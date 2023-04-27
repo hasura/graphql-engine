@@ -24,8 +24,8 @@ where
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.Lens (preview)
-import Data.Aeson qualified as Aeson
-import Data.HashMap.Strict qualified as Map
+import Data.Aeson qualified as J
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.NonEmpty qualified as MapNE
 import Data.HashSet qualified as H
 import Data.OpenApi (ToSchema (..))
@@ -48,7 +48,7 @@ data SuggestRels b = SuggestRels
     _srsOmitTracked :: Bool
   }
   deriving (Generic)
-  deriving (Aeson.FromJSON, Aeson.ToJSON, ToSchema) via Autodocodec (SuggestRels b)
+  deriving (J.FromJSON, J.ToJSON, ToSchema) via Autodocodec (SuggestRels b)
 
 instance Backend b => HasCodec (SuggestRels b) where
   codec =
@@ -68,7 +68,7 @@ newtype SuggestedRelationships b = Relationships
   { sRelationships :: [Relationship b]
   }
   deriving (Generic)
-  deriving (Aeson.FromJSON, Aeson.ToJSON, ToSchema) via Autodocodec (SuggestedRelationships b)
+  deriving (J.FromJSON, J.ToJSON, ToSchema) via Autodocodec (SuggestedRelationships b)
 
 instance Backend b => HasCodec (SuggestedRelationships b) where
   codec =
@@ -85,7 +85,7 @@ data Relationship b = Relationship
     rTo :: Mapping b
   }
   deriving (Generic)
-  deriving (Aeson.FromJSON, Aeson.ToJSON, ToSchema) via Autodocodec (Relationship b)
+  deriving (J.FromJSON, J.ToJSON, ToSchema) via Autodocodec (Relationship b)
 
 instance Backend b => HasCodec (Relationship b) where
   codec =
@@ -103,10 +103,10 @@ instance Backend b => HasCodec (Relationship b) where
 data Mapping b = Mapping
   { mTable :: TableName b,
     mColumns :: [Column b],
-    mConstraintName :: Maybe Aeson.Value
+    mConstraintName :: Maybe J.Value
   }
   deriving (Generic)
-  deriving (Aeson.FromJSON, Aeson.ToJSON, ToSchema) via Autodocodec (Mapping b)
+  deriving (J.FromJSON, J.ToJSON, ToSchema) via Autodocodec (Mapping b)
 
 instance Backend b => HasCodec (Mapping b) where
   codec =
@@ -158,15 +158,15 @@ suggestRelsFK omitTracked tables name uniqueConstraints tracked predicate foreig
           rFrom = Mapping {mTable = relatedTableName, mColumns = relatedColumns, mConstraintName = Nothing}
         }
     columnRelationships = MapNE.toHashMap (_fkColumnMapping foreignKey)
-    localColumns = Map.keys columnRelationships
-    relatedColumns = Map.elems columnRelationships
+    localColumns = HashMap.keys columnRelationships
+    relatedColumns = HashMap.elems columnRelationships
     uniqueConstraintColumns = H.map _ucColumns uniqueConstraints
     relatedTableName = _fkForeignTable foreignKey
-    relatedTable = Map.lookup relatedTableName tables
-    constraintName = Aeson.toJSON (_cName (_fkConstraint foreignKey))
+    relatedTable = HashMap.lookup relatedTableName tables
+    constraintName = J.toJSON (_cName (_fkConstraint foreignKey))
     discard b x = bool Nothing (Just x) (not b)
-    invert = Map.fromList . map swap . Map.toList
-    trackedBack = H.fromList $ mapMaybe (relationships (riRTable &&& riMapping)) $ maybe [] (Map.elems . _tciFieldInfoMap) relatedTable
+    invert = HashMap.fromList . map swap . HashMap.toList
+    trackedBack = H.fromList $ mapMaybe (relationships (riRTable &&& riMapping)) $ maybe [] (HashMap.elems . _tciFieldInfoMap) relatedTable
 
 suggestRelsTable ::
   forall b.
@@ -181,7 +181,7 @@ suggestRelsTable omitTracked tables predicate (name, table) =
   where
     foreignKeys = _tciForeignKeys table
     constraints = _tciUniqueConstraints table
-    tracked = H.fromList $ mapMaybe (relationships (riRTable &&& riMapping)) $ Map.elems $ _tciFieldInfoMap table
+    tracked = H.fromList $ mapMaybe (relationships (riRTable &&& riMapping)) $ HashMap.elems $ _tciFieldInfoMap table
 
 relationships :: (RelInfo b1 -> b2) -> FieldInfo b1 -> Maybe b2
 relationships f = fmap f . preview _FIRelationship
@@ -196,7 +196,7 @@ suggestRelsResponse ::
   SuggestedRelationships b
 suggestRelsResponse omitTracked tables predicate =
   Relationships $
-    suggestRelsTable omitTracked tables predicate =<< Map.toList tables
+    suggestRelsTable omitTracked tables predicate =<< HashMap.toList tables
 
 tablePredicate :: Hashable a => Maybe [a] -> a -> Bool
 tablePredicate Nothing _ = True

@@ -9,6 +9,8 @@ import defaultDbLogo from './default.svg';
 import mysqlLogo from './mysql.webp';
 import sqliteLogo from './sqlite.webp';
 import mariadbLogo from './mariadb.webp';
+import oracleLogo from './oracle.webp';
+import mongodbLogo from './mongodb.svg';
 
 const dbLogos: Record<string, string> = {
   pg: postgresLogo,
@@ -21,9 +23,11 @@ const dbLogos: Record<string, string> = {
   snowflake: snowflakeLogo,
   athena: amazonLogo,
   default: defaultDbLogo,
-  mysqlgdc: mysqlLogo,
+  mysql8: mysqlLogo,
   sqlite: sqliteLogo,
   mariadb: mariadbLogo,
+  oracle: oracleLogo,
+  Mongo: mongodbLogo,
 };
 
 export default dbLogos;

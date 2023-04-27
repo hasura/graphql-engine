@@ -21,7 +21,7 @@ module Hasura.Backends.Postgres.Execute.Prepare
 where
 
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.IntMap qualified as IntMap
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
@@ -39,8 +39,8 @@ import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Parser.Names
 import Hasura.Prelude
 import Hasura.RQL.IR.Value
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
-import Hasura.SQL.Backend
 import Hasura.Session
   ( SessionVariables,
     UserInfo (_uiSession),
@@ -49,7 +49,7 @@ import Hasura.Session
   )
 import Language.GraphQL.Draft.Syntax qualified as G
 
-type PlanVariables = Map.HashMap PlanVariable Int
+type PlanVariables = HashMap.HashMap PlanVariable Int
 
 -- | A variable used within the 'PlanVariables' map. We make the distinction
 -- between internal (i.e. generated within `graphql-engine`) and external (i.e.
@@ -75,7 +75,7 @@ data PlanningSt = PlanningSt
   deriving stock (Eq, Show)
 
 initPlanningSt :: PlanningSt
-initPlanningSt = PlanningSt 2 Map.empty IntMap.empty
+initPlanningSt = PlanningSt 2 HashMap.empty IntMap.empty
 
 -- | If we're preparing a value with planning state, we favour referring to
 -- values by their prepared argument index. If the value refers to a session
@@ -154,8 +154,8 @@ withUserVars usrVars list =
 getVarArgNum :: (MonadState PlanningSt m) => PlanVariable -> m Int
 getVarArgNum var = do
   PlanningSt curArgNum vars prepped <- get
-  Map.lookup var vars `onNothing` do
-    put $ PlanningSt (curArgNum + 1) (Map.insert var curArgNum vars) prepped
+  HashMap.lookup var vars `onNothing` do
+    put $ PlanningSt (curArgNum + 1) (HashMap.insert var curArgNum vars) prepped
     pure curArgNum
 
 -- | Add a prepared argument to the prepared argument map. These are keyed by

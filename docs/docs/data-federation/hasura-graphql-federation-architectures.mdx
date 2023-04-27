@@ -1,6 +1,7 @@
 ---
 description: Hasura GraphQL Data Federation Supergraphs
 title: Hasura GraphQL federation architectures
+sidebar_label: Federation Architectures
 keywords:
   - hasura
   - docs
@@ -16,11 +17,13 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 # Hasura GraphQL Federation Architectures
 
+## Overview
+
 In GraphQL, a supergraph is a unified and coherent schema that combines multiple sub-graphs, each representing a
 distinct part of the overall data model. The distinctions between supergraphs and a sub-graphs is largely academic and
 depends on the boundaries between one or more data sources.
 
-<Thumbnail src="/img/data-federation/federation-layer.png" alt="Data Federation Layer" className="no-shadow" />
+<Thumbnail src="/img/data-federation/data-federation_federation-layer.png" alt="Data Federation Layer" className="no-shadow" />
 
 For example:
 
@@ -50,7 +53,7 @@ their source:
 | **Existing GraphQL API** | [Database to Remote Schema Relationships](/schema/postgres/remote-relationships/remote-schema-relationships.mdx) | ❌                                                                                                  | [Remote schema to Remote schema relationships](/remote-schemas/remote-relationships/remote-schema-relationships.mdx) |
 
 <Thumbnail
-  src="/img/data-federation/multi-protocol-federation-with-hasura.png"
+  src="/img/data-federation/data-federation_multi-protocol-federation.png"
   alt="Multi-protocol federation with Hasura"
   className="no-shadow"
 />
@@ -91,7 +94,7 @@ This architecture pattern allows you the flexibility to rapidly evolve this grap
 databases.
 
 <Thumbnail
-  src="/img/data-federation/rest-api-federation.png"
+  src="/img/data-federation/data-federation_rest-api-federation.png"
   alt="REST API federation with Hasura"
   className="no-shadow"
 />
@@ -116,7 +119,7 @@ possibly owned and managed by other teams. This architecture allows you to centr
 providing a unified interface and managing authentication, authorization, caching, and more, centrally.
 
 <Thumbnail
-  src="/img/data-federation/multi-protocol-federation-capabilities.png"
+  src="/img/data-federation/data-federation_multi-protocol-federation-capabilities.png"
   alt="Multi-protocol federation capabilities"
   className="no-shadow"
 />
@@ -142,7 +145,7 @@ so you can add Hasura as a sub-graph in your Apollo federated gateway. You can a
 your other sub-graphs by enabling tables for [Apollo Federation](/data-federation/apollo-federation.mdx) explicitly.
 
 <Thumbnail
-  src="/img/data-federation/third-party-federation-layer.png"
+  src="/img/data-federation/data-federation_third-party-federation-layer.png"
   alt="Third-party federation with Hasura"
   className="no-shadow"
 />

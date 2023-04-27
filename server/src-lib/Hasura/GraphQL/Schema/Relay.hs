@@ -12,7 +12,7 @@ import Control.Lens hiding (index)
 import Data.Aeson qualified as J
 import Data.Aeson.Types qualified as J
 import Data.Align (align)
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text qualified as T
 import Data.These (partitionThese)
@@ -23,7 +23,6 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Node
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser (Kind (..), Parser, memoizeOn)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
@@ -32,14 +31,15 @@ import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Constructs the parser for the node interface.
@@ -56,12 +56,12 @@ nodeInterface sourceCache = NodeInterfaceParserBuilder $ \context options -> mem
       nodeInterfaceDescription = G.Description "An object with globally unique ID"
       roleName = scRole context
   tables :: [Parser 'Output n (SourceName, AB.AnyBackend TableMap)] <-
-    catMaybes . concat <$> for (Map.toList sourceCache) \(sourceName, anySourceInfo) ->
+    catMaybes . concat <$> for (HashMap.toList sourceCache) \(sourceName, anySourceInfo) ->
       AB.dispatchAnyBackendWithTwoConstraints @BackendSchema @BackendTableSelectSchema
         anySourceInfo
         \(sourceInfo :: SourceInfo b) ->
           runSourceSchema context options sourceInfo do
-            for (Map.toList $ takeValidTables $ _siTables sourceInfo) \(tableName, tableInfo) -> runMaybeT do
+            for (HashMap.toList $ takeValidTables $ _siTables sourceInfo) \(tableName, tableInfo) -> runMaybeT do
               tablePkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
               selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
               annotatedFieldsParser <- MaybeT $ tableSelectionSet tableInfo
@@ -70,11 +70,11 @@ nodeInterface sourceCache = NodeInterfaceParserBuilder $ \context options -> mem
                   ( sourceName,
                     AB.mkAnyBackend $
                       TableMap $
-                        Map.singleton tableName $
+                        HashMap.singleton tableName $
                           NodeInfo sourceInfo selectPermissions tablePkeyColumns fields
                   )
   pure $
-    Map.fromListWith fuseAnyMaps
+    HashMap.fromListWith fuseAnyMaps
       <$> P.selectionSetInterface
         Name._Node
         (Just nodeInterfaceDescription)
@@ -89,7 +89,7 @@ nodeInterface sourceCache = NodeInterfaceParserBuilder $ \context options -> mem
         error "panic: two tables of a different backend type within the same source"
 
     fuseMaps :: forall b. Backend b => TableMap b -> TableMap b -> AB.AnyBackend TableMap
-    fuseMaps (TableMap m1) (TableMap m2) = AB.mkAnyBackend @b $ TableMap $ Map.union m1 m2
+    fuseMaps (TableMap m1) (TableMap m2) = AB.mkAnyBackend @b $ TableMap $ HashMap.union m1 m2
 
 -- | Creates a field parser for the top-level "node" field in the QueryRoot.
 --
@@ -123,7 +123,7 @@ nodeField sourceCache context options = do
           -- sources! It is, however, unlikely; the engine emits V2 IDs, meaning
           -- if ever encounter a V1 ID it means it has been manually entered bya
           -- user, saved from an older version of the engine?
-          let matchingTables = flip mapMaybe (Map.keys sourceCache) \sourceName ->
+          let matchingTables = flip mapMaybe (HashMap.keys sourceCache) \sourceName ->
                 findNode @('Postgres 'Vanilla) sourceName tableName parseds
           case matchingTables of
             [nodeValue] -> createRootField stringifyNumbers tableName nodeValue pKeys

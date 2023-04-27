@@ -5,7 +5,7 @@ module Hasura.RQL.DDL.Relationship.Rename
 where
 
 import Data.Aeson
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -46,7 +46,7 @@ renameRelP2 ::
 renameRelP2 source qt newRN relInfo = withNewInconsistentObjsCheck $ do
   tabInfo <- askTableCoreInfo @b source qt
   -- check for conflicts in fieldInfoMap
-  case Map.lookup (fromRel newRN) $ _tciFieldInfoMap tabInfo of
+  case HashMap.lookup (fromRel newRN) $ _tciFieldInfoMap tabInfo of
     Nothing -> return ()
     Just _ ->
       throw400 AlreadyExists $

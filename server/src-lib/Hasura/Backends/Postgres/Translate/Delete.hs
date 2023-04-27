@@ -14,7 +14,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Delete
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 
 mkDelete ::
   Backend ('Postgres pgKind) =>

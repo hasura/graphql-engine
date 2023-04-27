@@ -11,8 +11,8 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.ResizePool
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'MySQL where

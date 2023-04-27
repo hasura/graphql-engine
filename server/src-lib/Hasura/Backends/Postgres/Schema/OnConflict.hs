@@ -14,7 +14,7 @@ module Hasura.Backends.Postgres.Schema.OnConflict
 where
 
 import Data.Has (getter)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types (showPGCols)
@@ -35,11 +35,11 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp qualified as IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Parser for a field name @on_conflict@ of type @tablename_on_conflict@.
@@ -95,7 +95,7 @@ conflictObjectParser tableInfo maybeUpdatePerms constraints = do
   tableGQLName <- getTableIdentifierName tableInfo
   let objectName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkOnConflictTypeName tableGQLName
       objectDesc = G.Description $ "on_conflict condition type for table " <>> tableName
-      (presetColumns, updateFilter) = fromMaybe (HM.empty, IR.gBoolExpTrue) $ do
+      (presetColumns, updateFilter) = fromMaybe (HashMap.empty, IR.gBoolExpTrue) $ do
         UpdPermInfo {..} <- maybeUpdatePerms
         pure
           ( partialSQLExpToUnpreparedValue <$> upiSet,

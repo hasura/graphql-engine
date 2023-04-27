@@ -60,17 +60,17 @@ where
 
 import Autodocodec (HasCodec, dimapCodec, disjointEitherCodec, optionalField', optionalFieldWithDefault')
 import Autodocodec qualified as AC
+import Autodocodec.Extended (optionalVersionField, versionField)
 import Control.Lens (Lens', lens, preview, set, traverseOf, view)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson.Extended ((.!=), (.:?), (.=), (.=?))
-import Data.Aeson.Extended qualified as Aeson
+import Data.Aeson.Extended qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Functor.Barbie (AllBF, ApplicativeB, ConstraintsB, FunctorB, TraversableB)
 import Data.Functor.Barbie qualified as B
 import Data.Text.Encoding qualified as TE
 import Data.Validation qualified as V
-import Hasura.Metadata.DTO.Utils (optionalVersionField, versionField)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Webhook.Transform.Body (Body (..), BodyTransformFn, TransformFn (BodyTransformFn_))
 import Hasura.RQL.DDL.Webhook.Transform.Body qualified as Body
@@ -142,7 +142,7 @@ instance HasCodec RequestTransform where
       bodyV2 = withOptionalField' @BodyTransformFn "body"
 
 instance FromJSON RequestTransform where
-  parseJSON = Aeson.withObject "RequestTransform" \o -> do
+  parseJSON = J.withObject "RequestTransform" \o -> do
     version <- o .:? "version" .!= V1
     method <- o .:? "method"
     url <- o .:? "url"
@@ -170,10 +170,10 @@ instance ToJSON RequestTransform where
         body' = case version of
           V1 -> case (getOptional body) of
             Just (BodyTransformFn_ (Body.ModifyAsJSON template)) ->
-              Just ("body", Aeson.toJSON template)
+              Just ("body", J.toJSON template)
             _ -> Nothing
           V2 -> "body" .=? getOptional body
-     in Aeson.object $
+     in J.object $
           [ "version" .= version,
             "template_engine" .= templateEngine
           ]
@@ -229,7 +229,7 @@ deriving anyclass instance
 -- NOTE: It is likely that we can derive these instances. Possibly if
 -- we move the aeson instances onto the *Transform types.
 instance FromJSON RequestTransformFns where
-  parseJSON = Aeson.withObject "RequestTransformFns" $ \o -> do
+  parseJSON = J.withObject "RequestTransformFns" $ \o -> do
     method <- o .:? "method"
     url <- o .:? "url"
     body <- o .:? "body"
@@ -246,7 +246,7 @@ instance FromJSON RequestTransformFns where
 
 instance ToJSON RequestTransformFns where
   toJSON RequestFields {..} =
-    Aeson.object . catMaybes $
+    J.object . catMaybes $
       [ "method" .=? getOptional method,
         "url" .=? getOptional url,
         "body" .=? getOptional body,
@@ -258,7 +258,7 @@ type RequestContext = RequestFields TransformCtx
 
 instance ToJSON RequestContext where
   toJSON RequestFields {..} =
-    Aeson.object
+    J.object
       [ "method" .= coerce @_ @RequestTransformCtx method,
         "url" .= coerce @_ @RequestTransformCtx url,
         "body" .= coerce @_ @RequestTransformCtx body,
@@ -296,14 +296,14 @@ requestL = lens getter setter
       RequestFields
         { method = coerce $ CI.mk $ TE.decodeUtf8 $ view HTTP.method req,
           url = coerce $ view HTTP.url req,
-          body = coerce $ JSONBody $ Aeson.decode =<< preview (HTTP.body . HTTP._RequestBodyLBS) req,
+          body = coerce $ JSONBody $ J.decode =<< preview (HTTP.body . HTTP._RequestBodyLBS) req,
           queryParams = coerce $ view HTTP.queryParams req,
           requestHeaders = coerce $ view HTTP.headers req
         }
 
     serializeBody :: Body -> HTTP.RequestBody
     serializeBody = \case
-      JSONBody body -> HTTP.RequestBodyLBS $ fromMaybe mempty $ fmap Aeson.encode body
+      JSONBody body -> HTTP.RequestBodyLBS $ fromMaybe mempty $ fmap J.encode body
       RawBody "" -> mempty
       RawBody bs -> HTTP.RequestBodyLBS bs
 
@@ -362,7 +362,7 @@ applyRequestTransform mkCtx transformations request =
 -- 'MetadataResponseTransform'. 'Nothing' means use the original
 -- response value.
 data ResponseTransform = ResponseTransform
-  { respTransformBody :: Maybe (ResponseTransformCtx -> Either TransformErrorBundle Aeson.Value),
+  { respTransformBody :: Maybe (ResponseTransformCtx -> Either TransformErrorBundle J.Value),
     respTransformTemplateEngine :: TemplatingEngine
   }
 
@@ -406,7 +406,7 @@ instance HasCodec MetadataResponseTransform where
       bodyV2 = optionalField' @BodyTransformFn "body"
 
 instance FromJSON MetadataResponseTransform where
-  parseJSON = Aeson.withObject "MetadataResponseTransform" $ \o -> do
+  parseJSON = J.withObject "MetadataResponseTransform" $ \o -> do
     mrtVersion <- o .:? "version" .!= V1
     mrtBodyTransform <- case mrtVersion of
       V1 -> do
@@ -421,10 +421,10 @@ instance ToJSON MetadataResponseTransform where
   toJSON MetadataResponseTransform {..} =
     let body = case mrtVersion of
           V1 -> case mrtBodyTransform of
-            Just (Body.ModifyAsJSON template) -> Just ("body", Aeson.toJSON template)
+            Just (Body.ModifyAsJSON template) -> Just ("body", J.toJSON template)
             _ -> Nothing
           V2 -> "body" .=? mrtBodyTransform
-     in Aeson.object $
+     in J.object $
           [ "template_engine" .= mrtTemplatingEngine,
             "version" .= mrtVersion
           ]
@@ -434,8 +434,8 @@ instance ToJSON MetadataResponseTransform where
 buildRespTransformCtx :: Maybe RequestContext -> Maybe SessionVariables -> TemplatingEngine -> BL.ByteString -> ResponseTransformCtx
 buildRespTransformCtx requestContext sessionVars engine respBody =
   ResponseTransformCtx
-    { responseTransformBody = fromMaybe Aeson.Null $ Aeson.decode @Aeson.Value respBody,
-      responseTransformReqCtx = Aeson.toJSON requestContext,
+    { responseTransformBody = fromMaybe J.Null $ J.decode @J.Value respBody,
+      responseTransformReqCtx = J.toJSON requestContext,
       responseSessionVariables = sessionVars,
       responseTransformEngine = engine
     }
@@ -448,15 +448,15 @@ buildRespTransformCtx requestContext sessionVars engine respBody =
 mkRespTemplateTransform ::
   BodyTransformFn ->
   ResponseTransformCtx ->
-  Either TransformErrorBundle Aeson.Value
-mkRespTemplateTransform Body.Remove _ = pure Aeson.Null
+  Either TransformErrorBundle J.Value
+mkRespTemplateTransform Body.Remove _ = pure J.Null
 mkRespTemplateTransform (Body.ModifyAsJSON template) context =
   runResponseTemplateTransform template context
 mkRespTemplateTransform (Body.ModifyAsFormURLEncoded formTemplates) context = do
   result <-
     liftEither . V.toEither . for formTemplates $
       runUnescapedResponseTemplateTransform' context
-  pure . Aeson.String . TE.decodeUtf8 . BL.toStrict $ Body.foldFormEncoded result
+  pure . J.String . TE.decodeUtf8 . BL.toStrict $ Body.foldFormEncoded result
 
 mkResponseTransform :: MetadataResponseTransform -> ResponseTransform
 mkResponseTransform MetadataResponseTransform {..} =
@@ -476,5 +476,5 @@ applyResponseTransform ResponseTransform {..} ctx@ResponseTransformCtx {..} =
       bodyFunc body =
         case respTransformBody of
           Nothing -> pure body
-          Just f -> Aeson.encode <$> f ctx
-   in bodyFunc (Aeson.encode responseTransformBody)
+          Just f -> J.encode <$> f ctx
+   in bodyFunc (J.encode responseTransformBody)

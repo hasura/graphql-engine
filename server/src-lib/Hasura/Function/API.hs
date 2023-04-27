@@ -23,7 +23,7 @@ where
 
 import Control.Lens ((.~), (^.))
 import Data.Aeson
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
 import Hasura.Base.Error
@@ -32,17 +32,17 @@ import Hasura.Function.Cache
 import Hasura.Function.Metadata (FunctionMetadata (..), fmConfiguration, fmPermissions)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
-import Hasura.SQL.Tag
-import Hasura.Session
 
 newtype TrackFunction b = TrackFunction {tfName :: FunctionName b}
 
@@ -61,7 +61,7 @@ trackFunctionP1 ::
   m ()
 trackFunctionP1 sourceName qf = do
   rawSchemaCache <- askSchemaCache
-  unless (isJust $ AB.unpackAnyBackend @b =<< Map.lookup sourceName (scSources rawSchemaCache)) $
+  unless (isJust $ AB.unpackAnyBackend @b =<< HashMap.lookup sourceName (scSources rawSchemaCache)) $
     throw400 NotExists $
       sourceName <<> " is not a known " <> reify (backendTag @b) <<> " source"
   when (isJust $ unsafeFunctionInfo @b sourceName qf $ scSources rawSchemaCache) $
@@ -242,7 +242,7 @@ runCreateFunctionPermission (FunctionPermissionArgument functionName source role
   functionTableInfo <-
     unsafeTableInfo @b source (_fiReturnType functionInfo) sourceCache
       `onNothing` throw400 NotExists ("function's return table " <> _fiReturnType functionInfo <<> " not found in the cache")
-  unless (role `Map.member` _tiRolePermInfoMap functionTableInfo) $
+  unless (role `HashMap.member` _tiRolePermInfoMap functionTableInfo) $
     throw400 NotSupported $
       "function permission can only be added when the function's return table "
         <> _fiReturnType functionInfo <<> " has select permission configured for role: " <>> role

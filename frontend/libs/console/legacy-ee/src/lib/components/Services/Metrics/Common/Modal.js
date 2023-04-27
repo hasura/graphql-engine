@@ -229,7 +229,9 @@ const Modal = props => {
               ' col-md-6 ' +
               styles.borderRight +
               ' ' +
-              styles.flexColumn
+              styles.flexColumn +
+              ' ' +
+              'overflow-auto'
             }
           >
             <div className={styles.infoWrapper}>

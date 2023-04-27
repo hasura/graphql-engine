@@ -57,7 +57,7 @@ where
 
 import Autodocodec (HasCodec, dimapCodec, disjointEitherCodec, optionalField', optionalFieldWith', optionalFieldWithDefault', optionalFieldWithOmittedDefault', requiredField')
 import Autodocodec qualified as AC
-import Autodocodec.Extended (graphQLFieldDescriptionCodec, graphQLFieldNameCodec, typeableName)
+import Autodocodec.Extended (boundedEnumCodec, discriminatorField, graphQLFieldDescriptionCodec, graphQLFieldNameCodec, typeableName)
 import Control.Lens (makeLenses)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
@@ -70,14 +70,14 @@ import Data.UUID qualified as UUID
 import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Hasura.Base.Error
-import Hasura.Metadata.DTO.Utils (boundedEnumCodec, discriminatorField)
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing (EventId (..))
-import Hasura.Session
+import Hasura.RQL.Types.Headers (HeaderConf)
+import Hasura.RQL.Types.Roles (RoleName)
+import Hasura.RQL.Types.Session (SessionVariables)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 import PostgreSQL.Binary.Encoding qualified as PE

@@ -41,7 +41,7 @@ import Data.Aeson.Lens (key, _String)
 import Data.Aeson.TH
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
@@ -610,7 +610,7 @@ logDeprecatedEnvVars logger env sources = do
   -- When a source named 'default' is present, it means that it is a migrated v2
   -- hasura project. In such cases log those environment variables that are moved
   -- to the metadata
-  for_ (HM.lookup SNDefault sources) $ \_defSource -> do
+  for_ (HashMap.lookup SNDefault sources) $ \_defSource -> do
     let deprecated = checkDeprecatedEnvVars (unEnvVarsMovedToMetadata envVarsMovedToMetadata)
     unless (null deprecated) $
       unLogger logger $

@@ -11,7 +11,7 @@ import Control.Concurrent.Async qualified as A
 import Control.Concurrent.STM qualified as STM
 import Control.Lens
 import Data.ByteString qualified as BS
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.Split (chunksOf)
 import Data.Monoid (Sum (..))
 import Data.Text.Extended
@@ -28,12 +28,14 @@ import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendTag, reify)
+import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
-import Hasura.SQL.Backend (BackendType (..), PostgresKind (Vanilla))
-import Hasura.SQL.Tag (backendTag, reify)
-import Hasura.Session
+import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..))
 import Refined (unrefine)
+import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
 
 pushResultToCohort ::
   GQResult BS.ByteString ->
@@ -75,6 +77,7 @@ pollLiveQuery ::
   forall b.
   BackendTransport b =>
   PollerId ->
+  STM.TVar PollerResponseState ->
   SubscriptionsOptions ->
   (SourceName, SourceConfig b) ->
   RoleName ->
@@ -82,9 +85,10 @@ pollLiveQuery ::
   MultiplexedQuery b ->
   CohortMap 'LiveQuery ->
   SubscriptionPostPollHook ->
+  PrometheusMetrics ->
   ResolvedConnectionTemplate b ->
   IO ()
-pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook resolvedConnectionTemplate = do
+pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook prometheusMetrics resolvedConnectionTemplate = do
   (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
     (snapshotTime, cohortBatches) <- withElapsedTime $ do
@@ -100,6 +104,18 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
     -- concurrently process each batch
     batchesDetails <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
       (queryExecutionTime, mxRes) <- runDBSubscription @b sourceConfig query (over (each . _2) C._csVariables cohorts) resolvedConnectionTemplate
+
+      previousPollerResponseState <- STM.readTVarIO pollerResponseState
+
+      case mxRes of
+        Left _ -> do
+          when (previousPollerResponseState == PRSSuccess) $ do
+            Prometheus.Gauge.inc $ submActiveLiveQueryPollersInError $ pmSubscriptionMetrics prometheusMetrics
+            STM.atomically $ STM.writeTVar pollerResponseState PRSError
+        Right _ -> do
+          when (previousPollerResponseState == PRSError) $ do
+            Prometheus.Gauge.dec $ submActiveLiveQueryPollersInError $ pmSubscriptionMetrics prometheusMetrics
+            STM.atomically $ STM.writeTVar pollerResponseState PRSSuccess
 
       let lqMeta = SubscriptionMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes
@@ -172,7 +188,7 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
         let resp = throwError $ GQExecError [encodeGQLErr False e]
          in [(resp, cohortId, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
-        let cohortSnapshotMap = Map.fromList cohorts
+        let cohortSnapshotMap = HashMap.fromList cohorts
         flip mapMaybe responses $ \(cohortId, respBS) ->
           let respHash = mkRespHash respBS
               respSize = BS.length respBS
@@ -181,4 +197,4 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
               -- (this shouldn't happen but if it happens it means a logic error and
               -- we should log it)
               (pure respBS,cohortId,Just (respHash, respSize),)
-                <$> Map.lookup cohortId cohortSnapshotMap
+                <$> HashMap.lookup cohortId cohortSnapshotMap

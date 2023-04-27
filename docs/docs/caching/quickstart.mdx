@@ -35,7 +35,8 @@ query MyProducts @cached {
 }
 ```
 
-You'll be able to see improvements in the response time of the query when the `@cached` directive is added.
+You'll be able to see improvements in the response time of the query when the `@cached` directive is added. Note
+that the first query with a `@cached` directive will always be a cache miss, but subsequent queries will be cache hits.
 
 <Player src="/img/caching/caching_quickstart-demo_2-21-0.mp4" />
 

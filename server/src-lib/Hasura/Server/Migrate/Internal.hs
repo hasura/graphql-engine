@@ -7,7 +7,7 @@ module Hasura.Server.Migrate.Internal
   )
 where
 
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.Text qualified as T
 import Data.Time.Clock (UTCTime)
 import Database.PG.Query qualified as PG
@@ -15,9 +15,9 @@ import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (InputWebhook, TriggerOnReplication (..))
 import Hasura.RQL.Types.EventTrigger
-import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Version
 
 -- | The old 0.8 catalog version is non-integral, so the version has always been
@@ -87,7 +87,7 @@ from3To4 = liftTx do
                                             configuration = $1
                                             WHERE name = $2
                                             |]
-        (PG.ViaJSON $ A.toJSON etc, name)
+        (PG.ViaJSON $ J.toJSON etc, name)
         True
 
 setCatalogVersion :: MonadTx m => Text -> UTCTime -> m ()

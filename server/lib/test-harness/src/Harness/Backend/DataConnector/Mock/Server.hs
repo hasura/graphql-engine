@@ -6,6 +6,8 @@ module Harness.Backend.DataConnector.Mock.Server
   ( AgentRequest (..),
     MockConfig (..),
     chinookMock,
+    MockRequestConfig (..),
+    defaultMockRequestConfig,
     mockAgentPort,
     runMockServer,
   )
@@ -34,7 +36,11 @@ data AgentRequest
 data MockConfig = MockConfig
   { _capabilitiesResponse :: API.CapabilitiesResponse,
     _schemaResponse :: API.SchemaResponse,
-    _queryResponse :: API.QueryRequest -> Either API.ErrorResponse API.QueryResponse,
+    _requestConfig :: MockRequestConfig
+  }
+
+data MockRequestConfig = MockRequestConfig
+  { _queryResponse :: API.QueryRequest -> Either API.ErrorResponse API.QueryResponse,
     _mutationResponse :: API.MutationRequest -> Either API.ErrorResponse API.MutationResponse
   }
 
@@ -830,13 +836,19 @@ schema =
       _srObjectTypes = Nothing
     }
 
--- | Stock 'MockConfig' for a Chinook Agent.
 chinookMock :: MockConfig
 chinookMock =
   MockConfig
     { _capabilitiesResponse = capabilities,
       _schemaResponse = schema,
-      _queryResponse = \_request -> Right $ API.QueryResponse (Just []) Nothing,
+      _requestConfig = defaultMockRequestConfig
+    }
+
+-- | Stock 'MockConfig' for a Chinook Agent.
+defaultMockRequestConfig :: MockRequestConfig
+defaultMockRequestConfig =
+  MockRequestConfig
+    { _queryResponse = \_request -> Right $ API.QueryResponse (Just []) Nothing,
       _mutationResponse = \_request -> Right $ API.MutationResponse []
     }
 
@@ -856,7 +868,7 @@ mockSchemaHandler mcfg mRecordedRequest mRecordedRequestConfig _sourceName reque
 
 mockQueryHandler :: I.IORef MockConfig -> I.IORef (Maybe AgentRequest) -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> API.QueryRequest -> Handler (Union API.QueryResponses)
 mockQueryHandler mcfg mRecordedRequest mRecordedRequestConfig _sourceName requestConfig query = liftIO $ do
-  handler <- fmap _queryResponse $ I.readIORef mcfg
+  handler <- fmap (_queryResponse . _requestConfig) $ I.readIORef mcfg
   I.writeIORef mRecordedRequest (Just $ Query query)
   I.writeIORef mRecordedRequestConfig (Just requestConfig)
   case handler query of
@@ -865,7 +877,7 @@ mockQueryHandler mcfg mRecordedRequest mRecordedRequestConfig _sourceName reques
 
 mockMutationHandler :: I.IORef MockConfig -> I.IORef (Maybe AgentRequest) -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> API.MutationRequest -> Handler (Union API.MutationResponses)
 mockMutationHandler mcfg mRecordedRequest mRecordedRequestConfig _sourceName requestConfig mutation = liftIO $ do
-  handler <- fmap _mutationResponse $ I.readIORef mcfg
+  handler <- fmap (_mutationResponse . _requestConfig) $ I.readIORef mcfg
   I.writeIORef mRecordedRequest (Just $ Mutation mutation)
   I.writeIORef mRecordedRequestConfig (Just requestConfig)
   case handler mutation of

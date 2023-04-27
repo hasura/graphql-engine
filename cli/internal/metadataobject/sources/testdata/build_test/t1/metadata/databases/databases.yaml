@@ -25,7 +25,7 @@
     test:
       sql: SELECT 1
     timeout: 5  
-  custom_return_types:
+  logical_models:
     - name: quiz_answer
       fields:
         added_by_user_id:

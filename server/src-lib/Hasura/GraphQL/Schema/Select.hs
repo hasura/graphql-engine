@@ -13,8 +13,8 @@ module Hasura.GraphQL.Schema.Select
     defaultSelectTableAggregate,
     defaultTableArgs,
     defaultTableSelectionSet,
-    defaultCustomReturnTypeArgs,
-    defaultCustomReturnTypeSelectionSet,
+    defaultLogicalModelArgs,
+    defaultLogicalModelSelectionSet,
     tableAggregationFields,
     tableConnectionArgs,
     tableConnectionSelectionSet,
@@ -25,7 +25,7 @@ module Hasura.GraphQL.Schema.Select
     tableOffsetArg,
     tablePermissionsInfo,
     tableSelectionList,
-    customReturnTypeSelectionList,
+    logicalModelSelectionList,
   )
 where
 
@@ -35,8 +35,7 @@ import Data.Aeson.Internal qualified as J
 import Data.Aeson.Key qualified as K
 import Data.ByteString.Lazy qualified as BL
 import Data.Has
-import Data.HashMap.Strict qualified as HM
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
@@ -44,19 +43,16 @@ import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
+import Data.Text.NonEmpty (mkNonEmptyText)
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
-import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (..))
-import Hasura.CustomReturnType.Types (CustomReturnTypeName (..))
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.Parser qualified as IP
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options (OptimizePermissionFilters (..))
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.OrderBy
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
@@ -67,8 +63,9 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
+import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelName (..))
 import Hasura.Name qualified as Name
-import Hasura.NativeQuery.Types (NullableScalarType (..))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
@@ -81,13 +78,15 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission qualified as Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
+import Hasura.RQL.Types.Schema.Options (OptimizePermissionFilters (..))
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils (executeJSONPath)
-import Hasura.Session (RoleName, adminRoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------
@@ -233,7 +232,7 @@ selectTableByPk tableInfo fieldName description = runMaybeT do
   selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
   selectionSetParser <- MaybeT $ tableSelectionSet tableInfo
-  guard $ all (\c -> ciColumn c `Map.member` spiCols selectPermissions) primaryKeys
+  guard $ all (\c -> ciColumn c `HashMap.member` spiCols selectPermissions) primaryKeys
   lift $ P.memoizeOn 'selectTableByPk (sourceName, tableName, fieldName) do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
     argsParser <-
@@ -410,7 +409,7 @@ defaultTableSelectionSet tableInfo = runMaybeT do
     tableGQLName <- getTableIdentifierName tableInfo
     let objectTypename = mkTypename $ applyTypeNameCaseIdentifier tCase tableGQLName
         xRelay = relayExtension @b
-        tableFields = Map.elems $ _tciFieldInfoMap tableCoreInfo
+        tableFields = HashMap.elems $ _tciFieldInfoMap tableCoreInfo
         tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableCoreInfo
         pkFields = concatMap toList tablePkeyColumns
         pkFieldDirective = T.intercalate " " $ map (G.unName . ciName) pkFields
@@ -423,7 +422,7 @@ defaultTableSelectionSet tableInfo = runMaybeT do
         --  }
         pkDirectives =
           if isApolloFedV1enabled (_tciApolloFederationConfig tableCoreInfo) && (not . null) pkFields
-            then [(G.Directive Name._key . Map.singleton Name._fields . G.VString) pkFieldDirective]
+            then [(G.Directive Name._key . HashMap.singleton Name._fields . G.VString) pkFieldDirective]
             else mempty
         description = G.Description . Postgres.getPGDescription <$> _tciDescription tableCoreInfo
     fieldParsers <-
@@ -475,62 +474,86 @@ tableSelectionList ::
 tableSelectionList tableInfo =
   fmap nonNullableObjectList <$> tableSelectionSet tableInfo
 
-customReturnTypeColumnsForRole ::
+logicalModelColumnsForRole ::
   RoleName ->
-  CustomReturnTypeInfo b ->
+  LogicalModelInfo b ->
   Maybe (Permission.PermColSpec b)
-customReturnTypeColumnsForRole role customReturnType =
+logicalModelColumnsForRole role logicalModel =
   if role == adminRoleName
     then -- if admin, assume all columns are OK
       pure Permission.PCStar
     else -- find list of columns we're allowed to access for this role
 
-      HM.lookup role (_crtiPermissions customReturnType)
+      HashMap.lookup role (_lmiPermissions logicalModel)
         >>= _permSel
-        <&> Permission.PCCols . HM.keys . spiCols
+        <&> Permission.PCCols . HashMap.keys . spiCols
 
-defaultCustomReturnTypeSelectionSet ::
+-- | this seems like it works on luck, ie that everything is really just Text
+-- underneath
+columnToRelName :: forall b. Backend b => Column b -> Maybe RelName
+columnToRelName column =
+  RelName <$> mkNonEmptyText (toTxt column)
+
+defaultLogicalModelSelectionSet ::
   forall b r m n.
-  ( MonadBuildSchema b r m n
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b
   ) =>
-  CustomReturnTypeInfo b ->
+  InsOrdHashMap RelName (RelInfo b) ->
+  LogicalModelInfo b ->
   SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-defaultCustomReturnTypeSelectionSet customReturnType = runMaybeT $ do
+defaultLogicalModelSelectionSet relationshipInfo logicalModel = runMaybeT $ do
   roleName <- retrieve scRole
 
-  selectableColumns <- hoistMaybe $ customReturnTypeColumnsForRole roleName customReturnType
+  selectableColumns <- hoistMaybe $ logicalModelColumnsForRole roleName logicalModel
 
   let isSelectable column =
         case selectableColumns of
           Permission.PCStar -> True
           Permission.PCCols cols -> column `elem` cols
 
-  let parseField (column, NullableScalarType {..}) = do
-        let -- We have not yet worked out what providing permissions here enables
-            caseBoolExpUnpreparedValue = Nothing
-
-            columnType = ColumnScalar nstType
-            pathArg = scalarSelectionArgumentsParser columnType
-
+  let parseField ::
+        Column b ->
+        LogicalModelField b ->
+        MaybeT (SchemaT r m) (IP.FieldParser MetadataObjId n (AnnotatedField b))
+      parseField column inputField = do
         columnName <- hoistMaybe (G.mkName (toTxt column))
 
-        field <- lift $ columnParser columnType (G.Nullability nstNullable)
+        -- We have not yet worked out what providing permissions here enables
+        let caseBoolExpUnpreparedValue = Nothing
 
-        pure $!
-          P.selection columnName (G.Description <$> nstDescription) pathArg field
-            <&> IR.mkAnnColumnField column columnType caseBoolExpUnpreparedValue
+        case inputField of
+          LogicalModelScalarField {..} -> do
+            let columnType = ColumnScalar lmfType
+                pathArg = scalarSelectionArgumentsParser columnType
 
-  let fieldName = getCustomReturnTypeName (_crtiName customReturnType)
+            field <- lift $ columnParser columnType (G.Nullability lmfNullable)
+
+            pure $!
+              P.selection columnName (G.Description <$> lmfDescription) pathArg field
+                <&> IR.mkAnnColumnField column columnType caseBoolExpUnpreparedValue
+          LogicalModelArrayReference {..} -> do
+            relName <- hoistMaybe $ columnToRelName @b column
+            -- fetch the nested custom return type for comparison purposes
+            _nestedLogicalModel <- lift $ askLogicalModelInfo @b lmfLogicalModel
+            -- lookup the reference in the data source
+            relationship <- hoistMaybe $ InsOrd.lookup relName relationshipInfo
+            -- check the types match
+            -- return IR for the actual data source lookup (ie, the table
+            -- lookup for a relationship)
+            logicalModelRelationshipField @b @r @m @n relationship
+
+  let fieldName = getLogicalModelName (_lmiName logicalModel)
 
   -- which columns are we allowed to access given permissions?
   let allowedColumns =
         filter
           (isSelectable . fst)
-          (InsOrd.toList (_crtiFields customReturnType))
+          (InsOrd.toList (_lmiFields logicalModel))
 
-  parsers <- traverse parseField allowedColumns
+  parsers <- traverse (uncurry parseField) allowedColumns
 
-  let description = G.Description <$> _crtiDescription customReturnType
+  let description = G.Description <$> _lmiDescription logicalModel
 
       -- We entirely ignore Relay for now.
       implementsInterfaces = mempty
@@ -539,12 +562,13 @@ defaultCustomReturnTypeSelectionSet customReturnType = runMaybeT $ do
     P.selectionSetObject fieldName description parsers implementsInterfaces
       <&> parsedSelectionsToFields IR.AFExpression
 
-customReturnTypeSelectionList ::
-  (MonadBuildSchema b r m n, BackendCustomReturnTypeSelectSchema b) =>
-  CustomReturnTypeInfo b ->
+logicalModelSelectionList ::
+  (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) =>
+  InsOrdHashMap RelName (RelInfo b) ->
+  LogicalModelInfo b ->
   SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-customReturnTypeSelectionList customReturnType =
-  fmap nonNullableObjectList <$> customReturnTypeSelectionSet customReturnType
+logicalModelSelectionList relationshipInfo logicalModel =
+  fmap nonNullableObjectList <$> logicalModelSelectionSet relationshipInfo logicalModel
 
 -- | Converts an output type parser from object_type to [object_type!]!
 nonNullableObjectList :: Parser 'Output m a -> Parser 'Output m a
@@ -691,15 +715,15 @@ defaultTableArgs tableInfo = do
 
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
-customReturnTypeWhereArg ::
+logicalModelWhereArg ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     AggregationPredicatesSchema b
   ) =>
-  CustomReturnTypeInfo b ->
+  LogicalModelInfo b ->
   SchemaT r m (InputFieldsParser n (Maybe (IR.AnnBoolExp b (IR.UnpreparedValue b))))
-customReturnTypeWhereArg customReturnType = do
-  boolExpParser <- customReturnTypeBoolExp customReturnType
+logicalModelWhereArg logicalModel = do
+  boolExpParser <- logicalModelBoolExp logicalModel
   pure $
     fmap join $
       P.fieldOptional whereName whereDesc $
@@ -710,15 +734,15 @@ customReturnTypeWhereArg customReturnType = do
 
 -- | Argument to sort rows returned from table selection
 -- > order_by: [table_order_by!]
-customReturnTypeOrderByArg ::
+logicalModelOrderByArg ::
   forall b r m n.
   ( MonadBuildSchema b r m n
   ) =>
-  CustomReturnTypeInfo b ->
+  LogicalModelInfo b ->
   SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)))))
-customReturnTypeOrderByArg customReturnType = do
+logicalModelOrderByArg logicalModel = do
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
-  orderByParser <- customReturnTypeOrderByExp customReturnType
+  orderByParser <- logicalModelOrderByExp logicalModel
   let orderByName = applyFieldNameCaseCust tCase Name._order_by
       orderByDesc = Just $ G.Description "sort the rows by one or more columns"
   pure $ do
@@ -731,23 +755,23 @@ customReturnTypeOrderByArg customReturnType = do
 
 -- | Argument to distinct select on columns returned from table selection
 -- > distinct_on: [table_select_column!]
-customReturnTypeDistinctArg ::
+logicalModelDistinctArg ::
   forall b r m n.
   ( MonadBuildSchema b r m n
   ) =>
-  CustomReturnTypeInfo b ->
+  LogicalModelInfo b ->
   SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
-customReturnTypeDistinctArg customReturnType = do
-  let name = getCustomReturnTypeName (_crtiName customReturnType)
+logicalModelDistinctArg logicalModel = do
+  let name = getLogicalModelName (_lmiName logicalModel)
 
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
 
   let maybeColumnDefinitions =
-        traverse definitionFromTypeRow (InsOrd.keys (_crtiFields customReturnType))
+        traverse definitionFromTypeRow (InsOrd.keys (_lmiFields logicalModel))
           >>= NE.nonEmpty
 
   case (,) <$> G.mkName "_enum_name" <*> maybeColumnDefinitions of
-    Nothing -> throw500 $ "Error creating an enum name for custom type " <> tshow (_crtiName customReturnType)
+    Nothing -> throw500 $ "Error creating an enum name for logical model " <> tshow (_lmiName logicalModel)
     Just (enum', columnDefinitions) -> do
       let enumName = name <> enum'
           description = Nothing
@@ -1038,12 +1062,12 @@ tableAggregationFields tableInfo = do
     let numericColumns = onlyNumCols allColumns
         comparableColumns = onlyComparableCols allColumns
         customOperatorsAndColumns =
-          Map.toList $ Map.mapMaybe (getCustomAggOpsColumns allColumns) $ getCustomAggregateOperators @b (_siConfiguration sourceInfo)
+          HashMap.toList $ HashMap.mapMaybe (getCustomAggOpsColumns allColumns) $ getCustomAggregateOperators @b (_siConfiguration sourceInfo)
         description = G.Description $ "aggregate fields of " <>> tableInfoName tableInfo
         selectName = runMkTypename mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggregateFieldTypeName tableGQLName
     count <- countField
     nonCountFieldsMap <-
-      fmap (Map.unionsWith (++) . concat) $
+      fmap (HashMap.unionsWith (++) . concat) $
         sequenceA $
           catMaybes
             [ -- operators on numeric columns
@@ -1052,7 +1076,7 @@ tableAggregationFields tableInfo = do
                 else Just $
                   for numericAggOperators $ \operator -> do
                     numFields <- mkNumericAggFields operator numericColumns
-                    pure $ Map.singleton operator numFields,
+                    pure $ HashMap.singleton operator numFields,
               -- operators on comparable columns
               if null comparableColumns
                 then Nothing
@@ -1060,21 +1084,21 @@ tableAggregationFields tableInfo = do
                   comparableFields <- traverse mkColumnAggField comparableColumns
                   pure $
                     comparisonAggOperators & map \operator ->
-                      Map.singleton operator comparableFields,
+                      HashMap.singleton operator comparableFields,
               -- -- custom operators
               if null customOperatorsAndColumns
                 then Nothing
                 else Just $
                   for customOperatorsAndColumns \(operator, columnTypes) -> do
                     customFields <- traverse (uncurry mkNullableScalarTypeAggField) (toList columnTypes)
-                    pure $ Map.singleton (C.fromCustomName operator) customFields
+                    pure $ HashMap.singleton (C.fromCustomName operator) customFields
             ]
     let nonCountFields =
-          Map.mapWithKey
+          HashMap.mapWithKey
             ( \operator fields -> parseAggOperator mkTypename operator tCase tableGQLName fields
             )
             nonCountFieldsMap
-        aggregateFields = count : Map.elems nonCountFields
+        aggregateFields = count : HashMap.elems nonCountFields
     pure $
       P.selectionSet selectName (Just description) aggregateFields
         <&> parsedSelectionsToFields IR.AFExp
@@ -1087,7 +1111,7 @@ tableAggregationFields tableInfo = do
               case ciType of
                 ColumnEnumReference _ -> Nothing
                 ColumnScalar scalarType ->
-                  (ci,) <$> Map.lookup scalarType typeMap
+                  (ci,) <$> HashMap.lookup scalarType typeMap
           )
         & nonEmpty
 
@@ -1159,7 +1183,7 @@ tableAggregationFields tableInfo = do
        in P.subselection_ opFieldName Nothing subselectionParser
             <&> IR.AFOp . IR.AggregateOp opText
 
--- | shared implementation between tables and custom types
+-- | shared implementation between tables and logical models
 defaultArgsParser ::
   forall b r m n.
   ( MonadBuildSchema b r m n
@@ -1205,17 +1229,17 @@ defaultArgsParser whereParser orderByParser distinctParser = do
         parseError
           "\"distinct_on\" columns must match initial \"order_by\" columns"
 
-defaultCustomReturnTypeArgs ::
+defaultLogicalModelArgs ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     AggregationPredicatesSchema b
   ) =>
-  CustomReturnTypeInfo b ->
+  LogicalModelInfo b ->
   SchemaT r m (InputFieldsParser n (SelectArgs b))
-defaultCustomReturnTypeArgs customReturnType = do
-  whereParser <- customReturnTypeWhereArg customReturnType
-  orderByParser <- customReturnTypeOrderByArg customReturnType
-  distinctParser <- customReturnTypeDistinctArg customReturnType
+defaultLogicalModelArgs logicalModel = do
+  whereParser <- logicalModelWhereArg logicalModel
+  orderByParser <- logicalModelOrderByArg logicalModel
+  distinctParser <- logicalModelDistinctArg logicalModel
 
   defaultArgsParser whereParser orderByParser distinctParser
 
@@ -1245,8 +1269,8 @@ fieldSelection table tableInfo = \case
       guard $ isHasuraSchema schemaKind || fieldName /= Name._id
       let columnName = ciColumn columnInfo
       selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
-      guard $ columnName `Map.member` spiCols selectPermissions
-      let !caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
+      guard $ columnName `HashMap.member` spiCols selectPermissions
+      let !caseBoolExp = join $ HashMap.lookup columnName (spiCols selectPermissions)
           !caseBoolExpUnpreparedValue =
             (fmap . fmap) partialSQLExpToUnpreparedValue <$!> caseBoolExp
           pathArg = scalarSelectionArgumentsParser $ ciType columnInfo
@@ -1299,7 +1323,7 @@ fieldSelection table tableInfo = \case
     nestedObjectFieldParser :: TableInfo b -> NestedObjectInfo b -> SchemaT r m (FieldParser n (AnnotatedNestedObjectSelect b))
     nestedObjectFieldParser TableInfo {..} NestedObjectInfo {..} = do
       let customObjectTypes = _tciCustomObjectTypes _tiCoreInfo
-      case Map.lookup _noiType customObjectTypes of
+      case HashMap.lookup _noiType customObjectTypes of
         Just objectType -> do
           parser <- nestedObjectParser _noiSupportsNestedObjects customObjectTypes objectType _noiColumn _noiIsNullable
           pure $ P.subselection_ _noiName _noiDescription parser
@@ -1333,7 +1357,7 @@ nestedObjectParser supportsNestedObjects objectTypes objectType column isNullabl
           TOFTScalar fieldTypeName scalarType ->
             wrapScalar scalarType $ customScalarParser fieldTypeName
           TOFTObject objectName -> do
-            objectType' <- Map.lookup objectName objectTypes `onNothing` throw500 ("Custom type " <> objectName <<> " not found")
+            objectType' <- HashMap.lookup objectName objectTypes `onNothing` throw500 ("Custom type " <> objectName <<> " not found")
             parser <- fmap (IR.AFNestedObject @b) <$> nestedObjectParser supportsNestedObjects objectTypes objectType' column' (G.isNullable gType)
             pure $ P.subselection_ name description parser
       where
@@ -1460,7 +1484,7 @@ relationshipField table ri = runMaybeT do
             -- `table`.  If it is, then we can optimize the row-level permission
             -- filters by dropping them here.
             if (riRTable remoteRI == table)
-              && (riMapping remoteRI `Map.isInverseOf` riMapping ri)
+              && (riMapping remoteRI `HashMap.isInverseOf` riMapping ri)
               && (thisTablePerm == remoteTablePerm)
               then BoolAnd []
               else x
@@ -1510,9 +1534,9 @@ relationshipField table ri = runMaybeT do
       nullable <- case (riIsManual ri, riInsertOrder ri) of
         -- Automatically generated forward relationship
         (False, BeforeParent) -> do
-          let columns = Map.keys $ riMapping ri
+          let columns = HashMap.keys $ riMapping ri
               fieldInfoMap = _tciFieldInfoMap $ _tiCoreInfo tableInfo
-              findColumn col = Map.lookup (fromCol @b col) fieldInfoMap ^? _Just . _FIColumn
+              findColumn col = HashMap.lookup (fromCol @b col) fieldInfoMap ^? _Just . _FIColumn
           -- Fetch information about the referencing columns of the foreign key
           -- constraint
           colInfo <-
@@ -1568,3 +1592,26 @@ tablePermissionsInfo selectPermissions =
     { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions,
       IR._tpLimit = spiLimit selectPermissions
     }
+
+-- | Field parsers for a logical model relationship
+logicalModelRelationshipField ::
+  forall b r m n.
+  ( BackendTableSelectSchema b,
+    MonadBuildSchema b r m n
+  ) =>
+  RelInfo b ->
+  MaybeT (SchemaT r m) (FieldParser n (AnnotatedField b))
+logicalModelRelationshipField ri = do
+  otherTableInfo <- lift $ askTableInfo $ riRTable ri
+  relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
+  case riType ri of
+    ObjRel -> do
+      throw500 "Object relationships on logical models are not implemented"
+    ArrRel -> do
+      let arrayRelDesc = Just $ G.Description "An array relationship"
+      otherTableParser <- MaybeT $ selectTable otherTableInfo relFieldName arrayRelDesc
+      pure $
+        otherTableParser <&> \selectExp ->
+          IR.AFArrayRelation $
+            IR.ASSimple $
+              IR.AnnRelationSelectG (riName ri) (riMapping ri) selectExp

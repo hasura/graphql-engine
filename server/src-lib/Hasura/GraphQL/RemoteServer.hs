@@ -17,7 +17,7 @@ import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (duplicates)
 import Data.Text qualified as T
@@ -33,11 +33,12 @@ import Hasura.HTTP
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (makeHeadersFromConf)
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Server.Utils
 import Hasura.Services.Network
-import Hasura.Session
+import Hasura.Session (UserInfo, adminUserInfo, sessionVariablesToHeaders, _uiSession)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -147,11 +148,11 @@ execRemoteGQ env userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
       -- filter out duplicate headers
       -- priority: conf headers > resolved userinfo vars > client headers
       hdrMaps =
-        [ Map.fromList confHdrs,
-          Map.fromList userInfoToHdrs,
-          Map.fromList clientHdrs
+        [ HashMap.fromList confHdrs,
+          HashMap.fromList userInfoToHdrs,
+          HashMap.fromList clientHdrs
         ]
-      headers = Map.toList $ foldr Map.union Map.empty hdrMaps
+      headers = HashMap.toList $ foldr HashMap.union HashMap.empty hdrMaps
       finalHeaders = addDefaultHeaders headers
   initReq <- onLeft (HTTP.mkRequestEither $ tshow url) (throwRemoteSchemaHttp webhookEnvRecord)
   let req =
@@ -232,7 +233,7 @@ validateSchemaCustomizationsDistinct remoteSchemaCustomizer (RemoteSchemaIntrosp
 
     validateTypeMappingsAreDistinct :: m ()
     validateTypeMappingsAreDistinct = do
-      let dups = duplicates $ runMkTypename customizeTypeName <$> Map.keys typeDefinitions
+      let dups = duplicates $ runMkTypename customizeTypeName <$> HashMap.keys typeDefinitions
       unless (Set.null dups) $
         throwRemoteSchema $
           "Type name mappings are not distinct; the following types appear more than once: "
@@ -402,7 +403,7 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
             types
         r =
           IntrospectionResult
-            (RemoteSchemaIntrospection $ Map.fromListOn getTypeName $ fromIntrospection <$> types')
+            (RemoteSchemaIntrospection $ HashMap.fromListOn getTypeName $ fromIntrospection <$> types')
             queryRoot
             mutationRoot
             subsRoot
@@ -425,14 +426,14 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
     nameFilter name = not $ "__" `T.isPrefixOf` G.unName name || name `Set.member` protectedTypeNames
 
     mkPrefixSuffixMap :: Maybe G.Name -> Maybe G.Name -> [G.Name] -> HashMap G.Name G.Name
-    mkPrefixSuffixMap mPrefix mSuffix names = Map.fromList $ case (mPrefix, mSuffix) of
+    mkPrefixSuffixMap mPrefix mSuffix names = HashMap.fromList $ case (mPrefix, mSuffix) of
       (Nothing, Nothing) -> []
       (Just prefix, Nothing) -> map (\name -> (name, prefix <> name)) names
       (Nothing, Just suffix) -> map (\name -> (name, name <> suffix)) names
       (Just prefix, Just suffix) -> map (\name -> (name, prefix <> name <> suffix)) names
 
     RemoteSchemaIntrospection typeDefinitions = irDoc
-    typesToRename = filter nameFilter $ Map.keys typeDefinitions
+    typesToRename = filter nameFilter $ HashMap.keys typeDefinitions
 
     -- NOTE: We are creating a root type name mapping, this will be used to
     -- prefix the root field names with the root field namespace. We are doing
@@ -464,10 +465,10 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
 
     fieldRenameMap =
       case _rscFieldNames of
-        Nothing -> Map.empty
+        Nothing -> HashMap.empty
         Just fieldNameCustomizations ->
-          let customizationMap = Map.fromList $ map (\rfc -> (_rfcParentType rfc, rfc)) fieldNameCustomizations
-           in Map.intersectionWith mkFieldRenameMap customizationMap typeFieldMap
+          let customizationMap = HashMap.fromList $ map (\rfc -> (_rfcParentType rfc, rfc)) fieldNameCustomizations
+           in HashMap.intersectionWith mkFieldRenameMap customizationMap typeFieldMap
 
     _rscNamespaceFieldName = _rscRootFieldsNamespace
     _rscCustomizeTypeName = typeRenameMap

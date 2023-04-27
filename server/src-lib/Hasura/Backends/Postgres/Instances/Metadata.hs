@@ -7,7 +7,7 @@
 -- Defines a 'Hasura.RQL.Types.Metadata.Backend.BackendMetadata' type class instance for Postgres.
 module Hasura.Backends.Postgres.Instances.Metadata () where
 
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.String.Interpolate (i)
 import Data.Text.Extended
@@ -24,12 +24,13 @@ import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.DDL.Relationship (defaultBuildArrayRelationshipInfo, defaultBuildObjectRelationshipInfo)
 import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache (askSourceConfig)
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 
 --------------------------------------------------------------------------------
 -- PostgresMetadata
@@ -143,7 +144,7 @@ instance PostgresMetadata 'Citus where
           RUManual RelManualConfig {} -> pure ()
     where
       lookupTableInfo tableName =
-        Map.lookup tableName tableCache
+        HashMap.lookup tableName tableCache
           `onNothing` throw400 NotFound ("no such table " <>> tableName)
 
       checkObjectRelationship sourceTableInfo targetTable = do
@@ -261,6 +262,8 @@ instance
   resolveSourceConfig = Postgres.resolveSourceConfig
   resolveDatabaseMetadata _ = Postgres.resolveDatabaseMetadata
   parseBoolExpOperations = Postgres.parseBoolExpOperations
+  buildArrayRelationshipInfo _ = defaultBuildArrayRelationshipInfo
+  buildObjectRelationshipInfo _ = defaultBuildObjectRelationshipInfo
   buildFunctionInfo = Postgres.buildFunctionInfo
   updateColumnInEventTrigger = Postgres.updateColumnInEventTrigger
   parseCollectableType = Postgres.parseCollectableType

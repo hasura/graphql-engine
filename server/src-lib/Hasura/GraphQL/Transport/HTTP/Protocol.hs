@@ -32,7 +32,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Either (isLeft)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended (dquote)
 import Hasura.Base.Error
 import Hasura.Base.Instances ()
@@ -60,7 +60,7 @@ newtype OperationName = OperationName {_unOperationName :: G.Name}
 instance J.FromJSON OperationName where
   parseJSON v = OperationName <$> J.parseJSON v
 
-type VariableValues = Map.HashMap G.Name J.Value
+type VariableValues = HashMap.HashMap G.Name J.Value
 
 -- | https://graphql.org/learn/serving-over-http/#post-request
 --

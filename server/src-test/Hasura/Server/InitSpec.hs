@@ -12,17 +12,17 @@ import Data.Time (NominalDiffTime)
 import Database.PG.Query qualified as Query
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.GraphQL.Schema.NamingCase qualified as NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging (Hasura)
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
+import Hasura.RQL.Types.Roles qualified as Roles
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.Types qualified as MonadTx
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init qualified as UUT
 import Hasura.Server.Logging qualified as Logging
 import Hasura.Server.Types qualified as Types
-import Hasura.Session qualified as UUT
 import Network.WebSockets qualified as WS
 import Refined (NonNegative, Positive, refineTH, unrefine)
 import Test.Hspec qualified as Hspec
@@ -377,17 +377,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (UUT.mkRoleName "guest")
+        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (Roles.mkRoleName "guest")
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoUnAuthRole = UUT.mkRoleName "visitor"}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoUnAuthRole = Roles.mkRoleName "visitor"}
             -- When
             env = [(UUT._envVar UUT.unAuthRoleOption, "guest")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (UUT.mkRoleName "visitor")
+        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (Roles.mkRoleName "visitor")
 
     Hspec.describe "soCorsConfig" $ do
       Hspec.it "Env > Nothing" $ do

@@ -10,7 +10,7 @@ import Data.Aeson ((.=))
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Parser.JSONPath
 import Data.Text qualified as T
@@ -18,10 +18,11 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
 import Hasura.Logging (Logger (..))
 import Hasura.Prelude
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName, mkRoleName)
 import Hasura.Server.Auth hiding (getUserInfoWithExpTime, processJwt)
 import Hasura.Server.Auth.JWT hiding (processJwt)
 import Hasura.Server.Utils
-import Hasura.Session
+import Hasura.Session (UserAdminSecret (..), UserInfo (..), UserRoleBuild (..), mkSessionVariable, mkSessionVariablesHeaders, mkUserInfo, sessionVariableToText)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Test.Hspec
@@ -69,7 +70,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
                   (mkSessionVariablesHeaders mempty)
 
           processAuthZHeader _jwtCtx _authzHeader =
-            pure (Map.fromList $ map (first (mkSessionVariable . K.toText)) $ KM.toList claims, Nothing)
+            pure (HashMap.fromList $ map (first (mkSessionVariable . K.toText)) $ KM.toList claims, Nothing)
 
           processJwt = processJwt_ processAuthZHeader tokenIssuer (const JHAuthorization)
 
@@ -436,7 +437,7 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
         _ -> error "Impossible!"
 
       defaultClaimsMap =
-        Map.fromList
+        HashMap.fromList
           [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user", "editor"])),
             (defaultRoleClaim, J.toJSON (mkRoleNameE "user"))
           ]
@@ -511,13 +512,13 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
         let customDefRoleClaim = mkCustomDefaultRoleClaim (Just "$.roles.default") Nothing
             customAllowedRolesClaim = mkCustomAllowedRoleClaim (Just "$.roles.allowed") Nothing
             otherClaims =
-              Map.fromList
+              HashMap.fromList
                 [(userIdClaim, mkCustomOtherClaim (Just "$.user.id") Nothing)]
             customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim otherClaims
 
         parseClaimsMap_ claimsSet (JCMap customClaimsMap)
           `shouldReturn` Right
-            ( Map.fromList
+            ( HashMap.fromList
                 [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user", "editor"])),
                   (defaultRoleClaim, J.toJSON (mkRoleNameE "user")),
                   (userIdClaim, J.String "1")
@@ -528,13 +529,13 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
         let customDefRoleClaim = mkCustomDefaultRoleClaim (Just "$.roles.default") Nothing
             customAllowedRolesClaim = mkCustomAllowedRoleClaim (Just "$.roles.allowed") Nothing
             otherClaims =
-              Map.fromList
+              HashMap.fromList
                 [(userIdClaim, mkCustomOtherClaim (Just "$.sub") Nothing)]
             customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim otherClaims
 
         parseClaimsMap_ (claimsSet & JWT.claimSub .~ (Just "2")) (JCMap customClaimsMap)
           `shouldReturn` Right
-            ( Map.fromList
+            ( HashMap.fromList
                 [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user", "editor"])),
                   (defaultRoleClaim, J.toJSON (mkRoleNameE "user")),
                   (userIdClaim, J.String "2")
@@ -554,7 +555,7 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
             customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim mempty
         parseClaimsMap_ claimsSet (JCMap customClaimsMap)
           `shouldReturn` Right
-            ( Map.fromList
+            ( HashMap.fromList
                 [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user", "editor"])),
                   (defaultRoleClaim, J.toJSON (mkRoleNameE "editor"))
                 ]
@@ -567,7 +568,7 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
             customClaimsMap = JWTCustomClaimsMap customDefRoleClaim customAllowedRolesClaim mempty
         parseClaimsMap_ JWT.emptyClaimsSet (JCMap customClaimsMap)
           `shouldReturn` Right
-            ( Map.fromList
+            ( HashMap.fromList
                 [ (allowedRolesClaim, J.toJSON (map mkRoleNameE ["user", "editor"])),
                   (defaultRoleClaim, J.toJSON (mkRoleNameE "editor"))
                 ]

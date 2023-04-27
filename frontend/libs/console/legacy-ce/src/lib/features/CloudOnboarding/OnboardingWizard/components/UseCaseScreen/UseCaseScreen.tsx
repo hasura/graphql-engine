@@ -1,11 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Button } from '../../../../../new-components/Button';
 import { LS_KEYS, removeLSItem } from '../../../../../utils/localStorage';
-import dataApiCard from './images/data-api.svg';
-import dataFederationCard from './images/data-sources.svg';
-import gatewayCard from './images/gateway.svg';
-import gqlBackend from './images/gql-backend.svg';
-import hasuraIllustrations from './images/hasura-illustration.svg';
 import { emitOnboardingEvent, persistSkippedOnboarding } from '../../utils';
 import { getUseCaseExperimentOnboardingVariables } from '../../constants';
 import { Analytics, trackCustomEvent } from '../../../../Analytics';
@@ -32,6 +27,50 @@ interface UseCaseAssets {
   docsUrl: string;
 }
 
+const useCasesAssets: UseCaseAssets[] = [
+  {
+    id: 'data-api',
+    image:
+      'https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-console/assets/common/img/hasura-usecase-data-api.svg',
+    title: 'Data API',
+    description:
+      'Build an instant, real-time API over your data sources for easy and performant access',
+    consoleUrl: '/',
+    docsUrl: 'https://hasura.io/docs/latest/resources/use-case/data-api/',
+  },
+  {
+    id: 'gql-backend',
+    image:
+      'https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-console/assets/common/img/hasura-usecase-gql-backend.svg',
+    title: 'Graphql Backend',
+    description:
+      'Build a lightning-fast GraphQL backend and significantly accelerate your application development',
+    consoleUrl: '/',
+    docsUrl: 'https://hasura.io/docs/latest/resources/use-case/gql-backend/',
+  },
+  {
+    id: 'data-federation',
+    image:
+      'https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-console/assets/common/img/hasura-usecase-data-federation.svg',
+    title: 'Data Federation',
+    description:
+      'Build an API that enables real-time data composition from different data sources',
+    consoleUrl: '/',
+    docsUrl:
+      'https://hasura.io/docs/latest/resources/use-case/data-federation/',
+  },
+  {
+    id: 'gateway',
+    image:
+      'https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-console/assets/common/img/hasura-usecase-gateway.svg',
+    title: 'Gateway Service',
+    description:
+      'Build a single entry point from client applications into an ecosystem of microservices',
+    consoleUrl: '/',
+    docsUrl: 'https://hasura.io/docs/latest/resources/use-case/api-gateway/',
+  },
+];
+
 export const UseCaseScreen = (props: UseCaseScreenProps) => {
   const [selectedUseCase, setSelectedUseCase] = useState<UseCases | null>(null);
 
@@ -43,45 +82,9 @@ export const UseCaseScreen = (props: UseCaseScreenProps) => {
     });
   }, []);
 
-  const useCasesAssets: UseCaseAssets[] = [
-    {
-      id: 'data-api',
-      image: dataApiCard,
-      title: 'Data API',
-      description:
-        'Build an instant, real-time API over your data sources for easy and performant access',
-      consoleUrl: '/',
-      docsUrl: 'https://hasura.io/docs/latest/resources/use-case/data-api/',
-    },
-    {
-      id: 'gql-backend',
-      image: gqlBackend,
-      title: 'Graphql Backend',
-      description:
-        'Build a lightning-fast GraphQL backend and significantly accelerate your application development',
-      consoleUrl: '/',
-      docsUrl: 'https://hasura.io/docs/latest/resources/use-case/gql-backend/',
-    },
-    {
-      id: 'data-federation',
-      image: dataFederationCard,
-      title: 'Data Federation',
-      description:
-        'Build an API that enables real-time data composition from different data sources',
-      consoleUrl: '/',
-      docsUrl:
-        'https://hasura.io/docs/latest/resources/use-case/data-federation/',
-    },
-    {
-      id: 'gateway',
-      image: gatewayCard,
-      title: 'Gateway Service',
-      description:
-        'Build a single entry point from client applications into an ecosystem of microservices',
-      consoleUrl: '/',
-      docsUrl: 'https://hasura.io/docs/latest/resources/use-case/api-gateway/',
-    },
-  ];
+  const randomUseCaseAssets = useMemo(() => {
+    return useCasesAssets.sort(() => Math.random() - 0.5);
+  }, [useCasesAssets]);
 
   const onSubmit = () => {
     const useCase = useCasesAssets.filter(
@@ -110,40 +113,48 @@ export const UseCaseScreen = (props: UseCaseScreenProps) => {
             Hasura can help you supercharge your development
           </div>
         </div>
-        <div className="use-case-welcome-illustrations">
-          <img src={hasuraIllustrations} alt="welcome" />
+        <div className="use-case-welcome-illustrations h-[93px]">
+          <img
+            src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-dashboard/dashboard/hasura-loading-illustration.svg"
+            alt="welcome"
+          />
         </div>
       </div>
       <div className="use-case-intro-text text-[#64748B] font-sans mt-3 mb-3.5">
         What would you like to build with Hasura?
       </div>
       <div className="use-cases flex flex-wrap justify-between gap-y-15 gap-y-8">
-        {useCasesAssets.map((item, index) => (
-          <label
-            key={index}
-            htmlFor={item.id}
-            className="use-case-card flex flex-col cursor-pointer border border-solid border-slate-300 rounded focus-within:border focus-within:border-solid focus-within:border-amber-500 transition-shadow shadow-none hover:shadow-md w-[400px]"
-            onChange={event => {
-              const selectedUseCaseNode = event.target as HTMLInputElement;
-              setSelectedUseCase(selectedUseCaseNode.id as UseCases);
-            }}
-          >
-            <img src={item.image} alt={item.id} />
-            <div className="data-api-description flex mt-3 ml-6 mb-2">
-              <input
-                type="radio"
-                id={item.id}
-                name="use-case"
-                className="mt-1"
-              />
-              <div className="flex flex-col font-sans ml-2">
-                <div className="font-semibold text-slate-900">{item.title}</div>
-                <div className="text-muted-dark font-normal">
-                  {item.description}
+        {randomUseCaseAssets.map((item, index) => (
+          <div className="flex relative h-[250px]">
+            <label
+              key={index}
+              htmlFor={item.id}
+              className="use-case-card flex flex-col cursor-pointer border border-solid border-slate-300 rounded focus-within:border focus-within:border-solid focus-within:border-amber-500 transition-shadow shadow-none hover:shadow-md w-[400px]"
+              onChange={event => {
+                const selectedUseCaseNode = event.target as HTMLInputElement;
+                setSelectedUseCase(selectedUseCaseNode.id as UseCases);
+              }}
+            >
+              <img src={item.image} alt={item.id} />
+
+              <div className="absolute bottom-0 data-api-description flex mt-3 ml-6 mb-2">
+                <input
+                  type="radio"
+                  id={item.id}
+                  name="use-case"
+                  className="mt-1"
+                />
+                <div className="flex flex-col font-sans ml-2">
+                  <div className="font-semibold text-slate-900">
+                    {item.title}
+                  </div>
+                  <div className="text-muted-dark font-normal">
+                    {item.description}
+                  </div>
                 </div>
               </div>
-            </div>
-          </label>
+            </label>
+          </div>
         ))}
       </div>
       <div className="use-case-cta flex justify-between w-full mt-8">

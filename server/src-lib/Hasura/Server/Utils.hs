@@ -61,6 +61,7 @@ import Data.Vector qualified as V
 import Database.PG.Query qualified as PG
 import Hasura.Base.Instances ()
 import Hasura.Prelude
+import Hasura.RQL.Types.Session (isSessionVariable)
 import Language.Haskell.TH.Syntax qualified as TH
 import Network.HTTP.Client qualified as HC
 import Network.HTTP.Types qualified as HTTP
@@ -203,9 +204,6 @@ commonClientHeadersIgnored =
 
 sessionVariablePrefix :: Text
 sessionVariablePrefix = "x-hasura-"
-
-isSessionVariable :: Text -> Bool
-isSessionVariable = T.isPrefixOf sessionVariablePrefix . T.toLower
 
 isReqUserId :: Text -> Bool
 isReqUserId = (== "req_user_id") . T.toLower

@@ -3,6 +3,7 @@ module Hasura.NativeQuery.Types
   ( NativeQueryName (..),
     NullableScalarType (..),
     nullableScalarTypeMapCodec,
+    nativeQueryArrayRelationshipsCodec,
   )
 where
 
@@ -11,9 +12,11 @@ import Autodocodec qualified as AC
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, Value)
 import Data.HashMap.Strict.InsOrd qualified as InsOrd
 import Data.Text.Extended (ToTxt)
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
+import Hasura.RQL.Types.BackendTag (backendPrefix)
+import Hasura.RQL.Types.Common (RelName)
+import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualConfig)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax (Lift)
 
@@ -41,7 +44,7 @@ instance (Backend b) => HasCodec (NullableScalarType b) where
   codec =
     AC.CommentCodec
       ("A scalar type that can be nullable with an optional description")
-      $ AC.object (codecNamePrefix @b <> "NullableScalarType")
+      $ AC.object (backendPrefix @b <> "NullableScalarType")
       $ AC.objectCodec
 
 instance (Backend b) => HasObjectCodec (NullableScalarType b) where
@@ -108,4 +111,26 @@ nullableScalarTypeMapCodec =
     ( AC.listCodec $
         AC.object "NullableScalarType" $
           AC.objectCodec @(MergedObject (NameField (Column b)) (NullableScalarType b))
+    )
+
+nativeQueryArrayRelationshipsCodec ::
+  forall b.
+  (Backend b) =>
+  AC.Codec
+    Value
+    (InsOrd.InsOrdHashMap RelName (RelDef (RelManualConfig b)))
+    (InsOrd.InsOrdHashMap RelName (RelDef (RelManualConfig b)))
+nativeQueryArrayRelationshipsCodec =
+  AC.dimapCodec
+    ( InsOrd.fromList
+        . fmap
+          ( \(MergedObject (NameField name) nst) ->
+              (name, nst)
+          )
+    )
+    ( fmap (\(fld, nst) -> MergedObject (NameField fld) nst) . InsOrd.toList
+    )
+    ( AC.listCodec $
+        AC.object "RelDefRelManualConfig" $
+          AC.objectCodec @(MergedObject (NameField RelName) (RelDef (RelManualConfig b)))
     )

@@ -40,9 +40,9 @@ where
 import Control.Lens (Lens')
 import Control.Lens qualified as Lens
 import Data.Aeson (FromJSON, ToJSON, (.!=), (.:), (.:?), (.=))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KeyMap
-import Data.Aeson.TH qualified as Aeson.TH
+import Data.Aeson.TH qualified as J.TH
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
@@ -67,7 +67,7 @@ data ClearMetadata
   = ClearMetadata
   deriving (Show, Eq)
 
-$(Aeson.TH.deriveToJSON Aeson.TH.defaultOptions ''ClearMetadata)
+$(J.TH.deriveToJSON J.TH.defaultOptions ''ClearMetadata)
 
 instance FromJSON ClearMetadata where
   parseJSON _ = return ClearMetadata
@@ -79,7 +79,7 @@ instance FromJSON ClearMetadata where
 data ExportMetadata = ExportMetadata deriving (Show, Eq)
 
 instance ToJSON ExportMetadata where
-  toJSON ExportMetadata = Aeson.object []
+  toJSON ExportMetadata = J.object []
 
 instance FromJSON ExportMetadata where
   parseJSON _ = pure ExportMetadata
@@ -91,12 +91,12 @@ data ReloadSpec a
 
 instance (ToJSON a) => ToJSON (ReloadSpec a) where
   toJSON = \case
-    RSReloadAll -> Aeson.Bool True
-    RSReloadList l -> Aeson.toJSON l
+    RSReloadAll -> J.Bool True
+    RSReloadList l -> J.toJSON l
 
 instance (FromJSON a, Hashable a) => FromJSON (ReloadSpec a) where
-  parseJSON (Aeson.Bool b) = pure $ if b then RSReloadAll else RSReloadList mempty
-  parseJSON v = RSReloadList <$> Aeson.parseJSON v
+  parseJSON (J.Bool b) = pure $ if b then RSReloadAll else RSReloadList mempty
+  parseJSON v = RSReloadList <$> J.parseJSON v
 
 type ReloadRemoteSchemas = ReloadSpec RemoteSchemaName
 
@@ -132,10 +132,10 @@ data ReloadMetadata = ReloadMetadata
   }
   deriving (Show, Eq)
 
-$(Aeson.TH.deriveToJSON hasuraJSON ''ReloadMetadata)
+$(J.TH.deriveToJSON hasuraJSON ''ReloadMetadata)
 
 instance FromJSON ReloadMetadata where
-  parseJSON = Aeson.withObject "ReloadMetadata" $ \o ->
+  parseJSON = J.withObject "ReloadMetadata" $ \o ->
     ReloadMetadata
       <$> o .:? "reload_remote_schemas" .!= reloadAllRemoteSchemas
       <*> o .:? "reload_sources" .!= reloadAllSources
@@ -148,7 +148,7 @@ data DumpInternalState
   = DumpInternalState
   deriving (Show, Eq)
 
-$(Aeson.TH.deriveToJSON Aeson.TH.defaultOptions ''DumpInternalState)
+$(J.TH.deriveToJSON J.TH.defaultOptions ''DumpInternalState)
 
 instance FromJSON DumpInternalState where
   parseJSON _ = return DumpInternalState
@@ -160,7 +160,7 @@ data GetInconsistentMetadata
   = GetInconsistentMetadata
   deriving (Show, Eq)
 
-$(Aeson.TH.deriveToJSON Aeson.TH.defaultOptions ''GetInconsistentMetadata)
+$(J.TH.deriveToJSON J.TH.defaultOptions ''GetInconsistentMetadata)
 
 instance FromJSON GetInconsistentMetadata where
   parseJSON _ = return GetInconsistentMetadata
@@ -173,7 +173,7 @@ data DropInconsistentMetadata
   = DropInconsistentMetadata
   deriving (Show, Eq)
 
-$(Aeson.TH.deriveToJSON Aeson.TH.defaultOptions ''DropInconsistentMetadata)
+$(J.TH.deriveToJSON J.TH.defaultOptions ''DropInconsistentMetadata)
 
 instance FromJSON DropInconsistentMetadata where
   parseJSON _ = return DropInconsistentMetadata
@@ -185,11 +185,11 @@ data AllowInconsistentMetadata
 
 instance FromJSON AllowInconsistentMetadata where
   parseJSON =
-    Aeson.withBool "AllowInconsistentMetadata" $
+    J.withBool "AllowInconsistentMetadata" $
       pure . bool NoAllowInconsistentMetadata AllowInconsistentMetadata
 
 instance ToJSON AllowInconsistentMetadata where
-  toJSON = Aeson.toJSON . toBool
+  toJSON = J.toJSON . toBool
     where
       toBool AllowInconsistentMetadata = True
       toBool NoAllowInconsistentMetadata = False
@@ -201,16 +201,16 @@ data ReplaceMetadataV1
   deriving (Eq)
 
 instance FromJSON ReplaceMetadataV1 where
-  parseJSON = Aeson.withObject "ReplaceMetadataV1" $ \o -> do
+  parseJSON = J.withObject "ReplaceMetadataV1" $ \o -> do
     version <- o .:? "version" .!= Metadata.MVVersion1
     case version of
-      Metadata.MVVersion3 -> RMWithSources <$> Aeson.parseJSON (Aeson.Object o)
-      _ -> RMWithoutSources <$> Aeson.parseJSON (Aeson.Object o)
+      Metadata.MVVersion3 -> RMWithSources <$> J.parseJSON (J.Object o)
+      _ -> RMWithoutSources <$> J.parseJSON (J.Object o)
 
 instance ToJSON ReplaceMetadataV1 where
   toJSON = \case
-    RMWithSources v -> Aeson.toJSON v
-    RMWithoutSources v -> Aeson.toJSON v
+    RMWithSources v -> J.toJSON v
+    RMWithoutSources v -> J.toJSON v
 
 -- | Replace metadata while allowing for inconsitency in the metadata object.
 --
@@ -223,7 +223,7 @@ data ReplaceMetadataV2 = ReplaceMetadataV2
   deriving (Eq)
 
 instance FromJSON ReplaceMetadataV2 where
-  parseJSON = Aeson.withObject "ReplaceMetadataV2" $ \o ->
+  parseJSON = J.withObject "ReplaceMetadataV2" $ \o ->
     ReplaceMetadataV2
       <$> o .:? "allow_inconsistent_metadata" .!= NoAllowInconsistentMetadata
       <*> o .:? "allow_warnings" .!= AllowWarnings
@@ -231,7 +231,7 @@ instance FromJSON ReplaceMetadataV2 where
 
 instance ToJSON ReplaceMetadataV2 where
   toJSON ReplaceMetadataV2 {..} =
-    Aeson.object
+    J.object
       [ "allow_inconsistent_metadata" .= _rmv2AllowInconsistentMetadata,
         "allow_warnings" .= _rmv2AllowWarningss,
         "metadata" .= _rmv2Metadata
@@ -250,29 +250,29 @@ data ReplaceMetadata
   deriving (Eq)
 
 instance FromJSON ReplaceMetadata where
-  parseJSON = Aeson.withObject "ReplaceMetadata" $ \o -> do
+  parseJSON = J.withObject "ReplaceMetadata" $ \o -> do
     if KeyMap.member "metadata" o
-      then RMReplaceMetadataV2 <$> Aeson.parseJSON (Aeson.Object o)
-      else RMReplaceMetadataV1 <$> Aeson.parseJSON (Aeson.Object o)
+      then RMReplaceMetadataV2 <$> J.parseJSON (J.Object o)
+      else RMReplaceMetadataV1 <$> J.parseJSON (J.Object o)
 
 instance ToJSON ReplaceMetadata where
   toJSON = \case
-    RMReplaceMetadataV1 v1 -> Aeson.toJSON v1
-    RMReplaceMetadataV2 v2 -> Aeson.toJSON v2
+    RMReplaceMetadataV1 v1 -> J.toJSON v1
+    RMReplaceMetadataV2 v2 -> J.toJSON v2
 
 data WebHookUrl = EnvVar String | URL Text
   deriving (Eq)
 
 instance FromJSON WebHookUrl where
-  parseJSON (Aeson.Object o) = do
+  parseJSON (J.Object o) = do
     var <- o .: "from_env"
     pure $ EnvVar var
-  parseJSON (Aeson.String str) = pure $ URL str
+  parseJSON (J.String str) = pure $ URL str
   parseJSON _ = empty
 
 instance ToJSON WebHookUrl where
-  toJSON (EnvVar var) = Aeson.object ["from_env" .= var]
-  toJSON (URL url) = Aeson.toJSON url
+  toJSON (EnvVar var) = J.object ["from_env" .= var]
+  toJSON (URL url) = J.toJSON url
 
 -- | 'TestWebhookTransform' can be used to test out request
 -- transformations using mock data.
@@ -282,7 +282,7 @@ data TestWebhookTransform = TestWebhookTransform
   { _twtEnv :: Env.Environment,
     _twtHeaders :: [HTTP.Header],
     _twtWebhookUrl :: WebHookUrl,
-    _twtPayload :: Aeson.Value,
+    _twtPayload :: J.Value,
     _twtTransformer :: RequestTransform,
     _twtResponseTransformer :: Maybe MetadataResponseTransform,
     _twtSessionVariables :: Maybe SessionVariables
@@ -296,7 +296,7 @@ twtResponseTransformer :: Lens' TestWebhookTransform (Maybe MetadataResponseTran
 twtResponseTransformer = Lens.lens _twtResponseTransformer \twt a -> twt {_twtResponseTransformer = a}
 
 instance FromJSON TestWebhookTransform where
-  parseJSON = Aeson.withObject "TestWebhookTransform" $ \o -> do
+  parseJSON = J.withObject "TestWebhookTransform" $ \o -> do
     env <- fmap (fromMaybe mempty) $ o .:? "env"
     headers <- fmap (fmap (first (CI.mk))) $ o .:? "request_headers" .!= []
     url <- o .: "webhook_url"
@@ -308,7 +308,7 @@ instance FromJSON TestWebhookTransform where
 
 instance ToJSON TestWebhookTransform where
   toJSON (TestWebhookTransform env headers url payload mt mrt sv) =
-    Aeson.object
+    J.object
       [ "env" .= env,
         "request_headers" .= fmap (first CI.original) headers,
         "webhook_url" .= url,

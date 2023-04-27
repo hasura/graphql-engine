@@ -14,7 +14,7 @@ where
 
 import Control.Arrow.Extended
 import Control.Category
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Profunctor
 import Data.Tuple (swap)
 import Hasura.Incremental.Internal.Dependency
@@ -290,7 +290,7 @@ instance (Monad m) => ArrowKleisli m (Rule m) where
   {-# INLINE arrM #-}
 
 class (Arrow arr) => ArrowDistribute arr where
-  -- | Distributes an arrow that operates on key-value pairs, over a 'HM.HashMap' in an
+  -- | Distributes an arrow that operates on key-value pairs, over a 'HashMap.HashMap' in an
   -- order-independent way.
   --
   -- This is intended to be used as a control operator in @proc@ notation; see
@@ -313,13 +313,13 @@ instance ArrowDistribute (Rule m) where
     Hashable k =>
     Rule m (e, (k, (a, s))) b ->
     Rule m (e, (HashMap k a, s)) (HashMap k b)
-  keyed r0 = keyedWith HM.empty
+  keyed r0 = keyedWith HashMap.empty
     where
       keyedWith ::
         HashMap k (Rule m (e, (k, (a, s))) b) ->
         Rule m (e, (HashMap k a, s)) (HashMap k b)
       keyedWith !rs = Rule \s (e, (vs, sk)) c ->
-        HM.foldrWithKey (process rs e sk) (finish c) vs s HM.empty HM.empty
+        HashMap.foldrWithKey (process rs e sk) (finish c) vs s HashMap.empty HashMap.empty
 
       process ::
         HashMap k (Rule m (e, (k, (a, s))) b) ->
@@ -333,8 +333,8 @@ instance ArrowDistribute (Rule m) where
         HashMap k (Rule m (e, (k, (a, s))) b) ->
         m r
       process rs e sk k a c s !vs' !rs' =
-        let Rule r = HM.lookupDefault r0 k rs
-         in r s (e, (k, (a, sk))) \s' b r' -> c s' (HM.insert k b vs') (HM.insert k r' rs')
+        let Rule r = HashMap.lookupDefault r0 k rs
+         in r s (e, (k, (a, sk))) \s' b r' -> c s' (HashMap.insert k b vs') (HashMap.insert k r' rs')
 
       finish ::
         (Accesses -> HashMap k b -> Rule m (e, (HashMap k a, s)) (HashMap k b) -> m r) ->

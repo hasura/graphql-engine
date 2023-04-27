@@ -19,8 +19,8 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
-import Hasura.SQL.Backend
 
 data AnnDelG (b :: BackendType) (r :: Type) v = AnnDel
   { _adTable :: TableName b,

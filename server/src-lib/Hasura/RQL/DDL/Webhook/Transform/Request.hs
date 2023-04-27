@@ -28,7 +28,7 @@ where
 import Control.Arrow (left)
 import Control.Lens qualified as Lens
 import Data.Aeson (FromJSON, ToJSON, (.=))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Kriti.Functions qualified as KFunc
 import Data.Bifunctor
 import Data.ByteString (ByteString)
@@ -45,10 +45,10 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 
 -- | Common context that is made available to all request transformations.
 data RequestTransformCtx = RequestTransformCtx
-  { rtcBaseUrl :: Maybe Aeson.Value,
-    rtcBody :: Aeson.Value,
+  { rtcBaseUrl :: Maybe J.Value,
+    rtcBody :: J.Value,
     rtcSessionVariables :: Maybe SessionVariables,
-    rtcQueryParams :: Maybe Aeson.Value,
+    rtcQueryParams :: Maybe J.Value,
     rtcEngine :: TemplatingEngine
   }
 
@@ -62,7 +62,7 @@ instance ToJSON RequestTransformCtx where
           [ ("base_url" .=) <$> rtcBaseUrl,
             ("query_params" .=) <$> rtcQueryParams
           ]
-     in Aeson.object (required <> catMaybes optional)
+     in J.object (required <> catMaybes optional)
 
 -- | A smart constructor for constructing the 'RequestTransformCtx'
 --
@@ -76,16 +76,16 @@ mkReqTransformCtx ::
   HTTP.Request ->
   RequestTransformCtx
 mkReqTransformCtx url sessionVars rtcEngine reqData =
-  let rtcBaseUrl = Just $ Aeson.toJSON url
+  let rtcBaseUrl = Just $ J.toJSON url
       rtcBody =
-        let mBody = Lens.preview (HTTP.body . HTTP._RequestBodyLBS) reqData >>= Aeson.decode @Aeson.Value
-         in fromMaybe Aeson.Null mBody
+        let mBody = Lens.preview (HTTP.body . HTTP._RequestBodyLBS) reqData >>= J.decode @J.Value
+         in fromMaybe J.Null mBody
       rtcSessionVariables = sessionVars
       rtcQueryParams =
         let queryParams =
               Lens.view HTTP.queryParams reqData & fmap \(key, val) ->
                 (TE.decodeUtf8 key, fmap TE.decodeUtf8 val)
-         in Just $ Aeson.toJSON queryParams
+         in Just $ J.toJSON queryParams
    in RequestTransformCtx {..}
 
 -------------------------------------------------------------------------------
@@ -99,11 +99,11 @@ mkReqTransformCtx url sessionVars rtcEngine reqData =
 runRequestTemplateTransform ::
   Template ->
   RequestTransformCtx ->
-  Either TransformErrorBundle Aeson.Value
+  Either TransformErrorBundle J.Value
 runRequestTemplateTransform template RequestTransformCtx {rtcEngine = Kriti, ..} =
   let context =
         [ ("$body", rtcBody),
-          ("$session_variables", Aeson.toJSON rtcSessionVariables)
+          ("$session_variables", J.toJSON rtcSessionVariables)
         ]
           <> catMaybes
             [ ("$query_params",) <$> rtcQueryParams,
@@ -112,7 +112,7 @@ runRequestTemplateTransform template RequestTransformCtx {rtcEngine = Kriti, ..}
       kritiFuncs = KFunc.sessionFunctions rtcSessionVariables
       eResult = KFunc.runKritiWith (unTemplate $ template) context kritiFuncs
    in eResult & left \kritiErr ->
-        let renderedErr = Aeson.toJSON kritiErr
+        let renderedErr = J.toJSON kritiErr
          in TransformErrorBundle [renderedErr]
 
 -- TODO: Should this live in 'Hasura.RQL.DDL.Webhook.Transform.Validation'?
@@ -123,7 +123,7 @@ validateRequestTemplateTransform ::
 validateRequestTemplateTransform Kriti (Template template) =
   bimap packBundle (const ()) $ Kriti.parser $ TE.encodeUtf8 template
   where
-    packBundle = TransformErrorBundle . pure . Aeson.toJSON . Kriti.serialize
+    packBundle = TransformErrorBundle . pure . J.toJSON . Kriti.serialize
 
 validateRequestTemplateTransform' ::
   TemplatingEngine ->
@@ -143,7 +143,7 @@ data Version
 
 instance FromJSON Version where
   parseJSON v = do
-    version :: Int <- Aeson.parseJSON v
+    version :: Int <- J.parseJSON v
     case version of
       1 -> pure V1
       2 -> pure V2
@@ -151,8 +151,8 @@ instance FromJSON Version where
 
 instance ToJSON Version where
   toJSON = \case
-    V1 -> Aeson.toJSON @Int 1
-    V2 -> Aeson.toJSON @Int 2
+    V1 -> J.toJSON @Int 1
+    V2 -> J.toJSON @Int 2
 
 -------------------------------------------------------------------------------
 

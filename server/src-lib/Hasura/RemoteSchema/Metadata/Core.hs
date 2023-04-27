@@ -29,8 +29,8 @@ import Data.Text qualified as T
 import Data.Typeable (Typeable)
 import Hasura.Base.Error
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers (HeaderConf (..))
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Headers (HeaderConf (..))
 import Hasura.RemoteSchema.Metadata.Base
 import Hasura.RemoteSchema.Metadata.Customization
 import Hasura.RemoteSchema.Metadata.Permission

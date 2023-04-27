@@ -6,9 +6,10 @@ import Hasura.Backends.BigQuery.DDL qualified as BigQuery
 import Hasura.Backends.BigQuery.Schema.Introspection qualified as BigQuery (listAllTables)
 import Hasura.Base.Error (Code (UnexpectedPayload), throw400)
 import Hasura.Prelude
+import Hasura.RQL.DDL.Relationship (defaultBuildArrayRelationshipInfo, defaultBuildObjectRelationshipInfo)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata.Backend
-import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (SCMSNotSupported))
 
 instance BackendMetadata 'BigQuery where
@@ -18,6 +19,8 @@ instance BackendMetadata 'BigQuery where
   resolveSourceConfig = BigQuery.resolveSourceConfig
   resolveDatabaseMetadata _ _ = BigQuery.resolveSource
   parseBoolExpOperations = BigQuery.parseBoolExpOperations
+  buildArrayRelationshipInfo _ = defaultBuildArrayRelationshipInfo
+  buildObjectRelationshipInfo _ = defaultBuildObjectRelationshipInfo
   buildFunctionInfo = BigQuery.buildFunctionInfo
   updateColumnInEventTrigger = BigQuery.updateColumnInEventTrigger
   parseCollectableType = BigQuery.parseCollectableType

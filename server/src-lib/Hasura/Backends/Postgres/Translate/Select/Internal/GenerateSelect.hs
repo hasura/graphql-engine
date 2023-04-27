@@ -10,7 +10,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect
   )
 where
 
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
@@ -41,7 +41,7 @@ generateSQLSelect ::
 generateSQLSelect joinCondition selectSource selectNode =
   S.mkSelect
     { S.selExtr =
-        case [S.Extractor e $ Just a | (a, e) <- HM.toList extractors] of
+        case [S.Extractor e $ Just a | (a, e) <- HashMap.toList extractors] of
           -- If the select list is empty we will generated code which looks like this:
           -- > SELECT FROM ...
           -- This works for postgres, but not for cockroach, which expects a non-empty
@@ -96,10 +96,10 @@ generateSQLSelect joinCondition selectSource selectNode =
     joinedFrom :: S.FromItem
     joinedFrom =
       foldl' leftOuterJoin baseFromItem $
-        map objectRelationToFromItem (HM.toList objectRelations)
-          <> map arrayRelationToFromItem (HM.toList arrayRelations)
-          <> map arrayConnectionToFromItem (HM.toList arrayConnections)
-          <> map computedFieldToFromItem (HM.toList computedFields)
+        map objectRelationToFromItem (HashMap.toList objectRelations)
+          <> map arrayRelationToFromItem (HashMap.toList arrayRelations)
+          <> map arrayConnectionToFromItem (HashMap.toList arrayConnections)
+          <> map computedFieldToFromItem (HashMap.toList computedFields)
 
     objectRelationToFromItem ::
       (ObjectRelationSource, SelectNode) -> S.FromItem
@@ -162,7 +162,7 @@ generateSQLSelectFromArrayNode selectSource (MultiRowSelectNode topExtractors se
 mkJoinCond :: S.TableIdentifier -> HashMap PGCol PGCol -> S.BoolExp
 mkJoinCond baseTablepfx colMapn =
   foldl' (S.BEBin S.AndOp) (S.BELit True) $
-    flip map (HM.toList colMapn) $ \(lCol, rCol) ->
+    flip map (HashMap.toList colMapn) $ \(lCol, rCol) ->
       S.BECompare S.SEQ (S.mkQIdenExp baseTablepfx lCol) (S.mkSIdenExp rCol)
 
 connectionToSelectWith ::

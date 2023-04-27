@@ -31,6 +31,8 @@ import Skeleton from 'react-loading-skeleton';
 import { generateQueryKeys } from '../../../DatabaseRelationships/utils/queryClientUtils';
 import { useQueryClient } from 'react-query';
 import { useCheckRows } from '../../../DatabaseRelationships/hooks/useCheckRows';
+import { APIError } from '../../../../hooks/error';
+import { BulkKeepGoingResponse } from '../../../hasura-metadata-types';
 
 const getQueryFunction = (relationship: Relationship) => {
   if (relationship.type === 'localRelationship') {
@@ -70,7 +72,7 @@ export const TrackedRelationships: React.VFC<TrackedRelationshipsProps> = ({
   relationships,
 }) => {
   const httpClient = useHttpClient();
-  const { mutateAsync } = useMetadataMigration();
+  const { mutateAsync } = useMetadataMigration<BulkKeepGoingResponse>();
   const queryClient = useQueryClient();
 
   const [isTrackingSelectedRelationships, setTrackingSelectedRelationships] =
@@ -138,27 +140,47 @@ export const TrackedRelationships: React.VFC<TrackedRelationshipsProps> = ({
         await mutateAsync(
           {
             query: {
-              type: 'bulk',
+              type: 'bulk_keep_going',
               args: queries,
             },
           },
           {
-            onSuccess: () => {
+            onSuccess: response => {
+              response.forEach(result => {
+                if ('error' in result) {
+                  hasuraToast({
+                    type: 'error',
+                    title: 'Error while tracking table',
+                    children: result.error,
+                  });
+                }
+              });
+
+              const successfullyTrackedCounter = response.filter(
+                result => 'message' in result && result.message === 'success'
+              ).length;
+              const plural = successfullyTrackedCounter > 1 ? 's' : '';
+
+              hasuraToast({
+                type: 'success',
+                title: 'Successfully untracked',
+                message: `${successfullyTrackedCounter} object${plural} tracked`,
+              });
+            },
+            onError: err => {
+              hasuraToast({
+                type: 'error',
+                title: 'Unable to perform operation',
+                message: (err as APIError).message,
+              });
+            },
+            onSettled: () => {
               queryClient.invalidateQueries(generateQueryKeys.metadata());
             },
           }
         );
 
         onUpdate();
-
-        const plural = selectedRelationships.length > 1 ? 's' : '';
-        const toastMessage = `${selectedRelationships.length} relationship${plural} untracked`;
-
-        hasuraToast({
-          title: 'Success',
-          message: toastMessage,
-          type: 'success',
-        });
       }
     } catch (err) {
       console.error(err);

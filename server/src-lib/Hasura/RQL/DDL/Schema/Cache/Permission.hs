@@ -5,19 +5,19 @@ module Hasura.RQL.DDL.Schema.Cache.Permission
     _unOrderedRoles,
     mkBooleanPermissionMap,
     resolveCheckPermission,
-    buildCustomReturnTypePermissions,
+    buildLogicalModelPermissions,
   )
 where
 
 import Data.Aeson
 import Data.Graph qualified as G
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Metadata (WithCustomReturnType (..))
-import Hasura.CustomReturnType.Types (CustomReturnTypeName)
+import Hasura.LogicalModel.Metadata (WithLogicalModel (..))
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -38,7 +38,6 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Session
 
 {- Note: [Inherited roles architecture for read queries]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,7 +86,7 @@ mkBooleanPermissionMap constructorFn metadataPermissions orderedRoles =
   foldl' combineBooleanPermission metadataPermissions $ _unOrderedRoles orderedRoles
   where
     combineBooleanPermission accumulatedPermMap (Role roleName (ParentRoles parentRoles)) =
-      case M.lookup roleName accumulatedPermMap of
+      case HashMap.lookup roleName accumulatedPermMap of
         -- We check if a permission for the given role exists in the metadata, if it
         -- exists, we use that
         Just _ -> accumulatedPermMap
@@ -96,9 +95,9 @@ mkBooleanPermissionMap constructorFn metadataPermissions orderedRoles =
         -- then the inherited role will also be able to access the entity.
         Nothing ->
           -- see Note [Roles Inheritance]
-          let canInheritPermission = any ((`M.member` accumulatedPermMap)) (toList parentRoles)
+          let canInheritPermission = any ((`HashMap.member` accumulatedPermMap)) (toList parentRoles)
            in if canInheritPermission
-                then M.insert roleName (constructorFn roleName) accumulatedPermMap
+                then HashMap.insert roleName (constructorFn roleName) accumulatedPermMap
                 else accumulatedPermMap
 
 -- | `OrderedRoles` is a data type to hold topologically sorted roles
@@ -202,7 +201,7 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
       go accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) = do
         parentRolePermissions <-
           for (toList parentRoles) $ \role ->
-            onNothing (M.lookup role accumulatedRolePermMap) $
+            onNothing (HashMap.lookup role accumulatedRolePermMap) $
               throw500 $
                 -- this error will ideally never be thrown, but if it's thrown then
                 -- it's possible that the permissions for the role do exist, but it's
@@ -210,7 +209,7 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
                 "buildTablePermissions: table role permissions for role: " <> role <<> " not found"
         let combinedParentRolePermInfo = mconcat $ fmap rolePermInfoToCombineRolePermInfo parentRolePermissions
             selectPermissionsCount = length $ filter (isJust . _permSel) parentRolePermissions
-            accumulatedRolePermission = M.lookup roleName accumulatedRolePermMap
+            accumulatedRolePermission = HashMap.lookup roleName accumulatedRolePermMap
             roleSelectPermission =
               onNothing (_permSel =<< accumulatedRolePermission) $
                 combinedSelPermInfoToSelPermInfo selectPermissionsCount <$> (crpiSelPerm combinedParentRolePermInfo)
@@ -218,7 +217,7 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
         roleUpdatePermission <- resolveCheckTablePermission (crpiUpdPerm combinedParentRolePermInfo) accumulatedRolePermission _permUpd roleName source table PTUpdate
         roleDeletePermission <- resolveCheckTablePermission (crpiDelPerm combinedParentRolePermInfo) accumulatedRolePermission _permDel roleName source table PTDelete
         let rolePermInfo = RolePermInfo roleInsertPermission roleSelectPermission roleUpdatePermission roleDeletePermission
-        pure $ M.insert roleName rolePermInfo accumulatedRolePermMap
+        pure $ HashMap.insert roleName rolePermInfo accumulatedRolePermMap
 
   metadataRolePermissions <-
     for alignedPermissions \(insertPermission, selectPermission, updatePermission, deletePermission) -> do
@@ -239,7 +238,7 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
           selectsMap = (\a -> (Nothing, Just a, Nothing, Nothing)) <$> mkMap _tpiSelect
           updatesMap = (\a -> (Nothing, Nothing, Just a, Nothing)) <$> mkMap _tpiUpdate
           deletesMap = (\a -> (Nothing, Nothing, Nothing, Just a)) <$> mkMap _tpiDelete
-          unionMap = M.unionWith \(a, b, c, d) (a', b', c', d') -> (a <|> a', b <|> b', c <|> c', d <|> d')
+          unionMap = HashMap.unionWith \(a, b, c, d) (a', b', c', d') -> (a <|> a', b <|> b', c <|> c', d <|> d')
        in insertsMap `unionMap` selectsMap `unionMap` updatesMap `unionMap` deletesMap
 
     buildPermission :: Maybe (PermDef b a) -> m (Maybe (PermInfo a b))
@@ -283,7 +282,7 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
 
 -- | Create the permission map for a native query based on the select
 -- permissions given in metadata. Compare with 'buildTablePermissions'.
-buildCustomReturnTypePermissions ::
+buildLogicalModelPermissions ::
   forall b m.
   ( MonadError QErr m,
     MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
@@ -292,12 +291,12 @@ buildCustomReturnTypePermissions ::
   ) =>
   SourceName ->
   TableCoreCache b ->
-  CustomReturnTypeName ->
-  FieldInfoMap (FieldInfo b) ->
+  LogicalModelName ->
+  InsOrdHashMap (Column b) (LogicalModelField b) ->
   InsOrdHashMap RoleName (SelPermDef b) ->
   OrderedRoles ->
   m (RolePermInfoMap b)
-buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName customReturnTypeFields selectPermissions orderedRoles = do
+buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModelFields selectPermissions orderedRoles = do
   let combineRolePermissions :: RolePermInfoMap b -> Role -> m (RolePermInfoMap b)
       combineRolePermissions acc (Role roleName (ParentRoles parentRoles)) = do
         -- This error will ideally never be thrown, but if it's thrown then
@@ -305,7 +304,7 @@ buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName cust
         -- not yet built due to wrong ordering of the roles, check `orderRoles`.
         parentRolePermissions <-
           for (toList parentRoles) \role ->
-            M.lookup role acc
+            HashMap.lookup role acc
               `onNothing` throw500 ("buildTablePermissions: table role permissions for role: " <> role <<> " not found")
 
         let -- What permissions are we inheriting?
@@ -320,7 +319,7 @@ buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName cust
 
             -- Does our specific role have any permissions?
             accumulatedRolePermission :: Maybe (RolePermInfo b)
-            accumulatedRolePermission = M.lookup roleName acc
+            accumulatedRolePermission = HashMap.lookup roleName acc
 
             -- If we have a permission, we'll use it. Otherwise, we'll fall
             -- back to the inherited permission.
@@ -333,9 +332,9 @@ buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName cust
             rolePermInfo :: RolePermInfo b
             rolePermInfo = RolePermInfo Nothing roleSelectPermission Nothing Nothing
 
-        pure (M.insert roleName rolePermInfo acc)
+        pure (HashMap.insert roleName rolePermInfo acc)
 
-  -- At the moment, we only support select permissions for custom return types
+  -- At the moment, we only support select permissions for logical models
   metadataRolePermissions <-
     for (OMap.toHashMap selectPermissions) \selectPermission -> do
       let role :: RoleName
@@ -347,8 +346,8 @@ buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName cust
           sourceObjId =
             MOSourceObjId sourceName $
               AB.mkAnyBackend $
-                SMOCustomReturnTypeObj @b customReturnTypeName $
-                  CRTMOPerm role PTSelect
+                SMOLogicalModelObj @b logicalModelName $
+                  LMMOPerm role PTSelect
 
           -- The object we're going to use to track the dependency and any
           -- potential cache inconsistencies.
@@ -356,10 +355,10 @@ buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName cust
           metadataObject =
             MetadataObject sourceObjId $
               toJSON
-                WithCustomReturnType
-                  { _wcrtSource = sourceName,
-                    _wcrtName = customReturnTypeName,
-                    _wcrtInfo = selectPermission
+                WithLogicalModel
+                  { _wlmSource = sourceName,
+                    _wlmName = logicalModelName,
+                    _wlmInfo = selectPermission
                   }
 
           -- An identifier for this permission within the metadata structure.
@@ -367,12 +366,12 @@ buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName cust
           schemaObject =
             SOSourceObj sourceName $
               AB.mkAnyBackend $
-                SOICustomReturnTypeObj @b customReturnTypeName $
-                  CRTOPerm role PTSelect
+                SOILogicalModelObj @b logicalModelName $
+                  LMOPerm role PTSelect
 
           modifyError :: ExceptT QErr m a -> ExceptT QErr m a
           modifyError = modifyErr \err ->
-            addCustomReturnTypeContext customReturnTypeName $
+            addLogicalModelContext logicalModelName $
               "in permission for role " <> role <<> ": " <> err
 
       select <- withRecordInconsistencyM metadataObject $ modifyError do
@@ -381,7 +380,7 @@ buildCustomReturnTypePermissions sourceName tableCache customReturnTypeName cust
 
         (permissionInformation, dependencies) <-
           flip runTableCoreCacheRT tableCache $
-            buildCustomReturnTypePermInfo sourceName customReturnTypeName customReturnTypeFields $
+            buildLogicalModelPermInfo sourceName logicalModelName logicalModelFields $
               _pdPermission selectPermission
 
         recordDependenciesM metadataObject schemaObject dependencies

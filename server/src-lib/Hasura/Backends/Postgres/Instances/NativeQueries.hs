@@ -26,16 +26,17 @@ import Hasura.Backends.Postgres.Connection.Connect (withPostgresDB)
 import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..), pgScalarTypeToText)
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..))
+import Hasura.LogicalModel.Common (columnsFromFields)
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.NativeQuery.Metadata
   ( InterpolatedItem (..),
     InterpolatedQuery (..),
     NativeQueryArgumentName,
     NativeQueryMetadata (..),
   )
-import Hasura.NativeQuery.Types (NullableScalarType (nstType), getNativeQueryName)
+import Hasura.NativeQuery.Types (NullableScalarType (nstType))
 import Hasura.Prelude
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 
 -- | Prepare a native query query against a postgres-like database to validate it.
 validateNativeQuery ::
@@ -44,13 +45,14 @@ validateNativeQuery ::
   InsOrd.InsOrdHashMap PGScalarType PQ.Oid ->
   Env.Environment ->
   PG.PostgresConnConfiguration ->
-  CustomReturnTypeMetadata ('Postgres pgKind) ->
+  LogicalModelMetadata ('Postgres pgKind) ->
   NativeQueryMetadata ('Postgres pgKind) ->
   m ()
-validateNativeQuery pgTypeOidMapping env connConf customReturnType model = do
-  (prepname, preparedQuery) <- nativeQueryToPreparedStatement customReturnType model
+validateNativeQuery pgTypeOidMapping env connConf logicalModel model = do
+  (prepname, preparedQuery) <- nativeQueryToPreparedStatement logicalModel model
   description <- runCheck prepname (PG.fromText preparedQuery)
-  let returnColumns = bimap toTxt nstType <$> InsOrd.toList (_crtmFields customReturnType)
+  let returnColumns = bimap toTxt nstType <$> InsOrd.toList (columnsFromFields $ _lmmFields logicalModel)
+
   for_ (toList returnColumns) (matchTypes description)
   where
     -- Run stuff against the database.
@@ -199,15 +201,14 @@ renderIQ (InterpolatedQuery items) = foldMap printItem items
 nativeQueryToPreparedStatement ::
   forall m pgKind.
   MonadError QErr m =>
-  CustomReturnTypeMetadata ('Postgres pgKind) ->
+  LogicalModelMetadata ('Postgres pgKind) ->
   NativeQueryMetadata ('Postgres pgKind) ->
   m (BS.ByteString, Text)
-nativeQueryToPreparedStatement customReturnType model = do
-  let name = getNativeQueryName $ _nqmRootFieldName model
+nativeQueryToPreparedStatement logicalModel model = do
   let (preparedIQ, argumentMapping) = renameIQ $ _nqmCode model
       logimoCode :: Text
       logimoCode = renderIQ preparedIQ
-      prepname = "_logimo_vali_" <> toTxt name
+      prepname = "_logimo_vali_"
 
       occurringArguments, declaredArguments, undeclaredArguments :: Set NativeQueryArgumentName
       occurringArguments = Set.fromList (Map.elems argumentMapping)
@@ -223,7 +224,7 @@ nativeQueryToPreparedStatement customReturnType model = do
 
       returnedColumnNames :: Text
       returnedColumnNames =
-        commaSeparated $ InsOrd.keys (_crtmFields customReturnType)
+        commaSeparated $ InsOrd.keys (columnsFromFields $ _lmmFields logicalModel)
 
       wrapInCTE :: Text -> Text
       wrapInCTE query =

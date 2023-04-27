@@ -5,7 +5,7 @@ module Hasura.GraphQL.Execute.Resolve
   )
 where
 
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.List qualified as L
 import Data.Text qualified as T
@@ -29,9 +29,9 @@ resolveVariables ::
       G.SelectionSet fragments Variable
     )
 resolveVariables definitions jsonValues directives selSet = do
-  variablesByName <- Map.groupOnNE getName <$> traverse buildVariable definitions
+  variablesByName <- HashMap.groupOnNE getName <$> traverse buildVariable definitions
   uniqueVariables <- flip
-    Map.traverseWithKey
+    HashMap.traverseWithKey
     variablesByName
     \variableName variableDefinitions ->
       case variableDefinitions of
@@ -43,8 +43,8 @@ resolveVariables definitions jsonValues directives selSet = do
     d <- traverse (traverse (resolveVariable uniqueVariables)) directives
     s <- traverse (traverse (resolveVariable uniqueVariables)) selSet
     pure (d, s)
-  let variablesByNameSet = HS.fromList . Map.keys $ variablesByName
-      jsonVariableNames = HS.fromList $ Map.keys jsonValues
+  let variablesByNameSet = HS.fromList . HashMap.keys $ variablesByName
+      jsonVariableNames = HS.fromList $ HashMap.keys jsonValues
       -- At the time of writing, this check is disabled using
       -- a local binding because, the master branch doesn't implement this
       -- check.
@@ -81,7 +81,7 @@ resolveVariables definitions jsonValues directives selSet = do
     buildVariable G.VariableDefinition {G._vdName, G._vdType, G._vdDefaultValue} = do
       let defaultValue = fromMaybe G.VNull _vdDefaultValue
           isOptional = isJust _vdDefaultValue || G.isNullable _vdType
-      value <- case Map.lookup _vdName jsonValues of
+      value <- case HashMap.lookup _vdName jsonValues of
         Just jsonValue -> pure $ JSONValue jsonValue
         Nothing
           | isOptional -> pure $ GraphQLValue $ absurd <$> defaultValue
@@ -98,6 +98,6 @@ resolveVariables definitions jsonValues directives selSet = do
             vValue = value
           }
     resolveVariable :: HashMap G.Name Variable -> G.Name -> StateT (HS.HashSet G.Name) m Variable
-    resolveVariable variables name = case Map.lookup name variables of
+    resolveVariable variables name = case HashMap.lookup name variables of
       Just variable -> modify (HS.insert name) >> pure variable
       Nothing -> throw400 ValidationFailed $ "unbound variable " <>> name

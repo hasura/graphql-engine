@@ -7,12 +7,13 @@ module Test.DataConnector.MockAgent.MetadataApiSpec where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Lens (_Array)
 import Data.List.NonEmpty qualified as NE
 import Data.Vector qualified as Vector
 import Harness.Backend.DataConnector.Mock (MockRequestResults (..), mockAgentMetadataTest)
 import Harness.Backend.DataConnector.Mock qualified as Mock
+import Harness.Backend.DataConnector.Mock.Server (defaultMockRequestConfig)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Quoter.Yaml.InterpolateYaml (interpolateYaml)
 import Harness.Test.BackendType qualified as BackendType
@@ -37,7 +38,7 @@ spec =
     )
     tests
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -74,9 +75,10 @@ tests = do
                 source: #{sourceString}
             |]
 
-      MockRequestResults {..} <- performMetadataRequest Mock.chinookMock request
+      let expectedStatusCode = 200
+      MockRequestResults {..} <- performMetadataRequest defaultMockRequestConfig expectedStatusCode request
 
-      Aeson.toJSON _mrrRecordedRequestConfig
+      J.toJSON _mrrRecordedRequestConfig
         `shouldBe` [yaml|
             DEBUG:
               test: data

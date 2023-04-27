@@ -15,8 +15,8 @@ module Hasura.Generator.Common
 where
 
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Aeson qualified as Aeson
-import Data.HashMap.Strict qualified as HM
+import Data.Aeson qualified as J
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyText)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (FieldName (FieldName))
@@ -34,7 +34,7 @@ genHashMap ::
   m b ->
   Range Int ->
   m (HashMap a b)
-genHashMap genA genB range = fmap HM.fromList . Gen.list range $ (,) <$> genA <*> genB
+genHashMap genA genB range = fmap HashMap.fromList . Gen.list range $ (,) <$> genA <*> genB
 
 genInt :: Gen Int
 genInt = fromIntegral <$> Gen.int32 (Range.linear 1 99999)
@@ -73,4 +73,4 @@ jsonRoundTrip :: forall a. (FromJSON a, ToJSON a, Eq a, Show a) => Gen a -> Stri
 jsonRoundTrip gen ty = do
   it ty $ hedgehog $ do
     term <- forAll gen
-    tripping term Aeson.toJSON Aeson.fromJSON
+    tripping term J.toJSON J.fromJSON

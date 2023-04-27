@@ -6,8 +6,11 @@ import {
 } from '..';
 import { Table } from '../../hasura-metadata-types';
 import { NetworkArgs, runSQL } from '../api';
+import {
+  defaultDatabaseProps,
+  defaultIntrospectionProps,
+} from '../common/defaultDatabaseProps';
 import { postgresCapabilities } from '../common/capabilities';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import { adaptIntrospectedTables } from '../common/utils';
 import {
   getDatabaseSchemas,
@@ -15,6 +18,7 @@ import {
   getSupportedOperators,
   getTableColumns,
   getTablesListAsTree,
+  getIsTableView,
 } from './introspection';
 import { getTableRows } from './query';
 
@@ -30,6 +34,7 @@ const getDropSchemaSql = (schema: string) => {
 export const mssql: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    ...defaultIntrospectionProps,
     getVersion: async ({ dataSourceName, httpClient }: GetVersionProps) => {
       const result = await runSQL({
         source: {
@@ -81,6 +86,7 @@ export const mssql: Database = {
     getTablesListAsTree,
     getSupportedOperators,
     getDatabaseSchemas,
+    getIsTableView,
   },
   modify: {
     defaultQueryRoot: async () => Feature.NotImplemented,

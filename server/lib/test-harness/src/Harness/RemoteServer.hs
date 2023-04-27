@@ -11,7 +11,7 @@ where
 
 import Control.Concurrent.Async qualified as Async
 import Control.Exception.Safe (bracket)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as Lazy (ByteString)
 import Data.Morpheus qualified as Morpheus (interpreter)
 import Data.Morpheus.Server (RootResolverConstraint)
@@ -63,7 +63,7 @@ run (Interpreter interpreter) = mkTestResource do
     Spock.runSpockNoBanner port $
       Spock.spockT id $ do
         Spock.get "/" $ do
-          Spock.json $ Aeson.String "OK"
+          Spock.json $ J.String "OK"
         Spock.post "/graphql" $ do
           req <- Spock.request
           body <- liftIO $ Wai.strictRequestBody req

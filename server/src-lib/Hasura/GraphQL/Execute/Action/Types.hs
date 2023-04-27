@@ -27,13 +27,13 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers
 import Hasura.RQL.IR.Select qualified as RS
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.Headers (HeaderConf)
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP

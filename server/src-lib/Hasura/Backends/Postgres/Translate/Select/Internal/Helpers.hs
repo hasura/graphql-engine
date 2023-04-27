@@ -27,7 +27,7 @@ where
 
 import Control.Monad.Writer (Writer, runWriter)
 import Data.Bifunctor (bimap)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended (toTxt)
 import Database.PG.Query (Query, fromBuilder)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -47,8 +47,8 @@ import Hasura.NativeQuery.IR (NativeQuery (..))
 import Hasura.NativeQuery.Metadata (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (FieldName)
-import Hasura.SQL.Backend
 import Hasura.SQL.Types (ToSQL (toSQL))
 
 -- | First element extractor expression from given record set
@@ -167,12 +167,12 @@ selectToSelectWith action =
 -- | convert map of CustomSQL CTEs into named TopLevelCTEs
 customSQLToTopLevelCTEs :: CustomSQLCTEs -> [(S.TableAlias, S.TopLevelCTE)]
 customSQLToTopLevelCTEs =
-  fmap (bimap S.toTableAlias S.CTEUnsafeRawSQL) . Map.toList . getCustomSQLCTEs
+  fmap (bimap S.toTableAlias S.CTEUnsafeRawSQL) . HashMap.toList . getCustomSQLCTEs
 
 -- | convert map of CustomSQL CTEs into named InnerCTEs
 customSQLToInnerCTEs :: CustomSQLCTEs -> [(S.TableAlias, S.InnerCTE)]
 customSQLToInnerCTEs =
-  fmap (bimap S.toTableAlias S.ICTEUnsafeRawSQL) . Map.toList . getCustomSQLCTEs
+  fmap (bimap S.toTableAlias S.ICTEUnsafeRawSQL) . HashMap.toList . getCustomSQLCTEs
 
 toQuery :: S.SelectWithG S.TopLevelCTE -> Query
 toQuery = fromBuilder . toSQL . renameIdentifiersSelectWithTopLevelCTE

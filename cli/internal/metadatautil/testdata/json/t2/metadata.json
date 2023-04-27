@@ -25013,7 +25013,7 @@
         }
       ],
       "native_queries": null,
-      "custom_return_types": null,
+      "logical_models": null,
       "functions": [
         {
           "function": {

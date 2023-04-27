@@ -5,14 +5,14 @@ from typing import Optional
 import ports
 
 class NodeGraphQL:
-    def __init__(self, cmd: list[str], env: dict[str, str] = {}, port: Optional[int] = None):
-        self.cmd = cmd
+    def __init__(self, worker_id: str, script: str, env: dict[str, str] = {}, port: Optional[int] = None):
+        self.script = script
         self.env = env
-        self.port = port if port else ports.find_free_port()
+        self.port = port if port else ports.find_free_port(worker_id)
         self.proc: Optional[subprocess.Popen[bytes]] = None
 
     def start(self):
-        self.proc = subprocess.Popen(self.cmd, env={**os.environ, **self.env, 'PORT': str(self.port)})
+        self.proc = subprocess.Popen(['node', self.script], env={**os.environ, **self.env, 'PORT': str(self.port)})
         try:
             ports.wait_for_port(self.port, timeout = 30)
         except:

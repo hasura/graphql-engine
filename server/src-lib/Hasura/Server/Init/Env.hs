@@ -21,7 +21,7 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Monad.Morph qualified as Morph
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.ByteString.Lazy.UTF8 qualified as BLU
 import Data.Char qualified as Char
 import Data.HashSet qualified as HashSet
@@ -36,17 +36,17 @@ import Hasura.Cache.Bounded qualified as Cache
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.NamingCase qualified as NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults (..))
+import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Config qualified as Config
 import Hasura.Server.Logging qualified as Server.Logging
 import Hasura.Server.Types qualified as Server.Types
 import Hasura.Server.Utils qualified as Utils
-import Hasura.Session qualified as Session
 import Network.Wai.Handler.Warp qualified as Warp
 import Refined (NonNegative, Positive, Refined, refineFail, unrefine)
 
@@ -200,9 +200,9 @@ instance FromEnv Integer where
 instance FromEnv Auth.AdminSecretHash where
   fromEnv = Right . Auth.hashAdminSecret . Text.pack
 
-instance FromEnv Session.RoleName where
+instance FromEnv RoleName where
   fromEnv string =
-    case Session.mkRoleName (Text.pack string) of
+    case mkRoleName (Text.pack string) of
       Nothing -> Left "empty string not allowed"
       Just roleName -> Right roleName
 
@@ -231,14 +231,14 @@ instance FromEnv Config.AdminInternalErrorsStatus where
 instance FromEnv Config.WsReadCookieStatus where
   fromEnv = fmap (bool Config.WsReadCookieDisabled Config.WsReadCookieEnabled) . fromEnv
 
-instance FromEnv Aeson.Value where
-  fromEnv = Aeson.eitherDecode . BLU.fromString
+instance FromEnv J.Value where
+  fromEnv = J.eitherDecode . BLU.fromString
 
 instance FromEnv MetadataDefaults where
-  fromEnv = Aeson.eitherDecode . BLU.fromString
+  fromEnv = J.eitherDecode . BLU.fromString
 
 instance FromEnv Metadata where
-  fromEnv = Aeson.eitherDecode . BLU.fromString
+  fromEnv = J.eitherDecode . BLU.fromString
 
 instance FromEnv Options.StringifyNumbers where
   fromEnv = fmap (bool Options.Don'tStringifyNumbers Options.StringifyNumbers) . fromEnv @Bool

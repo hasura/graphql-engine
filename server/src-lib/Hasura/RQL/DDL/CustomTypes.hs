@@ -8,7 +8,7 @@ where
 
 import Control.Lens ((.~))
 import Control.Monad.Validate
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.List.Extended
 import Data.List.Extended qualified as L
@@ -20,6 +20,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
@@ -29,7 +30,6 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -125,10 +125,10 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
     mapFromL (unObjectTypeName . _aotName)
       <$> traverse validateObject objectDefinitions
   let scalarTypeMap =
-        Map.map NOCTScalar $
-          Map.map ASTCustom scalarTypes <> reusedScalars
-      enumTypeMap = Map.map NOCTEnum enumTypes
-      inputObjectTypeMap = Map.map NOCTInputObject inputObjectTypes
+        HashMap.map NOCTScalar $
+          HashMap.map ASTCustom scalarTypes <> reusedScalars
+      enumTypeMap = HashMap.map NOCTEnum enumTypes
+      inputObjectTypeMap = HashMap.map NOCTInputObject inputObjectTypes
       nonObjectTypeMap = scalarTypeMap <> enumTypeMap <> inputObjectTypeMap
   pure $ AnnotatedCustomTypes nonObjectTypeMap annotatedObjects
   where
@@ -173,7 +173,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
               duplicateEnumValues
 
     validateInputObject ::
-      InputObjectTypeDefinition -> WriterT (Map.HashMap G.Name AnnotatedScalarType) m ()
+      InputObjectTypeDefinition -> WriterT (HashMap.HashMap G.Name AnnotatedScalarType) m ()
     validateInputObject inputObjectDefinition = do
       let inputObjectTypeName = _iotdName inputObjectDefinition
           duplicateFieldNames =
@@ -190,7 +190,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
               inputObjectTypeName
               duplicateFieldNames
 
-      let mapToSet = Set.fromList . Map.keys
+      let mapToSet = Set.fromList . HashMap.keys
           inputTypes =
             mapToSet scalarTypes `Set.union` mapToSet enumTypes `Set.union` mapToSet inputObjectTypes
 
@@ -200,7 +200,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
         if
             | Set.member fieldBaseType inputTypes -> pure ()
             | Just scalarInfo <- lookupBackendScalar allScalars fieldBaseType ->
-                tell $ Map.singleton fieldBaseType scalarInfo
+                tell $ HashMap.singleton fieldBaseType scalarInfo
             | otherwise ->
                 refute $
                   pure $
@@ -238,11 +238,11 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
           let fieldBaseType = G.getBaseType $ unGraphQLType fieldType
           annotatedObjectFieldType <-
             if
-                | Just scalarDef <- Map.lookup fieldBaseType scalarTypes ->
+                | Just scalarDef <- HashMap.lookup fieldBaseType scalarTypes ->
                     pure $ AOFTScalar $ ASTCustom scalarDef
-                | Just enumDef <- Map.lookup fieldBaseType enumTypes ->
+                | Just enumDef <- HashMap.lookup fieldBaseType enumTypes ->
                     pure $ AOFTEnum enumDef
-                | Map.member fieldBaseType objectTypes ->
+                | HashMap.member fieldBaseType objectTypes ->
                     pure $ AOFTObject fieldBaseType
                 | Just scalarInfo <- lookupBackendScalar allScalars fieldBaseType ->
                     pure $ AOFTScalar scalarInfo
@@ -256,7 +256,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
           pure (unGraphQLType fieldType, annotatedObjectFieldType)
 
       let fieldsMap =
-            Map.fromList $
+            HashMap.fromList $
               map (_ofdName &&& (fst . _ofdType)) $
                 toList fields
 
@@ -267,7 +267,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
       annotatedRelationships <- for _otdRelationships $ \TypeRelationshipDefinition {..} -> do
         -- get the source info
         SourceInfo {..} <-
-          onNothing (unsafeSourceInfo =<< Map.lookup _trdSource sources) $
+          onNothing (unsafeSourceInfo =<< HashMap.lookup _trdSource sources) $
             refute $
               pure $
                 ObjectRelationshipTableDoesNotExist
@@ -277,7 +277,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
 
         -- check that the table exists
         remoteTableInfo <-
-          onNothing (Map.lookup _trdRemoteTable _siTables) $
+          onNothing (HashMap.lookup _trdRemoteTable _siTables) $
             refute $
               pure $
                 ObjectRelationshipTableDoesNotExist
@@ -286,9 +286,9 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
                   _trdRemoteTable
 
         -- check that the column mapping is sane
-        annotatedFieldMapping <- flip Map.traverseWithKey _trdFieldMapping $
+        annotatedFieldMapping <- flip HashMap.traverseWithKey _trdFieldMapping $
           \fieldName columnName -> do
-            case Map.lookup fieldName fieldsMap of
+            case HashMap.lookup fieldName fieldsMap of
               Nothing ->
                 dispute $
                   pure $
@@ -340,7 +340,7 @@ lookupBackendScalar allScalars baseType =
     go backendScalars =
       ASTReusedScalar baseType
         <$> AB.traverseBackend @Backend backendScalars \(ScalarMap scalarMap :: ScalarMap b) ->
-          ScalarWrapper <$> Map.lookup baseType scalarMap
+          ScalarWrapper <$> HashMap.lookup baseType scalarMap
 
 data CustomTypeValidationError
   = -- | type names have to be unique across all types

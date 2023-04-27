@@ -81,6 +81,7 @@ import Refined (unrefine)
 import StmContainers.Map qualified as STMMap
 import System.IO.Error qualified as E
 import System.Metrics.Prometheus.Counter qualified as Prometheus.Counter
+import System.Metrics.Prometheus.Histogram qualified as Prometheus.Histogram
 import System.TimeManager qualified as TM
 
 newtype WSId = WSId {unWSId :: UUID.UUID}
@@ -181,10 +182,13 @@ instance L.ToEngineLog WSReaperThreadLog L.Hasura where
     (L.LevelInfo, L.ELTInternal L.ILTWsServer, J.toJSON message)
 
 data WSQueueResponse = WSQueueResponse
-  { _wsqrMessage :: !BL.ByteString,
+  { _wsqrMessage :: BL.ByteString,
     -- | extra metadata that we use for other actions, such as print log
     -- we don't want to inlcude them into websocket message payload
-    _wsqrEventInfo :: !(Maybe WSEventInfo)
+    _wsqrEventInfo :: Maybe WSEventInfo,
+    -- | Timer to compute the time for which the websocket message
+    --   remains queued.
+    _wsqrTimer :: IO DiffTime
   }
 
 data WSConn a = WSConn
@@ -602,14 +606,18 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
                   messageHandler wsConn msg subProtocol
 
             let send = forever $ do
-                  WSQueueResponse msg wsInfo <- liftIO $ STM.atomically $ STM.readTQueue sendQ
+                  WSQueueResponse msg wsInfo wsTimer <- liftIO $ STM.atomically $ STM.readTQueue sendQ
+                  liftIO $ WS.sendTextData conn msg
+                  messageQueueTime <- liftIO $ realToFrac <$> wsTimer
                   let messageLength = BL.length msg
                       messageDetails = MessageDetails (SB.fromLBS msg) messageLength
-                  liftIO $ WS.sendTextData conn msg
-                  liftIO $
+                  liftIO $ do
                     Prometheus.Counter.add
                       (pmWebSocketBytesSent prometheusMetrics)
                       messageLength
+                    Prometheus.Histogram.observe
+                      (pmWebsocketMsgQueueTimeSeconds prometheusMetrics)
+                      messageQueueTime
                   logWSLog logger $ WSLog wsId (EMessageSent messageDetails) wsInfo
 
             -- withAsync lets us be very sure that if e.g. an async exception is raised while we're

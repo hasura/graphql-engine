@@ -44,8 +44,9 @@ import Hasura.Base.Error
 import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.Prelude
 import Hasura.RQL.Types.ResizePool
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.SQL.Types (ExtensionsSchema)
-import Hasura.Session
+import Hasura.Session (SessionVariables, UserInfo (_uiRole, _uiSession), maybeRoleFromSessionVariables)
 import Kriti.Error qualified as Kriti
 import Network.HTTP.Types qualified as HTTP
 

@@ -8,16 +8,16 @@ module Hasura.RQL.Types.Roles.Internal
   )
 where
 
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Semigroup (Any (..), Max (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.SchemaCache.Types
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | 'CheckPermission' is a type which can be used to combine multiple
@@ -215,12 +215,12 @@ instance OnlyRelevantEq RemoteSchemaInputValueDefinition where
 instance OnlyRelevantEq RemoteSchemaIntrospection where
   RemoteSchemaIntrospection typeDefinitionsL
     ==~ RemoteSchemaIntrospection typeDefinitionsR =
-      sort (Map.elems typeDefinitionsL) ==~ sort (Map.elems typeDefinitionsR)
+      sort (HashMap.elems typeDefinitionsL) ==~ sort (HashMap.elems typeDefinitionsR)
 
 instance OnlyRelevantEq IntrospectionResult where
   IntrospectionResult (RemoteSchemaIntrospection typeDefnsL) queryRootL mutationRootL subsRootL
     ==~ IntrospectionResult (RemoteSchemaIntrospection typeDefnsR) queryRootR mutationRootR subsRootR =
-      sort (Map.elems typeDefnsL) ==~ sort (Map.elems typeDefnsR)
+      sort (HashMap.elems typeDefnsL) ==~ sort (HashMap.elems typeDefnsR)
         && queryRootL == queryRootR
         && mutationRootL == mutationRootR
         && subsRootL == subsRootR

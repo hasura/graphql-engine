@@ -9,7 +9,7 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Lens qualified as Lens
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Lens (key, _Array)
 import Data.List.NonEmpty qualified as NE
 import Data.Vector qualified as Vector
@@ -133,8 +133,8 @@ nodeTests = describe "Nodes Tests" $ do
         |]
 
   it "works with array relations" $ \(testEnvironment, _) -> do
-    let sortYamlArray :: Aeson.Value -> IO Aeson.Value
-        sortYamlArray (Aeson.Array a) = pure $ Aeson.Array (Vector.fromList (sort (Vector.toList a)))
+    let sortYamlArray :: J.Value -> IO J.Value
+        sortYamlArray (J.Array a) = pure $ J.Array (Vector.fromList (sort (Vector.toList a)))
         sortYamlArray _ = fail "Should return Array"
 
     shouldReturnYamlF

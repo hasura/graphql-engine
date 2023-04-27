@@ -7,13 +7,11 @@ import { Collapsible } from '../../../new-components/Collapsible';
 import { InputField, useConsoleForm } from '../../../new-components/Form';
 import { DriverInfo } from '../../DataSource';
 import { useAddAgent } from '../../ManageAgents/hooks';
-import {
-  agentPaths,
-  KnownSuperConnectorDrivers,
-} from '../components/SetupConnector/hooks/useSuperConnectorAgents';
+import { agentPaths } from '../components/SetupConnector/hooks/useSuperConnectorAgents';
 import { ConnectDatabaseProps } from '../ConnectDatabase';
 import dbLogos from '../graphics/db-logos';
 import { useDatabaseConnectDrivers } from '../hooks';
+import { SuperConnectorDrivers } from '../../hasura-metadata-types';
 
 export const ConnectDatabaseSidebar = (props: ConnectDatabaseProps) => {
   const { consoleType } = props;
@@ -122,7 +120,6 @@ const ListContent = ({
       defaultOpen
       disableContentStyles
       animationSpeed="fast"
-      slimmerChevron
       triggerClassName="bg-slate-100 w-full px-2 py-1"
       doNotWrapChildren
       triggerChildren={
@@ -150,8 +147,7 @@ const ListContent = ({
                     mode="primary"
                     size="sm"
                     onClick={() => {
-                      const path =
-                        agentPaths[d.name as KnownSuperConnectorDrivers];
+                      const path = agentPaths[d.name as SuperConnectorDrivers];
                       if (path) {
                         addAgent({
                           name: d.name,

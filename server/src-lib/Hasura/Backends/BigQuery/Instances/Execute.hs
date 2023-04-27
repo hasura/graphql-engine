@@ -2,9 +2,9 @@
 
 module Hasura.Backends.BigQuery.Instances.Execute () where
 
-import Data.Aeson qualified as Aeson
-import Data.Aeson.Text qualified as Aeson
-import Data.HashMap.Strict qualified as Map
+import Data.Aeson qualified as J
+import Data.Aeson.Text qualified as J
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
@@ -21,7 +21,6 @@ import Hasura.EncJSON
 import Hasura.Function.Cache
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Namespace (RootFieldAlias)
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags
   ( emptyQueryTagsComment,
@@ -30,10 +29,11 @@ import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR (Provenance (Unknown))
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
@@ -82,7 +82,7 @@ bqDBQueryPlan userInfo sourceName sourceConfig qrf _ _ = do
             sourceConfig
             (DataLoader.executeSelect select)
         case result of
-          Left err -> throw500WithDetail (DataLoader.executeProblemMessage DataLoader.HideDetails err) $ Aeson.toJSON err
+          Left err -> throw500WithDetail (DataLoader.executeProblemMessage DataLoader.HideDetails err) $ J.toJSON err
           Right (job, recordSet) -> pure ActionResult {arStatistics = Just BigQuery.ExecutionStatistics {_esJob = job}, arResult = recordSetToEncJSON (BigQuery.selectCardinality select) recordSet}
   pure $ DBStepInfo @'BigQuery sourceName sourceConfig (Just (selectSQLTextForExplain select)) action ()
 
@@ -99,7 +99,7 @@ recordSetToEncJSON cardinality DataLoader.RecordSet {rows} =
       encJFromInsOrdHashMap . fmap encJFromOutputValue . OMap.mapKeys coerce
     encJFromOutputValue outputValue =
       case outputValue of
-        DataLoader.NullOutputValue -> encJFromJValue Aeson.Null
+        DataLoader.NullOutputValue -> encJFromJValue J.Null
         DataLoader.DecimalOutputValue i -> encJFromJValue i
         DataLoader.BigDecimalOutputValue i -> encJFromJValue i
         DataLoader.FloatOutputValue i -> encJFromJValue i
@@ -204,7 +204,7 @@ bqDBRemoteRelationshipPlan ::
   SourceName ->
   SourceConfig 'BigQuery ->
   -- | List of json objects, each of which becomes a row of the table.
-  NonEmpty Aeson.Object ->
+  NonEmpty J.Object ->
   -- | The above objects have this schema
   --
   -- XXX: What is this for/what does this mean?
@@ -228,10 +228,10 @@ bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
       UVParameter IR.Unknown $
         ColumnValue (ColumnScalar BigQuery.StringScalarType) $
           BigQuery.StringValue . LT.toStrict $
-            Aeson.encodeToLazyText lhs
+            J.encodeToLazyText lhs
 
     recordSetDefinitionList =
-      (coerceToColumn argumentId, BigQuery.IntegerScalarType) : Map.toList (fmap snd joinColumnMapping)
+      (coerceToColumn argumentId, BigQuery.IntegerScalarType) : HashMap.toList (fmap snd joinColumnMapping)
 
     jsonToRecordSet :: IR.SelectFromG ('BigQuery) (UnpreparedValue 'BigQuery)
     jsonToRecordSet =

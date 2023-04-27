@@ -19,9 +19,9 @@ import Hasura.GraphQL.Execute.Backend (ActionResult (..))
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (ExecutionStatistics))
+import Hasura.RQL.Types.BackendTag (HasTag)
+import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.SQL.AnyBackend (AnyBackend, dispatchAnyBackend', mkAnyBackend)
-import Hasura.SQL.Backend (BackendType)
-import Hasura.SQL.Tag (HasTag)
 import Hasura.Server.Types (RequestId)
 import Hasura.Tracing (TraceT)
 

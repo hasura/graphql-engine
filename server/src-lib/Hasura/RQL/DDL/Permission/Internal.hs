@@ -10,20 +10,20 @@ module Hasura.RQL.DDL.Permission.Internal
     getDependentHeaders,
     annBoolExp,
     procBoolExp,
-    procCustomReturnTypeBoolExp,
+    procLogicalModelBoolExp,
   )
 where
 
 import Control.Lens hiding ((.=))
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Types (CustomReturnTypeName)
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -33,11 +33,11 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.Server.Utils
-import Hasura.Session
 
 -- | Intrepet a 'PermColSpec' column specification, which can either refer to a
 -- list of named columns or all columns.
@@ -72,7 +72,7 @@ assertPermDefined role pt tableInfo =
         <> role
           <<> " does not exist"
   where
-    rpi = M.lookup role $ _tiRolePermInfoMap tableInfo
+    rpi = HashMap.lookup role $ _tiRolePermInfoMap tableInfo
 
 newtype CreatePerm a b = CreatePerm (WithTable b (PermDef b a))
 
@@ -110,8 +110,8 @@ procBoolExp source tn fieldInfoMap be = do
 -- | Interpret a 'BoolExp' into an 'AnnBoolExp', collecting any dependencies as
 -- we go. At the moment, the only dependencies we're likely to encounter are
 -- independent dependencies on other tables. For example, "this user can only
--- select from this custom return type if their ID is in the @allowed_users@ table".
-procCustomReturnTypeBoolExp ::
+-- select from this logical model if their ID is in the @allowed_users@ table".
+procLogicalModelBoolExp ::
   forall b m.
   ( QErrM m,
     TableCoreInfoRM b m,
@@ -119,11 +119,11 @@ procCustomReturnTypeBoolExp ::
     GetAggregationPredicatesDeps b
   ) =>
   SourceName ->
-  CustomReturnTypeName ->
+  LogicalModelName ->
   FieldInfoMap (FieldInfo b) ->
   BoolExp b ->
   m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
-procCustomReturnTypeBoolExp source lmn fieldInfoMap be = do
+procLogicalModelBoolExp source lmn fieldInfoMap be = do
   let -- The parser for the "right hand side" of operations. We use @rhsParser@
       -- as the name here for ease of grepping, though it's maybe a bit vague.
       -- More specifically, if we think of an operation that combines a field
@@ -140,9 +140,9 @@ procCustomReturnTypeBoolExp source lmn fieldInfoMap be = do
 
   let -- What dependencies do we have on the schema cache in order to process
       -- this boolean expression? This dependency system is explained more
-      -- thoroughly in the 'buildCustomReturnTypeSelPermInfo' inline comments.
+      -- thoroughly in the 'buildLogicalModelSelPermInfo' inline comments.
       deps :: [SchemaDependency]
-      deps = getCustomReturnTypeBoolExpDeps source lmn abe
+      deps = getLogicalModelBoolExpDeps source lmn abe
 
   return (abe, Seq.fromList deps)
 

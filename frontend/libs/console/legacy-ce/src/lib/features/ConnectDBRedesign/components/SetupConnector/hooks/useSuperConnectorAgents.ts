@@ -1,17 +1,13 @@
 import { useAddAgent } from '../../../../ManageAgents/hooks';
 import { AddAgentResponse } from '../../../../ManageAgents/hooks/useAddAgent';
+import { SuperConnectorDrivers } from '../../../../hasura-metadata-types';
 
-export type KnownSuperConnectorDrivers =
-  | 'snowflake'
-  | 'athena'
-  | 'mysqlgdc'
-  | string;
-
-export const agentPaths: Record<KnownSuperConnectorDrivers, string> = {
+export const agentPaths: Record<SuperConnectorDrivers, string> = {
   snowflake: '/api/v1/snowflake',
   athena: '/api/v1/athena',
-  mysqlgdc: '/api/v1/mysql',
+  mysql8: '/api/v1/mysql',
   mariadb: '/api/v1/mariadb',
+  oracle: '/api/v1/oracle',
 };
 
 function ensure<T>(
@@ -30,7 +26,7 @@ export const useAddSuperConnectorAgents = () => {
 
   const addAgents = async (
     superConnectorPath: string,
-    selectedAgent: KnownSuperConnectorDrivers
+    selectedAgent: SuperConnectorDrivers
   ) => {
     const args = Object.entries<string>(agentPaths).map(
       ([driverKind, agentPath]) => ({

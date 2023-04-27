@@ -10,7 +10,7 @@ where
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Hasura.Backends.Postgres.Instances.Schema ()
@@ -22,7 +22,6 @@ import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.Scalars (mkScalar)
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
@@ -37,13 +36,14 @@ import Hasura.RQL.IR.Root qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles (adminRoleName)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | actionExecute is used to execute either a query action or a synchronous
@@ -63,7 +63,7 @@ actionExecute ::
   SchemaT r m (Maybe (FieldParser n (IR.AnnActionExecution (IR.RemoteRelationshipField IR.UnpreparedValue))))
 actionExecute customTypes actionInfo = runMaybeT do
   roleName <- retrieve scRole
-  guard (roleName == adminRoleName || roleName `Map.member` permissions)
+  guard (roleName == adminRoleName || roleName `HashMap.member` permissions)
   let fieldName = unActionName actionName
       description = G.Description <$> comment
   inputArguments <- lift $ actionInputArguments (_actInputTypes customTypes) $ _adArguments definition
@@ -107,7 +107,7 @@ actionAsyncMutation ::
   SchemaT r m (Maybe (FieldParser n IR.AnnActionMutationAsync))
 actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
   roleName <- retrieve scRole
-  guard $ roleName == adminRoleName || roleName `Map.member` permissions
+  guard $ roleName == adminRoleName || roleName `HashMap.member` permissions
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
   let fieldName = unActionName actionName
       description = G.Description <$> comment
@@ -138,7 +138,7 @@ actionAsyncQuery ::
   SchemaT r m (Maybe (FieldParser n (IR.AnnActionAsyncQuery ('Postgres 'Vanilla) (IR.RemoteRelationshipField IR.UnpreparedValue))))
 actionAsyncQuery objectTypes actionInfo = runMaybeT do
   roleName <- retrieve scRole
-  guard $ roleName == adminRoleName || roleName `Map.member` permissions
+  guard $ roleName == adminRoleName || roleName `HashMap.member` permissions
   createdAtFieldParser <- mkOutputParser PGTimeStampTZ
   errorsFieldParser <- P.nullable <$> mkOutputParser PGJSON
   let outputTypeName = unActionName actionName
@@ -225,10 +225,10 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
     mkDefinitionList = \case
       AOTScalar _ -> pure []
       AOTObject AnnotatedObjectType {..} -> do
-        let fieldReferences = Map.unions $ map _atrFieldMapping _aotRelationships
+        let fieldReferences = HashMap.unions $ map _atrFieldMapping _aotRelationships
         for (toList _aotFields) \ObjectFieldDefinition {..} ->
           (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,)
-            <$> case Map.lookup _ofdName fieldReferences of
+            <$> case HashMap.lookup _ofdName fieldReferences of
               Nothing -> fieldTypeToScalarType $ snd _ofdType
               Just columnInfo -> pure $ unsafePGColumnToBackend $ ciType columnInfo
 
@@ -294,7 +294,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
         AOFTEnum def ->
           wrapScalar $ customEnumParser def
         AOFTObject objectName -> do
-          def <- Map.lookup objectName objectTypes `onNothing` throw500 ("Custom type " <> objectName <<> " not found")
+          def <- HashMap.lookup objectName objectTypes `onNothing` throw500 ("Custom type " <> objectName <<> " not found")
           parser <- fmap (IR.ACFNestedObject fieldName) <$> actionOutputFields gType def objectTypes
           pure $ P.subselection_ fieldName description parser
       where
@@ -314,14 +314,14 @@ actionOutputFields outputType annotatedObject objectTypes = do
       --  where 'x' is the 'reference name' of a join field, i.e, how a join
       --         field is referenced in the remote relationships definition
       --  while 'y' is the join field.
-      --  In case of custom types, they are pretty much the same.
+      --  In case of logical models, they are pretty much the same.
       --  In case of databases, 'y' could be a computed field with session variables etc.
-      let lhsJoinFields = Map.fromList [(FieldName $ G.unName k, k) | ObjectFieldName k <- Map.keys _atrFieldMapping]
-          joinMapping = Map.fromList $ do
-            (k, v) <- Map.toList _atrFieldMapping
+      let lhsJoinFields = HashMap.fromList [(FieldName $ G.unName k, k) | ObjectFieldName k <- HashMap.keys _atrFieldMapping]
+          joinMapping = HashMap.fromList $ do
+            (k, v) <- HashMap.toList _atrFieldMapping
             let scalarType = case ciType v of
                   ColumnScalar scalar -> scalar
-                  -- We don't currently allow enum types as fields of custom types so they should not appear here.
+                  -- We don't currently allow enum types as fields of logical models so they should not appear here.
                   -- If we do allow them in future then they would be represented in Postgres as Text.
                   ColumnEnumReference _ -> PGText
             pure (FieldName $ G.unName $ unObjectFieldName k, (scalarType, ciColumn v))
@@ -384,7 +384,7 @@ actionInputArguments nonObjectTypeMap arguments = do
               (toList inputFields)
               \(InputObjectFieldDefinition (InputObjectFieldName fieldName) fieldDesc (GraphQLType fieldType)) -> do
                 nonObjectFieldType <-
-                  Map.lookup (G.getBaseType fieldType) nonObjectTypeMap
+                  HashMap.lookup (G.getBaseType fieldType) nonObjectTypeMap
                     `onNothing` throw500 "object type for a field found in custom input object type"
                 (fieldName,) <$> argumentParser fieldName fieldDesc fieldType nonObjectFieldType
             pure $

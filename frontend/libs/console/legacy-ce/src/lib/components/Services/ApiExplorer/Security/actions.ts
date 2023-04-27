@@ -8,6 +8,7 @@ import {
 } from '../../../../metadata/utils';
 import { Thunk } from '../../../../types';
 import { makeMigrationCall } from '../../Data/DataActions';
+import { hasuraToast } from '../../../../new-components/Toasts';
 
 export type updateSecurityFeaturesActionType = {
   api_limits: {
@@ -42,9 +43,21 @@ export const updateAPILimits = ({
     const successMsg = 'Updated API limits';
     const errorMsg = 'Updating API limits failed';
 
-    const onSuccess = () => {
+    const onSuccess = (
+      response: [{ warnings: { code: string; message: string }[] }]
+    ) => {
       dispatch(exportMetadata());
       successCb?.();
+      response?.[0]?.warnings?.forEach(i => {
+        hasuraToast({
+          type: 'warning',
+          title: 'Time Limit Exceeded System Limit',
+          message: i.message,
+          toastOptions: {
+            duration: Infinity,
+          },
+        });
+      });
     };
 
     const onError = () => {
@@ -86,11 +99,23 @@ export const removeAPILimits = ({
     const successMsg = 'Removing API limits';
     const errorMsg = 'Removing API limits failed';
 
-    const onSuccess = () => {
+    const onSuccess = (response: [{ warnings: [] }]) => {
       dispatch(exportMetadata());
       if (callback) {
         callback();
       }
+      response?.[0]?.warnings?.forEach(
+        (i: { code: string; message: string }) => {
+          hasuraToast({
+            type: 'warning',
+            title: 'Time Limit Exceeded System Limit',
+            message: i.message,
+            toastOptions: {
+              duration: Infinity,
+            },
+          });
+        }
+      );
     };
 
     const onError = () => {};

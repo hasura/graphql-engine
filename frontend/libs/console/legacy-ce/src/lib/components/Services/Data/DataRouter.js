@@ -24,7 +24,7 @@ import {
 import { Connect } from '../../../features/ConnectDB';
 import { ConnectUIContainer } from '../../../features/ConnectDBRedesign';
 import { ConnectDatabaseRouteWrapper } from '../../../features/ConnectDBRedesign/ConnectDatabase.route';
-import { ManageDatabaseContainer } from '../../../features/Data';
+import { ManageDatabaseRoute } from '../../../features/Data';
 import { ManageTable } from '../../../features/Data/ManageTable';
 import { setDriver } from '../../../dataSources';
 import { exportMetadata } from '../../../metadata/actions';
@@ -63,7 +63,7 @@ const makeDataRouter = (
             <IndexRedirect to="modify" />
             <Route path=":operation" component={ManageTable} />
           </Route>
-          <Route path="database" component={ManageDatabaseContainer} />
+          <Route path="database" component={ManageDatabaseRoute} />
         </Route>
         <Route path="edit" component={Connect.EditConnection} />
       </Route>

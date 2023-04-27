@@ -96,3 +96,23 @@ export const noAppliedPermissionsData = {
     { role: 'testrole', permission: { filter: {} } },
   ],
 } as MetadataTable;
+
+export const alreadyExistingInsertPermissions = {
+  table: ['Chinook', 'Artist'],
+  insert_permissions: [
+    {
+      role: 'user',
+      permission: {
+        check: { ArtistId: { _eq: 'X-Hasura-User-Id' } },
+        columns: [],
+        filter: { ArtistId: { _eq: 'X-Hasura-User-Id' } },
+      },
+    },
+  ],
+  delete_permissions: [
+    {
+      role: 'user',
+      permission: { filter: { ArtistId: { _eq: 1 }, columns: [] } },
+    },
+  ],
+} as MetadataTable;

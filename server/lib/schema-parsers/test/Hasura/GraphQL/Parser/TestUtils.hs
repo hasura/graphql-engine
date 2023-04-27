@@ -7,7 +7,7 @@ module Hasura.GraphQL.Parser.TestUtils
 where
 
 import Data.Functor ((<&>))
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Hasura.Base.ErrorMessage (ErrorMessage)
 import Hasura.GraphQL.Parser
@@ -42,7 +42,7 @@ fakeInputFieldValue (InputFieldInfo t _) = go t
         (TIScalar, _) -> fakeScalar name
         (TIEnum ei, _) -> G.VEnum $ G.EnumValue $ dName $ NE.head ei
         (TIInputObject (InputObjectInfo oi), _) -> G.VObject $
-          M.fromList $ do
+          HashMap.fromList $ do
             Definition fieldName _ _ _ fieldInfo <- oi
             pure (fieldName, fakeInputFieldValue fieldInfo)
         _ -> error "fakeInputFieldValue: non-exhaustive. FIXME"
@@ -50,6 +50,6 @@ fakeInputFieldValue (InputFieldInfo t _) = go t
 fakeDirective :: DirectiveInfo origin -> G.Directive Variable
 fakeDirective DirectiveInfo {..} =
   G.Directive diName $
-    M.fromList $
+    HashMap.fromList $
       diArguments <&> \(Definition argName _ _ _ argInfo) ->
         (argName, fakeInputFieldValue argInfo)

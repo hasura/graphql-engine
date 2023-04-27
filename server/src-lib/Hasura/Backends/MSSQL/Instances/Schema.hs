@@ -8,7 +8,7 @@
 module Hasura.Backends.MSSQL.Instances.Schema () where
 
 import Data.Char qualified as Char
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Encoding as TE
@@ -25,7 +25,6 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -41,11 +40,12 @@ import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend hiding (BackendInsert)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 ----------------------------------------------------------------
@@ -100,9 +100,9 @@ instance BackendTableSelectSchema 'MSSQL where
   selectTableAggregate = defaultSelectTableAggregate
   tableSelectionSet = defaultTableSelectionSet
 
-instance BackendCustomReturnTypeSelectSchema 'MSSQL where
-  customReturnTypeArguments = defaultCustomReturnTypeArgs
-  customReturnTypeSelectionSet = defaultCustomReturnTypeSelectionSet
+instance BackendLogicalModelSelectSchema 'MSSQL where
+  logicalModelArguments = defaultLogicalModelArgs
+  logicalModelSelectionSet = defaultLogicalModelSelectionSet
 
 instance BackendUpdateOperatorsSchema 'MSSQL where
   type UpdateOperators 'MSSQL = UpdateOperator
@@ -199,7 +199,7 @@ msColumnParser columnType nullability = case columnType of
                       >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . (MSSQL.parseScalarValue scalarType)
                 }
   ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
-    case nonEmpty (Map.toList enumValues) of
+    case nonEmpty (HashMap.toList enumValues) of
       Just enumValuesList ->
         peelWithOrigin . fmap (ColumnValue columnType)
           <$> msEnumParser tableName enumValuesList customTableName nullability

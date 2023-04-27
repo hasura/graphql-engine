@@ -20,14 +20,14 @@ module Hasura.RQL.Types.Metadata.Serialization
 where
 
 import Data.Aeson (ToJSON (..))
-import Data.Aeson qualified as JSON
+import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Text.Extended qualified as T
 import Data.Vector qualified as Vector
-import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..))
 import Hasura.Function.Cache (emptyFunctionConfig)
 import Hasura.Function.Metadata (FunctionMetadata (..))
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
@@ -41,6 +41,7 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist (AllowlistEntry (..), MetadataAllowlist)
 import Hasura.RQL.Types.ApiLimit (ApiLimit, emptyApiLimit)
 import Hasura.RQL.Types.Backend (Backend, defaultTriggerOnReplication)
+import Hasura.RQL.Types.BackendTag (HasTag (backendTag), reify)
 import Hasura.RQL.Types.Column (ColumnValues)
 import Hasura.RQL.Types.Common (Comment, MetricsConfig, RemoteRelationshipG (..), commentToMaybeText, defaultActionTimeoutSecs, emptyMetricsConfig)
 import Hasura.RQL.Types.CustomTypes
@@ -72,7 +73,6 @@ import Hasura.RQL.Types.Metadata.Common
     TableMetadata (..),
     getSourceName,
   )
-import Hasura.RQL.Types.Network (Network, emptyNetwork)
 import Hasura.RQL.Types.OpenTelemetry
   ( OpenTelemetryConfig (..),
     emptyOpenTelemetryConfig,
@@ -104,8 +104,8 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.SQL.Tag (HasTag (backendTag), reify)
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.Types.Extended (Network, emptyNetwork)
 
 sourcesToOrdJSONList :: Sources -> AO.Array
 sourcesToOrdJSONList sources =
@@ -116,13 +116,13 @@ sourcesToOrdJSONList sources =
   where
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
     sourceMetaToOrdJSON (BackendSourceMetadata exists) =
-      AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata _smName _smKind _smTables _smFunctions _smNativeQueries _smCustomReturnTypes _smConfiguration _smQueryTags _smCustomization _smHealthCheckConfig :: SourceMetadata b) ->
+      AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata _smName _smKind _smTables _smFunctions _smNativeQueries _smLogicalModels _smConfiguration _smQueryTags _smCustomization _smHealthCheckConfig :: SourceMetadata b) ->
         let sourceNamePair = ("name", AO.toOrdered _smName)
             sourceKindPair = ("kind", AO.toOrdered _smKind)
             tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
             functionsPair = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
             nativeQueriesPair = listToMaybeOrdPairSort "native_queries" AO.toOrdered _nqmRootFieldName (OM.elems _smNativeQueries)
-            customReturnTypesPair = listToMaybeOrdPairSort "custom_return_types" AO.toOrdered _crtmName (OM.elems _smCustomReturnTypes)
+            logicalModelsPair = listToMaybeOrdPairSort "logical_models" AO.toOrdered _lmmName (OM.elems _smLogicalModels)
             configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
             queryTagsConfigPair = maybe [] (\queryTagsConfig -> [("query_tags", AO.toOrdered queryTagsConfig)]) _smQueryTags
 
@@ -134,7 +134,7 @@ sourcesToOrdJSONList sources =
               [sourceNamePair, sourceKindPair, tablesPair]
                 <> maybeToList functionsPair
                 <> maybeToList nativeQueriesPair
-                <> maybeToList customReturnTypesPair
+                <> maybeToList logicalModelsPair
                 <> configurationPair
                 <> queryTagsConfigPair
                 <> customizationPair
@@ -670,7 +670,7 @@ listToMaybeOrdPair name f ta = case toList ta of
   [] -> Nothing
   list -> Just $ (name,) $ AO.array $ map f list
 
-maybeSetToMaybeOrdPair :: (Backend b) => Maybe (ColumnValues b JSON.Value) -> Maybe (Text, AO.Value)
+maybeSetToMaybeOrdPair :: (Backend b) => Maybe (ColumnValues b J.Value) -> Maybe (Text, AO.Value)
 maybeSetToMaybeOrdPair set =
   set >>= \colVals ->
     if colVals == mempty

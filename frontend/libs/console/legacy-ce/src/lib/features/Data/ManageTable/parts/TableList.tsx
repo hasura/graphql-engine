@@ -15,6 +15,7 @@ import { TrackableTable } from '../types';
 import { paginate, search } from '../utils';
 import { SearchBar } from './SearchBar';
 import { TableRow } from './TableRow';
+import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
 import { useTrackTables } from '../../hooks/useTrackTables';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { APIError } from '../../../../hooks/error';
@@ -55,11 +56,27 @@ export const TableList = (props: TableListProps) => {
     if (mode === 'track') {
       untrackTables({
         tablesToBeTracked: tables,
-        onSuccess: () => {
+        onSuccess: response => {
+          response.forEach(result => {
+            if ('error' in result) {
+              hasuraToast({
+                type: 'error',
+                title: 'Error while untracking table',
+                children: result.error,
+              });
+            }
+          });
+
+          const successfullyUntrackedCounter = response.filter(
+            result => 'message' in result && result.message === 'success'
+          ).length;
+
+          const plural = successfullyUntrackedCounter > 1 ? 's' : '';
+
           hasuraToast({
             type: 'success',
             title: 'Successfully untracked',
-            message: `${tables.length} objects untracked`,
+            message: `${successfullyUntrackedCounter} object${plural} untracked`,
           });
         },
         onError: err => {
@@ -73,11 +90,26 @@ export const TableList = (props: TableListProps) => {
     } else {
       trackTables({
         tablesToBeTracked: tables,
-        onSuccess: () => {
+        onSuccess: response => {
+          response.forEach(result => {
+            if ('error' in result) {
+              hasuraToast({
+                type: 'error',
+                title: 'Error while tracking table',
+                children: result.error,
+              });
+            }
+          });
+
+          const successfulTrackingsCounter = response.filter(
+            result => 'message' in result && result.message === 'success'
+          ).length;
+          const plural = successfulTrackingsCounter > 1 ? 's' : '';
+
           hasuraToast({
             type: 'success',
-            title: 'Successfully tracked',
-            message: `${tables.length} objects tracked`,
+            title: 'Successfully untracked',
+            message: `${successfulTrackingsCounter} object${plural} tracked`,
           });
         },
         onError: err => {
@@ -93,6 +125,8 @@ export const TableList = (props: TableListProps) => {
     onTrackedTable?.();
     reset();
   };
+
+  const pushRoute = usePushRoute();
 
   if (!tables.length) {
     return (
@@ -182,6 +216,17 @@ export const TableList = (props: TableListProps) => {
               checked={checkedIds.includes(table.id)}
               reset={reset}
               onChange={() => onCheck(table.id)}
+              onTableNameClick={
+                mode === 'track'
+                  ? () => {
+                      pushRoute(
+                        `data/v2/manage/table/browse?database=${dataSourceName}&table=${encodeURIComponent(
+                          JSON.stringify(table.table)
+                        )}`
+                      );
+                    }
+                  : undefined
+              }
             />
           ))}
         </CardedTable.TableBody>

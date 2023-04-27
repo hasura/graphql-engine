@@ -17,7 +17,7 @@ import Control.Monad.Trans.Managed (ManagedT)
 import Data.Aeson
 import Data.Aeson.Casing
 import Data.Aeson.TH
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Text qualified as T
 import Database.PG.Query qualified as PG
@@ -29,10 +29,10 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Schema (runCacheRWT)
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.Catalog
+import Hasura.RQL.Types.BackendType (BackendType (..))
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
-import Hasura.SQL.Backend (BackendType (..))
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.AppStateRef
   ( AppStateRef,
@@ -339,9 +339,9 @@ refreshSchemaCache
                             CacheInvalidations
                               { ciMetadata = True,
                                 ciRemoteSchemas = HS.fromList $ getAllRemoteSchemas schemaCache,
-                                ciSources = HS.fromList $ HM.keys $ scSources schemaCache,
+                                ciSources = HS.fromList $ HashMap.keys $ scSources schemaCache,
                                 ciDataConnectors =
-                                  maybe mempty (HS.fromList . HM.keys . unBackendInfoWrapper) $
+                                  maybe mempty (HS.fromList . HashMap.keys . unBackendInfoWrapper) $
                                     BackendMap.lookup @'DataConnector $
                                       scBackendCache schemaCache
                               }

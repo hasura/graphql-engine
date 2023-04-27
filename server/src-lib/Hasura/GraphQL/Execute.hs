@@ -19,7 +19,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Containers.ListUtils (nubOrd)
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
 import Data.Tagged qualified as Tagged
@@ -50,16 +50,17 @@ import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Subscription
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Server.Init qualified as Init
 import Hasura.Server.Prometheus (PrometheusMetrics)
 import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
 import Hasura.Services
-import Hasura.Session
+import Hasura.Session (BackendOnlyFieldAccess (..), UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
@@ -71,7 +72,7 @@ makeGQLContext ::
   ET.GraphQLQueryType ->
   C.GQLContext
 makeGQLContext userInfo sc queryType =
-  case Map.lookup role contextMap of
+  case HashMap.lookup role contextMap of
     Nothing -> defaultContext
     Just (C.RoleContext frontend backend) ->
       case _uiBackendOnlyFieldAccess userInfo of
@@ -169,7 +170,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
                           Left (actionId, (srcConfig, dbExecution)) -> do
                             let sourceName = EA._aaqseSource dbExecution
                             actionLogResponse <-
-                              Map.lookup actionId actionLogMap
+                              HashMap.lookup actionId actionLogMap
                                 `onNothing` throw500 "unexpected: cannot lookup action_id in the map"
                             let selectAST = EA._aaqseSelectBuilder dbExecution $ actionLogResponse
                                 queryDB = case EA._aaqseJsonAggSelect dbExecution of
@@ -362,6 +363,7 @@ getResolvedExecPlan
               (scSetGraphqlIntrospectionOptions sc)
               reqId
               maybeOperationName
+          Tracing.attachMetadata [("parameterized_query_hash", bsToTxt $ unParamQueryHash parameterizedQueryHash)]
           pure (parameterizedQueryHash, QueryExecutionPlan executionPlan queryRootFields dirMap)
         G.TypedOperationDefinition G.OperationTypeMutation _ varDefs directives inlinedSelSet -> do
           when (readOnlyMode == ReadOnlyModeEnabled) $

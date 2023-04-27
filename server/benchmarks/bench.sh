@@ -495,6 +495,7 @@ function load_data_and_schema() {
       --fail \
       --request POST \
       --header "Content-Type: application/json" \
+      --header "X-Hasura-Admin-Secret: my-secret" \
       --data @replace_metadata.json \
       "$HASURA_URL/v1/query"
   else

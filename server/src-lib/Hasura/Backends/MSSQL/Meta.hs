@@ -12,10 +12,10 @@ module Hasura.Backends.MSSQL.Meta
   )
 where
 
-import Data.Aeson as Aeson
+import Data.Aeson as J
 import Data.ByteString.UTF8 qualified as BSUTF8
 import Data.FileEmbed (embedFile, makeRelativeToProject)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HS
 import Data.String
@@ -28,10 +28,10 @@ import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (OID (..))
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 
 --------------------------------------------------------------------------------
 
@@ -42,9 +42,9 @@ loadDBMetadata = do
   let queryBytes = $(makeRelativeToProject "src-rsr/mssql/mssql_table_metadata.sql" >>= embedFile)
       odbcQuery :: ODBC.Query = fromString . BSUTF8.toString $ queryBytes
   sysTablesText <- runIdentity <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler odbcQuery
-  case Aeson.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of
+  case J.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of
     Left e -> throw500 $ T.pack $ "error loading sql server database schema: " <> e
-    Right sysTables -> pure $ HM.fromList $ map transformTable sysTables
+    Right sysTables -> pure $ HashMap.fromList $ map transformTable sysTables
 
 --------------------------------------------------------------------------------
 
@@ -192,7 +192,7 @@ transformPrimaryKey (SysPrimaryKey {..}) =
 -- * Helpers
 
 coalesceKeys :: [ForeignKey 'MSSQL] -> [ForeignKey 'MSSQL]
-coalesceKeys = HM.elems . foldl' coalesce HM.empty
+coalesceKeys = HashMap.elems . foldl' coalesce HashMap.empty
   where
-    coalesce mapping fk@(ForeignKey constraint tableName _) = HM.insertWith combine (constraint, tableName) fk mapping
+    coalesce mapping fk@(ForeignKey constraint tableName _) = HashMap.insertWith combine (constraint, tableName) fk mapping
     combine oldFK newFK = oldFK {_fkColumnMapping = (NEHashMap.union `on` _fkColumnMapping) oldFK newFK}

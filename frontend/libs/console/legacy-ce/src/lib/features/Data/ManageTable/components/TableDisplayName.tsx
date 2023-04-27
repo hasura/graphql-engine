@@ -1,19 +1,20 @@
 import { Table } from '../../../hasura-metadata-types';
+import { Link } from '../../TrackResources/components/parts/Link';
 import { getQualifiedTable } from '../utils';
 import { FaTable } from 'react-icons/fa';
 
 export const TableDisplayName = ({
   dataSourceName,
   table,
+  onClick,
 }: {
+  onClick?: () => void;
   dataSourceName?: string;
   table: Table;
 }) => {
   const tableName = getQualifiedTable(table);
-
-  console.log(tableName);
-  return (
-    <div>
+  const content = () => (
+    <>
       <FaTable className="text-sm text-muted mr-xs" />
       {dataSourceName ? (
         <>
@@ -22,6 +23,12 @@ export const TableDisplayName = ({
       ) : (
         <>{tableName.join(' / ')}</>
       )}
-    </div>
+    </>
+  );
+
+  return onClick ? (
+    <Link onClick={onClick}>{content()}</Link>
+  ) : (
+    <div>{content()}</div>
   );
 };

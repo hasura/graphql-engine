@@ -15,10 +15,10 @@ import Hasura.Backends.BigQuery.Source (BigQueryDataset (..), BigQuerySourceConf
 import Hasura.Backends.BigQuery.Types (TableName (..))
 import Hasura.Base.Error (QErr, throw500, throw500WithDetail)
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType qualified as Backend
 import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Metadata (MetadataM)
 import Hasura.RQL.Types.SchemaCache (CacheRM, askSourceConfig)
-import Hasura.SQL.Backend qualified as Backend
 
 -- | List all tables, tracked or untracked, on a given BigQuery source. All
 -- given datasets' tables will be included.

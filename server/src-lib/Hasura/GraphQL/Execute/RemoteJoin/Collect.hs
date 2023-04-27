@@ -9,7 +9,7 @@ where
 
 import Control.Lens (Traversal', preview, traverseOf, _2)
 import Control.Monad.Writer
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty (NEHashMap)
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
@@ -270,7 +270,7 @@ transformGraphQLSelectionSet = \case
   SelectionSetInterface s -> SelectionSetInterface <$> transformDeduplicatedTypeSelectionSet s
   where
     transformDeduplicatedTypeSelectionSet =
-      traverseOf dssMemberSelectionSets $ Map.traverseWithKey \typeName objectSelectionSet ->
+      traverseOf dssMemberSelectionSets $ HashMap.traverseWithKey \typeName objectSelectionSet ->
         transformObjectSelectionSet (Just typeName) objectSelectionSet
 
 -------------------------------------------------------------------------------
@@ -329,7 +329,7 @@ transformAnnFields fields = do
             -- without which preserving the order of fields in the final response
             -- would require a lot of bookkeeping.
             remoteAnnPlaceholder,
-            Just $ createRemoteJoin (Map.intersection joinColumnAliases _rrsLHSJoinFields) _rrsRelationship
+            Just $ createRemoteJoin (HashMap.intersection joinColumnAliases _rrsLHSJoinFields) _rrsRelationship
           )
       AFNestedObject nestedObj ->
         (,Nothing) . AFNestedObject <$> transformNestedObjectSelect nestedObj
@@ -353,16 +353,16 @@ transformAnnFields fields = do
     -- selection set.
     columnFields :: HashMap (Column src) FieldName
     columnFields =
-      Map.fromList $
+      HashMap.fromList $
         [ (_acfColumn annColumn, alias)
           | (alias, annColumn) <- getFields _AFColumn fields
         ]
 
     -- This is a map of computed field name to its alias of all computed fields
     -- in the selection set.
-    computedFields :: Map.HashMap ComputedFieldName FieldName
+    computedFields :: HashMap.HashMap ComputedFieldName FieldName
     computedFields =
-      Map.fromList $
+      HashMap.fromList $
         [ (fieldName, alias)
           | -- Note that we do not currently care about input arguments to a computed
             -- field because only computed fields which do not accept input arguments
@@ -390,8 +390,8 @@ transformAnnFields fields = do
     --    that are required for the join
     (joinColumnAliases, phantomFields) =
       let lhsJoinFields =
-            Map.unions $ map (_rrsLHSJoinFields . snd) $ getFields _AFRemote fields
-          annotatedJoinColumns = Map.mapWithKey annotateDBJoinField $ lhsJoinFields
+            HashMap.unions $ map (_rrsLHSJoinFields . snd) $ getFields _AFRemote fields
+          annotatedJoinColumns = HashMap.mapWithKey annotateDBJoinField $ lhsJoinFields
           phantomFields_ =
             toList annotatedJoinColumns & mapMaybe \(joinField, alias) ->
               case alias of
@@ -444,7 +444,7 @@ transformActionFields fields = do
             -- without which preserving the order of fields in the final response
             -- would require a lot of bookkeeping.
             remoteActionPlaceholder,
-            Just $ createRemoteJoin (Map.intersection joinColumnAliases _arrsLHSJoinFields) _arrsRelationship
+            Just $ createRemoteJoin (HashMap.intersection joinColumnAliases _arrsLHSJoinFields) _arrsRelationship
           )
       ACFNestedObject fn fs ->
         (,Nothing) . ACFNestedObject fn <$> transformActionFields fs
@@ -468,7 +468,7 @@ transformActionFields fields = do
     -- selection set.
     scalarFields :: HashMap G.Name FieldName
     scalarFields =
-      Map.fromList $
+      HashMap.fromList $
         [ (name, alias)
           | (alias, name) <- getFields _ACFScalar fields
         ]
@@ -489,8 +489,8 @@ transformActionFields fields = do
     --    that are required for the join
     (joinColumnAliases, phantomFields :: ([(FieldName, ActionFieldG Void)])) =
       let lhsJoinFields =
-            Map.unions $ map (_arrsLHSJoinFields . snd) $ getFields _ACFRemote fields
-          annotatedJoinColumns = Map.mapWithKey annotateJoinField $ lhsJoinFields
+            HashMap.unions $ map (_arrsLHSJoinFields . snd) $ getFields _ACFRemote fields
+          annotatedJoinColumns = HashMap.mapWithKey annotateJoinField $ lhsJoinFields
           phantomFields_ :: ([(FieldName, ActionFieldG Void)]) =
             toList annotatedJoinColumns & mapMaybe \(joinField, alias) ->
               case alias of
@@ -529,7 +529,7 @@ transformObjectSelectionSet typename selectionSet = do
             FieldRemote SchemaRemoteRelationshipSelect {..} -> do
               pure
                 ( mkPlaceholderField alias,
-                  Just $ createRemoteJoin (Map.intersection joinColumnAliases _srrsLHSJoinFields) _srrsRelationship
+                  Just $ createRemoteJoin (HashMap.intersection joinColumnAliases _srrsLHSJoinFields) _srrsRelationship
                 )
   let internalTypeAlias = Name.___hasura_internal_typename
       remoteJoins = OMap.mapMaybe snd annotatedFields
@@ -571,7 +571,7 @@ transformObjectSelectionSet typename selectionSet = do
     -- in the selection set. We do not yet support lhs join fields which take
     -- arguments. To be consistent with that, we ignore fields with arguments
     noArgsGraphQLFields =
-      Map.fromList $
+      HashMap.fromList $
         flip mapMaybe (OMap.toList selectionSet) \(alias, field) -> case field of
           FieldGraphQL f ->
             if null (_fArguments f)
@@ -597,8 +597,8 @@ transformObjectSelectionSet typename selectionSet = do
 
     (joinColumnAliases, phantomFields) =
       let lhsJoinFields =
-            Map.unions $ map _srrsLHSJoinFields $ mapMaybe (preview _FieldRemote) $ toList selectionSet
-          annotatedJoinColumns = Map.mapWithKey annotateLHSJoinField lhsJoinFields
+            HashMap.unions $ map _srrsLHSJoinFields $ mapMaybe (preview _FieldRemote) $ toList selectionSet
+          annotatedJoinColumns = HashMap.mapWithKey annotateLHSJoinField lhsJoinFields
        in (fmap snd annotatedJoinColumns, fmap fst annotatedJoinColumns)
 
 -------------------------------------------------------------------------------
@@ -609,13 +609,13 @@ transformObjectSelectionSet typename selectionSet = do
 createRemoteJoin ::
   -- We need information about 'how' the lhs join fields appear in the lhs
   -- response to construct a 'RemoteJoin' node
-  Map.HashMap FieldName JoinColumnAlias ->
+  HashMap.HashMap FieldName JoinColumnAlias ->
   -- The remote relationship field as captured in the IR
   RemoteRelationshipField UnpreparedValue ->
   RemoteJoin
 createRemoteJoin joinColumnAliases = \case
   RemoteSchemaField RemoteSchemaSelect {..} ->
-    let inputArgsToMap = Map.fromList . map (_rfaArgument &&& _rfaValue)
+    let inputArgsToMap = HashMap.fromList . map (_rfaArgument &&& _rfaValue)
         (transformedSchemaRelationship, schemaRelationshipJoins) =
           getRemoteJoinsGraphQLSelectionSet _rselSelection
         remoteJoin =
@@ -639,10 +639,10 @@ createRemoteJoin joinColumnAliases = \case
           -- RemoteRelationshipField which would make the type a little
           -- unweildy
           joinColumns =
-            _rssJoinMapping & Map.mapMaybeWithKey
+            _rssJoinMapping & HashMap.mapMaybeWithKey
               \joinFieldName (rhsColumnType, rhsColumn) ->
                 (,(rhsColumn, rhsColumnType))
-                  <$> Map.lookup joinFieldName joinColumnAliases
+                  <$> HashMap.lookup joinFieldName joinColumnAliases
           anySourceJoin =
             AB.mkAnyBackend $
               RemoteSourceJoin
@@ -670,7 +670,7 @@ getJoinColumnAlias ::
   [FieldName] ->
   JoinColumnAlias
 getJoinColumnAlias fieldName field selectedFields allAliases =
-  case Map.lookup field selectedFields of
+  case HashMap.lookup field selectedFields of
     Nothing -> JCPhantom uniqueAlias
     Just fieldAlias -> JCSelected fieldAlias
   where

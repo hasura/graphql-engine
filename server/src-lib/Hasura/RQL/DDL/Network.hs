@@ -14,8 +14,8 @@ import Hasura.Metadata.Class ()
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
-import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.SchemaCache.Build
+import Network.Types.Extended
 
 runAddHostToTLSAllowlist ::
   (QErrM m, CacheRWM m, MetadataM m) =>

@@ -13,6 +13,6 @@ export const generateGraphQLCustomizationInfo = (
       prefix: values?.typeNames?.prefix,
       suffix: values?.typeNames?.suffix,
     },
-    namingConvention: values?.namingConvention,
+    naming_convention: values?.namingConvention,
   };
 };

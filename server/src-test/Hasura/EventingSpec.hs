@@ -2,7 +2,7 @@
 module Hasura.EventingSpec (spec) where
 
 import Control.Concurrent.STM.TVar
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Set qualified as Set
 import Data.Time.Clock
 import Hasura.Eventing.EventTrigger
@@ -72,9 +72,9 @@ eventTriggersLockingUnlockingSpec = do
     it "locks events correctly" $ do
       saveLockedEventTriggerEvents SNDefault [eventId] lockedEventsContainer
       currentLockedEvents <- readTVarIO lockedEventsContainer
-      currentLockedEvents `shouldBe` (Map.singleton SNDefault (Set.singleton eventId))
+      currentLockedEvents `shouldBe` (HashMap.singleton SNDefault (Set.singleton eventId))
 
     it "unlocks (removes) an event correctly from the locked events" $ do
       removeEventTriggerEventFromLockedEvents SNDefault eventId lockedEventsContainer
       currentLockedEvents <- readTVarIO lockedEventsContainer
-      currentLockedEvents `shouldBe` (Map.singleton SNDefault mempty)
+      currentLockedEvents `shouldBe` (HashMap.singleton SNDefault mempty)

@@ -12,7 +12,7 @@ import Control.Monad.Trans.Control
 import Data.Aeson
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
-import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.GraphQL.RemoteServer
@@ -29,7 +29,6 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Permission (resolveRoleBasedRemoteSchema)
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Services
-import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
 -- Resolves a user specified `RemoteSchemaMetadata` into information rich `RemoteSchemaCtx`
@@ -64,7 +63,7 @@ buildRemoteSchemas env =
         (|
           withRecordInconsistency
             ( bindErrorA
-                -< case M.lookup name =<< storedIntrospection of
+                -< case HashMap.lookup name =<< storedIntrospection of
                   Nothing -> noopTrace $ addRemoteSchemaP2Setup env defn
                   Just rawIntro -> do
                     rsDef <- validateRemoteSchemaDef env defn
@@ -109,7 +108,7 @@ buildRemoteSchemaPermissions ::
   -- this ridiculous duplication of [(RemoteSchemaName, RemoteSchemaPermissionMetadata)]
   -- instead of just [RemoteSchemaName] is because buildInfoMap doesn't pass `e` to the
   -- mkMetadataObject function. However, that change is very invasive.
-  ((RemoteSchemaName, IntrospectionResult, OrderedRoles), [(RemoteSchemaName, RemoteSchemaPermissionMetadata)]) `arr` M.HashMap RoleName IntrospectionResult
+  ((RemoteSchemaName, IntrospectionResult, OrderedRoles), [(RemoteSchemaName, RemoteSchemaPermissionMetadata)]) `arr` HashMap.HashMap RoleName IntrospectionResult
 buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, orderedRoles), permissions) -> do
   metadataPermissionsMap <- do
     buildInfoMap (_rspmRole . snd) mkRemoteSchemaPermissionMetadataObject buildRemoteSchemaPermission
@@ -123,26 +122,26 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
       -<
         foldM
           ( \accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
-              rolePermission <- onNothing (M.lookup roleName accumulatedRolePermMap) $ do
+              rolePermission <- onNothing (HashMap.lookup roleName accumulatedRolePermMap) $ do
                 parentRolePermissions <-
                   for (toList parentRoles) $ \role ->
-                    onNothing (M.lookup role accumulatedRolePermMap) $
+                    onNothing (HashMap.lookup role accumulatedRolePermMap) $
                       throw500 $
                         "remote schema permissions: bad ordering of roles, could not find the permission of role: " <>> role
                 let combinedPermission = sconcat <$> nonEmpty parentRolePermissions
                 pure $ fromMaybe CPUndefined combinedPermission
-              pure $ M.insert roleName rolePermission accumulatedRolePermMap
+              pure $ HashMap.insert roleName rolePermission accumulatedRolePermMap
           )
           metadataCheckPermissionsMap
           (_unOrderedRoles orderedRoles)
   -- traverse through `allRolesUnresolvedPermissionsMap` to record any inconsistencies (if exists)
   resolvedPermissions <-
     interpretWriter
-      -< for (M.toList allRolesUnresolvedPermissionsMap) \(roleName, checkPermission) -> do
+      -< for (HashMap.toList allRolesUnresolvedPermissionsMap) \(roleName, checkPermission) -> do
         let inconsistentRoleEntity = InconsistentRemoteSchemaPermission remoteSchemaName
         resolvedCheckPermission <- resolveCheckPermission checkPermission roleName inconsistentRoleEntity
         return (roleName, resolvedCheckPermission)
-  returnA -< catMaybes $ M.fromList resolvedPermissions
+  returnA -< catMaybes $ HashMap.fromList resolvedPermissions
   where
     buildRemoteSchemaPermission = proc (originalIntrospection, (remoteSchemaName, remoteSchemaPerm)) -> do
       let RemoteSchemaPermissionMetadata roleName defn _ = remoteSchemaPerm

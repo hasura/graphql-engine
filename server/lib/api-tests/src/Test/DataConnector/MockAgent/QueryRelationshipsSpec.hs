@@ -6,17 +6,18 @@ module Test.DataConnector.MockAgent.QueryRelationshipsSpec (spec) where
 --------------------------------------------------------------------------------
 
 import Control.Lens ((.~), (?~))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
+import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockConfig, MockRequestResults (..), mockAgentGraphqlTest, mockAgentMetadataTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Quoter.Yaml.InterpolateYaml (interpolateYaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
 import Harness.Yaml (shouldBeYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
@@ -26,7 +27,7 @@ import Test.Hspec (SpecWith, describe, shouldBe)
 --------------------------------------------------------------------------------
 
 spec :: SpecWith GlobalTestEnvironment
-spec =
+spec = do
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Mock.backendTypeMetadata)
@@ -37,13 +38,23 @@ spec =
         ]
     )
     tests
+  Fixture.runWithLocalTestEnvironment
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Mock.backendTypeMetadata)
+            { Fixture.mkLocalTestEnvironment = Mock.mkLocalTestEnvironment' noRelationshipsCapabilityMockConfig,
+              Fixture.setupTeardown = \(testEnv, mockEnv) ->
+                [Mock.setupAction noRelationshipsCapabilitySourceMetadata Mock.agentConfig (testEnv, mockEnv)]
+            }
+        ]
+    )
+    noRelationshipsCapabilityTests
 
 --------------------------------------------------------------------------------
 
 testRoleName :: ByteString
 testRoleName = "test-role"
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -148,22 +159,22 @@ tests = describe "Object Relationships Tests" $ do
           |]
     let queryResponse =
           mkRowsQueryResponse
-            [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock (We Salute You)"),
+            [ [ ("Name", API.mkColumnFieldValue $ J.String "For Those About To Rock (We Salute You)"),
                 ( "Genre",
                   API.mkRelationshipFieldValue $
                     mkRowsQueryResponse
-                      [ [("Name", API.mkColumnFieldValue $ Aeson.String "Rock")]
+                      [ [("Name", API.mkColumnFieldValue $ J.String "Rock")]
                       ]
                 ),
                 ( "MediaType",
                   API.mkRelationshipFieldValue $
                     mkRowsQueryResponse
-                      [ [("Name", API.mkColumnFieldValue $ Aeson.String "MPEG audio file")]
+                      [ [("Name", API.mkColumnFieldValue $ J.String "MPEG audio file")]
                       ]
                 )
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -253,15 +264,15 @@ tests = describe "Object Relationships Tests" $ do
                       [ [ ( "Artist",
                             API.mkRelationshipFieldValue $
                               mkRowsQueryResponse
-                                [[("Name", API.mkColumnFieldValue $ Aeson.String "Zeca Pagodinho")]]
+                                [[("Name", API.mkColumnFieldValue $ J.String "Zeca Pagodinho")]]
                           )
                         ]
                       ]
                 ),
-                ("Name", API.mkColumnFieldValue $ Aeson.String "Camarão que Dorme e Onda Leva")
+                ("Name", API.mkColumnFieldValue $ J.String "Camarão que Dorme e Onda Leva")
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -369,10 +380,10 @@ tests = describe "Object Relationships Tests" $ do
           |]
     let queryResponse =
           mkRowsQueryResponse
-            [ [ ("EmployeeId", API.mkColumnFieldValue $ Aeson.Number 3)
+            [ [ ("EmployeeId", API.mkColumnFieldValue $ J.Number 3)
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -446,3 +457,118 @@ tests = describe "Object Relationships Tests" $ do
                        }
                    ]
         )
+
+--------------------------------------------------------------------------------
+
+noRelationshipsCapabilityMockConfig :: MockConfig
+noRelationshipsCapabilityMockConfig =
+  Mock.chinookMock
+    { Mock._capabilitiesResponse =
+        Mock._capabilitiesResponse Mock.chinookMock
+          & API.crCapabilities . API.cRelationships .~ Nothing -- Remove relationships capability
+    }
+
+noRelationshipsCapabilitySourceMetadata :: J.Value
+noRelationshipsCapabilitySourceMetadata =
+  let source = BackendType.backendSourceName Mock.backendTypeMetadata
+      backendType = BackendType.backendTypeString Mock.backendTypeMetadata
+   in [yaml|
+        name : *source
+        kind: *backendType
+        tables:
+          - table: [Album]
+          - table: [Artist]
+        configuration: {}
+      |]
+
+--------------------------------------------------------------------------------
+
+noRelationshipsCapabilityTests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+noRelationshipsCapabilityTests = describe "No Relationships Capability Tests" $ do
+  mockAgentMetadataTest "create object relationship returns error" $ \testEnvironment performMetadataRequest -> do
+    let backendTypeMetadata = fromMaybe (error "Missing backend type config") $ getBackendTypeConfig testEnvironment
+        backendType = BackendType.backendTypeString backendTypeMetadata
+        sourceString = BackendType.backendSourceName backendTypeMetadata
+
+    let request =
+          [interpolateYaml|
+            type: #{backendType}_create_object_relationship
+            args:
+              source: #{sourceString}
+              table: [Album]
+              name: Artist
+              using:
+                manual_configuration:
+                  remote_table: [Artist]
+                  column_mapping:
+                    ArtistId: ArtistId
+          |]
+
+    let expectedStatusCode = 400
+    MockRequestResults {..} <- performMetadataRequest Mock.defaultMockRequestConfig expectedStatusCode request
+
+    _mrrResponse
+      `shouldBe` [interpolateYaml|
+        path: $.args
+        code: invalid-configuration
+        error: "Inconsistent object: in table \"Album\": in relationship \"Artist\": Local object and array relationships are not supported for '#{sourceString}'. Instead consider using remote relationships to join between tables on the same source."
+        internal:
+          - definition:
+              source: #{sourceString}
+              table: [Album]
+              name: Artist
+              using:
+                manual_configuration:
+                  remote_table: [Artist]
+                  column_mapping:
+                    ArtistId: ArtistId
+                  insertion_order: null
+              comment: null
+            name: object_relation Artist in table Album in source #{sourceString}
+            reason: "Inconsistent object: in table \"Album\": in relationship \"Artist\": Local object and array relationships are not supported for '#{sourceString}'. Instead consider using remote relationships to join between tables on the same source."
+            type: object_relation
+      |]
+
+  mockAgentMetadataTest "create array relationship returns error" $ \testEnvironment performMetadataRequest -> do
+    let backendTypeMetadata = fromMaybe (error "Missing backend type config") $ getBackendTypeConfig testEnvironment
+        backendType = BackendType.backendTypeString backendTypeMetadata
+        sourceString = BackendType.backendSourceName backendTypeMetadata
+
+    let request =
+          [interpolateYaml|
+            type: #{backendType}_create_array_relationship
+            args:
+              source: #{sourceString}
+              table: [Artist]
+              name: Albums
+              using:
+                manual_configuration:
+                  remote_table: [Album]
+                  column_mapping:
+                    ArtistId: ArtistId
+          |]
+
+    let expectedStatusCode = 400
+    MockRequestResults {..} <- performMetadataRequest Mock.defaultMockRequestConfig expectedStatusCode request
+
+    _mrrResponse
+      `shouldBe` [interpolateYaml|
+        path: $.args
+        code: invalid-configuration
+        error: "Inconsistent object: in table \"Artist\": in relationship \"Albums\": Local object and array relationships are not supported for '#{sourceString}'. Instead consider using remote relationships to join between tables on the same source."
+        internal:
+          - definition:
+              source: #{sourceString}
+              table: [Artist]
+              name: Albums
+              using:
+                manual_configuration:
+                  remote_table: [Album]
+                  column_mapping:
+                    ArtistId: ArtistId
+                  insertion_order: null
+              comment: null
+            name: array_relation Albums in table Artist in source #{sourceString}
+            reason: "Inconsistent object: in table \"Artist\": in relationship \"Albums\": Local object and array relationships are not supported for '#{sourceString}'. Instead consider using remote relationships to join between tables on the same source."
+            type: array_relation
+      |]

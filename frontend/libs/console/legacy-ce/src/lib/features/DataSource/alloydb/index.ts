@@ -1,6 +1,9 @@
 import { Table } from '../../hasura-metadata-types';
+import {
+  defaultDatabaseProps,
+  defaultIntrospectionProps,
+} from '../common/defaultDatabaseProps';
 import { Database, GetVersionProps } from '..';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
 import {
   getDatabaseConfiguration,
   getTrackableTables,
@@ -13,12 +16,14 @@ import {
 import { getTableRows } from '../postgres/query';
 import { runSQL } from '../api';
 import { postgresCapabilities } from '../common/capabilities';
+import { getIsTableView } from './introspection/getIsTableView';
 
 export type AlloyDbTable = { name: string; schema: string };
 
 export const alloy: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    ...defaultIntrospectionProps,
     getVersion: async ({ dataSourceName, httpClient }: GetVersionProps) => {
       const result = await runSQL({
         source: {
@@ -47,6 +52,7 @@ export const alloy: Database = {
     getTablesListAsTree,
     getSupportedOperators,
     getDatabaseSchemas,
+    getIsTableView,
   },
   query: {
     getTableRows,

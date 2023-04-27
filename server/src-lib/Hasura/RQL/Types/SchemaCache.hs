@@ -87,9 +87,9 @@ module Hasura.RQL.Types.SchemaCache
     DependencyReason (..),
     SchemaDependency (..),
     mkParentDep,
-    mkCustomReturnTypeParentDep,
+    mkLogicalModelParentDep,
     mkColDep,
-    mkCustomReturnTypeColDep,
+    mkLogicalModelColDep,
     mkComputedFieldDep,
     getDependentObjs,
     getDependentObjsWith,
@@ -103,7 +103,7 @@ module Hasura.RQL.Types.SchemaCache
     showMetadataResourceVersion,
     initialResourceVersion,
     MetadataWithResourceVersion (..),
-    getCustomReturnTypeBoolExpDeps,
+    getLogicalModelBoolExpDeps,
     getBoolExpDeps,
     InlinedAllowlist,
     BoolExpM (..),
@@ -118,7 +118,7 @@ where
 import Control.Lens (Traversal', at, preview, (^.))
 import Data.Aeson
 import Data.Aeson.TH
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Int (Int64)
 import Data.Text.Extended ((<<>))
@@ -127,9 +127,9 @@ import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Types (CustomReturnTypeName)
 import Hasura.Function.Cache
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.IR.BoolExp
@@ -137,6 +137,8 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (HasTag (backendTag), reify)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
@@ -145,25 +147,24 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.Network (TlsAllow)
 import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryInfo)
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCacheTypes
+import Hasura.RQL.Types.Session (UserInfoM)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.SQL.Tag (HasTag (backendTag), reify)
-import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.Types.Extended (TlsAllow)
 import System.Cron.Types
 
 newtype MetadataResourceVersion = MetadataResourceVersion
@@ -192,21 +193,21 @@ mkParentDep ::
 mkParentDep s tn =
   SchemaDependency (SOSourceObj s $ AB.mkAnyBackend @b (SOITable tn)) DRTable
 
--- | When we depend on anything to do with custom return types, we also declare that
--- we depend on the custom return type as a whole. This is the "parent" dependency
--- in the dependency tree for a given custom return type.
-mkCustomReturnTypeParentDep ::
+-- | When we depend on anything to do with logical models, we also declare that
+-- we depend on the logical model as a whole. This is the "parent" dependency
+-- in the dependency tree for a given logical model.
+mkLogicalModelParentDep ::
   forall b.
   Backend b =>
   SourceName ->
-  CustomReturnTypeName ->
+  LogicalModelName ->
   SchemaDependency
-mkCustomReturnTypeParentDep source customReturnTypeName = do
+mkLogicalModelParentDep source logicalModelName = do
   let sourceObject :: SchemaObjId
       sourceObject =
         SOSourceObj source $
           AB.mkAnyBackend @b $
-            SOICustomReturnType customReturnTypeName
+            SOILogicalModel logicalModelName
 
   SchemaDependency sourceObject DRTable
 
@@ -225,22 +226,22 @@ mkColDep reason source tn col =
     . SOITableObj @b tn
     $ TOCol @b col
 
--- | Declare a dependency on a particular column of a custom return type
-mkCustomReturnTypeColDep ::
+-- | Declare a dependency on a particular column of a logical model
+mkLogicalModelColDep ::
   forall b.
   (Backend b) =>
   DependencyReason ->
   SourceName ->
-  CustomReturnTypeName ->
+  LogicalModelName ->
   Column b ->
   SchemaDependency
-mkCustomReturnTypeColDep reason source customReturnTypeName column = do
+mkLogicalModelColDep reason source logicalModelName column = do
   let sourceObject :: SchemaObjId
       sourceObject =
         SOSourceObj source $
           AB.mkAnyBackend $
-            SOICustomReturnTypeObj @b customReturnTypeName $
-              CRTOCol @b column
+            SOILogicalModelObj @b logicalModelName $
+              LMOCol @b column
 
   SchemaDependency sourceObject reason
 
@@ -265,16 +266,16 @@ type RemoteSchemaRelationships = RemoteSchemaRelationshipsG (RemoteFieldInfo G.N
 
 type RemoteSchemaCtx = RemoteSchemaCtxG (RemoteFieldInfo G.Name)
 
-type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
+type RemoteSchemaMap = HashMap.HashMap RemoteSchemaName RemoteSchemaCtx
 
 type PartiallyResolvedRemoteSchemaCtx =
   RemoteSchemaCtxG
     (PartiallyResolvedRemoteRelationship RemoteRelationshipDefinition)
 
 type PartiallyResolvedRemoteSchemaMap =
-  M.HashMap RemoteSchemaName PartiallyResolvedRemoteSchemaCtx
+  HashMap.HashMap RemoteSchemaName PartiallyResolvedRemoteSchemaCtx
 
-type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
+type DepMap = HashMap.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
 data CronTriggerInfo = CronTriggerInfo
   { ctiName :: TriggerName,
@@ -301,9 +302,9 @@ incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
 incSchemaCacheVer (SchemaCacheVer prev) =
   SchemaCacheVer $ prev + 1
 
-type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
+type ActionCache = HashMap.HashMap ActionName ActionInfo -- info of all actions
 
-type InheritedRolesCache = M.HashMap RoleName (HashSet RoleName)
+type InheritedRolesCache = HashMap.HashMap RoleName (HashSet RoleName)
 
 -------------------------------------------------------------------------------
 
@@ -324,7 +325,7 @@ askSourceInfo ::
 askSourceInfo sourceName = do
   sources <- scSources <$> askSchemaCache
   -- find any matching source info by name
-  case M.lookup sourceName sources of
+  case HashMap.lookup sourceName sources of
     -- 1. The function fails to find the named source at all
     Nothing -> throw400 NotExists $ "source with name " <> sourceName <<> " does not exist"
     Just matchingNameSourceInfo -> do
@@ -354,7 +355,7 @@ askSourceInfoMaybe ::
   m (Maybe (SourceInfo b))
 askSourceInfoMaybe sourceName = do
   sources <- scSources <$> askSchemaCache
-  pure (unsafeSourceInfo @b =<< M.lookup sourceName sources)
+  pure (unsafeSourceInfo @b =<< HashMap.lookup sourceName sources)
 
 -- | Retrieves the source config for a given source name.
 --
@@ -384,7 +385,7 @@ askSourceConfigMaybe =
 unsafeTableCache ::
   forall b. Backend b => SourceName -> SourceCache -> Maybe (TableCache b)
 unsafeTableCache sourceName cache = do
-  unsafeSourceTables @b =<< M.lookup sourceName cache
+  unsafeSourceTables @b =<< HashMap.lookup sourceName cache
 
 -- | Retrieves the table cache for a given source name.
 --
@@ -401,7 +402,7 @@ askTableCache ::
   m (Maybe (TableCache b))
 askTableCache sourceName = do
   sources <- scSources <$> askSchemaCache
-  pure $ unsafeSourceTables =<< M.lookup sourceName sources
+  pure $ unsafeSourceTables =<< HashMap.lookup sourceName sources
 
 -- | Retrieves the information about a table from the source cache, the source
 -- name, and the table name.
@@ -412,7 +413,7 @@ askTableCache sourceName = do
 unsafeTableInfo ::
   forall b. Backend b => SourceName -> TableName b -> SourceCache -> Maybe (TableInfo b)
 unsafeTableInfo sourceName tableName cache =
-  M.lookup tableName =<< unsafeTableCache @b sourceName cache
+  HashMap.lookup tableName =<< unsafeTableCache @b sourceName cache
 
 -- | Retrieves the information about a table for a given source name and table
 -- name.
@@ -492,7 +493,7 @@ askTableMetadata sourceName tableName = do
 unsafeFunctionCache ::
   forall b. Backend b => SourceName -> SourceCache -> Maybe (FunctionCache b)
 unsafeFunctionCache sourceName cache =
-  unsafeSourceFunctions @b =<< M.lookup sourceName cache
+  unsafeSourceFunctions @b =<< HashMap.lookup sourceName cache
 
 -- | Retrieves the information about a function from the source cache, the
 -- source name, and the function name.
@@ -503,7 +504,7 @@ unsafeFunctionCache sourceName cache =
 unsafeFunctionInfo ::
   forall b. Backend b => SourceName -> FunctionName b -> SourceCache -> Maybe (FunctionInfo b)
 unsafeFunctionInfo sourceName functionName cache =
-  M.lookup functionName =<< unsafeFunctionCache @b sourceName cache
+  HashMap.lookup functionName =<< unsafeFunctionCache @b sourceName cache
 
 -- | Retrieves the information about a function cache for a given source name
 -- and function name.
@@ -554,7 +555,7 @@ data SchemaCache = SchemaCache
     scUnauthenticatedRelayContext :: GQLContext,
     scDepMap :: DepMap,
     scInconsistentObjs :: [InconsistentMetadata],
-    scCronTriggers :: M.HashMap TriggerName CronTriggerInfo,
+    scCronTriggers :: HashMap.HashMap TriggerName CronTriggerInfo,
     scEndpoints :: EndpointTrie GQLQueryWithText,
     scApiLimits :: ApiLimit,
     scMetricsConfig :: MetricsConfig,
@@ -596,7 +597,7 @@ instance ToJSON SchemaCache where
 
 getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]
 getAllRemoteSchemas sc =
-  let consistentRemoteSchemas = M.keys $ scRemoteSchemas sc
+  let consistentRemoteSchemas = HashMap.keys $ scRemoteSchemas sc
       inconsistentRemoteSchemas =
         getInconsistentRemoteSchemas $ scInconsistentObjs sc
    in consistentRemoteSchemas <> inconsistentRemoteSchemas
@@ -630,7 +631,7 @@ instance (MonadReader r m) => MonadReader r (TableCoreCacheRT b m) where
 
 instance (Monad m, Backend b) => TableCoreInfoRM b (TableCoreCacheRT b m) where
   lookupTableCoreInfo tableName =
-    TableCoreCacheRT (pure . M.lookup tableName)
+    TableCoreCacheRT (pure . HashMap.lookup tableName)
 
 -- | All our RQL DML queries operate over a single source. This typeclass facilitates that.
 class (TableCoreInfoRM b m) => TableInfoRM b m where
@@ -656,11 +657,11 @@ newtype TableCacheRT b m a = TableCacheRT {runTableCacheRT :: TableCache b -> m 
 
 instance (Monad m, Backend b) => TableCoreInfoRM b (TableCacheRT b m) where
   lookupTableCoreInfo tableName =
-    TableCacheRT (pure . fmap _tiCoreInfo . M.lookup tableName)
+    TableCacheRT (pure . fmap _tiCoreInfo . HashMap.lookup tableName)
 
 instance (Monad m, Backend b) => TableInfoRM b (TableCacheRT b m) where
   lookupTableInfo tableName =
-    TableCacheRT (pure . M.lookup tableName)
+    TableCacheRT (pure . HashMap.lookup tableName)
 
 class (Monad m) => CacheRM m where
   askSchemaCache :: m SchemaCache
@@ -689,7 +690,7 @@ getDependentObjs = getDependentObjsWith (const True)
 getDependentObjsWith ::
   (DependencyReason -> Bool) -> SchemaCache -> SchemaObjId -> [SchemaObjId]
 getDependentObjsWith f sc objId =
-  map fst $ filter (isDependency . snd) $ M.toList $ scDepMap sc
+  map fst $ filter (isDependency . snd) $ HashMap.toList $ scDepMap sc
   where
     isDependency deps = not $
       HS.null $
@@ -738,24 +739,24 @@ getRemoteDependencies schemaCache sourceName =
       SORemoteSchemaPermission {} -> False
       SORole {} -> False
 
--- | What schema dependencies does a given row permission for a custom return type
+-- | What schema dependencies does a given row permission for a logical model
 -- have? This will almost certainly involve some number of dependencies on
--- custom return types, but may also involve dependencies on tables. Although we
--- can't relate tables and custom return types yet, we can still declare permissions
--- like, "you can only see this custom return type if your user ID exists in this
+-- logical models, but may also involve dependencies on tables. Although we
+-- can't relate tables and logical models yet, we can still declare permissions
+-- like, "you can only see this logical model if your user ID exists in this
 -- table".
-getCustomReturnTypeBoolExpDeps ::
+getLogicalModelBoolExpDeps ::
   forall b.
   (GetAggregationPredicatesDeps b) =>
   SourceName ->
-  CustomReturnTypeName ->
+  LogicalModelName ->
   AnnBoolExpPartialSQL b ->
   [SchemaDependency]
-getCustomReturnTypeBoolExpDeps source customReturnTypeName = \case
-  BoolAnd exps -> concatMap (getCustomReturnTypeBoolExpDeps source customReturnTypeName) exps
-  BoolOr exps -> concatMap (getCustomReturnTypeBoolExpDeps source customReturnTypeName) exps
-  BoolNot e -> getCustomReturnTypeBoolExpDeps source customReturnTypeName e
-  BoolField fld -> getCustomReturnTypeColExpDeps source customReturnTypeName fld
+getLogicalModelBoolExpDeps source logicalModelName = \case
+  BoolAnd exps -> concatMap (getLogicalModelBoolExpDeps source logicalModelName) exps
+  BoolOr exps -> concatMap (getLogicalModelBoolExpDeps source logicalModelName) exps
+  BoolNot e -> getLogicalModelBoolExpDeps source logicalModelName e
+  BoolField fld -> getLogicalModelColExpDeps source logicalModelName fld
   BoolExists (GExists refqt whereExp) -> do
     let table :: SchemaObjId
         table = SOSourceObj source $ AB.mkAnyBackend $ SOITable @b refqt
@@ -763,18 +764,18 @@ getCustomReturnTypeBoolExpDeps source customReturnTypeName = \case
     SchemaDependency table DRRemoteTable : getBoolExpDeps source refqt whereExp
 
 -- | What schema dependencies does this row permission for a particular column
--- within a custom return type have? This is a fairly simple function at the moment
+-- within a logical model have? This is a fairly simple function at the moment
 -- as there's only one type of column: columns! As a result, we have no
 -- dependencies from relationships, computed fields, or aggregation predicates,
 -- as none of these things are supported.
-getCustomReturnTypeColExpDeps ::
+getLogicalModelColExpDeps ::
   forall b.
   (GetAggregationPredicatesDeps b) =>
   SourceName ->
-  CustomReturnTypeName ->
+  LogicalModelName ->
   AnnBoolExpFld b (PartialSQLExp b) ->
   [SchemaDependency]
-getCustomReturnTypeColExpDeps source customReturnTypeName = \case
+getLogicalModelColExpDeps source logicalModelName = \case
   AVRelationship _ _ -> []
   AVComputedField _ -> []
   AVAggregationPredicates _ -> []
@@ -788,9 +789,9 @@ getCustomReturnTypeColExpDeps source customReturnTypeName = \case
         colDepReason = bool DRSessionVariable DROnType (any hasStaticExp opExps)
 
         colDep :: SchemaDependency
-        colDep = mkCustomReturnTypeColDep @b colDepReason source customReturnTypeName columnName
+        colDep = mkLogicalModelColDep @b colDepReason source logicalModelName columnName
 
-    colDep : getCustomReturnTypeOpExpDeps source customReturnTypeName opExps
+    colDep : getLogicalModelOpExpDeps source logicalModelName opExps
 
 -- | Discover the schema dependencies of an @AnnBoolExpPartialSQL@.
 getBoolExpDeps ::
@@ -879,19 +880,19 @@ getOpExpDeps opExps = do
           IsCurrent -> currTable
     pure $ mkColDep @b DROnType source table col
 
--- | What dependencies does this row permission for a custom return type have? This
+-- | What dependencies does this row permission for a logical model have? This
 -- is really a utility function for the tree of dependency traversals under
--- 'getCustomReturnTypeBoolExpDeps', specifically focusing on boolean operators.
-getCustomReturnTypeOpExpDeps ::
+-- 'getLogicalModelBoolExpDeps', specifically focusing on boolean operators.
+getLogicalModelOpExpDeps ::
   forall b.
   (Backend b) =>
   SourceName ->
-  CustomReturnTypeName ->
+  LogicalModelName ->
   [OpExpG b (PartialSQLExp b)] ->
   [SchemaDependency]
-getCustomReturnTypeOpExpDeps source customReturnTypeName operatorExpressions = do
+getLogicalModelOpExpDeps source logicalModelName operatorExpressions = do
   RootOrCurrentColumn _ column <- mapMaybe opExpDepCol operatorExpressions
-  pure (mkCustomReturnTypeColDep @b DROnType source customReturnTypeName column)
+  pure (mkLogicalModelColDep @b DROnType source logicalModelName column)
 
 -- | Asking for a table's fields info without explicit @'SourceName' argument.
 -- The source name is implicitly inferred from @'SourceM' via @'TableCoreInfoRM'.

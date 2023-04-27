@@ -17,7 +17,7 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Extended qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
@@ -40,15 +40,15 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Namespace (RootFieldAlias (..), RootFieldMap)
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend as RQLTypes
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as RQLColumn
 import Hasura.RQL.Types.Common as RQLTypes
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
@@ -95,7 +95,7 @@ msDBQueryPlan ::
   m (DBStepInfo 'MSSQL)
 msDBQueryPlan userInfo sourceName sourceConfig qrf _ _ = do
   let sessionVariables = _uiSession userInfo
-  (QueryWithDDL {qwdBeforeSteps, qwdAfterSteps, qwdQuery = statement}) <- planQuery sessionVariables qrf
+  QueryWithDDL {qwdBeforeSteps, qwdAfterSteps, qwdQuery = statement} <- planQuery sessionVariables qrf
   queryTags <- ask
 
   -- Append Query tags comment to the select statement
@@ -347,7 +347,7 @@ validateVariables sourceConfig sessionVariableValues prepState = do
         map
           ( \(n, v) -> Aliased (ValueExpression (RQLColumn.cvValue v)) (G.unName n)
           )
-          $ Map.toList
+          $ HashMap.toList
           $ namedArguments
 
       -- For positional args we need to be a bit careful not to capture names

@@ -10,6 +10,7 @@ import {
   SourceToSourceRelationship,
   SupportedDrivers,
   Table,
+  QualifiedFunction,
 } from '../hasura-metadata-types';
 
 import type { NetworkArgs } from './api';
@@ -170,6 +171,15 @@ export type GetDefaultQueryRootProps = {
   table: Table;
 };
 
+export type GetTrackableFunctionProps = {
+  dataSourceName: string;
+} & NetworkArgs;
+
+export type IntrospectedFunction = {
+  name: string;
+  qualifiedFunction: QualifiedFunction;
+  isVolatile: boolean;
+};
 export type GetDatabaseSchemaProps = {
   dataSourceName: string;
 } & NetworkArgs;
@@ -178,3 +188,8 @@ export type ChangeDatabaseSchemaProps = {
   dataSourceName: string;
   schemaName: string;
 } & NetworkArgs;
+export type GetIsTableViewProps = {
+  dataSourceName: string;
+  table: Table;
+  httpClient: NetworkArgs['httpClient'];
+};

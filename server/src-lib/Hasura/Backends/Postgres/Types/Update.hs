@@ -13,7 +13,7 @@ where
 import Hasura.Prelude
 import Hasura.RQL.IR.Update.Batch (UpdateBatch (..), updateBatchIsEmpty)
 import Hasura.RQL.Types.Backend (Backend)
-import Hasura.SQL.Backend (BackendType (Postgres))
+import Hasura.RQL.Types.BackendType (BackendType (Postgres))
 
 -- | The various @update operators@ supported by PostgreSQL,
 -- i.e. the @_set@, @_inc@ operators that appear in the schema.

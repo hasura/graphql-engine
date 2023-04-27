@@ -1,44 +1,10 @@
-import os
 import pytest
 import requests
-import threading
 from time import perf_counter, sleep
-from conftest import extract_server_address_from
-
-import jwk_server
-import ports
 
 pytestmark = [
     pytest.mark.admin_secret
 ]
-
-@pytest.fixture(scope='class')
-@pytest.mark.early
-def jwk_server_url(request: pytest.FixtureRequest, hge_fixture_env: dict[str, str]):
-    path_marker = request.node.get_closest_marker('jwk_path')
-    assert path_marker is not None, 'The test must set the `jwk_path` marker.'
-    path: str = path_marker.args[0]
-
-    # If the JWK server was started outside, just set the environment variable
-    # so that the test is skipped if the value is wrong.
-    env_var = os.getenv('JWK_SERVER_URL')
-    if env_var:
-        hge_fixture_env['HASURA_GRAPHQL_JWT_SECRET'] = '{"jwk_url": "' + env_var + path + '"}'
-        return env_var
-
-    server_address = extract_server_address_from('JWK_SERVER_URL')
-    server = jwk_server.create_server(server_address)
-    thread = threading.Thread(target=server.serve_forever)
-    thread.start()
-    request.addfinalizer(server.shutdown)
-
-    host = server.server_address[0]
-    port = server.server_address[1]
-    ports.wait_for_port(port)
-    url = f'http://{host}:{port}'
-    print(f'{jwk_server_url.__name__} server started on {url}')
-    hge_fixture_env['HASURA_GRAPHQL_JWT_SECRET'] = '{"jwk_url": "' + url + path + '"}'
-    return url
 
 def wait_until_request_count_reaches(num_requests: int, state_key: str, timeout_secs: int, jwk_server_url: str) -> float:
     start_time = perf_counter()

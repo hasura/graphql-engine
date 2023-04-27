@@ -2,7 +2,7 @@
 --
 -- How to parse the boolean expressions, specifically for Postgres.
 --
--- See 'Hasura.RQL.DDL.Schema.Cache' and 'Hasura.RQL.Types.Eventing.Backend'.
+-- See 'Hasura.Eventing.Backend'.
 module Hasura.Backends.Postgres.DDL.BoolExp
   ( parseBoolExpOperations,
     buildComputedFieldBooleanExp,
@@ -12,7 +12,7 @@ where
 import Data.Aeson
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
@@ -23,12 +23,12 @@ import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 
 parseBoolExpOperations ::
@@ -201,7 +201,7 @@ parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
         parseCast = do
           castOperations <- parseVal
           parsedCastOperations <-
-            forM (Map.toList castOperations) $ \(targetTypeName, castedComparisons) -> do
+            forM (HashMap.toList castOperations) $ \(targetTypeName, castedComparisons) -> do
               let targetType = textToPGScalarType targetTypeName
                   castedColumn = ColumnReferenceCast column (ColumnScalar targetType)
               checkValidCast targetType
@@ -209,7 +209,7 @@ parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
                 withPathK targetTypeName $
                   parseOperations castedColumn castedComparisons
               return (targetType, parsedCastedComparisons)
-          return . ACast $ Map.fromList parsedCastOperations
+          return . ACast $ HashMap.fromList parsedCastOperations
 
         checkValidCast targetType = case (colTy, targetType) of
           (ColumnScalar PGGeometry, PGGeography) -> return ()

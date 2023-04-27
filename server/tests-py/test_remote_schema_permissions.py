@@ -14,9 +14,9 @@ pytestmark = [
 
 @pytest.fixture(scope='class')
 @pytest.mark.early
-def graphql_service_1(hge_fixture_env: dict[str, str]):
+def graphql_service_1(worker_id: str, hge_fixture_env: dict[str, str]):
     (_, port) = extract_server_address_from('GRAPHQL_SERVICE_1')
-    server = NodeGraphQL(['node', 'remote_schemas/nodejs/remote_schema_perms.js'], port=port)
+    server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/remote_schema_perms.js', port=port)
     server.start()
     print(f'{graphql_service_1.__name__} server started on {server.url}')
     hge_fixture_env['GRAPHQL_SERVICE_1'] = server.url
@@ -25,9 +25,9 @@ def graphql_service_1(hge_fixture_env: dict[str, str]):
 
 @pytest.fixture(scope='class')
 @pytest.mark.early
-def graphql_service_2(hge_fixture_env: dict[str, str]):
+def graphql_service_2(worker_id: str, hge_fixture_env: dict[str, str]):
     (_, port) = extract_server_address_from('GRAPHQL_SERVICE_2')
-    server = NodeGraphQL(['node', 'remote_schemas/nodejs/secondary_remote_schema_perms.js'], port=port)
+    server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/secondary_remote_schema_perms.js', port=port)
     server.start()
     print(f'{graphql_service_2.__name__} server started on {server.url}')
     hge_fixture_env['GRAPHQL_SERVICE_2'] = server.url
@@ -36,9 +36,9 @@ def graphql_service_2(hge_fixture_env: dict[str, str]):
 
 @pytest.fixture(scope='class')
 @pytest.mark.early
-def graphql_service_3(hge_fixture_env: dict[str, str]):
+def graphql_service_3(worker_id: str, hge_fixture_env: dict[str, str]):
     (_, port) = extract_server_address_from('GRAPHQL_SERVICE_3')
-    server = NodeGraphQL(['node', 'remote_schemas/nodejs/secondary_remote_schema_perms_error.js'], port=port)
+    server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/secondary_remote_schema_perms_error.js', port=port)
     server.start()
     print(f'{graphql_service_3.__name__} server started on {server.url}')
     hge_fixture_env['GRAPHQL_SERVICE_3'] = server.url

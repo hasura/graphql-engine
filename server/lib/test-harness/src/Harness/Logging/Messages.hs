@@ -88,7 +88,7 @@ class LoggableMessage a where
 -- If you find yourself wanting to do this, consider defining a new, bespoke
 -- message type that describes what you want to log.
 instance TypeError ('Text "Please define a custom message type rather than logging raw JSON values") => LoggableMessage Value where
-  fromLoggableMessage = undefined
+  fromLoggableMessage = error "Please define a custom message type rather than logging raw JSON values"
 
 newtype LogTrace = LogTrace Text
 

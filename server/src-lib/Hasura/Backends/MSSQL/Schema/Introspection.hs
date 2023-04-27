@@ -15,10 +15,10 @@ import Hasura.Backends.MSSQL.SQL.Error (defaultMSSQLTxErrorHandler)
 import Hasura.Backends.MSSQL.Types (SchemaName (..), TableName (..))
 import Hasura.Base.Error (QErr, prefixQErr)
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType (BackendType (MSSQL))
 import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Metadata (MetadataM)
 import Hasura.RQL.Types.SchemaCache (CacheRM, askSourceConfig)
-import Hasura.SQL.Backend (BackendType (MSSQL))
 
 -- | List all tables, tracked or untracked, on a given data source.
 listAllTables :: (CacheRM m, MetadataM m, MonadBaseControl IO m, MonadError QErr m, MonadIO m) => SourceName -> m [TableName]

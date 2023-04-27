@@ -5,6 +5,8 @@ import { getPlaceholder } from './utils/getPlaceholder';
 import { Table } from '../hasura-metadata-types/source/table';
 import { InsertRowForm, InsertRowFormProps } from './InsertRowForm';
 import { useTableInfo } from '../Data/hooks/useTableInfo';
+import { useMetadata } from '../hasura-metadata-api';
+import { SupportedDrivers } from '../hasura-metadata-types';
 
 type InsertRowFormContainerProps = {
   dataSourceName: string;
@@ -23,7 +25,11 @@ export const InsertRowFormContainer = ({
     table,
   });
 
-  const isLoading = isLoadingColumns || isLoadingTableInfo;
+  const { data: driver, isLoading: isLoadingMetadata } = useMetadata(
+    m => m.metadata.sources.find(source => source.name === dataSourceName)?.kind
+  );
+
+  const isLoading = isLoadingColumns || isLoadingTableInfo || isLoadingMetadata;
 
   const onInsertSuccess = () =>
     hasuraToast({
@@ -78,6 +84,7 @@ export const InsertRowFormContainer = ({
       isInserting={isInserting}
       isLoading={isLoading}
       onInsertRow={onInsertRow}
+      driver={driver as SupportedDrivers}
     />
   );
 };

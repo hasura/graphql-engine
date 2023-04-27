@@ -118,10 +118,10 @@ import Data.Aeson.Extended
 import Data.Aeson.Key qualified as Key
 import Data.Aeson.Types (Parser)
 import Data.Kind (Constraint, Type)
-import Hasura.Backends.DataConnector.Adapter.Types (mkDataConnectorName)
 import Hasura.Prelude
-import Hasura.SQL.Backend
-import Hasura.SQL.Tag
+import Hasura.RQL.Types.BackendTag
+import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.DataConnector (mkDataConnectorName)
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
 --------------------------------------------------------------------------------

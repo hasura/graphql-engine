@@ -5,8 +5,7 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Types
-import Data.HashMap.Strict qualified as M
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Sequence qualified as DS
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
@@ -26,13 +25,13 @@ import Hasura.RQL.DML.Types
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Update
 import Hasura.RQL.IR.Update.Batch
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -133,22 +132,22 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let fieldInfoMap = _tciFieldInfoMap coreInfo
       allCols = getCols fieldInfoMap
       preSetObj = upiSet updPerm
-      preSetCols = M.keys preSetObj
+      preSetCols = HashMap.keys preSetObj
 
   -- convert the object to SQL set expression
   setItems <-
     withPathK "$set" $
-      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqSet uq) $
+      convOp fieldInfoMap preSetCols updPerm (HashMap.toList $ uqSet uq) $
         convSet prepValBldr
 
   incItems <-
     withPathK "$inc" $
-      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqInc uq) $
+      convOp fieldInfoMap preSetCols updPerm (HashMap.toList $ uqInc uq) $
         convInc prepValBldr
 
   mulItems <-
     withPathK "$mul" $
-      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $
+      convOp fieldInfoMap preSetCols updPerm (HashMap.toList $ uqMul uq) $
         convMul prepValBldr
 
   defItems <-
@@ -160,7 +159,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
     withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
   resolvedPreSetItems <-
-    M.toList
+    HashMap.toList
       <$> mapM (convPartialSQLExp sessVarBldr) preSetObj
 
   let setExpItems =
@@ -194,7 +193,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
       resolvedUpdCheck
       ( SingleBatch $
           UpdateBatch
-            (Map.fromList $ fmap UpdateSet <$> setExpItems)
+            (HashMap.fromList $ fmap UpdateSet <$> setExpItems)
             annSQLBoolExp
       )
       (mkDefaultMutFlds mAnnRetCols)

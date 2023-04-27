@@ -15,7 +15,7 @@ where
 
 import Control.Monad.Trans.Control qualified as MT
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.IntMap qualified as IntMap
 import Data.Sequence qualified as Seq
@@ -66,7 +66,6 @@ import Hasura.GraphQL.Namespace
     RootFieldMap,
   )
 import Hasura.GraphQL.Namespace qualified as G
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags
   ( QueryTagsComment (..),
@@ -79,6 +78,7 @@ import Hasura.RQL.IR.Returning qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
   ( ColumnType (..),
     ColumnValue (..),
@@ -89,8 +89,8 @@ import Hasura.RQL.Types.Common
     JsonAggSelect (..),
     SourceName,
   )
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -475,7 +475,7 @@ pgDBStreamingSubscriptionPlan userInfo _sourceName sourceConfig (rootFieldAlias,
         QDBStreamMultipleRows (IR.AnnSelectStreamG () _ _ _ args _) ->
           let cursorArg = IR._ssaCursorArg args
               colInfo = IR._sciColInfo cursorArg
-           in Map.singleton (ciName colInfo) (IR._sciInitialValue cursorArg)
+           in HashMap.singleton (ciName colInfo) (IR._sciInitialValue cursorArg)
         _ -> mempty
 
 -- | Test a multiplexed query in a transaction.
@@ -512,9 +512,10 @@ mkCurPlanTx userInfo ps@(PreparedSql q prepMap) =
       -- WARNING: this quietly assumes the intmap keys are contiguous
       prepArgs = fst <$> IntMap.elems args
    in (,Just ps) $ OnBaseMonad do
-        Tracing.newSpan "Postgres" $
-          runIdentity . PG.getRow
-            <$> PG.rawQE dmlTxErrorHandler q prepArgs True
+        -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/database/#connection-level-attributes
+        Tracing.attachMetadata [("db.system", "postgresql")]
+        runIdentity . PG.getRow
+          <$> PG.rawQE dmlTxErrorHandler q prepArgs True
 
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan ::
@@ -597,7 +598,7 @@ pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
     jsonToRecordSet :: IR.SelectFromG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
 
     recordSetDefinitionList =
-      (coerceToColumn argumentId, Postgres.PGBigInt) : Map.toList (fmap snd joinColumnMapping)
+      (coerceToColumn argumentId, Postgres.PGBigInt) : HashMap.toList (fmap snd joinColumnMapping)
     jsonToRecordSet =
       IR.FromFunction
         (Postgres.QualifiedObject "pg_catalog" $ Postgres.FunctionName "jsonb_to_recordset")

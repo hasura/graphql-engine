@@ -12,7 +12,6 @@ import { Badge } from '../../../../new-components/Badge';
 import { SuggestedRelationshipWithName } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useSuggestedRelationships';
 import { RelationshipRow } from './RelationshipRow';
 import { SuggestedRelationshipTrackModal } from '../../../DatabaseRelationships/components/SuggestedRelationshipTrackModal/SuggestedRelationshipTrackModal';
-import { hasuraToast } from '../../../../new-components/Toasts';
 import Skeleton from 'react-loading-skeleton';
 import {
   AddSuggestedRelationship,
@@ -111,13 +110,6 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
         selectedRelationships.map(adaptTrackRelationship);
 
       await onAddMultipleSuggestedRelationships(trackRelationships);
-
-      const plural = selectedRelationships.length > 1 ? 's' : '';
-      hasuraToast({
-        title: 'Success',
-        message: `${selectedRelationships.length} relationship${plural} tracked`,
-        type: 'success',
-      });
     } catch (err) {
       setTrackingSelectedRelationships(false);
     }

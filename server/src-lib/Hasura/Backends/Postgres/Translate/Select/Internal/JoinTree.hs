@@ -9,7 +9,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
 where
 
 import Control.Monad.Writer.Strict
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.Translate.Types
 import Hasura.Prelude
@@ -43,7 +43,7 @@ withWriteObjectRelation ::
   (MonadWriter SelectWriter m) =>
   m
     ( ObjectRelationSource,
-      HM.HashMap S.ColumnAlias S.SQLExp,
+      HashMap.HashMap S.ColumnAlias S.SQLExp,
       a
     ) ->
   m a
@@ -54,14 +54,14 @@ withWriteObjectRelation action =
   where
     updateJoinTree joinTree (source, nodeExtractors) =
       let selectNode = SelectNode nodeExtractors joinTree
-       in mempty {_jtObjectRelations = HM.singleton source selectNode}
+       in mempty {_jtObjectRelations = HashMap.singleton source selectNode}
 
 withWriteArrayRelation ::
   (MonadWriter SelectWriter m) =>
   m
     ( ArrayRelationSource,
       S.Extractor,
-      HM.HashMap S.ColumnAlias S.SQLExp,
+      HashMap.HashMap S.ColumnAlias S.SQLExp,
       a
     ) ->
   m a
@@ -74,14 +74,14 @@ withWriteArrayRelation action =
       let arraySelectNode =
             MultiRowSelectNode [topExtractor] $
               SelectNode nodeExtractors joinTree
-       in mempty {_jtArrayRelations = HM.singleton source arraySelectNode}
+       in mempty {_jtArrayRelations = HashMap.singleton source arraySelectNode}
 
 withWriteArrayConnection ::
   (MonadWriter SelectWriter m) =>
   m
     ( ArrayConnectionSource,
       S.Extractor,
-      HM.HashMap S.ColumnAlias S.SQLExp,
+      HashMap.HashMap S.ColumnAlias S.SQLExp,
       a
     ) ->
   m a
@@ -94,14 +94,14 @@ withWriteArrayConnection action =
       let arraySelectNode =
             MultiRowSelectNode [topExtractor] $
               SelectNode nodeExtractors joinTree
-       in mempty {_jtArrayConnections = HM.singleton source arraySelectNode}
+       in mempty {_jtArrayConnections = HashMap.singleton source arraySelectNode}
 
 withWriteComputedFieldTableSet ::
   (MonadWriter SelectWriter m) =>
   m
     ( ComputedFieldTableSetSource,
       S.Extractor,
-      HM.HashMap S.ColumnAlias S.SQLExp,
+      HashMap.HashMap S.ColumnAlias S.SQLExp,
       a
     ) ->
   m a
@@ -112,4 +112,4 @@ withWriteComputedFieldTableSet action =
   where
     updateJoinTree joinTree (source, topExtractor, nodeExtractors) =
       let selectNode = MultiRowSelectNode [topExtractor] $ SelectNode nodeExtractors joinTree
-       in mempty {_jtComputedFieldTableSets = HM.singleton source selectNode}
+       in mempty {_jtComputedFieldTableSets = HashMap.singleton source selectNode}

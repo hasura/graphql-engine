@@ -2,7 +2,7 @@
 
 module Hasura.Server.TelemetrySpec (spec) where
 
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Hasura.Prelude
 import Hasura.Server.Telemetry.Counters
 import Test.Hspec
@@ -52,5 +52,5 @@ telemetryCountersTests = do
       fmap (sort . serviceTimingMetrics) dumpServiceTimingMetrics `shouldReturn` expected
 
     it "serializes and deserializes properly" $ do
-      fmap (fmap (sort . serviceTimingMetrics) . A.eitherDecode . A.encode) dumpServiceTimingMetrics
+      fmap (fmap (sort . serviceTimingMetrics) . J.eitherDecode . J.encode) dumpServiceTimingMetrics
         `shouldReturn` Right expected

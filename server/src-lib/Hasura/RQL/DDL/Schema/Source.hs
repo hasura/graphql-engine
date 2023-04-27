@@ -4,7 +4,8 @@ module Hasura.RQL.DDL.Schema.Source
   ( -- * Add Source
     AddSource,
     runAddSource,
-    -- Drop Source
+
+    -- * Drop Source
     DropSource (..),
     runDropSource,
     runPostDropSourceHook,
@@ -31,19 +32,23 @@ where
 
 import Control.Lens (at, (.~), (^.))
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Extended
-import Data.Aeson.Extended qualified as J
 import Data.Aeson.TH
+import Data.Bifunctor (bimap)
 import Data.Environment qualified as Env
 import Data.Has
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
+import Data.HashSet qualified as HashSet
+import Data.Semigroup.Foldable (Foldable1 (..))
 import Data.Text.Extended
 import Data.Text.Extended qualified as Text.E
 import Hasura.Backends.DataConnector.API qualified as API
-import Hasura.Backends.DataConnector.Adapter.Metadata (requestDatabaseSchema)
+import Hasura.Backends.DataConnector.Adapter.Types qualified as DC.Types
+import Hasura.Backends.Postgres.SQL.Types (getPGDescription)
 import Hasura.Base.Error
 import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON
@@ -52,6 +57,9 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Backend qualified as RQL.Types
+import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.BackendType qualified as Backend
+import Hasura.RQL.Types.Column (ColumnMutability (..), RawColumnInfo (..))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.HealthCheck (HealthCheckConfig)
@@ -65,13 +73,14 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
+import Hasura.RQL.Types.Table (Constraint (..), DBTableMetadata (..), ForeignKey (..), ForeignKeyMetadata (..), PrimaryKey (..))
 import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.AnyBackend qualified as AnyBackend
-import Hasura.SQL.Backend
-import Hasura.SQL.Backend qualified as Backend
 import Hasura.Server.Logging (MetadataLog (..))
 import Hasura.Services
+import Language.GraphQL.Draft.Syntax qualified as G
+import Witch qualified
 
 --------------------------------------------------------------------------------
 -- Add source
@@ -117,7 +126,7 @@ runAddSource env (AddSource name backendKind sourceConfig replaceConfiguration s
 
   metadataModifier <-
     MetadataModifier
-      <$> if HM.member name sources
+      <$> if HashMap.member name sources
         then
           if replaceConfiguration
             then do
@@ -152,11 +161,11 @@ runRenameSource ::
 runRenameSource RenameSource {..} = do
   sources <- scSources <$> askSchemaCache
 
-  unless (HM.member _rmName sources) $
+  unless (HashMap.member _rmName sources) $
     throw400 NotExists $
       "Could not find source with name " <>> _rmName
 
-  when (HM.member _rmNewName sources) $
+  when (HashMap.member _rmNewName sources) $
     throw400 AlreadyExists $
       "Source with name " <> _rmNewName <<> " already exists"
 
@@ -210,7 +219,7 @@ runDropSource ::
 runDropSource dropSourceInfo@(DropSource name cascade) = do
   schemaCache <- askSchemaCache
   let sources = scSources schemaCache
-  case HM.lookup name sources of
+  case HashMap.lookup name sources of
     Just backendSourceInfo ->
       AB.dispatchAnyBackend @BackendMetadata backendSourceInfo $ dropSource dropSourceInfo
     Nothing -> do
@@ -273,7 +282,7 @@ runPostDropSourceHook sourceName sourceInfo = do
   logger :: (L.Logger L.Hasura) <- asks getter
   let sourceConfig = _siConfiguration sourceInfo
   -- Create a hashmap: {TableName: [Triggers]}
-  let tableTriggersMap = HM.map (HM.keys . _tiEventTriggerInfoMap) (_siTables sourceInfo)
+  let tableTriggersMap = HashMap.map (HashMap.keys . _tiEventTriggerInfoMap) (_siTables sourceInfo)
   -- We only log errors that arise from 'postDropSourceHook' here, and not
   -- surface them as end-user errors. See comment
   -- https://github.com/hasura/graphql-engine/issues/7092#issuecomment-873845282
@@ -318,7 +327,7 @@ runUpdateSource (UpdateSource name sourceConfig sourceCustomization healthCheckC
 
   metadataModifier <-
     MetadataModifier
-      <$> if HM.member name sources
+      <$> if HashMap.member name sources
         then do
           let sMetadata = metaSources . ix name . toSourceMetadata @b
               updateConfig = maybe id (\scc -> sMetadata . smConfiguration .~ scc) sourceConfig
@@ -336,7 +345,7 @@ runUpdateSource (UpdateSource name sourceConfig sourceCustomization healthCheckC
 newtype GetSourceTables (b :: BackendType) = GetSourceTables {_gstSourceName :: SourceName}
 
 instance FromJSON (GetSourceTables b) where
-  parseJSON = Aeson.withObject "GetSourceTables" \o -> do
+  parseJSON = J.withObject "GetSourceTables" \o -> do
     _gstSourceName <- o .: "source"
     pure $ GetSourceTables {..}
 
@@ -366,21 +375,17 @@ data GetTableInfo = GetTableInfo
   }
 
 instance FromJSON GetTableInfo where
-  parseJSON = Aeson.withObject "GetSourceTables" \o -> do
+  parseJSON = J.withObject "GetSourceTables" \o -> do
     _gtiSourceName <- o .: "source"
     _gtiTableName <- o .: "table"
     pure $ GetTableInfo {..}
 
--- | Fetch a list of tables for the request data source. Currently
+-- | Fetch a schema information about a table for the requested data source. Currently
 -- this is only supported for Data Connectors.
 runGetTableInfo ::
   ( CacheRM m,
-    Has (L.Logger L.Hasura) r,
-    MonadReader r m,
     MonadError Error.QErr m,
-    Metadata.MetadataM m,
-    MonadIO m,
-    MonadBaseControl IO m
+    Metadata.MetadataM m
   ) =>
   GetTableInfo ->
   m EncJSON
@@ -388,20 +393,17 @@ runGetTableInfo GetTableInfo {..} = do
   metadata <- Metadata.getMetadata
 
   let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
-
   abSourceMetadata <- lookupSourceMetadata _gtiSourceName sources
 
   AnyBackend.dispatchAnyBackend @RQL.Types.Backend abSourceMetadata $ \Metadata.SourceMetadata {_smKind, _smConfiguration} -> do
     case _smKind of
       Backend.DataConnectorKind _dcName -> do
-        sourceConfig <- askSourceConfig @'DataConnector _gtiSourceName
-        (logger :: L.Logger L.Hasura) <- asks getter
-
-        schemaResponse <- requestDatabaseSchema logger _gtiSourceName sourceConfig
-
-        let table = find ((== _gtiTableName) . API._tiName) $ API._srTables schemaResponse
-        pure $ EncJSON.encJFromJValue table
-      backend -> Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
+        sourceInfo <- askSourceInfo @'DataConnector _gtiSourceName
+        let tableName = Witch.from _gtiTableName
+        let table = HashMap.lookup tableName $ _rsTables $ _siDbObjectsIntrospection sourceInfo
+        pure . EncJSON.encJFromJValue $ convertTableMetadataToTableInfo tableName <$> table
+      backend ->
+        Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
 
 --------------------------------------------------------------------------------
 -- Internal helper functions
@@ -410,3 +412,48 @@ lookupSourceMetadata :: (MonadError QErr m) => SourceName -> InsOrdHashMap Sourc
 lookupSourceMetadata sourceName sources =
   InsOrdHashMap.lookup sourceName sources
     `onNothing` Error.throw400 Error.DataConnectorError ("Source '" <> Text.E.toTxt sourceName <> "' not found")
+
+convertTableMetadataToTableInfo :: TableName 'DataConnector -> DBTableMetadata 'DataConnector -> API.TableInfo
+convertTableMetadataToTableInfo tableName DBTableMetadata {..} =
+  API.TableInfo
+    { _tiName = Witch.from tableName,
+      _tiType = DC.Types._etmTableType _ptmiExtraTableMetadata,
+      _tiColumns = convertColumn <$> _ptmiColumns,
+      _tiPrimaryKey = fmap Witch.from . toNonEmpty . _pkColumns <$> _ptmiPrimaryKey,
+      _tiForeignKeys = convertForeignKeys _ptmiForeignKeys,
+      _tiDescription = getPGDescription <$> _ptmiDescription,
+      _tiInsertable = all viIsInsertable _ptmiViewInfo,
+      _tiUpdatable = all viIsUpdatable _ptmiViewInfo,
+      _tiDeletable = all viIsDeletable _ptmiViewInfo
+    }
+  where
+    convertColumn :: RawColumnInfo 'DataConnector -> API.ColumnInfo
+    convertColumn RawColumnInfo {..} =
+      API.ColumnInfo
+        { _ciName = Witch.from rciName,
+          _ciType = Witch.from rciType,
+          _ciNullable = rciIsNullable,
+          _ciDescription = G.unDescription <$> rciDescription,
+          _ciInsertable = _cmIsInsertable rciMutability,
+          _ciUpdatable = _cmIsUpdatable rciMutability,
+          _ciValueGenerated = DC.Types._ecmValueGenerated =<< extraColumnMetadata
+        }
+      where
+        extraColumnMetadata = HashMap.lookup rciName . DC.Types._etmExtraColumnMetadata $ _ptmiExtraTableMetadata
+
+    convertForeignKeys :: HashSet (ForeignKeyMetadata 'DataConnector) -> API.ForeignKeys
+    convertForeignKeys foreignKeys =
+      foreignKeys
+        & HashSet.toList
+        & fmap
+          ( \(ForeignKeyMetadata ForeignKey {..}) ->
+              let constraintName = Witch.from $ _cName _fkConstraint
+                  constraint =
+                    API.Constraint
+                      { _cForeignTable = Witch.from _fkForeignTable,
+                        _cColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> NEHashMap.toList _fkColumnMapping
+                      }
+               in (constraintName, constraint)
+          )
+        & HashMap.fromList
+        & API.ForeignKeys

@@ -40,6 +40,7 @@ import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Options
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Execute.Subscription.Poll
+import Hasura.GraphQL.Execute.Subscription.Poll.Common (PollerResponseState (PRSSuccess))
 import Hasura.GraphQL.Execute.Subscription.TMap qualified as TMap
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
 import Hasura.GraphQL.Transport.Backend
@@ -51,7 +52,7 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common (SourceName)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Metrics (ServerMetrics (..))
-import Hasura.Server.Prometheus (PrometheusMetrics (..))
+import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..))
 import Hasura.Server.Types (RequestId)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Refined (unrefine)
@@ -133,7 +134,7 @@ findPollerForSubscriber subscriber pollerMap pollerKey cohortKey addToCohort add
     Nothing -> do
       -- no poller found, so create one with the cohort
       -- and the subscriber within it.
-      !poller <- Poller <$> TMap.new <*> STM.newEmptyTMVar
+      !poller <- Poller <$> TMap.new <*> STM.newTVar PRSSuccess <*> STM.newEmptyTMVar
       cursorVars <- addToPoller subscriber poller
       STMMap.insert poller pollerKey pollerMap
       return $ (Just poller, cursorVars)
@@ -195,11 +196,23 @@ addLiveQuery
         forever $ do
           (lqOpts, _) <- getSubscriptionOptions
           let SubscriptionsOptions _ refetchInterval = lqOpts
-          pollLiveQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts poller) postPollHook resolvedConnectionTemplate
+          pollLiveQuery @b
+            pollerId
+            (_pPollerState poller)
+            lqOpts
+            (source, sourceConfig)
+            role
+            parameterizedQueryHash
+            query
+            (_pCohorts poller)
+            postPollHook
+            prometheusMetrics
+            resolvedConnectionTemplate
           sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
       STM.atomically $ STM.putTMVar (_pIOState poller) pState
+      liftIO $ Prometheus.Gauge.inc $ submActiveLiveQueryPollers $ pmSubscriptionMetrics $ prometheusMetrics
 
     liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
     liftIO $ Prometheus.Gauge.inc $ pmActiveSubscriptions prometheusMetrics
@@ -285,15 +298,17 @@ addStreamSubscriptionQuery
         forever $ do
           (_, streamQOpts) <- getSubscriptionOptions
           let SubscriptionsOptions _ refetchInterval = streamQOpts
-          pollStreamingQuery @b pollerId streamQOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) rootFieldName postPollHook Nothing resolvedConnectionTemplate
+          pollStreamingQuery @b pollerId (_pPollerState handler) streamQOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) rootFieldName postPollHook Nothing prometheusMetrics resolvedConnectionTemplate
           sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
       STM.atomically $ STM.putTMVar (_pIOState handler) pState
+      liftIO $ Prometheus.Gauge.inc $ submActiveStreamingPollers $ pmSubscriptionMetrics $ prometheusMetrics
 
-    liftIO $ EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
-    liftIO $ Prometheus.Gauge.inc $ pmActiveSubscriptions prometheusMetrics
-    liftIO $ EKG.Gauge.inc $ smActiveStreamingSubscriptions serverMetrics
+    liftIO $ do
+      EKG.Gauge.inc $ smActiveSubscriptions serverMetrics
+      Prometheus.Gauge.inc $ pmActiveSubscriptions prometheusMetrics
+      EKG.Gauge.inc $ smActiveStreamingSubscriptions serverMetrics
 
     pure $ SubscriberDetails handlerId (cohortKey, cohortCursorTVar) subscriberId
     where
@@ -326,7 +341,7 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
   mbCleanupIO <- STM.atomically $ do
     detM <- getQueryDet lqMap
     fmap join $
-      forM detM $ \(Poller cohorts ioState, cohort) ->
+      forM detM $ \(Poller cohorts _ ioState, cohort) ->
         cleanHandlerC cohorts ioState cohort
   sequence_ mbCleanupIO
   liftIO $ EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
@@ -362,7 +377,10 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
           return $
             Just $ -- deferred IO:
               case threadRefM of
-                Just threadRef -> Immortal.stop threadRef
+                Just threadRef -> do
+                  Immortal.stop threadRef
+                  liftIO $ Prometheus.Gauge.dec $ submActiveLiveQueryPollers $ pmSubscriptionMetrics prometheusMetrics
+
                 -- This would seem to imply addLiveQuery broke or a bug
                 -- elsewhere. Be paranoid and log:
                 Nothing ->
@@ -385,12 +403,13 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
   mbCleanupIO <- STM.atomically $ do
     detM <- getQueryDet streamQMap
     fmap join $
-      forM detM $ \(Poller cohorts ioState, currentCohortId, cohort) ->
+      forM detM $ \(Poller cohorts _ ioState, currentCohortId, cohort) ->
         cleanHandlerC cohorts ioState (cohort, currentCohortId)
   sequence_ mbCleanupIO
-  liftIO $ EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
-  liftIO $ Prometheus.Gauge.dec $ pmActiveSubscriptions prometheusMetrics
-  liftIO $ EKG.Gauge.dec $ smActiveStreamingSubscriptions serverMetrics
+  liftIO $ do
+    EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
+    Prometheus.Gauge.dec $ pmActiveSubscriptions prometheusMetrics
+    EKG.Gauge.dec $ smActiveStreamingSubscriptions serverMetrics
   where
     streamQMap = _ssStreamQueryMap subscriptionState
 
@@ -423,14 +442,19 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
           return $
             Just $ -- deferred IO:
               case threadRefM of
-                Just threadRef -> Immortal.stop threadRef
+                Just threadRef -> do
+                  Immortal.stop threadRef
+                  liftIO $
+                    Prometheus.Gauge.dec $
+                      submActiveStreamingPollers $
+                        pmSubscriptionMetrics prometheusMetrics
                 -- This would seem to imply addStreamSubscriptionQuery broke or a bug
                 -- elsewhere. Be paranoid and log:
                 Nothing ->
                   L.unLogger logger $
                     L.UnstructuredLog L.LevelError $
                       fromString $
-                        "In removeLiveQuery no worker thread installed. Please report this as a bug: "
+                        "In removeStreamingQuery no worker thread installed. Please report this as a bug: "
                           <> " poller_id: "
                           <> show handlerId
                           <> ", cohort_id: "

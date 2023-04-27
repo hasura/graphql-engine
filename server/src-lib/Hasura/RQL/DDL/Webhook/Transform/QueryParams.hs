@@ -15,7 +15,7 @@ where
 import Autodocodec (HasCodec (codec), dimapCodec, disjointEitherCodec, hashMapCodec)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Validation (Validation)
 import Data.Validation qualified as V
 import Hasura.Prelude
@@ -130,17 +130,17 @@ instance HasCodec QueryParamsTransformFn where
       addOrReplaceCodec = hashMapCodec (codec @(Maybe UnescapedTemplate))
       templateCodec = codec @UnescapedTemplate
 
-      dec (Left qps) = AddOrReplace $ M.toList qps
+      dec (Left qps) = AddOrReplace $ HashMap.toList qps
       dec (Right template) = ParamTemplate template
 
-      enc (AddOrReplace addOrReplace) = Left $ M.fromList addOrReplace
+      enc (AddOrReplace addOrReplace) = Left $ HashMap.fromList addOrReplace
       enc (ParamTemplate template) = Right template
 
 instance J.ToJSON QueryParamsTransformFn where
-  toJSON (AddOrReplace addOrReplace) = J.toJSON $ M.fromList addOrReplace
+  toJSON (AddOrReplace addOrReplace) = J.toJSON $ HashMap.fromList addOrReplace
   toJSON (ParamTemplate template) = J.toJSON template
 
 instance J.FromJSON QueryParamsTransformFn where
-  parseJSON xs@(J.Object _) = AddOrReplace . M.toList <$> J.parseJSON xs
+  parseJSON xs@(J.Object _) = AddOrReplace . HashMap.toList <$> J.parseJSON xs
   parseJSON xs@(J.String _) = ParamTemplate <$> J.parseJSON xs
   parseJSON _ = fail "Invalid query parameter"

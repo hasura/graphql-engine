@@ -24,6 +24,7 @@ cabal.project.local~
 temp-console-hasura/
 .DS_Store
 .idea
+tags
 
 # tool-agnostic personal ignore files
 .direnv

@@ -23,7 +23,7 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Reader (MonadReader)
 import Control.Monad.State.Class (get, modify')
 import Control.Monad.State.Strict (StateT, evalStateT)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Lens (key)
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
@@ -180,11 +180,11 @@ getClientState = AgentClientT get
 incrementRequestCounter :: Monad m => AgentClientT m ()
 incrementRequestCounter = AgentClientT $ modify' \state -> state {_acsRequestCounter = _acsRequestCounter state + 1}
 
-redactJsonResponse :: Method -> ByteString -> Aeson.Value -> Aeson.Value
+redactJsonResponse :: Method -> ByteString -> J.Value -> J.Value
 redactJsonResponse requestMethod requestPath =
   case requestMethod of
     "POST" | "/datasets/clones/" `BS.isPrefixOf` requestPath -> redactCreateCloneResponse
     _ -> id
 
-redactCreateCloneResponse :: Aeson.Value -> Aeson.Value
-redactCreateCloneResponse = key "config" .~ Aeson.String "<REDACTED>"
+redactCreateCloneResponse :: J.Value -> J.Value
+redactCreateCloneResponse = key "config" .~ J.String "<REDACTED>"

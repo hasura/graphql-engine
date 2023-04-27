@@ -6,7 +6,7 @@
 -- Please avoid editing this file manually.
 module Test.PortedFromPytest.TestGraphQLQueryFunctions (spec) where
 
-import Data.Aeson qualified as Yaml
+import Data.Aeson qualified as J
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -20,7 +20,7 @@ import Hasura.Prelude
 import Test.Hspec hiding (shouldBe)
 
 -- original file: queries/graphql_query/functions/setup.yaml
-setup_Postgres :: Yaml.Value
+setup_Postgres :: J.Value
 setup_Postgres =
   [interpolateYaml|
     type: bulk
@@ -234,7 +234,7 @@ tests = do
   describe "test_search_posts" do
     -- from: queries/graphql_query/functions/query_search_posts.yaml [0]
     it "Custom GraphQL query using search_posts function" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -244,7 +244,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -264,7 +264,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/query_search_posts.yaml [1]
     it "...and make sure this didn't somehow end up under the mutation root" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               errors:
@@ -275,7 +275,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -295,7 +295,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/query_search_posts_aggregate.yaml
     it "Custom GraphQL aggregate query using search_posts function" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -305,7 +305,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -326,7 +326,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/query_get_users.yaml
     it "Query from users table using get_users function" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -340,7 +340,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -359,7 +359,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/query_get_users_arguments_error.yaml
     it "Query from users table using get_users function" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               errors:
@@ -370,7 +370,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -389,7 +389,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/query_get_users_default_arguments_error.yaml
     it "Query from users table using get_users function" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               errors:
@@ -400,7 +400,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -419,7 +419,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/alter_function_error.yaml
     it "Alter SQL function to type VOLATILE (error)" \testEnvironment -> do
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postV1Query
               400
@@ -440,7 +440,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/overloading_function_error.yaml
     it "Create a new SQL function with same name (error)" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               path: $.args
@@ -449,7 +449,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postV1Query
               400
@@ -474,7 +474,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/query_get_test_uuid.yaml
     it "Query using get_test function" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -485,7 +485,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -508,7 +508,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/query_my_add.yaml
     it "Run queries on SQL my_add function with null input values" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -521,7 +521,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -553,7 +553,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/query_get_session_var.yaml
     it "Query get_session_var custom SQL function" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -562,7 +562,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphqlWithHeaders
               testEnvironment
@@ -585,7 +585,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_function_v2_errors.yaml [0]
     it "setup a custom SQL function" \testEnvironment -> do
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postV1Query
               200
@@ -606,7 +606,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_function_v2_errors.yaml [1]
     it "Track function v2 with invalid session argument" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               internal:
@@ -626,7 +626,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postV1Query
               400
@@ -646,7 +646,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_function_v2_errors.yaml [2]
     it "Track function v2 with non json session argument" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               internal:
@@ -665,7 +665,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postV1Query
               400
@@ -685,7 +685,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_function_v2_errors.yaml [3]
     it "teardown function" \testEnvironment -> do
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postV1Query
               200
@@ -703,7 +703,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/query_get_test_session_id.yaml
     it "Query get_test_session_id custom SQL function" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -713,7 +713,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphqlWithHeaders
               testEnvironment
@@ -735,7 +735,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/query_search_author_mview.yaml
     it "Custom GraphQL query using search_author_mview function which returns results from a materialized view" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -745,7 +745,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -765,7 +765,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_non_base_function_arg_type.yaml [0]
     it "setup a custom SQL function" \testEnvironment -> do
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postV1Query
               200
@@ -789,14 +789,14 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_non_base_function_arg_type.yaml [1]
     it "Track function v2 with invalid session argument" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               message: success
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postV1Query
               200
@@ -814,7 +814,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_non_base_function_arg_type.yaml [2]
     it "Introspect the new composite table scalar type created" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -823,7 +823,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -840,7 +840,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_non_base_function_arg_type.yaml [3]
     it "Execute the tracked function with a composite row type argument" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -850,7 +850,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -868,7 +868,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [0]
     it "Define the SQL function the tests will be using" \testEnvironment -> do
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postV2Query
               200
@@ -894,14 +894,14 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [1]
     it "Test that we supply all custom names to `pg_track_function`." \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               message: success
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postMetadataWithStatus
               200
@@ -922,7 +922,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [2]
     it "Execute the function without the alias, which should fail" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               errors:
@@ -934,7 +934,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -952,7 +952,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [3]
     it "Execute the function by its alias, which should succeed" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -963,7 +963,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -981,7 +981,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [4]
     it "Execute the function with aggregation by its aggregation-alias, which should succeed" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -992,7 +992,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -1011,14 +1011,14 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [5]
     it "Teardown the test of fully given aliases" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               message: success
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postMetadataWithStatus
               200
@@ -1037,14 +1037,14 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [6]
     it "Test that we supply all custom names to `pg_track_function`." \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               message: success
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postMetadataWithStatus
               200
@@ -1063,7 +1063,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [7]
     it "Execute the function without the alias, which should fail" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               errors:
@@ -1075,7 +1075,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -1093,7 +1093,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [8]
     it "Execute the function by its alias, which should succeed" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -1104,7 +1104,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -1122,7 +1122,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [9]
     it "Execute the function with aggregation by its aggregation-alias, which should succeed" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -1135,7 +1135,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -1154,7 +1154,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [10]
     it "Test that we fail on non-existing functions" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               code: not-exists
@@ -1163,7 +1163,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postMetadataWithStatus
               400
@@ -1180,7 +1180,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [11]
     it "Test that we fail on duplicate custom root fields" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               code: parse-failed
@@ -1192,7 +1192,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postMetadataWithStatus
               400
@@ -1213,14 +1213,14 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [12]
     it "Test that we can clear the customized names" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               message: success
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postMetadataWithStatus
               200
@@ -1237,7 +1237,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [13]
     it "None" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -1248,7 +1248,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -1266,14 +1266,14 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [14]
     it "Test that we can set customized names using `set_function_customization`" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               message: success
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postMetadataWithStatus
               200
@@ -1293,7 +1293,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [15]
     it "Execute the function by its alias" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -1304,7 +1304,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -1322,7 +1322,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [16]
     it "Execute the function with aggregation (unaliased), which should succeed." \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               data:
@@ -1341,7 +1341,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postGraphql
               testEnvironment
@@ -1360,7 +1360,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [17]
     it "Setup: Define a separate function to cause clashes" \testEnvironment -> do
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postV2Query
               200
@@ -1384,14 +1384,14 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [18]
     it "Setup: Track the new function" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               message: success
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postMetadataWithStatus
               200
@@ -1408,14 +1408,14 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [19]
     it "Setup: clear up aliases of unaliased_function" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               message: success
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postMetadataWithStatus
               200
@@ -1432,7 +1432,7 @@ tests = do
 
     -- from: queries/graphql_query/functions/track_customised_names.yaml [20]
     it "Test that we cannot alias `unaliased_function2` to `unaliased_function`" \testEnvironment -> do
-      let expected :: Yaml.Value
+      let expected :: J.Value
           expected =
             [interpolateYaml|
               code: unexpected
@@ -1443,7 +1443,7 @@ tests = do
 
             |]
 
-      let actual :: IO Yaml.Value
+      let actual :: IO J.Value
           actual =
             GraphqlEngine.postMetadataWithStatus
               500

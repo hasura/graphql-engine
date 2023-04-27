@@ -270,6 +270,19 @@
 
 
 ################################################################################
+# Import conventions
+
+- modules:
+  - name:
+    - Data.Aeson
+    - Data.Aeson.Extended
+    as: J
+  - name:
+    - Data.HashMap.Strict
+    - Data.HashMap.Strict.Extended
+    as: HashMap
+
+################################################################################
 # Import restrictions
 
 # We limit the place where the module `Hasura.RQL.Types.Instances` can be
@@ -293,5 +306,7 @@
                 Hasura.RQL.Types.Relationships.Remote,
                 Hasura.RQL.Types.SchemaCacheTypes,
                 Hasura.RQL.Types.Source,
-                Hasura.GraphQL.Schema.Build.UpdateSpec
+                Hasura.GraphQL.Schema.Build.UpdateSpec,
+                Test.Parser.Delete,
+                Test.Parser.Internal
               ]

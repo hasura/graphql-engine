@@ -1,7 +1,5 @@
-import os
 import pytest
 import queue
-import sqlalchemy
 import time
 
 import fixtures.postgres
@@ -12,9 +10,7 @@ from validate import check_query_f, check_event, check_event_transformed, check_
 usefixtures = pytest.mark.usefixtures
 
 # Every test in this class requires the events webhook to be running first
-# We are also going to mark as server upgrade tests are allowed
-# A few tests are going to be excluded with skip_server_upgrade_test mark
-pytestmark = [usefixtures('evts_webhook'), pytest.mark.allow_server_upgrade_test]
+pytestmark = usefixtures('evts_webhook')
 
 def select_last_event_fromdb(hge_ctx):
     q = {
@@ -118,8 +114,6 @@ class TestEventCreateAndDelete:
     def test_create_reset(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/create_and_reset.yaml")
 
-    # Can't run server upgrade tests, as this test has a schema change
-    @pytest.mark.skip_server_upgrade_test
     def test_create_operation_spec_not_provider_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/create_trigger_operation_specs_not_provided_err.yaml")
 
@@ -190,8 +184,6 @@ class TestEventCreateAndDeleteMSSQL:
 
         check_query_f(hge_ctx, self.dir() + "/create_and_reset_mssql_2.yaml")
 
-    # Can't run server upgrade tests, as this test has a schema change
-    @pytest.mark.skip_server_upgrade_test
     def test_create_operation_spec_not_provider_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/create_trigger_operation_specs_not_provided_err_mssql.yaml")
 
@@ -874,7 +866,6 @@ class TestEventSelCols:
         delete(hge_ctx, table, where_exp)
         check_event(hge_ctx, evts_webhook, "t1_cols", table, "DELETE", exp_ev_data)
 
-    @pytest.mark.skip_server_upgrade_test
     def test_selected_cols_dep(self, hge_ctx, evts_webhook):
         resp = hge_ctx.v1q({
             "type": "run_sql",
@@ -940,7 +931,6 @@ class TestEventSelColsMSSQL:
         print("----- RESP 4 -----", resp)
         check_event(hge_ctx, evts_webhook, "t1_cols", table, "DELETE", exp_ev_data)
 
-    @pytest.mark.skip_server_upgrade_test
     def test_selected_cols_dep(self, hge_ctx, evts_webhook):
         # Dropping Primary Key is not allowed
         resp = hge_ctx.v2q({

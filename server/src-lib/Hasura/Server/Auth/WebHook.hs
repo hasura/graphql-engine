@@ -11,7 +11,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Parser.CacheControl (parseMaxAge)
 import Data.Parser.Expires
 import Data.Text qualified as T
@@ -83,7 +83,7 @@ userInfoFromAuthHook logger manager hook reqHeaders reqs = do
             HTTP.httpLbs req' manager
           AHTPost -> do
             let contentType = ("Content-Type", "application/json")
-                headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
+                headersPayload = J.toJSON $ HashMap.fromList $ hdrsToText reqHeaders
                 req' =
                   req
                     & set HTTP.method "POST"
@@ -159,9 +159,9 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody respHdrs
     logError = logWebHookResp LevelError (Just respBody) Nothing
 
     timeFromCacheControl headers = do
-      header <- afold $ Map.lookup "Cache-Control" headers
+      header <- afold $ HashMap.lookup "Cache-Control" headers
       duration <- parseMaxAge header `onLeft` \err -> logWarn (T.pack err) *> empty
       addUTCTime (fromInteger duration) <$> liftIO getCurrentTime
     timeFromExpires headers = do
-      header <- afold $ Map.lookup "Expires" headers
+      header <- afold $ HashMap.lookup "Expires" headers
       parseExpirationTime header `onLeft` \err -> logWarn (T.pack err) *> empty

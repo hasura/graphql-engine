@@ -26,10 +26,10 @@ import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Update
 import Hasura.RQL.Types.Backend qualified as RQL
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.RemoteSchema.SchemaCache.Types qualified as RQL
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 
 data SourceConfigWith (db :: BackendType -> Type) (b :: BackendType)
   = SourceConfigWith (RQL.SourceConfig b) (Maybe RQL.QueryTagsConfig) (db b)

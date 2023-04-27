@@ -16,7 +16,7 @@ import Hasura.Backends.Postgres.Translate.Returning
 import Hasura.Prelude
 import Hasura.RQL.IR.Insert
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 
 mkInsertCTE ::
   Backend ('Postgres pgKind) =>

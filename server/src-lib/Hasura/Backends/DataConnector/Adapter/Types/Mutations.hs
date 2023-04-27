@@ -11,7 +11,7 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Hasura.RQL.IR.Update.Batch (UpdateBatch)
 import Hasura.RQL.Types.Backend (Backend)
-import Hasura.SQL.Backend (BackendType (..))
+import Hasura.RQL.Types.BackendType (BackendType (..))
 
 --------------------------------------------------------------------------------
 

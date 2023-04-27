@@ -35,10 +35,10 @@ import Hasura.Backends.MySQL.Types
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (TableEventTriggers)
-import Hasura.SQL.Backend
 
 resolveSourceConfig :: (MonadIO m) => SourceName -> ConnSourceConfig -> BackendSourceKind 'MySQL -> BackendConfig 'MySQL -> environment -> manager -> m (Either QErr SourceConfig)
 resolveSourceConfig _name csc@ConnSourceConfig {_cscPoolSettings = ConnPoolSettings {..}, ..} _backendKind _backendConfig _env _manager = do

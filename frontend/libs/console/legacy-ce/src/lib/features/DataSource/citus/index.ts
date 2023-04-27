@@ -1,7 +1,10 @@
 import { Table } from '../../hasura-metadata-types';
 import { Database, Feature } from '..';
 import { runSQL } from '../api';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
+import {
+  defaultDatabaseProps,
+  defaultIntrospectionProps,
+} from '../common/defaultDatabaseProps';
 import { adaptIntrospectedTables } from '../common/utils';
 import { GetTrackableTablesProps, GetVersionProps } from '../types';
 import {
@@ -9,6 +12,7 @@ import {
   getFKRelationships,
   getTablesListAsTree,
   getSupportedOperators,
+  getIsTableView,
 } from './introspection';
 import { getTableRows } from './query';
 import { postgresCapabilities } from '../common/capabilities';
@@ -18,6 +22,7 @@ export type CitusTable = { name: string; schema: string };
 export const citus: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    ...defaultIntrospectionProps,
     getVersion: async ({ dataSourceName, httpClient }: GetVersionProps) => {
       const result = await runSQL({
         source: {
@@ -80,6 +85,7 @@ export const citus: Database = {
     getTablesListAsTree,
     getSupportedOperators,
     getDatabaseSchemas: async () => Feature.NotImplemented,
+    getIsTableView,
   },
   query: {
     getTableRows,

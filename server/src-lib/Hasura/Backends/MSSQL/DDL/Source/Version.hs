@@ -16,7 +16,7 @@ import Database.ODBC.TH qualified as ODBC
 import Hasura.Backends.MSSQL.Connection (MonadMSSQLTx (..))
 import Hasura.Backends.MSSQL.SQL.Error qualified as HGE
 import Hasura.Prelude
-import Hasura.SQL.Backend (BackendType (MSSQL))
+import Hasura.RQL.Types.BackendType (BackendType (MSSQL))
 import Hasura.Server.Migrate.Version qualified as Version
 
 type SourceCatalogVersion = Version.SourceCatalogVersion 'MSSQL

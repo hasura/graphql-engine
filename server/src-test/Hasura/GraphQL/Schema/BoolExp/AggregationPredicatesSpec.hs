@@ -6,7 +6,7 @@ module Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSpec (spec) where
 
 import Data.Aeson.QQ (aesonQQ)
 import Data.Has (Has (..))
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.NonEmpty (nonEmptyTextQQ)
 import Hasura.Backends.Postgres.Instances.Schema ()
 import Hasura.Backends.Postgres.SQL.Types
@@ -22,21 +22,21 @@ import Hasura.GraphQL.Schema.BoolExp.AggregationPredicates
   )
 import Hasura.GraphQL.Schema.Introspection (queryInputFieldsParserIntrospection)
 import Hasura.GraphQL.Schema.NamingCase (NamingCase (..))
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (GBoolExp (..), OpExpG (AEQ))
 import Hasura.RQL.IR.BoolExp.AggregationPredicates
 import Hasura.RQL.IR.Value (Provenance (Unknown), UnpreparedValue (UVParameter))
+import Hasura.RQL.Types.BackendType (BackendSourceKind (PostgresVanillaKind), BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnType (ColumnScalar), ColumnValue (..))
 import Hasura.RQL.Types.Common (InsertOrder (..), RelName (..), RelType (..), SourceName (..))
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..))
-import Hasura.RQL.Types.Source (SourceInfo (..))
+import Hasura.RQL.Types.Schema.Options qualified as Options
+import Hasura.RQL.Types.Source (DBObjectsIntrospection (..), SourceInfo (..))
 import Hasura.RQL.Types.SourceCustomization (ResolvedSourceCustomization (..))
 import Hasura.RQL.Types.Table
   ( TableCoreInfoG (_tciName),
     TableInfo (_tiCoreInfo),
   )
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Aeson.Expectation (shouldBeSubsetOf)
@@ -308,7 +308,7 @@ spec = do
       RelInfo
         { riName = RelName [nonEmptyTextQQ|tracks|],
           riType = ArrRel,
-          riMapping = HM.fromList [("id", "album_id")],
+          riMapping = HashMap.fromList [("id", "album_id")],
           riRTable = (mkTable "track"),
           riIsManual = False,
           riInsertOrder = AfterParent
@@ -318,14 +318,16 @@ spec = do
     sourceInfo =
       SourceInfo
         { _siName = SNDefault,
+          _siSourceKind = PostgresVanillaKind,
           _siTables = makeTableCache [albumTableInfo, trackTableInfo],
           _siFunctions = mempty,
           _siNativeQueries = mempty,
-          _siCustomReturnTypes = mempty,
+          _siLogicalModels = mempty,
           _siConfiguration = notImplementedYet "SourceConfig",
           _siQueryTagsConfig = Nothing,
-          _siCustomization = ResolvedSourceCustomization mempty mempty HasuraCase Nothing
+          _siCustomization = ResolvedSourceCustomization mempty mempty HasuraCase Nothing,
+          _siDbObjectsIntrospection = DBObjectsIntrospection mempty mempty mempty
         }
 
     makeTableCache :: [TableInfo ('Postgres 'Vanilla)] -> HashMap QualifiedTable (TableInfo ('Postgres 'Vanilla))
-    makeTableCache tables = HM.fromList [(_tciName $ _tiCoreInfo ti, ti) | ti <- tables]
+    makeTableCache tables = HashMap.fromList [(_tciName $ _tiCoreInfo ti, ti) | ti <- tables]

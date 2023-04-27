@@ -23,6 +23,8 @@ library
     , graphql-engine
     , graphql-parser
     , haskell-src-meta
+    , hasura-base
+    , hasura-extras
     , hasura-prelude
     , hedgehog
     , hspec
@@ -146,6 +148,7 @@ library
     Harness.Quoter.Yaml.InterpolateYaml
     Harness.RemoteServer
     Harness.Schema
+    Harness.Schema.LogicalModel
     Harness.Schema.Name
     Harness.Schema.Table
     Harness.Services.Composed

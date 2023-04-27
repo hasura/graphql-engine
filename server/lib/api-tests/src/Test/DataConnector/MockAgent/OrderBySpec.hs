@@ -6,7 +6,7 @@ module Test.DataConnector.MockAgent.OrderBySpec (spec) where
 --------------------------------------------------------------------------------
 
 import Control.Lens ((.~), (?~))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
@@ -40,7 +40,7 @@ spec =
 
 --------------------------------------------------------------------------------
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -84,17 +84,17 @@ tests = describe "Order By Tests" $ do
           |]
     let queryResponse =
           rowsResponse
-            [ [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 1),
-                (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+            [ [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ J.Number 1),
+                (API.FieldName "Title", API.mkColumnFieldValue $ J.String "For Those About To Rock We Salute You")
               ],
-              [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 2),
-                (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
+              [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ J.Number 2),
+                (API.FieldName "Title", API.mkColumnFieldValue $ J.String "Balls to the Wall")
               ],
-              [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ Aeson.Number 3),
-                (API.FieldName "Title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
+              [ (API.FieldName "AlbumId", API.mkColumnFieldValue $ J.Number 3),
+                (API.FieldName "Title", API.mkColumnFieldValue $ J.String "Restless and Wild")
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -138,10 +138,10 @@ tests = describe "Order By Tests" $ do
           |]
     let queryResponse =
           rowsResponse
-            [ [(API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Milton Nascimento & Bebeto")],
-              [(API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Azymuth")]
+            [ [(API.FieldName "Name", API.mkColumnFieldValue $ J.String "Milton Nascimento & Bebeto")],
+              [(API.FieldName "Name", API.mkColumnFieldValue $ J.String "Azymuth")]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 

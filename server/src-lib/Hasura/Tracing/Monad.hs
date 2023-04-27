@@ -13,6 +13,7 @@ import Control.Monad.Morph
 import Control.Monad.Trans.Control
 import Data.IORef
 import Hasura.Prelude
+import Hasura.RQL.Types.Session (UserInfoM (..))
 import Hasura.Tracing.Class
 import Hasura.Tracing.Context
 import Hasura.Tracing.Reporter
@@ -109,6 +110,9 @@ instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (TraceT m) where
     asks (fmap teMetadataRef . snd) >>= \case
       Nothing -> pure ()
       Just ref -> liftIO $ modifyIORef' ref (metadata ++)
+
+instance (UserInfoM m) => UserInfoM (TraceT m) where
+  askUserInfo = lift askUserInfo
 
 --------------------------------------------------------------------------------
 -- Internal

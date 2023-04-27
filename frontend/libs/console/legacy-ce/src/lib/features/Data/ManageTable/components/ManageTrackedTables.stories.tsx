@@ -33,9 +33,11 @@ UntrackedTables.play = async ({ canvasElement }) => {
   resetMetadata();
 
   // Wait until it finishes loading
-  await waitFor(() => canvas.findByTestId('track-tables'), {
+  await waitFor(() => canvas.findByTestId('trackable-resource-tabs'), {
     timeout: 5000,
   });
+
+  await userEvent.click(canvas.getByTestId('untracked-tab'));
 
   // Verify it correctly displays untracked tables by default
   await expect(canvas.getByText('public / Invoice')).toBeInTheDocument();
@@ -58,7 +60,7 @@ Untrack.play = async ({ canvasElement }) => {
   resetMetadata();
 
   // Wait until it finishes loading
-  await waitFor(() => canvas.findByTestId('track-tables'), {
+  await waitFor(() => canvas.findByTestId('trackable-resource-tabs'), {
     timeout: 5000,
   });
 
@@ -94,9 +96,11 @@ Track.play = async ({ canvasElement }) => {
   resetMetadata();
 
   // Wait until it finishes loading
-  await waitFor(() => canvas.findByTestId('track-tables'), {
+  await waitFor(() => canvas.findByTestId('trackable-resource-tabs'), {
     timeout: 5000,
   });
+
+  await userEvent.click(canvas.getByTestId('untracked-tab'));
 
   // Wait for the button to appear on the screen using findBy. Store it in a variable to click it afterwards.
   const button = await canvas.findByTestId(`track-public.Invoice`);
@@ -131,7 +135,7 @@ TrackedTables.play = async ({ canvasElement }) => {
   resetMetadata();
 
   // Wait until it finishes loading
-  await waitFor(() => canvas.findByTestId('track-tables'), {
+  await waitFor(() => canvas.findByTestId('trackable-resource-tabs'), {
     timeout: 5000,
   });
 

@@ -7,7 +7,7 @@ module Test.DataConnector.MockAgent.BasicQuerySpec (spec) where
 --------------------------------------------------------------------------------
 
 import Control.Lens ((?~))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
@@ -43,7 +43,7 @@ spec =
 testRoleName :: ByteString
 testRoleName = "test-role"
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -120,11 +120,11 @@ tests = describe "Basic Tests" $ do
           |]
     let queryResponse =
           mkRowsQueryResponse
-            [ [ ("id", API.mkColumnFieldValue $ Aeson.Number 1),
-                ("title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+            [ [ ("id", API.mkColumnFieldValue $ J.Number 1),
+                ("title", API.mkColumnFieldValue $ J.String "For Those About To Rock We Salute You")
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -164,17 +164,17 @@ tests = describe "Basic Tests" $ do
           |]
     let queryResponse =
           mkRowsQueryResponse
-            [ [ ("id", API.mkColumnFieldValue $ Aeson.Number 1),
-                ("name", API.mkColumnFieldValue $ Aeson.String "AC/DC")
+            [ [ ("id", API.mkColumnFieldValue $ J.Number 1),
+                ("name", API.mkColumnFieldValue $ J.String "AC/DC")
               ],
-              [ ("id", API.mkColumnFieldValue $ Aeson.Number 2),
-                ("name", API.mkColumnFieldValue $ Aeson.String "Accept")
+              [ ("id", API.mkColumnFieldValue $ J.Number 2),
+                ("name", API.mkColumnFieldValue $ J.String "Accept")
               ],
-              [ ("id", API.mkColumnFieldValue $ Aeson.Number 3),
-                ("name", API.mkColumnFieldValue $ Aeson.String "Aerosmith")
+              [ ("id", API.mkColumnFieldValue $ J.Number 3),
+                ("name", API.mkColumnFieldValue $ J.String "Aerosmith")
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -220,14 +220,14 @@ tests = describe "Basic Tests" $ do
           |]
     let queryResponse =
           mkRowsQueryResponse
-            [ [ ("CustomerId", API.mkColumnFieldValue $ Aeson.Number 1)
+            [ [ ("CustomerId", API.mkColumnFieldValue $ J.Number 1)
               ],
-              [ ("CustomerId", API.mkColumnFieldValue $ Aeson.Number 2)
+              [ ("CustomerId", API.mkColumnFieldValue $ J.Number 2)
               ],
-              [ ("CustomerId", API.mkColumnFieldValue $ Aeson.Number 3)
+              [ ("CustomerId", API.mkColumnFieldValue $ J.Number 3)
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -256,7 +256,7 @@ tests = describe "Basic Tests" $ do
                       ( API.ApplyBinaryComparisonOperator
                           API.Equal
                           (API.ComparisonColumn API.CurrentTable (API.ColumnName "EmployeeId") $ API.ScalarType "number")
-                          (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))
+                          (API.ScalarValueComparison $ API.ScalarValue (J.Number 1) (API.ScalarType "number"))
                       )
               )
         )

@@ -21,7 +21,7 @@ where
 
 import Data.Dependent.Map qualified as DM
 import "some" Data.GADT.Compare
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Kind
 import Data.Proxy (Proxy (..))
 import Data.Type.Equality
@@ -53,7 +53,7 @@ class (GCompare (Selector a)) => Select a where
 
 instance (Ord k, Hashable k) => Select (HashMap k v) where
   type Selector (HashMap k v) = ConstS k (Maybe v)
-  select (ConstS k) = M.lookup k
+  select (ConstS k) = HashMap.lookup k
 
 instance (GCompare k) => Select (DM.DMap k f) where
   type Selector (DM.DMap k f) = DMapS k f

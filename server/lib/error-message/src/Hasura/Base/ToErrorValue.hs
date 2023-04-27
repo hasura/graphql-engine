@@ -5,9 +5,9 @@ module Hasura.Base.ToErrorValue
   )
 where
 
-import Data.Aeson qualified as Aeson
-import Data.Aeson.Key qualified as Aeson.Key
-import Data.Aeson.Text qualified as Aeson
+import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as J.Key
+import Data.Aeson.Text qualified as J
 import Data.HashSet (HashSet)
 import Data.HashSet qualified as HashSet
 import Data.List qualified as List
@@ -34,7 +34,7 @@ instance ToErrorValue () where
 
 -- | Wraps a list of values with brackets and separates the values with commas.
 --   For example:
--- > [Aeson.Number 1, Aeson.Bool True, Aeson.String "three"]
+-- > [J.Number 1, J.Bool True, J.String "three"]
 --   Will be printed as:
 -- > "[1, true, \"three\"]"
 instance ToErrorValue a => ToErrorValue [a] where
@@ -58,8 +58,8 @@ instance ToErrorValue G.Name where
 instance ToErrorValue G.GType where
   toErrorValue = squote . G.showGT
 
-instance ToErrorValue Aeson.Key where
-  toErrorValue = dquote . Aeson.Key.toText
+instance ToErrorValue J.Key where
+  toErrorValue = dquote . J.Key.toText
 
-instance ToErrorValue Aeson.Value where
-  toErrorValue = toErrorMessage . Text.Lazy.toStrict . Aeson.encodeToLazyText
+instance ToErrorValue J.Value where
+  toErrorValue = toErrorMessage . Text.Lazy.toStrict . J.encodeToLazyText

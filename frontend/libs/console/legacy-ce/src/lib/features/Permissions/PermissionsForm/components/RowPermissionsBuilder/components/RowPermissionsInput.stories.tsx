@@ -304,7 +304,10 @@ export const BooleanArrayType: ComponentStory<
 BooleanArrayType.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   expect(canvas.getByTestId('Author-operator')).toBeInTheDocument();
-  expect(canvas.getByTestId('Author._ceq-comparator')).toBeInTheDocument();
+  const element = await canvas.getByLabelText('Author._ceq-comparator');
+  await expect(element.getAttribute('id')).toEqual(
+    'Author._ceq-comparator-select-value'
+  );
   expect(
     canvas.getByTestId('Author._ceq-column-comparator-entry')
   ).toBeInTheDocument();
@@ -548,11 +551,12 @@ SetNotPermission.play = async ({ canvasElement }) => {
 
   await userEvent.selectOptions(canvas.getByTestId('-operator'), '_not');
 
-  await userEvent.selectOptions(canvas.getByTestId('_not-operator'), 'Period');
+  const all = await canvas.getAllByTestId('_not-operator');
+  await userEvent.selectOptions(all[all?.length - 1], 'Period');
 
-  await userEvent.selectOptions(
-    canvas.getByTestId('_not.Period._eq-comparator'),
-    '_neq'
+  const element = await canvas.getByLabelText('_not.Period._eq-comparator');
+  await expect(element.getAttribute('id')).toEqual(
+    '_not.Period._eq-comparator-select-value'
   );
 };
 
@@ -641,9 +645,10 @@ JsonbColumns.play = async ({ canvasElement }) => {
     timeout: 50000,
   });
   // Expect jason._contained_in-comparator to be in the document
-  expect(
-    canvas.getByTestId('jason._contained_in-comparator')
-  ).toBeInTheDocument();
+  const element = await canvas.getByLabelText('jason._contained_in-comparator');
+  await expect(element.getAttribute('id')).toEqual(
+    'jason._contained_in-comparator-select-value'
+  );
   // Expect jason._contained_in-value-input to have value "{"a": "b"}"
   expect(canvas.getByTestId('jason._contained_in-value-input')).toHaveValue(
     '{"a":"b"}'
@@ -768,7 +773,7 @@ NumberColumns.play = async ({ canvasElement, args }) => {
     ][0];
   expect(latestPermissions).toEqual({
     id: {
-      _eq: '"1234"1337',
+      _eq: 12341337,
     },
   });
 };
@@ -781,4 +786,37 @@ StringObjectType.play = async ({ canvasElement }) => {
   expect(input).toHaveValue(
     '{"distance":100000,"from":{"coordinates":[1.4,2.5],"type":"Point"},"use_spheroid":false}'
   );
+};
+
+export const OperatorDropdownHandling: ComponentStory<
+  typeof RowPermissionsInput
+> = args => (
+  <RowPermissionsInput
+    onPermissionsChange={action('onPermissionsChange')}
+    table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
+    tables={tables}
+    comparators={comparators}
+    permissions={{
+      _not: { STATUS: { _eq: 'X-Hasura-User-Id' } },
+    }}
+  />
+);
+
+OperatorDropdownHandling.play = async ({ canvasElement, args }) => {
+  const canvas = within(canvasElement);
+
+  await userEvent.selectOptions(canvas.getByTestId('_not-operator'), '_or');
+
+  await userEvent.selectOptions(canvas.getByTestId('_or-operator'), '_exists');
+
+  await userEvent.selectOptions(canvas.getByTestId('_exists-operator'), '_and');
+
+  await userEvent.selectOptions(
+    canvas.getByTestId('_and.1-operator'),
+    'Period'
+  );
+
+  await userEvent.selectOptions(canvas.getByTestId('_and-operator'), '_or');
+
+  await userEvent.selectOptions(canvas.getByTestId('_or.1-operator'), 'Period');
 };

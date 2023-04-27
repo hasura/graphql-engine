@@ -7,7 +7,7 @@
 module Control.Monad.MemoizationSpecDefinition (Memoizer (..), memoizationSpec) where
 
 import Control.Monad.TimeLimit
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Kind (Type)
 import Data.Typeable (Typeable)
 import Hasura.Prelude
@@ -114,14 +114,14 @@ checkMemoization = do
     (fibos, count) <- succeedsWithinTimeLimit $
       flip runStateT (mempty :: HashMap Int Int) $ runMemoizer @m do
         let fibo n = memoize 'checkMemoization n do
-              modify $ Map.insertWith (+) n (1 :: Int)
+              modify $ HashMap.insertWith (+) n (1 :: Int)
               case n of
                 0 -> pure 0
                 1 -> pure 1
                 _ -> (+) <$> fibo (n - 2) <*> fibo (n - 1)
         traverse fibo [0 .. 20]
     fibos !! 20 `shouldBe` (6765 :: Int)
-    count `shouldBe` Map.fromList (zip [0 .. 20] (repeat 1))
+    count `shouldBe` HashMap.fromList (zip [0 .. 20] (repeat 1))
 
 --------------------------------------------------------------------------------
 -- Failure

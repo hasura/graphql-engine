@@ -18,18 +18,17 @@ module Hasura.RQL.Types.OpenTelemetry
     OtlpProtocol (..),
     OtelBatchSpanProcessorConfig (..),
     defaultOtelBatchSpanProcessorConfig,
+    NameValue (..),
 
     -- * Parsed configuration (schema cache)
     OpenTelemetryInfo (..),
     otiExporterOtlp,
     otiBatchSpanProcessor,
     emptyOpenTelemetryInfo,
-    OtelExporterInfo,
-    parseOtelExporterConfig,
+    OtelExporterInfo (..),
     getOtelExporterTracesBaseRequest,
     getOtelExporterResourceAttributes,
-    OtelBatchSpanProcessorInfo,
-    parseOtelBatchSpanProcessorConfig,
+    OtelBatchSpanProcessorInfo (..),
     getMaxExportBatchSize,
     getMaxQueueSize,
     defaultOtelBatchSpanProcessorInfo,
@@ -38,22 +37,18 @@ where
 
 import Autodocodec (HasCodec, optionalField, optionalFieldWithDefault, optionalFieldWithDefault', requiredField', (<?>))
 import Autodocodec qualified as AC
+import Autodocodec.Extended (boundedEnumCodec)
 import Control.Lens.TH (makeLenses)
 import Data.Aeson (FromJSON, ToJSON (..), (.!=), (.:), (.:?), (.=))
-import Data.Aeson qualified as Aeson
-import Data.Bifunctor (first)
-import Data.Environment (Environment)
+import Data.Aeson qualified as J
+import Data.Map.Strict (Map)
 import Data.Set (Set)
 import Data.Set qualified as Set
-import Data.Text qualified as Text
 import GHC.Generics
-import Hasura.Base.Error (Code (InvalidParams), QErr, err400)
-import Hasura.Metadata.DTO.Utils (boundedEnumCodec)
 import Hasura.Prelude hiding (first)
-import Hasura.RQL.DDL.Headers
+import Hasura.RQL.Types.Headers (HeaderConf)
 import Language.Haskell.TH.Syntax (Lift)
-import Network.HTTP.Client (Request (requestHeaders), requestFromURI)
-import Network.URI (parseURI)
+import Network.HTTP.Client (Request)
 
 --------------------------------------------------------------------------------
 
@@ -78,7 +73,7 @@ instance HasCodec OpenTelemetryConfig where
         <*> optionalFieldWithDefault' "batch_span_processor" defaultOtelBatchSpanProcessorConfig AC..= _ocBatchSpanProcessor
 
 instance FromJSON OpenTelemetryConfig where
-  parseJSON = Aeson.withObject "OpenTelemetryConfig" $ \o ->
+  parseJSON = J.withObject "OpenTelemetryConfig" $ \o ->
     OpenTelemetryConfig
       <$> o .:? "status" .!= defaultOtelStatus
       <*> o .:? "data_types" .!= defaultOtelEnabledDataTypes
@@ -121,14 +116,14 @@ instance HasCodec OtelStatus where
 
 instance FromJSON OtelStatus where
   parseJSON = \case
-    Aeson.String s
+    J.String s
       | s == "enabled" -> pure OtelEnabled
       | s == "disabled" -> pure OtelDisabled
     _ -> fail "OpenTelemetry status must be either \"enabled\" or \"disabled\""
 
 instance ToJSON OtelStatus where
   toJSON status =
-    Aeson.String $
+    J.String $
       case status of
         OtelEnabled -> "enabled"
         OtelDisabled -> "disabled"
@@ -143,13 +138,13 @@ instance HasCodec OtelDataType where
     OtelTraces -> "traces"
 
 instance FromJSON OtelDataType where
-  parseJSON = Aeson.withText "OtelDataType" \case
+  parseJSON = J.withText "OtelDataType" \case
     "traces" -> pure OtelTraces
     x -> fail $ "unexpected string '" <> show x <> "'."
 
 instance ToJSON OtelDataType where
   toJSON = \case
-    OtelTraces -> Aeson.String "traces"
+    OtelTraces -> J.String "traces"
 
 defaultOtelEnabledDataTypes :: Set OtelDataType
 defaultOtelEnabledDataTypes = Set.empty
@@ -183,7 +178,7 @@ instance HasCodec OtelExporterConfig where
       attrsDoc = "Attributes to send as the resource attributes of an export request. We currently only support string-valued attributes."
 
 instance FromJSON OtelExporterConfig where
-  parseJSON = Aeson.withObject "OtelExporterConfig" $ \o -> do
+  parseJSON = J.withObject "OtelExporterConfig" $ \o -> do
     _oecTracesEndpoint <-
       o .:? "otlp_traces_endpoint" .!= defaultOtelExporterTracesEndpoint
     _oecProtocol <-
@@ -196,7 +191,7 @@ instance FromJSON OtelExporterConfig where
 
 instance ToJSON OtelExporterConfig where
   toJSON (OtelExporterConfig otlpTracesEndpoint protocol headers resourceAttributes) =
-    Aeson.object $
+    J.object $
       catMaybes
         [ ("otlp_traces_endpoint" .=) <$> otlpTracesEndpoint,
           Just $ "protocol" .= protocol,
@@ -229,7 +224,7 @@ instance HasCodec OtlpProtocol where
       <?> "Possible protocol to use with OTLP. Currently, only http/protobuf is supported."
 
 instance FromJSON OtlpProtocol where
-  parseJSON = Aeson.withText "OtlpProtocol" \case
+  parseJSON = J.withText "OtlpProtocol" \case
     "http/protobuf" -> pure OtlpProtocolHttpProtobuf
     "http/json" -> fail "http/json is not supported"
     "grpc" -> fail "gRPC is not supported"
@@ -237,7 +232,7 @@ instance FromJSON OtlpProtocol where
 
 instance ToJSON OtlpProtocol where
   toJSON = \case
-    OtlpProtocolHttpProtobuf -> Aeson.String "http/protobuf"
+    OtlpProtocolHttpProtobuf -> J.String "http/protobuf"
 
 -- Internal helper type for JSON lists of key-value pairs
 data NameValue = NameValue
@@ -258,10 +253,10 @@ instance HasCodec NameValue where
 
 instance ToJSON NameValue where
   toJSON (NameValue {nv_name, nv_value}) =
-    Aeson.object ["name" .= nv_name, "value" .= nv_value]
+    J.object ["name" .= nv_name, "value" .= nv_value]
 
 instance FromJSON NameValue where
-  parseJSON = Aeson.withObject "name-value pair" $ \o -> do
+  parseJSON = J.withObject "name-value pair" $ \o -> do
     nv_name <- o .: "name"
     nv_value <- o .: "value"
     pure NameValue {..}
@@ -295,13 +290,13 @@ instance HasCodec OtelBatchSpanProcessorConfig where
       maxSizeDoc = "The maximum batch size of every export. It must be smaller or equal to maxQueueSize (not yet configurable). Default 512."
 
 instance FromJSON OtelBatchSpanProcessorConfig where
-  parseJSON = Aeson.withObject "OtelBatchSpanProcessorConfig" $ \o ->
+  parseJSON = J.withObject "OtelBatchSpanProcessorConfig" $ \o ->
     OtelBatchSpanProcessorConfig
       <$> o .:? "max_export_batch_size" .!= defaultMaxExportBatchSize
 
 instance ToJSON OtelBatchSpanProcessorConfig where
   toJSON (OtelBatchSpanProcessorConfig maxExportBatchSize) =
-    Aeson.object
+    J.object
       [ "max_export_batch_size" .= maxExportBatchSize
       ]
 
@@ -341,55 +336,18 @@ data OtelExporterInfo = OtelExporterInfo
     _oteleiTracesBaseRequest :: Request,
     -- | Attributes to send as the resource attributes of an export request. We
     -- currently only support string-valued attributes.
-    _oteleiResourceAttributes :: [(Text, Text)]
+    --
+    -- Using Data.Map.Strict over Data.Hashmap.Strict because currently the
+    -- only operations on data are (1) folding and (2) union with a small
+    -- map of default attributes, and Map should be is faster than HashMap for
+    -- the latter.
+    _oteleiResourceAttributes :: Map Text Text
   }
-
--- | Smart constructor for 'OtelExporterInfo'.
---
--- Returns a @Left qErr@ to signal a validation error. Returns @Right Nothing@
--- to signal that the exporter should be disabled without raising an error.
---
--- Allows the trace endpoint to be unset if the entire OpenTelemetry system is
--- disabled.
-parseOtelExporterConfig ::
-  OtelStatus ->
-  Environment ->
-  OtelExporterConfig ->
-  Either QErr (Maybe OtelExporterInfo)
-parseOtelExporterConfig otelStatus env OtelExporterConfig {..} = do
-  -- First validate everything but the trace endpoint
-  headers <- makeHeadersFromConf env _oecHeaders
-  -- Allow the trace endpoint to be unset when OpenTelemetry is disabled
-  case _oecTracesEndpoint of
-    Nothing ->
-      case otelStatus of
-        OtelDisabled ->
-          pure Nothing
-        OtelEnabled -> Left (err400 InvalidParams "Missing traces endpoint")
-    Just rawTracesEndpoint -> do
-      tracesUri <-
-        maybeToEither (err400 InvalidParams "Invalid URL") $
-          parseURI $
-            Text.unpack rawTracesEndpoint
-      uriRequest <-
-        first (err400 InvalidParams . tshow) $ requestFromURI tracesUri
-      pure $
-        Just $
-          OtelExporterInfo
-            { _oteleiTracesBaseRequest =
-                uriRequest
-                  { requestHeaders = headers ++ requestHeaders uriRequest
-                  },
-              _oteleiResourceAttributes =
-                map
-                  (\NameValue {nv_name, nv_value} -> (nv_name, nv_value))
-                  _oecResourceAttributes
-            }
 
 getOtelExporterTracesBaseRequest :: OtelExporterInfo -> Request
 getOtelExporterTracesBaseRequest = _oteleiTracesBaseRequest
 
-getOtelExporterResourceAttributes :: OtelExporterInfo -> [(Text, Text)]
+getOtelExporterResourceAttributes :: OtelExporterInfo -> Map Text Text
 getOtelExporterResourceAttributes = _oteleiResourceAttributes
 
 data OtelBatchSpanProcessorInfo = OtelBatchSpanProcessorInfo
@@ -401,17 +359,6 @@ data OtelBatchSpanProcessorInfo = OtelBatchSpanProcessorInfo
     _obspiMaxQueueSize :: Int
   }
   deriving (Lift)
-
--- Smart constructor. Consistent with defaults.
-parseOtelBatchSpanProcessorConfig ::
-  OtelBatchSpanProcessorConfig -> Either QErr OtelBatchSpanProcessorInfo
-parseOtelBatchSpanProcessorConfig OtelBatchSpanProcessorConfig {..} = do
-  _obspiMaxExportBatchSize <-
-    if _obspcMaxExportBatchSize > 0
-      then Right _obspcMaxExportBatchSize
-      else Left (err400 InvalidParams "max_export_batch_size must be a positive integer")
-  let _obspiMaxQueueSize = 4 * _obspiMaxExportBatchSize -- consistent with default value of 2048
-  pure OtelBatchSpanProcessorInfo {..}
 
 getMaxExportBatchSize :: OtelBatchSpanProcessorInfo -> Int
 getMaxExportBatchSize = _obspiMaxExportBatchSize

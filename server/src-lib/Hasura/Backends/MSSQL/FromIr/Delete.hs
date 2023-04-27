@@ -8,8 +8,8 @@ import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
-import Hasura.SQL.Backend
 
 fromDelete :: IR.AnnDel 'MSSQL -> FromIr Delete
 fromDelete (IR.AnnDel table (permFilter, whereClause) _ allColumns _) = do

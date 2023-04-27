@@ -119,14 +119,6 @@ tests = do
         `shouldReturnYaml` [yaml|
           is_consistent: true
           inconsistent_objects: []
-          warnings:
-            - code: source-cleanup-failed
-              message: >-
-                Could not cleanup the source '"postgres"' while dropping it from the graphql-engine as it is
-                inconsistent. Please consider cleaning the resources created by the graphql engine, refer
-                https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-footprints-manually
-              type: source
-              name: source postgres
         |]
 
 reloadMetadata :: Value

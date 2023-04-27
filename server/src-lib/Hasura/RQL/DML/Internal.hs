@@ -28,7 +28,7 @@ where
 
 import Control.Lens
 import Data.Aeson.Types
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Sequence qualified as DS
 import Data.Text qualified as T
@@ -45,17 +45,18 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Permission (annBoolExp)
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
-import Hasura.Session
+import Hasura.Session (SessionVariable, UserInfoM, askCurRole, askUserInfo, getSessionVariables, sessionVariableToText, _uiSession)
 
 newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq PG.PrepArg) m a}
   deriving
@@ -104,7 +105,7 @@ assertAskPermInfo pt pa tableInfo = do
 isTabUpdatable :: RoleName -> TableInfo ('Postgres 'Vanilla) -> Bool
 isTabUpdatable role ti
   | role == adminRoleName = True
-  | otherwise = isJust $ M.lookup role rpim >>= _permUpd
+  | otherwise = isJust $ HashMap.lookup role rpim >>= _permUpd
   where
     rpim = _tiRolePermInfoMap ti
 
@@ -153,7 +154,7 @@ checkSelOnCol ::
   Column ('Postgres 'Vanilla) ->
   m ()
 checkSelOnCol selPermInfo =
-  checkPermOnCol PTSelect (HS.fromList $ M.keys $ spiCols selPermInfo)
+  checkPermOnCol PTSelect (HS.fromList $ HashMap.keys $ spiCols selPermInfo)
 
 checkPermOnCol ::
   (UserInfoM m, QErrM m) =>
@@ -179,7 +180,7 @@ checkSelectPermOnScalarComputedField ::
   m ()
 checkSelectPermOnScalarComputedField selPermInfo computedField = do
   role <- askCurRole
-  unless (M.member computedField $ spiComputedFields selPermInfo) $
+  unless (HashMap.member computedField $ spiComputedFields selPermInfo) $
     throw400 PermissionDenied $
       permErrMsg role
   where

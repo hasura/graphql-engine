@@ -12,7 +12,7 @@ module Hasura.GraphQL.Schema.Remote
 where
 
 import Data.Has
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
@@ -552,7 +552,7 @@ argumentsParser args schemaDoc = do
       -- not apply.
       Just preset -> pure $ pure $ pure (Altered True, preset)
     pure $ fmap (fmap (argName,)) <$> argParser
-  pure $ sequenceA argsParsers <&> fmap Map.fromList . aggregateListAndAlteration
+  pure $ sequenceA argsParsers <&> fmap HashMap.fromList . aggregateListAndAlteration
 
 aggregateListAndAlteration :: [Maybe (Altered, a)] -> (Altered, [a])
 aggregateListAndAlteration = first mconcat . unzip . catMaybes

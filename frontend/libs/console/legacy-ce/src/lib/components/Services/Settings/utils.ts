@@ -1,3 +1,5 @@
+import { getTableDisplayName } from '../../../features/DatabaseRelationships';
+
 export const permissionTypes = [
   'select_permission',
   'update_permission',
@@ -38,10 +40,7 @@ export const getTableNameFromDef = (
       }
     | string
 ) => {
-  if (typeof def === 'string') {
-    return def;
-  }
-  return def.name;
+  return getTableDisplayName(def);
 };
 
 const filterInconsistentMetadataObject = (

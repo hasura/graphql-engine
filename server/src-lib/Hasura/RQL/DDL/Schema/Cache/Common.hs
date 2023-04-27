@@ -24,7 +24,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     TableBuildInput (TableBuildInput, _tbiName),
     TablePermissionInputs (..),
     addTableContext,
-    addCustomReturnTypeContext,
+    addLogicalModelContext,
     boActions,
     boCustomTypes,
     boBackendCache,
@@ -49,17 +49,18 @@ import Control.Arrow.Interpret
 import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Extended
-import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Types (CustomReturnTypeName)
 import Hasura.EncJSON
 import Hasura.Incremental qualified as Inc
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
@@ -76,11 +77,9 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend
-import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Services
-import Hasura.Session
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 newtype BackendInvalidationKeysWrapper (b :: BackendType) = BackendInvalidationKeysWrapper
@@ -129,7 +128,7 @@ invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
       a ->
       HashMap a Inc.InvalidationKey ->
       HashMap a Inc.InvalidationKey
-    invalidate = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
+    invalidate = HashMap.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
     invalidateDataConnectors :: BackendInvalidationKeysWrapper 'DataConnector -> BackendInvalidationKeysWrapper 'DataConnector
     invalidateDataConnectors (BackendInvalidationKeysWrapper invalidationKeys) =
@@ -145,7 +144,7 @@ instance Backend b => FromJSON (BackendIntrospection b) where
   parseJSON = withObject "BackendIntrospection" \o -> do
     metadata <- o .: "metadata"
     enumValues <- o .: "enum_values"
-    pure $ BackendIntrospection metadata (M.fromList enumValues)
+    pure $ BackendIntrospection metadata (HashMap.fromList enumValues)
 
 deriving stock instance BackendMetadata b => Eq (BackendIntrospection b)
 
@@ -354,7 +353,7 @@ buildInfoMap ::
   (e, a) `arr` Maybe b ->
   (e, [a]) `arr` HashMap k b
 buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) -> do
-  let groupedInfos = M.groupOn extractKey infos
+  let groupedInfos = HashMap.groupOn extractKey infos
   infoMapMaybes <-
     (|
       Inc.keyed
@@ -378,7 +377,7 @@ buildInfoMapM ::
   [a] ->
   m (HashMap k b)
 buildInfoMapM extractKey mkMetadataObject buildInfo infos = do
-  let groupedInfos = M.groupOn extractKey infos
+  let groupedInfos = HashMap.groupOn extractKey infos
   infoMapMaybes <- for groupedInfos \duplicateInfos -> do
     infoMaybe <- noDuplicates mkMetadataObject duplicateInfos
     case infoMaybe of
@@ -427,5 +426,5 @@ buildInfoMapPreservingMetadataM extractKey mkMetadataObject buildInfo =
 addTableContext :: (Backend b) => TableName b -> Text -> Text
 addTableContext tableName e = "in table " <> tableName <<> ": " <> e
 
-addCustomReturnTypeContext :: CustomReturnTypeName -> Text -> Text
-addCustomReturnTypeContext customReturnTypeName e = "in custom return type " <> customReturnTypeName <<> ": " <> e
+addLogicalModelContext :: LogicalModelName -> Text -> Text
+addLogicalModelContext logicalModelName e = "in logical model " <> logicalModelName <<> ": " <> e

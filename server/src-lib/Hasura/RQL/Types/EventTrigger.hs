@@ -35,30 +35,38 @@ module Hasura.RQL.Types.EventTrigger
     TriggerLogCleanupToggleConfig (..),
     updateCleanupConfig,
     isIllegalTriggerName,
+    EventLogStatus (..),
+    GetEventLogs (..),
+    EventLog (..),
+    GetEventInvocations (..),
+    EventInvocationLog (..),
+    GetEventById (..),
+    EventLogWithInvocations (..),
   )
 where
 
 import Autodocodec (HasCodec, codec, dimapCodec, disjointEitherCodec, listCodec, literalTextCodec, optionalField', optionalFieldWithDefault', optionalFieldWithOmittedDefault', requiredField')
 import Autodocodec qualified as AC
+import Autodocodec.Extended (boolConstCodec)
 import Data.Aeson
 import Data.Aeson.Extended ((.=?))
 import Data.Aeson.TH
 import Data.ByteString.Lazy qualified as LBS
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.Time.Clock qualified as Time
 import Database.PG.Query qualified as PG
-import Hasura.Metadata.DTO.Utils (boolConstCodec, codecNamePrefix)
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendPrefix)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (EnvRecord, InputWebhook, ResolvedWebhook, SourceName (..), TriggerOnReplication (..))
 import Hasura.RQL.Types.Eventing
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.Headers (HeaderConf (..))
 import System.Cron (CronSchedule)
 import Text.Regex.TDFA qualified as TDFA
 
@@ -136,7 +144,7 @@ instance (Backend b) => NFData (SubscribeOpSpec b)
 
 instance Backend b => HasCodec (SubscribeOpSpec b) where
   codec =
-    AC.object (codecNamePrefix @b <> "SubscribeOpSpec") $
+    AC.object (backendPrefix @b <> "SubscribeOpSpec") $
       SubscribeOpSpec
         <$> requiredField' "columns" AC..= sosColumns
         <*> optionalField' "payload" AC..= sosPayload
@@ -228,7 +236,7 @@ instance Backend b => NFData (TriggerOpsDef b)
 
 instance Backend b => HasCodec (TriggerOpsDef b) where
   codec =
-    AC.object (codecNamePrefix @b <> "TriggerOpsDef") $
+    AC.object (backendPrefix @b <> "TriggerOpsDef") $
       TriggerOpsDef
         <$> optionalField' "insert" AC..= tdInsert
         <*> optionalField' "update" AC..= tdUpdate
@@ -405,7 +413,7 @@ data EventTriggerConf (b :: BackendType) = EventTriggerConf
 
 instance (Backend b) => HasCodec (EventTriggerConf b) where
   codec =
-    AC.object (codecNamePrefix @b <> "EventTriggerConfEventTriggerConf") $
+    AC.object (backendPrefix @b <> "EventTriggerConfEventTriggerConf") $
       EventTriggerConf
         <$> requiredField' "name" AC..= etcName
         <*> requiredField' "definition" AC..= etcDefinition
@@ -539,7 +547,7 @@ instance Backend b => NFData (EventTriggerInfo b)
 instance Backend b => ToJSON (EventTriggerInfo b) where
   toJSON = genericToJSON hasuraJSON
 
-type EventTriggerInfoMap b = M.HashMap TriggerName (EventTriggerInfo b)
+type EventTriggerInfoMap b = HashMap.HashMap TriggerName (EventTriggerInfo b)
 
 newtype FetchBatchSize = FetchBatchSize {_unFetchBatchSize :: Int}
   deriving (Show, Eq)
@@ -550,3 +558,136 @@ data DeletedEventLogStats = DeletedEventLogStats
     deletedInvocationLogs :: Int
   }
   deriving (Show, Eq)
+
+data EventLogStatus
+  = Processed
+  | Pending
+  | All
+  deriving (Show, Eq)
+
+instance ToJSON EventLogStatus where
+  toJSON Processed = String "processed"
+  toJSON Pending = String "pending"
+  toJSON All = String "all"
+
+instance FromJSON EventLogStatus where
+  parseJSON (String "processed") = pure Processed
+  parseJSON (String "pending") = pure Pending
+  parseJSON _ = fail "event logs status can only be one of the following: processed or pending"
+
+data GetEventLogs (b :: BackendType) = GetEventLogs
+  { _gelName :: TriggerName,
+    _gelSourceName :: SourceName,
+    _gelLimit :: Int,
+    _gelOffset :: Int,
+    _gelStatus :: EventLogStatus
+  }
+  deriving (Show)
+
+instance ToJSON (GetEventLogs b) where
+  toJSON GetEventLogs {..} =
+    object $
+      [ "name" .= _gelName,
+        "source" .= _gelSourceName,
+        "limit" .= _gelLimit,
+        "offset" .= _gelOffset,
+        "status" .= _gelStatus
+      ]
+
+instance FromJSON (GetEventLogs b) where
+  parseJSON = withObject "GetEventLogs" $ \o ->
+    GetEventLogs
+      <$> o .: "name"
+      <*> o .:? "source" .!= SNDefault
+      <*> o .:? "limit" .!= 100
+      <*> o .:? "offset" .!= 0
+      <*> o .:? "status" .!= All
+
+data EventLog = EventLog
+  { elId :: EventId,
+    elSchemaName :: Text,
+    elTableName :: Text,
+    elTriggerName :: TriggerName,
+    elPayload :: Value,
+    elDelivered :: Bool,
+    elError :: Bool,
+    elTries :: Int,
+    elCreatedAt :: Time.UTCTime,
+    elLocked :: Maybe Time.UTCTime,
+    elNextRetryAt :: Maybe Time.UTCTime,
+    elArchived :: Bool
+  }
+  deriving (Eq, Generic)
+
+$(deriveToJSON hasuraJSON ''EventLog)
+
+data GetEventInvocations (b :: BackendType) = GetEventInvocations
+  { _geiName :: TriggerName,
+    _geiSourceName :: SourceName,
+    _geiLimit :: Int,
+    _geiOffset :: Int
+  }
+  deriving (Show)
+
+instance ToJSON (GetEventInvocations b) where
+  toJSON GetEventInvocations {..} =
+    object $
+      [ "name" .= _geiName,
+        "source" .= _geiSourceName,
+        "limit" .= _geiLimit,
+        "offset" .= _geiOffset
+      ]
+
+instance FromJSON (GetEventInvocations b) where
+  parseJSON = withObject "GetEventInvocations" $ \o ->
+    GetEventInvocations
+      <$> o .: "name"
+      <*> o .:? "source" .!= SNDefault
+      <*> o .:? "limit" .!= 100
+      <*> o .:? "offset" .!= 0
+
+data EventInvocationLog = EventInvocationLog
+  { eilId :: Text,
+    eilTriggerName :: TriggerName,
+    eilEventId :: EventId,
+    eilHttpStatus :: Maybe Int,
+    eilRequest :: Value,
+    eilResponse :: Value,
+    eilCreatedAt :: Time.UTCTime
+  }
+  deriving (Generic)
+
+$(deriveToJSON hasuraJSON ''EventInvocationLog)
+
+data GetEventById (b :: BackendType) = GetEventById
+  { _gebiSourceName :: SourceName,
+    _gebiEventId :: EventId,
+    _gebiInvocationLogLimit :: Int,
+    _gebiInvocationLogOffset :: Int
+  }
+  deriving (Show)
+
+instance ToJSON (GetEventById b) where
+  toJSON GetEventById {..} =
+    object $
+      [ "source" .= _gebiSourceName,
+        "event_id" .= _gebiEventId,
+        "invocation_log_limit" .= _gebiInvocationLogLimit,
+        "invocation_log_offset" .= _gebiInvocationLogOffset
+      ]
+
+instance FromJSON (GetEventById b) where
+  parseJSON = withObject "GetEventById" $ \o ->
+    GetEventById
+      <$> o .:? "source" .!= SNDefault
+      <*> o .: "event_id"
+      <*> o .:? "invocation_log_limit" .!= 100
+      <*> o .:? "invocation_log_offset" .!= 0
+
+data EventLogWithInvocations = EventLogWithInvocations
+  { elwiEvent :: Maybe EventLog,
+    elwiInvocations :: [EventInvocationLog]
+  }
+  deriving (Generic)
+
+$(deriveToJSON hasuraJSON ''EventLogWithInvocations)

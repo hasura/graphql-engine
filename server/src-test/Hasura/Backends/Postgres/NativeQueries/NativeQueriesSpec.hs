@@ -8,13 +8,12 @@ module Hasura.Backends.Postgres.NativeQueries.NativeQueriesSpec (spec) where
 
 import Data.Bifunctor
 import Data.Either
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.Postgres.Instances.NativeQueries
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Metadata
+import Hasura.LogicalModel.Metadata
 import Hasura.NativeQuery.Metadata
-import Hasura.NativeQuery.Types
 import Hasura.Prelude hiding (first)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Test.Hspec (Spec, describe, it, shouldBe, shouldSatisfy)
@@ -67,26 +66,27 @@ spec = do
       parseInterpolatedQuery rawSQL `shouldBe` Left "Found '{{' without a matching closing '}}'"
 
   describe "Validation" do
-    let crtm =
-          CustomReturnTypeMetadata
-            { _crtmName = CustomReturnTypeName (G.unsafeMkName "custom_return_type_name"),
-              _crtmFields = mempty,
-              _crtmDescription = Nothing,
-              _crtmSelectPermissions = mempty
+    let lmm =
+          LogicalModelMetadata
+            { _lmmName = LogicalModelName (G.unsafeMkName "logical_model_name"),
+              _lmmFields = mempty,
+              _lmmDescription = Nothing,
+              _lmmSelectPermissions = mempty
             }
 
         nqm =
           NativeQueryMetadata
             { _nqmRootFieldName = NativeQueryName (G.unsafeMkName "root_field_name"),
               _nqmCode = InterpolatedQuery mempty,
-              _nqmReturns = CustomReturnTypeName (G.unsafeMkName "custom_return_type_name"),
+              _nqmReturns = LogicalModelName (G.unsafeMkName "logical_model_name"),
               _nqmArguments = mempty,
+              _nqmArrayRelationships = mempty,
               _nqmDescription = mempty
             }
 
     it "Rejects undeclared variables" do
       let Right code = parseInterpolatedQuery "SELECT {{hey}}"
-      let actual :: Either QErr Text = fmap snd $ runExcept $ nativeQueryToPreparedStatement crtm nqm {_nqmCode = code}
+      let actual :: Either QErr Text = fmap snd $ runExcept $ nativeQueryToPreparedStatement lmm nqm {_nqmCode = code}
 
       (first showQErr actual) `shouldSatisfy` isLeft
       let Left err = actual
@@ -98,11 +98,11 @@ spec = do
             fmap snd $
               runExcept $
                 nativeQueryToPreparedStatement
-                  crtm
+                  lmm
                   nqm
                     { _nqmCode = code,
                       _nqmArguments =
-                        HM.fromList
+                        HashMap.fromList
                           [ (NativeQueryArgumentName "hey", NullableScalarType PGVarchar False Nothing)
                           ]
                     }
@@ -110,7 +110,7 @@ spec = do
       (first showQErr actual) `shouldSatisfy` isRight
       let Right rendered = actual
       rendered
-        `shouldBe` "PREPARE _logimo_vali_root_field_name(varchar) AS WITH _cte_logimo_vali_root_field_name AS (\nSELECT $1, $1\n)\nSELECT \nFROM _cte_logimo_vali_root_field_name"
+        `shouldBe` "PREPARE _logimo_vali_(varchar) AS WITH _cte_logimo_vali_ AS (\nSELECT $1, $1\n)\nSELECT \nFROM _cte_logimo_vali_"
 
     it "Handles multiple variables " do
       let Right code = parseInterpolatedQuery "SELECT {{hey}}, {{ho}}"
@@ -118,11 +118,11 @@ spec = do
             fmap snd $
               runExcept $
                 nativeQueryToPreparedStatement
-                  crtm
+                  lmm
                   nqm
                     { _nqmCode = code,
                       _nqmArguments =
-                        HM.fromList
+                        HashMap.fromList
                           [ (NativeQueryArgumentName "hey", NullableScalarType PGVarchar False Nothing),
                             (NativeQueryArgumentName "ho", NullableScalarType PGInteger False Nothing)
                           ]
@@ -131,4 +131,4 @@ spec = do
       (first showQErr actual) `shouldSatisfy` isRight
       let Right rendered = actual
       rendered
-        `shouldBe` "PREPARE _logimo_vali_root_field_name(varchar, integer) AS WITH _cte_logimo_vali_root_field_name AS (\nSELECT $1, $2\n)\nSELECT \nFROM _cte_logimo_vali_root_field_name"
+        `shouldBe` "PREPARE _logimo_vali_(varchar, integer) AS WITH _cte_logimo_vali_ AS (\nSELECT $1, $2\n)\nSELECT \nFROM _cte_logimo_vali_"

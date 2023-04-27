@@ -23,7 +23,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Process
   )
 where
 
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended (ToTxt (toTxt))
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -80,17 +80,17 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy (processOrderB
 import Hasura.Backends.Postgres.Translate.Types
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Node (currentNodeIdVersion, nodeIdVersionInt)
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.NativeQuery.IR (NativeQuery (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy (OrderByItemG (OrderByItemG, obiColumn))
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.Schema.Options qualified as Options
 
 processSelectParams ::
   forall pgKind m.
@@ -176,7 +176,7 @@ processSelectParams
           tell $
             mempty
               { _swCustomSQLCTEs =
-                  CustomSQLCTEs (HM.singleton cteName (nqInterpolatedQuery lm))
+                  CustomSQLCTEs (HashMap.singleton cteName (nqInterpolatedQuery lm))
               }
 
           pure $ S.QualifiedIdentifier (S.tableAliasToIdentifier cteName) Nothing
@@ -193,7 +193,7 @@ processAnnAggregateSelect ::
   AnnAggregateSelect ('Postgres pgKind) ->
   m
     ( SelectSource,
-      HM.HashMap S.ColumnAlias S.SQLExp,
+      HashMap.HashMap S.ColumnAlias S.SQLExp,
       S.Extractor
     )
 processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
@@ -235,7 +235,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
             flip concatMap (map (second snd) processedFields) $
               \(FieldName fieldText, fieldExp) -> [S.SELit fieldText, fieldExp]
       nodeExtractors =
-        HM.fromList $
+        HashMap.fromList $
           concatMap (fst . snd) processedFields <> orderByAndDistinctExtrs
 
   pure (selectSource, nodeExtractors, topLevelExtractor)
@@ -244,7 +244,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
     permLimit = _tpLimit tablePermissions
     orderBy = _saOrderBy tableArgs
     permLimitSubQuery = mkPermissionLimitSubQuery permLimit aggSelFields orderBy
-    similarArrayFields = HM.unions $
+    similarArrayFields = HashMap.unions $
       flip map (map snd aggSelFields) $ \case
         TAFAgg _ -> mempty
         TAFNodes _ annFlds ->
@@ -301,7 +301,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
               AnnObjectSelectG objAnnFields tableFrom tableFilter = annObjSel
               objRelSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
               sourcePrefixes = mkSourcePrefixes objRelSourcePrefix
-          annFieldsExtr <- processAnnFields (identifierToTableIdentifier $ _pfThis sourcePrefixes) fieldName HM.empty objAnnFields tCase
+          annFieldsExtr <- processAnnFields (identifierToTableIdentifier $ _pfThis sourcePrefixes) fieldName HashMap.empty objAnnFields tCase
           let selectSource =
                 ObjectSelectSource
                   (_pfThis sourcePrefixes)
@@ -310,7 +310,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
               objRelSource = ObjectRelationSource relName relMapping selectSource
           pure
             ( objRelSource,
-              HM.fromList [annFieldsExtr],
+              HashMap.fromList [annFieldsExtr],
               S.mkQIdenExp objRelSourcePrefix fieldName
             )
         AFArrayRelation arrSel -> do
@@ -416,7 +416,7 @@ mkSimilarArrayFields ::
   Maybe (NE.NonEmpty (AnnotatedOrderByItemG ('Postgres pgKind) v)) ->
   SimilarArrayFields
 mkSimilarArrayFields annFields maybeOrderBys =
-  HM.fromList $
+  HashMap.fromList $
     flip map allTuples $
       \(relNameAndArgs, fieldName) -> (fieldName, getSimilarFields relNameAndArgs)
   where
@@ -546,7 +546,7 @@ processAnnSimpleSelect ::
   AnnSimpleSelect ('Postgres pgKind) ->
   m
     ( SelectSource,
-      HM.HashMap S.ColumnAlias S.SQLExp
+      HashMap.HashMap S.ColumnAlias S.SQLExp
     )
 processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel = do
   (selectSource, orderByAndDistinctExtrs, _) <-
@@ -565,7 +565,7 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
       similarArrayFields
       annSelFields
       tCase
-  let allExtractors = HM.fromList $ annFieldsExtr : orderByAndDistinctExtrs
+  let allExtractors = HashMap.fromList $ annFieldsExtr : orderByAndDistinctExtrs
   pure (selectSource, allExtractors)
   where
     AnnSelectG annSelFields tableFrom tablePermissions tableArgs _ tCase = annSimpleSel
@@ -582,12 +582,12 @@ processConnectionSelect ::
   SourcePrefixes ->
   FieldName ->
   S.TableAlias ->
-  HM.HashMap PGCol PGCol ->
+  HashMap.HashMap PGCol PGCol ->
   ConnectionSelect ('Postgres pgKind) Void S.SQLExp ->
   m
     ( ArrayConnectionSource,
       S.Extractor,
-      HM.HashMap S.ColumnAlias S.SQLExp
+      HashMap.HashMap S.ColumnAlias S.SQLExp
     )
 processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connectionSelect = do
   (selectSource, orderByAndDistinctExtrs, maybeOrderByCursor) <-
@@ -609,7 +609,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
           mkCursorExtractor primaryKeyColumnsObjectExp : primaryKeyColumnExtractors
   (topExtractorExp, exps) <- flip runStateT [] $ processFields selectSource
   let topExtractor = S.Extractor topExtractorExp $ Just $ S.toColumnAlias fieldIdentifier
-      allExtractors = HM.fromList $ cursorExtractors <> exps <> orderByAndDistinctExtrs
+      allExtractors = HashMap.fromList $ cursorExtractors <> exps <> orderByAndDistinctExtrs
       arrayConnectionSource =
         ArrayConnectionSource
           relAlias
@@ -671,11 +671,11 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
                   obiColumn orderByItem
            in S.BECompare S.SEQ (S.SEIdentifier $ toIdentifier obAlias) v
 
-    similarArrayFields = HM.unions $
+    similarArrayFields = HashMap.unions $
       flip map (map snd fields) $ \case
         ConnectionTypename {} -> mempty
         ConnectionPageInfo {} -> mempty
-        ConnectionEdges edges -> HM.unions $
+        ConnectionEdges edges -> HashMap.unions $
           flip map (map snd edges) $ \case
             EdgeTypename {} -> mempty
             EdgeCursor {} -> mempty

@@ -10,7 +10,7 @@ module Hasura.GraphQL.Execute.Remote
 where
 
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended
@@ -74,8 +74,8 @@ buildExecStepRemote remoteSchemaInfo resultCustomizer tp rootField remoteJoins o
   let selSet = [G.SelectionField $ IR.convertGraphQLField rootField]
       unresolvedSelSet = unresolveVariables selSet
       allVars = map getVariableDefinitionAndValue $ Set.toList $ collectVariables selSet
-      varValues = Map.fromList $ map snd allVars
-      varValsM = bool (Just varValues) Nothing $ Map.null varValues
+      varValues = HashMap.fromList $ map snd allVars
+      varValsM = bool (Just varValues) Nothing $ HashMap.null varValues
       varDefs = map fst allVars
       _grQuery = G.TypedOperationDefinition tp (_unOperationName <$> operationName) varDefs [] unresolvedSelSet
       _grVariables = varValsM
@@ -206,9 +206,9 @@ resolveRemoteVariable userInfo = \case
     let key = RemoteJSONVariableKey gtype jsonValue
     varMap <- gets coerce
     index <-
-      Map.lookup key varMap `onNothing` do
-        let i = Map.size varMap + 1
-        put . coerce $ Map.insert key i varMap
+      HashMap.lookup key varMap `onNothing` do
+        let i = HashMap.size varMap + 1
+        put . coerce $ HashMap.insert key i varMap
         pure i
     -- This should never fail.
     let varText = "hasura_json_var_" <> tshow index

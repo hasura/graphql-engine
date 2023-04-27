@@ -12,7 +12,7 @@ module Test.Parser.Internal
   )
 where
 
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Casing qualified as C
@@ -26,13 +26,13 @@ import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), GBoolExp (..), PartialSQLExp (
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
+import Hasura.RQL.Types.BackendType (BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..))
 import Hasura.RQL.Types.Common (Comment (..), FieldName (..), OID (..))
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Permission (AllowedRootFields (..))
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..), fromRel)
 import Hasura.RQL.Types.Table (Constraint (..), CustomRootField (..), FieldInfo (..), PrimaryKey (..), RolePermInfo (..), SelPermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..))
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
 import Language.GraphQL.Draft.Syntax (unsafeMkName)
 import Test.Parser.Monad
 
@@ -171,12 +171,12 @@ buildTableInfo TableInfoBuilder {..} = tableInfo
           _permDel = Nothing
         }
 
-    fieldInfoMap :: HM.HashMap FieldName (FieldInfo PG)
-    fieldInfoMap = HM.unions [columnFields, relationFields]
+    fieldInfoMap :: HashMap.HashMap FieldName (FieldInfo PG)
+    fieldInfoMap = HashMap.unions [columnFields, relationFields]
 
-    columnFields :: HM.HashMap FieldName (FieldInfo PG)
+    columnFields :: HashMap.HashMap FieldName (FieldInfo PG)
     columnFields =
-      HM.fromList
+      HashMap.fromList
         . fmap toCIHashPair
         $ columns
 
@@ -186,8 +186,8 @@ buildTableInfo TableInfoBuilder {..} = tableInfo
     toRelHashPair :: RelInfo PG -> (FieldName, FieldInfo PG)
     toRelHashPair ri = (fromRel $ riName ri, FIRelationship ri)
 
-    relationFields :: HM.HashMap FieldName (FieldInfo PG)
-    relationFields = HM.fromList . fmap toRelHashPair $ relations
+    relationFields :: HashMap.HashMap FieldName (FieldInfo PG)
+    relationFields = HashMap.fromList . fmap toRelHashPair $ relations
 
     tableConfig :: TableConfig PG
     tableConfig =
@@ -201,7 +201,7 @@ buildTableInfo TableInfoBuilder {..} = tableInfo
     selPermInfo :: SelPermInfo PG
     selPermInfo =
       SelPermInfo
-        { spiCols = HM.fromList . fmap ((,Nothing) . unsafePGCol . cibName) $ columns,
+        { spiCols = HashMap.fromList . fmap ((,Nothing) . unsafePGCol . cibName) $ columns,
           spiComputedFields = mempty,
           spiFilter = upiFilter,
           spiLimit = Nothing,

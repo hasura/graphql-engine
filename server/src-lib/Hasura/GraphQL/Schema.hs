@@ -11,7 +11,7 @@ import Control.Concurrent.Extended (concurrentlyEIO, forConcurrentlyEIO)
 import Control.Lens hiding (contexts)
 import Control.Monad.Memoize
 import Data.Aeson.Ordered qualified as JO
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (duplicates)
@@ -20,7 +20,6 @@ import Data.Text.NonEmpty qualified as NT
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
-import Hasura.CustomReturnType.Cache (_crtiPermissions)
 import Hasura.Function.Cache
 import Hasura.GraphQL.ApolloFederation
 import Hasura.GraphQL.Context
@@ -30,8 +29,6 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Introspect
-import Hasura.GraphQL.Schema.Options (SchemaOptions (..))
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     Kind (..),
@@ -46,6 +43,7 @@ import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename (MkTypename (..))
+import Hasura.LogicalModel.Cache (_lmiPermissions)
 import Hasura.Name qualified as Name
 import Hasura.NativeQuery.Cache (NativeQueryCache, _nqiReturns)
 import Hasura.Prelude
@@ -53,11 +51,15 @@ import Hasura.QueryTags.Types
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (HasTag)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName, mkRoleNameSafe)
+import Hasura.RQL.Types.Schema.Options (SchemaOptions (..))
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization as SC
@@ -65,9 +67,7 @@ import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Tag (HasTag)
 import Hasura.Server.Types
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
@@ -129,22 +129,22 @@ buildGQLContext
   allRemoteSchemas
   allActions
   customTypes = do
-    let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
+    let remoteSchemasRoles = concatMap (HashMap.keys . _rscPermissions . fst . snd) $ HashMap.toList allRemoteSchemas
         actionRoles =
           Set.insert adminRoleName $
-            Set.fromList (allActionInfos ^.. folded . aiPermissions . to Map.keys . folded)
+            Set.fromList (allActionInfos ^.. folded . aiPermissions . to HashMap.keys . folded)
               <> Set.fromList (bool mempty remoteSchemasRoles $ remoteSchemaPermissions == Options.EnableRemoteSchemaPermissions)
-        allActionInfos = Map.elems allActions
-        allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
-        allCustomReturnTypeRoles = Set.fromList $ getCustomReturnTypeRoles =<< Map.elems sources
-        allRoles = actionRoles <> allTableRoles <> allCustomReturnTypeRoles
+        allActionInfos = HashMap.elems allActions
+        allTableRoles = Set.fromList $ getTableRoles =<< HashMap.elems sources
+        allLogicalModelRoles = Set.fromList $ getLogicalModelRoles =<< HashMap.elems sources
+        allRoles = actionRoles <> allTableRoles <> allLogicalModelRoles
 
     contexts <-
       -- Buld role contexts in parallel. We'd prefer deterministic parallelism
       -- but that isn't really acheivable (see mono #3829). NOTE: the admin role
       -- will still be a bottleneck here, even on huge_schema which has many
       -- roles.
-      fmap Map.fromList $
+      fmap HashMap.fromList $
         forConcurrentlyEIO 10 (Set.toList allRoles) $ \role -> do
           (role,)
             <$> concurrentlyEIO
@@ -171,7 +171,7 @@ buildGQLContext
         relayContexts = snd <$> contexts
 
     adminIntrospection <-
-      case Map.lookup adminRoleName hasuraContexts of
+      case HashMap.lookup adminRoleName hasuraContexts of
         Just (_context, _errors, introspection) -> pure introspection
         Nothing -> throw500 "buildGQLContext failed to build for the admin role"
     (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext (sqlGen, functionPermissions) sources allRemoteSchemas experimentalFeatures remoteSchemaPermissions
@@ -179,7 +179,7 @@ buildGQLContext
       ( ( adminIntrospection,
           view _1 <$> hasuraContexts,
           unauthenticated,
-          Set.unions $ unauthenticatedRemotesErrors : (view _2 <$> Map.elems hasuraContexts)
+          Set.unions $ unauthenticatedRemotesErrors : (view _2 <$> HashMap.elems hasuraContexts)
         ),
         ( relayContexts,
           -- Currently, remote schemas are exposed through Relay, but ONLY through
@@ -348,30 +348,30 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))], -- subscription fields
           [(G.Name, Parser 'Output P.Parse (ApolloFederationParserFunction P.Parse))] -- apollo federation tables
         )
-    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions nativeQueries _customReturnTypes _ _ sourceCustomization) =
+    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo {..}) =
       runSourceSchema schemaContext schemaOptions sourceInfo do
-        let validFunctions = takeValidFunctions functions
-            validNativeQueries = takeValidNativeQueries nativeQueries
-            validTables = takeValidTables tables
-            mkRootFieldName = _rscRootFields sourceCustomization
-            makeTypename = SC._rscTypeNames sourceCustomization
+        let validFunctions = takeValidFunctions _siFunctions
+            validNativeQueries = takeValidNativeQueries _siNativeQueries
+            validTables = takeValidTables _siTables
+            mkRootFieldName = _rscRootFields _siCustomization
+            makeTypename = SC._rscTypeNames _siCustomization
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields, apolloFedTableParsers) <-
           buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions validNativeQueries
         (,,,,apolloFedTableParsers)
           <$> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__query))
             (pure uncustomizedQueryRootFields)
           <*> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__mutation_frontend))
             (buildMutationFields mkRootFieldName Frontend sourceInfo validTables validFunctions)
           <*> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__mutation_backend))
             (buildMutationFields mkRootFieldName Backend sourceInfo validTables validFunctions)
           <*> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__subscription))
             (pure uncustomizedSubscriptionRootFields)
 
@@ -470,29 +470,29 @@ buildRelayRoleContext options sources actions customTypes role expFeatures = do
           [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))]
         )
-    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo _ tables functions _nativeQueries _customReturnTypes _ _ sourceCustomization) = do
+    buildSource schemaContext schemaOptions sourceInfo@(SourceInfo {..}) = do
       runSourceSchema schemaContext schemaOptions sourceInfo do
-        let validFunctions = takeValidFunctions functions
-            validTables = takeValidTables tables
-            mkRootFieldName = _rscRootFields sourceCustomization
-            makeTypename = SC._rscTypeNames sourceCustomization
+        let validFunctions = takeValidFunctions _siFunctions
+            validTables = takeValidTables _siTables
+            mkRootFieldName = _rscRootFields _siCustomization
+            makeTypename = SC._rscTypeNames _siCustomization
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields) <-
           buildRelayQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions
         (,,,)
           <$> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__query))
             (pure uncustomizedQueryRootFields)
           <*> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__mutation_frontend))
             (buildMutationFields mkRootFieldName Frontend sourceInfo validTables validFunctions)
           <*> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__mutation_backend))
             (buildMutationFields mkRootFieldName Backend sourceInfo validTables validFunctions)
           <*> customizeFields
-            sourceCustomization
+            _siCustomization
             (makeTypename <> MkTypename (<> Name.__subscription))
             (pure uncustomizedSubscriptionRootFields)
 
@@ -590,7 +590,7 @@ buildAndValidateRemoteSchemas ::
     (MemoizeT m)
     ([RemoteSchemaParser P.Parse], HashSet InconsistentMetadata)
 buildAndValidateRemoteSchemas remotes sourcesQueryFields sourcesMutationFields role remoteSchemaPermsCtx =
-  runWriterT $ foldlM step [] (Map.elems remotes)
+  runWriterT $ foldlM step [] (HashMap.elems remotes)
   where
     getFieldName = P.getName . P.fDefinition
 
@@ -680,10 +680,10 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
   functionPermsCtx <- retrieve Options.soInferFunctionPermissions
   functionSelectExpParsers <-
     concat . catMaybes
-      <$> for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
+      <$> for (HashMap.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
         guard $
           roleName == adminRoleName
-            || roleName `Map.member` _fiPermissions functionInfo
+            || roleName `HashMap.member` _fiPermissions functionInfo
             || functionPermsCtx == Options.InferFunctionPermissions
         let targetTableName = _fiReturnType functionInfo
         lift $ mkRFs $ buildFunctionQueryFields mkRootFieldName functionName functionInfo targetTableName
@@ -692,7 +692,7 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
 
   (tableQueryFields, tableSubscriptionFields, apolloFedTableParsers) <-
     unzip3 . catMaybes
-      <$> for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT $ do
+      <$> for (HashMap.toList tables) \(tableName, tableInfo) -> runMaybeT $ do
         tableIdentifierName <- getTableIdentifierName @b tableInfo
         lift $ buildTableQueryAndSubscriptionFields mkRootFieldName tableName tableInfo tableIdentifierName
 
@@ -723,14 +723,14 @@ buildNativeQueryFields ::
 buildNativeQueryFields sourceInfo nativeQueries = runMaybeTmempty $ do
   roleName <- retrieve scRole
 
-  map mkRF . catMaybes <$> for (Map.elems nativeQueries) \nativeQuery -> do
+  map mkRF . catMaybes <$> for (HashMap.elems nativeQueries) \nativeQuery -> do
     -- only include this native query in the schema
     -- if the current role is admin, or we have a select permission
     -- for this role (this is the broad strokes check. later, we'll filter
     -- more granularly on columns and then rows)
     guard $
       roleName == adminRoleName
-        || roleName `Map.member` _crtiPermissions (_nqiReturns nativeQuery)
+        || roleName `HashMap.member` _lmiPermissions (_nqiReturns nativeQuery)
 
     lift (buildNativeQueryRootFields nativeQuery)
   where
@@ -754,7 +754,7 @@ buildRelayQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExpo
   roleName <- retrieve scRole
   (tableConnectionQueryFields, tableConnectionSubscriptionFields) <-
     unzip . catMaybes
-      <$> for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT do
+      <$> for (HashMap.toList tables) \(tableName, tableInfo) -> runMaybeT do
         tableIdentifierName <- getTableIdentifierName @b tableInfo
         SelPermInfo {..} <- hoistMaybe $ tableSelectPermissions roleName tableInfo
         pkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
@@ -766,7 +766,7 @@ buildRelayQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExpo
             includeRelayWhen (isRootFieldAllowed SRFTSelect spiAllowedSubscriptionRootFields)
           )
 
-  functionConnectionFields <- for (Map.toList functions) $ \(functionName, functionInfo) -> runMaybeT do
+  functionConnectionFields <- for (HashMap.toList functions) $ \(functionName, functionInfo) -> runMaybeT do
     let returnTableName = _fiReturnType functionInfo
     -- FIXME: only extract the TableInfo once to avoid redundant cache lookups
     returnTableInfo <- lift $ askTableInfo returnTableName
@@ -793,7 +793,7 @@ buildMutationFields ::
   SchemaT r m [P.FieldParser n (MutationRootField UnpreparedValue)]
 buildMutationFields mkRootFieldName scenario sourceInfo tables (takeExposedAs FEAMutation -> functions) = do
   roleName <- retrieve scRole
-  tableMutations <- for (Map.toList tables) \(tableName, tableInfo) -> do
+  tableMutations <- for (HashMap.toList tables) \(tableName, tableInfo) -> do
     tableIdentifierName <- getTableIdentifierName @b tableInfo
     inserts <-
       mkRFs (MDBR . MDBInsert) $ buildTableInsertMutationFields mkRootFieldName scenario tableName tableInfo tableIdentifierName
@@ -802,7 +802,7 @@ buildMutationFields mkRootFieldName scenario sourceInfo tables (takeExposedAs FE
     deletes <-
       mkRFs (MDBR . MDBDelete) $ buildTableDeleteMutationFields mkRootFieldName scenario tableName tableInfo tableIdentifierName
     pure $ concat [inserts, updates, deletes]
-  functionMutations <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
+  functionMutations <- for (HashMap.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     let targetTableName = _fiReturnType functionInfo
     -- A function exposed as mutation must have a function permission
     -- configured for the role. See Note [Function Permissions]
@@ -815,7 +815,7 @@ buildMutationFields mkRootFieldName scenario sourceInfo tables (takeExposedAs FE
 
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
-      roleName == adminRoleName || roleName `Map.member` _fiPermissions functionInfo
+      roleName == adminRoleName || roleName `HashMap.member` _fiPermissions functionInfo
     lift $ mkRFs MDBR $ buildFunctionMutationFields mkRootFieldName functionName functionInfo targetTableName
   pure $ concat $ tableMutations <> catMaybes functionMutations
   where
@@ -1014,7 +1014,7 @@ mkRootFields sourceName sourceConfig queryTagsConfig inj =
     )
 
 takeExposedAs :: FunctionExposedAs -> FunctionCache b -> FunctionCache b
-takeExposedAs x = Map.filter ((== x) . _fiExposedAs)
+takeExposedAs x = HashMap.filter ((== x) . _fiExposedAs)
 
 subscriptionRoot :: G.Name
 subscriptionRoot = Name._subscription_root

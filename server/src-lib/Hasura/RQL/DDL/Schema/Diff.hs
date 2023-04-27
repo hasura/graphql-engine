@@ -14,7 +14,7 @@ where
 
 import Control.Lens ((.~))
 import Data.Aeson
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
 import Data.List.Extended
@@ -27,6 +27,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Rename
 import Hasura.RQL.DDL.Schema.Table
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
@@ -36,7 +37,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data FunctionMeta b = FunctionMeta
@@ -297,7 +297,7 @@ processTablesDiff source preActionTables tablesDiff = do
   for_ alteredTables $ \(oldQtn, tableDiff) -> do
     ti <-
       onNothing
-        (M.lookup oldQtn preActionTables)
+        (HashMap.lookup oldQtn preActionTables)
         (throw500 $ "old table metadata not found in cache: " <>> oldQtn)
     alterTableInMetadata source (_tiCoreInfo ti) tableDiff
   where
@@ -430,5 +430,5 @@ removeDroppedColumnsFromMetadataField source droppedCols tableInfo = do
     tableName = _tciName tableInfo
     originalTableConfig = _tciCustomConfig tableInfo
     originalColumnConfig = _tcColumnConfig originalTableConfig
-    newColumnConfig = foldl' (flip M.delete) originalColumnConfig droppedCols
+    newColumnConfig = foldl' (flip HashMap.delete) originalColumnConfig droppedCols
     newTableConfig = originalTableConfig & tcColumnConfig .~ newColumnConfig

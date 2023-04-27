@@ -28,7 +28,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH qualified as J
 import Data.Aeson.Types (prependFailure)
 import Data.Bifunctor (bimap)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd.Autodocodec (insertionOrderedElemsCodec)
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.Scientific (floatingOrInteger)
@@ -82,7 +82,7 @@ instance HasCodec RemoteFields where
               .= snd
 
       dec :: HashMap G.Name (RemoteArguments, Maybe RemoteFields) -> Either String RemoteFields
-      dec hashmap = case HM.toList hashmap of
+      dec hashmap = case HashMap.toList hashmap of
         [(fieldName, (arguments, maybeSubField))] ->
           let subfields = maybe [] (toList . unRemoteFields) maybeSubField
            in Right $
@@ -93,7 +93,7 @@ instance HasCodec RemoteFields where
 
       enc :: RemoteFields -> HashMap G.Name (RemoteArguments, Maybe RemoteFields)
       enc (RemoteFields (field :| subfields)) =
-        HM.singleton (fcName field) (fcArguments field, RemoteFields <$> nonEmpty subfields)
+        HashMap.singleton (fcName field) (fcArguments field, RemoteFields <$> nonEmpty subfields)
 
 instance J.FromJSON RemoteFields where
   parseJSON = prependFailure details . fmap RemoteFields . parseRemoteFields
@@ -177,7 +177,7 @@ instance J.FromJSON RemoteArguments where
       details = "Remote arguments are represented by an object that maps each argument name to its value."
 
       parseObjectFieldsToGValue keyMap =
-        HM.fromList <$> for (KM.toList keyMap) \(K.toText -> key, value) -> do
+        HashMap.fromList <$> for (KM.toList keyMap) \(K.toText -> key, value) -> do
           name <- G.mkName key `onNothing` fail (T.unpack key <> " is an invalid key name")
           parsedValue <- parseValueAsGValue value
           pure (name, parsedValue)
@@ -210,7 +210,7 @@ instance J.ToJSON RemoteArguments where
   toJSON (RemoteArguments fields) = fieldsToObject fields
     where
       fieldsToObject =
-        J.Object . KM.fromList . map (bimap (K.fromText . G.unName) gValueToValue) . HM.toList
+        J.Object . KM.fromList . map (bimap (K.fromText . G.unName) gValueToValue) . HashMap.toList
 
       gValueToValue =
         \case

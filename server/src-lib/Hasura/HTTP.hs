@@ -25,7 +25,7 @@ import Control.Lens hiding ((.=))
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.CaseInsensitive (mk, original)
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Conversions (UTF8 (..), convertText)
 import Data.Text.Encoding qualified as TE
@@ -169,7 +169,7 @@ encodeHTTPRequestJSON request =
       [ ("host", J.toJSON $ TE.decodeUtf8 $ HTTP.host request),
         ("port", J.toJSON $ HTTP.port request),
         ("secure", J.toJSON $ HTTP.secure request),
-        ("requestHeaders", J.toJSON $ M.fromList $ hdrsToText $ map redactSensitiveHeader $ HTTP.requestHeaders request),
+        ("requestHeaders", J.toJSON $ HashMap.fromList $ hdrsToText $ map redactSensitiveHeader $ HTTP.requestHeaders request),
         ("path", J.toJSON $ TE.decodeUtf8 $ HTTP.path request),
         ("queryString", J.toJSON $ TE.decodeUtf8 $ HTTP.queryString request),
         ("method", J.toJSON $ TE.decodeUtf8 $ HTTP.method request),

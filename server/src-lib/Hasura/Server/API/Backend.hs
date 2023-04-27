@@ -23,7 +23,7 @@ module Hasura.Server.API.Backend
     computedFieldCommands,
     connectionTemplateCommands,
     nativeQueriesCommands,
-    customReturnTypesCommands,
+    logicalModelsCommands,
   )
 where
 
@@ -34,9 +34,9 @@ import Data.Aeson.Types qualified as J
 import Data.Text qualified as T
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.SQL.AnyBackend
-import Hasura.SQL.Backend
-import {-# SOURCE #-} Hasura.Server.API.Metadata
+import Hasura.Server.API.Metadata.Types
 
 -- API class
 
@@ -155,7 +155,10 @@ eventTriggerCommands =
   [ commandParser "invoke_event_trigger" $ RMInvokeEventTrigger . mkAnyBackend @b,
     commandParser "create_event_trigger" $ RMCreateEventTrigger . mkAnyBackend @b,
     commandParser "delete_event_trigger" $ RMDeleteEventTrigger . mkAnyBackend @b,
-    commandParser "redeliver_event" $ RMRedeliverEvent . mkAnyBackend @b
+    commandParser "redeliver_event" $ RMRedeliverEvent . mkAnyBackend @b,
+    commandParser "get_event_logs" $ RMGetEventLogs . mkAnyBackend @b,
+    commandParser "get_event_invocation_logs" $ RMGetEventInvocationLogs . mkAnyBackend @b,
+    commandParser "get_event_by_id" $ RMGetEventById . mkAnyBackend @b
   ]
 
 computedFieldCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
@@ -176,11 +179,11 @@ nativeQueriesCommands =
     commandParser "untrack_native_query" $ RMUntrackNativeQuery . mkAnyBackend @b
   ]
 
-customReturnTypesCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
-customReturnTypesCommands =
-  [ commandParser "get_custom_return_type" $ RMGetCustomReturnType . mkAnyBackend @b,
-    commandParser "track_custom_return_type" $ RMTrackCustomReturnType . mkAnyBackend @b,
-    commandParser "untrack_custom_return_type" $ RMUntrackCustomReturnType . mkAnyBackend @b,
-    commandParser "create_custom_return_type_select_permission" $ RMCreateSelectCustomReturnTypePermission . mkAnyBackend @b,
-    commandParser "drop_custom_return_type_select_permission" $ RMDropSelectCustomReturnTypePermission . mkAnyBackend @b
+logicalModelsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+logicalModelsCommands =
+  [ commandParser "get_logical_model" $ RMGetLogicalModel . mkAnyBackend @b,
+    commandParser "track_logical_model" $ RMTrackLogicalModel . mkAnyBackend @b,
+    commandParser "untrack_logical_model" $ RMUntrackLogicalModel . mkAnyBackend @b,
+    commandParser "create_logical_model_select_permission" $ RMCreateSelectLogicalModelPermission . mkAnyBackend @b,
+    commandParser "drop_logical_model_select_permission" $ RMDropSelectLogicalModelPermission . mkAnyBackend @b
   ]

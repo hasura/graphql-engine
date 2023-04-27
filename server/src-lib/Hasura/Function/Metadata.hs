@@ -17,9 +17,9 @@ import Control.Lens hiding (set, (.=))
 import Data.Aeson.Types
 import Data.Text qualified as T
 import Hasura.Function.Cache
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendPrefix)
 
 data FunctionMetadata b = FunctionMetadata
   { _fmFunction :: FunctionName b,
@@ -61,7 +61,7 @@ instance (Backend b) => HasCodec (FunctionMetadata b) where
             "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax"
           ]
       )
-      $ AC.object (codecNamePrefix @b <> "FunctionMetadata")
+      $ AC.object (backendPrefix @b <> "FunctionMetadata")
       $ FunctionMetadata
         <$> requiredField "function" nameDoc
           AC..= _fmFunction

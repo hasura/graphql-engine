@@ -3,7 +3,7 @@ module Hasura.SQL.Value
   )
 where
 
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.Aeson.Types qualified as AT
 import Data.Text qualified as T
 import Hasura.Prelude
@@ -15,12 +15,12 @@ data TxtEncodedVal
 
 instance Hashable TxtEncodedVal
 
-instance A.ToJSON TxtEncodedVal where
+instance J.ToJSON TxtEncodedVal where
   toJSON = \case
     TENull -> AT.Null
     TELit t -> AT.String t
 
-instance A.FromJSON TxtEncodedVal where
-  parseJSON A.Null = pure TENull
-  parseJSON (A.String t) = pure $ TELit t
+instance J.FromJSON TxtEncodedVal where
+  parseJSON J.Null = pure TENull
+  parseJSON (J.String t) = pure $ TELit t
   parseJSON v = AT.typeMismatch "String" v

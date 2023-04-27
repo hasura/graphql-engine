@@ -9,7 +9,7 @@ module Hasura.Backends.MSSQL.FromIr.Expression
 where
 
 import Control.Monad.Validate
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.MSSQL.FromIr
   ( Error (UnsupportedOpExpG),
     FromIr,
@@ -21,9 +21,9 @@ import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.RQL.Types.Relationships.Local qualified as IR
-import Hasura.SQL.Backend
 
 -- | Translate boolean expressions into TSQL 'Expression's.
 --
@@ -126,7 +126,7 @@ fromAnnBoolExpFld =
                   (ColumnExpression remoteFieldName)
               )
         )
-        . HM.toList
+        . HashMap.toList
 
 -- | Scope a translation action to the table bound in a FROM clause.
 scopedTo :: From -> ReaderT EntityAlias FromIr a -> ReaderT EntityAlias FromIr a

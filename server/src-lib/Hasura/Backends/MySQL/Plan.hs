@@ -16,8 +16,8 @@ import Hasura.Backends.MySQL.Types
 import Hasura.Base.Error
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as RQL
-import Hasura.SQL.Backend
 import Hasura.Session
 
 -- | Plan the query and then produce a forest of actions for the executor.

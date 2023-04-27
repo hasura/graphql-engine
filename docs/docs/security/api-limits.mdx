@@ -49,6 +49,15 @@ You can choose any one of the above parameters to rate limit the requests.
 **Note**: If you set a `Unique Parameter` then the combination of both the `role_name` and the `Unique Parameter` will
 be used to rate-limit requests.
 
+:::info Note
+
+To enable rate limiting on Hasura Enterprise, you must set the
+[`HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`](/deployment/graphql-engine-flags/reference.mdx#rate-limit-redis-url) environment
+variable or the [`--rate-limit-redis-url`](/deployment/graphql-engine-flags/reference.mdx#rate-limit-redis-url) server flag
+with the appropriate Redis connection string.
+
+:::
+
 Example:
 
 If you rate-limit using the `role_name` and set the unique parameter for the rate-limit as `IP Address`, then rate-limit

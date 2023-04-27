@@ -9,7 +9,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.ByteString.Lazy qualified as LBS
-import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.RawString
@@ -31,8 +31,9 @@ import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Root
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RemoteSchema.SchemaCache
-import Hasura.Session
+import Hasura.Session (BackendOnlyFieldAccess (..), SessionVariables, UserInfo (..), mkSessionVariable)
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
@@ -55,7 +56,7 @@ runError = runExceptT >=> (`onLeft` (error . T.unpack . qeError))
 
 mkTestRemoteSchema :: Text -> RemoteSchemaIntrospection
 mkTestRemoteSchema schema = RemoteSchemaIntrospection $
-  M.fromListOn getTypeName $
+  HashMap.fromListOn getTypeName $
     runIdentity $
       runError $ do
         G.SchemaDocument types <- G.parseSchemaDocument schema `onLeft` throw500
@@ -84,7 +85,7 @@ mkTestRemoteSchema schema = RemoteSchemaIntrospection $
             choice $
               G._ivdDirectives ivd <&> \dir -> do
                 guard $ G._dName dir == Name._preset
-                value <- M.lookup Name._value $ G._dArguments dir
+                value <- HashMap.lookup Name._value $ G._dArguments dir
                 Just $ case value of
                   G.VString "x-hasura-test" ->
                     G.VVariable $
@@ -106,13 +107,13 @@ mkTestExecutableDocument t = runIdentity $
           pure (G._todVariableDefinitions opDef, resSelSet)
       _ -> throw500 "must have only one query in the document"
 
-mkTestVariableValues :: LBS.ByteString -> M.HashMap G.Name J.Value
+mkTestVariableValues :: LBS.ByteString -> HashMap.HashMap G.Name J.Value
 mkTestVariableValues vars = runIdentity $
   runError $ do
     value <- J.eitherDecode vars `onLeft` (throw500 . T.pack)
     case value of
       J.Object vs ->
-        M.fromList <$> for (KM.toList vs) \(K.toText -> name, val) -> do
+        HashMap.fromList <$> for (KM.toList vs) \(K.toText -> name, val) -> do
           gname <- G.mkName name `onNothing` throw500 ("wrong Name: " <>> name)
           pure (gname, val)
       _ -> throw500 "variables must be an object"
@@ -145,7 +146,7 @@ buildQueryParsers introspection = do
 runQueryParser ::
   P.FieldParser TestMonad any ->
   ([G.VariableDefinition], G.SelectionSet G.NoFragments G.Name) ->
-  M.HashMap G.Name J.Value ->
+  HashMap.HashMap G.Name J.Value ->
   any
 runQueryParser parser (varDefs, selSet) vars = runIdentity . runError $ do
   (_, resolvedSelSet) <- resolveVariables varDefs vars [] selSet
@@ -221,7 +222,7 @@ query($a: A!) {
   }
 }
 |]
-  let arg = head $ M.toList $ _fArguments field
+  let arg = head $ HashMap.toList $ _fArguments field
   arg
     `shouldBe` ( _a,
                  -- the parser did not create a new JSON variable, and forwarded the query variable unmodified
@@ -275,7 +276,7 @@ query($a: A) {
   }
 }
 |]
-  let arg = head $ M.toList $ _fArguments field
+  let arg = head $ HashMap.toList $ _fArguments field
   arg
     `shouldBe` ( _a,
                  -- fieldOptional has peeled the variable; all we see is a JSON blob, and in doubt
@@ -329,12 +330,12 @@ query($a: A!) {
   }
 }
 |]
-  let arg = head $ M.toList $ _fArguments field
+  let arg = head $ HashMap.toList $ _fArguments field
   arg
     `shouldBe` ( _a,
                  -- the preset has caused partial variable expansion, only up to where it's needed
                  G.VObject $
-                   M.fromList
+                   HashMap.fromList
                      [ ( _x,
                          G.VInt 0
                        ),

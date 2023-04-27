@@ -11,7 +11,7 @@ where
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as L
 import Data.Environment qualified as Env
-import Data.HashMap.Strict.Extended qualified as HM
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Int qualified as Int
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
@@ -24,11 +24,11 @@ import Hasura.Base.Error
 import Hasura.Function.Cache (FunctionOverloads (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 
 defaultGlobalSelectLimit :: Int.Int64
 defaultGlobalSelectLimit = 1000
@@ -102,11 +102,11 @@ resolveSource sourceConfig =
           "unexpected exception while connecting to database: " <> tshow err
       Right (restTables, restRoutines) -> do
         seconds <- liftIO $ fmap systemSeconds getSystemTime
-        let functions = FunctionOverloads <$> HM.groupOnNE (routineReferenceToFunctionName . routineReference) restRoutines
+        let functions = FunctionOverloads <$> HashMap.groupOnNE (routineReferenceToFunctionName . routineReference) restRoutines
         pure
           ( DBObjectsIntrospection
               { _rsTables =
-                  HM.fromList
+                  HashMap.fromList
                     [ ( restTableReferenceToTableName tableReference,
                         DBTableMetadata
                           { _ptmiOid = OID (fromIntegral seconds + index :: Int), -- TODO: The seconds are used for uniqueness. BigQuery doesn't support a "stable" ID for a table.

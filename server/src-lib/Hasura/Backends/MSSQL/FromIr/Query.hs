@@ -13,8 +13,7 @@ where
 import Control.Applicative (getConst)
 import Control.Monad.Validate
 import Data.Aeson.Extended qualified as J
-import Data.HashMap.Strict qualified as HM
-import Data.HashMap.Strict.InsOrd qualified as InsOrd
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
@@ -27,22 +26,20 @@ import Hasura.Backends.MSSQL.FromIr
     FromIr,
     NameTemplate (..),
     generateAlias,
-    tellAfter,
-    tellBefore,
+    tellCTE,
   )
 import Hasura.Backends.MSSQL.FromIr.Constants
 import Hasura.Backends.MSSQL.FromIr.Expression
 import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
-import Hasura.CustomReturnType.IR (CustomReturnType (..))
 import Hasura.NativeQuery.IR qualified as IR
-import Hasura.NativeQuery.Types (NativeQueryName (..), NullableScalarType (..))
+import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.RQL.Types.Common qualified as IR
 import Hasura.RQL.Types.Relationships.Local qualified as IR
-import Hasura.SQL.Backend
 
 -- | This is the top-level entry point for translation of Query root fields.
 fromQueryRootField :: IR.QueryDB 'MSSQL Void Expression -> FromIr Select
@@ -90,7 +87,7 @@ fromSourceRelationship ::
   -- | List of json objects, each of which becomes a row of the table
   NE.NonEmpty J.Object ->
   -- | The above objects have this schema
-  HM.HashMap IR.FieldName (ColumnName, ScalarType) ->
+  HashMap.HashMap IR.FieldName (ColumnName, ScalarType) ->
   IR.FieldName ->
   (IR.FieldName, IR.SourceRelationshipSelection 'MSSQL Void (Const Expression)) ->
   FromIr TSQL.Select
@@ -135,7 +132,7 @@ fromSourceRelationship lhs lhsSchema argumentId relationshipField = do
                   openJsonWith =
                     Just $
                       toJsonFieldSpec argumentId IntegerType
-                        NE.:| map (uncurry toJsonFieldSpec . second snd) (HM.toList lhsSchema)
+                        NE.:| map (uncurry toJsonFieldSpec . second snd) (HashMap.toList lhsSchema)
                 },
             aliasedAlias = "lhs"
           }
@@ -151,7 +148,7 @@ fromSourceRelationship lhs lhsSchema argumentId relationshipField = do
 -- an object, array, or aggregate relationship.
 fromRemoteRelationFieldsG ::
   Map TableName EntityAlias ->
-  HM.HashMap ColumnName ColumnName ->
+  HashMap.HashMap ColumnName ColumnName ->
   (IR.FieldName, IR.SourceRelationshipSelection 'MSSQL Void (Const Expression)) ->
   ReaderT EntityAlias FromIr FieldSource
 fromRemoteRelationFieldsG existingJoins joinColumns (IR.FieldName name, field) =
@@ -335,30 +332,11 @@ fromNativeQuery :: IR.NativeQuery 'MSSQL Expression -> FromIr TSQL.From
 fromNativeQuery nativeQuery = do
   let nativeQueryName = IR.nqRootFieldName nativeQuery
       nativeQuerySql = IR.nqInterpolatedQuery nativeQuery
-      nativeQueryReturnType = IR.nqReturnType nativeQuery
+      cteName = T.toTxt (getNativeQueryName nativeQueryName)
 
-      rawTempTableName = T.toTxt (getNativeQueryName nativeQueryName)
-      aliasedTempTableName = Aliased (TempTableName rawTempTableName) rawTempTableName
+  tellCTE (Aliased nativeQuerySql cteName)
 
-  let columns =
-        ( \(name, ty) ->
-            UnifiedColumn
-              { name = name,
-                type' = (nstType ty)
-              }
-        )
-          <$> InsOrd.toList (crtFields nativeQueryReturnType)
-
-  -- \| add create temp table to "the environment"
-  tellBefore (CreateTemp (TempTableName rawTempTableName) columns)
-
-  -- \| add insert into temp table
-  tellBefore (InsertTemp (TempTableName rawTempTableName) nativeQuerySql)
-
-  -- \| when we're done, drop the temp table
-  tellAfter (DropTemp (TempTableName rawTempTableName))
-
-  pure $ TSQL.FromTempTable aliasedTempTableName
+  pure $ TSQL.FromIdentifier cteName
 
 fromSelectAggregate ::
   Maybe (EntityAlias, HashMap ColumnName ColumnName) ->
@@ -850,7 +828,7 @@ fromMapping localFrom =
               (ColumnExpression remoteFieldName)
           )
     )
-    . HM.toList
+    . HashMap.toList
 
 selectFromMapping ::
   Select ->

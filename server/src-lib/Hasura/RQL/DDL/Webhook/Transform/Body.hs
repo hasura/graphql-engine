@@ -15,6 +15,7 @@ where
 -------------------------------------------------------------------------------
 
 import Autodocodec (HasCodec, codec, dimapCodec, disjointEitherCodec, object, requiredField', (.=))
+import Autodocodec.Extended (discriminatorField)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
@@ -25,7 +26,6 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Validation (Validation)
 import Data.Validation qualified as V
-import Hasura.Metadata.DTO.Utils (discriminatorField)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
   ( Template (..),

@@ -41,8 +41,8 @@ import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.DDL.ConnectionTemplate (BackendResolvedConnectionTemplate (..), ResolvedConnectionTemplateWrapper (..))
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing

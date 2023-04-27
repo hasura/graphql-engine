@@ -5,8 +5,8 @@ module Hasura.GraphQL.Schema.Introspection
   )
 where
 
-import Data.Aeson qualified as A
-import Data.Aeson.Ordered qualified as AO
+import Data.Aeson qualified as J
+import Data.Aeson.Ordered qualified as JO
 import Data.Text qualified as T
 import Hasura.Backends.Postgres.Instances.Schema ()
 import Hasura.Base.ErrorMessage
@@ -26,7 +26,7 @@ queryInputFieldsParserIntrospection ::
   P.InputFieldsParser n a ->
   -- | The Introspection query
   G.Field G.NoFragments P.Variable ->
-  IO A.Value
+  IO J.Value
 queryInputFieldsParserIntrospection parser field = do
   introspectionParser <- introspectDefintions (P.ifDefinitions parser)
   runParserTest $ P.fParser introspectionParser field
@@ -35,9 +35,9 @@ introspectDefintions ::
   forall n a.
   (P.HasTypeDefinitions a, P.MonadParse n) =>
   a ->
-  IO (P.FieldParser n A.Value)
+  IO (P.FieldParser n J.Value)
 introspectDefintions definitions = do
-  let introParser :: Either P.ConflictingDefinitions (P.FieldParser n A.Value) = do
+  let introParser :: Either P.ConflictingDefinitions (P.FieldParser n J.Value) = do
         types <- P.collectTypeDefinitions [P.TypeDefinitionsWrapper definitions]
         let schema =
               P.Schema
@@ -51,6 +51,6 @@ introspectDefintions definitions = do
                   sSubscriptionType = Nothing,
                   sDirectives = []
                 }
-        return $ (AO.fromOrdered . ($ schema)) <$> I.schema @n
+        return $ (JO.fromOrdered . ($ schema)) <$> I.schema @n
 
   onLeft introParser (error . T.unpack . fromErrorMessage . toErrorValue)

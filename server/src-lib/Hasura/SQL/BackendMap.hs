@@ -17,7 +17,7 @@ where
 import Autodocodec (HasCodec (codec), ObjectCodec, optionalFieldWith')
 import Autodocodec qualified as AC
 import Autodocodec.Extended (typeableName)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Extended
 import Data.Aeson.Key qualified as Key
 import Data.Aeson.KeyMap qualified as KeyMap
@@ -30,9 +30,9 @@ import Data.Text.Extended (toTxt)
 import Hasura.Incremental.Internal.Dependency (Dependency (..), selectD)
 import Hasura.Incremental.Select
 import Hasura.Prelude hiding (empty, lookup, modify)
+import Hasura.RQL.Types.BackendTag (BackendTag, HasTag, backendTag, reify)
+import Hasura.RQL.Types.BackendType (BackendType (..), supportedBackends)
 import Hasura.SQL.AnyBackend
-import Hasura.SQL.Backend (BackendType (..), supportedBackends)
-import Hasura.SQL.Tag (BackendTag, HasTag, backendTag, reify)
 
 --------------------------------------------------------------------------------
 
@@ -82,7 +82,7 @@ instance
 
 instance i `SatisfiesForAllBackends` FromJSON => FromJSON (BackendMap i) where
   parseJSON =
-    Aeson.withObject "BackendMap" $ \obj -> do
+    J.withObject "BackendMap" $ \obj -> do
       BackendMap . Map.fromList
         <$> traverse
           ( \keyValue -> do
@@ -93,12 +93,12 @@ instance i `SatisfiesForAllBackends` FromJSON => FromJSON (BackendMap i) where
 
 instance i `SatisfiesForAllBackends` ToJSON => ToJSON (BackendMap i) where
   toJSON (BackendMap backendMap) =
-    Aeson.object $ valueToPair <$> Map.elems backendMap
+    J.object $ valueToPair <$> Map.elems backendMap
     where
-      valueToPair :: AnyBackend i -> (Key, Aeson.Value)
+      valueToPair :: AnyBackend i -> (Key, J.Value)
       valueToPair value = dispatchAnyBackend'' @ToJSON @HasTag value $ \(v :: i b) ->
         let backendTypeText = Key.fromText . toTxt . reify $ backendTag @b
-         in (backendTypeText, Aeson.toJSON v)
+         in (backendTypeText, J.toJSON v)
 
 instance Select (BackendMap i) where
   type Selector (BackendMap i) = BackendMapS i

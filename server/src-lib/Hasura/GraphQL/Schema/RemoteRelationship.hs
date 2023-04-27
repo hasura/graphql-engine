@@ -4,7 +4,7 @@ module Hasura.GraphQL.Schema.RemoteRelationship
 where
 
 import Control.Lens
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
@@ -12,7 +12,6 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
-import Hasura.GraphQL.Schema.Options
 import Hasura.GraphQL.Schema.Parser (FieldParser, MonadMemoize)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Remote
@@ -24,6 +23,8 @@ import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Common (FieldName, RelType (..), relNameToTxt)
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.ResultCustomization
+import Hasura.RQL.Types.Roles (adminRoleName)
+import Hasura.RQL.Types.Schema.Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
@@ -31,7 +32,6 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.RemoteSchema.SchemaCache qualified as Remote
 import Hasura.SQL.AnyBackend
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Remote relationship field parsers
@@ -67,13 +67,13 @@ remoteRelationshipToSchemaField ::
   (MonadBuildRemoteSchema r m n) =>
   RemoteSchemaMap ->
   RemoteSchemaPermissions ->
-  Map.HashMap FieldName lhsJoinField ->
+  HashMap.HashMap FieldName lhsJoinField ->
   RemoteSchemaFieldInfo ->
   SchemaT r m (Maybe (FieldParser n (IR.RemoteSchemaSelect (IR.RemoteRelationshipField IR.UnpreparedValue))))
 remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFields RemoteSchemaFieldInfo {..} = runMaybeT do
   roleName <- retrieve scRole
   remoteSchemaContext <-
-    Map.lookup _rrfiRemoteSchemaName remoteSchemaCache
+    HashMap.lookup _rrfiRemoteSchemaName remoteSchemaCache
       `onNothing` throw500 ("invalid remote schema name: " <>> _rrfiRemoteSchemaName)
   introspection <- hoistMaybe $ getIntrospectionResult remoteSchemaPermissions roleName remoteSchemaContext
   let remoteSchemaRelationships = _rscRemoteRelationships remoteSchemaContext
@@ -81,7 +81,7 @@ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFie
       remoteSchemaRoot = irQueryRoot introspection
       remoteSchemaCustomizer = rsCustomizer $ _rscInfo remoteSchemaContext
       RemoteSchemaIntrospection typeDefns = roleIntrospection
-  let hasuraFieldNames = Map.keysSet lhsFields
+  let hasuraFieldNames = HashMap.keysSet lhsFields
       relationshipDef = ToSchemaRelationshipDef _rrfiRemoteSchemaName hasuraFieldNames _rrfiRemoteFields
   (newInpValDefns :: [G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition], remoteFieldParamMap) <-
     if roleName == adminRoleName
@@ -99,7 +99,7 @@ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFie
         pure (Remote._rrfiInputValueDefinitions roleRemoteField, Remote._rrfiParamMap roleRemoteField)
   let -- add the new input value definitions created by the remote relationship
       -- to the existing schema introspection of the role
-      remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> Map.fromListOn getTypeName newInpValDefns
+      remoteRelationshipIntrospection = RemoteSchemaIntrospection $ typeDefns <> HashMap.fromListOn getTypeName newInpValDefns
   fieldName <- textToName $ relNameToTxt _rrfiName
 
   -- This selection set parser, should be of the remote node's selection set parser, which comes
@@ -116,7 +116,7 @@ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFie
       throw500 $
         "unexpected: " <> typeName <<> " not found "
   -- These are the arguments that are given by the user while executing a query
-  let remoteFieldUserArguments = map snd $ Map.toList remoteFieldParamMap
+  let remoteFieldUserArguments = map snd $ HashMap.toList remoteFieldParamMap
   remoteFld <-
     withRemoteSchemaCustomization remoteSchemaCustomizer $
       lift $
@@ -127,7 +127,7 @@ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFie
     remoteFld
       `P.bindField` \fld@IR.GraphQLField {IR._fArguments = args, IR._fSelectionSet = selSet, IR._fName = fname} -> do
         let remoteArgs =
-              Map.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue argVal
+              HashMap.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue argVal
         let resultCustomizer =
               applyFieldCalls fieldCalls $
                 applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls)) $
@@ -192,7 +192,7 @@ remoteRelationshipToSourceField ::
   m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField IR.UnpreparedValue) IR.UnpreparedValue tgt)]
 remoteRelationshipToSourceField context options sourceCache RemoteSourceFieldInfo {..} = do
   sourceInfo <-
-    onNothing (unsafeSourceInfo @tgt =<< Map.lookup _rsfiSource sourceCache) $
+    onNothing (unsafeSourceInfo @tgt =<< HashMap.lookup _rsfiSource sourceCache) $
       throw500 $
         "source not found " <> dquote _rsfiSource
   runSourceSchema context options sourceInfo do

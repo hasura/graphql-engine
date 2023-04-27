@@ -14,7 +14,7 @@ module Hasura.RQL.Types.Metadata.Common
     ComputedFieldMetadata (..),
     ComputedFields,
     CronTriggers,
-    CustomReturnTypes,
+    LogicalModels,
     Endpoints,
     NativeQueries,
     EventTriggers,
@@ -44,7 +44,7 @@ module Hasura.RQL.Types.Metadata.Common
     smTables,
     smCustomization,
     smNativeQueries,
-    smCustomReturnTypes,
+    smLogicalModels,
     smHealthCheckConfig,
     sourcesCodec,
     tmArrayRelationships,
@@ -78,9 +78,8 @@ import Data.List.Extended qualified as L
 import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
-import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata (..), CustomReturnTypeName)
 import Hasura.Function.Metadata (FunctionMetadata (..))
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), LogicalModelName)
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..), NativeQueryName)
 import Hasura.Prelude
 import Hasura.QueryTags.Types
@@ -88,6 +87,8 @@ import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (BackendTag, HasTag (backendTag), backendPrefix)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
@@ -105,9 +106,6 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
-import Hasura.SQL.Tag (BackendTag, HasTag (backendTag))
-import Hasura.Session
 
 -- | Parse a list of objects into a map from a derived key,
 -- failing if the list has duplicates.
@@ -142,7 +140,7 @@ deriving instance (Backend b) => Eq (ComputedFieldMetadata b)
 
 instance Backend b => HasCodec (ComputedFieldMetadata b) where
   codec =
-    AC.object (codecNamePrefix @b <> "ComputedFieldMetadata") $
+    AC.object (backendPrefix @b <> "ComputedFieldMetadata") $
       ComputedFieldMetadata
         <$> requiredField' "name" AC..= _cfmName
         <*> requiredField' "definition" AC..= _cfmDefinition
@@ -204,7 +202,7 @@ instance (Backend b) => ToJSON (TableMetadata b) where
 instance (Backend b) => HasCodec (TableMetadata b) where
   codec =
     CommentCodec "Representation of a table in metadata, 'tables.yaml' and 'metadata.json'" $
-      AC.object (codecNamePrefix @b <> "TableMetadata") $
+      AC.object (backendPrefix @b <> "TableMetadata") $
         TableMetadata
           <$> requiredField' "table"
             .== _tmTable
@@ -347,7 +345,7 @@ type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 
 type NativeQueries b = InsOrdHashMap NativeQueryName (NativeQueryMetadata b)
 
-type CustomReturnTypes b = InsOrdHashMap CustomReturnTypeName (CustomReturnTypeMetadata b)
+type LogicalModels b = InsOrdHashMap LogicalModelName (LogicalModelMetadata b)
 
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 
@@ -364,7 +362,7 @@ data SourceMetadata b = SourceMetadata
     _smTables :: Tables b,
     _smFunctions :: Functions b,
     _smNativeQueries :: NativeQueries b,
-    _smCustomReturnTypes :: CustomReturnTypes b,
+    _smLogicalModels :: LogicalModels b,
     _smConfiguration :: SourceConnConfiguration b,
     _smQueryTags :: Maybe QueryTagsConfig,
     _smCustomization :: SourceCustomization,
@@ -384,7 +382,7 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
     _smNativeQueries <- oMapFromL _nqmRootFieldName <$> o .:? "native_queries" .!= []
-    _smCustomReturnTypes <- oMapFromL _crtmName <$> o .:? "custom_return_types" .!= []
+    _smLogicalModels <- oMapFromL _lmmName <$> o .:? "logical_models" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
@@ -433,7 +431,7 @@ anySourceMetadataCodec = dimapCodec dec enc
 
 instance Backend b => HasCodec (SourceMetadata b) where
   codec =
-    AC.object (codecNamePrefix @b <> "SourceMetadata") $
+    AC.object (backendPrefix @b <> "SourceMetadata") $
       SourceMetadata
         <$> requiredField' "name"
           .== _smName
@@ -445,8 +443,8 @@ instance Backend b => HasCodec (SourceMetadata b) where
           .== _smFunctions
         <*> optionalFieldOrNullWithOmittedDefaultWith' "native_queries" (sortedElemsCodec _nqmRootFieldName) mempty
           .== _smNativeQueries
-        <*> optionalFieldOrNullWithOmittedDefaultWith' "custom_return_types" (sortedElemsCodec _crtmName) mempty
-          .== _smCustomReturnTypes
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "logical_models" (sortedElemsCodec _lmmName) mempty
+          .== _smLogicalModels
         <*> requiredField' "configuration"
           .== _smConfiguration
         <*> optionalFieldOrNull' "query_tags"

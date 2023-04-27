@@ -43,6 +43,7 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy (OrderByItemG (OrderByItemG))
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.BackendType (BackendType (Postgres))
 import Hasura.RQL.Types.Column
   ( ColumnInfo (ciColumn, ciName),
     ColumnValue (cvType),
@@ -55,7 +56,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Subscription
   ( CursorOrdering (CODescending),
   )
-import Hasura.SQL.Backend (BackendType (Postgres))
 import Hasura.SQL.Types
   ( CollectableType (CollectableTypeArray, CollectableTypeScalar),
   )

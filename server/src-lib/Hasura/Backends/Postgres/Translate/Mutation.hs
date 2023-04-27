@@ -10,7 +10,7 @@ module Hasura.Backends.Postgres.Translate.Mutation
   )
 where
 
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
@@ -18,9 +18,9 @@ import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 
 -- | Note:- Using sorted columns is necessary to enable casting the rows returned by VALUES expression to table type.
@@ -54,7 +54,7 @@ mkSelectExpFromColumnValues qt allCols = \case
         forM sortedCols $ \ci -> do
           let pgCol = ciColumn ci
           val <-
-            onNothing (Map.lookup pgCol colVal) $
+            onNothing (HashMap.lookup pgCol colVal) $
               throw500 $
                 "column " <> pgCol <<> " not found in returning values"
           pure $ txtEncodedToSQLExp (ciType ci) val

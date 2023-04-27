@@ -4,7 +4,7 @@ module Test.DataConnector.MockAgent.DeleteMutationsSpec
 where
 
 import Control.Lens ((.~), (?~))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
@@ -41,7 +41,7 @@ spec =
 testRoleName :: ByteString
 testRoleName = "test-role"
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -110,37 +110,37 @@ tests = do
                   API._morReturning =
                     Just
                       [ mkFieldsMap
-                          [ ("deletedRows_AlbumId", API.mkColumnFieldValue $ Aeson.Number 112),
-                            ("deletedRows_Title", API.mkColumnFieldValue $ Aeson.String "The Number of The Beast"),
+                          [ ("deletedRows_AlbumId", API.mkColumnFieldValue $ J.Number 112),
+                            ("deletedRows_Title", API.mkColumnFieldValue $ J.String "The Number of The Beast"),
                             ( "deletedRows_Artist",
                               API.mkRelationshipFieldValue $
                                 mkRowsQueryResponse
-                                  [ [ ("ArtistId", API.mkColumnFieldValue $ Aeson.Number 90),
-                                      ("Name", API.mkColumnFieldValue $ Aeson.String "Iron Maiden")
+                                  [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 90),
+                                      ("Name", API.mkColumnFieldValue $ J.String "Iron Maiden")
                                     ]
                                   ]
                             )
                           ],
                         mkFieldsMap
-                          [ ("deletedRows_AlbumId", API.mkColumnFieldValue $ Aeson.Number 113),
-                            ("deletedRows_Title", API.mkColumnFieldValue $ Aeson.String "The X Factor"),
+                          [ ("deletedRows_AlbumId", API.mkColumnFieldValue $ J.Number 113),
+                            ("deletedRows_Title", API.mkColumnFieldValue $ J.String "The X Factor"),
                             ( "deletedRows_Artist",
                               API.mkRelationshipFieldValue $
                                 mkRowsQueryResponse
-                                  [ [ ("ArtistId", API.mkColumnFieldValue $ Aeson.Number 90),
-                                      ("Name", API.mkColumnFieldValue $ Aeson.String "Iron Maiden")
+                                  [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 90),
+                                      ("Name", API.mkColumnFieldValue $ J.String "Iron Maiden")
                                     ]
                                   ]
                             )
                           ],
                         mkFieldsMap
-                          [ ("deletedRows_AlbumId", API.mkColumnFieldValue $ Aeson.Number 114),
-                            ("deletedRows_Title", API.mkColumnFieldValue $ Aeson.String "Virtual XI"),
+                          [ ("deletedRows_AlbumId", API.mkColumnFieldValue $ J.Number 114),
+                            ("deletedRows_Title", API.mkColumnFieldValue $ J.String "Virtual XI"),
                             ( "deletedRows_Artist",
                               API.mkRelationshipFieldValue $
                                 mkRowsQueryResponse
-                                  [ [ ("ArtistId", API.mkColumnFieldValue $ Aeson.Number 90),
-                                      ("Name", API.mkColumnFieldValue $ Aeson.String "Iron Maiden")
+                                  [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 90),
+                                      ("Name", API.mkColumnFieldValue $ J.String "Iron Maiden")
                                     ]
                                   ]
                             )
@@ -148,7 +148,7 @@ tests = do
                       ]
                 }
             ]
-    let mockConfig = Mock.chinookMock & mockMutationResponse mockAgentResponse
+    let mockConfig = mockMutationResponse mockAgentResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -202,11 +202,11 @@ tests = do
                                [ API.ApplyBinaryComparisonOperator
                                    API.Equal
                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 90) (API.ScalarType "number")),
+                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 90) (API.ScalarType "number")),
                                  API.ApplyBinaryComparisonOperator
                                    API.GreaterThan
                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 111) (API.ScalarType "number"))
+                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 111) (API.ScalarType "number"))
                                ],
                          API._dmoReturningFields =
                            mkFieldsMap
@@ -252,13 +252,13 @@ tests = do
                   API._morReturning =
                     Just
                       [ mkFieldsMap
-                          [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 112),
-                            ("Title", API.mkColumnFieldValue $ Aeson.String "The Number of The Beast"),
+                          [ ("AlbumId", API.mkColumnFieldValue $ J.Number 112),
+                            ("Title", API.mkColumnFieldValue $ J.String "The Number of The Beast"),
                             ( "Artist",
                               API.mkRelationshipFieldValue $
                                 mkRowsQueryResponse
-                                  [ [ ("ArtistId", API.mkColumnFieldValue $ Aeson.Number 90),
-                                      ("Name", API.mkColumnFieldValue $ Aeson.String "Iron Maiden")
+                                  [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 90),
+                                      ("Name", API.mkColumnFieldValue $ J.String "Iron Maiden")
                                     ]
                                   ]
                             )
@@ -266,7 +266,7 @@ tests = do
                       ]
                 }
             ]
-    let mockConfig = Mock.chinookMock & mockMutationResponse mockAgentResponse
+    let mockConfig = mockMutationResponse mockAgentResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -308,11 +308,11 @@ tests = do
                                [ API.ApplyBinaryComparisonOperator
                                    API.Equal
                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 90) (API.ScalarType "number")),
+                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 90) (API.ScalarType "number")),
                                  API.ApplyBinaryComparisonOperator
                                    API.Equal
                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (Aeson.Number 112) (API.ScalarType "number"))
+                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 112) (API.ScalarType "number"))
                                ],
                          API._dmoReturningFields =
                            mkFieldsMap

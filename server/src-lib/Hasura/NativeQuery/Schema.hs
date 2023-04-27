@@ -4,11 +4,10 @@
 module Hasura.NativeQuery.Schema (defaultBuildNativeQueryRootFields) where
 
 import Data.Has (Has (getter))
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Monoid (Ap (Ap, getAp))
-import Hasura.CustomReturnType.Schema
 import Hasura.GraphQL.Schema.Backend
-  ( BackendCustomReturnTypeSelectSchema (..),
+  ( BackendLogicalModelSelectSchema (..),
     BackendSchema (columnParser),
     MonadBuildSchema,
   )
@@ -16,8 +15,8 @@ import Hasura.GraphQL.Schema.Common
   ( SchemaT,
     retrieve,
   )
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
+import Hasura.LogicalModel.Schema
 import Hasura.NativeQuery.Cache (NativeQueryInfo (..))
 import Hasura.NativeQuery.IR (NativeQuery (..))
 import Hasura.NativeQuery.Metadata (InterpolatedQuery (..), NativeQueryArgumentName (..))
@@ -29,6 +28,7 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value (Provenance (FromInternal), UnpreparedValue (UVParameter), openValueOrigin)
 import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.Metadata.Object qualified as MO
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
   ( SourceInfo (_siCustomization, _siName),
   )
@@ -42,7 +42,7 @@ import Language.GraphQL.Draft.Syntax.QQ qualified as G
 defaultBuildNativeQueryRootFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
-    BackendCustomReturnTypeSelectSchema b
+    BackendLogicalModelSelectSchema b
   ) =>
   NativeQueryInfo b ->
   SchemaT
@@ -63,17 +63,17 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
 
   stringifyNumbers <- retrieve Options.soStringifyNumbers
 
-  customReturnTypePermissions <-
+  logicalModelPermissions <-
     MaybeT . fmap Just $
-      buildCustomReturnTypePermissions @b @r @m @n _nqiReturns
+      buildLogicalModelPermissions @b @r @m @n _nqiReturns
 
-  (selectionSetParser, customTypesArgsParser) <-
-    MaybeT $ buildCustomReturnTypeFields _nqiReturns
+  (selectionSetParser, logicalModelsArgsParser) <-
+    MaybeT $ buildLogicalModelFields _nqiArrayRelationships _nqiReturns
 
   let interpolatedQuery nqArgs =
         InterpolatedQuery $
           (fmap . fmap)
-            ( \var@(NativeQueryArgumentName name) -> case HM.lookup var nqArgs of
+            ( \var@(NativeQueryArgumentName name) -> case HashMap.lookup var nqArgs of
                 Just arg -> UVParameter (FromInternal name) arg
                 Nothing ->
                   -- the `nativeQueryArgsParser` will already have checked
@@ -94,11 +94,11 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
         fieldName
         description
         ( (,)
-            <$> customTypesArgsParser
+            <$> logicalModelsArgsParser
             <*> nativeQueryArgsParser
         )
         selectionSetParser
-        <&> \((crtArgs, nqArgs), fields) ->
+        <&> \((lmArgs, nqArgs), fields) ->
           QDBMultipleRows $
             IR.AnnSelectG
               { IR._asnFields = fields,
@@ -108,10 +108,10 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
                       { nqRootFieldName = _nqiRootFieldName,
                         nqArgs,
                         nqInterpolatedQuery = interpolatedQuery nqArgs,
-                        nqReturnType = buildCustomReturnTypeIR _nqiReturns
+                        nqLogicalModel = buildLogicalModelIR _nqiReturns
                       },
-                IR._asnPerm = customReturnTypePermissions,
-                IR._asnArgs = crtArgs,
+                IR._asnPerm = logicalModelPermissions,
+                IR._asnArgs = lmArgs,
                 IR._asnStrfyNum = stringifyNumbers,
                 IR._asnNamingConvention = Just tCase
               }
@@ -131,7 +131,7 @@ nativeQueryArgumentsSchema nativeQueryName argsSignature = do
       foldMap
         ( \(name, NullableScalarType {nstType, nstNullable, nstDescription}) -> Ap do
             argValueParser <-
-              fmap (HM.singleton name . openValueOrigin)
+              fmap (HashMap.singleton name . openValueOrigin)
                 <$> lift (columnParser (Column.ColumnScalar nstType) (G.Nullability nstNullable))
             -- TODO: Naming conventions?
             -- TODO: Custom fields? (Probably not)
@@ -145,7 +145,7 @@ nativeQueryArgumentsSchema nativeQueryName argsSignature = do
                 (Just description)
                 argValueParser
         )
-        (HM.toList argsSignature)
+        (HashMap.toList argsSignature)
 
   let desc = Just $ G.Description $ G.unName nativeQueryName <> " Native Query Arguments"
 

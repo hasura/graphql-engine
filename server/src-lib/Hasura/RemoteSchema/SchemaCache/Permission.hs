@@ -38,7 +38,7 @@ module Hasura.RemoteSchema.SchemaCache.Permission
 where
 
 import Control.Monad.Validate
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as S
 import Data.List.Extended (duplicates, getDifference)
 import Data.List.NonEmpty qualified as NE
@@ -49,11 +49,12 @@ import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata.Instances ()
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Server.Utils (englishList, isSessionVariable)
-import Hasura.Session
+import Hasura.Session (mkSessionVariable)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data FieldDefinitionType
@@ -497,11 +498,11 @@ parsePresetValue gType varName isStatic value = do
         Just (PresetInputObject inputValueDefinitions) ->
           let inpValsMap = mapFromL G._ivdName inputValueDefinitions
               parseInputObjectField k val = do
-                inpVal <- onNothing (Map.lookup k inpValsMap) (refute $ pure $ KeyDoesNotExistInInputObject k typeName)
+                inpVal <- onNothing (HashMap.lookup k inpValsMap) (refute $ pure $ KeyDoesNotExistInInputObject k typeName)
                 parsePresetValue (G._ivdType inpVal) k isStatic val
            in case value of
                 G.VObject obj ->
-                  G.VObject <$> Map.traverseWithKey parseInputObjectField obj
+                  G.VObject <$> HashMap.traverseWithKey parseInputObjectField obj
                 _ -> refute $ pure $ ExpectedInputObject typeName value
     G.TypeList _ gType' ->
       case value of
@@ -526,15 +527,15 @@ parsePresetDirective ::
   m (G.Value RemoteSchemaVariable)
 parsePresetDirective gType parentArgName (G.Directive _name args) = do
   if
-      | Map.null args -> refute $ pure $ NoPresetArgumentFound
+      | HashMap.null args -> refute $ pure $ NoPresetArgumentFound
       | otherwise -> do
           val <-
-            onNothing (Map.lookup Name._value args) $
+            onNothing (HashMap.lookup Name._value args) $
               refute $
                 pure $
                   InvalidPresetArgument parentArgName
           isStatic <-
-            case (Map.lookup Name._static args) of
+            case (HashMap.lookup Name._static args) of
               Nothing -> pure False
               (Just (G.VBoolean b)) -> pure b
               _ -> refute $ pure $ InvalidStaticValue
@@ -558,12 +559,12 @@ validateDirective providedDirective upstreamDirective (parentType, parentTypeNam
     dispute $
       pure $
         UnexpectedNonMatchingNames providedName upstreamName Directive
-  for_ (NE.nonEmpty $ Map.keys argsDiff) $ \argNames ->
+  for_ (NE.nonEmpty $ HashMap.keys argsDiff) $ \argNames ->
     dispute $
       pure $
         NonExistingDirectiveArgument parentTypeName parentType providedName argNames
   where
-    argsDiff = Map.difference providedDirectiveArgs upstreamDirectiveArgs
+    argsDiff = HashMap.difference providedDirectiveArgs upstreamDirectiveArgs
 
     G.Directive providedName providedDirectiveArgs = providedDirective
     G.Directive upstreamName upstreamDirectiveArgs = upstreamDirective
@@ -584,7 +585,7 @@ validateDirectives providedDirectives upstreamDirectives directiveLocation paren
   for_ nonPresetDirectives $ \dir -> do
     let directiveName = G._dName dir
     upstreamDir <-
-      onNothing (Map.lookup directiveName upstreamDirectivesMap) $
+      onNothing (HashMap.lookup directiveName upstreamDirectivesMap) $
         refute $
           pure $
             TypeDoesNotExist Directive directiveName
@@ -701,7 +702,7 @@ validateArguments providedArgs upstreamArgs parentTypeName = do
     refute $ pure $ MissingNonNullableArguments parentTypeName nonNullableArgs
   for providedArgs $ \providedArg@(G.InputValueDefinition _ name _ _ _) -> do
     upstreamArg <-
-      onNothing (Map.lookup name upstreamArgsMap) $
+      onNothing (HashMap.lookup name upstreamArgsMap) $
         refute $
           pure $
             NonExistingInputArgument parentTypeName name
@@ -772,7 +773,7 @@ validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions parentType
     refute $ pure $ DuplicateFields parentType dups
   for providedFldDefnitions $ \fldDefn@(G.FieldDefinition _ name _ _ _) -> do
     upstreamFldDefn <-
-      onNothing (Map.lookup name upstreamFldDefinitionsMap) $
+      onNothing (HashMap.lookup name upstreamFldDefinitionsMap) $
         refute $
           pure $
             NonExistingField parentType name
@@ -893,9 +894,9 @@ validateSchemaDefinitions [] = pure $ (Nothing, Nothing, Nothing)
 validateSchemaDefinitions [schemaDefn] = do
   let G.SchemaDefinition _ rootOpsTypes = schemaDefn
       rootOpsTypesMap = mapFromL G._rotdOperationType rootOpsTypes
-      mQueryRootName = G._rotdOperationTypeType <$> Map.lookup G.OperationTypeQuery rootOpsTypesMap
-      mMutationRootName = G._rotdOperationTypeType <$> Map.lookup G.OperationTypeMutation rootOpsTypesMap
-      mSubscriptionRootName = G._rotdOperationTypeType <$> Map.lookup G.OperationTypeSubscription rootOpsTypesMap
+      mQueryRootName = G._rotdOperationTypeType <$> HashMap.lookup G.OperationTypeQuery rootOpsTypesMap
+      mMutationRootName = G._rotdOperationTypeType <$> HashMap.lookup G.OperationTypeMutation rootOpsTypesMap
+      mSubscriptionRootName = G._rotdOperationTypeType <$> HashMap.lookup G.OperationTypeSubscription rootOpsTypesMap
   pure (mQueryRootName, mMutationRootName, mSubscriptionRootName)
 validateSchemaDefinitions _ = refute $ pure $ MultipleSchemaDefinitionsFound
 
@@ -904,7 +905,7 @@ validateSchemaDefinitions _ = refute $ pure $ MultipleSchemaDefinitionsFound
 -- constructing here, manually.
 createPossibleTypesMap :: [(G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)] -> HashMap G.Name [G.Name]
 createPossibleTypesMap objectDefinitions = do
-  Map.fromListWith (<>) $ do
+  HashMap.fromListWith (<>) $ do
     objectDefinition <- objectDefinitions
     let objectName = G._otdName objectDefinition
     interface <- G._otdImplementsInterfaces objectDefinition
@@ -942,13 +943,13 @@ getSchemaDocIntrospection providedTypeDefns (queryRoot, mutationRoot, subscripti
           G.TypeDefinitionInterface interface@(G.InterfaceTypeDefinition _ name _ _ _) ->
             pure $
               G.TypeDefinitionInterface $
-                interface {G._itdPossibleTypes = concat $ maybeToList (Map.lookup name possibleTypesMap)}
+                interface {G._itdPossibleTypes = concat $ maybeToList (HashMap.lookup name possibleTypesMap)}
           G.TypeDefinitionScalar scalar -> pure $ G.TypeDefinitionScalar scalar
           G.TypeDefinitionEnum enum -> pure $ G.TypeDefinitionEnum enum
           G.TypeDefinitionObject obj -> pure $ G.TypeDefinitionObject obj
           G.TypeDefinitionUnion union' -> pure $ G.TypeDefinitionUnion union'
           G.TypeDefinitionInputObject inpObj -> pure $ G.TypeDefinitionInputObject inpObj
-      remoteSchemaIntrospection = RemoteSchemaIntrospection $ Map.fromListOn getTypeName modifiedTypeDefns
+      remoteSchemaIntrospection = RemoteSchemaIntrospection $ HashMap.fromListOn getTypeName modifiedTypeDefns
    in IntrospectionResult remoteSchemaIntrospection (fromMaybe GName._Query queryRoot) mutationRoot subscriptionRoot
 
 -- | validateRemoteSchema accepts two arguments, the `SchemaDocument` of

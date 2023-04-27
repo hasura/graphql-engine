@@ -20,6 +20,7 @@ module Hasura.Backends.BigQuery.Source
 where
 
 import Autodocodec
+import Autodocodec.Extended (fromEnvCodec)
 import Control.Concurrent.MVar
 import Crypto.PubKey.RSA.Types qualified as Cry
 import Data.Aeson qualified as J
@@ -32,7 +33,6 @@ import Data.Scientific (Scientific)
 import Data.Text.Encoding qualified as TE
 import Data.X509 qualified as X509
 import Data.X509.Memory qualified as X509
-import Hasura.Metadata.DTO.Utils (fromEnvCodec)
 import Hasura.Prelude
 
 newtype BigQueryProjectId = BigQueryProjectId {getBigQueryProjectId :: Text}

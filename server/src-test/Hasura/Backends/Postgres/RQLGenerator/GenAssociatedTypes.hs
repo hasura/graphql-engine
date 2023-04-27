@@ -24,7 +24,7 @@ import Hasura.Backends.Postgres.Types.Function qualified as PGTypes
 import Hasura.Generator.Common (defaultRange, genArbitraryUnicodeText)
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend (BackendType (..), PostgresKind (..))
+import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (..))
 import Hedgehog (MonadGen)
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range (Range)

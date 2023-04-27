@@ -10,8 +10,9 @@ import Hasura.Backends.MSSQL.DDL qualified as MSSQL
 import Hasura.Backends.MSSQL.Schema.Introspection qualified as MSSQL (listAllTables)
 import Hasura.Base.Error (throw500)
 import Hasura.Prelude
+import Hasura.RQL.DDL.Relationship (defaultBuildArrayRelationshipInfo, defaultBuildObjectRelationshipInfo)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Metadata.Backend
-import Hasura.SQL.Backend
 
 instance BackendMetadata 'MSSQL where
   prepareCatalog = MSSQL.prepareCatalog
@@ -20,6 +21,8 @@ instance BackendMetadata 'MSSQL where
   resolveSourceConfig = MSSQL.resolveSourceConfig
   resolveDatabaseMetadata _ _ = MSSQL.resolveDatabaseMetadata
   parseBoolExpOperations = MSSQL.parseBoolExpOperations
+  buildArrayRelationshipInfo _ = defaultBuildArrayRelationshipInfo
+  buildObjectRelationshipInfo _ = defaultBuildObjectRelationshipInfo
   buildFunctionInfo = MSSQL.buildFunctionInfo
   updateColumnInEventTrigger = MSSQL.updateColumnInEventTrigger
   parseCollectableType = MSSQL.parseCollectableType

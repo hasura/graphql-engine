@@ -34,14 +34,14 @@ where
 import Control.Lens.TH
 import Data.Aeson
 import Data.Aeson.TH
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -55,7 +55,7 @@ newtype EnumValueInfo = EnumValueInfo
 
 $(deriveJSON hasuraJSON ''EnumValueInfo)
 
-type EnumValues = M.HashMap EnumValue EnumValueInfo
+type EnumValues = HashMap.HashMap EnumValue EnumValueInfo
 
 -- | Represents a reference to an “enum table,” a single-column Postgres table that is referenced
 -- via foreign key.
@@ -150,7 +150,7 @@ parseScalarValueColumnType columnType value = case columnType of
       parseEnumValue :: Maybe G.Name -> m (ScalarValue b)
       parseEnumValue enumValueName = do
         for_ enumValueName \evn -> do
-          let enums = map getEnumValue $ M.keys enumValues
+          let enums = map getEnumValue $ HashMap.keys enumValues
           unless (evn `elem` enums) $
             throw400 UnexpectedPayload $
               "expected one of the values "

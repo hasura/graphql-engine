@@ -16,4 +16,5 @@ function adhoc_operation() {
     --header 'Content-Type: application/json' \
     --data "@$scriptDir/remove_collection.json" \
     "$HASURA_URL/v1/query"
+  sleep 3
 }

@@ -12,7 +12,7 @@ module Hasura.RQL.Types.Endpoint.Trie
 where
 
 import Data.Aeson (ToJSON, ToJSONKey)
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.Multi qualified as MM
 import Data.Set qualified as S
 import Data.Trie qualified as T
@@ -100,10 +100,10 @@ lookupPath (x : xs) t = do
     matchPathComponent ::
       Hashable a =>
       a ->
-      M.HashMap (PathComponent a) v ->
+      HashMap.HashMap (PathComponent a) v ->
       [(PathComponent (), v)]
     matchPathComponent a m =
-      catMaybes [(PathLiteral (),) <$> M.lookup (PathLiteral a) m, (PathParam,) <$> M.lookup PathParam m]
+      catMaybes [(PathLiteral (),) <$> HashMap.lookup (PathLiteral a) m, (PathParam,) <$> HashMap.lookup PathParam m]
 
 -- | Match a key @k@ and path @[a]@ against a @MultiMapPathTrie a k v@
 matchPath :: (Hashable k, Hashable a) => k -> [a] -> MultiMapPathTrie a k v -> MatchResult a k v
@@ -140,7 +140,7 @@ ambiguousPaths (T.Trie pathMap methodMap) =
     isAmbiguous e = S.size e >= 2
     ambiguous = mconcat $ filter isAmbiguous $ maybe [] MM.elems methodMap
     thisNodeAmbiguousPaths = guard (not $ null $ ambiguous) >> [([], ambiguous)]
-    childNodesAmbiguousPaths = uncurry childNodeAmbiguousPaths =<< M.toList pathMap
+    childNodesAmbiguousPaths = uncurry childNodeAmbiguousPaths =<< HashMap.toList pathMap
     childNodeAmbiguousPaths pc t = first (pc :) <$> ambiguousPaths (mergeWildcardTrie t)
-    wildcardTrie = M.lookup PathParam pathMap
+    wildcardTrie = HashMap.lookup PathParam pathMap
     mergeWildcardTrie = maybe id (<>) wildcardTrie

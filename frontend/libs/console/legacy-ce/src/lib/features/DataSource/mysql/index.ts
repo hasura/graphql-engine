@@ -1,11 +1,15 @@
 import { Database, Feature } from '..';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
+import {
+  defaultDatabaseProps,
+  defaultIntrospectionProps,
+} from '../common/defaultDatabaseProps';
 
 export type MySQLTable = { name: string };
 
 export const mysql: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    ...defaultIntrospectionProps,
     getDriverInfo: async () => ({
       name: 'mysql',
       displayName: 'MySQL',
@@ -20,6 +24,7 @@ export const mysql: Database = {
     getTablesListAsTree: async () => Feature.NotImplemented,
     getSupportedOperators: async () => Feature.NotImplemented,
     getDatabaseSchemas: async () => Feature.NotImplemented,
+    getIsTableView: async () => Feature.NotImplemented,
   },
   query: {
     getTableRows: async () => Feature.NotImplemented,

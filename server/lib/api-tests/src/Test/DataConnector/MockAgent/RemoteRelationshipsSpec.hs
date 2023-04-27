@@ -6,7 +6,7 @@ module Test.DataConnector.MockAgent.RemoteRelationshipsSpec (spec) where
 --------------------------------------------------------------------------------
 
 import Control.Lens ((.~), (?~), _Just)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.List.NonEmpty qualified as NonEmpty
@@ -68,7 +68,7 @@ spec = describe "Remote Relationships Tests" $ do
 
 --------------------------------------------------------------------------------
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -216,11 +216,11 @@ tests = do
             [ [ ( "query",
                   API.mkRelationshipFieldValue $
                     mkRowsQueryResponse
-                      [ [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 1),
-                          ("Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+                      [ [ ("AlbumId", API.mkColumnFieldValue $ J.Number 1),
+                          ("Title", API.mkColumnFieldValue $ J.String "For Those About To Rock We Salute You")
                         ],
-                        [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 4),
-                          ("Title", API.mkColumnFieldValue $ Aeson.String "Let There Be Rock")
+                        [ ("AlbumId", API.mkColumnFieldValue $ J.Number 4),
+                          ("Title", API.mkColumnFieldValue $ J.String "Let There Be Rock")
                         ]
                       ]
                 )
@@ -228,17 +228,17 @@ tests = do
               [ ( "query",
                   API.mkRelationshipFieldValue $
                     mkRowsQueryResponse
-                      [ [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 2),
-                          ("Title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
+                      [ [ ("AlbumId", API.mkColumnFieldValue $ J.Number 2),
+                          ("Title", API.mkColumnFieldValue $ J.String "Balls to the Wall")
                         ],
-                        [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 3),
-                          ("Title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
+                        [ ("AlbumId", API.mkColumnFieldValue $ J.Number 3),
+                          ("Title", API.mkColumnFieldValue $ J.String "Restless and Wild")
                         ]
                       ]
                 )
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -276,8 +276,8 @@ tests = do
               )
               & API.qrForeach
                 ?~ NonEmpty.fromList
-                  [ HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))],
-                    HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (Aeson.Number 2) (API.ScalarType "number"))]
+                  [ HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (J.Number 1) (API.ScalarType "number"))],
+                    HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (J.Number 2) (API.ScalarType "number"))]
                   ]
         )
 
@@ -302,8 +302,8 @@ tests = do
             [ [ ( "query",
                   API.mkRelationshipFieldValue $
                     mkRowsQueryResponse
-                      [ [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 3),
-                          ("Title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
+                      [ [ ("AlbumId", API.mkColumnFieldValue $ J.Number 3),
+                          ("Title", API.mkColumnFieldValue $ J.String "Restless and Wild")
                         ]
                       ]
                 )
@@ -311,8 +311,8 @@ tests = do
               [ ( "query",
                   API.mkRelationshipFieldValue $
                     mkRowsQueryResponse
-                      [ [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 1),
-                          ("Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+                      [ [ ("AlbumId", API.mkColumnFieldValue $ J.Number 1),
+                          ("Title", API.mkColumnFieldValue $ J.String "For Those About To Rock We Salute You")
                         ]
                       ]
                 )
@@ -320,14 +320,14 @@ tests = do
               [ ( "query",
                   API.mkRelationshipFieldValue $
                     mkRowsQueryResponse
-                      [ [ ("AlbumId", API.mkColumnFieldValue $ Aeson.Number 4),
-                          ("Title", API.mkColumnFieldValue $ Aeson.String "Let There Be Rock")
+                      [ [ ("AlbumId", API.mkColumnFieldValue $ J.Number 4),
+                          ("Title", API.mkColumnFieldValue $ J.String "Let There Be Rock")
                         ]
                       ]
                 )
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -366,9 +366,9 @@ tests = do
               )
               & API.qrForeach
                 ?~ NonEmpty.fromList
-                  [ HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (Aeson.Number 3) (API.ScalarType "number"))],
-                    HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))],
-                    HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (Aeson.Number 4) (API.ScalarType "number"))]
+                  [ HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (J.Number 3) (API.ScalarType "number"))],
+                    HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (J.Number 1) (API.ScalarType "number"))],
+                    HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (J.Number 4) (API.ScalarType "number"))]
                   ]
         )
 
@@ -398,33 +398,33 @@ tests = do
             [ [ ( "query",
                   API.mkRelationshipFieldValue $
                     mkQueryResponse
-                      [ [ ("nodes_AlbumId", API.mkColumnFieldValue $ Aeson.Number 1),
-                          ("nodes_Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+                      [ [ ("nodes_AlbumId", API.mkColumnFieldValue $ J.Number 1),
+                          ("nodes_Title", API.mkColumnFieldValue $ J.String "For Those About To Rock We Salute You")
                         ],
-                        [ ("nodes_AlbumId", API.mkColumnFieldValue $ Aeson.Number 4),
-                          ("nodes_Title", API.mkColumnFieldValue $ Aeson.String "Let There Be Rock")
+                        [ ("nodes_AlbumId", API.mkColumnFieldValue $ J.Number 4),
+                          ("nodes_Title", API.mkColumnFieldValue $ J.String "Let There Be Rock")
                         ]
                       ]
-                      [ ("aggregate_count", Aeson.Number 2)
+                      [ ("aggregate_count", J.Number 2)
                       ]
                 )
               ],
               [ ( "query",
                   API.mkRelationshipFieldValue $
                     mkQueryResponse
-                      [ [ ("nodes_AlbumId", API.mkColumnFieldValue $ Aeson.Number 2),
-                          ("nodes_Title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
+                      [ [ ("nodes_AlbumId", API.mkColumnFieldValue $ J.Number 2),
+                          ("nodes_Title", API.mkColumnFieldValue $ J.String "Balls to the Wall")
                         ],
-                        [ ("nodes_AlbumId", API.mkColumnFieldValue $ Aeson.Number 3),
-                          ("nodes_Title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
+                        [ ("nodes_AlbumId", API.mkColumnFieldValue $ J.Number 3),
+                          ("nodes_Title", API.mkColumnFieldValue $ J.String "Restless and Wild")
                         ]
                       ]
-                      [ ("aggregate_count", Aeson.Number 2)
+                      [ ("aggregate_count", J.Number 2)
                       ]
                 )
               ]
             ]
-    let mockConfig = Mock.chinookMock & mockQueryResponse queryResponse
+    let mockConfig = mockQueryResponse queryResponse
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
@@ -469,8 +469,8 @@ tests = do
               )
               & API.qrForeach
                 ?~ NonEmpty.fromList
-                  [ HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (Aeson.Number 1) (API.ScalarType "number"))],
-                    HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (Aeson.Number 2) (API.ScalarType "number"))]
+                  [ HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (J.Number 1) (API.ScalarType "number"))],
+                    HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (J.Number 2) (API.ScalarType "number"))]
                   ]
         )
 

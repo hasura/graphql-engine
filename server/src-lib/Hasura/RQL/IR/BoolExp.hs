@@ -56,18 +56,18 @@ import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH
 import Data.Aeson.Types (parseEither)
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Monoid
 import Data.Text.Extended
 import Hasura.Function.Cache
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendPrefix)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.SQL.Backend
 import Hasura.Session
 
 ----------------------------------------------------------------------------------------------------
@@ -118,7 +118,7 @@ instance (Backend backend, ToJSONKeyValue field) => ToJSON (GBoolExp backend fie
     -- @and@ expressions can be represented differently than the rest
     -- if the keys are unique
     BoolAnd bExps ->
-      let m = M.fromList $ map getKV bExps
+      let m = HashMap.fromList $ map getKV bExps
        in -- if the keys aren't repeated, then the special notation of object encoding can be used
           if length m == length bExps
             then toJSON m
@@ -204,7 +204,7 @@ newtype BoolExp (b :: BackendType) = BoolExp {unBoolExp :: GBoolExp b ColExp}
 -- Autodocodec to gain support for expressing an object type with "additional
 -- properties" for fields.
 instance Backend b => HasCodec (BoolExp b) where
-  codec = CommentCodec doc $ named (codecNamePrefix @b <> "BoolExp") $ dimapCodec BoolExp unBoolExp jsonCodec
+  codec = CommentCodec doc $ named (backendPrefix @b <> "BoolExp") $ dimapCodec BoolExp unBoolExp jsonCodec
     where
       jsonCodec :: JSONCodec (GBoolExp b ColExp)
       jsonCodec = bimapCodec (parseEither parseJSON) toJSON valueCodec
@@ -262,7 +262,7 @@ hasStaticExp = getAny . foldMap (Any . isStaticValue)
 -- Boolean expressions in the schema
 
 -- | Operand for cast operator
-type CastExp backend field = M.HashMap (ScalarType backend) [OpExpG backend field]
+type CastExp backend field = HashMap.HashMap (ScalarType backend) [OpExpG backend field]
 
 -- | This type represents the boolean operators that can be applied on values of a column. This type
 -- only contains the common core, that we expect to be ultimately entirely supported in most if not
@@ -683,6 +683,6 @@ type AnnColumnCaseBoolExp b a = GBoolExp b (AnnColumnCaseBoolExpField b a)
 -- misc type aliases
 type AnnColumnCaseBoolExpPartialSQL b = AnnColumnCaseBoolExp b (PartialSQLExp b)
 
-type PreSetColsG b v = M.HashMap (Column b) v
+type PreSetColsG b v = HashMap.HashMap (Column b) v
 
-type PreSetColsPartial b = M.HashMap (Column b) (PartialSQLExp b)
+type PreSetColsPartial b = HashMap.HashMap (Column b) (PartialSQLExp b)

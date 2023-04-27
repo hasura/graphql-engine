@@ -16,7 +16,7 @@ where
 import Control.Lens hiding ((.=))
 import Data.Aeson
 import Data.FileEmbed (makeRelativeToProject)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended ((<<>))
 import Data.Text.NonEmpty
@@ -36,6 +36,7 @@ import Hasura.RQL.DDL.RemoteRelationship
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.EventTrigger
@@ -47,7 +48,6 @@ import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.Metadata
-import Hasura.SQL.Backend
 
 saveMetadataToHdbTables ::
   (MonadTx m, MonadReader SystemDefined m) => MetadataNoSources -> m ()
@@ -902,4 +902,4 @@ recreateSystemMetadata = do
     objectRel name using = Left $ RelDef (RelName name) using Nothing
     arrayRel name using = Right $ RelDef (RelName name) using Nothing
     manualConfig schemaName tableName columns =
-      RUManual $ RelManualConfig (QualifiedObject schemaName tableName) (HM.fromList columns) Nothing
+      RUManual $ RelManualConfig (QualifiedObject schemaName tableName) (HashMap.fromList columns) Nothing

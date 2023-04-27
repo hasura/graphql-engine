@@ -14,7 +14,7 @@ import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KMap
 import Data.Aeson.Ordered qualified as JO
 import Data.Bifunctor (Bifunctor (bimap))
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
 import Hasura.Base.Error
@@ -22,7 +22,6 @@ import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options (StringifyNumbers)
 import Hasura.GraphQL.Schema.Parser
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -32,6 +31,7 @@ import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Value (UnpreparedValue, ValueWithOrigin (ValueNoOrigin))
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Schema.Options (StringifyNumbers)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
@@ -200,13 +200,13 @@ generateSDL (G.SchemaIntrospection sIntro) = sdl
 
     -- first we filter out the type definitions which are not relevent such as
     -- schema fields and types (starts with `__`)
-    typeDefns = map (G.TypeSystemDefinitionType . filterTypeDefinition . bimap (const ()) id) (Map.elems sIntro)
+    typeDefns = map (G.TypeSystemDefinitionType . filterTypeDefinition . bimap (const ()) id) (HashMap.elems sIntro)
 
     -- next we get the root operation type definitions
     rootOpTypeDefns =
       mapMaybe
         ( \(fieldName, operationType) ->
-            Map.lookup fieldName sIntro
+            HashMap.lookup fieldName sIntro
               $> G.RootOperationTypeDefinition operationType fieldName
         )
         [ (Name._query_root, G.OperationTypeQuery),
@@ -252,7 +252,7 @@ mkEntityUnionFieldParser ::
   [(G.Name, Parser 'Output Parse (ApolloFederationParserFunction Parse))] ->
   FieldParser P.Parse (QueryRootField UnpreparedValue)
 mkEntityUnionFieldParser apolloFedTableParsers =
-  let entityParserMap = Map.fromList apolloFedTableParsers
+  let entityParserMap = HashMap.fromList apolloFedTableParsers
 
       -- the Union `Entities`
       bodyParser = P.selectionSetUnion Name.__Entity (Just "A union of all types that use the @key directive") entityParserMap
@@ -273,7 +273,7 @@ mkEntityUnionFieldParser apolloFedTableParsers =
               for
                 parsedArgs
                 ( \anyArg ->
-                    case Map.lookup (afTypename anyArg) parsedBody of
+                    case HashMap.lookup (afTypename anyArg) parsedBody of
                       Nothing -> (P.parseError . toErrorMessage) $ G.unName (afTypename anyArg) <> " is not found in selection set or apollo federation is not enabled for the type"
                       Just aafus -> (aafuGetRootField aafus) anyArg
                 )

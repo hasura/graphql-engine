@@ -662,38 +662,6 @@
                 ],
                 "type": "object"
             },
-            "BigqueryCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/BigquerySelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "BigqueryDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -809,6 +777,39 @@
                 ],
                 "type": "object"
             },
+            "BigqueryLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/BigquerySelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
+                "type": "object"
+            },
             "BigqueryNativeQueryMetadata": {
                 "description": "A native query as represented in metadata.",
                 "properties": {
@@ -819,6 +820,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__BigQuery"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -1030,14 +1038,6 @@
                     "configuration": {
                         "$ref": "#/components/schemas/BigQueryConnSourceConfig"
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/BigqueryCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -1054,6 +1054,14 @@
                             "bigquery"
                         ],
                         "type": "string"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/BigqueryLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -1391,38 +1399,6 @@
                 ],
                 "type": "object"
             },
-            "CitusCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/CitusSelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "CitusDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -1641,6 +1617,39 @@
                 ],
                 "type": "object"
             },
+            "CitusLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CitusSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
+                "type": "object"
+            },
             "CitusNativeQueryMetadata": {
                 "description": "A native query as represented in metadata.",
                 "properties": {
@@ -1651,6 +1660,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Citus_"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -1887,14 +1903,6 @@
                     "configuration": {
                         "$ref": "#/components/schemas/PostgresConnConfiguration"
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/CitusCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -1914,6 +1922,14 @@
                             "citus"
                         ],
                         "type": "string"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CitusLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -2258,38 +2274,6 @@
                 ],
                 "type": "object"
             },
-            "CockroachCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/CockroachSelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "CockroachDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -2508,6 +2492,39 @@
                 ],
                 "type": "object"
             },
+            "CockroachLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CockroachSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
+                "type": "object"
+            },
             "CockroachNativeQueryMetadata": {
                 "description": "A native query as represented in metadata.",
                 "properties": {
@@ -2518,6 +2535,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Cockroach_"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -2754,14 +2778,6 @@
                     "configuration": {
                         "$ref": "#/components/schemas/PostgresConnConfiguration"
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/CockroachCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -2781,6 +2797,14 @@
                             "cockroach"
                         ],
                         "type": "string"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CockroachLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -3379,38 +3403,6 @@
                 ],
                 "type": "object"
             },
-            "DataconnectorCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/DataconnectorSelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "DataconnectorDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -3530,6 +3522,39 @@
                 ],
                 "type": "object"
             },
+            "DataconnectorLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/DataconnectorSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
+                "type": "object"
+            },
             "DataconnectorNativeQueryMetadata": {
                 "description": "A native query as represented in metadata.",
                 "properties": {
@@ -3540,6 +3565,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__DataConnector"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -3768,14 +3800,6 @@
                             }
                         ]
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/DataconnectorCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -3789,6 +3813,14 @@
                     },
                     "kind": {
                         "$ref": "#/components/schemas/GraphQLName"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/DataconnectorLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -4780,38 +4812,6 @@
                 ],
                 "type": "object"
             },
-            "MssqlCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MssqlSelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "MssqlDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -5022,6 +5022,39 @@
                 ],
                 "type": "object"
             },
+            "MssqlLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MssqlSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
+                "type": "object"
+            },
             "MssqlNativeQueryMetadata": {
                 "description": "A native query as represented in metadata.",
                 "properties": {
@@ -5032,6 +5065,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__MSSQL"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -5267,14 +5307,6 @@
                     "configuration": {
                         "$ref": "#/components/schemas/MSSQLConnConfiguration"
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MssqlCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -5294,6 +5326,14 @@
                             "mssql"
                         ],
                         "type": "string"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MssqlLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -5704,38 +5744,6 @@
                 ],
                 "type": "object"
             },
-            "MysqlCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlSelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "MysqlDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -5852,6 +5860,39 @@
                 ],
                 "type": "object"
             },
+            "MysqlLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MysqlSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
+                "type": "object"
+            },
             "MysqlNativeQueryMetadata": {
                 "description": "A native query as represented in metadata.",
                 "properties": {
@@ -5862,6 +5903,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__MySQL"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -6128,14 +6176,6 @@
                     "configuration": {
                         "$ref": "#/components/schemas/MySQLConnSourceConfig"
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -6152,6 +6192,14 @@
                             "mysql"
                         ],
                         "type": "string"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MysqlLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -6377,32 +6425,6 @@
                         "type": "array"
                     }
                 },
-                "type": "object"
-            },
-            "NullableScalarType": {
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema",
-                        "type": "string"
-                    },
-                    "name": {
-                        "description": "name",
-                        "type": "string"
-                    },
-                    "nullable": {
-                        "default": false,
-                        "description": "Whether the type is nullable",
-                        "type": "boolean"
-                    },
-                    "type": {
-                        "description": "The base scalar type\nPostgres Scalar Types",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "name",
-                    "type"
-                ],
                 "type": "object"
             },
             "ObjectFieldDefinition_GraphQLType": {
@@ -6733,38 +6755,6 @@
                 ],
                 "type": "object"
             },
-            "PostgresCustomReturnTypeMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the custom return type",
-                        "items": {
-                            "$ref": "#/components/schemas/NullableScalarType"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a custom return type",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/PostgresSelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
             "PostgresDelPerm": {
                 "properties": {
                     "backend_only": {
@@ -6983,6 +6973,39 @@
                 ],
                 "type": "object"
             },
+            "PostgresLogicalModelMetadata": {
+                "description": "A return type.",
+                "properties": {
+                    "description": {
+                        "description": "Optional description text which appears in the GraphQL Schema.",
+                        "type": "string"
+                    },
+                    "fields": {
+                        "description": "Return types for the logical model",
+                        "items": {
+                            "additionalProperties": true,
+                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                        },
+                        "type": "array"
+                    },
+                    "name": {
+                        "description": "A name for a logical model",
+                        "type": "string"
+                    },
+                    "select_permissions": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/PostgresSelectPermDef"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "name",
+                    "fields"
+                ],
+                "type": "object"
+            },
             "PostgresNativeQueryMetadata": {
                 "description": "A native query as represented in metadata.",
                 "properties": {
@@ -6993,6 +7016,13 @@
                         "default": {},
                         "description": "Free variables in the expression and their types",
                         "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Vanilla_"
+                        },
+                        "type": "array"
                     },
                     "code": {
                         "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
@@ -7341,14 +7371,6 @@
                     "configuration": {
                         "$ref": "#/components/schemas/PostgresConnConfiguration"
                     },
-                    "custom_return_types": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/PostgresCustomReturnTypeMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
                     "customization": {
                         "$ref": "#/components/schemas/SourceCustomization"
                     },
@@ -7370,6 +7392,14 @@
                             "pg"
                         ],
                         "type": "string"
+                    },
+                    "logical_models": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/PostgresLogicalModelMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
                     },
                     "name": {
                         "type": "string"
@@ -8024,6 +8054,132 @@
                 },
                 "required": [
                     "max_reqs_per_min"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig__BigQuery": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/BigqueryRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig__DataConnector": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/DataconnectorRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig__MSSQL": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/MssqlRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig__MySQL": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/MysqlRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig___Postgres__Citus_": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/CitusRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig___Postgres__Cockroach_": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/CockroachRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig___Postgres__Vanilla_": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "$ref": "#/components/schemas/PostgresRelManualConfig"
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
                 ],
                 "type": "object"
             },

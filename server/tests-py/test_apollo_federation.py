@@ -21,14 +21,37 @@ class TestApolloFederation:
     def dir(cls):
         return 'queries/apollo_federation'
 
-    def test_apollo_federated_server_with_hge_only(self, hge_url: str, hge_key: str):
-        # start the node server
-        fed_server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_federated_server_with_hge_only.js"], env={
+    @pytest.fixture
+    def federated_server_with_hge_only(self, worker_id: str, hge_url: str, hge_key: str):
+        server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/apollo_federated_server_with_hge_only.js', env={
             'HGE_URL': hge_url,
             'HASURA_GRAPHQL_ADMIN_SECRET': hge_key,
         })
-        fed_server.start()
+        server.start()
+        yield server
+        server.stop()
 
+    @pytest.fixture
+    def server_1(self, worker_id: str, hge_url: str):
+        server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/apollo_server_1.js', env={
+            'HGE_URL': hge_url,
+        })
+        server.start()
+        yield server
+        server.stop()
+
+    @pytest.fixture
+    def federated_server_with_hge_and_server1(self, worker_id: str, hge_url: str, hge_key: str, server_1):
+        server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/apollo_federated_server_with_hge_and_server1.js', env={
+            'HGE_URL': hge_url,
+            'OTHER_URL': server_1.url,
+            'HASURA_GRAPHQL_ADMIN_SECRET': hge_key,
+        })
+        server.start()
+        yield server
+        server.stop()
+
+    def test_apollo_federated_server_with_hge_only(self, federated_server_with_hge_only):
         # run a GQL query
         gql_query = """
             query {
@@ -38,29 +61,13 @@ class TestApolloFederation:
                 }
             }
             """
-        resp = make_request(fed_server.url, gql_query)
-
-        # stop the node server
-        fed_server.stop()
+        resp = make_request(federated_server_with_hge_only.url, gql_query)
 
         # check if everything was okay
         assert resp.status_code == 200, resp.text
         assert 'data' in resp.text
 
-    def test_apollo_federated_server_with_hge_and_apollo_graphql_server(self, hge_url: str, hge_key: str):
-        # start the node servers
-        server_1 = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_server_1.js"], env={
-            'HGE_URL': hge_url,
-        })
-        fed_server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_federated_server_with_hge_and_server1.js"], env={
-            'HGE_URL': hge_url,
-            'OTHER_URL': server_1.url,
-            'HASURA_GRAPHQL_ADMIN_SECRET': hge_key,
-        })
-
-        server_1.start()
-        fed_server.start()
-
+    def test_apollo_federated_server_with_hge_and_apollo_graphql_server(self, federated_server_with_hge_and_server1):
         # run a GQL query
         gql_query = """
             query {
@@ -72,11 +79,7 @@ class TestApolloFederation:
                 }
             }
             """
-        resp = make_request(fed_server.url, gql_query)
-
-        # stop the node servers
-        fed_server.stop()
-        server_1.stop()
+        resp = make_request(federated_server_with_hge_and_server1.url, gql_query)
 
         # check if everything was okay
         assert resp.status_code == 200, resp.text

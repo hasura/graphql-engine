@@ -3,7 +3,7 @@
 
 module Hasura.GraphQL.Schema.OrderBy
   ( tableOrderByExp,
-    customReturnTypeOrderByExp,
+    logicalModelOrderByExp,
   )
 where
 
@@ -12,9 +12,6 @@ import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (_crtiFields, _crtiName))
-import Hasura.CustomReturnType.Common (toFieldInfo)
-import Hasura.CustomReturnType.Types (CustomReturnTypeName (..))
 import Hasura.Function.Cache
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
@@ -28,6 +25,9 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
+import Hasura.LogicalModel.Cache (LogicalModelInfo (_lmiFields, _lmiName))
+import Hasura.LogicalModel.Common (columnsFromFields, toFieldInfo)
+import Hasura.LogicalModel.Types (LogicalModelName (..))
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.OrderBy qualified as IR
@@ -66,16 +66,16 @@ orderByOperator tCase sourceInfo = case tCase of
 -- >   coln: order_by
 -- >   obj-rel: <remote-table>_order_by
 -- > }
-customReturnTypeOrderByExp ::
+logicalModelOrderByExp ::
   forall b r m n.
   ( MonadBuildSchema b r m n
   ) =>
-  CustomReturnTypeInfo b ->
+  LogicalModelInfo b ->
   SchemaT r m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
-customReturnTypeOrderByExp customReturnType =
-  let name = getCustomReturnTypeName (_crtiName customReturnType)
-   in case toFieldInfo (_crtiFields customReturnType) of
-        Nothing -> throw500 $ "Error creating fields for custom type " <> tshow name
+logicalModelOrderByExp logicalModel =
+  let name = getLogicalModelName (_lmiName logicalModel)
+   in case toFieldInfo (columnsFromFields $ _lmiFields logicalModel) of
+        Nothing -> throw500 $ "Error creating fields for logical model " <> tshow name
         Just tableFields -> do
           let description =
                 G.Description $

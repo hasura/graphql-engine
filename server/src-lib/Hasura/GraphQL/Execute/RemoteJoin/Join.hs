@@ -9,7 +9,7 @@ import Control.Monad.Trans.Control
 import Data.Aeson.Ordered qualified as JO
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.HashSet qualified as HS
@@ -151,7 +151,7 @@ foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree reqHeaders op
   (compositeValue, joins) <- collectJoinArguments (assignJoinIds joinTree) lhs
   joinIndices <- fmap catMaybes $
     for joins $ \JoinArguments {..} -> do
-      let joinArguments = IntMap.fromList $ map swap $ Map.toList _jalArguments
+      let joinArguments = IntMap.fromList $ map swap $ HashMap.toList _jalArguments
       previousStep <- case _jalJoin of
         RemoteJoinRemoteSchema remoteSchemaJoin childJoinTree -> do
           let remoteSchemaInfo = rsDef $ _rsjRemoteSchema remoteSchemaJoin
@@ -242,7 +242,7 @@ collectJoinArguments joinTree lhs = do
         -- This needs to be tested so we can verify that the result of this
         -- function call is reasonable.
         Just (JoinArguments _remoteJoin arguments _fieldName) ->
-          case Map.lookup argument arguments of
+          case HashMap.lookup argument arguments of
             Just argumentId -> pure $ ReplacementToken joinId argumentId
             Nothing -> addNewArgument counter joins arguments
         Nothing -> addNewArgument counter joins mempty
@@ -252,7 +252,7 @@ collectJoinArguments joinTree lhs = do
               newArguments =
                 JoinArguments
                   remoteJoin
-                  (Map.insert argument argumentId arguments)
+                  (HashMap.insert argument argumentId arguments)
                   fieldName
           put (counter + 1, IntMap.insert joinId newArguments joins)
           pure $ ReplacementToken joinId argumentId
@@ -337,7 +337,7 @@ collectJoinArguments joinTree lhs = do
               onNothing (JO.lookup aliasTxt object) $
                 throw500 $
                   "a join column is missing from the response: " <> aliasTxt
-            if Map.null (Map.filter (== JO.Null) joinArgument)
+            if HashMap.null (HashMap.filter (== JO.Null) joinArgument)
               then
                 Just . CVFromRemote
                   <$> getReplacementToken joinId remoteJoin (JoinArgument joinArgument) (FieldName fieldName)

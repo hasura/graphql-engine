@@ -11,7 +11,7 @@ where
 
 import Control.Arrow ((>>>))
 import Control.Monad (unless)
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.Function (on)
 import Data.Void (absurd)
 import Hasura.Base.ErrorMessage
@@ -134,12 +134,12 @@ describeValueWith describeVariable = \case
   GraphQLValue gval -> describeGraphQL gval
   where
     describeJSON = \case
-      A.Null -> "null"
-      A.Bool _ -> "a boolean"
-      A.String _ -> "a string"
-      A.Number _ -> "a number"
-      A.Array _ -> "a list"
-      A.Object _ -> "an object"
+      J.Null -> "null"
+      J.Bool _ -> "a boolean"
+      J.String _ -> "a string"
+      J.Number _ -> "a number"
+      J.Array _ -> "a list"
+      J.Object _ -> "an object"
     describeGraphQL = \case
       VVariable var -> describeVariable var
       VInt _ -> "an integer"

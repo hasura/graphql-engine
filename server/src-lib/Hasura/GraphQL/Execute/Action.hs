@@ -32,7 +32,7 @@ import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Data.Has
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.SerializableBlob qualified as SB
 import Data.Set (Set)
 import Data.Text.Extended
@@ -54,34 +54,36 @@ import Hasura.Eventing.Common
 import Hasura.Function.Cache
 import Hasura.GraphQL.Execute.Action.Types as Types
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import Hasura.HTTP
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Name qualified as Name
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers
+import Hasura.RQL.DDL.Headers (makeHeadersFromConf, toHeadersConf)
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as RS
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.Headers (HeaderConf)
+import Hasura.RQL.Types.Roles (adminRoleName)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
-import Hasura.SQL.Backend
 import Hasura.Server.Init.Config (OptionalInterval (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Utils
   ( mkClientHeadersForward,
     mkSetCookieHeaders,
   )
-import Hasura.Session
+import Hasura.Session (SessionVariables, UserInfo, _uiRole, _uiSession)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -101,7 +103,7 @@ fetchActionLogResponses actionIds = do
   -- in case any exception occured in calling webhook.
   let isActionComplete ActionLogResponse {..} =
         isJust _alrResponsePayload || isJust _alrErrors
-  pure (Map.fromList responses, all (isActionComplete . snd) responses)
+  pure (HashMap.fromList responses, all (isActionComplete . snd) responses)
 
 runActionExecution ::
   ( MonadIO m,
@@ -182,7 +184,7 @@ validateResponseObject :: MonadError QErr m => KM.KeyMap J.Value -> IR.ActionOut
 validateResponseObject obj outputField = do
   -- Note: Fields not specified in the output are ignored
   void $
-    flip Map.traverseWithKey outputField $ \fieldName fieldTy ->
+    flip HashMap.traverseWithKey outputField $ \fieldName fieldTy ->
       -- When field is non-nullable, it has to present in the response with no null value
       unless (G.isNullable fieldTy) $ case KM.lookup (K.fromText $ G.unName fieldName) obj of
         Nothing ->
@@ -268,7 +270,7 @@ gTypeContains fun gType aof = case gType of
   (G.TypeList _ expectedType) -> gTypeContains fun expectedType aof
 
 isCustomScalar :: G.GType -> IR.ActionOutputFields -> Bool
-isCustomScalar (G.TypeNamed _ name) outputF = isJust (lookup (G.unName name) pgScalarTranslations) || (Map.null outputF && (not (isInBuiltScalar (G.unName name))))
+isCustomScalar (G.TypeNamed _ name) outputF = isJust (lookup (G.unName name) pgScalarTranslations) || (HashMap.null outputF && (not (isInBuiltScalar (G.unName name))))
 isCustomScalar (G.TypeList _ _) _ = False
 
 {- Note: [Async action architecture]
@@ -338,7 +340,7 @@ resolveAsyncActionQuery userInfo annAction =
           IR.AsyncOutput annFields ->
             fromMaybe AO.Null <$> forM
               _alrResponsePayload
-              \response -> makeActionResponseNoRelations annFields outputType Map.empty False <$> decodeValue response
+              \response -> makeActionResponseNoRelations annFields outputType HashMap.empty False <$> decodeValue response
           IR.AsyncId -> pure $ AO.String $ actionIdToText actionId
           IR.AsyncCreatedAt -> pure $ AO.toOrdered $ J.toJSON _alrCreatedAt
           IR.AsyncErrors -> pure $ AO.toOrdered $ J.toJSON _alrErrors
@@ -458,8 +460,8 @@ asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedAct
           Interval sleepTime -> do
             actionCache <- scActions <$> liftIO getSCFromRef'
             let asyncActions =
-                  Map.filter ((== ActionMutation ActionAsynchronous) . (^. aiDefinition . adType)) actionCache
-            unless (Map.null asyncActions) $ do
+                  HashMap.filter ((== ActionMutation ActionAsynchronous) . (^. aiDefinition . adType)) actionCache
+            unless (HashMap.null asyncActions) $ do
               -- fetch undelivered action events only when there's at least
               -- one async action present in the schema cache
               asyncInvocationsE <- fetchUndeliveredActionEvents
@@ -485,7 +487,7 @@ asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedAct
               reqHeaders
               sessionVariables
               inputPayload = actionLogItem
-        case Map.lookup actionName actionCache of
+        case HashMap.lookup actionName actionCache of
           Nothing -> return ()
           Just actionInfo -> do
             let definition = _aiDefinition actionInfo
@@ -564,7 +566,7 @@ callWebhook
     let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else mempty
         -- Using HashMap to avoid duplicate headers between configuration headers
         -- and client headers where configuration headers are preferred
-        hdrs = (Map.toList . Map.fromList) (resolvedConfHeaders <> defaultHeaders <> clientHeaders)
+        hdrs = (HashMap.toList . HashMap.fromList) (resolvedConfHeaders <> defaultHeaders <> clientHeaders)
         postPayload = J.toJSON actionWebhookPayload
         requestBody = J.encode postPayload
         requestBodySize = BL.length requestBody
@@ -742,7 +744,7 @@ insertActionTx actionName sessionVariables httpHeaders inputArgsPayload =
       )
       False
   where
-    toHeadersMap = Map.fromList . map ((bsToTxt . CI.original) *** bsToTxt)
+    toHeadersMap = HashMap.fromList . map ((bsToTxt . CI.original) *** bsToTxt)
 
 fetchUndeliveredActionEventsTx :: PG.TxE QErr [ActionLogItem]
 fetchUndeliveredActionEventsTx =
@@ -772,7 +774,7 @@ fetchUndeliveredActionEventsTx =
         ) =
         ActionLogItem actionId actionName (fromHeadersMap headersMap) sessionVariables inputPayload
 
-    fromHeadersMap = map ((CI.mk . txtToBs) *** txtToBs) . Map.toList
+    fromHeadersMap = map ((CI.mk . txtToBs) *** txtToBs) . HashMap.toList
 
 setActionStatusTx :: ActionId -> AsyncActionStatus -> PG.TxE QErr ()
 setActionStatusTx actionId = \case

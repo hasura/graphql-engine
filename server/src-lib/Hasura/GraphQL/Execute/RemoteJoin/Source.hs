@@ -26,7 +26,7 @@ import Data.Aeson.Ordered qualified as AO
 import Data.Aeson.Ordered qualified as JO
 import Data.Bifunctor (bimap)
 import Data.ByteString.Lazy qualified as BL
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.IntMap.Strict qualified as IntMap
 import Data.List.NonEmpty qualified as NE
 import Data.Scientific qualified as Scientific
@@ -111,7 +111,7 @@ buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName 
           KM.insert "__argument_id__" (J.toJSON argumentId) $
             KM.fromList $
               map (bimap (K.fromText . getFieldNameTxt) JO.fromOrdered) $
-                Map.toList $
+                HashMap.toList $
                   unJoinArgument argument
       rowSchema = fmap snd (_rsjJoinColumns remoteSourceJoin)
   for (NE.nonEmpty rows) $ \nonEmptyRows -> do

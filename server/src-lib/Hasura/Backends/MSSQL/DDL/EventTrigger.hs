@@ -25,6 +25,9 @@ module Hasura.Backends.MSSQL.DDL.EventTrigger
     updateCleanupEventStatusToPaused,
     updateCleanupEventStatusToCompleted,
     deleteEventTriggerLogs,
+    fetchEventLogs,
+    fetchEventInvocationLogs,
+    fetchEventById,
   )
 where
 
@@ -33,7 +36,7 @@ import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Data.ByteString.Lazy (fromStrict)
 import Data.FileEmbed (makeRelativeToProject)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HashSet
 import Data.Set.NonEmpty qualified as NE
 import Data.Text qualified as T
@@ -55,13 +58,13 @@ import Hasura.Backends.MSSQL.Types.Internal (columnNameText, geoTypes)
 import Hasura.Base.Error
 import Hasura.Eventing.Common
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing (EventId (..), OpVar (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey (..))
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Types
 import Hasura.Session
@@ -449,58 +452,23 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) = do
     -- 'IN' MSSQL operator.
     triggerNamesTxt = "(" <> commaSeparated (map (\t -> "'" <> toTxt t <> "'") triggerNames) <> ")"
 
-    uncurryEvent (id', sn, tn, trn, payload' :: Text, tries, created_at :: B.ByteString, next_retry_at :: Maybe B.ByteString) = do
-      payload <- encodePayload payload'
-      createdAt <- convertTime created_at
-      retryAt <- traverse convertTime next_retry_at
+    uncurryEvent (eventId, sn, tn, trn, payload :: Text, tries, createdAt :: B.ByteString, nextRetryAt :: Maybe B.ByteString) = do
+      -- see Note [Encode Event Trigger Payload to JSON in SQL Server]
+      payload' <- encodeJSON payload "payload decode failed while fetching MSSQL events"
+      createdAt' <- bsToUTCTime createdAt "conversion of created_at to UTCTime failed while fetching MSSQL events"
+      retryAt <- traverse (`bsToUTCTime` "conversion of next_retry_at to UTCTime failed while fetching MSSQL events") nextRetryAt
 
       pure $
         Event
-          { eId = EventId (bsToTxt id'),
+          { eId = EventId (bsToTxt eventId),
             eSource = source,
             eTable = (TableName tn (SchemaName sn)),
             eTrigger = TriggerMetadata (TriggerName $ mkNonEmptyTextUnsafe trn),
-            eEvent = payload,
+            eEvent = payload',
             eTries = tries,
-            eCreatedAt = createdAt,
+            eCreatedAt = createdAt',
             eRetryAt = retryAt
           }
-
-    -- Note: We do not have JSON datatype in SQL Server. But since in
-    -- 'mkAllTriggersQ' we ensure that all the values in the payload column of
-    -- hdb_catalog.event_log is always a JSON. We can directly decode the payload
-    -- value and not worry that the decoding will fail.
-    --
-    -- We ensure that the values in 'hd_catalog.event_log' is always a JSON is by
-    -- using the 'FOR JSON PATH' MSSQL operand when inserting value into the
-    -- 'hdb_catalog.event_log' table.
-    encodePayload :: (J.FromJSON a, QErrM m) => Text -> m a
-    encodePayload payload =
-      onLeft
-        -- The NVARCHAR column has UTF-16 or UCS-2 encoding. Ref: https://learn.microsoft.com/en-us/sql/t-sql/data-types/nchar-and-nvarchar-transact-sql?view=sql-server-ver16#nvarchar---n--max--
-        -- But JSON strings are expected to have UTF-8 encoding as per spec. Ref: https://www.rfc-editor.org/rfc/rfc8259#section-8.1
-        -- Hence it's important to encode the payload into UTF-8 else the decoding of
-        -- text to JSON will fail.
-        (J.eitherDecode $ fromStrict $ TE.encodeUtf8 payload)
-        (\_ -> throw500 $ T.pack "payload decode failed while fetching MSSQL events")
-
-    -- Note: The ODBC server does not have a FromJSON instance of UTCTime and only
-    -- supports DateTime2  and SmallDateTime. But the above two data types do not
-    -- have time offsets and 'Event' stores the time as UTCTime. But during
-    -- 'mkAllTriggersQ' we do save them as UTC Time format. So we can directly decode
-    -- the time we get from the DB as UTCTime and not worry about exception being
-    -- thrown during decoding.
-    --
-    -- We ensure that the time stored in 'create_at' column is a UTCTime, by
-    -- defaulting the 'created_at' column to use 'SYSDATETIMEOFFSET()' MSSQL function
-    -- in 'init_mssql_source.sql' file. The 'SYSDATETIMEOFFSET()' function returns
-    -- value that contains the date and time of the computer on which the instance of
-    -- SQL Server is running. The time zone offset is included.
-    convertTime :: (QErrM m) => B.ByteString -> m UTCTime
-    convertTime createdAt =
-      onLeft
-        (readEither (T.unpack $ bsToTxt createdAt) :: Either String UTCTime)
-        (\_ -> throw500 $ T.pack "conversion to UTCTime failed while fetching MSSQL events")
 
 dropTriggerQ :: TriggerName -> SchemaName -> TxE QErr ()
 dropTriggerQ triggerName schemaName =
@@ -926,11 +894,11 @@ addCleanupSchedules sourceConfig triggersWithcleanupConfig =
     let currTime = utcToZonedTime utc currTimeUTC
         triggerNames = map fst triggersWithcleanupConfig
     allScheduledCleanupsInDB <- liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ selectLastCleanupScheduledTimestamp triggerNames
-    let triggerMap = Map.fromList $ allScheduledCleanupsInDB
+    let triggerMap = HashMap.fromList $ allScheduledCleanupsInDB
         scheduledTriggersAndTimestamps =
           mapMaybe
             ( \(tName, cConfig) ->
-                let lastScheduledTime = case Map.lookup tName triggerMap of
+                let lastScheduledTime = case HashMap.lookup tName triggerMap of
                       Nothing -> Just currTime
                       Just (count, lastTime) -> if count < 5 then (Just lastTime) else Nothing
                  in fmap
@@ -1207,3 +1175,225 @@ deleteEventTriggerLogs ::
 deleteEventTriggerLogs sourceConfig oldCleanupConfig getLatestCleanupConfig = do
   deleteEventTriggerLogsInBatchesWith getLatestCleanupConfig oldCleanupConfig $ \cleanupConfig -> do
     runMSSQLSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig
+
+fetchEventLogs ::
+  (MonadIO m, MonadError QErr m) =>
+  MSSQLSourceConfig ->
+  GetEventLogs b ->
+  m [EventLog]
+fetchEventLogs sourceConfig getEventLogs = do
+  liftIO (runMSSQLSourceReadTx sourceConfig $ fetchEventLogsTxE getEventLogs)
+    `onLeftM` (throwError . prefixQErr "unexpected error while fetching event logs: ")
+
+fetchEventLogsTxE :: GetEventLogs b -> TxE QErr [EventLog]
+fetchEventLogsTxE GetEventLogs {..} = do
+  case status of
+    Pending -> do
+      events <-
+        multiRowQueryE
+          HGE.defaultMSSQLTxErrorHandler
+          [ODBC.sql|
+            SELECT CONVERT(varchar(MAX), id), schema_name, table_name, trigger_name, payload, delivered, error, tries,
+            CONVERT(varchar(MAX), created_at), CONVERT(varchar(MAX), locked), CONVERT(varchar(MAX), next_retry_at), archived
+            FROM hdb_catalog.event_log
+            WHERE trigger_name = $triggerName
+            AND delivered=0 AND error=0 AND archived=0
+            ORDER BY created_at DESC OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY;
+          |]
+      mapM uncurryEventLog events
+    Processed -> do
+      events <-
+        multiRowQueryE
+          HGE.defaultMSSQLTxErrorHandler
+          [ODBC.sql|
+            SELECT CONVERT(varchar(MAX), id), schema_name, table_name, trigger_name, payload, delivered, error, tries,
+            CONVERT(varchar(MAX), created_at), CONVERT(varchar(MAX), locked), CONVERT(varchar(MAX), next_retry_at), archived
+            FROM hdb_catalog.event_log
+            WHERE trigger_name = $triggerName
+            AND (delivered=1 OR error=1) AND archived=0
+            ORDER BY created_at DESC OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY;
+          |]
+      mapM uncurryEventLog events
+    All -> do
+      events <-
+        multiRowQueryE
+          HGE.defaultMSSQLTxErrorHandler
+          [ODBC.sql|
+            SELECT CONVERT(varchar(MAX), id), schema_name, table_name, trigger_name, payload, delivered, error, tries,
+            CONVERT(varchar(MAX), created_at), CONVERT(varchar(MAX), locked), CONVERT(varchar(MAX), next_retry_at), archived
+            FROM hdb_catalog.event_log
+            WHERE trigger_name = $triggerName
+            ORDER BY created_at DESC OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY;
+          |]
+      mapM uncurryEventLog events
+  where
+    triggerName = triggerNameToTxt _gelName
+    limit = _gelLimit
+    offset = _gelOffset
+    status = _gelStatus
+
+fetchEventInvocationLogs ::
+  (MonadError QErr m, MonadIO m) =>
+  MSSQLSourceConfig ->
+  GetEventInvocations b ->
+  m [EventInvocationLog]
+fetchEventInvocationLogs sourceConfig getEventInvocationLogs = do
+  liftIO (runMSSQLSourceReadTx sourceConfig $ fetchEventInvocationLogsTxE getEventInvocationLogs)
+    `onLeftM` (throwError . prefixQErr "unexpected error while fetching invocation logs: ")
+
+fetchEventInvocationLogsTxE :: GetEventInvocations b -> TxE QErr [EventInvocationLog]
+fetchEventInvocationLogsTxE GetEventInvocations {..} = do
+  invocations <-
+    multiRowQueryE
+      HGE.defaultMSSQLTxErrorHandler
+      [ODBC.sql|
+        SELECT CONVERT(varchar(MAX), id), trigger_name, CONVERT(varchar(MAX), event_id),
+        status, request, response, CONVERT(varchar(MAX), created_at)
+        FROM hdb_catalog.event_invocation_logs
+        WHERE trigger_name = $triggerName
+        ORDER BY created_at DESC OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY;
+      |]
+  mapM uncurryEventInvocationLog invocations
+  where
+    triggerName = triggerNameToTxt _geiName
+    limit = _geiLimit
+    offset = _geiOffset
+
+fetchEventById ::
+  (MonadError QErr m, MonadIO m) =>
+  MSSQLSourceConfig ->
+  GetEventById b ->
+  m (EventLogWithInvocations)
+fetchEventById sourceConfig getEventById = do
+  fetchEventByIdTxE' <- liftIO $ runMSSQLSourceReadTx sourceConfig $ fetchEventByIdTxE getEventById
+  case fetchEventByIdTxE' of
+    Left err ->
+      throwError $
+        prefixQErr ("unexpected error while fetching event with id " <> eventId <> ": ") err
+    Right eventLogWithInvocations -> do
+      if isNothing (elwiEvent eventLogWithInvocations)
+        then throw400 NotExists errMsg
+        else return eventLogWithInvocations
+  where
+    eventId = unEventId $ _gebiEventId getEventById
+    errMsg = "event id " <> eventId <> " does not exist"
+
+fetchEventByIdTxE :: GetEventById b -> TxE QErr (EventLogWithInvocations)
+fetchEventByIdTxE GetEventById {..} = do
+  eventsQuery <-
+    multiRowQueryE
+      HGE.defaultMSSQLTxErrorHandler
+      [ODBC.sql|
+        SELECT CONVERT(varchar(MAX), id), schema_name, table_name, trigger_name, payload, delivered, error, tries,
+        CONVERT(varchar(MAX), created_at), CONVERT(varchar(MAX), locked), CONVERT(varchar(MAX), next_retry_at), archived
+        FROM hdb_catalog.event_log
+        WHERE id = $eventId;
+      |]
+  events <- mapM uncurryEventLog eventsQuery
+  case events of
+    [] -> return $ EventLogWithInvocations Nothing []
+    [event] -> do
+      invocationsQuery <-
+        multiRowQueryE
+          HGE.defaultMSSQLTxErrorHandler
+          [ODBC.sql|
+            SELECT CONVERT(varchar(MAX), id), trigger_name, CONVERT(varchar(MAX), event_id),
+            status, request, response, CONVERT(varchar(MAX), created_at)
+            FROM hdb_catalog.event_invocation_logs
+            WHERE event_id = $eventId
+            ORDER BY created_at DESC OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY;
+          |]
+      invocations <- mapM uncurryEventInvocationLog invocationsQuery
+      pure $ EventLogWithInvocations (Just event) invocations
+    _ -> throw500 $ "Unexpected error: Multiple events present with event id " <> eventId
+  where
+    eventId = unEventId _gebiEventId
+    limit = _gebiInvocationLogLimit
+    offset = _gebiInvocationLogOffset
+
+uncurryEventLog ::
+  (MonadError QErr m) =>
+  (B.ByteString, Text, Text, Text, Text, Bool, Bool, Int, B.ByteString, Maybe B.ByteString, Maybe B.ByteString, Bool) ->
+  m EventLog
+uncurryEventLog (eventId, schemaName, tableName, triggerName, payload, delivered, isError, tries, createdAt, locked, nextRetryAt, archived) = do
+  -- see Note [Encode Event Trigger Payload to JSON in SQL Server]
+  payload' <- encodeJSON payload "payload decode failed while fetching MSSQL events"
+  createdAt' <- bsToUTCTime createdAt "conversion of created_at to UTCTime failed while fetching MSSQL events"
+  locked' <- traverse (`bsToUTCTime` "conversion of locked to UTCTime failed while fetching MSSQL events") locked
+  nextRetryAt' <- traverse (`bsToUTCTime` "conversion of next_retry_at to UTCTime failed while fetching MSSQL events") nextRetryAt
+  pure
+    EventLog
+      { elId = EventId (bsToTxt eventId),
+        elSchemaName = schemaName,
+        elTableName = tableName,
+        elTriggerName = TriggerName (mkNonEmptyTextUnsafe triggerName),
+        elPayload = payload',
+        elDelivered = delivered,
+        elError = isError,
+        elTries = tries,
+        elCreatedAt = createdAt',
+        elLocked = locked',
+        elNextRetryAt = nextRetryAt',
+        elArchived = archived
+      }
+
+uncurryEventInvocationLog ::
+  (MonadError QErr m) =>
+  (B.ByteString, Text, B.ByteString, Maybe Int, Text, Text, B.ByteString) ->
+  m EventInvocationLog
+uncurryEventInvocationLog (invocationId, triggerName, eventId, status, request, response, createdAt) = do
+  request' <- encodeJSON request "request decode failed while fetching MSSQL event invocations"
+  response' <- encodeJSON response "response decode failed while fetching MSSQL event invocations"
+  createdAt' <- bsToUTCTime createdAt "conversion of created_at to UTCTime failed while fetching MSSQL event invocations"
+  pure
+    EventInvocationLog
+      { eilId = bsToTxt invocationId,
+        eilTriggerName = TriggerName (mkNonEmptyTextUnsafe triggerName),
+        eilEventId = EventId (bsToTxt eventId),
+        eilHttpStatus = status,
+        eilRequest = request',
+        eilResponse = response',
+        eilCreatedAt = createdAt'
+      }
+
+{- Note [Encode Event Trigger Payload to JSON in SQL Server]
+
+We do not have JSON datatype in SQL Server. But since in 'mkAllTriggersQ' we
+ensure that all the values in the payload column of hdb_catalog.event_log is
+always a JSON. We can directly decode the payload value and not worry that the
+decoding will fail.
+
+We ensure that the values in 'hd_catalog.event_log' is always a JSON is by using
+the 'FOR JSON PATH' MSSQL operand when inserting value into the
+'hdb_catalog.event_log' table.
+
+-}
+encodeJSON :: (J.FromJSON a, QErrM m) => Text -> String -> m a
+encodeJSON json err =
+  onLeft
+    -- The NVARCHAR column has UTF-16 or UCS-2 encoding. Ref:
+    -- https://learn.microsoft.com/en-us/sql/t-sql/data-types/nchar-and-nvarchar-transact-sql?view=sql-server-ver16#nvarchar---n--max--
+    -- But JSON strings are expected to have UTF-8 encoding as per spec. Ref:
+    -- https://www.rfc-editor.org/rfc/rfc8259#section-8.1 Hence it's important
+    -- to encode the json into UTF-8 else the decoding of text to JSON will
+    -- fail.
+    (J.eitherDecode $ fromStrict $ TE.encodeUtf8 json)
+    (\_ -> throw500 $ T.pack err)
+
+-- | UTCTime type is used to store all the time related information pertaining
+-- to  event triggers (i.e `created_at`, `locked` and `next_retry_at`).  The ODBC
+-- server does not have a FromJSON instance of UTCTime datatype. This mean the
+-- direct conversion of the "time related data" which ODBC server fetches to
+-- UTCTime is not possible.
+--
+-- As a workaround, we cast the data from ODBC server to Bytestring and then use
+-- the `readEither` to parse that bytestring to UTCTime.
+--
+-- We make sure that the parse will never fail, by ensuring that values present
+-- in the `created_at`, `locked` and `next_retry_at` columns are always in UTC
+-- Time.
+bsToUTCTime :: MonadError QErr m => B.ByteString -> String -> m UTCTime
+bsToUTCTime timeInByteString err =
+  onLeft
+    (readEither (T.unpack $ bsToTxt timeInByteString) :: Either String UTCTime)
+    (\_ -> throw500 $ T.pack err)

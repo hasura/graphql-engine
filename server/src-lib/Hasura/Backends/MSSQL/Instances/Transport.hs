@@ -34,8 +34,8 @@ import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.SQL.AnyBackend (AnyBackend)
-import Hasura.SQL.Backend
 import Hasura.Server.Types (RequestId)
 import Hasura.Session
 import Hasura.Tracing

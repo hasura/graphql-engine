@@ -23,7 +23,11 @@ const CustomPickerContainer: React.FC<{ className: string }> = ({
 
 const getISOTimePart = (date: Date) => date.toISOString().slice(11, 19);
 
-export const TimeInput: React.VFC<TextInputProps> = ({
+type TimeInputProps = {
+  formatDate?: (date: Date) => string;
+} & TextInputProps;
+
+export const TimeInput: React.VFC<TimeInputProps> = ({
   name,
   disabled,
   placeholder,
@@ -31,13 +35,14 @@ export const TimeInput: React.VFC<TextInputProps> = ({
   onChange,
   onInput,
   onBlur,
+  formatDate,
 }) => {
   const [isCalendarPickerVisible, setCalendarPickerVisible] = useState(false);
 
   const onTimeChange = (date: Date) => {
     const timeZoneOffsetMinutes = date.getTimezoneOffset();
     const utcDate = sub(date, { minutes: timeZoneOffsetMinutes });
-    const timeString = getISOTimePart(utcDate);
+    const timeString = formatDate ? formatDate(date) : getISOTimePart(utcDate);
 
     if (inputRef && 'current' in inputRef && inputRef.current) {
       inputRef.current.value = timeString;

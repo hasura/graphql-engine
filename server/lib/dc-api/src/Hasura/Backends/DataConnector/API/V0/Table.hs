@@ -104,6 +104,7 @@ data TableType
   | View
   deriving stock (Eq, Ord, Show, Generic, Enum, Bounded)
   deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON) via Autodocodec TableType
 
 instance HasCodec TableType where
   codec =

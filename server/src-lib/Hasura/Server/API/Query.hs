@@ -46,6 +46,7 @@ import Hasura.RQL.DML.Select
 import Hasura.RQL.DML.Types
 import Hasura.RQL.DML.Update
 import Hasura.RQL.Types.Allowlist
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
@@ -57,7 +58,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RemoteSchema.MetadataAPI
-import Hasura.SQL.Backend
 import Hasura.Server.Types
 import Hasura.Server.Utils
 import Hasura.Services

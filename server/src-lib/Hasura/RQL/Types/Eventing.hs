@@ -24,7 +24,7 @@ import Data.Text.Extended
 import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers
+import Hasura.RQL.Types.Headers (HeaderConf)
 import PostgreSQL.Binary.Encoding qualified as PE
 
 newtype EventId = EventId {unEventId :: Text}

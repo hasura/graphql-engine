@@ -10,7 +10,8 @@ module Hasura.RQL.Types.SchemaCacheTypes
     SchemaObjId (..),
     SourceObjId (..),
     TableObjId (..),
-    CustomReturnTypeObjId (..),
+    LogicalModelObjId (..),
+    NativeQueryObjId (..),
     purgeDependentObject,
     purgeSourceAndSchemaDependencies,
     reasonToTxt,
@@ -29,21 +30,21 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Types (CustomReturnTypeName)
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.NativeQuery.Types (NativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (PartialSQLExp)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.Roles (RoleName, roleNameToTxt)
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data TableObjId (b :: BackendType)
@@ -60,25 +61,38 @@ deriving instance Backend b => Eq (TableObjId b)
 
 instance (Backend b) => Hashable (TableObjId b)
 
--- | Identifiers for components of custom return types within the metadata. These
+-- | Identifiers for components of logical models within the metadata. These
 -- are used to track dependencies within the resolved schema (see
 -- 'SourceInfo').
-data CustomReturnTypeObjId (b :: BackendType)
-  = CRTOPerm RoleName PermType
-  | CRTOCol (Column b)
+data LogicalModelObjId (b :: BackendType)
+  = LMOPerm RoleName PermType
+  | LMOCol (Column b)
   deriving (Generic)
 
-deriving stock instance (Backend b) => Eq (CustomReturnTypeObjId b)
+deriving stock instance (Backend b) => Eq (LogicalModelObjId b)
 
-instance (Backend b) => Hashable (CustomReturnTypeObjId b)
+instance (Backend b) => Hashable (LogicalModelObjId b)
+
+-- | Identifier for component of Native Queries within the metadata. These are
+-- used to track dependencies between items in the resolved schema. For
+-- instance, we use `NQOCol` along with `TOCol` from `TableObjId` to ensure
+-- that the two columns that join an array relationship actually exist.
+newtype NativeQueryObjId (b :: BackendType)
+  = NQOCol (Column b)
+  deriving (Generic)
+
+deriving instance Backend b => Eq (NativeQueryObjId b)
+
+instance (Backend b) => Hashable (NativeQueryObjId b)
 
 data SourceObjId (b :: BackendType)
   = SOITable (TableName b)
   | SOITableObj (TableName b) (TableObjId b)
   | SOIFunction (FunctionName b)
   | SOINativeQuery NativeQueryName
-  | SOICustomReturnType CustomReturnTypeName
-  | SOICustomReturnTypeObj CustomReturnTypeName (CustomReturnTypeObjId b)
+  | SOINativeQueryObj NativeQueryName (NativeQueryObjId b)
+  | SOILogicalModel LogicalModelName
+  | SOILogicalModelObj LogicalModelName (LogicalModelObjId b)
   deriving (Eq, Generic)
 
 instance (Backend b) => Hashable (SourceObjId b)
@@ -108,11 +122,13 @@ reportSchemaObj = \case
         SOITable tn -> "table " <> toTxt tn
         SOIFunction fn -> "function " <> toTxt fn
         SOINativeQuery lmn -> "native query " <> toTxt lmn
-        SOICustomReturnType crt -> "custom return type " <> toTxt crt
-        SOICustomReturnTypeObj crt (CRTOCol cn) ->
-          "custom return type column " <> toTxt crt <> "." <> toTxt cn
-        SOICustomReturnTypeObj crt (CRTOPerm rn pt) ->
-          "permission " <> toTxt crt <> "." <> roleNameToTxt rn <> "." <> permTypeToCode pt
+        SOINativeQueryObj nqn (NQOCol cn) ->
+          "column " <> toTxt nqn <> "." <> toTxt cn
+        SOILogicalModel lm -> "logical model " <> toTxt lm
+        SOILogicalModelObj lm (LMOCol cn) ->
+          "logical model column " <> toTxt lm <> "." <> toTxt cn
+        SOILogicalModelObj lm (LMOPerm rn pt) ->
+          "permission " <> toTxt lm <> "." <> roleNameToTxt rn <> "." <> permTypeToCode pt
         SOITableObj tn (TOCol cn) ->
           "column " <> toTxt tn <> "." <> toTxt cn
         SOITableObj tn (TORel cn) ->
@@ -173,7 +189,7 @@ data DependencyReason
   | DRRemoteSchema
   | DRRemoteRelationship
   | DRParentRole
-  | DRCustomReturnType
+  | DRLogicalModel
   deriving (Show, Eq, Generic)
 
 instance Hashable DependencyReason
@@ -196,7 +212,7 @@ reasonToTxt = \case
   DRRemoteSchema -> "remote_schema"
   DRRemoteRelationship -> "remote_relationship"
   DRParentRole -> "parent_role"
-  DRCustomReturnType -> "custom_return_type"
+  DRLogicalModel -> "logical_model"
 
 instance ToJSON DependencyReason where
   toJSON = String . reasonToTxt

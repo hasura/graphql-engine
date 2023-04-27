@@ -9,10 +9,10 @@ module Hasura.RQL.DDL.Schema.Cache.Config
 where
 
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (SQLGenCtx)
 import Hasura.RQL.Types.Metadata (MetadataDefaults)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Types
 
 --------------------------------------------------------------------------------

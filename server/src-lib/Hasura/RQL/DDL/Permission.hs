@@ -24,7 +24,7 @@ module Hasura.RQL.DDL.Permission
     runSetPermComment,
     PermInfo,
     buildPermInfo,
-    buildCustomReturnTypePermInfo,
+    buildLogicalModelPermInfo,
     addPermissionToMetadata,
     annBoolExp,
   )
@@ -34,14 +34,15 @@ import Control.Lens (Lens', (.~), (^?))
 import Data.Aeson
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Types (CustomReturnTypeName)
 import Hasura.EncJSON
+import Hasura.LogicalModel.Common (logicalModelFieldsToFieldInfo)
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal
 import Hasura.RQL.IR.BoolExp
@@ -54,13 +55,14 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types
-import Hasura.Session
+import Hasura.Session (UserInfoM)
 
 {- Note [Backend only permissions]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -181,14 +183,14 @@ procSetObj ::
 procSetObj source tn fieldInfoMap mObj = do
   (setColTups, deps) <- withPathK "set" $
     fmap unzip $
-      forM (HM.toList setObj) $ \(pgCol, val) -> do
+      forM (HashMap.toList setObj) $ \(pgCol, val) -> do
         ty <-
           askColumnType fieldInfoMap pgCol $
             "column " <> pgCol <<> " not found in table " <>> tn
         sqlExp <- parseCollectableType (CollectableTypeScalar ty) val
         let dep = mkColDep @b (getDepReason sqlExp) source tn pgCol
         return ((pgCol, sqlExp), dep)
-  return (HM.fromList setColTups, depHeaders, Seq.fromList deps)
+  return (HashMap.fromList setColTups, depHeaders, Seq.fromList deps)
   where
     setObj = fromMaybe mempty mObj
     depHeaders =
@@ -196,7 +198,7 @@ procSetObj source tn fieldInfoMap mObj = do
         Object $
           KM.fromList $
             map (first (K.fromText . toTxt)) $
-              HM.toList setObj
+              HashMap.toList setObj
 
     getDepReason = bool DRSessionVariable DROnType . isStaticValue
 
@@ -234,21 +236,21 @@ buildPermInfo x1 x2 x3 roleName = \case
   UpdPerm' p -> buildUpdPermInfo x1 x2 x3 p
   DelPerm' p -> buildDelPermInfo x1 x2 x3 p
 
--- | Given the custom return type's definition and the permissions as defined in the
--- custom return type's metadata, try to construct the permission definition.
-buildCustomReturnTypePermInfo ::
+-- | Given the logical model's definition and the permissions as defined in the
+-- logical model's metadata, try to construct the permission definition.
+buildLogicalModelPermInfo ::
   ( BackendMetadata b,
     QErrM m,
     TableCoreInfoRM b m,
     GetAggregationPredicatesDeps b
   ) =>
   SourceName ->
-  CustomReturnTypeName ->
-  FieldInfoMap (FieldInfo b) ->
+  LogicalModelName ->
+  OMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
   PermDefPermission b perm ->
   m (WithDeps (PermInfo perm b))
-buildCustomReturnTypePermInfo sourceName customReturnTypeName fieldInfoMap = \case
-  SelPerm' p -> buildCustomReturnTypeSelPermInfo sourceName customReturnTypeName fieldInfoMap p
+buildLogicalModelPermInfo sourceName logicalModelName fieldInfoMap = \case
+  SelPerm' p -> buildLogicalModelSelPermInfo sourceName logicalModelName fieldInfoMap p
   InsPerm' _ -> error "Not implemented yet"
   UpdPerm' _ -> error "Not implemented yet"
   DelPerm' _ -> error "Not implemented yet"
@@ -350,7 +352,7 @@ buildInsPermInfo source tn fieldInfoMap (InsPerm checkCond set mCols backendOnly
         reqHdrs = fltrHeaders `HS.union` (HS.fromList setHdrs)
         insColDeps = mkColDep @b DRUntyped source tn <$> insCols
         deps = mkParentDep @b source tn Seq.:<| beDeps <> setColDeps <> Seq.fromList insColDeps
-        insColsWithoutPresets = HS.fromList insCols `HS.difference` HM.keysSet setColsSQL
+        insColsWithoutPresets = HS.fromList insCols `HS.difference` HashMap.keysSet setColsSQL
 
     return (InsPermInfo insColsWithoutPresets be setColsSQL backendOnly reqHdrs, deps)
   where
@@ -421,7 +423,7 @@ validateAllowedRootFields sourceName tableName roleName SelPerm {..} = do
 -- | Given the native query's definition and the permissions as defined in the
 -- native query's metadata, try to construct the @SELECT@ permission
 -- definition.
-buildCustomReturnTypeSelPermInfo ::
+buildLogicalModelSelPermInfo ::
   forall b m.
   ( QErrM m,
     TableCoreInfoRM b m,
@@ -429,18 +431,20 @@ buildCustomReturnTypeSelPermInfo ::
     GetAggregationPredicatesDeps b
   ) =>
   SourceName ->
-  CustomReturnTypeName ->
-  FieldInfoMap (FieldInfo b) ->
+  LogicalModelName ->
+  OMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
-buildCustomReturnTypeSelPermInfo source customReturnTypeName fieldInfoMap sp = withPathK "permission" do
+buildLogicalModelSelPermInfo source logicalModelName logicalModelFieldMap sp = withPathK "permission" do
   let columns :: [Column b]
-      columns = interpColSpec (ciColumn <$> getCols fieldInfoMap) (spColumns sp)
+      columns = interpColSpec (lmfName <$> OMap.elems logicalModelFieldMap) (spColumns sp)
 
   -- Interpret the row permissions in the 'SelPerm' definition.
+  -- TODO: do row permisions work on non-scalar fields? Going to assume not and
+  -- filter out the non-scalars.
   (spiFilter, boolExpDeps) <-
     withPathK "filter" $
-      procCustomReturnTypeBoolExp source customReturnTypeName fieldInfoMap (spFilter sp)
+      procLogicalModelBoolExp source logicalModelName (logicalModelFieldsToFieldInfo logicalModelFieldMap) (spFilter sp)
 
   let -- What parts of the metadata are interesting when computing the
       -- permissions? These dependencies bubble all the way up to
@@ -449,9 +453,9 @@ buildCustomReturnTypeSelPermInfo source customReturnTypeName fieldInfoMap sp = w
       deps :: Seq SchemaDependency
       deps =
         mconcat
-          [ Seq.singleton (mkCustomReturnTypeParentDep @b source customReturnTypeName),
+          [ Seq.singleton (mkLogicalModelParentDep @b source logicalModelName),
             boolExpDeps,
-            fmap (mkCustomReturnTypeColDep @b DRUntyped source customReturnTypeName) $
+            fmap (mkLogicalModelColDep @b DRUntyped source logicalModelName) $
               Seq.fromList columns
           ]
 
@@ -471,7 +475,7 @@ buildCustomReturnTypeSelPermInfo source customReturnTypeName fieldInfoMap sp = w
       -- TODO: do we care about inherited roles? We don't seem to set this to
       -- anything other than 'Nothing' for in 'buildSelPermInfo' either.
       spiCols :: HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
-      spiCols = HM.fromList (map (,Nothing) columns)
+      spiCols = HashMap.fromList (map (,Nothing) columns)
 
       -- Native queries don't have computed fields.
       spiComputedFields :: HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
@@ -546,7 +550,7 @@ buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permissi
     when (value < 0) $
       throw400 NotSupported "unexpected negative value"
 
-  let spiCols = HM.fromList $ map (,Nothing) pgCols
+  let spiCols = HashMap.fromList $ map (,Nothing) pgCols
       spiComputedFields = HS.toMap (HS.fromList validComputedFields) $> Nothing
 
   (spiAllowedQueryRootFields, spiAllowedSubscriptionRootFields) <-
@@ -598,7 +602,7 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check backendO
       deps = mkParentDep @b source tn Seq.:<| beDeps <> maybe mempty snd checkExpr <> Seq.fromList updColDeps <> setColDeps
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `HS.union` (HS.fromList setHeaders)
-      updColsWithoutPreSets = HS.fromList updCols `HS.difference` HM.keysSet setColsSQL
+      updColsWithoutPreSets = HS.fromList updCols `HS.difference` HashMap.keysSet setColsSQL
 
   return (UpdPermInfo updColsWithoutPreSets tn be (fst <$> checkExpr) setColsSQL backendOnly reqHeaders, deps)
   where

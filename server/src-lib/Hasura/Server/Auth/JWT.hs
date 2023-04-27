@@ -70,7 +70,7 @@ import Data.ByteString.Internal qualified as B
 import Data.ByteString.Lazy qualified as BL
 import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.CaseInsensitive qualified as CI
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable
 import Data.IORef (IORef, modifyIORef, readIORef, writeIORef)
 import Data.Map.Strict qualified as M
@@ -90,6 +90,7 @@ import Hasura.Base.Error
 import Hasura.HTTP
 import Hasura.Logging (Hasura, LogLevel (..), Logger (..))
 import Hasura.Prelude
+import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
 import Hasura.Server.Auth.JWT.Internal (parseEdDSAKey, parseHmacKey, parseRsaKey)
 import Hasura.Server.Auth.JWT.Logging
 import Hasura.Server.Utils
@@ -98,7 +99,7 @@ import Hasura.Server.Utils
     isSessionVariable,
     userRoleHeader,
   )
-import Hasura.Session
+import Hasura.Session (SessionVariable, SessionVariableValue, UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkSessionVariable, mkSessionVariablesHeaders, mkSessionVariablesText, mkUserInfo, sessionVariableToText)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.HTTP.Types as N
 import Network.URI (URI)
@@ -191,7 +192,7 @@ type JWTCustomClaimsMapAllowedRoles = JWTCustomClaimsMapValueG [RoleName]
 -- Used to store other session variables like `x-hasura-user-id`
 type JWTCustomClaimsMapValue = JWTCustomClaimsMapValueG SessionVariableValue
 
-type CustomClaimsMap = HM.HashMap SessionVariable JWTCustomClaimsMapValue
+type CustomClaimsMap = HashMap.HashMap SessionVariable JWTCustomClaimsMapValue
 
 -- | JWTClaimsMap is an option to provide a custom JWT claims map.
 -- The JWTClaimsMap should be specified in the `HASURA_GRAPHQL_JWT_SECRET`
@@ -213,7 +214,7 @@ instance J.ToJSON JWTCustomClaimsMap where
           [ (defaultRoleClaim, J.toJSON defaultRole),
             (allowedRolesClaim, J.toJSON allowedRoles)
           ]
-            <> map (second J.toJSON) (HM.toList customClaims)
+            <> map (second J.toJSON) (HashMap.toList customClaims)
 
 instance J.FromJSON JWTCustomClaimsMap where
   parseJSON = J.withObject "JWTClaimsMap" $ \obj -> do
@@ -228,12 +229,12 @@ instance J.FromJSON JWTCustomClaimsMap where
     allowedRoles <- withNotFoundError allowedRolesClaim >>= J.parseJSON
     defaultRole <- withNotFoundError defaultRoleClaim >>= J.parseJSON
     let filteredClaims =
-          HM.delete allowedRolesClaim $
-            HM.delete defaultRoleClaim $
-              HM.fromList $
+          HashMap.delete allowedRolesClaim $
+            HashMap.delete defaultRoleClaim $
+              HashMap.fromList $
                 map (first (mkSessionVariable . K.toText)) $
                   KM.toList obj
-    customClaims <- flip HM.traverseWithKey filteredClaims $ const $ J.parseJSON
+    customClaims <- flip HashMap.traverseWithKey filteredClaims $ const $ J.parseJSON
     pure $ JWTCustomClaimsMap defaultRole allowedRoles customClaims
 
 -- | JWTNamespace is used to locate the claims map within the JWT token.
@@ -441,7 +442,7 @@ determineJwkExpiryLifetime getCurrentTime' (Logger logger) responseHeaders =
       liftIO $ logger $ JwkRefreshLog LevelInfo Nothing (Just err)
       throwError err
 
-type ClaimsMap = HM.HashMap SessionVariable J.Value
+type ClaimsMap = HashMap.HashMap SessionVariable J.Value
 
 -- | Decode a Jose ClaimsSet without verifying the signature
 decodeClaimsSet :: RawJWT -> Maybe Jose.ClaimsSet
@@ -507,8 +508,8 @@ processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthR
     (_, [(ctx, val)]) -> withAuthZ val ctx
     _ -> throw400 InvalidHeaders "Could not verify JWT: Multiple JWTs found"
   where
-    intersectKeys :: Hashable a => HM.HashMap a [b] -> HM.HashMap a [c] -> [(b, c)]
-    intersectKeys m n = concatMap (uncurry cartesianProduct) $ HM.elems $ HM.intersectionWith (,) m n
+    intersectKeys :: Hashable a => HashMap.HashMap a [b] -> HashMap.HashMap a [c] -> [(b, c)]
+    intersectKeys m n = concatMap (uncurry cartesianProduct) $ HashMap.elems $ HashMap.intersectionWith (,) m n
 
     issuerMatch (j, b) = do
       b'' <- case b of
@@ -528,11 +529,11 @@ processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthR
     cartesianProduct :: [a] -> [b] -> [(a, b)]
     cartesianProduct as bs = [(a, b) | a <- as, b <- bs]
 
-    keyCtxOnAuthTypes :: [JWTCtx] -> HM.HashMap AuthTokenLocation [JWTCtx]
-    keyCtxOnAuthTypes = HM.fromListWith (++) . fmap (expectedHeader &&& pure)
+    keyCtxOnAuthTypes :: [JWTCtx] -> HashMap.HashMap AuthTokenLocation [JWTCtx]
+    keyCtxOnAuthTypes = HashMap.fromListWith (++) . fmap (expectedHeader &&& pure)
 
-    keyTokensOnAuthTypes :: [HTTP.Header] -> HM.HashMap AuthTokenLocation [(AuthTokenLocation, B.ByteString)]
-    keyTokensOnAuthTypes = HM.fromListWith (++) . map (fst &&& pure) . concatMap findTokensInHeader
+    keyTokensOnAuthTypes :: [HTTP.Header] -> HashMap.HashMap AuthTokenLocation [(AuthTokenLocation, B.ByteString)]
+    keyTokensOnAuthTypes = HashMap.fromListWith (++) . map (fst &&& pure) . concatMap findTokensInHeader
 
     findTokensInHeader :: Header -> [(AuthTokenLocation, B.ByteString)]
     findTokensInHeader (key, val)
@@ -561,12 +562,12 @@ processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthR
             when (requestedRole `notElem` allowedRoles) $
               throw400 AccessDenied "Your requested role is not in allowed roles"
             let finalClaims =
-                  HM.delete defaultRoleClaim . HM.delete allowedRolesClaim $ claimsMap
+                  HashMap.delete defaultRoleClaim . HashMap.delete allowedRolesClaim $ claimsMap
 
             let finalClaimsObject =
                   KM.fromList $
                     map (first (K.fromText . sessionVariableToText)) $
-                      HM.toList finalClaims
+                      HashMap.toList finalClaims
             metadata <- parseJwtClaim (J.Object finalClaimsObject) "x-hasura-* claims"
             userInfo <-
               mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent $
@@ -639,7 +640,7 @@ parseClaimsMap claimsSet jcxClaims = do
 
       -- filter only x-hasura claims
       let claimsMap =
-            HM.fromList $
+            HashMap.fromList $
               map (first mkSessionVariable) $
                 filter (isSessionVariable . fst) $
                   map (first K.toText) $
@@ -661,7 +662,7 @@ parseClaimsMap claimsSet jcxClaims = do
               executeJSONPath defaultRoleJsonPath claimsJSON
         JWTCustomClaimsMapStatic staticDefaultRole -> pure staticDefaultRole
 
-      otherClaims <- flip HM.traverseWithKey otherClaimsMap $ \k claimObj -> do
+      otherClaims <- flip HashMap.traverseWithKey otherClaimsMap $ \k claimObj -> do
         let throwClaimErr =
               throw400 JWTInvalidClaims $
                 "JWT claim from claims_map, "
@@ -675,7 +676,7 @@ parseClaimsMap claimsSet jcxClaims = do
           JWTCustomClaimsMapStatic claimStaticValue -> pure $ J.String claimStaticValue
 
       pure $
-        HM.fromList
+        HashMap.fromList
           [ (allowedRolesClaim, J.toJSON allowedRoles),
             (defaultRoleClaim, J.toJSON defaultRole)
           ]
@@ -849,7 +850,7 @@ parseHasuraClaims claimsMap = do
   where
     parseClaim :: J.FromJSON a => SessionVariable -> Text -> m a
     parseClaim claim hint = do
-      claimV <- onNothing (HM.lookup claim claimsMap) missingClaim
+      claimV <- onNothing (HashMap.lookup claim claimsMap) missingClaim
       parseJwtClaim claimV $ "invalid " <> claimText <> "; " <> hint
       where
         missingClaim = throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> claimText

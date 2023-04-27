@@ -14,12 +14,14 @@ module Hasura.RQL.Types.Source
     unsafeSourceTables,
     siConfiguration,
     siNativeQueries,
-    siCustomReturnTypes,
+    siLogicalModels,
     siFunctions,
     siName,
+    siSourceKind,
     siQueryTagsConfig,
     siTables,
     siCustomization,
+    siDbObjectsIntrospection,
 
     -- * Schema cache
     DBObjectsIntrospection (..),
@@ -45,24 +47,24 @@ where
 import Control.Lens hiding ((.=))
 import Data.Aeson.Extended
 import Data.Environment
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Cache (CustomReturnTypeCache)
 import Hasura.Function.Cache
 import Hasura.Logging qualified as L
+import Hasura.LogicalModel.Cache (LogicalModelCache)
 import Hasura.NativeQuery.Cache (NativeQueryCache)
 import Hasura.Prelude
 import Hasura.QueryTags.Types
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
-import Hasura.SQL.Tag
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -71,16 +73,16 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 data SourceInfo b = SourceInfo
   { _siName :: SourceName,
+    _siSourceKind :: BackendSourceKind b,
     _siTables :: TableCache b,
     _siFunctions :: FunctionCache b,
     _siNativeQueries :: NativeQueryCache b,
-    _siCustomReturnTypes :: CustomReturnTypeCache b,
+    _siLogicalModels :: LogicalModelCache b,
     _siConfiguration :: ~(SourceConfig b),
     _siQueryTagsConfig :: Maybe QueryTagsConfig,
-    _siCustomization :: ResolvedSourceCustomization
+    _siCustomization :: ResolvedSourceCustomization,
+    _siDbObjectsIntrospection :: DBObjectsIntrospection b
   }
-
-$(makeLenses ''SourceInfo)
 
 instance
   ( Backend b,
@@ -117,9 +119,7 @@ unsafeSourceInfo :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceInfo
 unsafeSourceInfo = AB.unpackAnyBackend
 
 unsafeSourceName :: BackendSourceInfo -> SourceName
-unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi go
-  where
-    go (SourceInfo name _ _ _ _ _ _ _) = name
+unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi _siName
 
 unsafeSourceTables :: forall b. HasTag b => BackendSourceInfo -> Maybe (TableCache b)
 unsafeSourceTables = fmap _siTables . unsafeSourceInfo @b
@@ -151,7 +151,7 @@ instance Backend b => FromJSON (DBObjectsIntrospection b) where
     tables <- o .: "tables"
     functions <- o .: "functions"
     scalars <- o .: "scalars"
-    pure $ DBObjectsIntrospection (Map.fromList tables) (Map.fromList functions) (ScalarMap (Map.fromList scalars))
+    pure $ DBObjectsIntrospection (HashMap.fromList tables) (HashMap.fromList functions) (ScalarMap (HashMap.fromList scalars))
 
 instance (L.ToEngineLog (DBObjectsIntrospection b) L.Hasura) where
   toEngineLog _ = (L.LevelDebug, L.ELTStartup, toJSON rsLog)
@@ -234,3 +234,5 @@ data SourcePingInfo b = SourcePingInfo
 type BackendSourcePingInfo = AB.AnyBackend SourcePingInfo
 
 type SourcePingCache = HashMap SourceName BackendSourcePingInfo
+
+$(makeLenses ''SourceInfo)

@@ -61,7 +61,7 @@ let
 
     pkgs.haskell.packages.${pkgs.ghcName}.alex
     pkgs.haskell.packages.${pkgs.ghcName}.apply-refact
-    pkgs.haskell.packages.${pkgs.ghcName}.cabal-install
+    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.cabal-install)
     pkgs.haskell.packages.${pkgs.ghcName}.ghcid
     pkgs.haskell.packages.${pkgs.ghcName}.happy
     pkgs.haskell.packages.${pkgs.ghcName}.haskell-language-server

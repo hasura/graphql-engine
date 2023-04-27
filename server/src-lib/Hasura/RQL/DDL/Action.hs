@@ -27,7 +27,7 @@ import Control.Lens (makeLenses, (.~), (^.))
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.List.NonEmpty qualified as NEList
 import Data.Text.Extended
@@ -42,11 +42,11 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.SQL.BackendMap (BackendMap)
-import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 getActionInfo ::
@@ -55,7 +55,7 @@ getActionInfo ::
   m ActionInfo
 getActionInfo actionName = do
   actionMap <- scActions <$> askSchemaCache
-  onNothing (Map.lookup actionName actionMap) $
+  onNothing (HashMap.lookup actionName actionMap) $
     throw400 NotExists $
       "action with name " <> actionName <<> " does not exist"
 
@@ -76,7 +76,7 @@ runCreateAction ::
 runCreateAction createAction = do
   -- check if action with same name exists already
   actionMap <- scActions <$> askSchemaCache
-  for_ (Map.lookup actionName actionMap) $
+  for_ (HashMap.lookup actionName actionMap) $
     const $
       throw400 AlreadyExists $
         "action with name " <> actionName <<> " already exists"
@@ -130,7 +130,7 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
         <$> if
             | Just noCTScalar <- lookupBackendScalar allScalars argumentBaseType ->
                 pure $ NOCTScalar noCTScalar
-            | Just nonObjectType <- Map.lookup argumentBaseType _actInputTypes ->
+            | Just nonObjectType <- HashMap.lookup argumentBaseType _actInputTypes ->
                 pure nonObjectType
             | otherwise ->
                 throw400 InvalidParams $
@@ -146,9 +146,9 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
       if
           | Just aoTScalar <- lookupBackendScalar allScalars outputBaseType ->
               pure $ AOTScalar aoTScalar
-          | Just objectType <- Map.lookup outputBaseType _actObjectTypes ->
+          | Just objectType <- HashMap.lookup outputBaseType _actObjectTypes ->
               pure $ AOTObject objectType
-          | Just (NOCTScalar s) <- Map.lookup outputBaseType _actInputTypes ->
+          | Just (NOCTScalar s) <- HashMap.lookup outputBaseType _actInputTypes ->
               pure (AOTScalar s)
           | otherwise ->
               throw400 NotExists ("the type: " <> dquote outputBaseType <> " is not an object or scalar type defined in custom types")
@@ -175,7 +175,7 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
             let relationshipsWithNonTopLevelFields =
                   filter
                     ( \AnnotatedTypeRelationship {..} ->
-                        let objsInRel = unObjectFieldName <$> Map.keys _atrFieldMapping
+                        let objsInRel = unObjectFieldName <$> HashMap.keys _atrFieldMapping
                          in not $ all (`elem` scalarOrEnumFieldNames) objsInRel
                     )
                     (_aotRelationships aot')
@@ -228,7 +228,7 @@ runUpdateAction (UpdateAction actionName actionDefinition actionComment) = do
   sc <- askSchemaCache
   let actionsMap = scActions sc
   void $
-    onNothing (Map.lookup actionName actionsMap) $
+    onNothing (HashMap.lookup actionName actionsMap) $
       throw400 NotExists $
         "action with name " <> actionName <<> " does not exist"
   buildSchemaCacheFor (MOAction actionName) $ updateActionMetadataModifier actionDefinition actionComment

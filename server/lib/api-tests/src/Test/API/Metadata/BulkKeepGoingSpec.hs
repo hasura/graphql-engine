@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Tests of the newly separated Custom Return Types feature
+-- | Tests of the newly separated Logical Models feature
 module Test.API.Metadata.BulkKeepGoingSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE

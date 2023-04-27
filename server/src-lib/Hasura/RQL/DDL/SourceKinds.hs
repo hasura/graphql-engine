@@ -19,7 +19,7 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson (FromJSON, ToJSON, (.:), (.:?), (.=))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.Map.Strict qualified as Map
 import Data.Text.Extended (ToTxt (..))
@@ -31,10 +31,10 @@ import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON (EncJSON)
 import Hasura.EncJSON qualified as EncJSON
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType qualified as Backend
 import Hasura.RQL.Types.Metadata qualified as Metadata
 import Hasura.RQL.Types.SchemaCache qualified as SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend qualified as Backend
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
@@ -43,10 +43,10 @@ import Language.GraphQL.Draft.Syntax qualified as GQL
 data ListSourceKinds = ListSourceKinds
 
 instance FromJSON ListSourceKinds where
-  parseJSON = Aeson.withObject "ListSourceKinds" (const $ pure ListSourceKinds)
+  parseJSON = J.withObject "ListSourceKinds" (const $ pure ListSourceKinds)
 
 instance ToJSON ListSourceKinds where
-  toJSON ListSourceKinds = Aeson.object []
+  toJSON ListSourceKinds = J.object []
 
 --------------------------------------------------------------------------------
 
@@ -59,7 +59,7 @@ data SourceKindInfo = SourceKindInfo
   }
 
 instance FromJSON SourceKindInfo where
-  parseJSON = Aeson.withObject "SourceKindInfo" \o -> do
+  parseJSON = J.withObject "SourceKindInfo" \o -> do
     _skiSourceKind <- o .: "kind"
     _skiDisplayName <- o .:? "display_name"
     _skiReleaseName <- o .:? "release_name"
@@ -69,7 +69,7 @@ instance FromJSON SourceKindInfo where
 
 instance ToJSON SourceKindInfo where
   toJSON SourceKindInfo {..} =
-    Aeson.object $
+    J.object $
       [ "kind" .= _skiSourceKind,
         "builtin" .= _skiBuiltin,
         "available" .= _skiAvailable
@@ -83,13 +83,13 @@ instance ToJSON SourceKindInfo where
 data SourceType = Builtin | Agent
 
 instance FromJSON SourceType where
-  parseJSON = Aeson.withBool "source type" \case
+  parseJSON = J.withBool "source type" \case
     True -> pure Builtin
     False -> pure Agent
 
 instance ToJSON SourceType where
-  toJSON Builtin = Aeson.Bool True
-  toJSON Agent = Aeson.Bool False
+  toJSON Builtin = J.Bool True
+  toJSON Agent = J.Bool False
 
 --------------------------------------------------------------------------------
 
@@ -97,7 +97,7 @@ newtype SourceKinds = SourceKinds {unSourceKinds :: [SourceKindInfo]}
   deriving newtype (Semigroup, Monoid)
 
 instance ToJSON SourceKinds where
-  toJSON SourceKinds {..} = Aeson.object ["sources" .= unSourceKinds]
+  toJSON SourceKinds {..} = J.object ["sources" .= unSourceKinds]
 
 agentSourceKinds :: (Metadata.MetadataM m) => m SourceKinds
 agentSourceKinds = do
@@ -175,7 +175,7 @@ runListSourceKinds ListSourceKinds = fmap EncJSON.encJFromJValue $ do
 newtype GetSourceKindCapabilities = GetSourceKindCapabilities {_gskcKind :: NonEmptyText}
 
 instance FromJSON GetSourceKindCapabilities where
-  parseJSON = Aeson.withObject "GetSourceKindCapabilities" \o -> do
+  parseJSON = J.withObject "GetSourceKindCapabilities" \o -> do
     _gskcKind <- o .: "name"
     pure $ GetSourceKindCapabilities {..}
 

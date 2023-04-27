@@ -29,37 +29,37 @@ import CI qualified
 import Control.Concurrent.Extended qualified as C
 import Control.Exception (try)
 import Control.Lens
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
-import Data.HashMap.Strict qualified as HM
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.List qualified as L
 import Data.List.Extended qualified as L
 import Data.Text qualified as T
 import Data.Text.Conversions (UTF8 (..), decodeText)
+import Data.Text.Extended (toTxt)
 import Hasura.App.State qualified as State
 import Hasura.HTTP
 import Hasura.Logging
 import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiArguments))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.BackendTag
+import Hasura.RQL.Types.BackendType (BackendType, backendTypeFromBackendSourceKind)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as Any
-import Hasura.SQL.Backend (BackendType)
-import Hasura.SQL.Tag
 import Hasura.Server.AppStateRef qualified as HGE
 import Hasura.Server.Init.Config
 import Hasura.Server.Telemetry.Counters (dumpServiceTimingMetrics)
 import Hasura.Server.Telemetry.Types
 import Hasura.Server.Types
 import Hasura.Server.Version
-import Hasura.Session
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wreq qualified as Wreq
@@ -83,25 +83,25 @@ data TelemetryHttpError = TelemetryHttpError
   }
   deriving (Show)
 
-instance A.ToJSON TelemetryLog where
+instance J.ToJSON TelemetryLog where
   toJSON tl =
-    A.object
-      [ "type" A..= _tlType tl,
-        "message" A..= _tlMessage tl,
-        "http_error" A..= (A.toJSON <$> _tlHttpError tl)
+    J.object
+      [ "type" J..= _tlType tl,
+        "message" J..= _tlMessage tl,
+        "http_error" J..= (J.toJSON <$> _tlHttpError tl)
       ]
 
-instance A.ToJSON TelemetryHttpError where
+instance J.ToJSON TelemetryHttpError where
   toJSON tlhe =
-    A.object
-      [ "status_code" A..= (HTTP.statusCode <$> tlheStatus tlhe),
-        "url" A..= tlheUrl tlhe,
-        "response" A..= tlheResponse tlhe,
-        "http_exception" A..= (A.toJSON <$> tlheHttpException tlhe)
+    J.object
+      [ "status_code" J..= (HTTP.statusCode <$> tlheStatus tlhe),
+        "url" J..= tlheUrl tlhe,
+        "response" J..= tlheResponse tlhe,
+        "http_exception" J..= (J.toJSON <$> tlheHttpException tlhe)
       ]
 
 instance ToEngineLog TelemetryLog Hasura where
-  toEngineLog tl = (_tlLogLevel tl, ELTInternal ILTTelemetry, A.toJSON tl)
+  toEngineLog tl = (_tlLogLevel tl, ELTInternal ILTTelemetry, J.toJSON tl)
 
 mkHttpError ::
   Text ->
@@ -152,7 +152,7 @@ runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion = do
         experimentalFeatures <- State.acExperimentalFeatures <$> HGE.getAppContext appStateRef
         ci <- CI.getCI
         -- Creates a telemetry payload for a specific backend.
-        let telemetryForSource :: forall (b :: BackendType). HasTag b => SourceInfo b -> TelemetryPayload
+        let telemetryForSource :: forall (b :: BackendType). SourceInfo b -> TelemetryPayload
             telemetryForSource =
               mkTelemetryPayload
                 metadataDbUid
@@ -167,8 +167,8 @@ runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion = do
             telemetries =
               map
                 (\sourceinfo -> (Any.dispatchAnyBackend @HasTag) sourceinfo telemetryForSource)
-                (HM.elems (scSources schemaCache))
-            payloads = A.encode <$> telemetries
+                (HashMap.elems (scSources schemaCache))
+            payloads = J.encode <$> telemetries
 
         for_ payloads $ \payload -> do
           logger $ debugLBS $ "metrics_info: " <> payload
@@ -198,7 +198,6 @@ runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion = do
 --   only with the default source.
 mkTelemetryPayload ::
   forall (b :: BackendType).
-  HasTag b =>
   MetadataDbId ->
   InstanceId ->
   Version ->
@@ -215,7 +214,8 @@ mkTelemetryPayload metadataDbId instanceId version pgVersion ci serviceTimings r
       sourceMetadata =
         SourceMetadata
           { _smDbUid = forDefaultSource (mdDbIdToDbUid metadataDbId),
-            _smDbKind = reify $ backendTag @b,
+            _smBackendType = backendTypeFromBackendSourceKind $ _siSourceKind sourceInfo,
+            _smDbKind = toTxt (_siSourceKind sourceInfo),
             _smDbVersion = forDefaultSource (pgToDbVersion pgVersion)
           }
       -- We use this function to attach additional information that is not associated
@@ -248,10 +248,10 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
   let _mtTables = countSourceTables (isNothing . _tciViewInfo . _tiCoreInfo)
       _mtViews = countSourceTables (isJust . _tciViewInfo . _tiCoreInfo)
       _mtEnumTables = countSourceTables (isJust . _tciEnumValues . _tiCoreInfo)
-      allRels = join $ Map.elems $ Map.map (getRels . _tciFieldInfoMap . _tiCoreInfo) sourceTableCache
+      allRels = join $ HashMap.elems $ HashMap.map (getRels . _tciFieldInfoMap . _tiCoreInfo) sourceTableCache
       (manualRels, autoRels) = L.partition riIsManual allRels
       _mtRelationships = RelationshipMetric (length manualRels) (length autoRels)
-      rolePerms = join $ Map.elems $ Map.map permsOfTbl sourceTableCache
+      rolePerms = join $ HashMap.elems $ HashMap.map permsOfTbl sourceTableCache
       _pmRoles = length $ L.uniques $ fst <$> rolePerms
       allPerms = snd <$> rolePerms
       _pmInsert = calcPerms _permIns allPerms
@@ -261,24 +261,24 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
       _mtPermissions =
         PermissionMetric {..}
       _mtEventTriggers =
-        Map.size $
-          Map.filter (not . Map.null) $
-            Map.map _tiEventTriggerInfoMap sourceTableCache
-      _mtRemoteSchemas = Map.size <$> remoteSchemaMap
-      _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
+        HashMap.size $
+          HashMap.filter (not . HashMap.null) $
+            HashMap.map _tiEventTriggerInfoMap sourceTableCache
+      _mtRemoteSchemas = HashMap.size <$> remoteSchemaMap
+      _mtFunctions = HashMap.size $ HashMap.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
       _mtActions = computeActionsMetrics <$> actionCache
-      _mtNativeQueries = countNativeQueries (HM.elems $ _siNativeQueries sourceInfo)
+      _mtNativeQueries = countNativeQueries (HashMap.elems $ _siNativeQueries sourceInfo)
    in Metrics {..}
   where
     sourceTableCache = _siTables sourceInfo
     sourceFunctionCache = _siFunctions sourceInfo
-    countSourceTables predicate = length . filter predicate $ Map.elems sourceTableCache
+    countSourceTables predicate = length . filter predicate $ HashMap.elems sourceTableCache
 
     calcPerms :: (RolePermInfo b -> Maybe a) -> [RolePermInfo b] -> Int
     calcPerms fn perms = length $ mapMaybe fn perms
 
     permsOfTbl :: TableInfo b -> [(RoleName, RolePermInfo b)]
-    permsOfTbl = Map.toList . _tiRolePermInfoMap
+    permsOfTbl = HashMap.toList . _tiRolePermInfoMap
 
     countNativeQueries :: [NativeQueryInfo b] -> NativeQueriesMetrics
     countNativeQueries =
@@ -294,7 +294,7 @@ computeActionsMetrics :: ActionCache -> ActionMetric
 computeActionsMetrics actionCache =
   ActionMetric syncActionsLen asyncActionsLen queryActionsLen typeRelationships customTypesLen
   where
-    actions = Map.elems actionCache
+    actions = HashMap.elems actionCache
     syncActionsLen = length . filter ((== ActionMutation ActionSynchronous) . _adType . _aiDefinition) $ actions
     asyncActionsLen = length . filter ((== ActionMutation ActionAsynchronous) . _adType . _aiDefinition) $ actions
     queryActionsLen = length . filter ((== ActionQuery) . _adType . _aiDefinition) $ actions

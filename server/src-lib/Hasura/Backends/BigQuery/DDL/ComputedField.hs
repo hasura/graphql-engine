@@ -7,7 +7,7 @@ module Hasura.Backends.BigQuery.DDL.ComputedField
 where
 
 import Control.Monad.Validate qualified as MV
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
@@ -18,9 +18,9 @@ import Hasura.Backends.BigQuery.Types
 import Hasura.Base.Error
 import Hasura.Function.Cache
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.SQL.Backend
 import Hasura.Server.Utils
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -100,7 +100,7 @@ buildComputedFieldInfo trackedTables table tableColumns computedField ComputedFi
       unless (routineType restRoutine == TABLE_VALUED_FUNCTION) $ MV.dispute $ pure CFENotTableValuedFunction
       restArguments <- onNothing (arguments restRoutine) $ MV.refute (pure CFENoInputArguments)
       inputArguments <- Seq.fromList <$> for restArguments resolveInputArgument
-      for_ (HM.toList _bqcfdArgumentMapping) (validateArgumentMapping inputArguments)
+      for_ (HashMap.toList _bqcfdArgumentMapping) (validateArgumentMapping inputArguments)
       let fieldFunction = ComputedFieldFunction _bqcfdFunction inputArguments _bqcfdArgumentMapping Nothing
       fieldReturn <- resolveFunctionReturning (returnTableType restRoutine) _bqcfdReturnTable
       pure $ ComputedFieldInfo @'BigQuery () computedField fieldFunction fieldReturn $ commentToMaybeText comment

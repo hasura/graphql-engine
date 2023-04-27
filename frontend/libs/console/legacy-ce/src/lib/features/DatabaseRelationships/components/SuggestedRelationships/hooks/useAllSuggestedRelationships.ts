@@ -10,8 +10,13 @@ import {
   SuggestedRelationshipsResponse,
 } from './useSuggestedRelationships';
 import { useMetadataMigration } from '../../../../MetadataAPI';
-import { NamingConvention, Table } from '../../../../hasura-metadata-types';
+import {
+  BulkKeepGoingResponse,
+  NamingConvention,
+  Table,
+} from '../../../../hasura-metadata-types';
 import { getTrackedRelationshipsCacheKey } from '../../../../Data/TrackResources/components/hooks/useTrackedRelationships';
+import { hasuraToast } from '../../../../../new-components/Toasts';
 
 export type AddSuggestedRelationship = {
   name: string;
@@ -89,7 +94,7 @@ export const useAllSuggestedRelationships = ({
 
   const rawSuggestedRelationships = data?.relationships || [];
 
-  const metadataMutation = useMetadataMigration({});
+  const metadataMutation = useMetadataMigration<BulkKeepGoingResponse>({});
   const queryClient = useQueryClient();
 
   const onAddMultipleSuggestedRelationships = async (
@@ -118,11 +123,33 @@ export const useAllSuggestedRelationships = ({
     await metadataMutation.mutateAsync(
       {
         query: {
-          type: 'bulk',
+          type: 'bulk_keep_going',
           args: queries,
         },
       },
       {
+        onSuccess: response => {
+          response.forEach(result => {
+            if ('error' in result) {
+              hasuraToast({
+                type: 'error',
+                title: 'Error while tracking foreign key',
+                children: result.error,
+              });
+            }
+          });
+
+          const successfullyTrackedCounter = response.filter(
+            result => 'message' in result && result.message === 'success'
+          ).length;
+          const plural = successfullyTrackedCounter > 1 ? 's' : '';
+
+          hasuraToast({
+            type: 'success',
+            title: 'Successfully tracked',
+            message: `${successfullyTrackedCounter} foreign key${plural} tracked`,
+          });
+        },
         onSettled: () => {
           queryClient.invalidateQueries({
             queryKey: getAllSuggestedRelationshipsCacheQuery(

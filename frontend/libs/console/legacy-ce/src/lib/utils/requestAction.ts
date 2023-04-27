@@ -13,6 +13,20 @@ import {
 import { globalCookiePolicy } from '../Endpoints';
 import { processResponseDetails } from '../components/Services/ApiExplorer/Actions';
 
+const getCacheRequestWarning = (
+  warningHeader: string | null
+): string | null => {
+  if (!warningHeader) {
+    return null;
+  }
+  return [
+    'cache-store-size-limit-exceeded',
+    'cache-store-capacity-exceeded',
+    'cache-store-error',
+  ]?.some(warning => warningHeader?.includes(warning))
+    ? warningHeader
+    : null;
+};
 const requestAction = <T = any>(
   url: string,
   options: RequestInit = {},
@@ -65,13 +79,17 @@ const requestAction = <T = any>(
                 const endTime = new Date().getTime();
                 const responseTimeMs = endTime - startTime;
                 const isResponseCached = response.headers.has('Cache-Control');
+                const cacheWarning = getCacheRequestWarning(
+                  response.headers.get('Warning')
+                );
                 const responseSize = JSON.stringify(results).length * 2;
                 dispatch(
                   processResponseDetails(
                     responseTimeMs,
                     responseSize,
                     isResponseCached,
-                    requestTrackingId
+                    requestTrackingId,
+                    cacheWarning
                   )
                 );
               }

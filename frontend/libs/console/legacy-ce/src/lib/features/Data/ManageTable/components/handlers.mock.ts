@@ -76,7 +76,7 @@ export const resetMetadata = () => {
 };
 
 function isTrackOrUntrackTable(body: any) {
-  return body.type === 'bulk';
+  return body.type === 'bulk_keep_going';
 }
 
 function isTrackTable(arg: any) {

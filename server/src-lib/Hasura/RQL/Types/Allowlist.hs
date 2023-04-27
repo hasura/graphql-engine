@@ -21,17 +21,17 @@ where
 
 import Autodocodec (HasCodec, bimapCodec, disjointEitherCodec, optionalFieldWithDefault', requiredField')
 import Autodocodec qualified as AC
+import Autodocodec.Extended (discriminatorBoolField)
 import Data.Aeson
 import Data.Aeson.TH (deriveJSON, deriveToJSON)
-import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.HashSet qualified as S
 import Data.Text.Extended ((<<>))
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.Metadata.DTO.Utils (discriminatorBoolField)
 import Hasura.Prelude
 import Hasura.RQL.Types.QueryCollection
-import Hasura.Session (RoleName)
+import Hasura.RQL.Types.Roles (RoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 newtype DropCollectionFromAllowlist = DropCollectionFromAllowlist
@@ -217,7 +217,7 @@ inlineAllowlist collections allowlist = InlinedAllowlist global perRole
         ]
 
     inverseMap :: Hashable b => [(a, [b])] -> HashMap b [a]
-    inverseMap = M.fromListWith (<>) . concatMap (\(c, rs) -> [(r, [c]) | r <- rs])
+    inverseMap = HashMap.fromListWith (<>) . concatMap (\(c, rs) -> [(r, [c]) | r <- rs])
 
     global = inlineQueries globalCollections
     perRole = inlineQueries <$> perRoleCollections
@@ -246,4 +246,4 @@ allowlistAllowsQuery (InlinedAllowlist global perRole) mode role query =
     AllowlistModeFull -> inAllowlist global || inAllowlist roleAllowlist
   where
     inAllowlist = S.member (normalizeQuery query)
-    roleAllowlist = M.findWithDefault mempty role perRole
+    roleAllowlist = HashMap.findWithDefault mempty role perRole

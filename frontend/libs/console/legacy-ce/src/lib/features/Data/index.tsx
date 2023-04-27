@@ -1,4 +1,4 @@
-export * from './ManageDatabaseContainer';
+export * from './ManageDatabase/ManageDatabase.Route';
 export * from './components';
 export * from './hooks';
 export { useTrackTables } from './hooks/useTrackTables';

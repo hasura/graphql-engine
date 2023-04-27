@@ -31,7 +31,7 @@ module Hasura.Backends.MSSQL.ToQuery
 where
 
 import Data.Aeson (ToJSON (..))
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.List (intersperse)
 import Data.String
 import Data.Text qualified as T
@@ -40,7 +40,6 @@ import Data.Text.Lazy qualified as L
 import Data.Text.Lazy.Builder qualified as L
 import Database.ODBC.SQLServer
 import Hasura.Backends.MSSQL.Types
-import Hasura.Backends.MSSQL.Types qualified as MSSQL
 import Hasura.NativeQuery.Metadata (InterpolatedItem (..), InterpolatedQuery (..))
 import Hasura.Prelude hiding (GT, LT)
 
@@ -339,11 +338,11 @@ fromMergeWhenMatched (MergeWhenMatched updateColumns updateCondition updatePrese
         <+> " THEN UPDATE "
         <+> fromUpdateSet updates
   where
-    updates = updateSet <> HM.map UpdateSet updatePreset
+    updates = updateSet <> HashMap.map UpdateSet updatePreset
 
     updateSet :: UpdateSet
     updateSet =
-      HM.fromList $
+      HashMap.fromList $
         map
           ( \cn@ColumnName {..} ->
               ( cn,
@@ -432,14 +431,14 @@ fromUpdateSet :: UpdateSet -> Printer
 fromUpdateSet setColumns =
   let updateColumnValue (column, updateOp) =
         fromColumnName column <+> fromUpdateOperator (fromExpression <$> updateOp)
-   in "SET " <+> SepByPrinter ", " (map updateColumnValue (HM.toList setColumns))
+   in "SET " <+> SepByPrinter ", " (map updateColumnValue (HashMap.toList setColumns))
   where
     fromUpdateOperator :: UpdateOperator Printer -> Printer
     fromUpdateOperator = \case
       UpdateSet p -> " = " <+> p
       UpdateInc p -> " += " <+> p
 
-fromTempTableDDL :: MSSQL.TempTableDDL -> Printer
+fromTempTableDDL :: TempTableDDL -> Printer
 fromTempTableDDL = \case
   CreateTemp tempTableName tempColumns ->
     "CREATE TABLE "
@@ -563,7 +562,16 @@ fromWith (With withSelects) =
   "WITH " <+> SepByPrinter ", " (map fromAliasedSelect (toList withSelects)) <+> NewlinePrinter
   where
     fromAliasedSelect (Aliased {..}) =
-      fromNameText aliasedAlias <+> " AS " <+> "( " <+> fromSelect aliasedThing <+> " )"
+      fromNameText aliasedAlias
+        <+> " AS "
+        <+> "( "
+        <+> ( case aliasedThing of
+                CTESelect select ->
+                  fromSelect select
+                CTEUnsafeRawSQL nativeQuery ->
+                  renderInterpolatedQuery nativeQuery <+> "\n"
+            )
+        <+> " )"
 
 renderInterpolatedQuery :: InterpolatedQuery Expression -> Printer
 renderInterpolatedQuery = foldr (<+>) "" . renderedParts

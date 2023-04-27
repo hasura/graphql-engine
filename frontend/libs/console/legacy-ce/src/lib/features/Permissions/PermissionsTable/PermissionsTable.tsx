@@ -9,9 +9,26 @@ import { TableMachine } from './hooks';
 import { useDriverCapabilities } from '../../Data/hooks/useDriverCapabilities';
 import { Capabilities } from '@hasura/dc-api-types';
 import { getDriversSupportedQueryTypes } from './utils/getDriversSupportedQueryTypes';
+import { useIsTableView } from '../../Data/hooks/useIsTableView';
 
 const queryType = ['insert', 'select', 'update', 'delete'] as const;
 type QueryType = (typeof queryType)[number];
+
+const getIsColumnEditable = (
+  roleName: string,
+  isView: boolean | undefined,
+  driverSupportedQueries: string[],
+  permissionType: string
+) => {
+  if (roleName === 'admin') return false;
+
+  if (isView) {
+    return permissionType === 'select';
+  }
+  if (driverSupportedQueries.includes(permissionType)) return true;
+
+  return false;
+};
 
 interface ViewPermissionsNoteProps {
   viewsSupported: boolean;
@@ -72,6 +89,8 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
 
   const [state, send] = machine;
 
+  const { data: isView } = useIsTableView({ dataSourceName, table });
+
   if (isLoading)
     return (
       <div>
@@ -128,9 +147,12 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                   {permissionTypes.map(({ permissionType, access }) => {
                     // TODO: add checks to see what permissions are supported by each db
 
-                    const isEditable =
-                      driverSupportedQueries.includes(permissionType) ||
-                      roleName !== 'admin';
+                    const isEditable = getIsColumnEditable(
+                      roleName,
+                      isView,
+                      driverSupportedQueries,
+                      permissionType
+                    );
 
                     if (isNewRole) {
                       return (

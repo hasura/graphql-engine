@@ -14,9 +14,6 @@ module Hasura.Backends.DataConnector.Adapter.Types
     scTemplate,
     scTimeoutMicroseconds,
     scEnvironment,
-    DataConnectorName,
-    unDataConnectorName,
-    mkDataConnectorName,
     DataConnectorOptions (..),
     DataConnectorInfo (..),
     TableName (..),
@@ -32,6 +29,7 @@ module Hasura.Backends.DataConnector.Adapter.Types
     fromGQLType,
     ExtraTableMetadata (..),
     ExtraColumnMetadata (..),
+    module Hasura.RQL.Types.DataConnector,
   )
 where
 
@@ -43,18 +41,17 @@ import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, g
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as J
 import Data.Aeson.Types (parseEither, toJSONKeyText)
-import Data.Data (Typeable)
 import Data.Environment (Environment)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as Text
 import Data.Text.Extended (ToTxt (..))
-import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyTextUnsafe)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue (ToErrorValue (..))
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
+import Hasura.RQL.Types.DataConnector
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
 import Servant.Client (BaseUrl)
@@ -180,30 +177,6 @@ instance J.ToJSON SourceConfig where
   toJSON _ = J.String "SourceConfig"
 
 --------------------------------------------------------------------------------
-
--- | Note: Currently you should not use underscores in this name.
---         This should be enforced in instances, and the `mkDataConnectorName`
---         smart constructor is available to assist.
-newtype DataConnectorName = DataConnectorName {unDataConnectorName :: GQL.Name}
-  deriving stock (Eq, Ord, Show, Typeable, Generic)
-  deriving newtype (ToJSON, FromJSONKey, ToJSONKey, Hashable, ToTxt)
-  deriving anyclass (NFData)
-
-instance FromJSON DataConnectorName where
-  parseJSON v = (`onLeft` fail) =<< (mkDataConnectorName <$> J.parseJSON v)
-
-mkDataConnectorName :: GQL.Name -> Either String DataConnectorName
-mkDataConnectorName n =
-  if ('_' `Text.elem` GQL.unName n)
-    then -- Could return other errors in future.
-      Left "DataConnectorName may not contain underscores."
-    else Right (DataConnectorName n)
-
-instance Witch.From DataConnectorName NonEmptyText where
-  from = mkNonEmptyTextUnsafe . GQL.unName . unDataConnectorName -- mkNonEmptyTextUnsafe is safe here since GQL.Name is never empty
-
-instance Witch.From DataConnectorName Text where
-  from = GQL.unName . unDataConnectorName
 
 data DataConnectorOptions = DataConnectorOptions
   { _dcoUri :: BaseUrl,
@@ -401,7 +374,9 @@ fromGQLType typeName =
 -- | This type captures backend-specific "extra" information about tables
 -- and is used on types like 'DBTableMetadata'
 data ExtraTableMetadata = ExtraTableMetadata
-  {_etmExtraColumnMetadata :: HashMap ColumnName ExtraColumnMetadata}
+  { _etmTableType :: API.TableType,
+    _etmExtraColumnMetadata :: HashMap ColumnName ExtraColumnMetadata
+  }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 

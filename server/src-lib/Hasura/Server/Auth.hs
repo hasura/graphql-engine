@@ -43,10 +43,11 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
 import Hasura.Logging
 import Hasura.Prelude
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.Server.Auth.JWT hiding (processJwt_)
 import Hasura.Server.Auth.WebHook
 import Hasura.Server.Utils
-import Hasura.Session
+import Hasura.Session (ExtraUserInfo, UserAdminSecret (..), UserInfo, UserRoleBuild (..), getSessionVariableValue, mkSessionVariablesHeaders, mkUserInfo)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 

@@ -27,9 +27,9 @@ import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Update
 import Hasura.RQL.IR.Update.Batch
 import Hasura.RQL.IR.Value
+import Hasura.RQL.Types.BackendType (BackendType (..))
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.SQL.Backend (BackendType (..))
 import Hasura.Session (SessionVariables)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Witch qualified

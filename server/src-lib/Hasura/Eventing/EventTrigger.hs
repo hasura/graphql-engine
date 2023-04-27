@@ -58,7 +58,7 @@ import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Aeson.Lens qualified as JL
 import Data.Aeson.TH
 import Data.Has
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.SerializableBlob qualified as SB
 import Data.Set qualified as Set
 import Data.String
@@ -69,21 +69,20 @@ import Data.Time.Clock
 import Data.Time.Clock qualified as Time
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Base.Error
+import Hasura.Eventing.Backend
 import Hasura.Eventing.Common
 import Hasura.Eventing.HTTP
 import Hasura.HTTP (getHTTPExceptionStatus)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus (EventTriggerMetrics (..))
 import Hasura.Server.Types
@@ -95,6 +94,7 @@ import System.Metrics.Gauge qualified as EKG.Gauge
 import System.Metrics.Prometheus.Counter qualified as Prometheus.Counter
 import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
 import System.Metrics.Prometheus.Histogram qualified as Prometheus.Histogram
+import System.Timeout.Lifted (timeout)
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -191,9 +191,9 @@ saveLockedEventTriggerEvents sourceName eventIds lockedEvents =
   liftIO $
     atomically $ do
       lockedEventsVals <- readTVar lockedEvents
-      case M.lookup sourceName lockedEventsVals of
-        Nothing -> writeTVar lockedEvents $! M.singleton sourceName (Set.fromList eventIds)
-        Just _ -> writeTVar lockedEvents $! M.insertWith Set.union sourceName (Set.fromList eventIds) lockedEventsVals
+      case HashMap.lookup sourceName lockedEventsVals of
+        Nothing -> writeTVar lockedEvents $! HashMap.singleton sourceName (Set.fromList eventIds)
+        Just _ -> writeTVar lockedEvents $! HashMap.insertWith Set.union sourceName (Set.fromList eventIds) lockedEventsVals
 
 removeEventTriggerEventFromLockedEvents ::
   MonadIO m => SourceName -> EventId -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()
@@ -201,7 +201,7 @@ removeEventTriggerEventFromLockedEvents sourceName eventId lockedEvents =
   liftIO $
     atomically $ do
       lockedEventsVals <- readTVar lockedEvents
-      writeTVar lockedEvents $! M.adjust (Set.delete eventId) sourceName lockedEventsVals
+      writeTVar lockedEvents $! HashMap.adjust (Set.delete eventId) sourceName lockedEventsVals
 
 type BackendEventWithSource = AB.AnyBackend EventWithSource
 
@@ -215,11 +215,11 @@ newtype NumEventsFetchedPerSource = NumEventsFetchedPerSource {unNumEventsFetche
 
 instance J.ToJSON NumEventsFetchedPerSource where
   toJSON (NumEventsFetchedPerSource m) =
-    J.Object $ KeyMap.fromList $ map ((Key.fromText . sourceNameToText) *** J.toJSON) $ M.toList m
+    J.Object $ KeyMap.fromList $ map ((Key.fromText . sourceNameToText) *** J.toJSON) $ HashMap.toList m
 
 instance Semigroup NumEventsFetchedPerSource where
   (NumEventsFetchedPerSource lMap) <> (NumEventsFetchedPerSource rMap) =
-    NumEventsFetchedPerSource $ M.unionWith (+) lMap rMap
+    NumEventsFetchedPerSource $ HashMap.unionWith (+) lMap rMap
 
 instance Monoid NumEventsFetchedPerSource where
   mempty = NumEventsFetchedPerSource mempty
@@ -266,9 +266,15 @@ logFetchedEventsStatistics logger backendEvents =
     numEventsFetchedPerSource =
       let sourceNames = flip map backendEvents $
             \backendEvent -> AB.dispatchAnyBackend @Backend backendEvent _ewsSourceName
-       in NumEventsFetchedPerSource $ M.fromListWith (+) [(sourceName, 1) | sourceName <- sourceNames]
+       in NumEventsFetchedPerSource $ HashMap.fromListWith (+) [(sourceName, 1) | sourceName <- sourceNames]
 
 {-# ANN processEventQueue ("HLint: ignore Use withAsync" :: String) #-}
+
+-- | `upperBoundEventTriggerTimeout` is the maximum amount of time
+--    an event trigger can take to process. This function is intended
+--    to use with a timeout.
+upperBoundEventTriggerTimeout :: DiffTime
+upperBoundEventTriggerTimeout = minutes 30
 
 -- | Service events from our in-DB queue.
 --
@@ -318,18 +324,18 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
       fetchBatchSize <- unrefine . _eeCtxFetchSize <$> liftIO getEventEngineCtx
       events <- liftIO . fmap concat $
         -- fetch pending events across all the sources asynchronously
-        LA.forConcurrently (M.toList allSources) \(sourceName, sourceCache) ->
-          AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo _sourceName tableCache _functionCache _nativeQueryCache _customReturnTypeCache sourceConfig _queryTagsConfig _sourceCustomization :: SourceInfo b) -> do
-            let tables = M.elems tableCache
+        LA.forConcurrently (HashMap.toList allSources) \(sourceName, sourceCache) ->
+          AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo {..} :: SourceInfo b) -> do
+            let tables = HashMap.elems _siTables
                 triggerMap = _tiEventTriggerInfoMap <$> tables
-                eventTriggerCount = sum (M.size <$> triggerMap)
-                triggerNames = concatMap M.keys triggerMap
+                eventTriggerCount = sum (HashMap.size <$> triggerMap)
+                triggerNames = concatMap HashMap.keys triggerMap
 
             -- only process events for this source if at least one event trigger exists
             if eventTriggerCount > 0
               then do
                 eventPollStartTime <- getCurrentTime
-                runExceptT (fetchUndeliveredEvents @b sourceConfig sourceName triggerNames maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
+                runExceptT (fetchUndeliveredEvents @b _siConfiguration sourceName triggerNames maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
                   Right events -> do
                     if (null events)
                       then return []
@@ -340,7 +346,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                         Prometheus.Histogram.observe (eventsFetchTimePerBatch eventTriggerMetrics) eventPollTime
                         _ <- EKG.Distribution.add (smNumEventsFetchedPerBatch serverMetrics) (fromIntegral $ length events)
                         saveLockedEventTriggerEvents sourceName (eId <$> events) leEvents
-                        return $ map (\event -> AB.mkAnyBackend @b $ EventWithSource event sourceConfig sourceName eventsFetchedTime) events
+                        return $ map (\event -> AB.mkAnyBackend @b $ EventWithSource event _siConfiguration sourceName eventsFetchedTime) events
                   Left err -> do
                     liftIO $ L.unLogger logger $ EventInternalErr err
                     pure []
@@ -442,7 +448,8 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
 
     processEvent ::
       forall io r b.
-      ( MonadIO io,
+      ( MonadBaseControl IO io,
+        MonadIO io,
         MonadReader r io,
         Has HTTP.Manager r,
         Has (L.Logger L.Hasura) r,
@@ -490,7 +497,6 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
               runExceptT (setRetry sourceConfig e (addUTCTime 60 currentTime) maintenanceModeVersion)
                 >>= flip onLeft logQErr
             Right eti -> trace (spanName eti) do
-              eventExecutionStartTime <- liftIO getCurrentTime
               let webhook = wciCachedValue $ etiWebhookInfo eti
                   retryConf = etiRetryConf eti
                   timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
@@ -501,72 +507,85 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                   extraLogCtx = ExtraLogContext (epId ep) (Just $ etiName eti)
                   requestTransform = etiRequestTransform eti
                   responseTransform = mkResponseTransform <$> etiResponseTransform eti
-              eitherReqRes <-
-                runExceptT $
-                  mkRequest headers httpTimeout payload requestTransform (_envVarValue webhook) >>= \reqDetails -> do
-                    let request = extractRequest reqDetails
-                        logger' res details = do
-                          logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders
-                          liftIO $ do
-                            case res of
-                              Left _err -> pure ()
-                              Right response ->
-                                Prometheus.Counter.add
-                                  (eventTriggerBytesReceived eventTriggerMetrics)
-                                  (hrsSize response)
-                            let RequestDetails {_rdOriginalSize, _rdTransformedSize} = details
-                             in Prometheus.Counter.add
-                                  (eventTriggerBytesSent eventTriggerMetrics)
-                                  (fromMaybe _rdOriginalSize _rdTransformedSize)
-                    -- Event Triggers have a configuration parameter called
-                    -- HASURA_GRAPHQL_EVENTS_HTTP_WORKERS, which is used
-                    -- to control the concurrency of http delivery.
-                    -- This bracket is used to increment and decrement an
-                    -- HTTP Worker EKG Gauge for the duration of the
-                    -- request invocation
-                    resp <-
-                      bracket_
-                        ( do
-                            liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics
-                            liftIO $ Prometheus.Gauge.inc (eventTriggerHTTPWorkers eventTriggerMetrics)
-                        )
-                        ( do
-                            liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics
-                            liftIO $ Prometheus.Gauge.dec (eventTriggerHTTPWorkers eventTriggerMetrics)
-                        )
-                        (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger')
-                    pure (request, resp)
-              case eitherReqRes of
-                Right (req, resp) -> do
-                  let reqBody = fromMaybe J.Null $ preview (HTTP.body . HTTP._RequestBodyLBS) req >>= J.decode @J.Value
-                  processSuccess sourceConfig e logHeaders reqBody maintenanceModeVersion resp >>= flip onLeft logQErr
-                  eventExecutionFinishTime <- liftIO getCurrentTime
-                  let eventWebhookProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventExecutionStartTime
-                      -- For event_processing_time, the start time is defined as the expected delivery time for an event, i.e.:
-                      --  - For event with no retries: created_at time
-                      --  - For event with retries: next_retry_at time
-                      eventStartTime = fromMaybe (eCreatedAt e) (eRetryAt e)
-                      -- The timestamps in the DB are supposed to be UTC time, so the timestamps (`eventExecutionFinishTime` and
-                      -- `eventStartTime`) used here in calculation are all UTC time.
-                      eventProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventStartTime
-                  liftIO $ do
-                    EKG.Distribution.add (smEventWebhookProcessingTime serverMetrics) eventWebhookProcessingTime'
-                    Prometheus.Histogram.observe (eventWebhookProcessingTime eventTriggerMetrics) eventWebhookProcessingTime'
-                    EKG.Distribution.add (smEventProcessingTime serverMetrics) eventProcessingTime'
-                    Prometheus.Histogram.observe (eventProcessingTime eventTriggerMetrics) eventProcessingTime'
-                    Prometheus.Counter.inc (eventProcessedTotalSuccess eventTriggerMetrics)
-                    Prometheus.Counter.inc (eventInvocationTotalSuccess eventTriggerMetrics)
-                Left eventError -> do
-                  -- TODO (paritosh): We can also add a label to the metric to indicate the type of error
-                  liftIO $ Prometheus.Counter.inc (eventInvocationTotalFailure eventTriggerMetrics)
-                  case eventError of
-                    (HTTPError reqBody err) ->
-                      processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion eventTriggerMetrics err >>= flip onLeft logQErr
-                    (TransformationError _ err) -> do
-                      L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
+                  eventTriggerProcessingTimeout = maybe upperBoundEventTriggerTimeout (min upperBoundEventTriggerTimeout . fromIntegral) (rcTimeoutSec retryConf)
+                  eventTriggerProcessAction = do
+                    eventExecutionStartTime <- liftIO getCurrentTime
+                    eitherReqRes <-
+                      runExceptT $
+                        mkRequest headers httpTimeout payload requestTransform (_envVarValue webhook) >>= \reqDetails -> do
+                          let request = extractRequest reqDetails
+                              logger' res details = do
+                                logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders
+                                liftIO $ do
+                                  case res of
+                                    Left _err -> pure ()
+                                    Right response ->
+                                      Prometheus.Counter.add
+                                        (eventTriggerBytesReceived eventTriggerMetrics)
+                                        (hrsSize response)
+                                  let RequestDetails {_rdOriginalSize, _rdTransformedSize} = details
+                                   in Prometheus.Counter.add
+                                        (eventTriggerBytesSent eventTriggerMetrics)
+                                        (fromMaybe _rdOriginalSize _rdTransformedSize)
+                          -- Event Triggers have a configuration parameter called
+                          -- HASURA_GRAPHQL_EVENTS_HTTP_WORKERS, which is used
+                          -- to control the concurrency of http delivery.
+                          -- This bracket is used to increment and decrement an
+                          -- HTTP Worker EKG Gauge for the duration of the
+                          -- request invocation
+                          resp <-
+                            bracket_
+                              ( do
+                                  liftIO $ EKG.Gauge.inc $ smNumEventHTTPWorkers serverMetrics
+                                  liftIO $ Prometheus.Gauge.inc (eventTriggerHTTPWorkers eventTriggerMetrics)
+                              )
+                              ( do
+                                  liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics
+                                  liftIO $ Prometheus.Gauge.dec (eventTriggerHTTPWorkers eventTriggerMetrics)
+                              )
+                              (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger')
+                          pure (request, resp)
+                    case eitherReqRes of
+                      Right (req, resp) -> do
+                        let reqBody = fromMaybe J.Null $ preview (HTTP.body . HTTP._RequestBodyLBS) req >>= J.decode @J.Value
+                        processSuccess sourceConfig e logHeaders reqBody maintenanceModeVersion resp >>= flip onLeft logQErr
+                        eventExecutionFinishTime <- liftIO getCurrentTime
+                        let eventWebhookProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventExecutionStartTime
+                            -- For event_processing_time, the start time is defined as the expected delivery time for an event, i.e.:
+                            --  - For event with no retries: created_at time
+                            --  - For event with retries: next_retry_at time
+                            eventStartTime = fromMaybe (eCreatedAt e) (eRetryAt e)
+                            -- The timestamps in the DB are supposed to be UTC time, so the timestamps (`eventExecutionFinishTime` and
+                            -- `eventStartTime`) used here in calculation are all UTC time.
+                            eventProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventStartTime
+                        liftIO $ do
+                          EKG.Distribution.add (smEventWebhookProcessingTime serverMetrics) eventWebhookProcessingTime'
+                          Prometheus.Histogram.observe (eventWebhookProcessingTime eventTriggerMetrics) eventWebhookProcessingTime'
+                          EKG.Distribution.add (smEventProcessingTime serverMetrics) eventProcessingTime'
+                          Prometheus.Histogram.observe (eventProcessingTime eventTriggerMetrics) eventProcessingTime'
+                          Prometheus.Counter.inc (eventProcessedTotalSuccess eventTriggerMetrics)
+                          Prometheus.Counter.inc (eventInvocationTotalSuccess eventTriggerMetrics)
+                      Left eventError -> do
+                        -- TODO (paritosh): We can also add a label to the metric to indicate the type of error
+                        liftIO $ Prometheus.Counter.inc (eventInvocationTotalFailure eventTriggerMetrics)
+                        case eventError of
+                          (HTTPError reqBody err) ->
+                            processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion eventTriggerMetrics err >>= flip onLeft logQErr
+                          (TransformationError _ err) -> do
+                            L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
 
-                      -- Record an Event Error
-                      recordError' @b sourceConfig e Nothing PESetError maintenanceModeVersion >>= flip onLeft logQErr
+                            -- Record an Event Error
+                            recordError' @b sourceConfig e Nothing PESetError maintenanceModeVersion >>= flip onLeft logQErr
+              -- Try to process the event trigger with a timeout of min(`uppserBoundEventTriggerTimeout`, event's response timeout),
+              -- so that we're never blocked forever while processing a single event trigger.
+              --
+              -- If the request times out, then process it as an erroneous invocation and move on.
+              timeout (fromInteger (diffTimeToMicroSeconds eventTriggerProcessingTimeout)) eventTriggerProcessAction
+                `onNothingM` do
+                  let eventTriggerTimeoutMessage = "Event Trigger " <> etiName eti <<> " timed out while processing."
+                  processError @b sourceConfig e retryConf logHeaders J.Null maintenanceModeVersion eventTriggerMetrics (HOther $ T.unpack eventTriggerTimeoutMessage)
+                    >>= flip onLeft logQErr
+
       -- removing an event from the _eeCtxLockedEvents after the event has been processed:
       removeEventTriggerEventFromLockedEvents sourceName (eId e) leEvents
 
@@ -697,7 +716,7 @@ getEventTriggerInfoFromEvent sc e = do
       mTableInfo = unsafeTableInfo @b (eSource e) table $ scSources sc
   tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
   let triggerName = tmName $ eTrigger e
-      mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
+      mEventTriggerInfo = HashMap.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
   onNothing mEventTriggerInfo $
     Left
       ( "event trigger '"

@@ -250,7 +250,7 @@ export const mockSourceKinds = {
         available: true,
         builtin: false,
         display_name: 'MySQL',
-        kind: 'mysqlgdc',
+        kind: 'mysql8',
         release_name: 'Alpha',
       },
     ],
@@ -291,7 +291,7 @@ export const mockSourceKinds = {
         available: true,
         builtin: true,
         display_name: 'MySQL',
-        kind: 'mysqlgdc',
+        kind: 'mysql8',
       },
       {
         available: true,

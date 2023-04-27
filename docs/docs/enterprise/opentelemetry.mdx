@@ -185,6 +185,25 @@ Example using Console:
   width="745px"
 />
 
+Your observability tool may expect to receive certain resource attributes in order to provide full functionality; such
+resource attributes must be set with this parameter. Many, but not all, of these resource attributes will be
+[OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/concepts/semantic-conventions/).
+
+Hasura automatically sets some resource attributes. The values of such attributes can be overridden by specifying
+your own value for the attribute using this parameter.
+
+#### Default resource attributes
+
+| Attribute | Type | Default |
+| --------- | ---- | ------- |
+| [service.name](https://opentelemetry.io/docs/reference/specification/resource/semantic_conventions/#service) | string | `hasura` |
+
+:::info Attribute type support
+
+Hasura currently only supports string-valued attributes.
+
+:::
+
 ## Understanding traces
 
 Use your observability tool's UI to visualize and perform further analytics on trace data to monitor, diagnose and

@@ -6,7 +6,7 @@
 -- https://hasura.io/docs/latest/schema/bigquery/computed-fields/#bigquery-create-table-function
 module Test.Databases.BigQuery.Schema.ComputedFields.TableSpec (spec) where
 
-import Data.Aeson as Aeson
+import Data.Aeson as J
 import Data.List.NonEmpty qualified as NE
 import Data.String.Interpolate (i)
 import Harness.Backend.BigQuery qualified as BigQuery
@@ -156,7 +156,7 @@ setupMetadata testEnv =
                 "fetch_articles_explicit_return"
                 "search_articles_explicit_return"
                 [yaml| a_id: id |]
-                Aeson.Null
+                J.Null
                 testEnv,
             Fixture.teardownAction = \_ -> pure ()
           }

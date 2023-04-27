@@ -8,7 +8,7 @@ module Hasura.Backends.Postgres.Translate.BoolExp
   )
 where
 
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended (ToTxt)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
@@ -19,11 +19,11 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.BoolExp.AggregationPredicates (AggregationPredicate (..), AggregationPredicateArguments (..), AggregationPredicatesImplementation (..))
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Table ()
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 
 -- This convoluted expression instead of col = val
@@ -108,8 +108,16 @@ translateBoolExp = \case
     return $ foldr (S.BEBin S.OrOp) (S.BELit False) sqlBExps
   BoolNot notExp -> S.BENot <$> translateBoolExp notExp
   BoolExists (GExists currTableReference wh) -> do
-    whereExp <- withCurrentTable (S.QualTable currTableReference) (translateBoolExp wh)
-    return $ S.mkExists (S.FISimple currTableReference Nothing) whereExp
+    fresh <- state \identifier -> (identifier, identifier + 1)
+
+    let alias :: S.TableAlias
+        alias = S.toTableAlias (Identifier ("_exists_table_" <> tshow fresh))
+
+        identifier :: TableIdentifier
+        identifier = S.tableAliasToIdentifier alias
+
+    whereExp <- withCurrentTable (S.QualifiedIdentifier identifier Nothing) (translateBoolExp wh)
+    return $ S.mkExists (S.FISimple currTableReference (Just alias)) whereExp
   BoolField boolExp -> case boolExp of
     AVColumn colInfo opExps -> do
       BoolExpCtx {rootReference, currTableReference} <- ask
@@ -286,7 +294,7 @@ translateTableRelationship colMapping relTableNameIdentifier = do
   BoolExpCtx {currTableReference} <- ask
   pure $
     sqlAnd $
-      flip map (M.toList colMapping) $ \(lCol, rCol) ->
+      flip map (HashMap.toList colMapping) $ \(lCol, rCol) ->
         S.BECompare
           S.SEQ
           (S.mkIdentifierSQLExp (S.QualifiedIdentifier relTableNameIdentifier Nothing) rCol)
@@ -397,6 +405,6 @@ mkFieldCompExp rootReference currTableReference lhsField = mkCompExp qLhsField
         withSQLNull = fromMaybe S.SENull
 
         mkCastsExp casts =
-          sqlAnd . flip map (M.toList casts) $ \(targetType, operations) ->
+          sqlAnd . flip map (HashMap.toList casts) $ \(targetType, operations) ->
             let targetAnn = S.mkTypeAnn $ CollectableTypeScalar targetType
              in sqlAnd $ map (mkCompExp (S.SETyAnn lhs targetAnn)) operations

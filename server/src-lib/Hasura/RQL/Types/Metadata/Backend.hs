@@ -9,15 +9,16 @@ import Data.Aeson
 import Data.Environment qualified as Env
 import Data.Has (Has)
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Metadata (CustomReturnTypeMetadata)
 import Hasura.Function.Cache
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata)
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
@@ -30,7 +31,6 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Version
 import Hasura.Services.Network
@@ -120,6 +120,24 @@ class
     Value ->
     m [OpExpG b v]
 
+  buildObjectRelationshipInfo ::
+    (MonadError QErr m) =>
+    SourceConfig b ->
+    SourceName ->
+    HashMap (TableName b) (HashSet (ForeignKey b)) ->
+    TableName b ->
+    ObjRelDef b ->
+    m (RelInfo b, Seq SchemaDependency)
+
+  buildArrayRelationshipInfo ::
+    (MonadError QErr m) =>
+    SourceConfig b ->
+    SourceName ->
+    HashMap (TableName b) (HashSet (ForeignKey b)) ->
+    TableName b ->
+    ArrRelDef b ->
+    m (RelInfo b, Seq SchemaDependency)
+
   buildFunctionInfo ::
     (MonadError QErr m) =>
     SourceName ->
@@ -202,7 +220,7 @@ class
     (MonadIO m, MonadError QErr m) =>
     Env.Environment ->
     SourceConnConfiguration b ->
-    CustomReturnTypeMetadata b ->
+    LogicalModelMetadata b ->
     NativeQueryMetadata b ->
     m ()
   validateNativeQuery _ _ _ _ =

@@ -42,6 +42,9 @@ module Hasura.RQL.DDL.EventTrigger
     MonadEventLogCleanup (..),
     getAllEventTriggersWithCleanupConfig,
     getAllETWithCleanupConfigInTableMetadata,
+    runGetEventLogs,
+    runGetEventInvocationLogs,
+    runGetEventById,
   )
 where
 
@@ -50,8 +53,7 @@ import Data.Aeson
 import Data.Either.Combinators
 import Data.Environment qualified as Env
 import Data.Has (Has)
-import Data.HashMap.Strict qualified as HM
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
@@ -60,16 +62,17 @@ import Data.Text.Extended
 import Data.URL.Template (printURLTemplate)
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Eventing.Backend
 import Hasura.Eventing.EventTrigger (logQErr)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
-import Hasura.RQL.Types.Eventing.Backend
+import Hasura.RQL.Types.Headers (HeaderValue (..))
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
@@ -79,7 +82,6 @@ import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Hasura.Tracing qualified as Tracing
@@ -435,7 +437,7 @@ getTabInfoFromSchemaCache ::
   Maybe (TableInfo b)
 getTabInfoFromSchemaCache schemaCache sourceName triggerName = do
   tableCache <- unsafeTableCache sourceName $ scSources schemaCache
-  find (isJust . HM.lookup triggerName . _tiEventTriggerInfoMap) (HM.elems tableCache)
+  find (isJust . HashMap.lookup triggerName . _tiEventTriggerInfoMap) (HashMap.elems tableCache)
 
 askEventTriggerInfo ::
   forall b m.
@@ -446,9 +448,24 @@ askEventTriggerInfo ::
 askEventTriggerInfo sourceName triggerName = do
   triggerInfo <- askTabInfoFromTrigger @b sourceName triggerName
   let eventTriggerInfoMap = _tiEventTriggerInfoMap triggerInfo
-  HM.lookup triggerName eventTriggerInfoMap `onNothing` throw400 NotExists errMsg
+  HashMap.lookup triggerName eventTriggerInfoMap `onNothing` throw400 NotExists errMsg
   where
     errMsg = "event trigger " <> triggerName <<> " does not exist"
+
+checkIfTriggerNameExists ::
+  forall b m.
+  (Backend b, CacheRM m) =>
+  SourceName ->
+  TriggerName ->
+  m (Bool)
+checkIfTriggerNameExists sourceName triggerName = do
+  schemaCache <- askSchemaCache
+  -- TODO: The name getTabInfoFromSchemaCache is misleading here.
+  -- There is a JIRA ticket that addresses this (https://hasurahq.atlassian.net/browse/GS-535)
+  let tableInfoMaybe = getTabInfoFromSchemaCache @b schemaCache sourceName triggerName
+  case tableInfoMaybe of
+    Nothing -> pure False
+    _ -> pure True
 
 -- This change helps us create functions for the event triggers
 -- without the function name being truncated by PG, since PG allows
@@ -674,23 +691,23 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
       case tlcs of
         TriggerAllSource -> do
           ifor_ (scSources schemaCache) $ \sourceName backendSourceInfo -> do
-            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _nativeQueryCache _customReturnTypeCache _ _ _ :: SourceInfo b) -> do
-              traverseTableHelper tableCache cleanupSwitch sourceName
+            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo {..} :: SourceInfo b) -> do
+              traverseTableHelper _siTables cleanupSwitch sourceName
         TriggerSource sourceNameLst -> do
           forM_ sourceNameLst $ \sourceName -> do
             backendSourceInfo <-
-              HM.lookup sourceName (scSources schemaCache)
+              HashMap.lookup sourceName (scSources schemaCache)
                 `onNothing` throw400 NotExists ("source with name " <> sourceNameToText sourceName <> " does not exists")
 
-            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo _ tableCache _ _nativeQueryCache _customReturnTypeCache _ _ _ :: SourceInfo b) -> do
-              traverseTableHelper tableCache cleanupSwitch sourceName
+            AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo {..} :: SourceInfo b) -> do
+              traverseTableHelper _siTables cleanupSwitch sourceName
     TriggerQualifier qualifierLst -> do
       forM_ qualifierLst $ \qualifier -> do
         let sourceName = _etqSourceName qualifier
             triggerNames = _etqEventTriggers qualifier
 
         backendSourceInfo <-
-          HM.lookup sourceName (scSources schemaCache)
+          HashMap.lookup sourceName (scSources schemaCache)
             `onNothing` throw400 NotExists ("source with name " <> sourceNameToText sourceName <> " does not exists")
 
         AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo {} :: SourceInfo b) -> do
@@ -734,7 +751,7 @@ runEventTriggerPauseCleanup conf = toggleEventTriggerCleanupAction conf ETCSPaus
 
 -- | Collects and returns all the event triggers with cleanup config
 getAllEventTriggersWithCleanupConfig :: TableInfo b -> [(TriggerName, AutoTriggerLogCleanupConfig)]
-getAllEventTriggersWithCleanupConfig tInfo = mapMaybe (\(triggerName, triggerInfo) -> (triggerName,) <$> etiCleanupConfig triggerInfo) $ Map.toList $ _tiEventTriggerInfoMap tInfo
+getAllEventTriggersWithCleanupConfig tInfo = mapMaybe (\(triggerName, triggerInfo) -> (triggerName,) <$> etiCleanupConfig triggerInfo) $ HashMap.toList $ _tiEventTriggerInfoMap tInfo
 
 hasCleanupCronScheduleUpdated :: Maybe AutoTriggerLogCleanupConfig -> Maybe AutoTriggerLogCleanupConfig -> Bool
 hasCleanupCronScheduleUpdated Nothing _ = False
@@ -751,3 +768,44 @@ getAllETWithCleanupConfigInTableMetadata tMetadata =
     )
     $ OMap.toList
     $ _tmEventTriggers tMetadata
+
+runGetEventLogs ::
+  forall b m.
+  (MonadIO m, CacheRM m, MonadError QErr m, BackendEventTrigger b, MetadataM m) =>
+  GetEventLogs b ->
+  m EncJSON
+runGetEventLogs getEventLogs = do
+  sourceConfig <- askSourceConfig @b sourceName
+  doesTriggerExists <- checkIfTriggerNameExists @b sourceName triggerName
+  if not doesTriggerExists
+    then throw400 NotExists $ "event trigger " <> triggerName <<> " does not exist"
+    else encJFromJValue <$> fetchEventLogs sourceConfig getEventLogs
+  where
+    sourceName = _gelSourceName getEventLogs
+    triggerName = _gelName getEventLogs
+
+runGetEventInvocationLogs ::
+  forall b m.
+  (MonadIO m, CacheRM m, MonadError QErr m, BackendEventTrigger b, MetadataM m) =>
+  GetEventInvocations b ->
+  m EncJSON
+runGetEventInvocationLogs getEventInvocations = do
+  sourceConfig <- askSourceConfig @b sourceName
+  doesTriggerExists <- checkIfTriggerNameExists @b sourceName triggerName
+  if not doesTriggerExists
+    then throw400 NotExists $ "event trigger " <> triggerName <<> " does not exist"
+    else encJFromJValue <$> fetchEventInvocationLogs sourceConfig getEventInvocations
+  where
+    sourceName = _geiSourceName getEventInvocations
+    triggerName = _geiName getEventInvocations
+
+runGetEventById ::
+  forall b m.
+  (MonadIO m, CacheRM m, MonadError QErr m, BackendEventTrigger b, MetadataM m) =>
+  GetEventById b ->
+  m EncJSON
+runGetEventById getEventById = do
+  sourceConfig <- askSourceConfig @b sourceName
+  encJFromJValue <$> fetchEventById sourceConfig getEventById
+  where
+    sourceName = _gebiSourceName getEventById

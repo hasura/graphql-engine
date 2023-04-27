@@ -4,7 +4,7 @@ module Hasura.NativeQuery.IR
   )
 where
 
-import Hasura.CustomReturnType.IR
+import Hasura.LogicalModel.IR
 import Hasura.NativeQuery.Metadata
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -19,7 +19,7 @@ data NativeQuery b field = NativeQuery
     -- | The arguments passed to the query, if any.
     nqArgs :: HashMap NativeQueryArgumentName (ColumnValue b),
     -- | The return type of the native query
-    nqReturnType :: CustomReturnType b
+    nqLogicalModel :: LogicalModel b
   }
   deriving (Functor, Foldable, Traversable)
 

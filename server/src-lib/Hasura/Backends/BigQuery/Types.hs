@@ -75,6 +75,7 @@ where
 
 import Autodocodec (HasCodec (codec), dimapCodec, object, optionalField', requiredField', (.=))
 import Autodocodec qualified as AC
+import Autodocodec.Extended (boundedEnumCodec)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
@@ -98,7 +99,6 @@ import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.Function.Cache (FunctionArgName)
-import Hasura.Metadata.DTO.Utils (boundedEnumCodec)
 import Hasura.NativeQuery.Metadata (InterpolatedQuery, NativeQueryName)
 import Hasura.Prelude hiding (state)
 import Hasura.RQL.IR.BoolExp
@@ -622,7 +622,8 @@ data ScalarType
   | JsonScalarType
   | StructScalarType
   deriving stock (Show, Eq, Ord, Bounded, Enum, Generic, Data, Lift)
-  deriving anyclass (FromJSON, Hashable, NFData, ToJSON, ToJSONKey)
+  deriving anyclass (Hashable, NFData, ToJSONKey)
+  deriving (FromJSON, ToJSON) via AC.Autodocodec ScalarType
 
 instance HasCodec ScalarType where
   codec = AC.named "ScalarType" $

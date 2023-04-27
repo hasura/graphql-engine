@@ -35,11 +35,11 @@ module Hasura.Server.Telemetry.Types
 where
 
 import CI qualified
-import Data.Aeson qualified as A
-import Data.Aeson.TH qualified as A
+import Data.Aeson qualified as J
+import Data.Aeson.TH qualified as J
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Metadata.Instances ()
-import Hasura.SQL.Backend (BackendType)
 import Hasura.Server.Telemetry.Counters
 import Hasura.Server.Types
 import Hasura.Server.Version
@@ -50,7 +50,7 @@ data RelationshipMetric = RelationshipMetric
   }
   deriving (Show, Eq)
 
-$(A.deriveToJSON hasuraJSON ''RelationshipMetric)
+$(J.deriveToJSON hasuraJSON ''RelationshipMetric)
 
 data PermissionMetric = PermissionMetric
   { _pmSelect :: Int,
@@ -61,7 +61,7 @@ data PermissionMetric = PermissionMetric
   }
   deriving (Show, Eq)
 
-$(A.deriveToJSON hasuraJSON ''PermissionMetric)
+$(J.deriveToJSON hasuraJSON ''PermissionMetric)
 
 data ActionMetric = ActionMetric
   { _amSynchronous :: Int,
@@ -72,7 +72,7 @@ data ActionMetric = ActionMetric
   }
   deriving (Show, Eq)
 
-$(A.deriveToJSON hasuraJSON ''ActionMetric)
+$(J.deriveToJSON hasuraJSON ''ActionMetric)
 
 data NativeQueriesMetrics = NativeQueriesMetrics
   { _nqmWithParameters :: Int,
@@ -89,7 +89,7 @@ instance Semigroup NativeQueriesMetrics where
 instance Monoid NativeQueriesMetrics where
   mempty = NativeQueriesMetrics 0 0
 
-$(A.deriveToJSON hasuraJSON ''NativeQueriesMetrics)
+$(J.deriveToJSON hasuraJSON ''NativeQueriesMetrics)
 
 data Metrics = Metrics
   { _mtTables :: Int,
@@ -106,16 +106,17 @@ data Metrics = Metrics
   }
   deriving (Show, Eq)
 
-$(A.deriveToJSON hasuraJSON ''Metrics)
+$(J.deriveToJSON hasuraJSON ''Metrics)
 
 data SourceMetadata = SourceMetadata
   { _smDbUid :: Maybe DbUid,
-    _smDbKind :: BackendType,
+    _smBackendType :: BackendType,
+    _smDbKind :: Text,
     _smDbVersion :: Maybe DbVersion
   }
   deriving (Show, Eq)
 
-$(A.deriveToJSON hasuraJSON ''SourceMetadata)
+$(J.deriveToJSON hasuraJSON ''SourceMetadata)
 
 data HasuraTelemetry = HasuraTelemetry
   { _htMetadataDbUid :: MetadataDbId,
@@ -128,11 +129,11 @@ data HasuraTelemetry = HasuraTelemetry
   }
   deriving (Show)
 
-$(A.deriveToJSON hasuraJSON ''HasuraTelemetry)
+$(J.deriveToJSON hasuraJSON ''HasuraTelemetry)
 
 -- | The telemetry table to which we'll add telemetry.
 newtype Topic = Topic {getTopic :: Text}
-  deriving (Show, Eq, A.ToJSON, A.FromJSON)
+  deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
 data TelemetryPayload = TelemetryPayload
   { _tpTopic :: Topic,
@@ -140,4 +141,4 @@ data TelemetryPayload = TelemetryPayload
   }
   deriving (Show)
 
-$(A.deriveToJSON hasuraJSON ''TelemetryPayload)
+$(J.deriveToJSON hasuraJSON ''TelemetryPayload)

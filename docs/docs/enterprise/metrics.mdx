@@ -73,9 +73,9 @@ curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
   </tr>
   <tr>
     <td><code>hasura_graphql_requests_total</code></td>
-    <td>Number of GraphQL requests received (excluding subscriptions)</td>
+    <td>Number of GraphQL requests received </td>
     <td>Counter</td>
-    <td>&#8226; "operation_type": query|mutation|unknown <br/>
+    <td>&#8226; "operation_type": query|mutation|subscription|unknown <br/>
       &#8226; The "unknown" operation type will be returned for queries that fail authorization, parsing, or certain
       validations<br/>
       &#8226; "response_status": success|failed
@@ -109,14 +109,14 @@ curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
     <td>Histogram<br/><br/>Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10</td>
     <td>none</td>
     <td>A higher processing time indicates slow webhook, you should try to optimize the event webhook.</td>
-  </tr> 
+  </tr>
   <tr>
     <td><code>hasura_event_processing_time_seconds</code></td>
     <td>The time taken for an event to be delivered since it's been created (if first attempt) or retried (after first attempt).</td>
     <td>Histogram<br/><br/>Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100</td>
     <td>none</td>
     <td>This metric can be considered as the end-to-end processing time for an event.</td>
-  </tr> 
+  </tr>
   <tr>
     <td><code>hasura_event_trigger_http_workers</code></td>
     <td>Current number of active Event Trigger HTTP workers</td>
@@ -188,6 +188,45 @@ curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
     indicates high failure rate of the one-off webhook.
   </td>
 </tr>
+<tr>
+  <td>
+    <code>hasura_active_subscription_pollers</code>
+  </td>
+  <td>Current number of active subscription pollers. A subscription poller <a href="https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-3-batch-multiple-live-queries-into-one-sql-query">multiplexes </a> similar subscriptions together.
+ </td>
+  <td>Gauge</td>
+  <td>
+    &#8226; "subscription_kind": streaming|live-query
+    <br />
+  </td>
+  <td>
+    The value of this metric is supposed to be proportional to the number of uniquely parameterised subscriptions i.e. subscriptions with the same selection set
+    but with different input arguments and session variables are multiplexed on the same poller.
+    If this metric is high then it may be an indication that there are too many uniquely parameterised subscriptions
+    which could be optimized for better performance.
+    </td>
+</tr>
+<tr>
+  <td>
+    <code>hasura_active_subscription_pollers_in_error_state</code>
+  </td>
+  <td>Current number of active subscription pollers that are in the error state.
+      A subscription poller <a href="https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-3-batch-multiple-live-queries-into-one-sql-query">multiplexes </a>
+      similar subscriptions together.
+ </td>
+  <td>Gauge</td>
+  <td>
+    &#8226; "subscription_kind": streaming|live-query
+    <br />
+  </td>
+  <td>
+    A non-zero value of this metric indicates that there are runtime errors in atleast one of the subscription pollers that are running
+    in Hasura. In most of the cases, runtime errors in subscriptions are caused due to the changes at the data model layer and fixing the
+    issue at the data model layer should automatically fix the runtime errors.
+    </td>
+</tr>
+
+
 
 </table>
 

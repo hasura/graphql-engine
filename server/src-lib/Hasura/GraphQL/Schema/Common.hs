@@ -32,8 +32,9 @@ module Hasura.GraphQL.Schema.Common
     StreamSelectExp,
     TablePerms,
     getTableRoles,
-    getCustomReturnTypeRoles,
+    getLogicalModelRoles,
     askTableInfo,
+    askLogicalModelInfo,
     comparisonAggOperators,
     mapField,
     mkDescriptionWith,
@@ -57,7 +58,7 @@ where
 
 import Data.Either (isRight)
 import Data.Has
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.List (uncons)
 import Data.Text qualified as T
@@ -66,15 +67,14 @@ import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
-import Hasura.CustomReturnType.Cache (CustomReturnTypeInfo (_crtiPermissions))
 import Hasura.Function.Cache
 import Hasura.GraphQL.Namespace (NamespacedField)
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.GraphQL.Schema.Node
-import Hasura.GraphQL.Schema.Options (SchemaOptions)
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
+import Hasura.LogicalModel.Cache (LogicalModelInfo (_lmiPermissions))
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.NativeQuery.Cache (NativeQueryCache)
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -82,12 +82,14 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Remote
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
+import Hasura.RQL.Types.Schema.Options (SchemaOptions)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Session (RoleName, adminRoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
@@ -325,12 +327,12 @@ data RemoteSchemaParser n = RemoteSchemaParser
 getTableRoles :: BackendSourceInfo -> [RoleName]
 getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
   where
-    go si = Map.keys . _tiRolePermInfoMap =<< Map.elems (_siTables si)
+    go si = HashMap.keys . _tiRolePermInfoMap =<< HashMap.elems (_siTables si)
 
-getCustomReturnTypeRoles :: BackendSourceInfo -> [RoleName]
-getCustomReturnTypeRoles bsi = AB.dispatchAnyBackend @Backend bsi go
+getLogicalModelRoles :: BackendSourceInfo -> [RoleName]
+getLogicalModelRoles bsi = AB.dispatchAnyBackend @Backend bsi go
   where
-    go si = Map.keys . _crtiPermissions =<< Map.elems (_siCustomReturnTypes si)
+    go si = HashMap.keys . _lmiPermissions =<< HashMap.elems (_siLogicalModels si)
 
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is
@@ -343,8 +345,22 @@ askTableInfo ::
   m (TableInfo b)
 askTableInfo tableName = do
   SourceInfo {..} <- asks getter
-  Map.lookup tableName _siTables
+  HashMap.lookup tableName _siTables
     `onNothing` throw500 ("askTableInfo: no info for table " <> dquote tableName <> " in source " <> dquote _siName)
+
+-- | Looks up custom return type information for the given custom return type name. This function
+-- should never fail, since the schema cache construction process is
+-- supposed to ensure all dependencies are resolved.
+-- TODO: deduplicate this with `CacheRM`.
+askLogicalModelInfo ::
+  forall b r m.
+  (MonadError QErr m, MonadReader r m, Has (SourceInfo b) r) =>
+  LogicalModelName ->
+  m (LogicalModelInfo b)
+askLogicalModelInfo logicalModelName = do
+  SourceInfo {..} <- asks getter
+  HashMap.lookup logicalModelName _siLogicalModels
+    `onNothing` throw500 ("askLogicalModelInfo: no info for logical model " <> dquote logicalModelName <> " in source " <> dquote _siName)
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
@@ -426,7 +442,7 @@ mkDescriptionWith descM defaultTxt = G.Description $ case descM of
 --        got removed in PDV. OTOH, I’m not sure how prevalent this feature
 --        actually is
 takeValidTables :: forall b. Backend b => TableCache b -> TableCache b
-takeValidTables = Map.filterWithKey graphQLTableFilter
+takeValidTables = HashMap.filterWithKey graphQLTableFilter
   where
     graphQLTableFilter tableName tableInfo =
       -- either the table name should be GraphQL compliant
@@ -436,7 +452,7 @@ takeValidTables = Map.filterWithKey graphQLTableFilter
 
 -- TODO and what about graphql-compliant function names here too?
 takeValidFunctions :: forall b. FunctionCache b -> FunctionCache b
-takeValidFunctions = Map.filter functionFilter
+takeValidFunctions = HashMap.filter functionFilter
   where
     functionFilter = not . isSystemDefined . _fiSystemDefined
 
@@ -496,4 +512,4 @@ getIntrospectionResult remoteSchemaPermsCtx role remoteSchemaContext =
           pure $ _rscIntroOriginal remoteSchemaContext
       | -- otherwise, look the role up in the map; if we find nothing, then the role doesn't have access
         otherwise ->
-          Map.lookup role (_rscPermissions remoteSchemaContext)
+          HashMap.lookup role (_rscPermissions remoteSchemaContext)

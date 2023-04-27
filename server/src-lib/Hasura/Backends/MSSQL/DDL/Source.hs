@@ -20,7 +20,7 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Lazy qualified as LT
 import Database.MSSQL.Transaction
 import Database.MSSQL.Transaction qualified as Tx
@@ -36,11 +36,11 @@ import Hasura.Backends.MSSQL.Types
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
 import Hasura.Server.Migrate.Version qualified as Version
 import Language.Haskell.TH.Lib qualified as TH
@@ -88,7 +88,7 @@ postDropSourceHook (MSSQLSourceConfig _ mssqlExecCtx _) tableTriggersMap = do
   --
   -- Hence we first delete all the related Hasura SQL triggers and then drop the
   -- 'hdb_catalog' schema.
-  for_ (HM.toList tableTriggersMap) $ \(_table@(TableName _tableName schema), triggers) ->
+  for_ (HashMap.toList tableTriggersMap) $ \(_table@(TableName _tableName schema), triggers) ->
     for_ triggers $ \triggerName ->
       liftIO $ runExceptT $ mssqlRunReadWrite mssqlExecCtx (dropTriggerQ triggerName schema)
   _ <- runExceptT $ mssqlRunReadWrite mssqlExecCtx dropSourceCatalog

@@ -16,7 +16,7 @@ import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude
 import Hasura.RQL.IR.Generator (genAnnBoolExp, genAnnBoolExpFld)
 import Hasura.RQL.IR.Select (TablePermG (..))
-import Hasura.SQL.Backend (BackendType (..), PostgresKind (..))
+import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (..))
 import Hedgehog (MonadGen)
 import Hedgehog.Gen qualified as Gen
 

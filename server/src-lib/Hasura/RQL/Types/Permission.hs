@@ -41,15 +41,15 @@ import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as T
 import Database.PG.Query qualified as PG
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendPrefix)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.SQL.Backend
-import Hasura.Session
+import Hasura.RQL.Types.Roles (RoleName)
 import PostgreSQL.Binary.Decoding qualified as PD
 
 data PermType
@@ -210,7 +210,7 @@ instance Backend b => ToAesonPairs (PermDef b perm) where
 
 instance (Backend b, HasCodec (perm b), IsPerm perm) => HasCodec (PermDef b perm) where
   codec =
-    AC.object (codecNamePrefix @b <> T.toTitle (permTypeToCode (permType @perm)) <> "PermDef") $
+    AC.object (backendPrefix @b <> T.toTitle (permTypeToCode (permType @perm)) <> "PermDef") $
       PermDef
         <$> requiredField' "role" .== _pdRole
         <*> requiredField' "permission" .== _pdPermission
@@ -279,7 +279,7 @@ instance Backend b => ToJSON (InsPerm b) where
 
 instance Backend b => HasCodec (InsPerm b) where
   codec =
-    AC.object (codecNamePrefix @b <> "InsPerm") $
+    AC.object (backendPrefix @b <> "InsPerm") $
       InsPerm
         <$> requiredField' "check" AC..= ipCheck
         <*> optionalField' "set" AC..= ipSet
@@ -393,7 +393,7 @@ instance Backend b => FromJSON (SelPerm b) where
 
 instance Backend b => HasCodec (SelPerm b) where
   codec =
-    AC.object (codecNamePrefix @b <> "SelPerm") $
+    AC.object (backendPrefix @b <> "SelPerm") $
       SelPerm
         <$> requiredField' "columns" AC..= spColumns
         <*> requiredField' "filter" AC..= spFilter
@@ -423,7 +423,7 @@ instance Backend b => ToJSON (DelPerm b) where
 
 instance Backend b => HasCodec (DelPerm b) where
   codec =
-    AC.object (codecNamePrefix @b <> "DelPerm") $
+    AC.object (backendPrefix @b <> "DelPerm") $
       DelPerm
         <$> requiredField' "filter" .== dcFilter
         <*> optionalFieldWithOmittedDefault' "backend_only" False .== dcBackendOnly
@@ -461,7 +461,7 @@ instance Backend b => ToJSON (UpdPerm b) where
 
 instance Backend b => HasCodec (UpdPerm b) where
   codec =
-    AC.object (codecNamePrefix @b <> "UpdPerm") $
+    AC.object (backendPrefix @b <> "UpdPerm") $
       UpdPerm
         <$> requiredField "columns" "Allowed columns" AC..= ucColumns
         <*> optionalField "set" "Preset columns" AC..= ucSet

@@ -35,7 +35,7 @@ module Hasura.RQL.IR.RemoteSchema
 where
 
 import Control.Lens.TH (makeLenses, makePrisms)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (longestCommonPrefix)
@@ -71,7 +71,7 @@ data DeduplicatedSelectionSet r var = DeduplicatedSelectionSet
   { -- | Fields that aren't explicitly defined for member types
     _dssCommonFields :: Set.HashSet G.Name,
     -- | SelectionSets of individual member types
-    _dssMemberSelectionSets :: Map.HashMap G.Name (ObjectSelectionSet r var)
+    _dssMemberSelectionSets :: HashMap.HashMap G.Name (ObjectSelectionSet r var)
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
@@ -89,7 +89,7 @@ mkInterfaceSelectionSet ::
 mkInterfaceSelectionSet interfaceFields selectionSets =
   DeduplicatedSelectionSet
     (Set.insert GName.___typename interfaceFields)
-    (Map.fromList selectionSets)
+    (HashMap.fromList selectionSets)
 
 -- | Constructs an 'UnionSelectionSet' from a list of the fields, using a
 -- singleton set of @__typename@ for the set of common fields.
@@ -100,7 +100,7 @@ mkUnionSelectionSet ::
 mkUnionSelectionSet selectionSets =
   DeduplicatedSelectionSet
     (Set.singleton GName.___typename)
-    (Map.fromList selectionSets)
+    (HashMap.fromList selectionSets)
 
 -- | Representation of one individual field.
 --
@@ -208,7 +208,7 @@ convertSelectionSet = \case
       let (base, members) = reduceAbstractTypeSelectionSet abstractSelectionSet
           commonFields = convertObjectSelectionSet base
           concreteTypeSelectionSets =
-            Map.toList members <&> \(concreteType, selectionSet) ->
+            HashMap.toList members <&> \(concreteType, selectionSet) ->
               G.InlineFragment
                 { G._ifTypeCondition = Just concreteType,
                   G._ifDirectives = mempty,
@@ -321,11 +321,11 @@ convertGraphQLField GraphQLField {..} =
 reduceAbstractTypeSelectionSet ::
   (Eq var) =>
   DeduplicatedSelectionSet Void var ->
-  (ObjectSelectionSet Void var, Map.HashMap G.Name (ObjectSelectionSet Void var))
+  (ObjectSelectionSet Void var, HashMap.HashMap G.Name (ObjectSelectionSet Void var))
 reduceAbstractTypeSelectionSet (DeduplicatedSelectionSet baseMemberFields selectionSets) =
-  (baseSelectionSet, Map.fromList memberSelectionSets)
+  (baseSelectionSet, HashMap.fromList memberSelectionSets)
   where
-    sharedSelectionSetPrefix = longestCommonPrefix $ map (OMap.toList . snd) $ Map.toList selectionSets
+    sharedSelectionSetPrefix = longestCommonPrefix $ map (OMap.toList . snd) $ HashMap.toList selectionSets
 
     baseSelectionSet = OMap.fromList $ takeWhile (shouldAddToBase . snd) sharedSelectionSetPrefix
 
@@ -337,7 +337,7 @@ reduceAbstractTypeSelectionSet (DeduplicatedSelectionSet baseMemberFields select
       filter (not . null . snd) $
         -- remove the common prefix from member selection sets
         map (second (OMap.fromList . drop (OMap.size baseSelectionSet) . OMap.toList)) $
-          Map.toList selectionSets
+          HashMap.toList selectionSets
 
 -------------------------------------------------------------------------------
 -- TH lens generation

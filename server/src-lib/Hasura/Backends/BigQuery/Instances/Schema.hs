@@ -6,7 +6,7 @@ module Hasura.Backends.BigQuery.Instances.Schema () where
 
 import Data.Aeson qualified as J
 import Data.Has
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Casing qualified as C
@@ -22,7 +22,6 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
@@ -41,13 +40,14 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 ----------------------------------------------------------------
@@ -88,9 +88,9 @@ instance BackendTableSelectSchema 'BigQuery where
   selectTableAggregate = defaultSelectTableAggregate
   tableSelectionSet = defaultTableSelectionSet
 
-instance BackendCustomReturnTypeSelectSchema 'BigQuery where
-  customReturnTypeArguments = defaultCustomReturnTypeArgs
-  customReturnTypeSelectionSet = defaultCustomReturnTypeSelectionSet
+instance BackendLogicalModelSelectSchema 'BigQuery where
+  logicalModelArguments = defaultLogicalModelArgs
+  logicalModelSelectionSet = defaultLogicalModelSelectionSet
 
 ----------------------------------------------------------------
 -- Individual components
@@ -149,7 +149,7 @@ bqColumnParser columnType nullability = case columnType of
           pure $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased _Timestamp
         ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
   ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
-    case nonEmpty (Map.toList enumValues) of
+    case nonEmpty (HashMap.toList enumValues) of
       Just enumValuesList ->
         peelWithOrigin . fmap (ColumnValue columnType) . bqPossiblyNullable nullability
           <$> bqEnumParser tableName enumValuesList customTableName nullability
@@ -412,7 +412,7 @@ bqComputedField ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
     BigQuery.ReturnTableSchema returnFields -> do
       -- Check if the computed field is available in the select permission
       selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
-      guard $ Map.member _cfiName $ spiComputedFields selectPermissions
+      guard $ HashMap.member _cfiName $ spiComputedFields selectPermissions
       objectTypeName <-
         mkTypename <$> do
           computedFieldGQLName <- textToName $ computedFieldNameToText _cfiName
@@ -460,7 +460,7 @@ bqComputedField ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
           tableGQLName <- getTableGQLName @'BigQuery tableInfo
           pure $ computedFieldGQLName <> Name.__ <> tableGQLName <> Name.__args
 
-      let userInputArgs = filter (not . flip Map.member _cffComputedFieldImplicitArgs . BigQuery._faName) (toList _cffInputArgs)
+      let userInputArgs = filter (not . flip HashMap.member _cffComputedFieldImplicitArgs . BigQuery._faName) (toList _cffInputArgs)
 
       argumentParsers <- sequenceA <$> forM userInputArgs parseArgument
 
@@ -477,8 +477,8 @@ bqComputedField ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
 
       pure $
         argsField `P.bindFields` \maybeInputArguments -> do
-          let tableColumnInputs = Map.map BigQuery.AETableColumn $ Map.mapKeys getFuncArgNameTxt _cffComputedFieldImplicitArgs
-          pure $ FunctionArgsExp mempty $ maybe mempty Map.fromList maybeInputArguments <> tableColumnInputs
+          let tableColumnInputs = HashMap.map BigQuery.AETableColumn $ HashMap.mapKeys getFuncArgNameTxt _cffComputedFieldImplicitArgs
+          pure $ FunctionArgsExp mempty $ maybe mempty HashMap.fromList maybeInputArguments <> tableColumnInputs
 
     parseArgument :: BigQuery.FunctionArgument -> SchemaT r m (InputFieldsParser n (Text, BigQuery.ArgumentExp (IR.UnpreparedValue 'BigQuery)))
     parseArgument arg = do

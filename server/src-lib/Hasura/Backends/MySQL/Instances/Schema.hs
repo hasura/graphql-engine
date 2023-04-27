@@ -5,7 +5,7 @@
 module Hasura.Backends.MySQL.Instances.Schema () where
 
 import Data.ByteString (ByteString)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Extended
@@ -30,9 +30,9 @@ import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend as RQL
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column as RQL
 import Hasura.RQL.Types.SchemaCache as RQL
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
 instance BackendSchema 'MySQL where
@@ -127,7 +127,7 @@ columnParser' columnType nullability = case columnType of
                       >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . (MySQL.parseScalarValue scalarType)
                 }
   ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
-    case nonEmpty (HM.toList enumValues) of
+    case nonEmpty (HashMap.toList enumValues) of
       Just enumValuesList ->
         peelWithOrigin . fmap (ColumnValue columnType)
           <$> enumParser' tableName enumValuesList customTableName nullability

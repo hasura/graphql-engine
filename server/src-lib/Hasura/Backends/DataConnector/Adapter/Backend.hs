@@ -25,9 +25,9 @@ import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw40
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, HasSourceConfiguration (..), SupportedNamingCase (..), XDisable, XEnable)
+import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
 import Hasura.RQL.Types.Column (ColumnType (..))
 import Hasura.RQL.Types.ResizePool
-import Hasura.SQL.Backend (BackendType (DataConnector))
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | An alias for '()' indicating that a particular associated type has not yet

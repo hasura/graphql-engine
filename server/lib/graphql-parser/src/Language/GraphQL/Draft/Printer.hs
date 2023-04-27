@@ -21,7 +21,7 @@ import Data.ByteString.Builder qualified as BS
 import Data.ByteString.Builder.Scientific qualified as BSBS
 import Data.Char (isControl)
 import Data.HashMap.Strict (HashMap)
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.List (intersperse, sort)
 import Data.Scientific (Scientific)
 import Data.String (IsString)
@@ -337,7 +337,7 @@ objectValue :: (Print var, Printer a) => HashMap Name (Value var) -> a
 objectValue o = charP '{' <> objectFields o <> charP '}'
 
 objectFields :: (Print var, Printer a) => HashMap Name (Value var) -> a
-objectFields o = mconcat $ intersperse (charP ',') $ map objectField $ M.toList o
+objectFields o = mconcat $ intersperse (charP ',') $ map objectField $ HashMap.toList o
   where
     objectField (name, val) = nameP name <> ": " <> value val
 

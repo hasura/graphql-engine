@@ -31,11 +31,12 @@ import Autodocodec.Extended (hashSetCodec)
 import Control.Lens (makePrisms)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended (ToTxt (toTxt))
 import GHC.TypeLits (ErrorMessage (..), TypeError)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
@@ -44,7 +45,6 @@ import Hasura.RQL.Types.Relationships.ToSource
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend (AnyBackend)
-import Hasura.SQL.Backend
 
 type RemoteRelationship = RemoteRelationshipG RemoteRelationshipDefinition
 
@@ -248,7 +248,7 @@ instance ToJSON RemoteRelationshipDefinition where
 
 -- | Resolved remote relationship, as stored in the schema cache.
 data RemoteFieldInfo lhsJoinField = RemoteFieldInfo
-  { _rfiLHS :: HM.HashMap FieldName lhsJoinField,
+  { _rfiLHS :: HashMap.HashMap FieldName lhsJoinField,
     _rfiRHS :: RemoteFieldInfoRHS
   }
   deriving (Generic, Eq)

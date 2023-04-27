@@ -50,7 +50,7 @@ import Data.Char
   )
 import Data.Functor (($>))
 import Data.HashMap.Strict (HashMap)
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Maybe (fromMaybe)
 import Data.Scientific (Scientific)
 import Data.Text (Text, find)
@@ -267,12 +267,12 @@ objectFields ::
   Variable var =>
   (forall b. Parser b -> Parser [b]) ->
   Parser (HashMap AST.Name (AST.Value var))
-objectFields several = foldM insertField M.empty =<< several objectField
+objectFields several = foldM insertField HashMap.empty =<< several objectField
   where
     objectField = (,) <$> nameParser <* tok ":" <*> value
     insertField obj (k, v)
-      | k `M.member` obj = fail $ "multiple “" <> T.unpack (Name.unName k) <> "” fields"
-      | otherwise = pure (M.insert k v obj)
+      | k `HashMap.member` obj = fail $ "multiple “" <> T.unpack (Name.unName k) <> "” fields"
+      | otherwise = pure (HashMap.insert k v obj)
 
 -- * Directives
 

@@ -20,8 +20,8 @@ import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..))
 import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..), txtEncoder, withScalarTypeAnn)
 import Hasura.Prelude
 import Hasura.RQL.IR.Value (Provenance (Unknown), UnpreparedValue (..))
+import Hasura.RQL.Types.BackendType (BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnInfo, ColumnType (..), ColumnValue (..))
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
 import Test.Parser.Expectation qualified as Expect
 
 type PG = 'Postgres 'Vanilla

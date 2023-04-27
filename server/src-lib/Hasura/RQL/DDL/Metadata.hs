@@ -28,7 +28,7 @@ import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Data.Has (Has, getter)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as HS
 import Data.List qualified as L
@@ -39,10 +39,11 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (dquote, dquoteList, (<<>))
 import Hasura.Base.Error
-import Hasura.CustomReturnType.API
 import Hasura.EncJSON
+import Hasura.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.Function.API
 import Hasura.Logging qualified as HL
+import Hasura.LogicalModel.API
 import Hasura.Metadata.Class
 import Hasura.NativeQuery.API
 import Hasura.Prelude hiding (first)
@@ -65,15 +66,14 @@ import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType (BackendType (..))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.EventTrigger qualified as ET
-import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger (..))
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.ScheduledTrigger
@@ -82,10 +82,10 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source (unsafeSourceInfo)
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend (BackendType (..))
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Logging (MetadataLog (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
+import Network.Types.Extended
 
 -- | Helper function to run the post drop source hook
 postDropSourceHookHelper ::
@@ -103,18 +103,19 @@ postDropSourceHookHelper ::
 postDropSourceHookHelper oldSchemaCache sourceName sourceMetadataBackend = do
   logger :: (HL.Logger HL.Hasura) <- asks getter
 
-  AB.dispatchAnyBackend @BackendMetadata sourceMetadataBackend \(_ :: SourceMetadata b) -> do
-    let sourceInfoMaybe = unsafeSourceInfo @b =<< HM.lookup sourceName (scSources oldSchemaCache)
+  AB.dispatchAnyBackend @BackendMetadata sourceMetadataBackend \(oldSourceMetadata :: SourceMetadata b) -> do
+    let sourceInfoMaybe = unsafeSourceInfo @b =<< HashMap.lookup sourceName (scSources oldSchemaCache)
     case sourceInfoMaybe of
       Nothing -> do
-        let message =
-              "Could not cleanup the source '"
-                <> sourceName
-                  <<> "' while dropping it from the graphql-engine as it is inconsistent."
-                <> " Please consider cleaning the resources created by the graphql engine,"
-                <> " refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-footprints-manually"
-        HL.unLogger logger $ MetadataLog HL.LevelWarn message J.Null
-        warn $ MetadataWarning WCSourceCleanupFailed (MOSource sourceName) message
+        unless (null (getTriggersMap oldSourceMetadata)) do
+          let message =
+                "Could not cleanup the source '"
+                  <> sourceName
+                    <<> "' while dropping it from the graphql-engine as it is inconsistent."
+                  <> " Please consider cleaning the resources created by the graphql engine,"
+                  <> " refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-footprints-manually"
+          HL.unLogger logger $ MetadataLog HL.LevelWarn message J.Null
+          warn $ MetadataWarning WCSourceCleanupFailed (MOSource sourceName) message
       Just sourceInfo -> runPostDropSourceHook defaultSource sourceInfo
 
 runClearMetadata ::
@@ -408,23 +409,23 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
             case _rmv2Metadata of
               RMWithoutSources m -> _mnsCronTriggers m
               RMWithSources m -> _metaCronTriggers m
-          -- this function is intended to use with `HM.differenceWith`, it's used when two
+          -- this function is intended to use with `HashMap.differenceWith`, it's used when two
           -- equal keys are encountered, then the values are compared to calculate the diff.
           -- see https://hackage.haskell.org/package/unordered-containers-0.2.14.0/docs/Data-HashMap-Internal.html#v:differenceWith
           leftIfDifferent l r
             | l == r = Nothing
             | otherwise = Just l
           cronTriggersToBeAdded =
-            HM.differenceWith
+            HashMap.differenceWith
               leftIfDifferent
               (OMap.toHashMap allNewCronTriggers)
               (OMap.toHashMap oldCronTriggersIncludedInMetadata)
           cronTriggersToBeDropped =
-            HM.differenceWith
+            HashMap.differenceWith
               leftIfDifferent
               (OMap.toHashMap oldCronTriggersIncludedInMetadata)
               (OMap.toHashMap allNewCronTriggers)
-      liftEitherM $ dropFutureCronEvents $ MetadataCronTriggers $ HM.keys cronTriggersToBeDropped
+      liftEitherM $ dropFutureCronEvents $ MetadataCronTriggers $ HashMap.keys cronTriggersToBeDropped
       cronTriggers <- do
         -- traverse over the new cron triggers and check if any of them
         -- already exists as a cron trigger with "included_in_metadata: false"
@@ -475,18 +476,18 @@ runReplaceMetadataV2' ReplaceMetadataV2 {..} = do
                 flip catchError catcher do
                   sourceConfigMaybe <- askSourceConfigMaybe @b source
                   case sourceConfigMaybe of
-                    Nothing -> do
-                      -- TODO: Add user facing docs on how to drop triggers manually. Issue #7104
-                      let message =
-                            "Could not drop SQL triggers present in the source '"
-                              <> source
-                                <<> "' as it is inconsistent."
-                              <> " While creating an event trigger, Hasura creates SQL triggers on the table."
-                              <> " Please refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-up-event-trigger-footprints-manually "
-                              <> " to delete the sql triggers from the database manually."
-                              <> " For more details, please refer https://hasura.io/docs/latest/graphql/core/event-triggers/index.html "
-                      warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
-                      logger $ MetadataLog HL.LevelWarn message J.Null
+                    Nothing ->
+                      unless (null oldTriggersMap) do
+                        let message =
+                              "Could not drop SQL triggers present in the source '"
+                                <> source
+                                  <<> "' as it is inconsistent."
+                                <> " While creating an event trigger, Hasura creates SQL triggers on the table."
+                                <> " Please refer https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-up-event-trigger-footprints-manually "
+                                <> " to delete the sql triggers from the database manually."
+                                <> " For more details, please refer https://hasura.io/docs/latest/graphql/core/event-triggers/index.html "
+                        warn $ MetadataWarning WCSourceCleanupFailed sourceObjID message
+                        logger $ MetadataLog HL.LevelWarn message J.Null
                     Just sourceConfig -> do
                       for_ droppedEventTriggers \triggerName -> do
                         -- TODO: The `tableName` parameter could be computed while building
@@ -703,14 +704,19 @@ purgeMetadataObj = \case
       SMOTable qt -> dropTableInMetadata @b source qt
       SMOFunction qf -> dropFunctionInMetadata @b source qf
       SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata @b source qf rn
-      SMOCustomReturnType crt -> dropCustomReturnTypeInMetadata @b source crt
       SMONativeQuery lm -> dropNativeQueryInMetadata @b source lm
-      SMOCustomReturnTypeObj customReturnTypeName customReturnTypeMetadataObjId ->
+      SMONativeQueryObj nativeQueryName nativeQueryMetadataObjId ->
         MetadataModifier $
-          customReturnTypeMetadataSetter @b source customReturnTypeName
-            %~ case customReturnTypeMetadataObjId of
-              CRTMOPerm roleName permType ->
-                dropCustomReturnTypePermissionInMetadata roleName permType
+          nativeQueryMetadataSetter @b source nativeQueryName
+            %~ case nativeQueryMetadataObjId of
+              NQMORel rn _ -> dropNativeQueryRelationshipInMetadata rn
+      SMOLogicalModel lm -> dropLogicalModelInMetadata @b source lm
+      SMOLogicalModelObj logicalModelName logicalModelMetadataObjId ->
+        MetadataModifier $
+          logicalModelMetadataSetter @b source logicalModelName
+            %~ case logicalModelMetadataObjId of
+              LMMOPerm roleName permType ->
+                dropLogicalModelPermissionInMetadata roleName permType
       SMOTableObj qt tableObj ->
         MetadataModifier $
           tableMetadataSetter @b source qt %~ case tableObj of

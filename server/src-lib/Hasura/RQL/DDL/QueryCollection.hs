@@ -11,7 +11,7 @@ module Hasura.RQL.DDL.QueryCollection
 where
 
 import Control.Lens ((.~))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.List.Extended (duplicates)
 import Data.Text.Extended
@@ -158,8 +158,8 @@ runAddCollectionToAllowlist entry = do
   allowlist <- withPathK "allowlist" fetchAllowlist
   case metadataAllowlistInsert entry allowlist of
     Left msg ->
-      pure . encJFromJValue . Aeson.object $
-        ["message" Aeson..= msg]
+      pure . encJFromJValue . J.object $
+        ["message" J..= msg]
     Right allowlist' -> do
       withNewInconsistentObjsCheck . buildSchemaCache $ MetadataModifier (metaAllowlist .~ allowlist')
       pure successMsg

@@ -10,7 +10,7 @@
 -- the tests.
 module Test.Schema.RemoteRelationships.XToRemoteSchemaRelationshipSpec (spec) where
 
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
@@ -358,12 +358,12 @@ lhsSqliteSetup testEnvironment = do
   let cloneName = API.DatasetCloneName $ tshow (uniqueTestId testEnvironment) <> "-lhs"
   let lhsSourceName_ = "source"
   let sourceName = Text.unpack lhsSourceName_
-  let sqliteLhsTableName = Aeson.toJSON ["main" :: Text, "track"]
+  let sqliteLhsTableName = J.toJSON ["main" :: Text, "track"]
 
   (API.Config sourceConfig) <- Sqlite.createEmptyDatasetCloneSourceConfig cloneName
 
   -- Add remote source
-  Schema.addSource lhsSourceName_ (Aeson.Object sourceConfig) testEnvironment
+  Schema.addSource lhsSourceName_ (J.Object sourceConfig) testEnvironment
 
   -- Setup tables
   Sqlite.createTable sourceName testEnvironment track

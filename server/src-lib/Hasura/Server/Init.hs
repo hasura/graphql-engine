@@ -33,10 +33,10 @@ import Hasura.Backends.Postgres.Connection qualified as Connection
 import Hasura.Base.Error qualified as Error
 import Hasura.GraphQL.ApolloFederation (getApolloFederationStatus)
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Arg

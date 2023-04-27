@@ -71,13 +71,13 @@ import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl (..))
 import Control.Monad.Trans.Managed (ManagedT (..), allocate, allocate_)
 import Control.Retry qualified as Retry
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.ByteString.Char8 qualified as BC
 import Data.ByteString.Lazy qualified as BL
 import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Set.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Time.Clock (UTCTime)
@@ -90,6 +90,8 @@ import Hasura.App.State
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
+import Hasura.ClientCredentials (getEEClientCredentialsTx, setEEClientCredentialsTx)
+import Hasura.Eventing.Backend
 import Hasura.Eventing.Common
 import Hasura.Eventing.EventTrigger
 import Hasura.Eventing.ScheduledTrigger
@@ -124,17 +126,15 @@ import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.Catalog
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.EECredentials
-import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Metadata
-import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.ResizePool
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Server.API.Query (requiresAdmin)
 import Hasura.Server.App
 import Hasura.Server.AppStateRef
@@ -160,6 +160,7 @@ import Hasura.ShutdownLatch
 import Hasura.Tracing
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.CreateManager (mkHttpManager)
+import Network.Types.Extended
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
 import Options.Applicative
@@ -197,8 +198,8 @@ instance Exception ExitException
 throwErrExit :: (MonadIO m) => forall a. ExitCode -> String -> m a
 throwErrExit reason = liftIO . throwIO . ExitException reason . BC.pack
 
-throwErrJExit :: (A.ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
-throwErrJExit reason = liftIO . throwIO . ExitException reason . BLC.toStrict . A.encode
+throwErrJExit :: (J.ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
+throwErrJExit reason = liftIO . throwIO . ExitException reason . BLC.toStrict . J.encode
 
 accessDeniedErrMsg :: Text
 accessDeniedErrMsg = "restricted access : admin only"
@@ -206,8 +207,8 @@ accessDeniedErrMsg = "restricted access : admin only"
 --------------------------------------------------------------------------------
 -- Printing helpers (move to another module!)
 
-printJSON :: (A.ToJSON a, MonadIO m) => a -> m ()
-printJSON = liftIO . BLC.putStrLn . A.encode
+printJSON :: (J.ToJSON a, MonadIO m) => a -> m ()
+printJSON = liftIO . BLC.putStrLn . J.encode
 
 --------------------------------------------------------------------------------
 -- Logging
@@ -389,7 +390,7 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
       StartupLog
         { slLogLevel = LevelWarn,
           slKind = "no_admin_secret",
-          slInfo = A.toJSON ("WARNING: No admin secret provided" :: Text)
+          slInfo = J.toJSON ("WARNING: No admin secret provided" :: Text)
         }
 
   -- SIDE EFFECT: log all server options.
@@ -566,7 +567,7 @@ migrateCatalogAndFetchMetadata
           StartupLog
             { slLogLevel = LevelError,
               slKind = "catalog_migrate",
-              slInfo = A.toJSON err
+              slInfo = J.toJSON err
             }
         liftIO (throwErrJExit DatabaseMigrationError err)
       Right (migrationResult, metadataWithVersion) -> do
@@ -614,7 +615,7 @@ buildFirstSchemaCache
         StartupLog
           { slLogLevel = LevelError,
             slKind = "catalog_migrate",
-            slInfo = A.toJSON err
+            slInfo = J.toJSON err
           }
       liftIO (throwErrJExit DatabaseMigrationError err)
 
@@ -734,7 +735,7 @@ instance ConsoleRenderer AppM where
 
 instance MonadVersionAPIWithExtraData AppM where
   -- we always default to CE as the `server_type` in this codebase
-  getExtraDataForVersionAPI = return ["server_type" A..= ("ce" :: Text)]
+  getExtraDataForVersionAPI = return ["server_type" J..= ("ce" :: Text)]
 
 instance MonadGQLExecutionCheck AppM where
   checkGQLExecution userInfo _ enableAL sc query _ = runExceptT $ do
@@ -1148,13 +1149,13 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
       -- event triggers should be tied to the life cycle of a source
       lockedEvents <- readTVarIO leEvents
       forM_ sources $ \backendSourceInfo -> do
-        AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo sourceName _ _ _ _ sourceConfig _ _ :: SourceInfo b) -> do
-          let sourceNameText = sourceNameToText sourceName
+        AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo {..} :: SourceInfo b) -> do
+          let sourceNameText = sourceNameToText _siName
           logger $ mkGenericLog LevelInfo "event_triggers" $ "unlocking events of source: " <> sourceNameText
-          for_ (HM.lookup sourceName lockedEvents) $ \sourceLockedEvents -> do
+          for_ (HashMap.lookup _siName lockedEvents) $ \sourceLockedEvents -> do
             -- No need to execute unlockEventsTx when events are not present
             for_ (NE.nonEmptySet sourceLockedEvents) $ \nonEmptyLockedEvents -> do
-              res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return $ unlockEventsInSource @b sourceConfig nonEmptyLockedEvents)
+              res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return $ unlockEventsInSource @b _siConfiguration nonEmptyLockedEvents)
               case res of
                 Left err ->
                   logger $
@@ -1220,7 +1221,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
     startEventTriggerPollerThread logger lockedEventsCtx = do
       AppEnv {..} <- lift askAppEnv
       schemaCache <- liftIO $ getSchemaCache appStateRef
-      let allSources = HM.elems $ scSources schemaCache
+      let allSources = HashMap.elems $ scSources schemaCache
       activeEventProcessingThreads <- liftIO $ newTVarIO 0
 
       -- Initialise the event processing thread
@@ -1366,7 +1367,7 @@ getCatalogStateTx =
     mkCatalogState (dbId, PG.ViaJSON cliState, PG.ViaJSON consoleState) =
       CatalogState dbId cliState consoleState
 
-setCatalogStateTx :: CatalogStateType -> A.Value -> PG.TxE QErr ()
+setCatalogStateTx :: CatalogStateType -> J.Value -> PG.TxE QErr ()
 setCatalogStateTx stateTy stateValue =
   case stateTy of
     CSTCli ->
@@ -1401,16 +1402,16 @@ mkConsoleHTML ::
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn ceConsoleType =
   renderHtmlTemplate consoleTmplt $
     -- variables required to render the template
-    A.object
-      [ "isAdminSecretSet" A..= isAdminSecretSet authMode,
-        "consolePath" A..= consolePath,
-        "enableTelemetry" A..= boolToText (isTelemetryEnabled enableTelemetry),
-        "cdnAssets" A..= boolToText (isNothing consoleAssetsDir),
-        "consoleSentryDsn" A..= fromMaybe "" consoleSentryDsn,
-        "assetsVersion" A..= consoleAssetsVersion,
-        "serverVersion" A..= currentVersion,
-        "consoleType" A..= ceConsoleTypeIdentifier ceConsoleType, -- TODO(awjchen): This is a kludge that will be removed when the entitlement service is fully implemented.
-        "consoleSentryDsn" A..= ("" :: Text)
+    J.object
+      [ "isAdminSecretSet" J..= isAdminSecretSet authMode,
+        "consolePath" J..= consolePath,
+        "enableTelemetry" J..= boolToText (isTelemetryEnabled enableTelemetry),
+        "cdnAssets" J..= boolToText (isNothing consoleAssetsDir),
+        "consoleSentryDsn" J..= fromMaybe "" consoleSentryDsn,
+        "assetsVersion" J..= consoleAssetsVersion,
+        "serverVersion" J..= currentVersion,
+        "consoleType" J..= ceConsoleTypeIdentifier ceConsoleType, -- TODO(awjchen): This is a kludge that will be removed when the entitlement service is fully implemented.
+        "consoleSentryDsn" J..= ("" :: Text)
       ]
   where
     consolePath = case path of

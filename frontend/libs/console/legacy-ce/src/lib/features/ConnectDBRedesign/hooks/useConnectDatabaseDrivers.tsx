@@ -13,8 +13,8 @@ type useDatabaseConnectDriversProps = {
 // these are drivers are a special case bc we may want to display them in the UI before their agent's are added in certain cases
 const SuperConnectorDrivers: readonly DriverInfo[] = [
   {
-    name: 'mysqlgdc',
-    displayName: 'MySql',
+    name: 'mysql8',
+    displayName: 'MySQL',
     native: false,
     release: 'Alpha',
     enterprise: true,
@@ -40,6 +40,20 @@ const SuperConnectorDrivers: readonly DriverInfo[] = [
     release: 'Beta',
     enterprise: true,
   },
+  {
+    name: 'oracle',
+    displayName: 'Oracle',
+    native: false,
+    release: 'Beta',
+    enterprise: true,
+  },
+  // {
+  //   name: 'Mongo',
+  //   displayName: 'MongoDB',
+  //   native: false,
+  //   release: 'Alpha',
+  //   enterprise: true,
+  // },
 ] as const;
 
 // this is a wrapper around useAvailableDrivers
@@ -67,6 +81,7 @@ export const useDatabaseConnectDrivers = ({
         <DatabaseLogo
           title={d.displayName}
           image={dbLogos[d.name] || dbLogos.default}
+          releaseName={d.release}
         />
       ),
     }));

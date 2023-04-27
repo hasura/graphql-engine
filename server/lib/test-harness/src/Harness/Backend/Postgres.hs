@@ -43,7 +43,7 @@ where
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Monoid (Last (..))
 import Data.String.Interpolate (i)
 import Data.Text qualified as T
@@ -502,8 +502,8 @@ setupComputedFieldAction table functionName asFieldName env =
         table
         functionName
         asFieldName
-        Aeson.Null
-        Aeson.Null
+        J.Null
+        J.Null
         env
     )
     ( \_ ->

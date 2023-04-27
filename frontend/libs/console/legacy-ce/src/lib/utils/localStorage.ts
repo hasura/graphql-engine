@@ -1,9 +1,22 @@
 import globals from '../Globals';
 
+/*
+In Hasura cloud, console local storage functions have been monkey-patched to separate out local storage keys
+based on project ids. i.e. Hasura cloud dashboard and the different project consoles and do not share the same local
+storage keys.
+
+See monkeypatch code: https://github.com/hasura/lux/blob/0845a55/services/cloud/team_console/index.html#L24-L103
+
+To share local storage keys between different project consoles or between cloud dashboard and console, the
+localstorage key needs to be added to the `GLOBAL_LS_KEYS` variable in the above file.
+*/
+
+/* IMPORTANT: for behaviour on Cloud console, see note at start of file */
 export const setLSItem = (key: string, data: string) => {
   window.localStorage.setItem(key, data);
 };
 
+/* IMPORTANT: for behaviour on Cloud console, see note at start of file */
 export const getLSItem = (key: string) => {
   if (!key) {
     return null;
@@ -12,22 +25,7 @@ export const getLSItem = (key: string) => {
   return window.localStorage.getItem(key);
 };
 
-export const getParsedLSItem = (key: string, defaultVal: any = null) => {
-  const value = getLSItem(key);
-
-  if (!value) {
-    return defaultVal;
-  }
-
-  try {
-    const jsonValue = JSON.parse(value);
-
-    return jsonValue || defaultVal;
-  } catch {
-    return defaultVal;
-  }
-};
-
+/* IMPORTANT: for behaviour on Cloud console, see note at start of file */
 export const removeLSItem = (key: string) => {
   const value = getLSItem(key);
 
@@ -71,6 +69,22 @@ export const getItemWithExpiry = (key: string) => {
   return item.value;
 };
 
+export const getParsedLSItem = (key: string, defaultVal: any = null) => {
+  const value = getLSItem(key);
+
+  if (!value) {
+    return defaultVal;
+  }
+
+  try {
+    const jsonValue = JSON.parse(value);
+
+    return jsonValue || defaultVal;
+  } catch {
+    return defaultVal;
+  }
+};
+
 export const listLSKeys = () => {
   return Object.keys(window.localStorage);
 };
@@ -111,6 +125,7 @@ export const LS_KEYS = {
   notificationsLastSeen: 'notifications:lastSeen',
   authState: 'AUTH_STATE',
   useCaseExperimentOnboarding: 'onboarding:useCaseExperiment',
+  showUseCaseOverviewPopup: 'onboarding:showUseCaseOverviewPopup',
 };
 
 export const clearGraphiqlLS = () => {

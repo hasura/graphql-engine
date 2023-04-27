@@ -24,19 +24,19 @@ import Hasura.GraphQL.Execute.Action.Types (ActionExecutionPlan)
 import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Namespace (RootFieldAlias, RootFieldMap)
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column (ColumnType, fromCol)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ResultCustomization
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
 import Language.GraphQL.Draft.Syntax qualified as G

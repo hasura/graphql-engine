@@ -24,7 +24,7 @@ import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH qualified as J
 import Data.CaseInsensitive qualified as CI
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Prelude
@@ -175,11 +175,11 @@ instance J.FromJSON ConnectionSetTemplateContext where
             pure (connSetMemberName, connSetMember)
         )
         (KM.toList o)
-    pure $ ConnectionSetTemplateContext (Map.fromList connections)
+    pure $ ConnectionSetTemplateContext (HashMap.fromList connections)
 
 instance J.ToJSON ConnectionSetTemplateContext where
   toJSON (ConnectionSetTemplateContext connections) =
-    J.Object $ KM.fromHashMap $ Map.map (J.toJSON) (Map.mapKeys (K.fromText . toTxt) connections)
+    J.Object $ KM.fromHashMap $ HashMap.map (J.toJSON) (HashMap.mapKeys (K.fromText . toTxt) connections)
 
 newtype QueryOperationType = QueryOperationType G.OperationType
   deriving (Show)
@@ -249,7 +249,7 @@ makeConnectionTemplateContext reqCtx connectionSetMembers =
     connectionSet
   where
     connectionSet =
-      ConnectionSetTemplateContext $ Map.fromList $ map (id &&& mkConnectionSetMemberTemplateContext) connectionSetMembers
+      ConnectionSetTemplateContext $ HashMap.fromList $ map (id &&& mkConnectionSetMemberTemplateContext) connectionSetMembers
 
 -- | We should move this to Data.Aeson.Kriti.Functions
 runKritiEval :: PostgresConnectionTemplateContext -> KritiTemplate -> Either Kriti.EvalError J.Value
@@ -260,5 +260,5 @@ runKritiEval ktcContext (KritiTemplate rawTemplate templateAST) = Kriti.runEval 
 
 makeRequestContext :: Maybe QueryContext -> [HTTP.Header] -> SessionVariables -> RequestContext
 makeRequestContext queryContext reqHeaders sessionVars =
-  let reqHeaderHashMap = Map.fromList $ map (\(hdrName, hdrVal) -> (bsToTxt (CI.original hdrName), bsToTxt hdrVal)) reqHeaders
+  let reqHeaderHashMap = HashMap.fromList $ map (\(hdrName, hdrVal) -> (bsToTxt (CI.original hdrName), bsToTxt hdrVal)) reqHeaders
    in RequestContext (RequestContextHeaders reqHeaderHashMap) sessionVars queryContext

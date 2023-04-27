@@ -52,7 +52,7 @@ import Control.Lens.TH (makeLenses)
 import Data.Aeson ((.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Text.Extended (ToTxt (..))
 import Data.Typeable (Typeable)
@@ -61,11 +61,11 @@ import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------
@@ -229,7 +229,7 @@ instance HasCodec ScalarTypeDefinition where
         <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec AC..= _stdDescription
 
 defaultGraphQLScalars :: HashMap G.Name ScalarTypeDefinition
-defaultGraphQLScalars = Map.fromList . map (\name -> (name, ScalarTypeDefinition name Nothing)) $ Set.toList GName.builtInScalars
+defaultGraphQLScalars = HashMap.fromList . map (\name -> (name, ScalarTypeDefinition name Nothing)) $ Set.toList GName.builtInScalars
 
 --------------------------------------------------------------------------------
 -- Custom enums

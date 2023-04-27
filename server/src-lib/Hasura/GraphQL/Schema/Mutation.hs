@@ -14,7 +14,7 @@ where
 
 import Control.Lens ((^.))
 import Data.Has (getter)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Text.Extended
 import Hasura.GraphQL.Schema.Backend
@@ -190,7 +190,7 @@ tableFieldsInput tableInfo = do
       mkTypename = runMkTypename $ _rscTypeNames customization
   P.memoizeOn 'tableFieldsInput (sourceName, tableName) do
     tableGQLName <- getTableIdentifierName tableInfo
-    objectFields <- traverse mkFieldParser (Map.elems allFields)
+    objectFields <- traverse mkFieldParser (HashMap.elems allFields)
     let objectName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableInsertInputTypeName tableGQLName
         objectDesc = G.Description $ "input type for inserting data into table " <>> tableName
     pure $ P.object objectName (Just objectDesc) $ coalesceFields objectFields
@@ -517,7 +517,7 @@ primaryKeysArguments tableInfo = runMaybeT $ do
   selectPerms <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   primaryKeys <- hoistMaybe $ _tciPrimaryKey . _tiCoreInfo $ tableInfo
   let columns = _pkColumns primaryKeys
-  guard $ all (\c -> ciColumn c `Map.member` spiCols selectPerms) columns
+  guard $ all (\c -> ciColumn c `HashMap.member` spiCols selectPerms) columns
   lift $
     fmap (BoolAnd . toList) . sequenceA <$> for columns \columnInfo -> do
       field <- columnParser (ciType columnInfo) (G.Nullability False)

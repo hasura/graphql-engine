@@ -8,7 +8,7 @@ where
 import Control.Exception (throw)
 import Data.ByteString.Char8 qualified as B8
 import Data.FileEmbed (embedFile, makeRelativeToProject)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HS
 import Data.Sequence.NonEmpty qualified as NESeq
@@ -21,10 +21,10 @@ import Database.MySQL.Simple.Result (Result, ResultError (..), convert)
 import Hasura.Backends.MySQL.Instances.Types ()
 import Hasura.Backends.MySQL.Types
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 getMetadata :: ConnSourceConfig -> Connection -> IO (DBTablesMetadata 'MySQL)
@@ -34,11 +34,11 @@ getMetadata ConnSourceConfig {_cscDatabase} scConnection = do
   pure (mkMetadata results)
 
 mkMetadata :: [InformationSchema] -> DBTablesMetadata 'MySQL
-mkMetadata = foldr mergeMetadata HM.empty
+mkMetadata = foldr mergeMetadata HashMap.empty
 
 mergeMetadata :: InformationSchema -> DBTablesMetadata 'MySQL -> DBTablesMetadata 'MySQL
 mergeMetadata InformationSchema {..} =
-  HM.insertWith
+  HashMap.insertWith
     mergeDBTableMetadata
     (TableName {name = isTableName, schema = pure isTableSchema})
     $ DBTableMetadata

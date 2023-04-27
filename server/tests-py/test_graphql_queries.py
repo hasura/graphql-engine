@@ -1,5 +1,4 @@
 import json
-import os
 import pytest
 import ruamel.yaml as yaml
 import textwrap
@@ -7,9 +6,6 @@ import warnings
 
 from context import PytestConf
 from validate import assert_response_code, check_query_f, get_conf_f
-
-# Mark that all tests in this module can be run as server upgrade tests
-pytestmark = pytest.mark.allow_server_upgrade_test
 
 usefixtures = pytest.mark.usefixtures
 
@@ -152,8 +148,6 @@ class TestGraphQLQueryBasicMSSQL:
 @pytest.mark.backend('postgres')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicPostgres:
-    # Can't run server upgrade tests, as this test has a schema change
-    @pytest.mark.skip_server_upgrade_test
     def test_select_various_postgres_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types_postgres.yaml', transport)
 
@@ -927,7 +921,6 @@ class TestUnauthorizedRolePermission:
     def test_unauth_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
 
-@pytest.mark.parametrize('transport', ['http'])
 @usefixtures('per_class_tests_db_state')
 @pytest.mark.admin_secret
 @pytest.mark.hge_env('HASURA_GRAPHQL_UNAUTHORIZED_ROLE', 'anonymous')
@@ -936,22 +929,31 @@ class TestFallbackUnauthorizedRoleCookie:
     def dir(cls):
         return 'queries/unauthorized_role'
 
-    def test_fallback_unauth_role_jwt_cookie_not_set(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_set.yaml', transport, add_auth=False)
+    def test_fallback_unauth_role_jwt_cookie_not_set(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_set.yaml', add_auth=False)
 
-@pytest.mark.skipif(
-    not PytestConf.config.getoption("--test-no-cookie-and-unauth-role"),
-    reason="--test-no-cookie-and-unauth-role missing"
-)
-@pytest.mark.parametrize('transport', ['http'])
-@usefixtures('per_class_tests_db_state')
+@usefixtures('per_class_tests_db_state', 'jwt_configuration')
+@pytest.mark.admin_secret
+@pytest.mark.jwt('rsa')
+@pytest.mark.hge_env('HASURA_GRAPHQL_UNAUTHORIZED_ROLE', 'anonymous')
+class TestFallbackUnauthorizedRoleCookieWithJwt:
+    @classmethod
+    def dir(cls):
+        return 'queries/unauthorized_role'
+
+    def test_fallback_unauth_role_jwt_cookie_not_set(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_set.yaml', add_auth=False)
+
+@usefixtures('per_class_tests_db_state', 'jwt_configuration')
+@pytest.mark.admin_secret
+@pytest.mark.jwt('rsa')
 class TestMissingUnauthorizedRoleAndCookie:
     @classmethod
     def dir(cls):
         return 'queries/unauthorized_role'
 
-    def test_error_unauth_role_not_set_jwt_cookie_not_set(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_not_set.yaml', transport, add_auth=False)
+    def test_error_unauth_role_not_set_jwt_cookie_not_set(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/cookie_header_absent_unauth_role_not_set.yaml', add_auth=False)
 
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLExplainPostgresMSSQL:
@@ -981,13 +983,9 @@ class TestGraphQLExplainPostgresMSSQL:
     def test_limit_orderby_column_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_column_query.yaml')
 
-    @pytest.mark.skip_server_upgrade_test
-    # skipping due to https://github.com/hasura/graphql-engine/issues/7936
     def test_limit_orderby_relationship_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_orderby_relationship_query.yaml')
 
-    @pytest.mark.skip_server_upgrade_test
-    # skipping due to https://github.com/hasura/graphql-engine/issues/7936
     def test_limit_offset_orderby_relationship_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/limit_offset_orderby_relationship_query.yaml')
 
@@ -1233,7 +1231,6 @@ class TestGraphQLQueryBoolExpLtree:
 @pytest.mark.backend('mssql')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSpatialMSSQL:
-    @pytest.mark.skip_server_upgrade_test
     def test_select_spatial_mssql_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_spatial_types_mssql.yaml', transport)
 

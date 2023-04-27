@@ -204,7 +204,7 @@ export default {
       },
       {
         name: 'Chinook',
-        kind: 'mysqlgdc',
+        kind: 'mysql8',
         tables: [
           {
             table: ['Chinook', 'Customer'],
@@ -256,7 +256,7 @@ export default {
       },
       {
         name: 'MySQL',
-        kind: 'mysqlgdc',
+        kind: 'mysql8',
         tables: [],
         configuration: {
           template: null,
@@ -331,7 +331,7 @@ export default {
         SQLite: {
           uri: 'http://host.docker.internal:8100',
         },
-        mysqlgdc: {
+        mysql8: {
           uri: 'http://data-connector-agent:8081/api/v1/mysql',
         },
       },

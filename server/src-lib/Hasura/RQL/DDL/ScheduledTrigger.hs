@@ -14,7 +14,7 @@ where
 
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Time.Clock qualified as C
 import Data.URL.Template (printURLTemplate)
@@ -75,7 +75,7 @@ runCreateCronTrigger CreateCronTrigger {..} = do
     True -> updateCronTrigger q
     False -> do
       cronTriggersMap <- scCronTriggers <$> askSchemaCache
-      case Map.lookup (ctName q) cronTriggersMap of
+      case HashMap.lookup (ctName q) cronTriggersMap of
         Nothing -> pure ()
         Just _ ->
           throw400 AlreadyExists $
@@ -176,7 +176,7 @@ checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
 checkExists name = do
   cronTriggersMap <- scCronTriggers <$> askSchemaCache
   void $
-    onNothing (Map.lookup name cronTriggersMap) $
+    onNothing (HashMap.lookup name cronTriggersMap) $
       throw400 NotExists $
         "cron trigger with name: " <> triggerNameToTxt name <> " does not exist"
 

@@ -10,8 +10,8 @@ import Data.Map.Strict qualified as Map
 import Data.Maybe (fromJust)
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorOptions (..), mkDataConnectorName)
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType (BackendType (..))
 import Hasura.RQL.Types.Metadata.Common (BackendConfigWrapper (BackendConfigWrapper))
-import Hasura.SQL.Backend (BackendType (..))
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BM
 import Language.GraphQL.Draft.Syntax qualified as GQL

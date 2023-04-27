@@ -35,11 +35,10 @@ const getPermissionsMappedByRole = ({
       (data: { role: string }) => data.role === currentRole
     )?.permission;
   if (!permissions) return tally;
-
   if (currentQueryType === 'update' || currentQueryType === 'insert') {
-    permissions.check = permissions?.filter;
+    if (!permissions.check) permissions.check = permissions?.filter;
   } else if (currentQueryType === 'select' || currentQueryType === 'delete') {
-    permissions.filter = permissions?.check;
+    if (!permissions.filter) permissions.filter = permissions?.check;
   }
   permissions.columns = formatColumns(permissions.columns);
 

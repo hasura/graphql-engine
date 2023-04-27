@@ -89,6 +89,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     Values (..),
     Where (..),
     With (..),
+    CTEBody (..),
     emptySelect,
     geoTypes,
     getGQLTableName,
@@ -115,7 +116,7 @@ import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.NativeQuery.Metadata (InterpolatedQuery)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.SQL.GeoJSON qualified as Geo
 import Hasura.SQL.WKT qualified as WKT
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -379,7 +380,13 @@ newtype Where
   = Where [Expression]
 
 newtype With
-  = With (NonEmpty (Aliased Select))
+  = With (NonEmpty (Aliased CTEBody))
+  deriving (Semigroup)
+
+-- | Something that can appear in a CTE body.
+data CTEBody
+  = CTESelect Select
+  | CTEUnsafeRawSQL (InterpolatedQuery Expression)
 
 -- | Extra query steps that can be emitted from the main
 -- query to do things like setup temp tables
