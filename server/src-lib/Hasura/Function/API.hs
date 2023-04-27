@@ -24,7 +24,7 @@ where
 import Control.Lens ((.~), (^.))
 import Data.Aeson
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -85,7 +85,7 @@ trackFunctionP2 sourceName qf config comment = do
     (MOSourceObjId sourceName $ AB.mkAnyBackend $ SMOFunction @b qf)
     $ MetadataModifier
     $ metaSources . ix sourceName . toSourceMetadata . (smFunctions @b)
-      %~ OMap.insert qf (FunctionMetadata qf config mempty comment)
+      %~ InsOrdHashMap.insert qf (FunctionMetadata qf config mempty comment)
   pure successMsg
 
 getSingleUniqueFunctionOverload ::

@@ -12,7 +12,7 @@ import Control.Lens.Combinators
 import Control.Lens.Operators
 import Data.Aeson
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.Text.Extended
 import Hasura.Base.Error
@@ -123,8 +123,8 @@ renameTableInMetadata source newQT oldQT = do
   tell $
     MetadataModifier $
       metaSources . ix source . (toSourceMetadata @b) . smTables %~ \tables ->
-        flip (maybe tables) (OMap.lookup oldQT tables) $
-          \tableMeta -> OMap.delete oldQT $ OMap.insert newQT tableMeta {_tmTable = newQT} tables
+        flip (maybe tables) (InsOrdHashMap.lookup oldQT tables) $
+          \tableMeta -> InsOrdHashMap.delete oldQT $ InsOrdHashMap.insert newQT tableMeta {_tmTable = newQT} tables
   where
     errMsg = "cannot rename table " <> oldQT <<> " to " <>> newQT
 
@@ -250,8 +250,8 @@ renameRelationshipInMetadata source qt oldRN relType newRN = do
     rewriteRelationships ::
       Relationships (RelDef a) -> Relationships (RelDef a)
     rewriteRelationships relationsMap =
-      flip (maybe relationsMap) (OMap.lookup oldRN relationsMap) $
-        \rd -> OMap.insert newRN rd {_rdName = newRN} $ OMap.delete oldRN relationsMap
+      flip (maybe relationsMap) (InsOrdHashMap.lookup oldRN relationsMap) $
+        \rd -> InsOrdHashMap.insert newRN rd {_rdName = newRN} $ InsOrdHashMap.delete oldRN relationsMap
 
 -- update table names in relationship definition
 updateRelDefs ::

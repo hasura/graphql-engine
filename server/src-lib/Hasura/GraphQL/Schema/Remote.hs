@@ -13,7 +13,7 @@ where
 
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Monoid (Any (..))
@@ -567,7 +567,7 @@ remoteSchemaRelationships ::
   G.Name ->
   SchemaT r m [FieldParser n (IR.SchemaRemoteRelationshipSelect (IR.RemoteRelationshipField IR.UnpreparedValue))]
 remoteSchemaRelationships relationships typeName =
-  case OMap.lookup typeName relationships of
+  case InsOrdHashMap.lookup typeName relationships of
     Nothing -> pure []
     Just rels ->
       concat <$> for (toList rels) \remoteFieldInfo -> do
@@ -596,7 +596,7 @@ remoteSchemaObject schemaDoc remoteRelationships defn@(G.ObjectTypeDefinition de
     let allFields = map (fmap IR.FieldGraphQL) subFieldParsers <> map (fmap IR.FieldRemote) remoteJoinParsers
     pure $
       P.selectionSetObject typename description allFields implements
-        <&> OMap.mapWithKey \alias ->
+        <&> InsOrdHashMap.mapWithKey \alias ->
           handleTypename $
             const $
               IR.FieldGraphQL $

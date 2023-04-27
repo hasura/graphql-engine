@@ -54,7 +54,7 @@ import Data.Either.Combinators
 import Data.Environment qualified as Env
 import Data.Has (Has)
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
@@ -338,7 +338,7 @@ createEventTriggerQueryMetadata q = do
       tableMetadataSetter @b source table . tmEventTriggers
         %~ if replace
           then ix triggerName .~ triggerConf
-          else OMap.insert triggerName triggerConf
+          else InsOrdHashMap.insert triggerName triggerConf
 
 runCreateEventTriggerQuery ::
   forall b m r.
@@ -619,20 +619,20 @@ getTrigDefDeps source tableName (TriggerOpsDef mIns mUpd mDel _) =
 getTriggersMap ::
   SourceMetadata b ->
   InsOrdHashMap TriggerName (EventTriggerConf b)
-getTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
+getTriggersMap = InsOrdHashMap.unions . map _tmEventTriggers . InsOrdHashMap.elems . _smTables
 
 getSourceTableAndTriggers ::
   SourceMetadata b ->
   [(TableName b, TriggerName)]
 getSourceTableAndTriggers =
-  (concatMap mkKeyValue) . OMap.toList . _smTables
+  (concatMap mkKeyValue) . InsOrdHashMap.toList . _smTables
   where
-    mkKeyValue (tableName, tableMetadata) = map (tableName,) $ OMap.keys (_tmEventTriggers tableMetadata)
+    mkKeyValue (tableName, tableMetadata) = map (tableName,) $ InsOrdHashMap.keys (_tmEventTriggers tableMetadata)
 
 getTriggerNames ::
   SourceMetadata b ->
   Set.HashSet TriggerName
-getTriggerNames = Set.fromList . OMap.keys . getTriggersMap
+getTriggerNames = Set.fromList . InsOrdHashMap.keys . getTriggersMap
 
 getTableNameFromTrigger ::
   forall b.
@@ -766,7 +766,7 @@ getAllETWithCleanupConfigInTableMetadata tMetadata =
         (triggerName,)
           <$> etcCleanupConfig triggerConf
     )
-    $ OMap.toList
+    $ InsOrdHashMap.toList
     $ _tmEventTriggers tMetadata
 
 runGetEventLogs ::

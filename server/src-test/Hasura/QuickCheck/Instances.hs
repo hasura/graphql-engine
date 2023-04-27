@@ -6,7 +6,7 @@ module Hasura.QuickCheck.Instances () where
 
 import Data.Aeson.Types qualified as Aeson.Types
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrd.HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.Multi qualified as MMap
 import Data.HashSet qualified as HashSet
 import Data.Ratio ((%))
@@ -54,8 +54,8 @@ instance
   (Arbitrary k, Hashable k, Arbitrary v) =>
   Arbitrary (InsOrdHashMap k v)
   where
-  arbitrary = InsOrd.HashMap.fromList <$> arbitrary
-  shrink = fmap InsOrd.HashMap.fromList . shrink . InsOrd.HashMap.toList
+  arbitrary = InsOrdHashMap.fromList <$> arbitrary
+  shrink = fmap InsOrdHashMap.fromList . shrink . InsOrdHashMap.toList
 
 instance Arbitrary Aeson.Types.JSONPathElement where
   arbitrary = Aeson.Types.Index <$> arbitrary

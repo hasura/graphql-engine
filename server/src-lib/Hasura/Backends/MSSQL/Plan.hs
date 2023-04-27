@@ -24,7 +24,7 @@ import Control.Applicative (Const (Const))
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy (toStrict)
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
@@ -127,7 +127,7 @@ prepareValueQuery sessionVariables =
 
 planSubscription ::
   MonadError QErr m =>
-  OMap.InsOrdHashMap G.Name (QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL)) ->
+  InsOrdHashMap.InsOrdHashMap G.Name (QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL)) ->
   SessionVariables ->
   m (Reselect, PrepareState)
 planSubscription unpreparedMap sessionVariables = do
@@ -145,7 +145,7 @@ planSubscription unpreparedMap sessionVariables = do
 
 -- Plan a query without prepare/exec.
 -- planNoPlanMap ::
---      OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (UnpreparedValue 'MSSQL))
+--      InsOrdHashMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (UnpreparedValue 'MSSQL))
 --   -> Either PrepareError Reselect
 -- planNoPlanMap _unpreparedMap =
 -- let rootFieldMap = runIdentity $
@@ -162,7 +162,7 @@ planSubscription unpreparedMap sessionVariables = do
 -- | Collapse a set of selects into a single select that projects
 -- these as subselects.
 collapseMap ::
-  OMap.InsOrdHashMap G.Name Select ->
+  InsOrdHashMap.InsOrdHashMap G.Name Select ->
   Reselect
 collapseMap selects =
   Reselect
@@ -170,7 +170,7 @@ collapseMap selects =
         JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot},
       reselectWhere = Where mempty,
       reselectProjections =
-        map projectSelect (OMap.toList selects)
+        map projectSelect (InsOrdHashMap.toList selects)
     }
   where
     projectSelect :: (G.Name, Select) -> Projection

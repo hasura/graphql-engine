@@ -50,7 +50,7 @@ import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Extended
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
@@ -220,17 +220,17 @@ mkTableInputs TableMetadata {..} =
     nonColumns =
       NonColumnTableInputs
         _tmTable
-        (OMap.elems _tmObjectRelationships)
-        (OMap.elems _tmArrayRelationships)
-        (OMap.elems _tmComputedFields)
-        (OMap.elems _tmRemoteRelationships)
+        (InsOrdHashMap.elems _tmObjectRelationships)
+        (InsOrdHashMap.elems _tmArrayRelationships)
+        (InsOrdHashMap.elems _tmComputedFields)
+        (InsOrdHashMap.elems _tmRemoteRelationships)
     permissions =
       TablePermissionInputs
         _tmTable
-        (OMap.elems _tmInsertPermissions)
-        (OMap.elems _tmSelectPermissions)
-        (OMap.elems _tmUpdatePermissions)
-        (OMap.elems _tmDeletePermissions)
+        (InsOrdHashMap.elems _tmInsertPermissions)
+        (InsOrdHashMap.elems _tmSelectPermissions)
+        (InsOrdHashMap.elems _tmUpdatePermissions)
+        (InsOrdHashMap.elems _tmDeletePermissions)
 
 -- | The direct output of 'buildSchemaCacheRule'. Contains most of the things necessary to build a
 -- schema cache, but dependencies and inconsistent metadata objects are collected via a separate

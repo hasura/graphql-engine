@@ -15,7 +15,7 @@ import Data.Aeson.KeyMap qualified as KMap
 import Data.Aeson.Ordered qualified as JO
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text qualified as T
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
@@ -157,7 +157,7 @@ mkServiceField = serviceFieldParser
     serviceParser = P.nonNullableParser $ P.selectionSet Name.__Service Nothing [sdlField]
     serviceFieldParser =
       P.subselection_ Name.__service Nothing serviceParser `bindField` \selSet -> do
-        let partialValue = OMap.map (\ps -> handleTypename (\tName _ -> JO.toOrdered tName) ps) (OMap.mapKeys G.unName selSet)
+        let partialValue = InsOrdHashMap.map (\ps -> handleTypename (\tName _ -> JO.toOrdered tName) ps) (InsOrdHashMap.mapKeys G.unName selSet)
         pure \schemaIntrospection -> RFRaw . JO.fromOrderedHashMap $ (partialValue ?? schemaIntrospection)
 
 apolloRootFields ::

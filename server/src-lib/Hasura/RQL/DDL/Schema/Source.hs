@@ -40,7 +40,6 @@ import Data.Environment qualified as Env
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HashSet
 import Data.Semigroup.Foldable (Foldable1 (..))
@@ -138,7 +137,7 @@ runAddSource env (AddSource name backendKind sourceConfig replaceConfiguration s
         else do
           let sourceMetadata =
                 mkSourceMetadata @b name backendKind sourceConfig sourceCustomization healthCheckConfig
-          pure $ metaSources %~ OMap.insert name sourceMetadata
+          pure $ metaSources %~ InsOrdHashMap.insert name sourceMetadata
 
   buildSchemaCacheFor (MOSource name) metadataModifier
   pure successMsg
@@ -179,13 +178,13 @@ runRenameSource RenameSource {..} = do
     renameBackendSourceMetadata ::
       SourceName ->
       SourceName ->
-      OMap.InsOrdHashMap SourceName BackendSourceMetadata ->
-      OMap.InsOrdHashMap SourceName BackendSourceMetadata
+      InsOrdHashMap.InsOrdHashMap SourceName BackendSourceMetadata ->
+      InsOrdHashMap.InsOrdHashMap SourceName BackendSourceMetadata
     renameBackendSourceMetadata oldKey newKey m =
-      case OMap.lookup oldKey m of
+      case InsOrdHashMap.lookup oldKey m of
         Just val ->
           let renamedSource = BackendSourceMetadata (AB.mapBackend (unBackendSourceMetadata val) (renameSource newKey))
-           in OMap.insert newKey renamedSource $ OMap.delete oldKey $ m
+           in InsOrdHashMap.insert newKey renamedSource $ InsOrdHashMap.delete oldKey $ m
         Nothing -> m
 
     renameSource :: forall b. SourceName -> SourceMetadata b -> SourceMetadata b
@@ -236,7 +235,7 @@ runDropSource dropSourceInfo@(DropSource name cascade) = do
   pure successMsg
 
 dropSourceMetadataModifier :: SourceName -> MetadataModifier
-dropSourceMetadataModifier sourceName = MetadataModifier $ metaSources %~ OMap.delete sourceName
+dropSourceMetadataModifier sourceName = MetadataModifier $ metaSources %~ InsOrdHashMap.delete sourceName
 
 dropSource ::
   forall m r b.

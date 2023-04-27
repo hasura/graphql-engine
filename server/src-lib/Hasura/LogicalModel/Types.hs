@@ -12,7 +12,7 @@ import Autodocodec
   )
 import Autodocodec qualified as AC
 import Data.Aeson (FromJSON (..), FromJSONKey, ToJSON (..), ToJSONKey, Value, object, withObject, (.!=), (.:), (.:?), (.=))
-import Data.HashMap.Strict.InsOrd qualified as InsOrd
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended (ToTxt)
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude hiding (first)
@@ -99,15 +99,15 @@ logicalModelFieldMapCodec ::
   (Backend b) =>
   AC.Codec
     Value
-    (InsOrd.InsOrdHashMap (Column b) (LogicalModelField b))
-    (InsOrd.InsOrdHashMap (Column b) (LogicalModelField b))
+    (InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b))
+    (InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b))
 logicalModelFieldMapCodec =
   AC.dimapCodec
-    ( InsOrd.fromList
+    ( InsOrdHashMap.fromList
         . fmap
           ( \lmf -> (lmfName lmf, lmf)
           )
     )
-    ( fmap snd . InsOrd.toList
+    ( fmap snd . InsOrdHashMap.toList
     )
     (AC.codec @[LogicalModelField b])

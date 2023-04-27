@@ -6,7 +6,7 @@ module Hasura.RQL.DDL.InheritedRoles
   )
 where
 
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
@@ -32,12 +32,12 @@ runAddInheritedRole addInheritedRoleQ@(Role inheritedRoleName (ParentRoles paren
     throw400 InvalidParams "an inherited role name cannot be in the role combination"
   buildSchemaCacheFor (MOInheritedRole inheritedRoleName) $
     MetadataModifier $
-      metaInheritedRoles %~ OMap.insert inheritedRoleName addInheritedRoleQ
+      metaInheritedRoles %~ InsOrdHashMap.insert inheritedRoleName addInheritedRoleQ
   pure successMsg
 
 dropInheritedRoleInMetadata :: RoleName -> MetadataModifier
 dropInheritedRoleInMetadata roleName =
-  MetadataModifier $ metaInheritedRoles %~ OMap.delete roleName
+  MetadataModifier $ metaInheritedRoles %~ InsOrdHashMap.delete roleName
 
 runDropInheritedRole ::
   (MonadError QErr m, CacheRWM m, MetadataM m) =>
@@ -45,7 +45,7 @@ runDropInheritedRole ::
   m EncJSON
 runDropInheritedRole (DropInheritedRole roleName) = do
   inheritedRolesMetadata <- _metaInheritedRoles <$> getMetadata
-  unless (roleName `OMap.member` inheritedRolesMetadata) $
+  unless (roleName `InsOrdHashMap.member` inheritedRolesMetadata) $
     throw400 NotExists $
       roleName <<> " inherited role doesn't exist"
   buildSchemaCacheFor (MOInheritedRole roleName) (dropInheritedRoleInMetadata roleName)

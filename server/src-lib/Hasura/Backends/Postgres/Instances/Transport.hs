@@ -13,7 +13,7 @@ where
 import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.ByteString qualified as B
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
@@ -193,7 +193,7 @@ runPGMutationTransaction reqId query userInfo logger sourceConfig resolvedConnec
   logQueryLog logger $ mkQueryLog query (mkUnNamespacedRootFieldAlias Name._transaction) Nothing reqId (resolvedConnectionTemplate <$ resolvedConnectionTemplate)
   withElapsedTime $
     runTxWithCtxAndUserInfo userInfo (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate) $
-      flip OMap.traverseWithKey mutations \fieldName dbsi ->
+      flip InsOrdHashMap.traverseWithKey mutations \fieldName dbsi ->
         newSpan ("Postgres Mutation for root field " <>> fieldName) $
           fmap arResult $
             runOnBaseMonad $

@@ -17,7 +17,7 @@ import Control.Lens hiding ((.=))
 import Data.Aeson
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended ((<<>))
 import Data.Text.NonEmpty
 import Data.Time.Clock qualified as C
@@ -401,7 +401,7 @@ parseLegacyRemoteRelationshipDefinition =
 fetchMetadataFromHdbTables :: MonadTx m => m MetadataNoSources
 fetchMetadataFromHdbTables = liftTx do
   tables <- fetchTables
-  let tableMetaMap = OMap.fromList . flip map tables $
+  let tableMetaMap = InsOrdHashMap.fromList . flip map tables $
         \(schema, name, isEnum, maybeConfig) ->
           let qualifiedName = QualifiedObject schema name
               configuration = maybe emptyTableConfig PG.getViaJSON maybeConfig
@@ -467,7 +467,7 @@ fetchMetadataFromHdbTables = liftTx do
   where
     modMetaMap l f xs = do
       st <- get
-      put $ foldl' (\b (qt, dfn) -> b & at qt . _Just . l %~ OMap.insert (f dfn) dfn) st xs
+      put $ foldl' (\b (qt, dfn) -> b & at qt . _Just . l %~ InsOrdHashMap.insert (f dfn) dfn) st xs
 
     mkPermDefs pt = mapM permRowToDef . filter (\pr -> pr ^. _4 == pt)
 

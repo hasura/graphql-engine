@@ -22,8 +22,7 @@ import Autodocodec (HasCodec)
 import Autodocodec qualified as AC
 import Control.Lens (Traversal', has, preview, traversed, (^..), (^?))
 import Data.Aeson
-import Data.HashMap.Strict.InsOrd qualified as InsOrd
-import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
+import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -50,7 +49,7 @@ data TrackLogicalModel (b :: BackendType) = TrackLogicalModel
   { tlmSource :: SourceName,
     tlmName :: LogicalModelName,
     tlmDescription :: Maybe Text,
-    tlmFields :: InsOrd.InsOrdHashMap (Column b) (LogicalModelField b)
+    tlmFields :: InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b)
   }
 
 instance (Backend b) => HasCodec (TrackLogicalModel b) where
@@ -134,7 +133,7 @@ runGetLogicalModel q = do
   let logicalModels :: Maybe (LogicalModels b)
       logicalModels = metadata ^? getCustomTypes (glmSource q)
 
-  pure (encJFromJValue (OMap.elems <$> logicalModels))
+  pure (encJFromJValue (InsOrdHashMap.elems <$> logicalModels))
 
 getCustomTypes :: forall b. (Backend b) => SourceName -> Traversal' Metadata (LogicalModels b)
 getCustomTypes sourceName =
@@ -168,7 +167,7 @@ runTrackLogicalModel trackLogicalModelRequest = do
         MOSourceObjId source $
           AB.mkAnyBackend $
             SMOLogicalModel @b fieldName
-      existingLogicalModels = OMap.keys (_smLogicalModels sourceMetadata)
+      existingLogicalModels = InsOrdHashMap.keys (_smLogicalModels sourceMetadata)
 
   when (fieldName `elem` existingLogicalModels) do
     throw400 AlreadyTracked $ "Logical model '" <> toTxt fieldName <> "' is already tracked."
@@ -176,7 +175,7 @@ runTrackLogicalModel trackLogicalModelRequest = do
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
       (metaSources . ix source . toSourceMetadata @b . smLogicalModels)
-        %~ OMap.insert fieldName metadata
+        %~ InsOrdHashMap.insert fieldName metadata
 
   pure successMsg
   where
@@ -286,7 +285,7 @@ runCreateSelectLogicalModelPermission CreateLogicalModelPermission {..} = do
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
       logicalModelMetadataSetter @b clmpSource clmpName . lmmSelectPermissions
-        %~ OMap.insert (_pdRole clmpInfo) clmpInfo
+        %~ InsOrdHashMap.insert (_pdRole clmpInfo) clmpInfo
 
   pure successMsg
 
@@ -325,7 +324,7 @@ runDropSelectLogicalModelPermission DropLogicalModelPermission {..} = do
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
       logicalModelMetadataSetter @b dlmpSource dlmpName . lmmSelectPermissions
-        %~ OMap.delete dlmpRole
+        %~ InsOrdHashMap.delete dlmpRole
 
   pure successMsg
 
@@ -334,7 +333,7 @@ dropLogicalModelInMetadata :: forall b. BackendMetadata b => SourceName -> Logic
 dropLogicalModelInMetadata source name = do
   MetadataModifier $
     metaSources . ix source . toSourceMetadata @b . smLogicalModels
-      %~ OMap.delete name
+      %~ InsOrdHashMap.delete name
 
 -- | check feature flag is enabled before carrying out any actions
 throwIfFeatureDisabled :: (HasFeatureFlagChecker m, MonadError QErr m) => m ()

@@ -12,7 +12,7 @@ import Control.Lens hiding (contexts)
 import Control.Monad.Memoize
 import Data.Aeson.Ordered qualified as JO
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (duplicates)
 import Data.Text.Extended
@@ -956,7 +956,7 @@ safeSelectionSet ::
   G.Name ->
   Maybe G.Description ->
   [FieldParser m a] ->
-  n (Parser 'Output m (OMap.InsOrdHashMap G.Name (P.ParsedSelection a)))
+  n (Parser 'Output m (InsOrdHashMap.InsOrdHashMap G.Name (P.ParsedSelection a)))
 safeSelectionSet name description fields =
   P.safeSelectionSet name description fields `onLeft` (throw500 . fromErrorMessage)
 

@@ -10,7 +10,7 @@ module Hasura.RQL.DDL.ComputedField
 where
 
 import Data.Aeson
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -65,7 +65,7 @@ runAddComputedField q = do
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
       tableMetadataSetter @b source table . tmComputedFields
-        %~ OMap.insert computedFieldName metadata
+        %~ InsOrdHashMap.insert computedFieldName metadata
   pure successMsg
   where
     source = _afcSource q

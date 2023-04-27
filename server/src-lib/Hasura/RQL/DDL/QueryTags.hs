@@ -9,7 +9,7 @@ where
 import Control.Lens
 import Data.Aeson
 import Data.Aeson.TH qualified as J
-import Data.HashMap.Strict.InsOrd qualified as OM
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -43,7 +43,7 @@ runSetQueryTagsConfig ::
   m EncJSON
 runSetQueryTagsConfig (SetQueryTagsConfig sourceName queryTagsConfig) = do
   oldMetadata <- getMetadata
-  case OM.lookup sourceName (_metaSources oldMetadata) of
+  case InsOrdHashMap.lookup sourceName (_metaSources oldMetadata) of
     Nothing -> throw400 NotExists $ "source with name " <> sourceName <<> " does not exist"
     Just exists -> do
       let backendType = getBackendType exists

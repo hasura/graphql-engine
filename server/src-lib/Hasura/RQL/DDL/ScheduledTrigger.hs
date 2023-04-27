@@ -15,7 +15,7 @@ where
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Time.Clock qualified as C
 import Data.URL.Template (printURLTemplate)
 import Hasura.Base.Error
@@ -98,7 +98,7 @@ runCreateCronTrigger CreateCronTrigger {..} = do
               _cctResponseTransform
       buildSchemaCacheFor metadataObj $
         MetadataModifier $
-          metaCronTriggers %~ OMap.insert _cctName metadata
+          metaCronTriggers %~ InsOrdHashMap.insert _cctName metadata
       populateInitialCronTriggerEvents _cctCronSchedule _cctName
       return successMsg
 
@@ -137,7 +137,7 @@ updateCronTrigger cronTriggerMetadata = do
   checkExists triggerName
   buildSchemaCacheFor (MOCronTrigger triggerName) $
     MetadataModifier $
-      metaCronTriggers %~ OMap.insert triggerName cronTriggerMetadata
+      metaCronTriggers %~ InsOrdHashMap.insert triggerName cronTriggerMetadata
   liftEitherM $ dropFutureCronEvents $ SingleCronTrigger triggerName
   currentTime <- liftIO C.getCurrentTime
   let scheduleTimes = generateScheduleTimes currentTime 100 $ ctSchedule cronTriggerMetadata
@@ -162,7 +162,7 @@ runDeleteCronTrigger (ScheduledTriggerName stName) = do
 
 dropCronTriggerInMetadata :: TriggerName -> MetadataModifier
 dropCronTriggerInMetadata name =
-  MetadataModifier $ metaCronTriggers %~ OMap.delete name
+  MetadataModifier $ metaCronTriggers %~ InsOrdHashMap.delete name
 
 runCreateScheduledEvent ::
   (MonadError QErr m, MonadMetadataStorage m) =>

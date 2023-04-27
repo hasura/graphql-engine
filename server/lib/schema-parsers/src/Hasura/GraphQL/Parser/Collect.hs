@@ -13,7 +13,7 @@ where
 
 import Control.Monad (foldM, unless)
 import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Maybe (fromMaybe)
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class
@@ -138,14 +138,14 @@ mergeFields ::
   (MonadParse m, Eq var) =>
   [Field NoFragments var] ->
   m (InsOrdHashMap Name (Field NoFragments var))
-mergeFields = foldM addField OMap.empty
+mergeFields = foldM addField InsOrdHashMap.empty
   where
-    addField fields newField = case OMap.lookup alias fields of
+    addField fields newField = case InsOrdHashMap.lookup alias fields of
       Nothing ->
-        pure $! OMap.insert alias newField fields
+        pure $! InsOrdHashMap.insert alias newField fields
       Just oldField -> do
         mergedField <- mergeField alias oldField newField
-        pure $! OMap.insert alias mergedField fields
+        pure $! InsOrdHashMap.insert alias mergedField fields
       where
         alias = fromMaybe (_fName newField) (_fAlias newField)
 

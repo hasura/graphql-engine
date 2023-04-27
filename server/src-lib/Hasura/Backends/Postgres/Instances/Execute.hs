@@ -16,7 +16,7 @@ where
 import Control.Monad.Trans.Control qualified as MT
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.IntMap qualified as IntMap
 import Data.Sequence qualified as Seq
 import Database.PG.Query qualified as PG
@@ -367,7 +367,7 @@ pgDBLiveQuerySubscriptionPlan userInfo _sourceName sourceConfig namespace unprep
       for unpreparedAST $
         traverse (PGL.resolveMultiplexedValue (_uiSession userInfo))
   subscriptionQueryTagsComment <- ask
-  let multiplexedQuery = PGL.mkMultiplexedQuery $ OMap.mapKeys _rfaAlias preparedAST
+  let multiplexedQuery = PGL.mkMultiplexedQuery $ InsOrdHashMap.mapKeys _rfaAlias preparedAST
       multiplexedQueryWithQueryTags =
         multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) subscriptionQueryTagsComment}
       roleName = _uiRole userInfo

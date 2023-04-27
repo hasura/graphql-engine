@@ -20,7 +20,7 @@ where
 import Data.Aeson (ToJSON (..))
 import Data.Bifunctor
 import Data.Containers.ListUtils
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List (intersperse)
 import Data.List.NonEmpty qualified as NE
 import Data.String
@@ -614,14 +614,14 @@ toTextFlat = LT.toStrict . LT.toLazyText . toBuilderFlat
 -- | Produces a query with holes, and a mapping for each
 renderBuilderFlat :: Printer -> (Builder, InsOrdHashMap Int Value)
 renderBuilderFlat =
-  second (OMap.fromList . map swap . OMap.toList)
+  second (InsOrdHashMap.fromList . map swap . InsOrdHashMap.toList)
     . flip runState mempty
     . runBuilderFlat
 
 -- | Produces a query with holes, and a mapping for each
 renderBuilderPretty :: Printer -> (Builder, InsOrdHashMap Int Value)
 renderBuilderPretty =
-  second (OMap.fromList . map swap . OMap.toList)
+  second (InsOrdHashMap.fromList . map swap . InsOrdHashMap.toList)
     . flip runState mempty
     . runBuilderPretty
 
@@ -647,9 +647,9 @@ runBuilderFlat = go 0
         ValuePrinter v -> do
           themap <- get
           next <-
-            OMap.lookup v themap `onNothing` do
-              next <- gets OMap.size
-              modify (OMap.insert v next)
+            InsOrdHashMap.lookup v themap `onNothing` do
+              next <- gets InsOrdHashMap.size
+              modify (InsOrdHashMap.insert v next)
               pure next
           pure ("@" <> paramName next)
     notEmpty = (/= mempty)
@@ -671,9 +671,9 @@ runBuilderPretty = go 0
         ValuePrinter v -> do
           themap <- get
           next <-
-            OMap.lookup v themap `onNothing` do
-              next <- gets OMap.size
-              modify (OMap.insert v next)
+            InsOrdHashMap.lookup v themap `onNothing` do
+              next <- gets InsOrdHashMap.size
+              modify (InsOrdHashMap.insert v next)
               pure next
           pure ("@" <> paramName next)
     indentation n = LT.fromText (T.replicate n " ")

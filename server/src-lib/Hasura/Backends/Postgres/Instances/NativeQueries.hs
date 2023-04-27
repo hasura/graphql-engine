@@ -10,7 +10,7 @@ import Data.Bifunctor
 import Data.ByteString qualified as BS
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrd
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Set (Set)
@@ -42,7 +42,7 @@ import Hasura.RQL.Types.BackendType
 validateNativeQuery ::
   forall m pgKind.
   (MonadIO m, MonadError QErr m) =>
-  InsOrd.InsOrdHashMap PGScalarType PQ.Oid ->
+  InsOrdHashMap.InsOrdHashMap PGScalarType PQ.Oid ->
   Env.Environment ->
   PG.PostgresConnConfiguration ->
   LogicalModelMetadata ('Postgres pgKind) ->
@@ -51,7 +51,7 @@ validateNativeQuery ::
 validateNativeQuery pgTypeOidMapping env connConf logicalModel model = do
   (prepname, preparedQuery) <- nativeQueryToPreparedStatement logicalModel model
   description <- runCheck prepname (PG.fromText preparedQuery)
-  let returnColumns = bimap toTxt nstType <$> InsOrd.toList (columnsFromFields $ _lmmFields logicalModel)
+  let returnColumns = bimap toTxt nstType <$> InsOrdHashMap.toList (columnsFromFields $ _lmmFields logicalModel)
 
   for_ (toList returnColumns) (matchTypes description)
   where
@@ -106,7 +106,7 @@ validateNativeQuery pgTypeOidMapping env connConf logicalModel model = do
                         "Column named '" <> toTxt name <> "' is not returned from the query."
               }
         Just actualOid
-          | Just expectedOid <- InsOrd.lookup expectedType pgTypeOidMapping,
+          | Just expectedOid <- InsOrdHashMap.lookup expectedType pgTypeOidMapping,
             expectedOid /= actualOid ->
               throwError
                 (err400 ValidationFailed "Failed to validate query")
@@ -130,7 +130,7 @@ validateNativeQuery pgTypeOidMapping env connConf logicalModel model = do
 
 -- | Invert the type/oid mapping.
 invertPgTypeOidMap :: InsOrdHashMap PGScalarType PQ.Oid -> Map PQ.Oid PGScalarType
-invertPgTypeOidMap = Map.fromList . map swap . InsOrd.toList
+invertPgTypeOidMap = Map.fromList . map swap . InsOrdHashMap.toList
 
 ---------------------------------------
 
@@ -224,7 +224,7 @@ nativeQueryToPreparedStatement logicalModel model = do
 
       returnedColumnNames :: Text
       returnedColumnNames =
-        commaSeparated $ InsOrd.keys (columnsFromFields $ _lmmFields logicalModel)
+        commaSeparated $ InsOrdHashMap.keys (columnsFromFields $ _lmmFields logicalModel)
 
       wrapInCTE :: Text -> Text
       wrapInCTE query =

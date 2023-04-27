@@ -30,9 +30,8 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Aeson.Ordered qualified as JO
 import Data.Align (align)
-import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as S
 import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended
@@ -199,7 +198,7 @@ checkConflictingNode sc tnGQL = do
   case queryParser introspectionQuery of
     Left _ -> pure ()
     Right results -> do
-      case OMap.lookup (mkUnNamespacedRootFieldAlias GName.___schema) results of
+      case InsOrdHashMap.lookup (mkUnNamespacedRootFieldAlias GName.___schema) results of
         Just (RFRaw (JO.Object schema)) -> do
           let names = do
                 JO.Object queryType <- JO.lookup "queryType" schema
@@ -246,7 +245,7 @@ trackExistingTableOrViewP2 source tableName isEnum config apolloFedConfig = do
           SMOTable @b tableName
     )
     $ MetadataModifier
-    $ metaSources . ix source . toSourceMetadata . smTables %~ OMap.insert tableName metadata
+    $ metaSources . ix source . toSourceMetadata . smTables %~ InsOrdHashMap.insert tableName metadata
   pure successMsg
 
 runTrackTableQ ::

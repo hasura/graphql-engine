@@ -5,7 +5,7 @@ module Hasura.Backends.BigQuery.Instances.Execute () where
 import Data.Aeson qualified as J
 import Data.Aeson.Text qualified as J
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Builder qualified as LT
@@ -96,7 +96,7 @@ recordSetToEncJSON cardinality DataLoader.RecordSet {rows} =
     BigQuery.Many -> encJFromList (toList (fmap encJFromRecord rows))
   where
     encJFromRecord =
-      encJFromInsOrdHashMap . fmap encJFromOutputValue . OMap.mapKeys coerce
+      encJFromInsOrdHashMap . fmap encJFromOutputValue . InsOrdHashMap.mapKeys coerce
     encJFromOutputValue outputValue =
       case outputValue of
         DataLoader.NullOutputValue -> encJFromJValue J.Null

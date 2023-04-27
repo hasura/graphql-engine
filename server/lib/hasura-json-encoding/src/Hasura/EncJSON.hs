@@ -30,7 +30,7 @@ import Data.ByteString.Builder qualified as BB
 import Data.ByteString.Builder.Extra qualified as BB
 import Data.ByteString.Builder.Internal qualified as BB
 import Data.ByteString.Lazy qualified as BL
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Encoding qualified as TE
 import Data.Text.NonEmpty (NonEmptyText)
 import Data.Text.NonEmpty qualified as NET
@@ -181,7 +181,7 @@ encJFromAssocList =
         builder' (t, v) = J.fromEncoding (J.text t) <> ":" <> unEncJSON v
 
 encJFromInsOrdHashMap :: InsOrdHashMap Text EncJSON -> EncJSON
-encJFromInsOrdHashMap = encJFromAssocList . OMap.toList
+encJFromInsOrdHashMap = encJFromAssocList . InsOrdHashMap.toList
 
 -- | Encode a 'JO.Value' as 'EncJSON'.
 encJFromOrderedValue :: JO.Value -> EncJSON

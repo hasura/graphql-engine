@@ -23,7 +23,7 @@ where
 import Data.Aeson qualified as J
 import Data.Aeson.TH (deriveJSON)
 import Data.Aeson.Text (encodeToLazyText)
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
 import Data.Vector qualified as V
@@ -99,16 +99,16 @@ recordSetAsHeaderAndRows Execute.RecordSet {rows} = J.toJSON (thead : tbody)
       case rows V.!? 0 of
         Nothing -> []
         Just row ->
-          map (J.toJSON . (coerce :: Execute.FieldNameText -> Text)) (OMap.keys row)
+          map (J.toJSON . (coerce :: Execute.FieldNameText -> Text)) (InsOrdHashMap.keys row)
     tbody :: [[J.Value]]
-    tbody = map (map J.toJSON . OMap.elems) (toList rows)
+    tbody = map (map J.toJSON . InsOrdHashMap.elems) (toList rows)
 
 recordSetAsSchema :: Execute.RecordSet -> J.Value
 recordSetAsSchema rs@(Execute.RecordSet {rows}) =
   recordSetAsHeaderAndRows $
     rs
       { Execute.rows =
-          OMap.adjust
+          InsOrdHashMap.adjust
             (Execute.TextOutputValue . LT.toStrict . encodeToLazyText . J.toJSON)
             (Execute.FieldNameText "columns")
             <$> rows

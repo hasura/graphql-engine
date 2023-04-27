@@ -36,7 +36,7 @@ where
 
 import Control.Lens.TH (makeLenses, makePrisms)
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
+import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (longestCommonPrefix)
 import Hasura.GraphQL.Parser.Name as GName
@@ -75,7 +75,7 @@ data DeduplicatedSelectionSet r var = DeduplicatedSelectionSet
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
-type ObjectSelectionSet r var = OMap.InsOrdHashMap G.Name (Field r var)
+type ObjectSelectionSet r var = InsOrdHashMap.InsOrdHashMap G.Name (Field r var)
 
 -- | Constructs an 'InterfaceSelectionSet' from a set of interface fields and an
 -- association list of the fields. This function ensures that @__typename@ is
@@ -202,7 +202,7 @@ convertSelectionSet = \case
       FieldGraphQL f -> convertGraphQLField f
 
     convertObjectSelectionSet =
-      map (G.SelectionField . convertField . snd) . OMap.toList
+      map (G.SelectionField . convertField . snd) . InsOrdHashMap.toList
 
     convertAbstractTypeSelectionSet abstractSelectionSet =
       let (base, members) = reduceAbstractTypeSelectionSet abstractSelectionSet
@@ -325,9 +325,9 @@ reduceAbstractTypeSelectionSet ::
 reduceAbstractTypeSelectionSet (DeduplicatedSelectionSet baseMemberFields selectionSets) =
   (baseSelectionSet, HashMap.fromList memberSelectionSets)
   where
-    sharedSelectionSetPrefix = longestCommonPrefix $ map (OMap.toList . snd) $ HashMap.toList selectionSets
+    sharedSelectionSetPrefix = longestCommonPrefix $ map (InsOrdHashMap.toList . snd) $ HashMap.toList selectionSets
 
-    baseSelectionSet = OMap.fromList $ takeWhile (shouldAddToBase . snd) sharedSelectionSetPrefix
+    baseSelectionSet = InsOrdHashMap.fromList $ takeWhile (shouldAddToBase . snd) sharedSelectionSetPrefix
 
     shouldAddToBase = \case
       FieldGraphQL f -> Set.member (_fName f) baseMemberFields
@@ -336,7 +336,7 @@ reduceAbstractTypeSelectionSet (DeduplicatedSelectionSet baseMemberFields select
       -- remove member selection sets that are subsumed by base selection set
       filter (not . null . snd) $
         -- remove the common prefix from member selection sets
-        map (second (OMap.fromList . drop (OMap.size baseSelectionSet) . OMap.toList)) $
+        map (second (InsOrdHashMap.fromList . drop (InsOrdHashMap.size baseSelectionSet) . InsOrdHashMap.toList)) $
           HashMap.toList selectionSets
 
 -------------------------------------------------------------------------------

@@ -10,7 +10,7 @@ where
 import Control.Lens (Traversal', preview, traverseOf, _2)
 import Control.Monad.Writer
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.NonEmpty (NEHashMap)
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.Text qualified as T
@@ -522,7 +522,7 @@ transformObjectSelectionSet typename selectionSet = do
   -- we need to keep track of whether any subfield contained a remote join
   (annotatedFields, subfieldsContainRemoteJoins) <-
     listens isJust $
-      flip OMap.traverseWithKey selectionSet \alias field ->
+      flip InsOrdHashMap.traverseWithKey selectionSet \alias field ->
         withField (G.unName <$> typename) (G.unName alias) do
           case field of
             FieldGraphQL f -> (,Nothing) <$> transformGraphQLField f
@@ -532,7 +532,7 @@ transformObjectSelectionSet typename selectionSet = do
                   Just $ createRemoteJoin (HashMap.intersection joinColumnAliases _srrsLHSJoinFields) _srrsRelationship
                 )
   let internalTypeAlias = Name.___hasura_internal_typename
-      remoteJoins = OMap.mapMaybe snd annotatedFields
+      remoteJoins = InsOrdHashMap.mapMaybe snd annotatedFields
       additionalFields =
         if
             | isJust typename && (not (null remoteJoins) || subfieldsContainRemoteJoins) ->
@@ -540,7 +540,7 @@ transformObjectSelectionSet typename selectionSet = do
                 -- that there is at least one remote join in this part of tree, meaning
                 -- we might need to branch on the typename when traversing the join
                 -- tree: we insert a custom field that will return the type name.
-                OMap.singleton internalTypeAlias $
+                InsOrdHashMap.singleton internalTypeAlias $
                   mkGraphQLField
                     (Just internalTypeAlias)
                     GName.___typename
@@ -552,17 +552,17 @@ transformObjectSelectionSet typename selectionSet = do
                 -- joins; this selection set isn't "ambiguous".
                 mempty
       transformedFields = fmap fst annotatedFields <> additionalFields
-  case NEMap.fromList $ OMap.toList remoteJoins of
+  case NEMap.fromList $ InsOrdHashMap.toList remoteJoins of
     Nothing -> pure $ fmap FieldGraphQL transformedFields
     Just neRemoteJoins -> do
       collect $ NEMap.mapKeys (\fieldGName -> QualifiedFieldName (G.unName <$> typename) (G.unName fieldGName)) neRemoteJoins
       pure $
         fmap
           FieldGraphQL
-          (transformedFields <> OMap.fromList [(_fAlias fld, fld) | fld <- toList phantomFields])
+          (transformedFields <> InsOrdHashMap.fromList [(_fAlias fld, fld) | fld <- toList phantomFields])
   where
     nameToField = FieldName . G.unName
-    allAliases = map (nameToField . fst) $ OMap.toList selectionSet
+    allAliases = map (nameToField . fst) $ InsOrdHashMap.toList selectionSet
 
     mkPlaceholderField alias =
       mkGraphQLField (Just alias) GName.___typename mempty mempty SelectionSetNone
@@ -572,7 +572,7 @@ transformObjectSelectionSet typename selectionSet = do
     -- arguments. To be consistent with that, we ignore fields with arguments
     noArgsGraphQLFields =
       HashMap.fromList $
-        flip mapMaybe (OMap.toList selectionSet) \(alias, field) -> case field of
+        flip mapMaybe (InsOrdHashMap.toList selectionSet) \(alias, field) -> case field of
           FieldGraphQL f ->
             if null (_fArguments f)
               then Just (_fName f, FieldName $ G.unName alias)

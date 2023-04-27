@@ -36,7 +36,7 @@ import Data.Aeson.Key qualified as K
 import Data.ByteString.Lazy qualified as BL
 import Data.Has
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrd
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
@@ -537,7 +537,7 @@ defaultLogicalModelSelectionSet relationshipInfo logicalModel = runMaybeT $ do
             -- fetch the nested custom return type for comparison purposes
             _nestedLogicalModel <- lift $ askLogicalModelInfo @b lmfLogicalModel
             -- lookup the reference in the data source
-            relationship <- hoistMaybe $ InsOrd.lookup relName relationshipInfo
+            relationship <- hoistMaybe $ InsOrdHashMap.lookup relName relationshipInfo
             -- check the types match
             -- return IR for the actual data source lookup (ie, the table
             -- lookup for a relationship)
@@ -549,7 +549,7 @@ defaultLogicalModelSelectionSet relationshipInfo logicalModel = runMaybeT $ do
   let allowedColumns =
         filter
           (isSelectable . fst)
-          (InsOrd.toList (_lmiFields logicalModel))
+          (InsOrdHashMap.toList (_lmiFields logicalModel))
 
   parsers <- traverse (uncurry parseField) allowedColumns
 
@@ -767,7 +767,7 @@ logicalModelDistinctArg logicalModel = do
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
 
   let maybeColumnDefinitions =
-        traverse definitionFromTypeRow (InsOrd.keys (_lmiFields logicalModel))
+        traverse definitionFromTypeRow (InsOrdHashMap.keys (_lmiFields logicalModel))
           >>= NE.nonEmpty
 
   case (,) <$> G.mkName "_enum_name" <*> maybeColumnDefinitions of

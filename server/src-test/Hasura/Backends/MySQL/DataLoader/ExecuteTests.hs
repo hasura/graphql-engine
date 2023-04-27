@@ -3,7 +3,7 @@ module Hasura.Backends.MySQL.DataLoader.ExecuteTests
   )
 where
 
-import Data.HashMap.Strict.InsOrd qualified as HMS
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Vector qualified as V
 import Hasura.Backends.MySQL.DataLoader.Execute
 import Hasura.Prelude
@@ -28,7 +28,7 @@ joinObjectRowsThrowsIfRightRowsIsEmpty =
     joinObjectRows
       Nothing
       ""
-      HMS.empty
+      InsOrdHashMap.empty
       empty
       `shouldSatisfy` invariant
 
@@ -42,8 +42,8 @@ joinObjectRowsThrowsIfRightRowsIsLargerThanOne = do
             joinObjectRows
               Nothing
               ""
-              HMS.empty
-              (V.replicate size HMS.empty)
+              InsOrdHashMap.empty
+              (V.replicate size InsOrdHashMap.empty)
       assert $ invariant result
 
 leftObjectJoinThrowsIfRightRowsIsEmpty :: Spec
@@ -53,7 +53,7 @@ leftObjectJoinThrowsIfRightRowsIsEmpty =
       Nothing
       ""
       []
-      (RecordSet Nothing (V.singleton HMS.empty) Nothing)
+      (RecordSet Nothing (V.singleton InsOrdHashMap.empty) Nothing)
       (RecordSet Nothing mempty Nothing)
       `shouldSatisfy` invariant
 
@@ -68,8 +68,8 @@ leftObjectJoinThrowsIfRightRowsIsLargerThanOne =
               Nothing
               ""
               []
-              (RecordSet Nothing (V.singleton HMS.empty) Nothing)
-              (RecordSet Nothing (V.replicate size HMS.empty) Nothing)
+              (RecordSet Nothing (V.singleton InsOrdHashMap.empty) Nothing)
+              (RecordSet Nothing (V.replicate size InsOrdHashMap.empty) Nothing)
       assert $ invariant result
 
 invariant :: Either ExecuteProblem a -> Bool

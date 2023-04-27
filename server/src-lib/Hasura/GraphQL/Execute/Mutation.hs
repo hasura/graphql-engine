@@ -5,7 +5,7 @@ where
 
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Tagged qualified as Tagged
 import Hasura.Base.Error
 import Hasura.GraphQL.Context
@@ -156,5 +156,5 @@ convertMutationSelectionSet
               pure $ ExecStepMulti allSteps
 
     -- Transform the RQL AST into a prepared SQL query
-    txs <- flip OMap.traverseWithKey unpreparedQueries $ resolveExecutionSteps
+    txs <- flip InsOrdHashMap.traverseWithKey unpreparedQueries $ resolveExecutionSteps
     return (txs, parameterizedQueryHash)

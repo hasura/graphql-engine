@@ -30,7 +30,7 @@ import Data.Aeson.Types (prependFailure)
 import Data.Bifunctor (bimap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd.Autodocodec (insertionOrderedElemsCodec)
-import Data.HashMap.Strict.InsOrd.Extended qualified as OM
+import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Scientific (floatingOrInteger)
 import Data.Text qualified as T
 import Hasura.Prelude
@@ -253,7 +253,7 @@ instance J.ToJSON (RemoteRelationshipG r) => J.ToJSON (RemoteSchemaTypeRelations
   toJSON RemoteSchemaTypeRelationships {..} =
     J.object
       [ "type_name" J..= _rstrsName,
-        "relationships" J..= OM.elems _rstrsRelationships
+        "relationships" J..= InsOrdHashMap.elems _rstrsRelationships
       ]
 
 type SchemaRemoteRelationships r = InsOrdHashMap G.Name (RemoteSchemaTypeRelationships r)

@@ -8,7 +8,7 @@ import Control.Lens
 import Control.Monad.Circular
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
+import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.HashMap.Strict.Multi qualified as MMap
 import Data.Monoid (Any (..))
 import Data.OpenApi
@@ -51,7 +51,7 @@ buildAllEndpoints ::
   G.SchemaIntrospection ->
   DeclareM m (InsOrdHashMap String (PathItem, Text))
 buildAllEndpoints schemaCache schemaTypes =
-  foldl' (OMap.unionWith (<>)) mempty <$> sequence do
+  foldl' (InsOrdHashMap.unionWith (<>)) mempty <$> sequence do
     -- for each path in the trie of endpoints
     endpointMap <- Trie.elems $ scEndpoints schemaCache
     -- for each method at that path
@@ -97,7 +97,7 @@ buildEndpoint schemaTypes method EndpointMetadata {..} = do
           & summary ?~ endpointName
           & parameters .~ (Inline xHasuraAdminSecret : endpointVarList)
           & requestBody .~ reqBody
-          & responses .~ Responses Nothing (OMap.singleton 200 $ Inline response)
+          & responses .~ Responses Nothing (InsOrdHashMap.singleton 200 $ Inline response)
       pathItem =
         mempty & case method of
           GET -> get ?~ operation
@@ -112,7 +112,7 @@ buildEndpoint schemaTypes method EndpointMetadata {..} = do
           then ""
           else "\n\nEndpoint \"" <> endpointName <> "\":" <> foldMap ("\n- ⚠️ " <>) messages
 
-  pure $ OMap.singleton (T.unpack endpointURL) (pathItem, formattedMessages)
+  pure $ InsOrdHashMap.singleton (T.unpack endpointURL) (pathItem, formattedMessages)
 
 --------------------------------------------------------------------------------
 -- Parameters
@@ -180,7 +180,7 @@ buildRequestBody Structure {..} = do
         runCircularT $
           mconcat <$> for vars \(varName, varInfo) -> do
             (resolvedVarInfo, isVarRequired) <- buildVariableSchema varInfo
-            pure (OMap.singleton (G.unName varName) resolvedVarInfo, Any isVarRequired)
+            pure (InsOrdHashMap.singleton (G.unName varName) resolvedVarInfo, Any isVarRequired)
       pure $
         Just $
           Inline $
@@ -188,7 +188,7 @@ buildRequestBody Structure {..} = do
               & description ?~ "Query parameters can also be provided in the request body as a JSON object"
               & required ?~ isBodyRequired
               & content
-                .~ OMap.singleton
+                .~ InsOrdHashMap.singleton
                   ("application" // "json")
                   ( mempty
                       & schema
@@ -235,7 +235,7 @@ buildVariableSchema VariableInfo {..} = do
           -- result in an unnecessary component declaration if here is the only
           -- place the reference would have been used.
           declarations <- lift look
-          OMap.lookup refName declarations
+          InsOrdHashMap.lookup refName declarations
             -- DeclareT doesn't have a MonadError instance, hence the need for
             -- explicit lifting.
             `onNothing` lift (lift $ throw500 "internal error: declareType returned an invalid reference")
@@ -267,7 +267,7 @@ buildInputFieldSchema gType = \case
             mempty
               & title ?~ G.unName typeName
               & description .~ fmap G.unDescription (G._iotdDescription _ioiTypeDefinition)
-              & properties .~ OMap.fromList fields
+              & properties .~ InsOrdHashMap.fromList fields
               & type_ ?~ OpenApiObject
               & nullable ?~ G.unNullability nullability
       lift $ declareType typeName nullability objectSchema
@@ -286,7 +286,7 @@ buildResponse (Structure fields _) endpointMethod endpointURL = do
   fs <- buildSelectionSchema $ HashMap.toList fields
   pure $
     mempty
-      & content .~ OMap.singleton ("application" // "json") (mempty & schema ?~ Inline fs)
+      & content .~ InsOrdHashMap.singleton ("application" // "json") (mempty & schema ?~ Inline fs)
       & description .~ "Responses for " <> tshow endpointMethod <> " " <> endpointURL
 
 -- | Given a list of fields and their types, build a corresponding schema.
@@ -298,7 +298,7 @@ buildSelectionSchema fields = do
   props <- for fields \(fieldName, fieldInfo) -> do
     fieldSchema <- buildFieldSchema fieldInfo
     pure (G.unName fieldName, fieldSchema)
-  pure $ mempty & properties .~ OMap.fromList props
+  pure $ mempty & properties .~ InsOrdHashMap.fromList props
 
 -- | Build the schema for a given output type.
 buildFieldSchema ::
@@ -420,7 +420,7 @@ applyModifiers gtype fun = case gtype of
 declareType :: Monad m => G.Name -> G.Nullability -> Schema -> DeclareM m (Referenced Schema)
 declareType typeName nullability s = do
   let refName = mkReferenceName typeName nullability
-  declare $ OMap.singleton refName s
+  declare $ InsOrdHashMap.singleton refName s
   pure $ Ref $ Reference refName
 
 -- | Crafts a reference name for a given type.

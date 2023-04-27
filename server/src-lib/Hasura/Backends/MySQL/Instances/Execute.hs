@@ -5,7 +5,7 @@ module Hasura.Backends.MySQL.Instances.Execute () where
 import Data.Aeson as J
 import Data.Bifunctor
 import Data.Coerce
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Tree
@@ -117,7 +117,7 @@ encJFromRecordSet RecordSet {rows} =
     ( map
         ( encJFromAssocList
             . map (first coerce . second encJFromOutputValue)
-            . OMap.toList
+            . InsOrdHashMap.toList
         )
         (toList rows)
     )
@@ -129,7 +129,7 @@ encJFromOutputValue =
     RecordOutputValue m ->
       encJFromAssocList
         . map (first coerce . second encJFromOutputValue)
-        . OMap.toList
+        . InsOrdHashMap.toList
         $ m
     ScalarOutputValue value -> encJFromJValue value
     NullOutputValue {} -> encJFromJValue J.Null

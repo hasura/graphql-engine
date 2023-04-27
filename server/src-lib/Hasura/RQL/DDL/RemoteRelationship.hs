@@ -25,7 +25,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended ((<<>), (<>>))
 import Hasura.Base.Error
@@ -133,7 +133,7 @@ runCreateRemoteRelationship CreateFromSourceRelationship {..} = do
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
       tableMetadataSetter @b _crrSource _crrTable . tmRemoteRelationships
-        %~ OMap.insert _crrName (RemoteRelationship _crrName _crrDefinition)
+        %~ InsOrdHashMap.insert _crrName (RemoteRelationship _crrName _crrDefinition)
   pure successMsg
 
 runUpdateRemoteRelationship ::
@@ -152,7 +152,7 @@ runUpdateRemoteRelationship CreateFromSourceRelationship {..} = do
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
       tableMetadataSetter @b _crrSource _crrTable . tmRemoteRelationships
-        %~ OMap.insert _crrName (RemoteRelationship _crrName _crrDefinition)
+        %~ InsOrdHashMap.insert _crrName (RemoteRelationship _crrName _crrDefinition)
   pure successMsg
 
 --------------------------------------------------------------------------------
@@ -227,7 +227,7 @@ runCreateRemoteSchemaRemoteRelationship CreateRemoteSchemaRemoteRelationship {..
         . at _crsrrType
         . non (RemoteSchemaTypeRelationships _crsrrType mempty)
         . rstrsRelationships
-        %~ OMap.insert _crsrrName (RemoteRelationship _crsrrName _crsrrDefinition)
+        %~ InsOrdHashMap.insert _crsrrName (RemoteRelationship _crsrrName _crsrrDefinition)
   pure successMsg
 
 runUpdateRemoteSchemaRemoteRelationship ::
@@ -279,7 +279,7 @@ runDeleteRemoteSchemaRemoteRelationship DeleteRemoteSchemaRemoteRelationship {..
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
       metaRemoteSchemas . ix _drsrrRemoteSchema . rsmRemoteRelationships . ix _drsrrTypeName . rstrsRelationships
-        %~ OMap.delete relName
+        %~ InsOrdHashMap.delete relName
   pure successMsg
 
 --------------------------------------------------------------------------------

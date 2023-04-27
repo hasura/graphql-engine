@@ -30,7 +30,7 @@ import Data.Aeson.TH
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.List.Extended qualified as LE
 import Data.List.NonEmpty qualified as NE
@@ -160,11 +160,11 @@ resolveDatabaseMetadata ::
   m (Either QErr (DBObjectsIntrospection ('Postgres pgKind)))
 resolveDatabaseMetadata sourceMetadata sourceConfig =
   runExceptT $ _pecRunTx (_pscExecCtx sourceConfig) (PGExecCtxInfo (Tx PG.ReadOnly Nothing) InternalRawQuery) do
-    tablesMeta <- fetchTableMetadata $ HashMap.keysSet $ OMap.toHashMap $ _smTables sourceMetadata
+    tablesMeta <- fetchTableMetadata $ HashMap.keysSet $ InsOrdHashMap.toHashMap $ _smTables sourceMetadata
     let allFunctions =
           Set.fromList $
-            OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
-              <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
+            InsOrdHashMap.keys (_smFunctions sourceMetadata) -- Tracked functions
+              <> concatMap getComputedFieldFunctionsMetadata (InsOrdHashMap.elems $ _smTables sourceMetadata) -- Computed field functions
     functionsMeta <- fetchFunctionMetadata @pgKind allFunctions
     pgScalars <- fetchPgScalars
     let scalarsMap = HashMap.fromList do
@@ -176,7 +176,7 @@ resolveDatabaseMetadata sourceMetadata sourceConfig =
     -- A helper function to list all functions underpinning computed fields from a table metadata
     getComputedFieldFunctionsMetadata :: TableMetadata ('Postgres pgKind) -> [FunctionName ('Postgres pgKind)]
     getComputedFieldFunctionsMetadata =
-      map (_cfdFunction . _cfmDefinition) . OMap.elems . _tmComputedFields
+      map (_cfdFunction . _cfmDefinition) . InsOrdHashMap.elems . _tmComputedFields
 
 -- | Initialise catalog tables for a source, including those required by the event delivery subsystem.
 prepareCatalog ::

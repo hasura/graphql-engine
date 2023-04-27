@@ -59,7 +59,7 @@ where
 import Data.Either (isRight)
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List (uncons)
 import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier)
@@ -405,10 +405,10 @@ mapField fp f = fmap (fmap f) fp
 parsedSelectionsToFields ::
   -- | how to handle @__typename@ fields
   (Text -> a) ->
-  OMap.InsOrdHashMap G.Name (P.ParsedSelection a) ->
+  InsOrdHashMap.InsOrdHashMap G.Name (P.ParsedSelection a) ->
   Fields a
 parsedSelectionsToFields mkTypenameFromText =
-  OMap.toList
+  InsOrdHashMap.toList
     >>> map (FieldName . G.unName *** P.handleTypename (mkTypenameFromText . G.unName))
 
 numericAggOperators :: [C.GQLNameIdentifier]

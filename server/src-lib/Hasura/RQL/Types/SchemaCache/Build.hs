@@ -35,7 +35,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson (Value, toJSON)
 import Data.Aeson.TH
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.Multi qualified as MultiMap
 import Data.List qualified as L
 import Data.List.Extended qualified as L
@@ -370,7 +370,7 @@ getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst =
         queryIsFaulty :: (Text, GQLQueryWithText) -> Bool
         queryIsFaulty (_, gqlQ) = (_lqQuery lq) == gqlQ
 
-    lqLst = concatMap zipLQwithDef (OMap.toList qcs)
+    lqLst = concatMap zipLQwithDef (InsOrdHashMap.toList qcs)
 
     formatError :: (CollectionName, ListedQuery) -> [Text] -> Text
     formatError (cName, lq) allErrs = msgInit <> lToTxt allErrs <> faultyEndpoints <> isInAllowList

@@ -32,7 +32,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Types qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Foldable
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Maybe
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
@@ -289,7 +289,7 @@ getFinalRecordSet recordSet =
     recordSet
       { rows =
           fmap
-            ( OMap.filterWithKey
+            ( InsOrdHashMap.filterWithKey
                 ( \(FieldNameText k) _ ->
                     all (elem k) (wantedFields recordSet)
                 )
@@ -305,14 +305,14 @@ selectToBigQuery select =
   BigQuery
     { query = LT.toLazyText query,
       parameters =
-        OMap.fromList
+        InsOrdHashMap.fromList
           ( map
               ( \(int, value) ->
                   ( ParameterName (LT.toLazyText (ToQuery.paramName int)),
                     Parameter {typ = valueType value, value}
                   )
               )
-              (OMap.toList params)
+              (InsOrdHashMap.toList params)
           )
     }
   where
@@ -584,7 +584,7 @@ createQueryJob conn BigQuery {..} = do
                                         "parameterValue" .= valueToBigQueryJson value
                                       ]
                                 )
-                                (OMap.toList parameters)
+                                (InsOrdHashMap.toList parameters)
                           ]
                     ]
               ]
@@ -736,7 +736,7 @@ parseBigQueryRow columnTypes =
                 fields
             )
             J.<?> J.Key "f"
-        pure (RecordOutputValue (OMap.fromList (V.toList values)))
+        pure (RecordOutputValue (InsOrdHashMap.fromList (V.toList values)))
     )
 
 parseBigQueryValue :: IsNullable -> BigQueryFieldType -> J.Value -> J.Parser OutputValue

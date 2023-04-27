@@ -12,7 +12,7 @@ where
 import Data.Aeson
 import Data.Graph qualified as G
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
@@ -336,7 +336,7 @@ buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModel
 
   -- At the moment, we only support select permissions for logical models
   metadataRolePermissions <-
-    for (OMap.toHashMap selectPermissions) \selectPermission -> do
+    for (InsOrdHashMap.toHashMap selectPermissions) \selectPermission -> do
       let role :: RoleName
           role = _pdRole selectPermission
 

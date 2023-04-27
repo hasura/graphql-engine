@@ -21,7 +21,7 @@ import Data.Aeson qualified as J
 import Data.Bifunctor
 import Data.Foldable
 import Data.Graph
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.IORef
 import Data.Vector (Vector)
 import Data.Vector qualified as V
@@ -208,13 +208,13 @@ makeRecordSet rows =
 saveRecordSet :: Ref -> RecordSet -> Execute ()
 saveRecordSet ref recordSet = do
   recordSetsRef <- asks recordSets
-  liftIO (modifyIORef' recordSetsRef (OMap.insert ref recordSet))
+  liftIO (modifyIORef' recordSetsRef (InsOrdHashMap.insert ref recordSet))
 
 getRecordSet :: Ref -> Execute RecordSet
 getRecordSet ref = do
   recordSetsRef <- asks recordSets
   hash <- liftIO (readIORef recordSetsRef)
-  OMap.lookup ref hash `onNothing` throwError (MissingRecordSetBug ref)
+  InsOrdHashMap.lookup ref hash `onNothing` throwError (MissingRecordSetBug ref)
 
 -- | See documentation for 'HeadAndTail'.
 getFinalRecordSet :: HeadAndTail -> Execute RecordSet
@@ -228,7 +228,7 @@ getFinalRecordSet HeadAndTail {..} = do
     tailSet
       { rows =
           fmap
-            ( OMap.filterWithKey
+            ( InsOrdHashMap.filterWithKey
                 ( \(FieldName k) _ ->
                     all (elem k) (wantedFields headSet)
                 )
@@ -251,7 +251,7 @@ makeRelationshipIn
     pure []
     where
       _lookupField' k row =
-        case OMap.lookup k row of
+        case InsOrdHashMap.lookup k row of
           Nothing -> Nothing
           Just x -> Just x
 
@@ -289,8 +289,8 @@ leftObjectJoin wantedFields joinAlias joinFields left right = do
                     ( \(rightField, leftField) ->
                         Just True
                           == ( do
-                                 leftValue <- OMap.lookup leftField leftRow
-                                 rightValue <- OMap.lookup rightField rightRow
+                                 leftValue <- InsOrdHashMap.lookup leftField leftRow
+                                 rightValue <- InsOrdHashMap.lookup rightField rightRow
                                  pure (leftValue == rightValue)
                              )
                     )
@@ -332,8 +332,8 @@ leftArrayJoin wantedFields joinAlias joinFields rhsTop rhsOffset left right =
                                       ( \(rightField, leftField) ->
                                           Just True
                                             == ( do
-                                                   leftValue <- OMap.lookup leftField leftRow
-                                                   rightValue <- OMap.lookup rightField rightRow
+                                                   leftValue <- InsOrdHashMap.lookup leftField leftRow
+                                                   rightValue <- InsOrdHashMap.lookup rightField rightRow
                                                    pure (leftValue == rightValue)
                                                )
                                       )
@@ -358,12 +358,12 @@ joinArrayRows ::
   Vector (InsOrdHashMap DataLoaderPlan.FieldName OutputValue) ->
   InsOrdHashMap DataLoaderPlan.FieldName OutputValue
 joinArrayRows wantedFields fieldName leftRow rightRow =
-  OMap.insert
+  InsOrdHashMap.insert
     (DataLoaderPlan.FieldName fieldName)
     ( ArrayOutputValue
         ( fmap
             ( RecordOutputValue
-                . OMap.filterWithKey
+                . InsOrdHashMap.filterWithKey
                   ( \(DataLoaderPlan.FieldName k) _ ->
                       all (elem k) wantedFields
                   )
@@ -383,14 +383,14 @@ joinObjectRows ::
   Vector (InsOrdHashMap DataLoaderPlan.FieldName OutputValue) ->
   Either ExecuteProblem (InsOrdHashMap DataLoaderPlan.FieldName OutputValue)
 joinObjectRows wantedFields fieldName leftRow rightRows
-  | V.length rightRows /= 1 = Left . BrokenJoinInvariant . foldMap OMap.keys $ rightRows
+  | V.length rightRows /= 1 = Left . BrokenJoinInvariant . foldMap InsOrdHashMap.keys $ rightRows
   | otherwise =
       let row = V.head rightRows
        in pure $
-            OMap.insert
+            InsOrdHashMap.insert
               (DataLoaderPlan.FieldName fieldName)
               ( RecordOutputValue
-                  ( OMap.filterWithKey
+                  ( InsOrdHashMap.filterWithKey
                       (\(DataLoaderPlan.FieldName k) _ -> all (elem k) wantedFields)
                       row
                   )

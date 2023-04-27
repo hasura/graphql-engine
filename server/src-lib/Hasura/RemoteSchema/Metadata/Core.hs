@@ -24,7 +24,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd.Autodocodec (insertionOrderedElemsCodec)
-import Data.HashMap.Strict.InsOrd.Extended qualified as OM
+import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Text qualified as T
 import Data.Typeable (Typeable)
 import Hasura.Base.Error
@@ -131,7 +131,7 @@ instance J.ToJSON (RemoteRelationshipG r) => J.ToJSON (RemoteSchemaMetadataG r) 
         "definition" J..= _rsmDefinition,
         "comment" J..= _rsmComment,
         "permissions" J..= _rsmPermissions,
-        "remote_relationships" J..= OM.elems _rsmRemoteRelationships
+        "remote_relationships" J..= InsOrdHashMap.elems _rsmRemoteRelationships
       ]
 
 $(makeLenses ''RemoteSchemaMetadataG)

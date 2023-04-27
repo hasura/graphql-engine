@@ -14,7 +14,7 @@ module Harness.Backend.DataConnector.Mock.Server
 where
 
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as HMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.IORef qualified as I
 import Data.OpenApi qualified as OpenApi
 import Data.Proxy
@@ -89,7 +89,7 @@ capabilities =
                 { OpenApi._schemaType = Just OpenApi.OpenApiObject,
                   OpenApi._schemaNullable = Just False,
                   OpenApi._schemaProperties =
-                    HMap.singleton
+                    InsOrdHashMap.singleton
                       "DEBUG"
                       ( OpenApi.Inline
                           mempty

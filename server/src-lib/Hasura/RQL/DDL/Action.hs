@@ -28,7 +28,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NEList
 import Data.Text.Extended
 import Data.URL.Template (printURLTemplate)
@@ -88,7 +88,7 @@ runCreateAction createAction = do
           []
   buildSchemaCacheFor (MOAction actionName) $
     MetadataModifier $
-      metaActions %~ OMap.insert actionName metadata
+      metaActions %~ InsOrdHashMap.insert actionName metadata
   pure successMsg
   where
     actionName = _caName createAction
@@ -279,7 +279,7 @@ runDropAction (DropAction actionName clearDataM) = do
 
 dropActionInMetadata :: ActionName -> MetadataModifier
 dropActionInMetadata name =
-  MetadataModifier $ metaActions %~ OMap.delete name
+  MetadataModifier $ metaActions %~ InsOrdHashMap.delete name
 
 newtype ActionMetadataField = ActionMetadataField {unActionMetadataField :: Text}
   deriving (Show, Eq, J.FromJSON, J.ToJSON)

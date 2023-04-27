@@ -7,8 +7,7 @@ import Control.Arrow.Extended
 import Control.Lens hiding ((.=))
 import Data.Aeson
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrd
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as HS
 import Data.List (nub)
 import Data.Monoid (First)
@@ -144,7 +143,7 @@ pruneDanglingDependents cache =
                 "remote schema " <> remoteSchemaName <<> " is not found"
         void
           $ onNothing
-            (OMap.lookup typeName (_rscRemoteRelationships remoteSchema) >>= OMap.lookup relationshipName)
+            (InsOrdHashMap.lookup typeName (_rscRemoteRelationships remoteSchema) >>= InsOrdHashMap.lookup relationshipName)
           $ Left
           $ "remote relationship "
             <> relationshipName
@@ -179,7 +178,7 @@ pruneDanglingDependents cache =
                         <> " permission defined on logical model "
                         <> logicalModelName <<> " for role " <>> roleName
                 LMOCol column ->
-                  unless (InsOrd.member column (_lmiFields logicalModel)) do
+                  unless (InsOrdHashMap.member column (_lmiFields logicalModel)) do
                     Left ("Could not find column " <> column <<> " in logical model " <>> logicalModelName)
             SOINativeQuery nativeQueryName -> do
               void $ resolveNativeQuery sourceInfo nativeQueryName
@@ -187,7 +186,7 @@ pruneDanglingDependents cache =
               nativeQueryInfo <- resolveNativeQuery sourceInfo nativeQueryName
               case nativeQueryObjId of
                 NQOCol colName ->
-                  unless (InsOrd.member colName (_lmiFields (_nqiReturns nativeQueryInfo))) $
+                  unless (InsOrdHashMap.member colName (_lmiFields (_nqiReturns nativeQueryInfo))) $
                     Left
                       ("native query " <> nativeQueryName <<> " has no field named " <>> colName)
             SOITableObj tableName tableObjectId -> do
@@ -277,7 +276,7 @@ deleteMetadataObject = \case
   MORemoteSchema name -> boRemoteSchemas %~ HashMap.delete name
   MORemoteSchemaPermissions name role -> boRemoteSchemas . ix name . _1 . rscPermissions %~ HashMap.delete role
   MORemoteSchemaRemoteRelationship remoteSchema typeName relationshipName ->
-    boRemoteSchemas . ix remoteSchema . _1 . rscRemoteRelationships . ix typeName %~ OMap.delete relationshipName
+    boRemoteSchemas . ix remoteSchema . _1 . rscRemoteRelationships . ix typeName %~ InsOrdHashMap.delete relationshipName
   MOCustomTypes -> boCustomTypes %~ const mempty
   MOAction name -> boActions %~ HashMap.delete name
   MOActionPermission name role -> boActions . ix name . aiPermissions %~ HashMap.delete role
@@ -314,7 +313,7 @@ deleteMetadataObject = \case
       SMONativeQuery name -> siNativeQueries %~ HashMap.delete name
       SMONativeQueryObj nativeQueryName nativeQueryObjId ->
         siNativeQueries . ix nativeQueryName %~ case nativeQueryObjId of
-          NQMORel name _ -> nqiArrayRelationships %~ InsOrd.delete name
+          NQMORel name _ -> nqiArrayRelationships %~ InsOrdHashMap.delete name
       SMOLogicalModel name -> siLogicalModels %~ HashMap.delete name
       SMOLogicalModelObj logicalModelName logicalModelObjectId ->
         siLogicalModels . ix logicalModelName %~ case logicalModelObjectId of

@@ -32,7 +32,7 @@ import Data.ByteString.Lazy qualified as LBS
 import Data.CaseInsensitive qualified as CI
 import Data.Dependent.Map qualified as DM
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.String
@@ -501,15 +501,15 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
           cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
           remoteSchemas =
-            OMap.elems queryPlan >>= \case
+            InsOrdHashMap.elems queryPlan >>= \case
               E.ExecStepDB _remoteHeaders _ remoteJoins ->
                 maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins) remoteJoins
               E.ExecStepRemote remoteSchemaInfo _ _ _ -> [remoteSchemaInfo]
               _ -> []
           actionsInfo =
             foldl getExecStepActionWithActionInfo [] $
-              OMap.elems $
-                OMap.filter
+              InsOrdHashMap.elems $
+                InsOrdHashMap.filter
                   ( \case
                       E.ExecStepAction _ _ _remoteJoins -> True
                       _ -> False
@@ -754,7 +754,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       res <- runExceptT $ f $ lift action
       onLeft res (throwError . embed)
 
-    forWithKey = flip OMap.traverseWithKey
+    forWithKey = flip InsOrdHashMap.traverseWithKey
 
     telemTransport = Telem.WebSocket
 

@@ -18,7 +18,7 @@ import Autodocodec qualified as AC
 import Control.Lens (Traversal', has, preview, (^?))
 import Data.Aeson
 import Data.Environment qualified as Env
-import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrd
+import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -51,7 +51,7 @@ data TrackNativeQuery (b :: BackendType) = TrackNativeQuery
     tnqRootFieldName :: NativeQueryName,
     tnqCode :: Text,
     tnqArguments :: HashMap NativeQueryArgumentName (NullableScalarType b),
-    tnqArrayRelationships :: InsOrd.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
+    tnqArrayRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
     tnqDescription :: Maybe Text,
     tnqReturns :: LogicalModelName
   }
@@ -168,7 +168,7 @@ runGetNativeQuery q = do
   let nativeQuery :: Maybe (NativeQueries b)
       nativeQuery = metadata ^? metaSources . ix (gnqSource q) . toSourceMetadata . smNativeQueries @b
 
-  pure (encJFromJValue (InsOrd.elems <$> nativeQuery))
+  pure (encJFromJValue (InsOrdHashMap.elems <$> nativeQuery))
 
 -- | Handler for the 'track_native_query' endpoint. The type 'TrackNativeQuery b'
 -- (appearing here in wrapped as 'BackendTrackNativeQuery b' for 'AnyBackend'
@@ -210,7 +210,7 @@ runTrackNativeQuery env trackNativeQueryRequest = do
         MOSourceObjId source $
           AB.mkAnyBackend $
             SMONativeQuery @b fieldName
-      existingNativeQueries = InsOrd.keys (_smNativeQueries sourceMetadata)
+      existingNativeQueries = InsOrdHashMap.keys (_smNativeQueries sourceMetadata)
 
   when (fieldName `elem` existingNativeQueries) do
     throw400 AlreadyTracked $ "Native query '" <> toTxt fieldName <> "' is already tracked."
@@ -218,7 +218,7 @@ runTrackNativeQuery env trackNativeQueryRequest = do
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
       (metaSources . ix source . toSourceMetadata @b . smNativeQueries)
-        %~ InsOrd.insert fieldName metadata
+        %~ InsOrdHashMap.insert fieldName metadata
 
   pure successMsg
   where
@@ -279,7 +279,7 @@ dropNativeQueryInMetadata :: forall b. BackendMetadata b => SourceName -> Native
 dropNativeQueryInMetadata source rootFieldName = do
   MetadataModifier $
     metaSources . ix source . toSourceMetadata @b . smNativeQueries
-      %~ InsOrd.delete rootFieldName
+      %~ InsOrdHashMap.delete rootFieldName
 
 -- | check feature flag is enabled before carrying out any actions
 throwIfFeatureDisabled :: (HasFeatureFlagChecker m, MonadError QErr m) => m ()

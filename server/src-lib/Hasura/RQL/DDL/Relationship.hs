@@ -16,7 +16,7 @@ where
 import Control.Lens ((.~))
 import Data.Aeson.Types
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
@@ -82,14 +82,14 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
         tableCache
         tableName
         (Left value)
-      pure $ tmObjectRelationships %~ OMap.insert relName (RelDef relName (_rdUsing value) comment)
+      pure $ tmObjectRelationships %~ InsOrdHashMap.insert relName (RelDef relName (_rdUsing value) comment)
     ArrRel -> do
       value <- decodeValue $ toJSON relDef
       validateRelationship @b
         tableCache
         tableName
         (Right value)
-      pure $ tmArrayRelationships %~ OMap.insert relName (RelDef relName (_rdUsing value) comment)
+      pure $ tmArrayRelationships %~ InsOrdHashMap.insert relName (RelDef relName (_rdUsing value) comment)
 
   buildSchemaCacheFor metadataObj $
     MetadataModifier $

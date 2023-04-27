@@ -10,7 +10,7 @@ import Data.Aeson.Ordered qualified as JO
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.HashSet qualified as HS
 import Data.IntMap.Strict qualified as IntMap
@@ -351,7 +351,7 @@ collectJoinArguments joinTree lhs = do
               then pure Nothing
               else pure $ Just $ CVOrdValue value_
 
-      pure . OMap.fromList $
+      pure . InsOrdHashMap.fromList $
         -- filter out the Nothings
         mapMaybe sequenceA compositeObject
 
@@ -378,7 +378,7 @@ joinResults remoteResults compositeValues = do
 
 -------------------------------------------------------------------------------
 
-type CompositeObject a = OMap.InsOrdHashMap Text (CompositeValue a)
+type CompositeObject a = InsOrdHashMap.InsOrdHashMap Text (CompositeValue a)
 
 -- | A hybrid JSON value representation which captures the context of remote join field in type parameter.
 data CompositeValue a
@@ -391,7 +391,7 @@ data CompositeValue a
 compositeValueToJSON :: CompositeValue JO.Value -> JO.Value
 compositeValueToJSON = \case
   CVOrdValue v -> v
-  CVObject obj -> JO.object $ OMap.toList $ OMap.map compositeValueToJSON obj
+  CVObject obj -> JO.object $ InsOrdHashMap.toList $ InsOrdHashMap.map compositeValueToJSON obj
   CVObjectArray vals -> JO.array $ map compositeValueToJSON vals
   CVFromRemote v -> v
 

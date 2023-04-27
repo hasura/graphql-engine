@@ -9,7 +9,7 @@ where
 
 import Data.Aeson.Ordered qualified as J
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Vector qualified as V
@@ -711,12 +711,12 @@ schemaSet =
           ]
 
 selectionSetToJSON ::
-  OMap.InsOrdHashMap G.Name J.Value ->
+  InsOrdHashMap.InsOrdHashMap G.Name J.Value ->
   J.Value
-selectionSetToJSON = J.object . map (first G.unName) . OMap.toList
+selectionSetToJSON = J.object . map (first G.unName) . InsOrdHashMap.toList
 
 applyPrinter ::
-  OMap.InsOrdHashMap G.Name (P.ParsedSelection (a -> J.Value)) ->
+  InsOrdHashMap.InsOrdHashMap G.Name (P.ParsedSelection (a -> J.Value)) ->
   a ->
   J.Value
 applyPrinter = flip (\x -> selectionSetToJSON . fmap (($ x) . P.handleTypename (const . nameAsJSON)))

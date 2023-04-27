@@ -5,6 +5,7 @@
 module Hasura.Prelude
   ( module M,
     HashMap,
+    InsOrdHashMap,
     mapKeys,
 
     -- * Maybe
@@ -116,8 +117,8 @@ import Data.Functor as M (($>), (<&>))
 import Data.Functor.Const as M (Const)
 import Data.HashMap.Strict as HashMap (HashMap, mapKeys)
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd as M (InsOrdHashMap)
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet as M (HashSet)
 import Data.Hashable as M (Hashable)
 import Data.List as M
@@ -345,7 +346,7 @@ mapFromL f = HashMap.fromList . map (\v -> (f v, v))
 -- | Construct an 'InsOrdHashMap' from a '[]' given a key builder
 -- function @a -> k@.
 oMapFromL :: (Hashable k) => (a -> k) -> [a] -> InsOrdHashMap k a
-oMapFromL f = OMap.fromList . map (\v -> (f v, v))
+oMapFromL f = InsOrdHashMap.fromList . map (\v -> (f v, v))
 
 --------------------------------------------------------------------------------
 -- Measuring and working with moments and durations

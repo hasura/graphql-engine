@@ -22,7 +22,7 @@ where
 import Data.Aeson (ToJSON (..))
 import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
-import Data.HashMap.Strict.InsOrd.Extended qualified as OM
+import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Text.Extended qualified as T
 import Data.Vector qualified as Vector
 import Hasura.Function.Cache (emptyFunctionConfig)
@@ -112,17 +112,17 @@ sourcesToOrdJSONList sources =
   Vector.fromList $
     map sourceMetaToOrdJSON $
       sortOn getSourceName $
-        OM.elems sources
+        InsOrdHashMap.elems sources
   where
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
     sourceMetaToOrdJSON (BackendSourceMetadata exists) =
       AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata _smName _smKind _smTables _smFunctions _smNativeQueries _smLogicalModels _smConfiguration _smQueryTags _smCustomization _smHealthCheckConfig :: SourceMetadata b) ->
         let sourceNamePair = ("name", AO.toOrdered _smName)
             sourceKindPair = ("kind", AO.toOrdered _smKind)
-            tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ OM.elems _smTables)
+            tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ InsOrdHashMap.elems _smTables)
             functionsPair = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
-            nativeQueriesPair = listToMaybeOrdPairSort "native_queries" AO.toOrdered _nqmRootFieldName (OM.elems _smNativeQueries)
-            logicalModelsPair = listToMaybeOrdPairSort "logical_models" AO.toOrdered _lmmName (OM.elems _smLogicalModels)
+            nativeQueriesPair = listToMaybeOrdPairSort "native_queries" AO.toOrdered _nqmRootFieldName (InsOrdHashMap.elems _smNativeQueries)
+            logicalModelsPair = listToMaybeOrdPairSort "logical_models" AO.toOrdered _lmmName (InsOrdHashMap.elems _smLogicalModels)
             configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
             queryTagsConfigPair = maybe [] (\queryTagsConfig -> [("query_tags", AO.toOrdered queryTagsConfig)]) _smQueryTags
 

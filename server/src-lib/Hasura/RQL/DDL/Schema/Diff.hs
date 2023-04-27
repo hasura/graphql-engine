@@ -15,7 +15,7 @@ where
 import Control.Lens ((.~))
 import Data.Aeson
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as HS
 import Data.List.Extended
 import Data.List.NonEmpty qualified as NE
@@ -375,7 +375,7 @@ dropTablesInMetadata ::
   m ()
 dropTablesInMetadata source droppedTables =
   forM_ droppedTables $
-    \tn -> tell $ MetadataModifier $ metaSources . ix source . toSourceMetadata . (smTables @b) %~ OMap.delete tn
+    \tn -> tell $ MetadataModifier $ metaSources . ix source . toSourceMetadata . (smTables @b) %~ InsOrdHashMap.delete tn
 
 alterColumnsInMetadata ::
   forall b m.

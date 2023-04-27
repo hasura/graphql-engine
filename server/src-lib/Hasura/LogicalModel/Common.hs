@@ -7,7 +7,7 @@ where
 
 import Data.Bifunctor (bimap)
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrd
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended (ToTxt (toTxt))
 import Hasura.LogicalModel.Types (LogicalModelField (..))
 import Hasura.NativeQuery.Types (NullableScalarType (..))
@@ -18,10 +18,10 @@ import Hasura.RQL.Types.Table (FieldInfo (..), FieldInfoMap)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 columnsFromFields ::
-  InsOrd.InsOrdHashMap k (LogicalModelField b) ->
-  InsOrd.InsOrdHashMap k (NullableScalarType b)
+  InsOrdHashMap.InsOrdHashMap k (LogicalModelField b) ->
+  InsOrdHashMap.InsOrdHashMap k (NullableScalarType b)
 columnsFromFields =
-  InsOrd.mapMaybe
+  InsOrdHashMap.mapMaybe
     ( \case
         LogicalModelScalarField
           { lmfType = nstType,
@@ -32,11 +32,11 @@ columnsFromFields =
         _ -> Nothing
     )
 
-toFieldInfo :: forall b. (Backend b) => InsOrd.InsOrdHashMap (Column b) (NullableScalarType b) -> Maybe [FieldInfo b]
+toFieldInfo :: forall b. (Backend b) => InsOrdHashMap.InsOrdHashMap (Column b) (NullableScalarType b) -> Maybe [FieldInfo b]
 toFieldInfo fields =
   traverseWithIndex
     (\i -> fmap FIColumn . logicalModelToColumnInfo i)
-    (InsOrd.toList fields)
+    (InsOrdHashMap.toList fields)
 
 traverseWithIndex :: (Applicative m) => (Int -> aa -> m bb) -> [aa] -> m [bb]
 traverseWithIndex f = zipWithM f [0 ..]
@@ -58,7 +58,7 @@ logicalModelToColumnInfo i (column, NullableScalarType {..}) = do
 logicalModelFieldsToFieldInfo ::
   forall b.
   (Backend b) =>
-  InsOrd.InsOrdHashMap (Column b) (LogicalModelField b) ->
+  InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
   FieldInfoMap (FieldInfo b)
 logicalModelFieldsToFieldInfo =
   HashMap.fromList
@@ -66,5 +66,5 @@ logicalModelFieldsToFieldInfo =
     . fromMaybe mempty
     . traverseWithIndex
       (\i (column, lmf) -> (,) column <$> logicalModelToColumnInfo i (column, lmf))
-    . InsOrd.toList
+    . InsOrdHashMap.toList
     . columnsFromFields

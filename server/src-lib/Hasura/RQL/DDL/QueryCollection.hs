@@ -12,7 +12,7 @@ where
 
 import Control.Lens ((.~))
 import Data.Aeson qualified as J
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.Extended (duplicates)
 import Data.Text.Extended
 import Data.Text.NonEmpty
@@ -53,7 +53,7 @@ runCreateCollection cc = do
   withNewInconsistentObjsCheck $
     buildSchemaCache $
       MetadataModifier $
-        metaQueryCollections %~ OMap.insert collName cc
+        metaQueryCollections %~ InsOrdHashMap.insert collName cc
   return successMsg
   where
     CreateCollection collName def _ = cc
@@ -77,11 +77,11 @@ runRenameCollection (RenameCollection oldName newName) = do
   return successMsg
   where
     changeCollectionName :: CollectionName -> CollectionName -> QueryCollections -> QueryCollections
-    changeCollectionName oldKey newKey oMap = case OMap.lookup oldKey oMap of
+    changeCollectionName oldKey newKey oMap = case InsOrdHashMap.lookup oldKey oMap of
       Nothing -> oMap
       Just oldVal ->
         let newVal = oldVal & ccName .~ newKey
-         in OMap.insert newKey newVal (OMap.delete oldKey oMap)
+         in InsOrdHashMap.insert newKey newVal (InsOrdHashMap.delete oldKey oMap)
 
 runAddQueryToCollection ::
   (CacheRWM m, MonadError QErr m, MetadataM m) =>
@@ -100,7 +100,7 @@ runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
     buildSchemaCache $
       MetadataModifier $
         metaQueryCollections
-          %~ OMap.insert collName (CreateCollection collName collDef comment)
+          %~ InsOrdHashMap.insert collName (CreateCollection collName collDef comment)
   return successMsg
   where
     listQ = ListedQuery queryName query
@@ -126,7 +126,7 @@ runDropCollection (DropCollection collName cascade) = do
 
   withNewInconsistentObjsCheck $
     buildSchemaCache $
-      cascadeModifier <> MetadataModifier (metaQueryCollections %~ OMap.delete collName)
+      cascadeModifier <> MetadataModifier (metaQueryCollections %~ InsOrdHashMap.delete collName)
 
   pure successMsg
 
@@ -173,9 +173,9 @@ dropCollectionFromAllowlist ::
 dropCollectionFromAllowlist collName = do
   withPathK "collection" $ assertCollectionDefined collName
   allowList <- withPathK "allowlist" fetchAllowlist
-  case OMap.lookup collName allowList of
+  case InsOrdHashMap.lookup collName allowList of
     Nothing -> throw400 NotFound $ "collection " <> collName <<> " doesn't exist in the allowlist"
-    Just _ -> pure $ MetadataModifier $ metaAllowlist .~ OMap.delete collName allowList
+    Just _ -> pure $ MetadataModifier $ metaAllowlist .~ InsOrdHashMap.delete collName allowList
 
 runDropCollectionFromAllowlist ::
   (MonadError QErr m, MetadataM m, CacheRWM m) =>
@@ -220,7 +220,7 @@ getCollectionDefM ::
   CollectionName ->
   m (Maybe CreateCollection)
 getCollectionDefM collName =
-  OMap.lookup collName <$> fetchAllCollections
+  InsOrdHashMap.lookup collName <$> fetchAllCollections
 
 fetchAllCollections :: MetadataM m => m QueryCollections
 fetchAllCollections =

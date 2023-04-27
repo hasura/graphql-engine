@@ -30,7 +30,7 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.FileEmbed (makeRelativeToProject)
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text qualified as T
 import Data.Text.IO qualified as TIO
 import Data.Time.Clock (UTCTime)
@@ -167,7 +167,7 @@ migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrati
                         Nothing
                         emptySourceCustomization
                         Nothing
-                  sources = OMap.singleton defaultSource $ BackendSourceMetadata defaultSourceMetadata
+                  sources = InsOrdHashMap.singleton defaultSource $ BackendSourceMetadata defaultSourceMetadata
                in emptyMetadata {_metaSources = sources}
 
       liftTx $ insertMetadataInCatalog emptyMetadata'
@@ -338,7 +338,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                         AB.mkAnyBackend $
                           SourceMetadata defaultSource PostgresVanillaKind _mnsTables _mnsFunctions mempty mempty defaultSourceConfig Nothing emptySourceCustomization Nothing
                  in Metadata
-                      (OMap.singleton defaultSource defaultSourceMetadata)
+                      (InsOrdHashMap.singleton defaultSource defaultSourceMetadata)
                       _mnsRemoteSchemas
                       _mnsQueryCollections
                       _mnsAllowlist
@@ -364,7 +364,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
           multiQ query
           let emptyMetadataNoSources =
                 MetadataNoSources mempty mempty mempty mempty mempty emptyCustomTypes mempty mempty
-          metadataV2 <- case OMap.toList _metaSources of
+          metadataV2 <- case InsOrdHashMap.toList _metaSources of
             [] -> pure emptyMetadataNoSources
             [(_, BackendSourceMetadata exists)] ->
               pure $ case AB.unpackAnyBackend exists of

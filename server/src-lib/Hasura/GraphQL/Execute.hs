@@ -20,7 +20,7 @@ import Data.Aeson qualified as J
 import Data.Containers.ListUtils (nubOrd)
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as HS
 import Data.Tagged qualified as Tagged
 import Hasura.Backends.Postgres.Execute.Types
@@ -128,7 +128,7 @@ buildSubscriptionPlan ::
   Maybe G.Name ->
   m SubscriptionExecution
 buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders operationName = do
-  ((liveQueryOnSourceFields, noRelationActionFields), streamingFields) <- foldlM go ((mempty, mempty), mempty) (OMap.toList rootFields)
+  ((liveQueryOnSourceFields, noRelationActionFields), streamingFields) <- foldlM go ((mempty, mempty), mempty) (InsOrdHashMap.toList rootFields)
 
   if
       | null liveQueryOnSourceFields && null streamingFields ->
@@ -136,7 +136,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
       | null noRelationActionFields -> do
           if
               | null liveQueryOnSourceFields -> do
-                  case OMap.toList streamingFields of
+                  case InsOrdHashMap.toList streamingFields of
                     [] -> throw500 "empty selset for subscription"
                     [(rootFieldName, (sourceName, exists))] -> do
                       subscriptionPlan <- AB.dispatchAnyBackend @EB.BackendExecute
@@ -178,7 +178,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
                                   JASSingleObject -> IR.QDBSingleRow selectAST
                             pure $ (sourceName, AB.mkAnyBackend $ IR.SourceConfigWith srcConfig Nothing (IR.QDBR queryDB))
 
-                        case OMap.toList sourceSubFields of
+                        case InsOrdHashMap.toList sourceSubFields of
                           [] -> throw500 "empty selset for subscription"
                           ((rootFieldName, sub) : _) -> buildAction sub sourceSubFields rootFieldName
               | otherwise -> throw400 NotSupported "streaming and livequery subscriptions cannot be executed in the same subscription"
@@ -227,8 +227,8 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
             throw400 NotSupported "Remote relationships are not allowed in subscriptions"
           pure $ IR.SourceConfigWith srcConfig queryTagsConfig (IR.QDBR newQDB)
         case subscriptionType of
-          Streaming -> pure (accLiveQueryFields, OMap.insert gName (src, newQDB) accStreamingFields)
-          LiveQuery -> pure (first (OMap.insert gName (Right (src, newQDB))) accLiveQueryFields, accStreamingFields)
+          Streaming -> pure (accLiveQueryFields, InsOrdHashMap.insert gName (src, newQDB) accStreamingFields)
+          LiveQuery -> pure (first (InsOrdHashMap.insert gName (Right (src, newQDB))) accLiveQueryFields, accStreamingFields)
       IR.RFAction action -> do
         let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
         unless (isNothing remoteJoins) $
@@ -238,9 +238,9 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
             let actionId = IR._aaaqActionId q
             case EA.resolveAsyncActionQuery userInfo q of
               EA.AAQENoRelationships respMaker ->
-                pure $ (second (OMap.insert gName (actionId, respMaker)) accLiveQueryFields, accStreamingFields)
+                pure $ (second (InsOrdHashMap.insert gName (actionId, respMaker)) accLiveQueryFields, accStreamingFields)
               EA.AAQEOnSourceDB srcConfig dbExecution ->
-                pure $ (first (OMap.insert gName (Left (actionId, (srcConfig, dbExecution)))) accLiveQueryFields, accStreamingFields)
+                pure $ (first (InsOrdHashMap.insert gName (Left (actionId, (srcConfig, dbExecution)))) accLiveQueryFields, accStreamingFields)
           IR.AQQuery _ -> throw400 NotSupported "query actions cannot be run as a subscription"
 
     buildAction ::
@@ -423,6 +423,6 @@ getResolvedExecPlan
 -- the bytestring response we get back from the DB.
 isSingleNamespace :: RootFieldMap a -> Bool
 isSingleNamespace fieldMap =
-  case nubOrd (_rfaNamespace <$> OMap.keys fieldMap) of
+  case nubOrd (_rfaNamespace <$> InsOrdHashMap.keys fieldMap) of
     [_] -> True
     _ -> False

@@ -24,7 +24,7 @@ import Data.Function ((&))
 import Data.Functor ((<&>))
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as S
 import Data.Hashable (Hashable)
 import Data.Maybe qualified as Maybe
@@ -175,7 +175,7 @@ selectionSet ::
   Name ->
   Maybe Description ->
   [FieldParser origin m a] ->
-  Parser origin 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
+  Parser origin 'Output m (InsOrdHashMap.InsOrdHashMap Name (ParsedSelection a))
 selectionSet name desc fields = selectionSetObject name desc fields []
 
 safeSelectionSet ::
@@ -184,7 +184,7 @@ safeSelectionSet ::
   Name ->
   Maybe Description ->
   [FieldParser origin m a] ->
-  n (Parser origin 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
+  n (Parser origin 'Output m (InsOrdHashMap.InsOrdHashMap Name (ParsedSelection a)))
 {-# INLINE safeSelectionSet #-}
 safeSelectionSet name description fields =
   case duplicatesList of
@@ -224,7 +224,7 @@ selectionSetObject ::
   -- | Interfaces implemented by this object;
   -- see Note [The interfaces story] in Hasura.GraphQL.Parser.Schema.
   [Parser origin 'Output m b] ->
-  Parser origin 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
+  Parser origin 'Output m (InsOrdHashMap.InsOrdHashMap Name (ParsedSelection a))
 {-# INLINE selectionSetObject #-}
 selectionSetObject name description parsers implementsInterfaces =
   Parser

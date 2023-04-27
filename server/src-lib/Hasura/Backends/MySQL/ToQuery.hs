@@ -14,7 +14,7 @@ module Hasura.Backends.MySQL.ToQuery
 where
 
 import Data.ByteString (ByteString)
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List (intersperse)
 import Data.String
 import Data.Text qualified as T
@@ -379,7 +379,7 @@ toQueryPretty = go 0
 -- | Produces a query with holes, and a mapping for each
 renderBuilderPretty :: Printer -> (LT.Builder, InsOrdHashMap Int ScalarValue)
 renderBuilderPretty =
-  second (OMap.fromList . map swap . OMap.toList)
+  second (InsOrdHashMap.fromList . map swap . InsOrdHashMap.toList)
     . flip runState mempty
     . runBuilderPretty
 

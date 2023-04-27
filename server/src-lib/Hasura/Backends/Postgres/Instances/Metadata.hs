@@ -8,7 +8,7 @@
 module Hasura.Backends.Postgres.Instances.Metadata () where
 
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrd
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.String.Interpolate (i)
 import Data.Text.Extended
 import Database.PG.Query.PTI qualified as PTI
@@ -55,9 +55,9 @@ class PostgresMetadata (pgKind :: PostgresKind) where
   --
   -- This is a insert order hash map so that when we invert it
   -- duplicate oids will point to a more "general" type.
-  pgTypeOidMapping :: InsOrd.InsOrdHashMap Postgres.PGScalarType PQ.Oid
+  pgTypeOidMapping :: InsOrdHashMap.InsOrdHashMap Postgres.PGScalarType PQ.Oid
   pgTypeOidMapping =
-    InsOrd.fromList $
+    InsOrdHashMap.fromList $
       [ (Postgres.PGSmallInt, PTI.int2),
         (Postgres.PGSerial, PTI.int4),
         (Postgres.PGInteger, PTI.int4),
@@ -218,12 +218,12 @@ instance PostgresMetadata 'Cockroach where
   validateRel _ _ _ = pure ()
 
   pgTypeOidMapping =
-    InsOrd.fromList
+    InsOrdHashMap.fromList
       [ (Postgres.PGInteger, PTI.int8),
         (Postgres.PGSerial, PTI.int8),
         (Postgres.PGJSON, PTI.jsonb)
       ]
-      `InsOrd.union` pgTypeOidMapping @'Vanilla
+      `InsOrdHashMap.union` pgTypeOidMapping @'Vanilla
 
   listAllTablesSql =
     Query.fromText

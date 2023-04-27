@@ -18,7 +18,7 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Extended qualified as J
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended qualified as T
@@ -283,7 +283,7 @@ msDBLiveQuerySubscriptionPlan ::
   Maybe G.Name ->
   m (SubscriptionQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
 msDBLiveQuerySubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig namespace rootFields _ _ = do
-  (reselect, prepareState) <- planSubscription (OMap.mapKeys _rfaAlias rootFields) _uiSession
+  (reselect, prepareState) <- planSubscription (InsOrdHashMap.mapKeys _rfaAlias rootFields) _uiSession
   cohortVariables <- prepareStateCohortVariables sourceConfig _uiSession prepareState
   queryTags <- ask
   let parameterizedPlan = ParameterizedSubscriptionQueryPlan _uiRole $ (MultiplexedQuery' reselect queryTags)

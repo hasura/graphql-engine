@@ -35,7 +35,7 @@ import Data.Aeson
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as HS
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
@@ -213,10 +213,10 @@ addPermissionToMetadata ::
   TableMetadata b ->
   TableMetadata b
 addPermissionToMetadata permDef = case _pdPermission permDef of
-  InsPerm' _ -> tmInsertPermissions %~ OMap.insert (_pdRole permDef) permDef
-  SelPerm' _ -> tmSelectPermissions %~ OMap.insert (_pdRole permDef) permDef
-  UpdPerm' _ -> tmUpdatePermissions %~ OMap.insert (_pdRole permDef) permDef
-  DelPerm' _ -> tmDeletePermissions %~ OMap.insert (_pdRole permDef) permDef
+  InsPerm' _ -> tmInsertPermissions %~ InsOrdHashMap.insert (_pdRole permDef) permDef
+  SelPerm' _ -> tmSelectPermissions %~ InsOrdHashMap.insert (_pdRole permDef) permDef
+  UpdPerm' _ -> tmUpdatePermissions %~ InsOrdHashMap.insert (_pdRole permDef) permDef
+  DelPerm' _ -> tmDeletePermissions %~ InsOrdHashMap.insert (_pdRole permDef) permDef
 
 buildPermInfo ::
   ( BackendMetadata b,
@@ -246,7 +246,7 @@ buildLogicalModelPermInfo ::
   ) =>
   SourceName ->
   LogicalModelName ->
-  OMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
+  InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
   PermDefPermission b perm ->
   m (WithDeps (PermInfo perm b))
 buildLogicalModelPermInfo sourceName logicalModelName fieldInfoMap = \case
@@ -432,12 +432,12 @@ buildLogicalModelSelPermInfo ::
   ) =>
   SourceName ->
   LogicalModelName ->
-  OMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
+  InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
 buildLogicalModelSelPermInfo source logicalModelName logicalModelFieldMap sp = withPathK "permission" do
   let columns :: [Column b]
-      columns = interpColSpec (lmfName <$> OMap.elems logicalModelFieldMap) (spColumns sp)
+      columns = interpColSpec (lmfName <$> InsOrdHashMap.elems logicalModelFieldMap) (spColumns sp)
 
   -- Interpret the row permissions in the 'SelPerm' definition.
   -- TODO: do row permisions work on non-scalar fields? Going to assume not and

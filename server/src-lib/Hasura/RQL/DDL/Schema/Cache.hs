@@ -30,7 +30,7 @@ import Data.Aeson
 import Data.Either (isLeft)
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
+import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.HashSet qualified as HS
 import Data.Proxy
 import Data.Sequence qualified as Seq
@@ -269,7 +269,7 @@ instance
 -- | Generate health checks related cache from sources metadata
 buildHealthCheckCache :: Sources -> SourceHealthCheckCache
 buildHealthCheckCache sources =
-  catMaybes $ HashMap.fromList $ map (second mkSourceHealthCheck) (OMap.toList sources)
+  catMaybes $ HashMap.fromList $ map (second mkSourceHealthCheck) (InsOrdHashMap.toList sources)
   where
     mkSourceHealthCheck :: BackendSourceMetadata -> Maybe BackendSourceHealthCheckInfo
     mkSourceHealthCheck (BackendSourceMetadata sourceMetadata) =
@@ -286,7 +286,7 @@ buildHealthCheckCache sources =
 -- attribution
 buildSourcePingCache :: Sources -> SourcePingCache
 buildSourcePingCache sources =
-  HashMap.fromList $ map (second mkSourcePing) (OMap.toList sources)
+  HashMap.fromList $ map (second mkSourcePing) (InsOrdHashMap.toList sources)
   where
     mkSourcePing :: BackendSourceMetadata -> BackendSourcePingInfo
     mkSourcePing (BackendSourceMetadata sourceMetadata) =
@@ -351,8 +351,8 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
   (inconsistentObjects, (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies), ((adminIntrospection, gqlContext, gqlContextUnauth, inconsistentRemoteSchemas), (relayContext, relayContextUnauth))) <-
     Inc.cache buildOutputsAndSchema -< (metadataDep, dynamicConfig, invalidationKeysDep, storedIntrospection)
 
-  let (resolvedEndpoints, endpointCollectedInfo) = runIdentity $ runWriterT $ buildRESTEndpoints _metaQueryCollections (OMap.elems _metaRestEndpoints)
-      (cronTriggersMap, cronTriggersCollectedInfo) = runIdentity $ runWriterT $ buildCronTriggers (OMap.elems _metaCronTriggers)
+  let (resolvedEndpoints, endpointCollectedInfo) = runIdentity $ runWriterT $ buildRESTEndpoints _metaQueryCollections (InsOrdHashMap.elems _metaRestEndpoints)
+      (cronTriggersMap, cronTriggersCollectedInfo) = runIdentity $ runWriterT $ buildCronTriggers (InsOrdHashMap.elems _metaCronTriggers)
       (openTelemetryInfo, openTelemetryCollectedInfo) = runIdentity $ runWriterT $ buildOpenTelemetry _metaOpenTelemetryConfig
 
       duplicateVariables :: EndpointMetadata a -> Bool
@@ -362,7 +362,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       endpointObjId md = MOEndpoint (_ceName md)
 
       endpointObject :: EndpointMetadata q -> MetadataObject
-      endpointObject md = MetadataObject (endpointObjId md) (toJSON $ OMap.lookup (_ceName md) _metaRestEndpoints)
+      endpointObject md = MetadataObject (endpointObjId md) (toJSON $ InsOrdHashMap.lookup (_ceName md) _metaRestEndpoints)
 
       listedQueryObjects :: (CollectionName, ListedQuery) -> MetadataObject
       listedQueryObjects (cName, lq) = MetadataObject (MOQueryCollectionsQuery cName lq) (toJSON lq)
@@ -666,7 +666,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
     buildSource = proc (dynamicConfig, allSources, sourceMetadata, sourceConfig, tablesRawInfo, eventTriggerInfoMaps, dbObjectsIntrospection, remoteSchemaMap, orderedRoles) -> do
       let DBObjectsIntrospection _dbTables dbFunctions _scalars = dbObjectsIntrospection
           SourceMetadata sourceName backendSourceKind tables functions nativeQueries logicalModels _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
-          tablesMetadata = OMap.elems tables
+          tablesMetadata = InsOrdHashMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
           alignTableMap = HashMap.intersectionWith (,)
@@ -716,7 +716,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       functionCacheMaybes <-
         interpretWriter
           -< for
-            (OMap.elems functions)
+            (InsOrdHashMap.elems functions)
             \case
               FunctionMetadata qf config functionPermissions comment -> do
                 let systemDefined = SystemDefined False
@@ -761,7 +761,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       logicalModelCacheMaybes <-
         interpretWriter
           -< for
-            (OMap.elems logicalModels)
+            (InsOrdHashMap.elems logicalModels)
             \lmm@LogicalModelMetadata {..} ->
               withRecordInconsistencyM (mkLogicalModelMetadataObject lmm) $ do
                 unless (_cdcAreNativeQueriesEnabled dynamicConfig) $
@@ -784,7 +784,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       nativeQueryCacheMaybes <-
         interpretWriter
           -< for
-            (OMap.elems nativeQueries)
+            (InsOrdHashMap.elems nativeQueries)
             \nqm@NativeQueryMetadata {..} -> do
               let metadataObject :: MetadataObject
                   metadataObject =
@@ -833,7 +833,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                         AB.mkAnyBackend $
                           SOINativeQuery @b _nqmRootFieldName
 
-                recordDependenciesM metadataObject sourceObject (mconcat $ snd <$> OMap.elems arrayRelationships)
+                recordDependenciesM metadataObject sourceObject (mconcat $ snd <$> InsOrdHashMap.elems arrayRelationships)
 
                 pure
                   NativeQueryInfo
@@ -872,26 +872,26 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       actions <- Inc.dependOn -< Inc.selectD #_metaActions metadataDep
       inheritedRoles <- Inc.dependOn -< Inc.selectD #_metaInheritedRoles metadataDep
       backendConfigs <- Inc.dependOn -< Inc.selectD #_metaBackendConfigs metadataDep
-      let actionRoles = map _apmRole . _amPermissions =<< OMap.elems actions
-          remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< OMap.elems remoteSchemas
+      let actionRoles = map _apmRole . _amPermissions =<< InsOrdHashMap.elems actions
+          remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< InsOrdHashMap.elems remoteSchemas
           sourceRoles =
             HS.fromList $
               concat $
-                OMap.elems sources >>= \(BackendSourceMetadata e) ->
+                InsOrdHashMap.elems sources >>= \(BackendSourceMetadata e) ->
                   AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _nativeQueries _logicalModels _ _ _ _) -> do
-                    table <- OMap.elems tables
+                    table <- InsOrdHashMap.elems tables
                     pure $
-                      OMap.keys (_tmInsertPermissions table)
-                        <> OMap.keys (_tmSelectPermissions table)
-                        <> OMap.keys (_tmUpdatePermissions table)
-                        <> OMap.keys (_tmDeletePermissions table)
-          inheritedRoleNames = OMap.keys inheritedRoles
+                      InsOrdHashMap.keys (_tmInsertPermissions table)
+                        <> InsOrdHashMap.keys (_tmSelectPermissions table)
+                        <> InsOrdHashMap.keys (_tmUpdatePermissions table)
+                        <> InsOrdHashMap.keys (_tmDeletePermissions table)
+          inheritedRoleNames = InsOrdHashMap.keys inheritedRoles
           allRoleNames = sourceRoles <> HS.fromList (remoteSchemaRoles <> actionRoles <> inheritedRoleNames)
 
       -- roles which have some kind of permission (action/remote schema/table/function) set in the metadata
       let metadataRoles = mapFromL _rRoleName $ (`Role` ParentRoles mempty) <$> toList allRoleNames
 
-      resolvedInheritedRoles <- interpretWriter -< buildInheritedRoles allRoleNames (OMap.elems inheritedRoles)
+      resolvedInheritedRoles <- interpretWriter -< buildInheritedRoles allRoleNames (InsOrdHashMap.elems inheritedRoles)
 
       let allRoles = resolvedInheritedRoles `HashMap.union` metadataRoles
 
@@ -899,7 +899,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
-      remoteSchemaMap <- buildRemoteSchemas env -< ((remoteSchemaInvalidationKeys, orderedRoles, fmap encJToLBS . siRemotes <$> storedIntrospection), OMap.elems remoteSchemas)
+      remoteSchemaMap <- buildRemoteSchemas env -< ((remoteSchemaInvalidationKeys, orderedRoles, fmap encJToLBS . siRemotes <$> storedIntrospection), InsOrdHashMap.elems remoteSchemas)
       let remoteSchemaCtxMap = HashMap.map fst remoteSchemaMap
           !defaultNC = _cdcDefaultNamingConvention dynamicConfig
           !isNamingConventionEnabled = EFNamingConventions `elem` (_cdcExperimentalFeatures dynamicConfig)
@@ -926,7 +926,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                         Nothing -> returnA -< Nothing
                         Just (sourceConfig, source) -> do
                           let metadataInvalidationKey = Inc.selectD #_ikMetadata invalidationKeys
-                              (tableInputs, _, _) = unzip3 $ map mkTableInputs $ OMap.elems $ _smTables sourceMetadata
+                              (tableInputs, _, _) = unzip3 $ map mkTableInputs $ InsOrdHashMap.elems $ _smTables sourceMetadata
                               scNamingConvention = _scNamingConvention $ _smCustomization sourceMetadata
                               !namingConv = if isNamingConventionEnabled then fromMaybe defaultNC scNamingConvention else HasuraCase
                           tablesCoreInfo <-
@@ -941,8 +941,8 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                                   namingConv
                                 )
 
-                          let tablesMetadata = OMap.elems $ _smTables sourceMetadata
-                              eventTriggers = map (_tmTable &&& OMap.elems . _tmEventTriggers) tablesMetadata
+                          let tablesMetadata = InsOrdHashMap.elems $ _smTables sourceMetadata
+                              eventTriggers = map (_tmTable &&& InsOrdHashMap.elems . _tmEventTriggers) tablesMetadata
 
                           (recreateEventTriggers, sourceCatalogMigrationState) <- initCatalogIfNeeded -< (Proxy :: Proxy b, eventTriggers, sourceConfig, sourceName)
 
@@ -968,7 +968,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                   -<
                     (exists, (dynamicConfig, invalidationKeys, storedIntrospection, defaultNC, isNamingConventionEnabled))
             )
-          |) (HashMap.fromList $ OMap.toList backendInfoAndSourceMetadata)
+          |) (HashMap.fromList $ InsOrdHashMap.toList backendInfoAndSourceMetadata)
       let partiallyResolvedSources = catMaybes partiallyResolvedSourcesMaybes
 
       -- then we can build the entire source output
@@ -1027,7 +1027,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
             -- custom types
             let scalarsMap = mconcat $ map snd $ HashMap.elems sourcesOutput
                 sourcesCache = HashMap.map fst sourcesOutput
-                actionList = OMap.elems actions
+                actionList = InsOrdHashMap.elems actions
             maybeResolvedCustomTypes <-
               withRecordInconsistencyM (MetadataObject MOCustomTypes $ toJSON customTypes) $
                 resolveCustomTypes sourcesCache customTypes scalarsMap
@@ -1107,7 +1107,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
     resolveEndpoint collections = traverse $ \(QueryReference collName queryName) -> do
       collection <-
         onNothing
-          (OMap.lookup collName collections)
+          (InsOrdHashMap.lookup collName collections)
           (throw400 NotExists $ "collection with name " <> toTxt collName <> " does not exist")
       listedQuery <-
         flip
@@ -1399,7 +1399,7 @@ joinBackendInfosToSources ::
   InsOrdHashMap SourceName BackendSourceMetadata ->
   InsOrdHashMap SourceName (AB.AnyBackend BackendInfoAndSourceMetadata)
 joinBackendInfosToSources backendInfos sources =
-  flip OMap.map sources $ \abSourceMetadata ->
+  flip InsOrdHashMap.map sources $ \abSourceMetadata ->
     AB.dispatchAnyBackend @Backend (unBackendSourceMetadata abSourceMetadata) $ \(sourceMetadata :: SourceMetadata b) ->
       let _bcasmBackendInfo = maybe mempty unBackendInfoWrapper (BackendMap.lookup @b backendInfos)
           _bcasmSourceMetadata = sourceMetadata

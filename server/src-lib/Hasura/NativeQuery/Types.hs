@@ -10,7 +10,7 @@ where
 import Autodocodec (Autodocodec (Autodocodec), HasCodec (codec), HasObjectCodec (..), bimapCodec, dimapCodec)
 import Autodocodec qualified as AC
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, Value)
-import Data.HashMap.Strict.InsOrd qualified as InsOrd
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended (ToTxt)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
@@ -96,17 +96,17 @@ nullableScalarTypeMapCodec ::
   (Backend b) =>
   AC.Codec
     Value
-    (InsOrd.InsOrdHashMap (Column b) (NullableScalarType b))
-    (InsOrd.InsOrdHashMap (Column b) (NullableScalarType b))
+    (InsOrdHashMap.InsOrdHashMap (Column b) (NullableScalarType b))
+    (InsOrdHashMap.InsOrdHashMap (Column b) (NullableScalarType b))
 nullableScalarTypeMapCodec =
   AC.dimapCodec
-    ( InsOrd.fromList
+    ( InsOrdHashMap.fromList
         . fmap
           ( \(MergedObject (NameField name) nst) ->
               (name, nst)
           )
     )
-    ( fmap (\(fld, nst) -> MergedObject (NameField fld) nst) . InsOrd.toList
+    ( fmap (\(fld, nst) -> MergedObject (NameField fld) nst) . InsOrdHashMap.toList
     )
     ( AC.listCodec $
         AC.object "NullableScalarType" $
@@ -118,17 +118,17 @@ nativeQueryArrayRelationshipsCodec ::
   (Backend b) =>
   AC.Codec
     Value
-    (InsOrd.InsOrdHashMap RelName (RelDef (RelManualConfig b)))
-    (InsOrd.InsOrdHashMap RelName (RelDef (RelManualConfig b)))
+    (InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)))
+    (InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)))
 nativeQueryArrayRelationshipsCodec =
   AC.dimapCodec
-    ( InsOrd.fromList
+    ( InsOrdHashMap.fromList
         . fmap
           ( \(MergedObject (NameField name) nst) ->
               (name, nst)
           )
     )
-    ( fmap (\(fld, nst) -> MergedObject (NameField fld) nst) . InsOrd.toList
+    ( fmap (\(fld, nst) -> MergedObject (NameField fld) nst) . InsOrdHashMap.toList
     )
     ( AC.listCodec $
         AC.object "RelDefRelManualConfig" $

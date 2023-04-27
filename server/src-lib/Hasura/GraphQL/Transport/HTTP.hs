@@ -36,7 +36,7 @@ import Data.Bifoldable
 import Data.ByteString.Lazy qualified as LBS
 import Data.Dependent.Map qualified as DM
 import Data.Environment qualified as Env
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Monoid (Any (..))
 import Data.Text qualified as T
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
@@ -399,7 +399,7 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
     doQErr :: ExceptT QErr m a -> ExceptT (Either GQExecError QErr) m a
     doQErr = withExceptT Right
 
-    forWithKey = flip OMap.traverseWithKey
+    forWithKey = flip InsOrdHashMap.traverseWithKey
 
     executePlan ::
       GQLReqParsed ->
@@ -581,7 +581,7 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
     cacheAccess reqParsed queryPlans asts dirMap =
       let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
           remoteSchemas =
-            OMap.elems queryPlans >>= \case
+            InsOrdHashMap.elems queryPlans >>= \case
               E.ExecStepDB _headers _dbAST remoteJoins -> do
                 maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins) remoteJoins
               E.ExecStepRemote remoteSchemaInfo _ _ _ -> [remoteSchemaInfo]
@@ -591,8 +591,8 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
             _ -> acc
           actionsInfo =
             foldl getExecStepActionWithActionInfo [] $
-              OMap.elems $
-                OMap.filter
+              InsOrdHashMap.elems $
+                InsOrdHashMap.filter
                   ( \case
                       E.ExecStepAction _ _ _remoteJoins -> True
                       _ -> False
@@ -744,7 +744,7 @@ encodeEncJSONResults :: RootFieldMap EncJSON -> EncJSON
 encodeEncJSONResults =
   encNameMap . fmap (namespacedField id encNameMap) . unflattenNamespaces
   where
-    encNameMap = encJFromInsOrdHashMap . OMap.mapKeys G.unName
+    encNameMap = encJFromInsOrdHashMap . InsOrdHashMap.mapKeys G.unName
 
 -- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs').
 runGQBatched ::
