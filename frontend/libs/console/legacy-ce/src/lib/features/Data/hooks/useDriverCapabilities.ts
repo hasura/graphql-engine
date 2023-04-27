@@ -1,32 +1,42 @@
-import { useQuery } from 'react-query';
-import { DataSource } from '../../DataSource';
+import { UseQueryOptions, useQuery } from 'react-query';
+import { DataSource, DriverCapability, Feature } from '../../DataSource';
 import { useMetadata } from '../../hasura-metadata-api';
 import { useHttpClient } from '../../Network';
+import { APIError } from '../../../hooks/error';
 
 type UseDatabaseCapabilitiesArgs = {
   dataSourceName: string;
 };
 
-export const useDriverCapabilities = ({
+export const useDriverCapabilities = <
+  FinalResult = Feature | DriverCapability
+>({
   dataSourceName,
-}: UseDatabaseCapabilitiesArgs) => {
+  select,
+  options = {},
+}: UseDatabaseCapabilitiesArgs & {
+  select?: (data: Feature | DriverCapability) => FinalResult;
+  options?: UseQueryOptions<Feature | DriverCapability, APIError, FinalResult>;
+}) => {
   const httpClient = useHttpClient();
 
   const { data: driverName, isFetching: isFetchingMetadata } = useMetadata(
     m => m.metadata.sources.find(source => source.name === dataSourceName)?.kind
   );
 
-  const result = useQuery({
-    queryKey: [driverName, 'capabilities'],
-    queryFn: async () => {
-      if (!driverName) {
-        throw Error('Unable to retrieve driver name from metadata');
-      }
-
-      return DataSource(httpClient).getDriverCapabilities(driverName);
+  return useQuery<Feature | DriverCapability, APIError, FinalResult>(
+    [dataSourceName, 'capabilities'],
+    async () => {
+      const result =
+        (await DataSource(httpClient).getDriverCapabilities(
+          driverName ?? ''
+        )) ?? Feature.NotImplemented;
+      return result;
     },
-    enabled: !isFetchingMetadata,
-  });
-
-  return result;
+    {
+      enabled: !isFetchingMetadata && options.enabled,
+      select,
+      ...options,
+    }
+  );
 };

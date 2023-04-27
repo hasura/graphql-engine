@@ -1,4 +1,4 @@
-import { Capabilities, OpenApiSchema } from '@hasura/dc-api-types';
+import { OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
 import { AxiosInstance } from 'axios';
 import pickBy from 'lodash/pickBy';
@@ -35,6 +35,7 @@ import type {
   TableRow,
   Version,
   WhereClause,
+  DriverCapability,
 } from './types';
 
 import { transformSchemaToZodObject } from '../OpenApi3Form/utils';
@@ -118,7 +119,7 @@ export type Database = {
     getDriverCapabilities: (
       httpClient: AxiosInstance,
       driver?: string
-    ) => Promise<Capabilities | Feature>;
+    ) => Promise<DriverCapability | Feature>;
     getTrackableTables: (
       props: GetTrackableTablesProps
     ) => Promise<IntrospectedTable[] | Feature.NotImplemented>;
@@ -539,10 +540,12 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   },
   getTrackableFunctions: async (dataSourceName: string) => {
     const database = await getDatabaseMethods({ dataSourceName, httpClient });
-    return database.introspection?.getTrackableFunctions({
-      dataSourceName,
-      httpClient,
-    });
+    return (
+      database.introspection?.getTrackableFunctions({
+        dataSourceName,
+        httpClient,
+      }) ?? Feature.NotImplemented
+    );
   },
   getDatabaseSchemas: async ({
     dataSourceName,

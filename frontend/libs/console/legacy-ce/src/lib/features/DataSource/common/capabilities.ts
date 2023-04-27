@@ -1,10 +1,14 @@
-import { Capabilities } from '@hasura/dc-api-types';
+import { DriverCapability } from '../types';
 
-export const postgresCapabilities: Capabilities = {
+export const postgresCapabilities: DriverCapability = {
   mutations: {
     insert: {},
     update: {},
     delete: {},
   },
   queries: {},
+  functions: {},
+  data_schema: {
+    supports_foreign_keys: true,
+  },
 };

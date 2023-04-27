@@ -210,23 +210,25 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
         </CardedTable.TableHead>
 
         <CardedTable.TableBody>
-          {paginate(filteredRelationships, pageSize, pageNumber).map(
-            relationship => (
-              <RelationshipRow
-                key={relationship.constraintName}
-                isChecked={checkedIds.includes(relationship.constraintName)}
-                isLoading={false}
-                relationship={relationship}
-                onToggle={() => onCheck(relationship.constraintName)}
-                onTrack={() => onTrackRelationship(relationship)}
-                onCustomize={() => {
-                  setSelectedRelationship(relationship);
-                  setModalVisible(true);
-                }}
-                dataSourceName={dataSourceName}
-              />
-            )
-          )}
+          {paginate({
+            data: filteredRelationships,
+            pageSize,
+            pageNumber,
+          }).data.map(relationship => (
+            <RelationshipRow
+              key={relationship.constraintName}
+              isChecked={checkedIds.includes(relationship.constraintName)}
+              isLoading={false}
+              relationship={relationship}
+              onToggle={() => onCheck(relationship.constraintName)}
+              onTrack={() => onTrackRelationship(relationship)}
+              onCustomize={() => {
+                setSelectedRelationship(relationship);
+                setModalVisible(true);
+              }}
+              dataSourceName={dataSourceName}
+            />
+          ))}
         </CardedTable.TableBody>
       </CardedTable.Table>
       {isModalVisible && selectedRelationship && (
