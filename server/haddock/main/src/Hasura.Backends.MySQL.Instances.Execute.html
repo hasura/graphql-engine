@@ -5,7 +5,7 @@
 </span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Bifunctor</span></a></span><span>
 </span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Coerce</span></a></span><span>
-</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Encoding</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier">Data.Tree</span></a></span><span>
@@ -423,7 +423,7 @@ Bifunctor p =&gt;
 </span><a href="Hasura.Backends.MySQL.Instances.Execute.html#encJFromOutputValue"><span class="hs-identifier hs-var">encJFromOutputValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-120"></span><span>            </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">OMap.toList</span></span><span>
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toList</span></span><span>
 </span><span id="line-121"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-122"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">toList</span></a></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
@@ -459,7 +459,7 @@ Bifunctor p =&gt;
 </span><a href="Hasura.Backends.MySQL.Instances.Execute.html#encJFromOutputValue"><span class="hs-identifier hs-var">encJFromOutputValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-132"></span><span>        </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">OMap.toList</span></span><span>
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toList</span></span><span>
 </span><span id="line-133"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
 </span><a href="#local-6989586621690989725"><span class="hs-identifier hs-var">m</span></a></span><span>

@@ -25,7 +25,7 @@
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
 </span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">deriveJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">deriveToJSON</span></span><span class="hs-special">)</span><span>
 </span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
-</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OM</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">S</span></span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(&lt;&lt;&gt;)</span></span><span class="hs-special">)</span><span>
 </span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier">Hasura.GraphQL.Parser.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">GName</span></span><span>
@@ -375,7 +375,7 @@ ObjectCodec oldInput output
 (Functor f, Hashable k) =&gt;
 (Maybe v -&gt; f (Maybe v))
 -&gt; k -&gt; InsOrdHashMap k v -&gt; f (InsOrdHashMap k v)
-</span><span class="hs-identifier hs-var">OM.alterF</span></span><span> </span><span class="annot"><span class="annottext">Maybe AllowlistEntry -&gt; Either Text (Maybe AllowlistEntry)
+</span><span class="hs-identifier hs-var">InsOrdHashMap.alterF</span></span><span> </span><span class="annot"><span class="annottext">Maybe AllowlistEntry -&gt; Either Text (Maybe AllowlistEntry)
 </span><a href="#local-6989586621690653473"><span class="hs-identifier hs-var">insertIfAbsent</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621690653476"><span class="hs-identifier hs-var">coll</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataAllowlist
 </span><a href="#local-6989586621690653475"><span class="hs-identifier hs-var">al</span></a></span><span>
@@ -416,7 +416,7 @@ ObjectCodec oldInput output
 (Functor f, Hashable k) =&gt;
 (Maybe v -&gt; f (Maybe v))
 -&gt; k -&gt; InsOrdHashMap k v -&gt; f (InsOrdHashMap k v)
-</span><span class="hs-identifier hs-var">OM.alterF</span></span><span> </span><span class="annot"><span class="annottext">Maybe AllowlistEntry -&gt; Either Text (Maybe AllowlistEntry)
+</span><span class="hs-identifier hs-var">InsOrdHashMap.alterF</span></span><span> </span><span class="annot"><span class="annottext">Maybe AllowlistEntry -&gt; Either Text (Maybe AllowlistEntry)
 </span><a href="#local-6989586621690653469"><span class="hs-identifier hs-var">setIfPresent</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621690653471"><span class="hs-identifier hs-var">coll</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataAllowlist
 </span><a href="#local-6989586621690653470"><span class="hs-identifier hs-var">al</span></a></span><span>
@@ -447,7 +447,7 @@ ObjectCodec oldInput output
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">toList</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall v1 v2 k.
 (v1 -&gt; v2) -&gt; InsOrdHashMap k v1 -&gt; InsOrdHashMap k v2
-</span><span class="hs-identifier hs-var">OM.map</span></span><span> </span><span class="annot"><span class="annottext">AllowlistEntry -&gt; CollectionName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.map</span></span><span> </span><span class="annot"><span class="annottext">AllowlistEntry -&gt; CollectionName
 </span><a href="Hasura.RQL.Types.Allowlist.html#aeCollection"><span class="hs-identifier hs-var">aeCollection</span></a></span><span>
 </span><span id="line-146"></span><span>
 </span><span id="line-147"></span><span class="hs-comment">-- | A query stripped of typenames. A query is allowed if it occurs</span><span>
@@ -671,7 +671,7 @@ $c== :: InlinedAllowlist -&gt; InlinedAllowlist -&gt; Bool
 </span><a href="#local-6989586621690653312"><span class="hs-identifier hs-var">coll</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Allowlist.html#AllowlistEntry"><span class="hs-identifier hs-type">AllowlistEntry</span></a></span><span> </span><span id="local-6989586621690653312"><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621690653312"><span class="hs-identifier hs-var">coll</span></a></span></span><span> </span><span class="annot"><span class="annottext">AllowlistScope
 </span><a href="Hasura.RQL.Types.Allowlist.html#AllowlistScopeGlobal"><span class="hs-identifier hs-var">AllowlistScopeGlobal</span></a></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">OM.elems</span></span><span> </span><span class="annot"><span class="annottext">MetadataAllowlist
+</span><span class="hs-identifier hs-var">InsOrdHashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">MetadataAllowlist
 </span><a href="#local-6989586621690653316"><span class="hs-identifier hs-var">allowlist</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-212"></span><span>    </span><span class="annot"><a href="#local-6989586621690653310"><span class="hs-identifier hs-type">perRoleCollections</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier hs-type">CollectionName</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-213"></span><span>    </span><span id="local-6989586621690653310"><span class="annot"><span class="annottext">perRoleCollections :: HashMap RoleName [CollectionName]
@@ -686,7 +686,7 @@ $c== :: InlinedAllowlist -&gt; InlinedAllowlist -&gt; Bool
 </span><span id="line-216"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Allowlist.html#AllowlistEntry"><span class="hs-identifier hs-type">AllowlistEntry</span></a></span><span> </span><span id="local-6989586621690653308"><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621690653308"><span class="hs-identifier hs-var">coll</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Allowlist.html#AllowlistScopeRoles"><span class="hs-identifier hs-type">AllowlistScopeRoles</span></a></span><span> </span><span id="local-6989586621690653307"><span class="annot"><span class="annottext">NonEmpty RoleName
 </span><a href="#local-6989586621690653307"><span class="hs-identifier hs-var">roles</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">OM.elems</span></span><span> </span><span class="annot"><span class="annottext">MetadataAllowlist
+</span><span class="hs-identifier hs-var">InsOrdHashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">MetadataAllowlist
 </span><a href="#local-6989586621690653316"><span class="hs-identifier hs-var">allowlist</span></a></span><span>
 </span><span id="line-217"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-218"></span><span>
@@ -744,7 +744,7 @@ cat a b -&gt; cat b c -&gt; cat a c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">CreateCollection -&gt; [ExecutableDocument Name]
 </span><a href="Hasura.RQL.Types.QueryCollection.html#collectionQueries"><span class="hs-identifier hs-var">collectionQueries</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">OM.lookup</span></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621690653289"><span class="hs-identifier hs-var">coll</span></a></span><span> </span><span class="annot"><span class="annottext">QueryCollections
 </span><a href="#local-6989586621690653317"><span class="hs-identifier hs-var">collections</span></a></span><span>
 </span><span id="line-236"></span><span>

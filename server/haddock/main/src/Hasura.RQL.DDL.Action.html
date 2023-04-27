@@ -28,7 +28,7 @@
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Environment</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
-</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.List.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NEList</span></span><span>
 </span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.URL.Template</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">printURLTemplate</span></span><span class="hs-special">)</span><span>
@@ -161,7 +161,7 @@ MetadataObjId -&gt; MetadataModifier -&gt; m ()
 </span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">ActionName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></span><span> </span><span class="annot"><span class="annottext">ActionName
 </span><a href="#local-6989586621690905047"><span class="hs-identifier hs-var">actionName</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMetadata
 </span><a href="#local-6989586621690905044"><span class="hs-identifier hs-var">metadata</span></a></span><span>
 </span><span id="line-92"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -831,7 +831,7 @@ ActionName -&gt; m (Either QErr ())
 </span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.delete</span></span><span> </span><span class="annot"><span class="annottext">ActionName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.delete</span></span><span> </span><span class="annot"><span class="annottext">ActionName
 </span><a href="#local-6989586621690904609"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-283"></span><span>
 </span><span id="line-284"></span><span class="hs-keyword">newtype</span><span> </span><span id="ActionMetadataField"><span class="annot"><a href="Hasura.RQL.DDL.Action.html#ActionMetadataField"><span class="hs-identifier hs-var">ActionMetadataField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionMetadataField"><span class="annot"><a href="Hasura.RQL.DDL.Action.html#ActionMetadataField"><span class="hs-identifier hs-var">ActionMetadataField</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unActionMetadataField"><span class="annot"><span class="annottext">ActionMetadataField -&gt; Text

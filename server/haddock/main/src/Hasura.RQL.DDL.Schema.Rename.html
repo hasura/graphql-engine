@@ -12,7 +12,7 @@
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens.Operators</span></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
-</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Hasura.Base.Error</span></span><span>
@@ -264,7 +264,7 @@ Prism' BackendSourceMetadata (SourceMetadata b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap (TableName b) (TableMetadata b)
 </span><a href="#local-6989586621690896771"><span class="hs-identifier hs-var">tables</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690896821"><span class="hs-identifier hs-var">oldQT</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap (TableName b) (TableMetadata b)
 </span><a href="#local-6989586621690896771"><span class="hs-identifier hs-var">tables</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
@@ -272,12 +272,12 @@ Prism' BackendSourceMetadata (SourceMetadata b)
 </span><a href="#local-6989586621690896767"><span class="hs-identifier hs-var">tableMeta</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.delete</span></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><span class="hs-identifier hs-var">InsOrdHashMap.delete</span></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690896821"><span class="hs-identifier hs-var">oldQT</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690896822"><span class="hs-identifier hs-var">newQT</span></a></span><span> </span><span class="annot"><span class="annottext">TableMetadata b
 </span><a href="#local-6989586621690896767"><span class="hs-identifier hs-var">tableMeta</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_tmTable :: TableName b
 </span><a href="#local-6989586621690896764"><span class="hs-identifier hs-var">_tmTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName b
@@ -716,7 +716,7 @@ Lens' (TableMetadata b) (Relationships (ArrRelDef b))
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="annot"><span class="annottext">Relationships (RelDef a)
 </span><a href="#local-6989586621690896561"><span class="hs-identifier hs-var">relationsMap</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">RelName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">RelName
 </span><a href="#local-6989586621690896587"><span class="hs-identifier hs-var">oldRN</span></a></span><span> </span><span class="annot"><span class="annottext">Relationships (RelDef a)
 </span><a href="#local-6989586621690896561"><span class="hs-identifier hs-var">relationsMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
@@ -724,7 +724,7 @@ Lens' (TableMetadata b) (Relationships (ArrRelDef b))
 </span><a href="#local-6989586621690896560"><span class="hs-identifier hs-var">rd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">RelName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></span><span> </span><span class="annot"><span class="annottext">RelName
 </span><a href="#local-6989586621690896585"><span class="hs-identifier hs-var">newRN</span></a></span><span> </span><span class="annot"><span class="annottext">RelDef a
 </span><a href="#local-6989586621690896560"><span class="hs-identifier hs-var">rd</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_rdName :: RelName
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#_rdName"><span class="hs-identifier hs-var">_rdName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelName
@@ -732,7 +732,7 @@ k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.delete</span></span><span> </span><span class="annot"><span class="annottext">RelName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.delete</span></span><span> </span><span class="annot"><span class="annottext">RelName
 </span><a href="#local-6989586621690896587"><span class="hs-identifier hs-var">oldRN</span></a></span><span> </span><span class="annot"><span class="annottext">Relationships (RelDef a)
 </span><a href="#local-6989586621690896561"><span class="hs-identifier hs-var">relationsMap</span></a></span><span>
 </span><span id="line-255"></span><span>

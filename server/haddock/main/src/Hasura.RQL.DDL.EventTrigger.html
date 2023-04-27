@@ -54,7 +54,7 @@
 </span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Environment</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
 </span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Has</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Has</span></span><span class="hs-special">)</span><span>
 </span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
-</span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-58"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
 </span><span id="line-59"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier">Data.Sequence</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Seq</span></span><span>
 </span><span id="line-60"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
@@ -1237,7 +1237,7 @@ Lens' (TableMetadata b) (EventTriggers b)
 </span><span id="line-341"></span><span>          </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><a href="#local-6989586621690952731"><span class="hs-identifier hs-var">triggerName</span></a></span><span> </span><span class="annot"><span class="annottext">EventTriggerConf b
 </span><a href="#local-6989586621690952734"><span class="hs-identifier hs-var">triggerConf</span></a></span><span>
 </span><span id="line-342"></span><span>
@@ -2080,12 +2080,12 @@ SourceMetadata b -&gt; InsOrdHashMap TriggerName (EventTriggerConf b)
 </span><a href="Hasura.RQL.DDL.EventTrigger.html#getTriggersMap"><span class="hs-identifier hs-var hs-var">getTriggersMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k (f :: * -&gt; *) v.
 (Eq k, Hashable k, Foldable f) =&gt;
 f (InsOrdHashMap k v) -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.unions</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">InsOrdHashMap.unions</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TableMetadata b -&gt; EventTriggers b
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#_tmEventTriggers"><span class="hs-identifier hs-var">_tmEventTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">InsOrdHashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceMetadata b -&gt; Tables b
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#_smTables"><span class="hs-identifier hs-var">_smTables</span></a></span><span>
 </span><span id="line-623"></span><span>
@@ -2100,7 +2100,7 @@ SourceMetadata b -&gt; [(TableName b, TriggerName)]
 (t, TableMetadata b) -&gt; [(t, TriggerName)]
 </span><a href="#local-6989586621690952272"><span class="hs-identifier hs-var">mkKeyValue</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">OMap.toList</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceMetadata b -&gt; Tables b
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#_smTables"><span class="hs-identifier hs-var">_smTables</span></a></span><span>
 </span><span id="line-629"></span><span>  </span><span class="hs-keyword">where</span><span>
@@ -2111,7 +2111,7 @@ SourceMetadata b -&gt; [(TableName b, TriggerName)]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">t
 </span><a href="#local-6989586621690952270"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">OMap.keys</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). TableMetadata b -&gt; EventTriggers b
+</span><span class="hs-identifier hs-var">InsOrdHashMap.keys</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). TableMetadata b -&gt; EventTriggers b
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#_tmEventTriggers"><span class="hs-identifier hs-var">_tmEventTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">TableMetadata b
 </span><a href="#local-6989586621690952269"><span class="hs-identifier hs-var">tableMetadata</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-631"></span><span>
@@ -2122,7 +2122,7 @@ SourceMetadata b -&gt; [(TableName b, TriggerName)]
 </span><a href="Hasura.RQL.DDL.EventTrigger.html#getTriggerNames"><span class="hs-identifier hs-var hs-var">getTriggerNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">OMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">InsOrdHashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 SourceMetadata b -&gt; InsOrdHashMap TriggerName (EventTriggerConf b)
 </span><a href="Hasura.RQL.DDL.EventTrigger.html#getTriggersMap"><span class="hs-identifier hs-var">getTriggersMap</span></a></span><span>
@@ -2676,7 +2676,7 @@ EventTriggerConf b -&gt; Maybe AutoTriggerLogCleanupConfig
 </span><span id="line-768"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-769"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">OMap.toList</span></span><span>
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toList</span></span><span>
 </span><span id="line-770"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TableMetadata b -&gt; EventTriggers b
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#_tmEventTriggers"><span class="hs-identifier hs-var">_tmEventTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">TableMetadata b

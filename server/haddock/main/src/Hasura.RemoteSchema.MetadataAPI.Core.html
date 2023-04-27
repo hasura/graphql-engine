@@ -17,7 +17,7 @@
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Environment</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
-</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">S</span></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Hasura.Base.Error</span></span><span>
@@ -153,7 +153,7 @@ MetadataObjId -&gt; MetadataModifier -&gt; m ()
 </span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
 </span><a href="#local-6989586621690992053"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaMetadataG RemoteRelationshipDefinition
 </span><a href="#local-6989586621690992042"><span class="hs-identifier hs-var">remoteSchemaMeta</span></a></span><span>
 </span><span id="line-79"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -475,7 +475,7 @@ Environment -&gt; AddRemoteSchemaQuery -&gt; m EncJSON
 </span><span id="line-177"></span><span>
 </span><span id="line-178"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690991805"><span class="annot"><span class="annottext">metadataRMSchema :: Maybe (RemoteSchemaMetadataG RemoteRelationshipDefinition)
 </span><a href="#local-6989586621690991805"><span class="hs-identifier hs-var hs-var">metadataRMSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
 </span><a href="#local-6989586621690991811"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemas
 </span><a href="#local-6989586621690991807"><span class="hs-identifier hs-var">remoteSchemaMap</span></a></span><span>
 </span><span id="line-179"></span><span>      </span><span id="local-6989586621690991803"><span class="annot"><span class="annottext">metadataRMSchemaPerms :: [RemoteSchemaPermissionMetadata]
@@ -595,7 +595,7 @@ MetadataObjId -&gt; MetadataModifier -&gt; m ()
 </span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
 </span><a href="#local-6989586621690991811"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[RemoteSchemaPermissionMetadata]
 -&gt; RemoteSchemaMetadataG RemoteRelationshipDefinition
 </span><a href="#local-6989586621690991785"><span class="hs-identifier hs-var">remoteSchemaMeta</span></a></span><span> </span><span class="annot"><span class="annottext">[RemoteSchemaPermissionMetadata]

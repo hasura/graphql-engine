@@ -10,7 +10,7 @@
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Traversal'</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">preview</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">traverseOf</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">_2</span></span><span class="hs-special">)</span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier">Control.Monad.Writer</span></a></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NEHashMap</span></span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NEMap</span></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
@@ -1808,7 +1808,7 @@ MonadWriter w m =&gt;
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) k a b.
 Applicative f =&gt;
 (k -&gt; a -&gt; f b) -&gt; InsOrdHashMap k a -&gt; f (InsOrdHashMap k b)
-</span><span class="hs-identifier hs-var">OMap.traverseWithKey</span></span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet (RemoteRelationshipField UnpreparedValue) var
+</span><span class="hs-identifier hs-var">InsOrdHashMap.traverseWithKey</span></span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet (RemoteRelationshipField UnpreparedValue) var
 </span><a href="#local-6989586621690981731"><span class="hs-identifier hs-var">selectionSet</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690981725"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690981725"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span id="local-6989586621690981724"><span class="annot"><span class="annottext">Field (RemoteRelationshipField UnpreparedValue) var
 </span><a href="#local-6989586621690981724"><span class="hs-identifier hs-var">field</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -1860,7 +1860,7 @@ HashMap k v -&gt; HashMap k w -&gt; HashMap k v
 </span><span id="line-535"></span><span>      </span><span id="local-6989586621690981710"><span class="annot"><span class="annottext">remoteJoins :: InsOrdHashMap Name RemoteJoin
 </span><a href="#local-6989586621690981710"><span class="hs-identifier hs-var hs-var">remoteJoins</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall v1 v2 k.
 (v1 -&gt; Maybe v2) -&gt; InsOrdHashMap k v1 -&gt; InsOrdHashMap k v2
-</span><span class="hs-identifier hs-var">OMap.mapMaybe</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">InsOrdHashMap.mapMaybe</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">snd</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (GraphQLField Void var, Maybe RemoteJoin)
 </span><a href="#local-6989586621690981730"><span class="hs-identifier hs-var">annotatedFields</span></a></span><span>
 </span><span id="line-536"></span><span>      </span><span id="local-6989586621690981708"><span class="annot"><span class="annottext">additionalFields :: InsOrdHashMap Name (GraphQLField Void var)
@@ -1880,7 +1880,7 @@ HashMap k v -&gt; HashMap k w -&gt; HashMap k v
 </span><span id="line-541"></span><span>                </span><span class="hs-comment">-- we might need to branch on the typename when traversing the join</span><span>
 </span><span id="line-542"></span><span>                </span><span class="hs-comment">-- tree: we insert a custom field that will return the type name.</span><span>
 </span><span id="line-543"></span><span>                </span><span class="annot"><span class="annottext">forall k v. Hashable k =&gt; k -&gt; v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">InsOrdHashMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690981712"><span class="hs-identifier hs-var">internalTypeAlias</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-544"></span><span>                  </span><span class="annot"><span class="annottext">forall var r.
@@ -1918,7 +1918,7 @@ Maybe Name
 </span><span id="line-555"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall k v. Hashable k =&gt; [(k, v)] -&gt; Maybe (NEHashMap k v)
 </span><span class="hs-identifier hs-var">NEMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">OMap.toList</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name RemoteJoin
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name RemoteJoin
 </span><a href="#local-6989586621690981710"><span class="hs-identifier hs-var">remoteJoins</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-556"></span><span>    </span><span class="annot"><span class="annottext">Maybe (NEHashMap Name RemoteJoin)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -1953,7 +1953,7 @@ Hashable k2 =&gt;
 </span><span id="line-562"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InsOrdHashMap Name (GraphQLField Void var)
 </span><a href="#local-6989586621690981700"><span class="hs-identifier hs-var">transformedFields</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.fromList</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall r var. GraphQLField r var -&gt; Name
+</span><span class="hs-identifier hs-var">InsOrdHashMap.fromList</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall r var. GraphQLField r var -&gt; Name
 </span><a href="Hasura.RQL.IR.RemoteSchema.html#_fAlias"><span class="hs-identifier hs-var">_fAlias</span></a></span><span> </span><span class="annot"><span class="annottext">GraphQLField Void var
 </span><a href="#local-6989586621690981693"><span class="hs-identifier hs-var">fld</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GraphQLField Void var
 </span><a href="#local-6989586621690981693"><span class="hs-identifier hs-var">fld</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621690981693"><span class="annot"><span class="annottext">GraphQLField Void var
@@ -1973,7 +1973,7 @@ Hashable k2 =&gt;
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fst</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">OMap.toList</span></span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet (RemoteRelationshipField UnpreparedValue) var
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet (RemoteRelationshipField UnpreparedValue) var
 </span><a href="#local-6989586621690981731"><span class="hs-identifier hs-var">selectionSet</span></a></span><span>
 </span><span id="line-566"></span><span>
 </span><span id="line-567"></span><span>    </span><span id="local-6989586621690981714"><span class="annot"><span class="annottext">mkPlaceholderField :: Name -&gt; GraphQLField r var
@@ -2007,7 +2007,7 @@ Maybe Name
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">OMap.toList</span></span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet (RemoteRelationshipField UnpreparedValue) var
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">ObjectSelectionSet (RemoteRelationshipField UnpreparedValue) var
 </span><a href="#local-6989586621690981731"><span class="hs-identifier hs-var">selectionSet</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690981682"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690981682"><span class="hs-identifier hs-var">alias</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690981681"><span class="annot"><span class="annottext">Field (RemoteRelationshipField UnpreparedValue) var
 </span><a href="#local-6989586621690981681"><span class="hs-identifier hs-var">field</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Field (RemoteRelationshipField UnpreparedValue) var

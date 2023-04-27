@@ -21,7 +21,7 @@
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Bifunctor</span></a></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Foldable</span></a></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier">Data.Graph</span></a></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.IORef</span></a></span><span>
 </span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Vector</span></span><span class="hs-special">)</span><span>
 </span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">V</span></span><span>
@@ -503,7 +503,7 @@ Bifunctor p =&gt;
 </span><a href="#local-6989586621690811960"><span class="hs-identifier hs-var">recordSetsRef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">Ref
+</span><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></span><span> </span><span class="annot"><span class="annottext">Ref
 </span><a href="#local-6989586621690811962"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="annot"><span class="annottext">RecordSet
 </span><a href="#local-6989586621690811961"><span class="hs-identifier hs-var">recordSet</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-212"></span><span>
@@ -521,7 +521,7 @@ k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">readIORef</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (InsOrdHashMap Ref RecordSet)
 </span><a href="#local-6989586621690811956"><span class="hs-identifier hs-var">recordSetsRef</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-217"></span><span>  </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Ref
+</span><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Ref
 </span><a href="#local-6989586621690811957"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Ref RecordSet
 </span><a href="#local-6989586621690811955"><span class="hs-identifier hs-var">hash</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
@@ -564,7 +564,7 @@ head :: Ref
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span>
 </span><span id="line-231"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall k v.
 (k -&gt; v -&gt; Bool) -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.filterWithKey</span></span><span>
+</span><span class="hs-identifier hs-var">InsOrdHashMap.filterWithKey</span></span><span>
 </span><span id="line-232"></span><span>                </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span id="local-6989586621690811941"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690811941"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">OutputValue
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -596,7 +596,7 @@ makeRelationshipIn
     pure []
     where
       _lookupField' k row =
-        case OMap.lookup k row of
+        case InsOrdHashMap.lookup k row of
           Nothing -&gt; Nothing
           Just x -&gt; Just x
 
@@ -687,12 +687,12 @@ planFieldNameToQueryFieldName (EntityAlias fieldNameEntity) (FieldName fieldName
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-292"></span><span>                                 </span><span id="local-6989586621690811923"><span class="annot"><span class="annottext">OutputValue
 </span><a href="#local-6989586621690811923"><span class="hs-identifier hs-var">leftValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
 </span><a href="#local-6989586621690811924"><span class="hs-identifier hs-var">leftField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
 </span><a href="#local-6989586621690811930"><span class="hs-identifier hs-var">leftRow</span></a></span><span>
 </span><span id="line-293"></span><span>                                 </span><span id="local-6989586621690811922"><span class="annot"><span class="annottext">OutputValue
 </span><a href="#local-6989586621690811922"><span class="hs-identifier hs-var">rightValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
 </span><a href="#local-6989586621690811925"><span class="hs-identifier hs-var">rightField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
 </span><a href="#local-6989586621690811928"><span class="hs-identifier hs-var">rightRow</span></a></span><span>
 </span><span id="line-294"></span><span>                                 </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -807,12 +807,12 @@ planFieldNameToQueryFieldName (EntityAlias fieldNameEntity) (FieldName fieldName
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-335"></span><span>                                                   </span><span id="local-6989586621690811906"><span class="annot"><span class="annottext">OutputValue
 </span><a href="#local-6989586621690811906"><span class="hs-identifier hs-var">leftValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
 </span><a href="#local-6989586621690811907"><span class="hs-identifier hs-var">leftField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
 </span><a href="#local-6989586621690811913"><span class="hs-identifier hs-var">leftRow</span></a></span><span>
 </span><span id="line-336"></span><span>                                                   </span><span id="local-6989586621690811905"><span class="annot"><span class="annottext">OutputValue
 </span><a href="#local-6989586621690811905"><span class="hs-identifier hs-var">rightValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
 </span><a href="#local-6989586621690811908"><span class="hs-identifier hs-var">rightField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
 </span><a href="#local-6989586621690811909"><span class="hs-identifier hs-var">rightRow</span></a></span><span>
 </span><span id="line-337"></span><span>                                                   </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -870,7 +870,7 @@ planFieldNameToQueryFieldName (EntityAlias fieldNameEntity) (FieldName fieldName
 </span><span id="line-361"></span><span>  </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.insert</span></span><span>
+</span><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></span><span>
 </span><span id="line-362"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; FieldName
 </span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-var">DataLoaderPlan.FieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690811896"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
@@ -883,7 +883,7 @@ k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span id="line-366"></span><span>                </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (k -&gt; v -&gt; Bool) -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.filterWithKey</span></span><span>
+</span><span class="hs-identifier hs-var">InsOrdHashMap.filterWithKey</span></span><span>
 </span><span id="line-367"></span><span>                  </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">DataLoaderPlan.FieldName</span></a></span><span> </span><span id="local-6989586621690811893"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690811893"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">OutputValue
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -932,7 +932,7 @@ k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">OMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">InsOrdHashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
 </span><a href="#local-6989586621690811889"><span class="hs-identifier hs-var">rightRows</span></a></span><span>
 </span><span id="line-387"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
@@ -947,7 +947,7 @@ k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span id="line-390"></span><span>            </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.insert</span></span><span>
+</span><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></span><span>
 </span><span id="line-391"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; FieldName
 </span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-var">DataLoaderPlan.FieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690811891"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
@@ -955,7 +955,7 @@ k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#RecordOutputValue"><span class="hs-identifier hs-var">RecordOutputValue</span></a></span><span>
 </span><span id="line-393"></span><span>                  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall k v.
 (k -&gt; v -&gt; Bool) -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.filterWithKey</span></span><span>
+</span><span class="hs-identifier hs-var">InsOrdHashMap.filterWithKey</span></span><span>
 </span><span id="line-394"></span><span>                      </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">DataLoaderPlan.FieldName</span></a></span><span> </span><span id="local-6989586621690811883"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690811883"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">OutputValue
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool

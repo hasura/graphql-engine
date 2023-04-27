@@ -29,7 +29,7 @@
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Environment</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Has</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Has</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">getter</span></span><span class="hs-special">)</span><span>
 </span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
-</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HS</span></span><span>
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.List</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
 </span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.Extended</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
@@ -302,7 +302,7 @@ SourceMetadata b -&gt; SourceConnConfiguration b
 </span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="Hasura.RQL.Types.Common.html#defaultSource"><span class="hs-identifier hs-var">defaultSource</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata
 </span><a href="#local-6989586621691005573"><span class="hs-identifier hs-var">emptyDefaultSource</span></a></span><span>
 </span><span id="line-168"></span><span>
@@ -678,7 +678,7 @@ i b -&gt; AnyBackend i
 -&gt; Metadata
 </span><a href="Hasura.RQL.Types.Metadata.html#Metadata"><span class="hs-identifier hs-var">Metadata</span></a></span><span>
 </span><span id="line-298"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. Hashable k =&gt; k -&gt; v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="Hasura.RQL.Types.Common.html#defaultSource"><span class="hs-identifier hs-var">defaultSource</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata
 </span><a href="#local-6989586621691005201"><span class="hs-identifier hs-var">newDefaultSourceMetadata</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-299"></span><span>          </span><span class="annot"><span class="annottext">RemoteSchemas
@@ -724,7 +724,7 @@ i b -&gt; AnyBackend i
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">OMap.toList</span></span><span> </span><span class="annot"><span class="annottext">Sources
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">Sources
 </span><a href="#local-6989586621691005190"><span class="hs-identifier hs-var">newSources</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621691005186"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691005186"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691005185"><span class="annot"><span class="annottext">BackendSourceMetadata
@@ -733,7 +733,7 @@ t a -&gt; (a -&gt; f b) -&gt; f ()
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691005186"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">Sources
 </span><a href="#local-6989586621691005191"><span class="hs-identifier hs-var">oldSources</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691005183"><span class="annot"><span class="annottext">BackendSourceMetadata
@@ -748,10 +748,10 @@ AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><span id="line-320"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691005163"><span class="annot"><span class="annottext">newTriggerNames :: [TriggerName]
 </span><a href="#local-6989586621691005163"><span class="hs-identifier hs-var hs-var">newTriggerNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">concatMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">OMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">InsOrdHashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TableMetadata b -&gt; EventTriggers b
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#_tmEventTriggers"><span class="hs-identifier hs-var">_tmEventTriggers</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">InsOrdHashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceMetadata b -&gt; Tables b
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#_smTables"><span class="hs-identifier hs-var">_smTables</span></a></span><span> </span><span class="annot"><span class="annottext">SourceMetadata b
 </span><a href="#local-6989586621691005164"><span class="hs-identifier hs-var">newSourceMetadata</span></a></span><span class="hs-special">)</span><span>
@@ -795,7 +795,7 @@ SourceMetadata b -&gt; InsOrdHashMap TriggerName (EventTriggerConf b)
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691005136"><span class="annot"><span class="annottext">TriggerName
 </span><a href="#local-6989586621691005136"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k a. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k a -&gt; Bool
-</span><span class="hs-identifier hs-var">OMap.member</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.member</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><a href="#local-6989586621691005136"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap TriggerName (EventTriggerConf b)
 </span><a href="#local-6989586621691005138"><span class="hs-identifier hs-var">oldTriggersMap</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
@@ -900,7 +900,7 @@ Maybe MaxTime -&gt; m (Either MetadataWarning ())
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#ciSources"><span class="hs-identifier hs-var">ciSources</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">OMap.keys</span></span><span> </span><span class="annot"><span class="annottext">Sources
+</span><span class="hs-identifier hs-var">InsOrdHashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">Sources
 </span><a href="#local-6989586621691005190"><span class="hs-identifier hs-var">newSources</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-351"></span><span>            </span><span class="annot"><span class="annottext">ciDataConnectors :: HashSet DataConnectorName
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#ciDataConnectors"><span class="hs-identifier hs-var">ciDataConnectors</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
@@ -1009,7 +1009,7 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="#local-6989586621691005074"><span class="hs-identifier hs-var hs-var">droppedSources</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v w.
 (Eq k, Hashable k) =&gt;
 InsOrdHashMap k v -&gt; InsOrdHashMap k w -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.difference</span></span><span> </span><span class="annot"><span class="annottext">Sources
+</span><span class="hs-identifier hs-var">InsOrdHashMap.difference</span></span><span> </span><span class="annot"><span class="annottext">Sources
 </span><a href="#local-6989586621691005191"><span class="hs-identifier hs-var">oldSources</span></a></span><span> </span><span class="annot"><span class="annottext">Sources
 </span><a href="#local-6989586621691005190"><span class="hs-identifier hs-var">newSources</span></a></span><span>
 </span><span id="line-377"></span><span>
@@ -1018,7 +1018,7 @@ InsOrdHashMap k v -&gt; InsOrdHashMap k w -&gt; InsOrdHashMap k v
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">OMap.toList</span></span><span> </span><span class="annot"><span class="annottext">Sources
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">Sources
 </span><a href="#local-6989586621691005074"><span class="hs-identifier hs-var">droppedSources</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621691005072"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691005072"><span class="hs-identifier hs-var">oldSource</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691005071"><span class="annot"><span class="annottext">BackendSourceMetadata
@@ -1072,7 +1072,7 @@ SchemaCache -&gt; SourceName -&gt; AnyBackend SourceMetadata -&gt; m ()
 Hashable k =&gt;
 (v -&gt; Bool)
 -&gt; InsOrdHashMap k v -&gt; (InsOrdHashMap k v, InsOrdHashMap k v)
-</span><span class="hs-identifier hs-var">OMap.partition</span></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata -&gt; Bool
+</span><span class="hs-identifier hs-var">InsOrdHashMap.partition</span></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata -&gt; Bool
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#ctIncludeInMetadata"><span class="hs-identifier hs-var">ctIncludeInMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Metadata -&gt; CronTriggers
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaCronTriggers"><span class="hs-identifier hs-var">_metaCronTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
 </span><a href="#local-6989586621691005069"><span class="hs-identifier hs-var">oldMetadata</span></a></span><span class="hs-special">)</span><span>
@@ -1113,10 +1113,10 @@ Hashable k =&gt;
 </span><span id="line-420"></span><span>              </span><span class="annot"><span class="annottext">forall {a}. Eq a =&gt; a -&gt; a -&gt; Maybe a
 </span><a href="#local-6989586621691005060"><span class="hs-identifier hs-var">leftIfDifferent</span></a></span><span>
 </span><span id="line-421"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">OMap.toHashMap</span></span><span> </span><span class="annot"><span class="annottext">CronTriggers
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toHashMap</span></span><span> </span><span class="annot"><span class="annottext">CronTriggers
 </span><a href="#local-6989586621691005065"><span class="hs-identifier hs-var">allNewCronTriggers</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-422"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">OMap.toHashMap</span></span><span> </span><span class="annot"><span class="annottext">CronTriggers
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toHashMap</span></span><span> </span><span class="annot"><span class="annottext">CronTriggers
 </span><a href="#local-6989586621691005068"><span class="hs-identifier hs-var">oldCronTriggersIncludedInMetadata</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-423"></span><span>          </span><span id="local-6989586621691005054"><span class="annot"><span class="annottext">cronTriggersToBeDropped :: HashMap TriggerName CronTriggerMetadata
 </span><a href="#local-6989586621691005054"><span class="hs-identifier hs-var hs-var">cronTriggersToBeDropped</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
@@ -1127,10 +1127,10 @@ Hashable k =&gt;
 </span><span id="line-425"></span><span>              </span><span class="annot"><span class="annottext">forall {a}. Eq a =&gt; a -&gt; a -&gt; Maybe a
 </span><a href="#local-6989586621691005060"><span class="hs-identifier hs-var">leftIfDifferent</span></a></span><span>
 </span><span id="line-426"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">OMap.toHashMap</span></span><span> </span><span class="annot"><span class="annottext">CronTriggers
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toHashMap</span></span><span> </span><span class="annot"><span class="annottext">CronTriggers
 </span><a href="#local-6989586621691005068"><span class="hs-identifier hs-var">oldCronTriggersIncludedInMetadata</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-427"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">OMap.toHashMap</span></span><span> </span><span class="annot"><span class="annottext">CronTriggers
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toHashMap</span></span><span> </span><span class="annot"><span class="annottext">CronTriggers
 </span><a href="#local-6989586621691005065"><span class="hs-identifier hs-var">allNewCronTriggers</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-428"></span><span>      </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1158,7 +1158,7 @@ t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CronTriggerMetadata -&gt; TriggerName
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#ctName"><span class="hs-identifier hs-var">ctName</span></a></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata
 </span><a href="#local-6989586621691005048"><span class="hs-identifier hs-var">ct</span></a></span><span> </span><span class="annot"><span class="annottext">forall k a. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k a -&gt; Bool
-</span><span class="hs-operator hs-var">`OMap.member`</span></span><span> </span><span class="annot"><span class="annottext">CronTriggers
+</span><span class="hs-operator hs-var">`InsOrdHashMap.member`</span></span><span> </span><span class="annot"><span class="annottext">CronTriggers
 </span><a href="#local-6989586621691005067"><span class="hs-identifier hs-var">oldCronTriggersNotIncludedInMetadata</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-434"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
@@ -1212,7 +1212,7 @@ a -&gt; m ()
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">OMap.toList</span></span><span> </span><span class="annot"><span class="annottext">Sources
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">Sources
 </span><a href="#local-6989586621691005041"><span class="hs-identifier hs-var">newSources</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621691005040"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691005040"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691005039"><span class="annot"><span class="annottext">BackendSourceMetadata
@@ -1221,7 +1221,7 @@ t a -&gt; (a -&gt; f b) -&gt; f ()
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691005040"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">Sources
 </span><a href="#local-6989586621691005042"><span class="hs-identifier hs-var">oldSources</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691005038"><span class="annot"><span class="annottext">BackendSourceMetadata
@@ -1262,19 +1262,19 @@ SourceMetadata b -&gt; InsOrdHashMap TriggerName (EventTriggerConf b)
 </span><a href="#local-6989586621691005033"><span class="hs-identifier hs-var">newSourceMetadata</span></a></span><span>
 </span><span id="line-462"></span><span>                  </span><span id="local-6989586621691004966"><span class="annot"><span class="annottext">droppedEventTriggers :: [TriggerName]
 </span><a href="#local-6989586621691004966"><span class="hs-identifier hs-var hs-var">droppedEventTriggers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">OMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">InsOrdHashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap TriggerName (EventTriggerConf b)
 </span><a href="#local-6989586621691004968"><span class="hs-identifier hs-var">oldTriggersMap</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v w.
 (Eq k, Hashable k) =&gt;
 InsOrdHashMap k v -&gt; InsOrdHashMap k w -&gt; InsOrdHashMap k v
-</span><span class="hs-operator hs-var">`OMap.difference`</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap TriggerName (EventTriggerConf b)
+</span><span class="hs-operator hs-var">`InsOrdHashMap.difference`</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap TriggerName (EventTriggerConf b)
 </span><a href="#local-6989586621691004967"><span class="hs-identifier hs-var">newTriggersMap</span></a></span><span>
 </span><span id="line-463"></span><span>                  </span><span id="local-6989586621691004965"><span class="annot"><span class="annottext">retainedNewTriggers :: InsOrdHashMap TriggerName (EventTriggerConf b)
 </span><a href="#local-6989586621691004965"><span class="hs-identifier hs-var hs-var">retainedNewTriggers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap TriggerName (EventTriggerConf b)
 </span><a href="#local-6989586621691004967"><span class="hs-identifier hs-var">newTriggersMap</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v w.
 (Eq k, Hashable k) =&gt;
 InsOrdHashMap k v -&gt; InsOrdHashMap k w -&gt; InsOrdHashMap k v
-</span><span class="hs-operator hs-var">`OMap.intersection`</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap TriggerName (EventTriggerConf b)
+</span><span class="hs-operator hs-var">`InsOrdHashMap.intersection`</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap TriggerName (EventTriggerConf b)
 </span><a href="#local-6989586621691004968"><span class="hs-identifier hs-var">oldTriggersMap</span></a></span><span>
 </span><span id="line-464"></span><span>                  </span><span id="local-6989586621691004956"><span class="annot"><span class="annottext">catcher :: QErr -&gt; f ()
 </span><a href="#local-6989586621691004956"><span class="hs-identifier hs-var hs-var">catcher</span></a></span></span><span> </span><span id="local-6989586621691004955"><span class="annot"><span class="annottext">e :: QErr
@@ -1415,13 +1415,13 @@ SourceConfig b -&gt; TriggerName -&gt; TableName b -&gt; m ()
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">OMap.toList</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap TriggerName (EventTriggerConf b)
+</span><span class="hs-identifier hs-var">InsOrdHashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap TriggerName (EventTriggerConf b)
 </span><a href="#local-6989586621691004965"><span class="hs-identifier hs-var">retainedNewTriggers</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621691004937"><span class="annot"><span class="annottext">TriggerName
 </span><a href="#local-6989586621691004937"><span class="hs-identifier hs-var">retainedNewTriggerName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691004936"><span class="annot"><span class="annottext">EventTriggerConf b
 </span><a href="#local-6989586621691004936"><span class="hs-identifier hs-var">retainedNewTriggerConf</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-503"></span><span>                        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><a href="#local-6989586621691004937"><span class="hs-identifier hs-var">retainedNewTriggerName</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap TriggerName (EventTriggerConf b)
 </span><a href="#local-6989586621691004968"><span class="hs-identifier hs-var">oldTriggersMap</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-504"></span><span>                          </span><span class="annot"><span class="annottext">Maybe (EventTriggerConf b)
@@ -1634,7 +1634,7 @@ AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="#local-6989586621691004883"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-548"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691004882"><span class="annot"><span class="annottext">cronTriggersIncludedInMetadata :: CronTriggers
 </span><a href="#local-6989586621691004882"><span class="hs-identifier hs-var hs-var">cronTriggersIncludedInMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall v k. (v -&gt; Bool) -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.filter</span></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata -&gt; Bool
+</span><span class="hs-identifier hs-var">InsOrdHashMap.filter</span></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata -&gt; Bool
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#ctIncludeInMetadata"><span class="hs-identifier hs-var">ctIncludeInMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; CronTriggers
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaCronTriggers"><span class="hs-identifier hs-var">_metaCronTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
@@ -1712,7 +1712,7 @@ ReloadMetadata -&gt; m EncJSON
 </span><a href="#local-6989586621691004755"><span class="hs-identifier hs-var hs-var">allSources</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">OMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">InsOrdHashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; Sources
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaSources"><span class="hs-identifier hs-var">_metaSources</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
 </span><a href="#local-6989586621691004756"><span class="hs-identifier hs-var">metadata</span></a></span><span>
@@ -1720,7 +1720,7 @@ ReloadMetadata -&gt; m EncJSON
 </span><a href="#local-6989586621691004754"><span class="hs-identifier hs-var hs-var">allRemoteSchemas</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [k]
-</span><span class="hs-identifier hs-var">OMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">InsOrdHashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; RemoteSchemas
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaRemoteSchemas"><span class="hs-identifier hs-var">_metaRemoteSchemas</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
 </span><a href="#local-6989586621691004756"><span class="hs-identifier hs-var">metadata</span></a></span><span>
@@ -2092,7 +2092,7 @@ MetadataModifier -&gt; m ()
 </span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.delete</span></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.delete</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691004639"><span class="hs-identifier hs-var">source</span></a></span><span>
 </span><span id="line-677"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MOSourceObjId"><span class="hs-identifier hs-type">MOSourceObjId</span></a></span><span> </span><span id="local-6989586621691004637"><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691004637"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621691004636"><span class="annot"><span class="annottext">AnyBackend SourceMetadataObjId
@@ -2364,12 +2364,12 @@ RelName -&gt; TableMetadata b -&gt; TableMetadata b
 </span><span id="line-736"></span><span>              </span><span id="local-6989586621691004517"><span class="annot"><span class="annottext">filteredCollection :: QueryCollections -&gt; QueryCollections
 </span><a href="#local-6989586621691004517"><span class="hs-identifier hs-var hs-var">filteredCollection</span></a></span></span><span> </span><span id="local-6989586621691004515"><span class="annot"><span class="annottext">QueryCollections
 </span><a href="#local-6989586621691004515"><span class="hs-identifier hs-var">qc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall v k. (v -&gt; Bool) -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CreateCollection -&gt; Bool
+</span><span class="hs-identifier hs-var">InsOrdHashMap.filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CreateCollection -&gt; Bool
 </span><a href="#local-6989586621691004514"><span class="hs-identifier hs-var">isNonEmptyCC</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 (v -&gt; v) -&gt; k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.adjust</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CreateCollection -&gt; CreateCollection
+</span><span class="hs-identifier hs-var">InsOrdHashMap.adjust</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CreateCollection -&gt; CreateCollection
 </span><a href="#local-6989586621691004512"><span class="hs-identifier hs-var">collectionModifier</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621691004522"><span class="hs-identifier hs-var">cName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QueryCollections
 </span><a href="#local-6989586621691004515"><span class="hs-identifier hs-var">qc</span></a></span><span>
@@ -2421,10 +2421,10 @@ _ccName :: CollectionName
 </span><span id="line-752"></span><span>              </span><span id="local-6989586621691004500"><span class="annot"><span class="annottext">cleanupAllowList :: MetadataAllowlist -&gt; MetadataAllowlist
 </span><a href="#local-6989586621691004500"><span class="hs-identifier hs-var hs-var">cleanupAllowList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v.
 (k -&gt; v -&gt; Bool) -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.filterWithKey</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">CollectionName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.filterWithKey</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">CollectionName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">AllowlistEntry
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall k a. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k a -&gt; Bool
-</span><span class="hs-identifier hs-var">OMap.member</span></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><span class="hs-identifier hs-var">InsOrdHashMap.member</span></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621691004522"><span class="hs-identifier hs-var">cName</span></a></span><span> </span><span class="annot"><span class="annottext">QueryCollections
 </span><a href="#local-6989586621691004518"><span class="hs-identifier hs-var">newQueryCollection</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-753"></span><span>
@@ -2432,7 +2432,7 @@ _ccName :: CollectionName
 </span><span id="line-755"></span><span>              </span><span id="local-6989586621691004498"><span class="annot"><span class="annottext">cleanupRESTEndpoints :: Endpoints -&gt; Endpoints
 </span><a href="#local-6989586621691004498"><span class="hs-identifier hs-var hs-var">cleanupRESTEndpoints</span></a></span></span><span> </span><span id="local-6989586621691004497"><span class="annot"><span class="annottext">Endpoints
 </span><a href="#local-6989586621691004497"><span class="hs-identifier hs-var">endpoints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall v k. (v -&gt; Bool) -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">InsOrdHashMap.filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">QueryReference -&gt; Bool
 </span><a href="#local-6989586621691004496"><span class="hs-identifier hs-var">isFaultyQuery</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c

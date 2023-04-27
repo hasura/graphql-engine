@@ -36,7 +36,7 @@
 </span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier">Data.ByteString.Lazy</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">LBS</span></span><span>
 </span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Dependent.Map</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">DM</span></span><span>
 </span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Environment</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
-</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Monoid</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Any</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
 </span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html"><span class="hs-identifier">Hasura.Backends.DataConnector.Agent.Client</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentLicenseKey"><span class="hs-identifier">AgentLicenseKey</span></a></span><span class="hs-special">)</span><span>
@@ -1036,7 +1036,7 @@ Functor m =&gt;
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) k a b.
 Applicative f =&gt;
 (k -&gt; a -&gt; f b) -&gt; InsOrdHashMap k a -&gt; f (InsOrdHashMap k b)
-</span><span class="hs-identifier hs-var">OMap.traverseWithKey</span></span><span>
+</span><span class="hs-identifier hs-var">InsOrdHashMap.traverseWithKey</span></span><span>
 </span><span id="line-403"></span><span>
 </span><span id="line-404"></span><span>    </span><span class="annot"><a href="#local-6989586621691026105"><span class="hs-identifier hs-type">executePlan</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-405"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqParsed"><span class="hs-identifier hs-type">GQLReqParsed</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -1967,7 +1967,7 @@ RequestId
 </span><span id="line-583"></span><span>          </span><span id="local-6989586621691025932"><span class="annot"><span class="annottext">remoteSchemas :: [RemoteSchemaInfo]
 </span><a href="#local-6989586621691025932"><span class="hs-identifier hs-var hs-var">remoteSchemas</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-584"></span><span>            </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">ExecutionPlan
+</span><span class="hs-identifier hs-var">InsOrdHashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">ExecutionPlan
 </span><a href="#local-6989586621691025937"><span class="hs-identifier hs-var">queryPlans</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-585"></span><span>              </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#ExecStepDB"><span class="hs-identifier hs-type">E.ExecStepDB</span></a></span><span> </span><span id="local-6989586621691025930"><span class="annot"><span class="annottext">ResponseHeaders
@@ -2013,10 +2013,10 @@ Foldable t =&gt;
 </span><a href="#local-6989586621691025923"><span class="hs-identifier hs-var">getExecStepActionWithActionInfo</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-594"></span><span>              </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [v]
-</span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">InsOrdHashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-595"></span><span>                </span><span class="annot"><span class="annottext">forall v k. (v -&gt; Bool) -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.filter</span></span><span>
+</span><span class="hs-identifier hs-var">InsOrdHashMap.filter</span></span><span>
 </span><span id="line-596"></span><span>                  </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-597"></span><span>                      </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#ExecStepAction"><span class="hs-identifier hs-type">E.ExecStepAction</span></a></span><span> </span><span class="annot"><span class="annottext">ActionExecutionPlan
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ActionsInfo
@@ -2516,7 +2516,7 @@ Value -&gt; m AnnotatedResponsePart
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k' k v.
 (Eq k', Hashable k') =&gt;
 (k -&gt; k') -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k' v
-</span><span class="hs-identifier hs-var">OMap.mapKeys</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
+</span><span class="hs-identifier hs-var">InsOrdHashMap.mapKeys</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.unName</span></a></span><span>
 </span><span id="line-748"></span><span>
 </span><span id="line-749"></span><span class="hs-comment">-- | Run (execute) a batched GraphQL query (see 'GQLBatchedReqs').</span><span>

@@ -13,7 +13,7 @@
 </span><span id="line-13"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-14"></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
-</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Parser</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Typename</span></a></span><span>
@@ -158,7 +158,7 @@ $cfmap :: forall a b. (a -&gt; b) -&gt; NamespacedField a -&gt; NamespacedField 
 </span><span id="line-65"></span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#flattenNamespaces"><span class="hs-identifier hs-type">flattenNamespaces</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690839137"><span class="annot"><a href="#local-6989586621690839137"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedFieldMap"><span class="hs-identifier hs-type">NamespacedFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690839137"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690839137"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-66"></span><span id="flattenNamespaces"><span class="annot"><span class="annottext">flattenNamespaces :: forall a. NamespacedFieldMap a -&gt; RootFieldMap a
 </span><a href="Hasura.GraphQL.Namespace.html#flattenNamespaces"><span class="hs-identifier hs-var hs-var">flattenNamespaces</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall m k a. Monoid m =&gt; (k -&gt; a -&gt; m) -&gt; InsOrdHashMap k a -&gt; m
-</span><span class="hs-identifier hs-var">OMap.foldMapWithKey</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; NamespacedField a -&gt; RootFieldMap a
+</span><span class="hs-identifier hs-var">InsOrdHashMap.foldMapWithKey</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; NamespacedField a -&gt; RootFieldMap a
 </span><a href="#local-6989586621690838920"><span class="hs-identifier hs-var">flattenNamespace</span></a></span><span>
 </span><span id="line-67"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-68"></span><span>    </span><span class="annot"><a href="#local-6989586621690838920"><span class="hs-identifier hs-type">flattenNamespace</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedField"><span class="hs-identifier hs-type">NamespacedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690839137"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690839137"><span class="hs-identifier hs-type">a</span></a></span><span>
@@ -169,14 +169,14 @@ $cfmap :: forall a b. (a -&gt; b) -&gt; NamespacedField a -&gt; NamespacedField 
 (a -&gt; b) -&gt; (InsOrdHashMap Name a -&gt; b) -&gt; NamespacedField a -&gt; b
 </span><a href="Hasura.GraphQL.Namespace.html#namespacedField"><span class="hs-identifier hs-var">namespacedField</span></a></span><span>
 </span><span id="line-71"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. Hashable k =&gt; k -&gt; v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">InsOrdHashMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; RootFieldAlias
 </span><a href="Hasura.GraphQL.Namespace.html#mkUnNamespacedRootFieldAlias"><span class="hs-identifier hs-var">mkUnNamespacedRootFieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690838919"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k' k v.
 (Eq k', Hashable k') =&gt;
 (k -&gt; k') -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k' v
-</span><span class="hs-identifier hs-var">OMap.mapKeys</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">InsOrdHashMap.mapKeys</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; RootFieldAlias
 </span><a href="Hasura.GraphQL.Namespace.html#mkNamespacedRootFieldAlias"><span class="hs-identifier hs-var">mkNamespacedRootFieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690838919"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
@@ -184,7 +184,7 @@ $cfmap :: forall a b. (a -&gt; b) -&gt; NamespacedField a -&gt; NamespacedField 
 </span><span id="line-74"></span><span id="local-6989586621690839120"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#unflattenNamespaces"><span class="hs-identifier hs-type">unflattenNamespaces</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690839120"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedFieldMap"><span class="hs-identifier hs-type">NamespacedFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690839120"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-75"></span><span id="unflattenNamespaces"><span class="annot"><span class="annottext">unflattenNamespaces :: forall a. RootFieldMap a -&gt; NamespacedFieldMap a
 </span><a href="Hasura.GraphQL.Namespace.html#unflattenNamespaces"><span class="hs-identifier hs-var hs-var">unflattenNamespaces</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a k v. (a -&gt; k -&gt; v -&gt; a) -&gt; a -&gt; InsOrdHashMap k v -&gt; a
-</span><span class="hs-identifier hs-var">OMap.foldlWithKey'</span></span><span> </span><span class="annot"><span class="annottext">forall {a}.
+</span><span class="hs-identifier hs-var">InsOrdHashMap.foldlWithKey'</span></span><span> </span><span class="annot"><span class="annottext">forall {a}.
 InsOrdHashMap Name (NamespacedField a)
 -&gt; RootFieldAlias -&gt; a -&gt; InsOrdHashMap Name (NamespacedField a)
 </span><a href="#local-6989586621690838912"><span class="hs-identifier hs-var">insert</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
@@ -206,7 +206,7 @@ _rfaNamespace :: RootFieldAlias -&gt; Maybe Name
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690838904"><span class="hs-identifier hs-var">_rfaAlias</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; NamespacedField a
 </span><a href="Hasura.GraphQL.Namespace.html#NotNamespaced"><span class="hs-identifier hs-var">NotNamespaced</span></a></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621690838903"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (NamespacedField a)
@@ -215,13 +215,13 @@ k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><a href="#local-6989586621690838901"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 (v -&gt; v -&gt; v) -&gt; k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.insertWith</span></span><span> </span><span class="annot"><span class="annottext">forall {a}.
+</span><span class="hs-identifier hs-var">InsOrdHashMap.insertWith</span></span><span> </span><span class="annot"><span class="annottext">forall {a}.
 NamespacedField a -&gt; NamespacedField a -&gt; NamespacedField a
 </span><a href="#local-6989586621690838899"><span class="hs-identifier hs-var">merge</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690838901"><span class="hs-identifier hs-var">ns</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. InsOrdHashMap Name a -&gt; NamespacedField a
 </span><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-var">Namespaced</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. Hashable k =&gt; k -&gt; v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">InsOrdHashMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690838904"><span class="hs-identifier hs-var">_rfaAlias</span></a></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621690838903"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (NamespacedField a)
 </span><a href="#local-6989586621690838906"><span class="hs-identifier hs-var">m</span></a></span><span>
@@ -232,9 +232,9 @@ NamespacedField a -&gt; NamespacedField a -&gt; NamespacedField a
 </span><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-var">Namespaced</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 InsOrdHashMap k v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">OMap.union</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name a
+</span><span class="hs-identifier hs-var">InsOrdHashMap.union</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name a
 </span><a href="#local-6989586621690838895"><span class="hs-identifier hs-var">m'</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name a
-</span><a href="#local-6989586621690838896"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- Note: order of arguments to OMap.union to preserve ordering</span><span>
+</span><a href="#local-6989586621690838896"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- Note: order of arguments to InsOrdHashMap.union to preserve ordering</span><span>
 </span><span id="line-81"></span><span>    </span><span class="annot"><a href="#local-6989586621690838899"><span class="hs-identifier hs-var">merge</span></a></span><span> </span><span id="local-6989586621690838893"><span class="annot"><span class="annottext">NamespacedField a
 </span><a href="#local-6989586621690838893"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="annot"><span class="annottext">NamespacedField a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamespacedField a
@@ -285,7 +285,7 @@ Name
 </span><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-var">Namespaced</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v1 v2.
 (k -&gt; v1 -&gt; v2) -&gt; InsOrdHashMap k v1 -&gt; InsOrdHashMap k v2
-</span><span class="hs-identifier hs-var">OMap.mapWithKey</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; ParsedSelection a -&gt; a
+</span><span class="hs-identifier hs-var">InsOrdHashMap.mapWithKey</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; ParsedSelection a -&gt; a
 </span><a href="#local-6989586621690838876"><span class="hs-identifier hs-var">fromParsedSelection</span></a></span><span>
 </span><span id="line-101"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
