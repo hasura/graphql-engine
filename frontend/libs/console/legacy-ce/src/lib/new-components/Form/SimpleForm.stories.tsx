@@ -99,3 +99,34 @@ value for the \`inputFieldName\` input.`,
     },
   },
 };
+
+export const FormDebug: ComponentStory<typeof SimpleForm> = () => {
+  const validationSchema = z.object({
+    inputFieldName: z.string().min(1),
+  });
+
+  return (
+    <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')} debug>
+      <div className="space-y-xs">
+        <h1 className="text-xl font-semibold mb-xs">Default value</h1>
+        <InputField
+          name="inputFieldName"
+          label="The input field label"
+          placeholder="Input field placeholder"
+          clearButton
+        />
+        <Button type="submit" mode="primary">
+          Submit
+        </Button>
+      </div>
+    </SimpleForm>
+  );
+};
+FormDebug.storyName = '💠 Form Debugger';
+FormDebug.parameters = {
+  docs: {
+    description: {
+      story: `In this example, a form debugger window is shown that displays form values and errors.`,
+    },
+  },
+};

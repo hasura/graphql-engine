@@ -44,6 +44,10 @@ export type FormProps<TForm extends ZodInfer<Schema>> = {
    * The form ID
    */
   id?: string;
+  /**
+   * Enables a debug pane that outputs form values and errors
+   */
+  debug?: boolean;
 };
 
 // form wrapper props (combo of form component and FormProvider)
