@@ -122,6 +122,7 @@ extractTableName selectG =
     FromIdentifier _ -> throw400 NotSupported "AnnSelectG: FromIdentifier not supported"
     FromFunction {} -> throw400 NotSupported "AnnSelectG: FromFunction not supported"
     FromNativeQuery {} -> throw400 NotSupported "AnnSelectG: FromNativeQuery not supported"
+    FromStoredProcedure {} -> throw400 NotSupported "AnnSelectG: FromStoredProcedure not supported"
 
 translateAnnSelect ::
   ( Has TableRelationships writerOutput,

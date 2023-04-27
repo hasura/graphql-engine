@@ -508,6 +508,7 @@ fromSelectAggregate mparentRelationship annSelectG = do
       IR.FromIdentifier {} -> refute $ pure IdentifierNotSupported
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
       IR.FromNativeQuery {} -> refute $ pure NativeQueryNotSupported
+      IR.FromStoredProcedure {} -> error "fromSelectAggregate: FromStoredProcedure"
   _mforeignKeyConditions <- fmap (Where . fromMaybe []) $
     for mparentRelationship $
       \(entityAlias, mapping) ->
@@ -699,6 +700,7 @@ fromSelectRows annSelectG = do
       IR.FromIdentifier {} -> refute $ pure IdentifierNotSupported
       IR.FromFunction {} -> refute $ pure FunctionNotSupported
       IR.FromNativeQuery {} -> refute $ pure NativeQueryNotSupported
+      IR.FromStoredProcedure {} -> error "fromSelectRow: FromStoredProcedure"
   Args
     { argsOrderBy,
       argsWhere,

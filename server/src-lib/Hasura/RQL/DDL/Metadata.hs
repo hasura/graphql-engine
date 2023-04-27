@@ -84,6 +84,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Logging (MetadataLog (..))
+import Hasura.StoredProcedure.API (dropStoredProcedureInMetadata)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Types.Extended
 
@@ -704,12 +705,15 @@ purgeMetadataObj = \case
       SMOTable qt -> dropTableInMetadata @b source qt
       SMOFunction qf -> dropFunctionInMetadata @b source qf
       SMOFunctionPermission qf rn -> dropFunctionPermissionInMetadata @b source qf rn
-      SMONativeQuery lm -> dropNativeQueryInMetadata @b source lm
+      SMONativeQuery nq -> dropNativeQueryInMetadata @b source nq
       SMONativeQueryObj nativeQueryName nativeQueryMetadataObjId ->
         MetadataModifier $
           nativeQueryMetadataSetter @b source nativeQueryName
             %~ case nativeQueryMetadataObjId of
               NQMORel rn _ -> dropNativeQueryRelationshipInMetadata rn
+      SMOStoredProcedure sp -> dropStoredProcedureInMetadata source sp --- TODO: re-add `@b`
+      SMOStoredProcedureObj _storedProcedureName _storedProcedureObjId ->
+        MetadataModifier id -- TODO: add once Stored Procedure is in metadata
       SMOLogicalModel lm -> dropLogicalModelInMetadata @b source lm
       SMOLogicalModelObj logicalModelName logicalModelMetadataObjId ->
         MetadataModifier $

@@ -314,6 +314,8 @@ deleteMetadataObject = \case
       SMONativeQueryObj nativeQueryName nativeQueryObjId ->
         siNativeQueries . ix nativeQueryName %~ case nativeQueryObjId of
           NQMORel name _ -> nqiArrayRelationships %~ InsOrdHashMap.delete name
+      SMOStoredProcedure _name -> id
+      SMOStoredProcedureObj _storedProcedureName _storedProcedureObjId -> id
       SMOLogicalModel name -> siLogicalModels %~ HashMap.delete name
       SMOLogicalModelObj logicalModelName logicalModelObjectId ->
         siLogicalModels . ix logicalModelName %~ case logicalModelObjectId of

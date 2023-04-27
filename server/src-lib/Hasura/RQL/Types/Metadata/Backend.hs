@@ -34,6 +34,7 @@ import Hasura.RQL.Types.Table
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Version
 import Hasura.Services.Network
+import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
 
@@ -225,6 +226,16 @@ class
     m ()
   validateNativeQuery _ _ _ _ =
     throw500 "validateNativeQuery: not implemented for this backend."
+
+  validateStoredProcedure ::
+    (MonadIO m, MonadError QErr m) =>
+    Env.Environment ->
+    SourceConnConfiguration b ->
+    LogicalModelMetadata b ->
+    StoredProcedureMetadata b ->
+    m ()
+  validateStoredProcedure _ _ _ _ =
+    throw500 "validateStoredProcedure: not implemented for this backend."
 
   -- | How to convert a column to a field.
   -- For backends that don't support nested objects or arrays the default implementation

@@ -129,6 +129,7 @@ selectFromToFromItem prefix = \case
           S.mkFunctionAlias
             qf
             (fmap (fmap (first S.toColumnAlias)) defListM)
+  FromStoredProcedure {} -> error "selectFromToFromItem: FromStoredProcedure"
   FromNativeQuery lm ->
     S.FIIdentifier (S.tableAliasToIdentifier $ nativeQueryNameToAlias (nqRootFieldName lm))
 

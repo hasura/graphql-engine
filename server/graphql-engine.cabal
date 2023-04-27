@@ -748,6 +748,13 @@ library
                      , Hasura.NativeQuery.Schema
                      , Hasura.NativeQuery.Types
 
+                     , Hasura.StoredProcedure.IR
+                     , Hasura.StoredProcedure.Cache
+                     , Hasura.StoredProcedure.Metadata
+                     , Hasura.StoredProcedure.API
+                     , Hasura.StoredProcedure.Schema
+                     , Hasura.StoredProcedure.Types
+
                      , Hasura.Tracing
                      , Hasura.Tracing.Class
                      , Hasura.Tracing.Context

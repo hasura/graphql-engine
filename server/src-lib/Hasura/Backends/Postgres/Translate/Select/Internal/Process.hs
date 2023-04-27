@@ -168,6 +168,7 @@ processSelectParams
         FromTable table -> pure $ S.QualTable table
         FromIdentifier i -> pure $ S.QualifiedIdentifier (TableIdentifier $ unFIIdentifier i) Nothing
         FromFunction qf _ _ -> pure $ S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText qf) Nothing
+        FromStoredProcedure {} -> error "selectFromToQual: FromStoredProcedure"
         FromNativeQuery lm -> do
           -- we are going to cram our SQL in a CTE, and this is what we will call it
           let cteName = nativeQueryNameToAlias (nqRootFieldName lm)
