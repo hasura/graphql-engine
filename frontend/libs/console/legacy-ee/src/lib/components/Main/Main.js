@@ -451,7 +451,7 @@ class Main extends React.Component {
         'hasMetricAccess' in accessState &&
         accessState.hasMetricAccess &&
         isMonitoringTabSupportedEnvironment(globals) &&
-        isHasuraCollaboratorUser() &&
+        (isCloudConsole(globals) || isHasuraCollaboratorUser()) &&
         this.hasMetricsEntitlement()
       ) {
         return (
