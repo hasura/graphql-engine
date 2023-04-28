@@ -42,7 +42,7 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker (..))
 import Hasura.Server.Init.FeatureFlag qualified as FF
-import Hasura.StoredProcedure.Metadata (StoredProcedureArgumentName, StoredProcedureMetadata (..), parseInterpolatedQuery)
+import Hasura.StoredProcedure.Metadata (NativeQueryArgumentName, StoredProcedureMetadata (..), parseInterpolatedQuery)
 import Hasura.StoredProcedure.Types (NullableScalarType, StoredProcedureName, storedProcedureArrayRelationshipsCodec)
 
 -- | Default implementation of the 'track_stored_procedure_query' request payload.
@@ -50,7 +50,7 @@ data TrackStoredProcedure (b :: BackendType) = TrackStoredProcedure
   { tspSource :: SourceName,
     tspRootFieldName :: StoredProcedureName,
     tspCode :: Text,
-    tspArguments :: HashMap StoredProcedureArgumentName (NullableScalarType b),
+    tspArguments :: HashMap NativeQueryArgumentName (NullableScalarType b),
     tspArrayRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
     tspDescription :: Maybe Text,
     tspReturns :: LogicalModelName

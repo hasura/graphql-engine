@@ -17,7 +17,7 @@ data StoredProcedure b field = StoredProcedure
     -- | The raw sql to use in the query
     spInterpolatedQuery :: InterpolatedQuery field,
     -- | The arguments passed to the query, if any.
-    spArgs :: HashMap StoredProcedureArgumentName (ColumnValue b),
+    spArgs :: HashMap NativeQueryArgumentName (ColumnValue b),
     -- | The return type of the stored procedure
     spLogicalModel :: LogicalModel b
   }

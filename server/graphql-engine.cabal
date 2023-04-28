@@ -752,6 +752,7 @@ library
                      , Hasura.NativeQuery.API
                      , Hasura.NativeQuery.Schema
                      , Hasura.NativeQuery.Types
+                     , Hasura.NativeQuery.InterpolatedQuery
 
                      , Hasura.StoredProcedure.IR
                      , Hasura.StoredProcedure.Cache

@@ -34,7 +34,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.StoredProcedure.Cache (StoredProcedureInfo (..))
 import Hasura.StoredProcedure.IR (StoredProcedure (..))
-import Hasura.StoredProcedure.Metadata (InterpolatedQuery (..), StoredProcedureArgumentName (..))
+import Hasura.StoredProcedure.Metadata (InterpolatedQuery (..), NativeQueryArgumentName (..))
 import Hasura.StoredProcedure.Types (NullableScalarType (..), getStoredProcedureName)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
@@ -73,7 +73,7 @@ defaultBuildStoredProcedureRootFields StoredProcedureInfo {..} = runMaybeT $ do
   let interpolatedQuery spArgs =
         InterpolatedQuery $
           (fmap . fmap)
-            ( \var@(StoredProcedureArgumentName name) -> case HashMap.lookup var spArgs of
+            ( \var@(NativeQueryArgumentName name) -> case HashMap.lookup var spArgs of
                 Just arg -> UVParameter (FromInternal name) arg
                 Nothing ->
                   -- the `storedProcedureArgsParser` will already have checked
@@ -120,8 +120,8 @@ storedProcedureArgumentsSchema ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   G.Name ->
-  HashMap StoredProcedureArgumentName (NullableScalarType b) ->
-  MaybeT (SchemaT r m) (P.InputFieldsParser n (HashMap StoredProcedureArgumentName (Column.ColumnValue b)))
+  HashMap NativeQueryArgumentName (NullableScalarType b) ->
+  MaybeT (SchemaT r m) (P.InputFieldsParser n (HashMap NativeQueryArgumentName (Column.ColumnValue b)))
 storedProcedureArgumentsSchema storedProcedureName argsSignature = do
   -- Lift 'SchemaT r m (InputFieldsParser ..)' into a monoid using Applicative.
   -- This lets us use 'foldMap' + monoid structure of hashmaps to avoid awkwardly
@@ -135,10 +135,10 @@ storedProcedureArgumentsSchema storedProcedureName argsSignature = do
                 <$> lift (columnParser (Column.ColumnScalar nstType) (G.Nullability nstNullable))
             -- TODO: Naming conventions?
             -- TODO: Custom fields? (Probably not)
-            argName <- hoistMaybe (G.mkName (getStoredProcedureArgumentName name))
+            argName <- hoistMaybe (G.mkName (getNativeQueryArgumentName name))
             let description = case nstDescription of
                   Just desc -> G.Description desc
-                  Nothing -> G.Description ("Stored procedure argument " <> getStoredProcedureArgumentName name)
+                  Nothing -> G.Description ("Stored procedure argument " <> getNativeQueryArgumentName name)
             pure $
               P.field
                 argName
