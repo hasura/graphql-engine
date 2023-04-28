@@ -21,6 +21,7 @@ module Hasura.Server.App
     mkWaiApp,
     onlyAdmin,
     renderHtmlTemplate,
+    onlyWhenApiEnabled,
   )
 where
 
