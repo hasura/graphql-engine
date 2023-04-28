@@ -103,15 +103,14 @@ class Login extends Component {
       }
     };
 
-    const renderSSOLogin = () => {
-      if (
-        !Array.isArray(globals.ssoIdentityProviders) ||
-        !globals.ssoIdentityProviders.length ||
-        !['pro', 'cloud', 'pro-lite'].includes(globals.consoleType)
-      ) {
-        return null;
-      }
+    // render SSO login buttons from 3rd-party identity providers
+    // that EE users define
+    const sso3rdPartyEnabled = () =>
+      Array.isArray(globals.ssoIdentityProviders) &&
+      globals.ssoIdentityProviders.length > 0 &&
+      ['pro', 'cloud', 'pro-lite'].includes(globals.consoleType);
 
+    const render3rdPartySSOLogin = () => {
       return globals.ssoIdentityProviders.map((idp, i) => (
         <SSOLoginButton
           key={`idp-${idp.client_id}-${i}`}
@@ -245,14 +244,28 @@ class Login extends Component {
     };
 
     if (globals.consoleType === 'pro-lite' && !globals.ssoEnabled) {
-      return <AdminSecretLogin />;
+      // the ssoEnabled boolean variable enables Hasura Lux SSO
+      // 3rd-party SSO buttons are rendered regardless the ssoEnabled variable is enabled or not
+      return (
+        <AdminSecretLogin>
+          {sso3rdPartyEnabled() && (
+            <div className="space-y-md mb-md">{render3rdPartySSOLogin()}</div>
+          )}
+        </AdminSecretLogin>
+      );
     }
 
     if (globals.consoleType === 'pro-lite' && globals.ssoEnabled) {
       return (
         <div>
           {this.state.showAdminSecretLogin ? (
-            <AdminSecretLogin backToLoginHome={backToLoginHome} />
+            <AdminSecretLogin backToLoginHome={backToLoginHome}>
+              {sso3rdPartyEnabled() && (
+                <div className="space-y-md mb-md">
+                  {render3rdPartySSOLogin()}
+                </div>
+              )}
+            </AdminSecretLogin>
           ) : (
             <SSOLogin
               ssoIcon={ssoIcon}
@@ -260,9 +273,10 @@ class Login extends Component {
               doAdminSecretLogin={doAdminSecretLogin}
               doSSOLogin={doSSOLogin}
               keyIcon={keyIcon}
-            />
+            >
+              {sso3rdPartyEnabled() && render3rdPartySSOLogin()}
+            </SSOLogin>
           )}
-          {renderSSOLogin()}
         </div>
       );
     }
@@ -277,7 +291,11 @@ class Login extends Component {
             </div>
             <div className={styles.loginWrapper}>
               <form className="form-horizontal" onSubmit={handleLoginClick}>
-                {renderSSOLogin()}
+                {sso3rdPartyEnabled() && (
+                  <div className="px-md mt-sm space-y-md">
+                    {render3rdPartySSOLogin()}
+                  </div>
+                )}
                 <div
                   className={styles.input_addon_group + ' ' + styles.padd_top}
                 >
