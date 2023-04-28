@@ -160,6 +160,7 @@ runClearMetadata _ = do
                         mempty
                         mempty
                         mempty
+                        mempty
                         (_smConfiguration @b s)
                         Nothing
                         emptySourceCustomization
@@ -711,9 +712,12 @@ purgeMetadataObj = \case
           nativeQueryMetadataSetter @b source nativeQueryName
             %~ case nativeQueryMetadataObjId of
               NQMORel rn _ -> dropNativeQueryRelationshipInMetadata rn
-      SMOStoredProcedure sp -> dropStoredProcedureInMetadata source sp --- TODO: re-add `@b`
-      SMOStoredProcedureObj _storedProcedureName _storedProcedureObjId ->
-        MetadataModifier id -- TODO: add once Stored Procedure is in metadata
+      SMOStoredProcedure sp -> dropStoredProcedureInMetadata @b source sp
+      SMOStoredProcedureObj storedProcedureName storedProcedureMetadataObjId ->
+        MetadataModifier $
+          storedProcedureMetadataSetter @b source storedProcedureName
+            %~ case storedProcedureMetadataObjId of
+              SPMORel rn _ -> dropStoredProcedureRelationshipInMetadata rn
       SMOLogicalModel lm -> dropLogicalModelInMetadata @b source lm
       SMOLogicalModelObj logicalModelName logicalModelMetadataObjId ->
         MetadataModifier $

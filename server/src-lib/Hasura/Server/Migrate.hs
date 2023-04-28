@@ -163,6 +163,7 @@ migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrati
                         mempty
                         mempty
                         mempty
+                        mempty
                         defaultSourceConfig
                         Nothing
                         emptySourceCustomization
@@ -336,7 +337,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                     defaultSourceMetadata =
                       BackendSourceMetadata $
                         AB.mkAnyBackend $
-                          SourceMetadata defaultSource PostgresVanillaKind _mnsTables _mnsFunctions mempty mempty defaultSourceConfig Nothing emptySourceCustomization Nothing
+                          SourceMetadata defaultSource PostgresVanillaKind _mnsTables _mnsFunctions mempty mempty mempty defaultSourceConfig Nothing emptySourceCustomization Nothing
                  in Metadata
                       (InsOrdHashMap.singleton defaultSource defaultSourceMetadata)
                       _mnsRemoteSchemas

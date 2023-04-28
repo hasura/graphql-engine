@@ -15,6 +15,7 @@ module Hasura.RQL.Types.Metadata
     dropLogicalModelPermissionInMetadata,
     dropRelationshipInMetadata,
     dropNativeQueryRelationshipInMetadata,
+    dropStoredProcedureRelationshipInMetadata,
     dropRemoteRelationshipInMetadata,
     dropTableInMetadata,
     dropRemoteSchemaInMetadata,
@@ -25,6 +26,7 @@ module Hasura.RQL.Types.Metadata
     functionMetadataSetter,
     logicalModelMetadataSetter,
     nativeQueryMetadataSetter,
+    storedProcedureMetadataSetter,
     metaActions,
     metaAllowlist,
     metaApiLimits,
@@ -82,6 +84,7 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
+import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata, StoredProcedureName, spmArrayRelationships)
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.Types.Extended
@@ -300,6 +303,16 @@ nativeQueryMetadataSetter ::
 nativeQueryMetadataSetter source nativeQueryName =
   metaSources . ix source . toSourceMetadata . smNativeQueries . ix nativeQueryName
 
+-- | A lens setter for the metadata of a stored procedure as identified by the
+-- source name and root field name.
+storedProcedureMetadataSetter ::
+  (Backend b) =>
+  SourceName ->
+  StoredProcedureName ->
+  ASetter' Metadata (StoredProcedureMetadata b)
+storedProcedureMetadataSetter source storedProcedureName =
+  metaSources . ix source . toSourceMetadata . smStoredProcedures . ix storedProcedureName
+
 -- | A simple monad class which enables fetching and setting @'Metadata'
 -- in the state.
 class (Monad m) => MetadataM m where
@@ -392,6 +405,10 @@ dropRelationshipInMetadata relName =
 dropNativeQueryRelationshipInMetadata :: RelName -> NativeQueryMetadata b -> NativeQueryMetadata b
 dropNativeQueryRelationshipInMetadata relName =
   nqmArrayRelationships %~ InsOrdHashMap.delete relName
+
+dropStoredProcedureRelationshipInMetadata :: RelName -> StoredProcedureMetadata b -> StoredProcedureMetadata b
+dropStoredProcedureRelationshipInMetadata relName =
+  spmArrayRelationships %~ InsOrdHashMap.delete relName
 
 dropPermissionInMetadata ::
   RoleName -> PermType -> TableMetadata b -> TableMetadata b

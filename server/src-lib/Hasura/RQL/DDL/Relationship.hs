@@ -10,6 +10,7 @@ module Hasura.RQL.DDL.Relationship
     SetRelComment,
     runSetRelComment,
     nativeQueryArrayRelationshipSetup,
+    storedProcedureArrayRelationshipSetup,
   )
 where
 
@@ -38,6 +39,7 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.StoredProcedure.Types (StoredProcedureName)
 
 --------------------------------------------------------------------------------
 -- Create local relationship
@@ -171,6 +173,46 @@ nativeQueryArrayRelationshipSetup sourceName nativeQueryName (RelDef relName man
                       AB.mkAnyBackend $
                         SOINativeQueryObj @b nativeQueryName $
                           NQOCol @b c
+                  )
+                  DRLeftColumn
+            )
+            (Seq.fromList lCols)
+        )
+          <> fmap
+            ( \c ->
+                SchemaDependency
+                  ( SOSourceObj sourceName $
+                      AB.mkAnyBackend $
+                        SOITableObj @b refqt $
+                          TOCol @b c
+                  )
+                  DRRightColumn
+            )
+            (Seq.fromList rCols)
+  pure (RelInfo relName ArrRel (rmColumns manualConfig) refqt True AfterParent, deps)
+
+-- | set up an array relationship from a Stored Procedure onto another data source
+-- currently we can only connect to other tables but this will expand in future
+-- we only do RelManualConfig as we don't have any notion of ForeignKey from a
+-- Stored Procedure.
+storedProcedureArrayRelationshipSetup ::
+  forall b m.
+  (QErrM m, Backend b) =>
+  SourceName ->
+  StoredProcedureName ->
+  RelDef (RelManualConfig b) ->
+  m (RelInfo b, Seq SchemaDependency)
+storedProcedureArrayRelationshipSetup sourceName storedProcedureName (RelDef relName manualConfig _) = do
+  let refqt = rmTable manualConfig
+      (lCols, rCols) = unzip $ HashMap.toList $ rmColumns manualConfig
+      deps =
+        ( fmap
+            ( \c ->
+                SchemaDependency
+                  ( SOSourceObj sourceName $
+                      AB.mkAnyBackend $
+                        SOIStoredProcedureObj @b storedProcedureName $
+                          SPOCol @b c
                   )
                   DRLeftColumn
             )

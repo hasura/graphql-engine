@@ -14,6 +14,7 @@ module Hasura.RQL.Types.Source
     unsafeSourceTables,
     siConfiguration,
     siNativeQueries,
+    siStoredProcedures,
     siLogicalModels,
     siFunctions,
     siName,
@@ -65,6 +66,7 @@ import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.StoredProcedure.Cache (StoredProcedureCache)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -77,6 +79,7 @@ data SourceInfo b = SourceInfo
     _siTables :: TableCache b,
     _siFunctions :: FunctionCache b,
     _siNativeQueries :: NativeQueryCache b,
+    _siStoredProcedures :: StoredProcedureCache b,
     _siLogicalModels :: LogicalModelCache b,
     _siConfiguration :: ~(SourceConfig b),
     _siQueryTagsConfig :: Maybe QueryTagsConfig,
@@ -89,6 +92,7 @@ instance
     ToJSON (TableCache b),
     ToJSON (FunctionCache b),
     ToJSON (NativeQueryCache b),
+    ToJSON (StoredProcedureCache b),
     ToJSON (QueryTagsConfig),
     ToJSON (SourceCustomization)
   ) =>
@@ -100,6 +104,7 @@ instance
         "tables" .= _siTables,
         "functions" .= _siFunctions,
         "native_queries" .= _siNativeQueries,
+        "stored_procedures" .= _siStoredProcedures,
         "configuration" .= _siConfiguration,
         "query_tags_config" .= _siQueryTagsConfig
       ]

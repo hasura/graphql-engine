@@ -150,6 +150,8 @@ library
     Harness.Schema
     Harness.Schema.LogicalModel
     Harness.Schema.Name
+    Harness.Schema.NativeQuery
+    Harness.Schema.StoredProcedure
     Harness.Schema.Table
     Harness.Services.Composed
     Harness.Services.Database.Postgres

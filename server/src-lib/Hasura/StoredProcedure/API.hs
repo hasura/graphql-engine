@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
--- | Define and handle v1/metadata API operations to track, untrack, and get native queries.
+-- | Define and handle v1/metadata API operations to track, untrack, and get stored procedures.
 module Hasura.StoredProcedure.API
   ( GetStoredProcedure (..),
     TrackStoredProcedure (..),
@@ -15,7 +15,7 @@ where
 
 import Autodocodec (HasCodec)
 import Autodocodec qualified as AC
-import Control.Lens (Traversal', preview, (^?))
+import Control.Lens (Traversal', has, preview, (^?))
 import Data.Aeson
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
@@ -45,7 +45,7 @@ import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.StoredProcedure.Metadata (StoredProcedureArgumentName, StoredProcedureMetadata (..), parseInterpolatedQuery)
 import Hasura.StoredProcedure.Types (NullableScalarType, StoredProcedureName, storedProcedureArrayRelationshipsCodec)
 
--- | Default implementation of the 'track_native_query' request payload.
+-- | Default implementation of the 'track_stored_procedure_query' request payload.
 data TrackStoredProcedure (b :: BackendType) = TrackStoredProcedure
   { tspSource :: SourceName,
     tspRootFieldName :: StoredProcedureName,
@@ -59,7 +59,7 @@ data TrackStoredProcedure (b :: BackendType) = TrackStoredProcedure
 instance (Backend b) => HasCodec (TrackStoredProcedure b) where
   codec =
     AC.CommentCodec
-      ("A request to track a native query")
+      ("A request to track a stored procedure")
       $ AC.object (backendPrefix @b <> "TrackStoredProcedure")
       $ TrackStoredProcedure
         <$> AC.requiredField "source" sourceDoc
@@ -78,8 +78,8 @@ instance (Backend b) => HasCodec (TrackStoredProcedure b) where
           AC..= tspReturns
     where
       arrayRelationshipsDoc = "Any relationships between an output value and multiple values in another data source"
-      sourceDoc = "The source in which this native query should be tracked"
-      rootFieldDoc = "Root field name for the native query"
+      sourceDoc = "The source in which this stored procedure should be tracked"
+      rootFieldDoc = "Root field name for the stored procedure"
       codeDoc = "Native code expression (SQL) to run"
       argumentsDoc = "Free variables in the expression and their types"
       returnsDoc = "Return type (table) of the expression"
@@ -95,7 +95,7 @@ deriving via
   instance
     (Backend b) => ToJSON (TrackStoredProcedure b)
 
--- | Validate a native query and extract the native query info from the request.
+-- | Validate a stored procedure and extract the stored procedure info from the request.
 storedProcedureTrackToMetadata ::
   forall b m.
   ( BackendMetadata b,
@@ -130,7 +130,7 @@ storedProcedureTrackToMetadata env sourceConnConfig TrackStoredProcedure {..} = 
 
   pure storedProcedureMetadata
 
--- | API payload for the 'get_native_query' endpoint.
+-- | API payload for the 'get_stored_procedure' endpoint.
 data GetStoredProcedure (b :: BackendType) = GetStoredProcedure
   { gspSource :: SourceName
   }
@@ -150,7 +150,7 @@ instance Backend b => ToJSON (GetStoredProcedure b) where
       [ "source" .= gspSource
       ]
 
--- | Handler for the 'get_native_query' endpoint.
+-- | Handler for the 'get_stored_procedure' endpoint.
 runGetStoredProcedure ::
   forall b m.
   ( BackendMetadata b,
@@ -165,8 +165,8 @@ runGetStoredProcedure q = do
 
   metadata <- getMetadata
 
-  let storedProcedure :: Maybe (NativeQueries b)
-      storedProcedure = metadata ^? metaSources . ix (gspSource q) . toSourceMetadata . smNativeQueries @b
+  let storedProcedure :: Maybe (StoredProcedures b)
+      storedProcedure = metadata ^? metaSources . ix (gspSource q) . toSourceMetadata . smStoredProcedures @b
 
   pure (encJFromJValue (InsOrdHashMap.elems <$> storedProcedure))
 
@@ -178,7 +178,7 @@ runTrackStoredProcedure ::
   ( BackendMetadata b,
     MonadError QErr m,
     MonadIO m,
-    -- CacheRWM m,
+    CacheRWM m,
     MetadataM m,
     HasFeatureFlagChecker m
   ) =>
@@ -206,27 +206,24 @@ runTrackStoredProcedure env trackStoredProcedureRequest = do
     storedProcedureTrackToMetadata @b env sourceConnConfig trackStoredProcedureRequest
 
   let fieldName = _spmRootFieldName metadata
-      _metadataObj =
+      metadataObj =
         MOSourceObjId source $
           AB.mkAnyBackend $
             SMOStoredProcedure @b fieldName
-      existingStoredProcedures = [] -- TODO: create a place in metadata for these InsOrdHashMap.keys (_smNativeQueries sourceMetadata)
+      existingStoredProcedures = InsOrdHashMap.keys (_smStoredProcedures sourceMetadata)
   when (fieldName `elem` existingStoredProcedures) do
     throw400 AlreadyTracked $ "Stored procedure '" <> toTxt fieldName <> "' is already tracked."
 
-  {-
-  -- TODO: put this back once we've added Stored Procedures into metadata
   buildSchemaCacheFor metadataObj $
     MetadataModifier $
-      (metaSources . ix source . toSourceMetadata @b . smNativeQueries)
+      (metaSources . ix source . toSourceMetadata @b . smStoredProcedures)
         %~ InsOrdHashMap.insert fieldName metadata
-  -}
 
   pure successMsg
   where
     source = tspSource trackStoredProcedureRequest
 
--- | API payload for the 'untrack_native_query' endpoint.
+-- | API payload for the 'untrack_stored_procedure' endpoint.
 data UntrackStoredProcedure (b :: BackendType) = UntrackStoredProcedure
   { utspSource :: SourceName,
     utspRootFieldName :: StoredProcedureName
@@ -249,7 +246,7 @@ instance ToJSON (UntrackStoredProcedure b) where
         "root_field_name" .= utspRootFieldName
       ]
 
--- | Handler for the 'untrack_native_query' endpoint.
+-- | Handler for the 'untrack_stored_procedure' endpoint.
 runUntrackStoredProcedure ::
   forall b m.
   ( BackendMetadata b,
@@ -261,7 +258,7 @@ runUntrackStoredProcedure ::
   m EncJSON
 runUntrackStoredProcedure q = do
   -- we do not check for feature flag here as we always want users to be able
-  -- to remove native queries if they'd like
+  -- to remove stored procedures if they'd like
   assertStoredProcedureExists @b source fieldName
 
   let metadataObj =
@@ -270,22 +267,22 @@ runUntrackStoredProcedure q = do
             SMOStoredProcedure @b fieldName
 
   buildSchemaCacheFor metadataObj $
-    dropStoredProcedureInMetadata source fieldName -- TODO pass `@b` again
+    dropStoredProcedureInMetadata @b source fieldName -- TODO pass `@b` again
   pure successMsg
   where
     source = utspSource q
     fieldName = utspRootFieldName q
 
-dropStoredProcedureInMetadata :: -- forall b. BackendMetadata b =>
-  SourceName -> StoredProcedureName -> MetadataModifier
-dropStoredProcedureInMetadata _source _rootFieldName = do
-  MetadataModifier $ id
-
-{-
-    -- TODO: implement once Stored Procedures live in metadata
-    metaSources . ix source . toSourceMetadata @b . smNativeQueries
+dropStoredProcedureInMetadata ::
+  forall b.
+  BackendMetadata b =>
+  SourceName ->
+  StoredProcedureName ->
+  MetadataModifier
+dropStoredProcedureInMetadata source rootFieldName = do
+  MetadataModifier $
+    metaSources . ix source . toSourceMetadata @b . smStoredProcedures
       %~ InsOrdHashMap.delete rootFieldName
--}
 
 -- | check feature flag is enabled before carrying out any actions
 throwIfFeatureDisabled :: (HasFeatureFlagChecker m, MonadError QErr m) => m ()
@@ -296,22 +293,18 @@ throwIfFeatureDisabled = do
 -- | Check whether a native query with the given root field name exists for
 -- the given source.
 assertStoredProcedureExists :: forall b m. (Backend b, MetadataM m, MonadError QErr m) => SourceName -> StoredProcedureName -> m ()
-assertStoredProcedureExists sourceName _rootFieldName = do
+assertStoredProcedureExists sourceName rootFieldName = do
   metadata <- getMetadata
 
   let sourceMetadataTraversal :: Traversal' Metadata (SourceMetadata b)
       sourceMetadataTraversal = metaSources . ix sourceName . toSourceMetadata @b
 
-  _sourceMetadata <-
+  sourceMetadata <-
     preview sourceMetadataTraversal metadata
       `onNothing` throw400 NotFound ("Source " <> sourceName <<> " not found.")
-  pure ()
 
-{-
--- TODO: reimplement once Stored Procedures are in metadata
-let desiredStoredProcedure :: Traversal' (SourceMetadata b) (StoredProcedureMetadata b)
-    desiredStoredProcedure = smNativeQueries . ix rootFieldName
+  let desiredStoredProcedure :: Traversal' (SourceMetadata b) (StoredProcedureMetadata b)
+      desiredStoredProcedure = smStoredProcedures . ix rootFieldName
 
-unless (has desiredStoredProcedure sourceMetadata) do
-  throw400 NotFound ("Native query " <> rootFieldName <<> " not found in source " <> sourceName <<> ".")
--}
+  unless (has desiredStoredProcedure sourceMetadata) do
+    throw400 NotFound ("Stored Procedure " <> rootFieldName <<> " not found in source " <> sourceName <<> ".")

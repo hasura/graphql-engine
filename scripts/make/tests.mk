@@ -222,6 +222,16 @@ test-native-queries-bigquery: remove-tix-file
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		cabal run $(API_TESTS_PRO)
 
+.PHONY: test-stored-procedures-sqlserver
+## test-stored-procedures-sqlserver: run all sqlserver tests for the Stored Procedure feature
+test-stored-procedures-sqlserver: remove-tix-file
+	cabal build exe:graphql-engine-pro
+	docker compose up -d --wait postgres sqlserver-healthcheck
+	HASURA_TEST_BACKEND_TYPE=SQLServer \
+		HSPEC_MATCH=StoredProcedures \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		cabal run $(API_TESTS_PRO)
+
 .PHONY: py-tests
 ## py-tests: run the python-based test suite
 py-tests:

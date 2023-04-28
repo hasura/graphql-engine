@@ -36,6 +36,7 @@ import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.SchemaCache (rscPermissions, rscRemoteRelationships)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap qualified as BackendMap
+import Hasura.StoredProcedure.Cache (StoredProcedureInfo (_spiReturns), spiArrayRelationships)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to
@@ -189,6 +190,15 @@ pruneDanglingDependents cache =
                   unless (InsOrdHashMap.member colName (_lmiFields (_nqiReturns nativeQueryInfo))) $
                     Left
                       ("native query " <> nativeQueryName <<> " has no field named " <>> colName)
+            SOIStoredProcedure storedProcedureName -> do
+              void $ resolveStoredProcedure sourceInfo storedProcedureName
+            SOIStoredProcedureObj storedProcedureName storedProcedureObjId -> do
+              storedProcedureInfo <- resolveStoredProcedure sourceInfo storedProcedureName
+              case storedProcedureObjId of
+                SPOCol colName ->
+                  unless (InsOrdHashMap.member colName (_lmiFields (_spiReturns storedProcedureInfo))) $
+                    Left
+                      ("stored procedure " <> storedProcedureName <<> " has no field named " <>> colName)
             SOITableObj tableName tableObjectId -> do
               tableInfo <- resolveTable sourceInfo tableName
               case tableObjectId of
@@ -238,6 +248,10 @@ pruneDanglingDependents cache =
     resolveNativeQuery sourceInfo nativeQueryName =
       HashMap.lookup nativeQueryName (_siNativeQueries sourceInfo)
         `onNothing` Left ("native query " <> nativeQueryName <<> " is not tracked")
+
+    resolveStoredProcedure sourceInfo storedProcedureName =
+      HashMap.lookup storedProcedureName (_siStoredProcedures sourceInfo)
+        `onNothing` Left ("stored procedure " <> storedProcedureName <<> " is not tracked")
 
     resolveLogicalModel sourceInfo logicalModelName =
       HashMap.lookup logicalModelName (_siLogicalModels sourceInfo)
@@ -314,8 +328,10 @@ deleteMetadataObject = \case
       SMONativeQueryObj nativeQueryName nativeQueryObjId ->
         siNativeQueries . ix nativeQueryName %~ case nativeQueryObjId of
           NQMORel name _ -> nqiArrayRelationships %~ InsOrdHashMap.delete name
-      SMOStoredProcedure _name -> id
-      SMOStoredProcedureObj _storedProcedureName _storedProcedureObjId -> id
+      SMOStoredProcedure name -> siStoredProcedures %~ HashMap.delete name
+      SMOStoredProcedureObj storedProcedureName storedProcedureObjId ->
+        siStoredProcedures . ix storedProcedureName %~ case storedProcedureObjId of
+          SPMORel name _ -> spiArrayRelationships %~ InsOrdHashMap.delete name
       SMOLogicalModel name -> siLogicalModels %~ HashMap.delete name
       SMOLogicalModelObj logicalModelName logicalModelObjectId ->
         siLogicalModels . ix logicalModelName %~ case logicalModelObjectId of

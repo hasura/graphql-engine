@@ -1077,6 +1077,14 @@
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
                     },
+                    "stored_procedures": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/BigqueryStoredProcedureMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "tables": {
                         "items": {
                             "$ref": "#/components/schemas/BigqueryTableMetadata"
@@ -1089,6 +1097,48 @@
                     "kind",
                     "tables",
                     "configuration"
+                ],
+                "type": "object"
+            },
+            "BigqueryStoredProcedureMetadata": {
+                "description": "A stored procedure as represented in metadata.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/BigqueryNullableScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__BigQuery"
+                        },
+                        "type": "array"
+                    },
+                    "code": {
+                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "A description of the stored procedure which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
+                    },
+                    "root_field_name": {
+                        "description": "Root field name for the stored procedure",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "root_field_name",
+                    "code",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -1945,6 +1995,14 @@
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
                     },
+                    "stored_procedures": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CitusStoredProcedureMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "tables": {
                         "items": {
                             "$ref": "#/components/schemas/CitusTableMetadata"
@@ -1957,6 +2015,48 @@
                     "kind",
                     "tables",
                     "configuration"
+                ],
+                "type": "object"
+            },
+            "CitusStoredProcedureMetadata": {
+                "description": "A stored procedure as represented in metadata.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/CitusNullableScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Citus_"
+                        },
+                        "type": "array"
+                    },
+                    "code": {
+                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "A description of the stored procedure which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
+                    },
+                    "root_field_name": {
+                        "description": "Root field name for the stored procedure",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "root_field_name",
+                    "code",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -2820,6 +2920,14 @@
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
                     },
+                    "stored_procedures": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CockroachStoredProcedureMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "tables": {
                         "items": {
                             "$ref": "#/components/schemas/CockroachTableMetadata"
@@ -2832,6 +2940,48 @@
                     "kind",
                     "tables",
                     "configuration"
+                ],
+                "type": "object"
+            },
+            "CockroachStoredProcedureMetadata": {
+                "description": "A stored procedure as represented in metadata.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/CockroachNullableScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Cockroach_"
+                        },
+                        "type": "array"
+                    },
+                    "code": {
+                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "A description of the stored procedure which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
+                    },
+                    "root_field_name": {
+                        "description": "Root field name for the stored procedure",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "root_field_name",
+                    "code",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -3836,6 +3986,14 @@
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
                     },
+                    "stored_procedures": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/DataconnectorStoredProcedureMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "tables": {
                         "items": {
                             "$ref": "#/components/schemas/DataconnectorTableMetadata"
@@ -3848,6 +4006,48 @@
                     "kind",
                     "tables",
                     "configuration"
+                ],
+                "type": "object"
+            },
+            "DataconnectorStoredProcedureMetadata": {
+                "description": "A stored procedure as represented in metadata.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/DataconnectorNullableScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__DataConnector"
+                        },
+                        "type": "array"
+                    },
+                    "code": {
+                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "A description of the stored procedure which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
+                    },
+                    "root_field_name": {
+                        "description": "Root field name for the stored procedure",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "root_field_name",
+                    "code",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -5349,6 +5549,14 @@
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
                     },
+                    "stored_procedures": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MssqlStoredProcedureMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "tables": {
                         "items": {
                             "$ref": "#/components/schemas/MssqlTableMetadata"
@@ -5361,6 +5569,48 @@
                     "kind",
                     "tables",
                     "configuration"
+                ],
+                "type": "object"
+            },
+            "MssqlStoredProcedureMetadata": {
+                "description": "A stored procedure as represented in metadata.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/MssqlNullableScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__MSSQL"
+                        },
+                        "type": "array"
+                    },
+                    "code": {
+                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "A description of the stored procedure which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
+                    },
+                    "root_field_name": {
+                        "description": "Root field name for the stored procedure",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "root_field_name",
+                    "code",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -6215,6 +6465,14 @@
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
                     },
+                    "stored_procedures": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MysqlStoredProcedureMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "tables": {
                         "items": {
                             "$ref": "#/components/schemas/MysqlTableMetadata"
@@ -6227,6 +6485,48 @@
                     "kind",
                     "tables",
                     "configuration"
+                ],
+                "type": "object"
+            },
+            "MysqlStoredProcedureMetadata": {
+                "description": "A stored procedure as represented in metadata.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/MysqlNullableScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__MySQL"
+                        },
+                        "type": "array"
+                    },
+                    "code": {
+                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "A description of the stored procedure which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
+                    },
+                    "root_field_name": {
+                        "description": "Root field name for the stored procedure",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "root_field_name",
+                    "code",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -7415,6 +7715,14 @@
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
                     },
+                    "stored_procedures": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/PostgresStoredProcedureMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "tables": {
                         "items": {
                             "$ref": "#/components/schemas/PostgresTableMetadata"
@@ -7427,6 +7735,48 @@
                     "kind",
                     "tables",
                     "configuration"
+                ],
+                "type": "object"
+            },
+            "PostgresStoredProcedureMetadata": {
+                "description": "A stored procedure as represented in metadata.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/PostgresNullableScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "array_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Vanilla_"
+                        },
+                        "type": "array"
+                    },
+                    "code": {
+                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "A description of the stored procedure which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
+                    },
+                    "root_field_name": {
+                        "description": "Root field name for the stored procedure",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "root_field_name",
+                    "code",
+                    "returns"
                 ],
                 "type": "object"
             },

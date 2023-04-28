@@ -32,3 +32,4 @@ instance BackendMetadata 'MSSQL where
   supportsBeingRemoteRelationshipTarget _ = True
   listAllTables = MSSQL.listAllTables
   validateNativeQuery _ _ _ _ = pure () -- for now, all queries are valid
+  validateStoredProcedure _ _ _ _ = pure () -- for now, all stored procedures are valid

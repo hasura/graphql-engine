@@ -103,6 +103,8 @@ import Hasura.Server.Migrate.Version
 import Hasura.Server.Types
 import Hasura.Services
 import Hasura.Session
+import Hasura.StoredProcedure.Cache (StoredProcedureCache, StoredProcedureInfo (..))
+import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.Types.Extended
@@ -666,7 +668,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
         `arr` (SourceInfo b)
     buildSource = proc (dynamicConfig, allSources, sourceMetadata, sourceConfig, tablesRawInfo, eventTriggerInfoMaps, dbObjectsIntrospection, remoteSchemaMap, orderedRoles) -> do
       let DBObjectsIntrospection _dbTables dbFunctions _scalars = dbObjectsIntrospection
-          SourceMetadata sourceName backendSourceKind tables functions nativeQueries logicalModels _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
+          SourceMetadata sourceName backendSourceKind tables functions nativeQueries storedProcedures logicalModels _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
           tablesMetadata = InsOrdHashMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
@@ -852,7 +854,74 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       let nativeQueryCache :: NativeQueryCache b
           nativeQueryCache = mapFromL _nqiRootFieldName (catMaybes nativeQueryCacheMaybes)
 
-      returnA -< SourceInfo sourceName backendSourceKind tableCache functionCache nativeQueryCache logicalModelsCache sourceConfig queryTagsConfig resolvedCustomization dbObjectsIntrospection
+      storedProcedureCacheMaybes <-
+        interpretWriter
+          -< for
+            (InsOrdHashMap.elems storedProcedures)
+            \spm@StoredProcedureMetadata {..} -> do
+              let metadataObject :: MetadataObject
+                  metadataObject =
+                    MetadataObject
+                      ( MOSourceObjId sourceName $
+                          AB.mkAnyBackend $
+                            SMOStoredProcedure @b _spmRootFieldName
+                      )
+                      (toJSON spm)
+
+                  schemaObjId :: SchemaObjId
+                  schemaObjId =
+                    SOSourceObj sourceName $
+                      AB.mkAnyBackend $
+                        SOIStoredProcedure @b _spmRootFieldName
+
+                  dependency :: SchemaDependency
+                  dependency =
+                    SchemaDependency
+                      { sdObjId =
+                          SOSourceObj sourceName $
+                            AB.mkAnyBackend $
+                              SOILogicalModel @b _spmReturns,
+                        sdReason = DRLogicalModel
+                      }
+
+              withRecordInconsistencyM metadataObject $ do
+                unless (_cscAreNativeQueriesEnabled cacheStaticConfig) $ -- @TODO: use a different flag
+                  throw400 InvalidConfiguration "The Stored Procedure feature is disabled"
+
+                logicalModel <-
+                  onNothing
+                    (HashMap.lookup _spmReturns logicalModelsCache)
+                    (throw400 InvalidConfiguration ("The logical model " <> toTxt _spmReturns <> " could not be found"))
+
+                recordDependenciesM metadataObject schemaObjId $
+                  Seq.singleton dependency
+
+                arrayRelationships <-
+                  traverse
+                    (storedProcedureArrayRelationshipSetup sourceName _spmRootFieldName)
+                    _spmArrayRelationships
+
+                let sourceObject =
+                      SOSourceObj sourceName $
+                        AB.mkAnyBackend $
+                          SOIStoredProcedure @b _spmRootFieldName
+
+                recordDependenciesM metadataObject sourceObject (mconcat $ snd <$> InsOrdHashMap.elems arrayRelationships)
+
+                pure
+                  StoredProcedureInfo
+                    { _spiRootFieldName = _spmRootFieldName,
+                      _spiCode = _spmCode,
+                      _spiReturns = logicalModel,
+                      _spiArguments = _spmArguments,
+                      _spiArrayRelationships = fst <$> arrayRelationships,
+                      _spiDescription = _spmDescription
+                    }
+
+      let storedProcedureCache :: StoredProcedureCache b
+          storedProcedureCache = mapFromL _spiRootFieldName (catMaybes storedProcedureCacheMaybes)
+
+      returnA -< SourceInfo sourceName backendSourceKind tableCache functionCache nativeQueryCache storedProcedureCache logicalModelsCache sourceConfig queryTagsConfig resolvedCustomization dbObjectsIntrospection
 
     buildAndCollectInfo ::
       forall arr m.
@@ -882,7 +951,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
             HS.fromList $
               concat $
                 InsOrdHashMap.elems sources >>= \(BackendSourceMetadata e) ->
-                  AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _nativeQueries _logicalModels _ _ _ _) -> do
+                  AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _nativeQueries _storedProcedures _logicalModels _ _ _ _) -> do
                     table <- InsOrdHashMap.elems tables
                     pure $
                       InsOrdHashMap.keys (_tmInsertPermissions table)

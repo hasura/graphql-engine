@@ -23,6 +23,7 @@ module Hasura.Server.API.Backend
     computedFieldCommands,
     connectionTemplateCommands,
     nativeQueriesCommands,
+    storedProceduresCommands,
     logicalModelsCommands,
   )
 where
@@ -177,6 +178,13 @@ nativeQueriesCommands =
   [ commandParser "get_native_query" $ RMGetNativeQuery . mkAnyBackend @b,
     commandParser "track_native_query" $ RMTrackNativeQuery . mkAnyBackend @b,
     commandParser "untrack_native_query" $ RMUntrackNativeQuery . mkAnyBackend @b
+  ]
+
+storedProceduresCommands :: forall (b :: BackendType). Backend b => [CommandParser b]
+storedProceduresCommands =
+  [ commandParser "get_stored_procedure" $ RMGetStoredProcedure . mkAnyBackend @b,
+    commandParser "track_stored_procedure" $ RMTrackStoredProcedure . mkAnyBackend @b,
+    commandParser "untrack_stored_procedure" $ RMUntrackStoredProcedure . mkAnyBackend @b
   ]
 
 logicalModelsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]

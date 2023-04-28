@@ -322,6 +322,7 @@ spec = do
           _siTables = makeTableCache [albumTableInfo, trackTableInfo],
           _siFunctions = mempty,
           _siNativeQueries = mempty,
+          _siStoredProcedures = mempty,
           _siLogicalModels = mempty,
           _siConfiguration = notImplementedYet "SourceConfig",
           _siQueryTagsConfig = Nothing,

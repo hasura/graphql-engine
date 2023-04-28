@@ -104,6 +104,7 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
+import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.Types.Extended (Network, emptyNetwork)
 
@@ -116,12 +117,13 @@ sourcesToOrdJSONList sources =
   where
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
     sourceMetaToOrdJSON (BackendSourceMetadata exists) =
-      AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata _smName _smKind _smTables _smFunctions _smNativeQueries _smLogicalModels _smConfiguration _smQueryTags _smCustomization _smHealthCheckConfig :: SourceMetadata b) ->
+      AB.dispatchAnyBackend @Backend exists $ \(SourceMetadata _smName _smKind _smTables _smFunctions _smNativeQueries _smStoredProcedures _smLogicalModels _smConfiguration _smQueryTags _smCustomization _smHealthCheckConfig :: SourceMetadata b) ->
         let sourceNamePair = ("name", AO.toOrdered _smName)
             sourceKindPair = ("kind", AO.toOrdered _smKind)
             tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON $ sortOn _tmTable $ InsOrdHashMap.elems _smTables)
             functionsPair = listToMaybeOrdPairSort "functions" functionMetadataToOrdJSON _fmFunction _smFunctions
             nativeQueriesPair = listToMaybeOrdPairSort "native_queries" AO.toOrdered _nqmRootFieldName (InsOrdHashMap.elems _smNativeQueries)
+            storedProceduresPair = listToMaybeOrdPairSort "stored_procedures" AO.toOrdered _spmRootFieldName (InsOrdHashMap.elems _smStoredProcedures)
             logicalModelsPair = listToMaybeOrdPairSort "logical_models" AO.toOrdered _lmmName (InsOrdHashMap.elems _smLogicalModels)
             configurationPair = [("configuration", AO.toOrdered _smConfiguration)]
             queryTagsConfigPair = maybe [] (\queryTagsConfig -> [("query_tags", AO.toOrdered queryTagsConfig)]) _smQueryTags
@@ -134,6 +136,7 @@ sourcesToOrdJSONList sources =
               [sourceNamePair, sourceKindPair, tablesPair]
                 <> maybeToList functionsPair
                 <> maybeToList nativeQueriesPair
+                <> maybeToList storedProceduresPair
                 <> maybeToList logicalModelsPair
                 <> configurationPair
                 <> queryTagsConfigPair

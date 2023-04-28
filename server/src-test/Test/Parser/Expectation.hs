@@ -100,6 +100,7 @@ runUpdateFieldTest UpdateTestSetup {..} =
           _siTables = HashMap.singleton table tableInfo,
           _siFunctions = mempty,
           _siNativeQueries = mempty,
+          _siStoredProcedures = mempty,
           _siLogicalModels = mempty,
           _siConfiguration = notImplementedYet "SourceConfig",
           _siQueryTagsConfig = Nothing,

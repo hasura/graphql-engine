@@ -12,6 +12,7 @@ module Hasura.RQL.Types.SchemaCacheTypes
     TableObjId (..),
     LogicalModelObjId (..),
     NativeQueryObjId (..),
+    StoredProcedureObjId (..),
     purgeDependentObject,
     purgeSourceAndSchemaDependencies,
     reasonToTxt,
@@ -45,6 +46,7 @@ import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Roles (RoleName, roleNameToTxt)
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.StoredProcedure.Types (StoredProcedureName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data TableObjId (b :: BackendType)
@@ -85,12 +87,26 @@ deriving instance Backend b => Eq (NativeQueryObjId b)
 
 instance (Backend b) => Hashable (NativeQueryObjId b)
 
+-- | Identifier for component of Stored Procedures within the metadata. These are
+-- used to track dependencies between items in the resolved schema. For
+-- instance, we use `SPOCol` along with `TOCol` from `TableObjId` to ensure
+-- that the two columns that join an array relationship actually exist.
+newtype StoredProcedureObjId (b :: BackendType)
+  = SPOCol (Column b)
+  deriving (Generic)
+
+deriving instance Backend b => Eq (StoredProcedureObjId b)
+
+instance (Backend b) => Hashable (StoredProcedureObjId b)
+
 data SourceObjId (b :: BackendType)
   = SOITable (TableName b)
   | SOITableObj (TableName b) (TableObjId b)
   | SOIFunction (FunctionName b)
   | SOINativeQuery NativeQueryName
   | SOINativeQueryObj NativeQueryName (NativeQueryObjId b)
+  | SOIStoredProcedure StoredProcedureName
+  | SOIStoredProcedureObj StoredProcedureName (StoredProcedureObjId b)
   | SOILogicalModel LogicalModelName
   | SOILogicalModelObj LogicalModelName (LogicalModelObjId b)
   deriving (Eq, Generic)
@@ -121,9 +137,12 @@ reportSchemaObj = \case
       \case
         SOITable tn -> "table " <> toTxt tn
         SOIFunction fn -> "function " <> toTxt fn
-        SOINativeQuery lmn -> "native query " <> toTxt lmn
+        SOINativeQuery nqn -> "native query " <> toTxt nqn
         SOINativeQueryObj nqn (NQOCol cn) ->
           "column " <> toTxt nqn <> "." <> toTxt cn
+        SOIStoredProcedure spn -> "stored procedure " <> toTxt spn
+        SOIStoredProcedureObj spn (SPOCol cn) ->
+          "column " <> toTxt spn <> "." <> toTxt cn
         SOILogicalModel lm -> "logical model " <> toTxt lm
         SOILogicalModelObj lm (LMOCol cn) ->
           "logical model column " <> toTxt lm <> "." <> toTxt cn

@@ -70,6 +70,7 @@ import Hasura.Server.Logging (SchemaSyncLog (..), SchemaSyncThreadType (TTMetada
 import Hasura.Server.Types
 import Hasura.Services
 import Hasura.Session
+import Hasura.StoredProcedure.API qualified as StoredProcedures
 import Hasura.Tracing qualified as Tracing
 
 -- | The payload for the @/v1/metadata@ endpoint. See:
@@ -215,6 +216,9 @@ queryModifiesMetadata = \case
       RMGetNativeQuery _ -> False
       RMTrackNativeQuery _ -> True
       RMUntrackNativeQuery _ -> True
+      RMGetStoredProcedure _ -> False
+      RMTrackStoredProcedure _ -> True
+      RMUntrackStoredProcedure _ -> True
       RMGetLogicalModel _ -> False
       RMTrackLogicalModel _ -> True
       RMUntrackLogicalModel _ -> True
@@ -412,6 +416,9 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMGetNativeQuery q -> dispatchMetadata NativeQueries.runGetNativeQuery q
   RMTrackNativeQuery q -> dispatchMetadata (NativeQueries.runTrackNativeQuery env) q
   RMUntrackNativeQuery q -> dispatchMetadata NativeQueries.runUntrackNativeQuery q
+  RMGetStoredProcedure q -> dispatchMetadata StoredProcedures.runGetStoredProcedure q
+  RMTrackStoredProcedure q -> dispatchMetadata (StoredProcedures.runTrackStoredProcedure env) q
+  RMUntrackStoredProcedure q -> dispatchMetadata StoredProcedures.runUntrackStoredProcedure q
   RMGetLogicalModel q -> dispatchMetadata LogicalModel.runGetLogicalModel q
   RMTrackLogicalModel q -> dispatchMetadata LogicalModel.runTrackLogicalModel q
   RMUntrackLogicalModel q -> dispatchMetadata LogicalModel.runUntrackLogicalModel q

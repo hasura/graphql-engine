@@ -15,8 +15,8 @@ module Harness.Schema
     SchemaName (..),
     NativeQuery (..),
     NativeQueryColumn (..),
-    trackNativeQueryCommand,
-    untrackNativeQueryCommand,
+    StoredProcedure (..),
+    StoredProcedureColumn (..),
     resolveTableSchema,
     trackTable,
     untrackTable,
@@ -32,9 +32,19 @@ module Harness.Schema
     untrackComputedField,
     runSQL,
     addSource,
+    getSchemaName,
+    nativeQuery,
+    nativeQueryColumn,
     trackNativeQuery,
     untrackNativeQuery,
-    getSchemaName,
+    trackNativeQueryCommand,
+    untrackNativeQueryCommand,
+    storedProcedure,
+    storedProcedureColumn,
+    trackStoredProcedure,
+    untrackStoredProcedure,
+    trackStoredProcedureCommand,
+    untrackStoredProcedureCommand,
     module Harness.Schema.Table,
     module Harness.Schema.Name,
     module Harness.Schema.LogicalModel,
@@ -51,6 +61,8 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Schema.LogicalModel
 import Harness.Schema.Name
+import Harness.Schema.NativeQuery
+import Harness.Schema.StoredProcedure
 import Harness.Schema.Table
 import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.BackendType qualified as BackendType
@@ -418,70 +430,3 @@ addSource sourceName sourceConfig testEnvironment = do
         name: #{ sourceName }
         configuration: #{ sourceConfig }
       |]
-
-trackNativeQueryCommand :: String -> BackendTypeConfig -> NativeQuery -> Value
-trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryArrayRelationships, nativeQueryName, nativeQueryArguments, nativeQueryQuery, nativeQueryLogicalModel}) =
-  -- arguments are a map from name to type details
-  let argsToJson =
-        J.object
-          . fmap
-            ( \NativeQueryColumn {..} ->
-                let key = K.fromText nativeQueryColumnName
-                    descriptionPair = case nativeQueryColumnDescription of
-                      Just desc -> ["description" .= desc]
-                      Nothing -> []
-
-                    value =
-                      J.object $
-                        [ ("type" .= (BackendType.backendScalarType backendTypeConfig) nativeQueryColumnType),
-                          ("nullable" .= nativeQueryColumnNullable)
-                        ]
-                          <> descriptionPair
-                 in (key, value)
-            )
-
-      arguments = argsToJson nativeQueryArguments
-
-      backendType = BackendType.backendTypeString backendTypeConfig
-
-      requestType = backendType <> "_track_native_query"
-   in [yaml|
-        type: *requestType
-        args:
-          type: query
-          source: *sourceName
-          root_field_name: *nativeQueryName 
-          code: *nativeQueryQuery
-          arguments: *arguments
-          array_relationships: *nativeQueryArrayRelationships
-          returns: *nativeQueryLogicalModel
-      |]
-
-trackNativeQuery :: HasCallStack => String -> NativeQuery -> TestEnvironment -> IO ()
-trackNativeQuery sourceName logMod testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
-
-  let command = trackNativeQueryCommand sourceName backendTypeMetadata logMod
-
-  GraphqlEngine.postMetadata_ testEnvironment command
-
-untrackNativeQueryCommand :: String -> BackendTypeConfig -> NativeQuery -> Value
-untrackNativeQueryCommand source backendTypeMetadata NativeQuery {nativeQueryName} =
-  let backendType = BackendType.backendTypeString backendTypeMetadata
-      requestType = backendType <> "_untrack_native_query"
-   in [yaml|
-      type: *requestType
-      args:
-        source: *source
-        root_field_name: *nativeQueryName 
-    |]
-
-untrackNativeQuery :: HasCallStack => String -> NativeQuery -> TestEnvironment -> IO ()
-untrackNativeQuery source logMod testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
-
-  let command = untrackNativeQueryCommand source backendTypeMetadata logMod
-
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    command
