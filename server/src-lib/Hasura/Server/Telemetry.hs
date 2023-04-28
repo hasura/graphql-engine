@@ -61,6 +61,7 @@ import Hasura.Server.Telemetry.Counters (dumpServiceTimingMetrics)
 import Hasura.Server.Telemetry.Types
 import Hasura.Server.Types
 import Hasura.Server.Version
+import Hasura.StoredProcedure.Cache (StoredProcedureInfo (_spiArguments))
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wreq qualified as Wreq
@@ -269,6 +270,7 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
       _mtFunctions = HashMap.size $ HashMap.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
       _mtActions = computeActionsMetrics <$> actionCache
       _mtNativeQueries = countNativeQueries (HashMap.elems $ _siNativeQueries sourceInfo)
+      _mtStoredProcedures = countStoredProcedures (HashMap.elems $ _siStoredProcedures sourceInfo)
       _mtLogicalModels = countLogicalModels (HashMap.elems $ _siLogicalModels sourceInfo)
    in Metrics {..}
   where
@@ -290,10 +292,19 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
     countNativeQueries :: [NativeQueryInfo b] -> NativeQueriesMetrics
     countNativeQueries =
       foldMap
-        ( \logimo ->
-            if null (_nqiArguments logimo)
+        ( \nativeQuery ->
+            if null (_nqiArguments nativeQuery)
               then mempty {_nqmWithoutParameters = 1}
               else mempty {_nqmWithParameters = 1}
+        )
+
+    countStoredProcedures :: [StoredProcedureInfo b] -> StoredProceduresMetrics
+    countStoredProcedures =
+      foldMap
+        ( \storedProcedure ->
+            if null (_spiArguments storedProcedure)
+              then mempty {_spmWithoutParameters = 1}
+              else mempty {_spmWithParameters = 1}
         )
 
 -- | Compute the relevant metrics for actions from the action cache.

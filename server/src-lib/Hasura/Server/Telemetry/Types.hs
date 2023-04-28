@@ -9,6 +9,7 @@ module Hasura.Server.Telemetry.Types
     PermissionMetric (..),
     ActionMetric (..),
     NativeQueriesMetrics (..),
+    StoredProceduresMetrics (..),
     LogicalModelsMetrics (..),
     Metrics (..),
     SourceMetadata (..),
@@ -93,6 +94,23 @@ instance Monoid NativeQueriesMetrics where
 
 $(J.deriveToJSON hasuraJSON ''NativeQueriesMetrics)
 
+data StoredProceduresMetrics = StoredProceduresMetrics
+  { _spmWithParameters :: Int,
+    _spmWithoutParameters :: Int
+  }
+  deriving (Show, Eq)
+
+instance Semigroup StoredProceduresMetrics where
+  a <> b =
+    StoredProceduresMetrics
+      (_spmWithParameters a + _spmWithParameters b)
+      (_spmWithoutParameters a + _spmWithoutParameters b)
+
+instance Monoid StoredProceduresMetrics where
+  mempty = StoredProceduresMetrics 0 0
+
+$(J.deriveToJSON hasuraJSON ''StoredProceduresMetrics)
+
 newtype LogicalModelsMetrics = LogicalModelsMetrics
   { _lmmCount :: Int
   }
@@ -113,6 +131,7 @@ data Metrics = Metrics
     _mtServiceTimings :: Maybe ServiceTimingMetrics,
     _mtActions :: Maybe ActionMetric,
     _mtNativeQueries :: NativeQueriesMetrics,
+    _mtStoredProcedures :: StoredProceduresMetrics,
     _mtLogicalModels :: LogicalModelsMetrics
   }
   deriving (Show, Eq)
