@@ -232,7 +232,7 @@ runUntrackLogicalModel q = do
   case find ((== fieldName) . _nqmReturns) nativeQueries of
     Just NativeQueryMetadata {_nqmRootFieldName} ->
       throw400 ConstraintViolation $
-        "Custom type "
+        "Logical model "
           <> fieldName
             <<> " still being used by native query "
           <> _nqmRootFieldName <<> "."
