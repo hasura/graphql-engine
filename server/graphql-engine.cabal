@@ -716,6 +716,7 @@ library
                      , Hasura.LogicalModel.Common
                      , Hasura.LogicalModel.IR
                      , Hasura.LogicalModel.Metadata
+                     , Hasura.LogicalModel.NullableScalarType
                      , Hasura.LogicalModel.Schema
                      , Hasura.LogicalModel.Types
 
