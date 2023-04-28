@@ -40,6 +40,7 @@ import Data.Text.Extended (toTxt)
 import Hasura.App.State qualified as State
 import Hasura.HTTP
 import Hasura.Logging
+import Hasura.LogicalModel.Cache (LogicalModelInfo)
 import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiArguments))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
@@ -268,6 +269,7 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
       _mtFunctions = HashMap.size $ HashMap.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
       _mtActions = computeActionsMetrics <$> actionCache
       _mtNativeQueries = countNativeQueries (HashMap.elems $ _siNativeQueries sourceInfo)
+      _mtLogicalModels = countLogicalModels (HashMap.elems $ _siLogicalModels sourceInfo)
    in Metrics {..}
   where
     sourceTableCache = _siTables sourceInfo
@@ -279,6 +281,11 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
 
     permsOfTbl :: TableInfo b -> [(RoleName, RolePermInfo b)]
     permsOfTbl = HashMap.toList . _tiRolePermInfoMap
+
+    countLogicalModels :: [LogicalModelInfo b] -> LogicalModelsMetrics
+    countLogicalModels =
+      foldMap
+        (\_ -> mempty {_lmmCount = 1})
 
     countNativeQueries :: [NativeQueryInfo b] -> NativeQueriesMetrics
     countNativeQueries =
