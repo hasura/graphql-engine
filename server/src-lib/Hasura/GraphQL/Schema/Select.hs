@@ -64,7 +64,7 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
-import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelName (..))
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelName (..), LogicalModelReferenceType (..))
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -532,7 +532,7 @@ defaultLogicalModelSelectionSet relationshipInfo logicalModel = runMaybeT $ do
             pure $!
               P.selection columnName (G.Description <$> lmfDescription) pathArg field
                 <&> IR.mkAnnColumnField column columnType caseBoolExpUnpreparedValue
-          LogicalModelArrayReference {..} -> do
+          LogicalModelReference {..} -> do
             relName <- hoistMaybe $ columnToRelName @b column
             -- fetch the nested custom return type for comparison purposes
             _nestedLogicalModel <- lift $ askLogicalModelInfo @b lmfLogicalModel
@@ -541,7 +541,7 @@ defaultLogicalModelSelectionSet relationshipInfo logicalModel = runMaybeT $ do
             -- check the types match
             -- return IR for the actual data source lookup (ie, the table
             -- lookup for a relationship)
-            logicalModelRelationshipField @b @r @m @n relationship
+            logicalModelRelationshipField @b @r @m @n lmfReferenceType relationship
 
   let fieldName = getLogicalModelName (_lmiName logicalModel)
 
@@ -1599,15 +1599,16 @@ logicalModelRelationshipField ::
   ( BackendTableSelectSchema b,
     MonadBuildSchema b r m n
   ) =>
+  LogicalModelReferenceType ->
   RelInfo b ->
   MaybeT (SchemaT r m) (FieldParser n (AnnotatedField b))
-logicalModelRelationshipField ri = do
+logicalModelRelationshipField relationshipType ri = do
   otherTableInfo <- lift $ askTableInfo $ riRTable ri
   relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
-  case riType ri of
-    ObjRel -> do
+  case (relationshipType, riType ri) of
+    (ObjectReference, ObjRel) -> do
       throw500 "Object relationships on logical models are not implemented"
-    ArrRel -> do
+    (ArrayReference, ArrRel) -> do
       let arrayRelDesc = Just $ G.Description "An array relationship"
       otherTableParser <- MaybeT $ selectTable otherTableInfo relFieldName arrayRelDesc
       pure $
@@ -1615,3 +1616,4 @@ logicalModelRelationshipField ri = do
           IR.AFArrayRelation $
             IR.ASSimple $
               IR.AnnRelationSelectG (riName ri) (riMapping ri) selectExp
+    _ -> hoistMaybe Nothing -- mismatch between relationship type expected on Logical Model, and in the source of data

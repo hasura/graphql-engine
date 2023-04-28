@@ -7,7 +7,8 @@ module Harness.Schema.LogicalModel
     LogicalModelColumn (..),
     logicalModel,
     logicalModelScalar,
-    logicalModelReference,
+    logicalModelArrayReference,
+    logicalModelObjectReference,
     trackLogicalModel,
     trackLogicalModelCommand,
     untrackLogicalModel,
@@ -27,6 +28,13 @@ import Harness.Test.ScalarType
 import Harness.TestEnvironment (TestEnvironment, getBackendTypeConfig)
 import Hasura.Prelude
 
+data ReferenceType = ArrayReference | ObjectReference
+  deriving (Show, Eq)
+
+instance J.ToJSON ReferenceType where
+  toJSON ArrayReference = "array"
+  toJSON ObjectReference = "object"
+
 data LogicalModelColumn
   = LogicalModelScalar
       { logicalModelColumnName :: Text,
@@ -36,7 +44,8 @@ data LogicalModelColumn
       }
   | LogicalModelReference
       { logicalModelColumnName :: Text,
-        logicalModelColumnReference :: Text
+        logicalModelColumnReference :: Text,
+        logicalModelColumnReferenceType :: ReferenceType
       }
   deriving (Show, Eq)
 
@@ -49,11 +58,20 @@ logicalModelScalar name colType =
       logicalModelColumnDescription = Nothing
     }
 
-logicalModelReference :: Text -> Text -> LogicalModelColumn
-logicalModelReference name ref =
+logicalModelArrayReference :: Text -> Text -> LogicalModelColumn
+logicalModelArrayReference name ref =
   LogicalModelReference
     { logicalModelColumnName = name,
-      logicalModelColumnReference = ref
+      logicalModelColumnReference = ref,
+      logicalModelColumnReferenceType = ArrayReference
+    }
+
+logicalModelObjectReference :: Text -> Text -> LogicalModelColumn
+logicalModelObjectReference name ref =
+  LogicalModelReference
+    { logicalModelColumnName = name,
+      logicalModelColumnReference = ref,
+      logicalModelColumnReferenceType = ObjectReference
     }
 
 data LogicalModel = LogicalModel
@@ -82,6 +100,7 @@ trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalMode
                 LogicalModelReference {..} ->
                   J.object $
                     [ ("logical_model" .= logicalModelColumnReference),
+                      ("link_type" .= logicalModelColumnReferenceType),
                       ("name" .= logicalModelColumnName)
                     ]
                 LogicalModelScalar {..} ->
