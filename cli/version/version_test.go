@@ -4,23 +4,23 @@ import (
 	"testing"
 )
 
-func TestNew(t *testing.T) {
-	v := New()
-	if v == nil {
-		t.Fatal("expected a version object, got nil")
-	}
-	if v.CLI != BuildVersion {
-		t.Fatalf("expected %s, got %s", BuildVersion, v.CLI)
-	}
-}
-
-func TestNewCLIVersion(t *testing.T) {
+func TestNewCLIVersionWithSemver(t *testing.T) {
 	v := NewCLIVersion("v1.0.0")
 	if v == nil {
 		t.Fatal("expected a version object, got nil")
 	}
 	if v.CLI != "v1.0.0" {
 		t.Fatalf("expected v1.0.0, got %s", v.CLI)
+	}
+}
+
+func TestNewCLIVersionWithDev(t *testing.T) {
+	v := NewCLIVersion("dev")
+	if v == nil {
+		t.Fatal("expected a version object, got nil")
+	}
+	if v.CLI != "dev" {
+		t.Fatalf("expected %s, got %s", "dev", v.CLI)
 	}
 }
 
