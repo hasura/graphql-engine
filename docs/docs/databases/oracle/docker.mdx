@@ -30,7 +30,7 @@ Oracle GraphQL Data Connector.
 
 :::tip Supported versions
 
-1.  Hasura GraphQL Engine `v2.23.0` onwards
+1.  Hasura GraphQL Engine `v2.24.0` onwards
 2.  Oracle version 18.0 and higher
 
 :::
@@ -77,7 +77,7 @@ by the Hasura team, you can enter it according to the directions below.
 ```yaml {5-6}
 ---
 graphql-engine:
-  image: hasura/graphql-engine:v2.12.0
+  image: hasura/graphql-engine:v2.24.0
   environment:
     HASURA_GRAPHQL_EE_LICENSE_KEY: <your_license_key>
     HASURA_GRAPHQL_ADMIN_SECRET: <your_secret_key>
@@ -186,7 +186,7 @@ For example:
 ```yaml {5-7}
 ---
 graphql-engine:
-  image: hasura/graphql-engine:v2.12.0
+  image: hasura/graphql-engine:v2.24.0
   environment:
     HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
     HASURA_GRAPHQL_REDIS_URL: 'redis://redis:6379'
