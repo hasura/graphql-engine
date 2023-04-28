@@ -1,17 +1,11 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.LogicalModel.Cache
   ( LogicalModelInfo (..),
     LogicalModelCache,
-    lmiName,
-    lmiPermissions,
-    lmiDescription,
-    lmiFields,
   )
 where
 
-import Control.Lens (makeLenses)
 import Data.Aeson (ToJSON (..), genericToJSON)
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Hasura.LogicalModel.Types (LogicalModelField, LogicalModelName)
@@ -30,8 +24,6 @@ data LogicalModelInfo (b :: BackendType) = LogicalModelInfo
     _lmiPermissions :: RolePermInfoMap b
   }
   deriving (Generic)
-
-makeLenses ''LogicalModelInfo
 
 instance
   (Backend b, ToJSON (RolePermInfoMap b)) =>

@@ -14,8 +14,10 @@ import Data.Monoid (First)
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.Function.Lenses (fiPermissions)
-import Hasura.LogicalModel.Cache (LogicalModelInfo (..), lmiPermissions)
-import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiReturns), nqiArrayRelationships)
+import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
+import Hasura.LogicalModel.Lenses (lmiPermissions)
+import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiReturns))
+import Hasura.NativeQuery.Lenses (nqiArrayRelationships)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -36,7 +38,8 @@ import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.SchemaCache (rscPermissions, rscRemoteRelationships)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.StoredProcedure.Cache (StoredProcedureInfo (_spiReturns), spiArrayRelationships)
+import Hasura.StoredProcedure.Cache (StoredProcedureInfo (_spiReturns))
+import Hasura.StoredProcedure.Lenses (spiArrayRelationships)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to

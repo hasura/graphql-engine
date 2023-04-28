@@ -715,6 +715,7 @@ library
                      , Hasura.LogicalModel.Cache
                      , Hasura.LogicalModel.Common
                      , Hasura.LogicalModel.IR
+                     , Hasura.LogicalModel.Lenses
                      , Hasura.LogicalModel.Metadata
                      , Hasura.LogicalModel.NullableScalarType
                      , Hasura.LogicalModel.Schema
@@ -746,6 +747,7 @@ library
 
                      , Hasura.NativeQuery.IR
                      , Hasura.NativeQuery.Cache
+                     , Hasura.NativeQuery.Lenses
                      , Hasura.NativeQuery.Metadata
                      , Hasura.NativeQuery.API
                      , Hasura.NativeQuery.Schema
@@ -753,6 +755,7 @@ library
 
                      , Hasura.StoredProcedure.IR
                      , Hasura.StoredProcedure.Cache
+                     , Hasura.StoredProcedure.Lenses
                      , Hasura.StoredProcedure.Metadata
                      , Hasura.StoredProcedure.API
                      , Hasura.StoredProcedure.Schema

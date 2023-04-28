@@ -1,20 +1,12 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | The representation of stored procedures as derived from the schema cache.
 module Hasura.StoredProcedure.Cache
   ( StoredProcedureInfo (..),
     StoredProcedureCache,
-    spiRootFieldName,
-    spiArrayRelationships,
-    spiCode,
-    spiReturns,
-    spiArguments,
-    spiDescription,
   )
 where
 
-import Control.Lens (makeLenses)
 import Data.Aeson (ToJSON (toJSON), genericToJSON)
 import Hasura.LogicalModel.Cache (LogicalModelInfo)
 import Hasura.Prelude
@@ -45,5 +37,3 @@ instance
   ToJSON (StoredProcedureInfo b)
   where
   toJSON = genericToJSON hasuraJSON
-
-makeLenses ''StoredProcedureInfo
