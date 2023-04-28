@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | types and helpers for user-defined-functions after they have been resolved
@@ -22,28 +21,8 @@ module Hasura.Function.Cache
     FunctionArgsExp,
     emptyFunctionConfig,
     emptyFunctionCustomRootFields,
-    fiComment,
-    fiDescription,
-    fiExposedAs,
-    fiGQLAggregateName,
-    fiGQLArgsName,
-    fiGQLName,
-    fiInputArgs,
-    fiJsonAggSelect,
-    fiPermissions,
-    fiReturnType,
-    fiSQLName,
-    fiSystemDefined,
-    fiVolatility,
-    fpmRole,
     funcTypToTxt,
-    getFunctionAggregateGQLName,
-    getFunctionArgsGQLName,
-    getFunctionGQLName,
-    getInputArgs,
     emptyFunctionArgsExp,
-    _IASessionVariables,
-    _IAUserProvided,
   )
 where
 
@@ -62,14 +41,12 @@ import Autodocodec.Extended (graphQLFieldNameCodec)
 import Control.Lens
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.Aeson.TH
 import Data.Char (toLower)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.Extended as LE
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
@@ -87,7 +64,12 @@ data FunctionVolatility
 
 instance NFData FunctionVolatility
 
-$(deriveJSON defaultOptions {constructorTagModifier = drop 2} ''FunctionVolatility)
+instance FromJSON FunctionVolatility where
+  parseJSON = genericParseJSON defaultOptions {constructorTagModifier = drop 2}
+
+instance ToJSON FunctionVolatility where
+  toJSON = genericToJSON defaultOptions {constructorTagModifier = drop 2}
+  toEncoding = genericToEncoding defaultOptions {constructorTagModifier = drop 2}
 
 funcTypToTxt :: FunctionVolatility -> Text
 funcTypToTxt FTVOLATILE = "VOLATILE"
@@ -106,16 +88,11 @@ instance HasCodec FunctionArgName where
 data InputArgument a
   = IAUserProvided a
   | IASessionVariables FunctionArgName
-  deriving (Show, Eq, Functor)
+  deriving (Show, Eq, Functor, Generic)
 
-$( deriveToJSON
-     defaultOptions
-       { constructorTagModifier = snakeCase . drop 2,
-         sumEncoding = TaggedObject "type" "argument"
-       }
-     ''InputArgument
- )
-$(makePrisms ''InputArgument)
+instance ToJSON a => ToJSON (InputArgument a) where
+  toJSON = genericToJSON defaultOptions {constructorTagModifier = snakeCase . drop 2, sumEncoding = TaggedObject "type" "argument"}
+  toEncoding = genericToEncoding defaultOptions {constructorTagModifier = snakeCase . drop 2, sumEncoding = TaggedObject "type" "argument"}
 
 type FunctionInputArgument b = InputArgument (FunctionArgument b)
 
@@ -129,10 +106,12 @@ instance NFData FunctionExposedAs
 instance HasCodec FunctionExposedAs where
   codec = stringConstCodec [(FEAQuery, "query"), (FEAMutation, "mutation")]
 
-$( deriveJSON
-     defaultOptions {sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3}
-     ''FunctionExposedAs
- )
+instance FromJSON FunctionExposedAs where
+  parseJSON = genericParseJSON defaultOptions {sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3}
+
+instance ToJSON FunctionExposedAs where
+  toJSON = genericToJSON defaultOptions {sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3}
+  toEncoding = genericToEncoding defaultOptions {sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3}
 
 newtype FunctionPermissionInfo = FunctionPermissionInfo
   { _fpmRole :: RoleName
@@ -144,8 +123,12 @@ instance HasCodec FunctionPermissionInfo where
     AC.object "FunctionPermissionInfo" $
       FunctionPermissionInfo <$> requiredField' "role" AC..= _fpmRole
 
-$(makeLenses ''FunctionPermissionInfo)
-$(deriveJSON hasuraJSON ''FunctionPermissionInfo)
+instance FromJSON FunctionPermissionInfo where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON FunctionPermissionInfo where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 type FunctionPermissionsMap = HashMap RoleName FunctionPermissionInfo
 
@@ -176,7 +159,9 @@ instance HasCodec FunctionCustomRootFields where
                 "the following custom root field names are duplicated: " <> toTxt f <<> " and " <>> toTxt fa
       checkForDup fields = Right fields
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''FunctionCustomRootFields)
+instance ToJSON FunctionCustomRootFields where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 instance FromJSON FunctionCustomRootFields where
   parseJSON = withObject "Object" $ \obj -> do
@@ -236,71 +221,6 @@ deriving instance Backend b => Eq (FunctionInfo b)
 instance (Backend b) => ToJSON (FunctionInfo b) where
   toJSON = genericToJSON hasuraJSON
 
-$(makeLenses ''FunctionInfo)
-
--- | Apply function name customization to function arguments, as detailed in
--- 'rfcs/function-root-field-customisation.md'.  We want the different
--- variations of a function (i.e. basic, aggregate) to share the same type name
--- for their arguments.
-getFunctionArgsGQLName ::
-  -- | The GQL version of the DB name of the function
-  G.Name ->
-  FunctionConfig ->
-  -- | Custom function for setting naming case
-  (G.Name -> G.Name) ->
-  G.Name
-getFunctionArgsGQLName
-  funcGivenName
-  FunctionConfig {..}
-  setCase =
-    setCase $ fromMaybe funcGivenName _fcCustomName <> Name.__args
-
--- | Apply function name customization to the basic function variation, as
--- detailed in 'rfcs/function-root-field-customisation.md'.
-getFunctionGQLName ::
-  G.Name ->
-  FunctionConfig ->
-  -- | Custom function for setting naming case
-  (G.Name -> G.Name) ->
-  G.Name
-getFunctionGQLName
-  funcGivenName
-  FunctionConfig
-    { _fcCustomRootFields = FunctionCustomRootFields {..},
-      ..
-    }
-  setCase =
-    choice
-      [ _fcrfFunction,
-        _fcCustomName
-      ]
-      & fromMaybe (setCase funcGivenName)
-
--- | Apply function name customization to the aggregate function variation, as
--- detailed in 'rfcs/function-root-field-customisation.md'.
-getFunctionAggregateGQLName ::
-  G.Name ->
-  FunctionConfig ->
-  -- | Custom function for setting naming case
-  (G.Name -> G.Name) ->
-  G.Name
-getFunctionAggregateGQLName
-  funcGivenName
-  FunctionConfig
-    { _fcCustomRootFields = FunctionCustomRootFields {..},
-      ..
-    }
-  setCase =
-    choice
-      [ _fcrfFunctionAggregate,
-        _fcCustomName <&> (<> Name.__aggregate)
-      ]
-      & fromMaybe (setCase $ funcGivenName <> Name.__aggregate)
-
-getInputArgs :: FunctionInfo b -> Seq.Seq (FunctionArgument b)
-getInputArgs =
-  Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . _fiInputArgs
-
 type FunctionCache b = HashMap (FunctionName b) (FunctionInfo b) -- info of all functions
 
 -- Metadata requests related types
@@ -339,7 +259,9 @@ instance FromJSON FunctionConfig where
       <*> obj .:? "custom_root_fields" .!= emptyFunctionCustomRootFields
       <*> obj .:? "custom_name"
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''FunctionConfig)
+instance ToJSON FunctionConfig where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 -- | The default function config; v1 of the API implies this.
 emptyFunctionConfig :: FunctionConfig

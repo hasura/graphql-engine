@@ -13,7 +13,7 @@ import Data.List (nub)
 import Data.Monoid (First)
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.Function.Cache
+import Hasura.Function.Lenses (fiPermissions)
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..), lmiPermissions)
 import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiReturns), nqiArrayRelationships)
 import Hasura.Prelude

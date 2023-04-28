@@ -19,6 +19,7 @@ import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName)
 import Hasura.Backends.Postgres.Types.Function
 import Hasura.Base.Error
 import Hasura.Function.Cache
+import Hasura.Function.Common (getFunctionAggregateGQLName, getFunctionArgsGQLName, getFunctionGQLName)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend

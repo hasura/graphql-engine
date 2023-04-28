@@ -723,6 +723,8 @@ library
 
                      , Hasura.Function.API
                      , Hasura.Function.Cache
+                     , Hasura.Function.Common
+                     , Hasura.Function.Lenses
                      , Hasura.Function.Metadata
 
                      , Hasura.GraphQL.Execute.Query
