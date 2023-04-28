@@ -157,7 +157,7 @@ test-unit: remove-tix-file
 .PHONY: test-integration-mssql
 ## test-integration-mssql: run MS SQL Server integration tests
 test-integration-mssql: remove-tix-file
-	docker compose up -d --wait sqlserver{,-healthcheck,-init}
+	docker compose up -d --wait sqlserver-healthcheck
 	HASURA_MSSQL_CONN_STR='$(TEST_MSSQL_CONNECTION_STRING)' \
 			cabal run graphql-engine:test:graphql-engine-test-mssql
 
