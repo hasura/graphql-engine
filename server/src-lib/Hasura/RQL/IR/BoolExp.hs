@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Boolean Expressions
@@ -15,9 +14,6 @@ module Hasura.RQL.IR.BoolExp
     GBoolExp (..),
     gBoolExpTrue,
     GExists (..),
-    geWhere,
-    geTable,
-    _BoolExists,
     DWithinGeomOp (..),
     DWithinGeogOp (..),
     CastExp,
@@ -49,12 +45,10 @@ where
 
 import Autodocodec (Codec (CommentCodec), HasCodec (codec), JSONCodec, bimapCodec, dimapCodec, named, valueCodec)
 import Control.Lens.Plated
-import Control.Lens.TH
 import Data.Aeson.Extended
 import Data.Aeson.Internal
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.TH
 import Data.Aeson.Types (parseEither)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Monoid
@@ -173,8 +167,6 @@ instance (Backend b, ToJSONKeyValue a) => ToJSON (GExists b a) where
         "_where" .= gWhere
       ]
 
-makeLenses ''GExists
-
 ----------------------------------------------------------------------------------------------------
 -- Boolean expressions in permissions
 
@@ -215,10 +207,6 @@ instance Backend b => HasCodec (BoolExp b) where
           <> "A value for \"_exists\" is an object with \"table\" and \"where\" properties where \"table\" is a table name, "
           <> "and \"where\" is another BoolExp expression. "
           <> "All other properties represent fields where the property name represents a column name, and the value represents a row value."
-
-$(makeWrapped ''BoolExp)
-
-makePrisms ''GBoolExp
 
 -- | Permissions get translated into boolean expressions that are threaded throuhgout the
 -- parsers. For the leaf values of those permissions, we use this type, which references but doesn't
@@ -592,7 +580,12 @@ instance (NFData a) => NFData (DWithinGeomOp a)
 
 instance (Hashable a) => Hashable (DWithinGeomOp a)
 
-$(deriveJSON hasuraJSON ''DWithinGeomOp)
+instance FromJSON a => FromJSON (DWithinGeomOp a) where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON a => ToJSON (DWithinGeomOp a) where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 -- | Operand for STDWithin opoerator
 data DWithinGeogOp field = DWithinGeogOp
@@ -606,7 +599,12 @@ instance (NFData a) => NFData (DWithinGeogOp a)
 
 instance (Hashable a) => Hashable (DWithinGeogOp a)
 
-$(deriveJSON hasuraJSON ''DWithinGeogOp)
+instance FromJSON a => FromJSON (DWithinGeogOp a) where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON a => ToJSON (DWithinGeogOp a) where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 -- | Operand for STIntersect
 data STIntersectsNbandGeommin field = STIntersectsNbandGeommin
@@ -619,7 +617,12 @@ instance (NFData a) => NFData (STIntersectsNbandGeommin a)
 
 instance (Hashable a) => Hashable (STIntersectsNbandGeommin a)
 
-$(deriveJSON hasuraJSON ''STIntersectsNbandGeommin)
+instance FromJSON field => FromJSON (STIntersectsNbandGeommin field) where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON field => ToJSON (STIntersectsNbandGeommin field) where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 -- | Operand for STIntersect
 data STIntersectsGeomminNband field = STIntersectsGeomminNband
@@ -632,7 +635,12 @@ instance (NFData a) => NFData (STIntersectsGeomminNband a)
 
 instance (Hashable a) => Hashable (STIntersectsGeomminNband a)
 
-$(deriveJSON hasuraJSON ''STIntersectsGeomminNband)
+instance FromJSON field => FromJSON (STIntersectsGeomminNband field) where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON field => ToJSON (STIntersectsGeomminNband field) where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 ----------------------------------------------------------------------------------------------------
 -- Miscellaneous

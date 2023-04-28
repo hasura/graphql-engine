@@ -916,6 +916,7 @@ library
                      , Hasura.RQL.IR.Action
                      , Hasura.RQL.IR.BoolExp
                      , Hasura.RQL.IR.BoolExp.AggregationPredicates
+                     , Hasura.RQL.IR.BoolExp.Lenses
                      , Hasura.RQL.IR.Conflict
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert

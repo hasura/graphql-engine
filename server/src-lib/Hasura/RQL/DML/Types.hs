@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RQL.DML.Types
   ( OrderByExp (..),
     DMLQuery (..),
@@ -26,7 +24,6 @@ where
 
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.Aeson.TH
 import Data.Attoparsec.Text qualified as AT
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.Postgres.Instances.Types ()
@@ -95,9 +92,10 @@ data SelectG a b c = SelectG
     sqLimit :: Maybe c, -- Limit
     sqOffset :: Maybe c -- Offset
   }
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(deriveFromJSON hasuraJSON {omitNothingFields = True} ''SelectG)
+instance (FromJSON a, FromJSON b, FromJSON c) => FromJSON (SelectG a b c) where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
 
 data Wildcard
   = Star
@@ -172,9 +170,10 @@ data OnConflict = OnConflict
     ocConstraint :: Maybe ConstraintName,
     ocAction :: ConflictAction
   }
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(deriveFromJSON hasuraJSON {omitNothingFields = True} ''OnConflict)
+instance FromJSON OnConflict where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
 
 data InsertQuery = InsertQuery
   { iqTable :: QualifiedTable,
@@ -259,12 +258,12 @@ data QueryT
   | QTDelete DeleteQuery
   | QTCount CountQuery
   | QTBulk [QueryT]
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$( deriveFromJSON
-     defaultOptions
-       { constructorTagModifier = snakeCase . drop 2,
-         sumEncoding = TaggedObject "type" "args"
-       }
-     ''QueryT
- )
+instance FromJSON QueryT where
+  parseJSON =
+    genericParseJSON
+      defaultOptions
+        { constructorTagModifier = snakeCase . drop 2,
+          sumEncoding = TaggedObject "type" "args"
+        }
