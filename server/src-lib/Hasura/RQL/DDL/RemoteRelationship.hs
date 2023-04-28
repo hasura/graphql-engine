@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.DDL.RemoteRelationship
@@ -23,7 +22,6 @@ import Control.Lens (at, non, to, (^?))
 import Data.Aeson (FromJSON (..), ToJSON (..), (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
@@ -209,7 +207,9 @@ instance FromJSON CreateRemoteSchemaRemoteRelationship where
       <*> o .: "name"
       <*> (o .: "definition" >>= parseRemoteRelationshipDefinition RRPStrict)
 
-$(J.deriveToJSON hasuraJSON ''CreateRemoteSchemaRemoteRelationship)
+instance J.ToJSON CreateRemoteSchemaRemoteRelationship where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 runCreateRemoteSchemaRemoteRelationship ::
   forall m.

@@ -856,6 +856,7 @@ library
                      , Hasura.RQL.Types.Webhook.Transform.WithOptional
 
                      , Hasura.RQL.DDL.Action
+                     , Hasura.RQL.DDL.Action.Lenses
                      , Hasura.RQL.DDL.ApiLimit
                      , Hasura.RQL.DDL.ComputedField
                      , Hasura.RQL.DDL.ConnectionTemplate

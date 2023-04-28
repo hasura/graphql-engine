@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | Types related to metadata management API
 module Hasura.RQL.DDL.Metadata.Types
   ( -- * Export Metadata
@@ -42,7 +40,6 @@ import Control.Lens qualified as Lens
 import Data.Aeson (FromJSON, ToJSON, (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KeyMap
-import Data.Aeson.TH qualified as J.TH
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
@@ -65,9 +62,11 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 -- https://hasura.io/docs/latest/api-reference/metadata-api/manage-metadata/#metadata-clear-metadata
 data ClearMetadata
   = ClearMetadata
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.TH.deriveToJSON J.TH.defaultOptions ''ClearMetadata)
+instance J.ToJSON ClearMetadata where
+  toJSON = J.genericToJSON J.defaultOptions
+  toEncoding = J.genericToEncoding J.defaultOptions
 
 instance FromJSON ClearMetadata where
   parseJSON _ = return ClearMetadata
@@ -130,9 +129,11 @@ data ReloadMetadata = ReloadMetadata
     _rmRecreateEventTriggers :: ReloadSources,
     _rmReloadDataConnectors :: ReloadDataConnectors
   }
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.TH.deriveToJSON hasuraJSON ''ReloadMetadata)
+instance J.ToJSON ReloadMetadata where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 instance FromJSON ReloadMetadata where
   parseJSON = J.withObject "ReloadMetadata" $ \o ->
@@ -146,9 +147,11 @@ instance FromJSON ReloadMetadata where
 -- 'SchemaCache'.
 data DumpInternalState
   = DumpInternalState
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.TH.deriveToJSON J.TH.defaultOptions ''DumpInternalState)
+instance J.ToJSON DumpInternalState where
+  toJSON = J.genericToJSON J.defaultOptions
+  toEncoding = J.genericToEncoding J.defaultOptions
 
 instance FromJSON DumpInternalState where
   parseJSON _ = return DumpInternalState
@@ -158,9 +161,11 @@ instance FromJSON DumpInternalState where
 -- https://hasura.io/docs/latest/api-reference/schema-metadata-api/manage-metadata/#schema-metadata-get-inconsistent-metadata
 data GetInconsistentMetadata
   = GetInconsistentMetadata
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.TH.deriveToJSON J.TH.defaultOptions ''GetInconsistentMetadata)
+instance J.ToJSON GetInconsistentMetadata where
+  toJSON = J.genericToJSON J.defaultOptions
+  toEncoding = J.genericToEncoding J.defaultOptions
 
 instance FromJSON GetInconsistentMetadata where
   parseJSON _ = return GetInconsistentMetadata
@@ -171,9 +176,11 @@ instance FromJSON GetInconsistentMetadata where
 -- https://hasura.io/docs/latest/api-reference/metadata-api/manage-metadata/#metadata-drop-inconsistent-metadata
 data DropInconsistentMetadata
   = DropInconsistentMetadata
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.TH.deriveToJSON J.TH.defaultOptions ''DropInconsistentMetadata)
+instance J.ToJSON DropInconsistentMetadata where
+  toJSON = J.genericToJSON J.defaultOptions
+  toEncoding = J.genericToEncoding J.defaultOptions
 
 instance FromJSON DropInconsistentMetadata where
   parseJSON _ = return DropInconsistentMetadata

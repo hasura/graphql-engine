@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RQL.DDL.Action
   ( CreateAction (..),
     runCreateAction,
@@ -14,18 +12,11 @@ module Hasura.RQL.DDL.Action
     DropActionPermission,
     runDropActionPermission,
     dropActionPermissionInMetadata,
-    caName,
-    caDefinition,
-    caComment,
-    uaName,
-    uaDefinition,
-    uaComment,
   )
 where
 
-import Control.Lens (makeLenses, (.~), (^.))
+import Control.Lens ((.~), (^.))
 import Data.Aeson qualified as J
-import Data.Aeson.TH qualified as J
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
@@ -64,10 +55,14 @@ data CreateAction = CreateAction
     _caDefinition :: ActionDefinitionInput,
     _caComment :: Maybe Text
   }
+  deriving stock (Generic)
 
-$(makeLenses ''CreateAction)
+instance J.FromJSON CreateAction where
+  parseJSON = J.genericParseJSON hasuraJSON
 
-$(J.deriveJSON hasuraJSON ''CreateAction)
+instance J.ToJSON CreateAction where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 runCreateAction ::
   (QErrM m, CacheRWM m, MetadataM m) =>
@@ -215,9 +210,10 @@ data UpdateAction = UpdateAction
     _uaDefinition :: ActionDefinitionInput,
     _uaComment :: Maybe Text
   }
+  deriving stock (Generic)
 
-$(makeLenses ''UpdateAction)
-$(J.deriveFromJSON hasuraJSON ''UpdateAction)
+instance J.FromJSON UpdateAction where
+  parseJSON = J.genericParseJSON hasuraJSON
 
 runUpdateAction ::
   forall m.
@@ -253,9 +249,14 @@ data DropAction = DropAction
   { _daName :: ActionName,
     _daClearData :: Maybe ClearActionData
   }
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.deriveJSON hasuraJSON ''DropAction)
+instance J.FromJSON DropAction where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON DropAction where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 runDropAction ::
   ( MonadError QErr m,
@@ -294,8 +295,10 @@ data CreateActionPermission = CreateActionPermission
     _capDefinition :: Maybe J.Value,
     _capComment :: Maybe Text
   }
+  deriving stock (Generic)
 
-$(J.deriveFromJSON hasuraJSON ''CreateActionPermission)
+instance J.FromJSON CreateActionPermission where
+  parseJSON = J.genericParseJSON hasuraJSON
 
 runCreateActionPermission ::
   (QErrM m, CacheRWM m, MetadataM m) =>
@@ -321,9 +324,14 @@ data DropActionPermission = DropActionPermission
   { _dapAction :: ActionName,
     _dapRole :: RoleName
   }
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.deriveJSON hasuraJSON ''DropActionPermission)
+instance J.FromJSON DropActionPermission where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON DropActionPermission where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 runDropActionPermission ::
   (QErrM m, CacheRWM m, MetadataM m) =>

@@ -24,6 +24,7 @@ import Hasura.Metadata.Class
 import Hasura.NativeQuery.API qualified as NativeQueries
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
+import Hasura.RQL.DDL.Action.Lenses (caDefinition, uaDefinition)
 import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.ConnectionTemplate

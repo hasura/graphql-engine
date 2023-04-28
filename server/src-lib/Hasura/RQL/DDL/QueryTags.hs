@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RQL.DDL.QueryTags
   ( SetQueryTagsConfig,
     runSetQueryTagsConfig,
@@ -8,7 +6,6 @@ where
 
 import Control.Lens
 import Data.Aeson
-import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
@@ -28,8 +25,11 @@ data SetQueryTagsConfig = SetQueryTagsConfig
   { _sqtSourceName :: SourceName,
     _sqtConfig :: QueryTagsConfig
   }
+  deriving stock (Generic)
 
-$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''SetQueryTagsConfig)
+instance ToJSON SetQueryTagsConfig where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 instance FromJSON SetQueryTagsConfig where
   parseJSON = withObject "SetQueryTagsConfig" $ \o -> do

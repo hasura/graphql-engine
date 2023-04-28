@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RQL.DDL.Schema.Source
   ( -- * Add Source
     AddSource,
@@ -34,7 +32,6 @@ import Control.Lens (at, (.~), (^.))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Extended
-import Data.Aeson.TH
 import Data.Bifunctor (bimap)
 import Data.Environment qualified as Env
 import Data.Has
@@ -149,8 +146,10 @@ data RenameSource = RenameSource
   { _rmName :: SourceName,
     _rmNewName :: SourceName
   }
+  deriving stock (Generic)
 
-$(deriveFromJSON hasuraJSON ''RenameSource)
+instance FromJSON RenameSource where
+  parseJSON = genericParseJSON hasuraJSON
 
 runRenameSource ::
   forall m.
