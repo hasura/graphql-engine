@@ -1,5 +1,4 @@
--- | The 'WithOptional' Functor and associated operations.
-module Hasura.RQL.DDL.Webhook.Transform.WithOptional
+module Hasura.RQL.Types.Webhook.Transform.WithOptional
   ( WithOptional (..),
     withOptional,
     withOptionalField',
@@ -7,14 +6,10 @@ module Hasura.RQL.DDL.Webhook.Transform.WithOptional
   )
 where
 
--------------------------------------------------------------------------------
-
 import Autodocodec (HasCodec (codec), ObjectCodec, ValueCodec, dimapCodec, optionalFieldWith')
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Coerce (Coercible)
 import Hasura.Prelude
-
--------------------------------------------------------------------------------
 
 -- | Enrich a 'Functor' @f@ with optionality; this is primarily useful when
 -- one wants to annotate fields as optional when using the Higher-Kinded Data
@@ -30,6 +25,8 @@ newtype WithOptional f result = WithOptional
 deriving newtype instance
   (NFData (f result)) =>
   NFData (WithOptional f result)
+
+-------------------------------------------------------------------------------
 
 -- | 'WithOptional' smart constructor for the special case of optional values
 -- that are representationally equivalent to some "wrapper" type.

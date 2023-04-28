@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -25,32 +24,19 @@ where
 
 -------------------------------------------------------------------------------
 
-import Autodocodec (HasCodec (codec), dimapCodec, stringConstCodec)
-import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.ByteString.Builder.Extra (toLazyByteStringWith, untrimmedStrategy)
 import Data.ByteString.Builder.Scientific (scientificBuilder)
 import Data.ByteString.Lazy qualified as LBS
-import Data.Kind (Type)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Validation (Validation)
 import Hasura.Prelude
-
--------------------------------------------------------------------------------
+import Hasura.RQL.Types.Webhook.Transform.Class (Template (..), TemplatingEngine (..), TransformCtx, TransformErrorBundle (..), TransformFn, UnescapedTemplate (..))
 
 -- | 'Transform' describes how to reify a defunctionalized transformation for
 -- a particular request field.
 class Transform a where
-  -- | The associated type 'TransformFn a' is the defunctionalized version
-  -- of some transformation that should be applied to a given request field.
-  --
-  -- In most cases it is some variation on a piece of template text describing
-  -- the transformation.
-  data TransformFn a :: Type
-
-  data TransformCtx a :: Type
-
   -- | 'transform' is a function which takes 'TransformFn' of @a@ and reifies
   -- it into a function of the form:
   --
@@ -72,14 +58,6 @@ class Transform a where
 
 -------------------------------------------------------------------------------
 
--- | We use collect all transformation failures as a '[J.Value]'.
-newtype TransformErrorBundle = TransformErrorBundle
-  { tebMessages :: [J.Value]
-  }
-  deriving stock (Eq, Generic, Show)
-  deriving newtype (Monoid, Semigroup, FromJSON, ToJSON)
-  deriving anyclass (NFData)
-
 -- | A helper function for serializing transformation errors to JSON.
 throwErrorBundle ::
   MonadError TransformErrorBundle m =>
@@ -98,77 +76,6 @@ throwErrorBundle msg val = do
   throwError $ TransformErrorBundle [err]
 
 -------------------------------------------------------------------------------
-
--- | Available templating engines.
-data TemplatingEngine
-  = Kriti
-  deriving stock (Bounded, Enum, Eq, Generic, Show)
-  deriving anyclass (NFData)
-
-instance HasCodec TemplatingEngine where
-  codec = stringConstCodec [(Kriti, "Kriti")]
-
--- XXX(jkachmar): We need roundtrip tests for these instances.
-instance FromJSON TemplatingEngine where
-  parseJSON =
-    J.genericParseJSON
-      J.defaultOptions
-        { J.tagSingleConstructors = True
-        }
-
--- XXX(jkachmar): We need roundtrip tests for these instances.
-instance ToJSON TemplatingEngine where
-  toJSON =
-    J.genericToJSON
-      J.defaultOptions
-        { J.tagSingleConstructors = True
-        }
-
-  toEncoding =
-    J.genericToEncoding
-      J.defaultOptions
-        { J.tagSingleConstructors = True
-        }
-
--- | Textual transformation template.
-newtype Template = Template
-  { unTemplate :: Text
-  }
-  deriving stock (Eq, Generic, Ord, Show)
-  deriving newtype (Hashable, FromJSONKey, ToJSONKey)
-  deriving anyclass (NFData)
-
-instance HasCodec Template where
-  codec = dimapCodec Template unTemplate codec
-
-instance J.FromJSON Template where
-  parseJSON = J.withText "Template" (pure . Template)
-
-instance J.ToJSON Template where
-  toJSON = J.String . coerce
-
--------------------------------------------------------------------------------
-
--- | Validated textual transformation template /for string
--- interpolation only/.
---
--- This is necessary due to Kriti not distinguishing between string
--- literals and string templates.
-newtype UnescapedTemplate = UnescapedTemplate
-  { getUnescapedTemplate :: Text
-  }
-  deriving stock (Eq, Generic, Ord, Show)
-  deriving newtype (Hashable, FromJSONKey, ToJSONKey)
-  deriving anyclass (NFData)
-
-instance HasCodec UnescapedTemplate where
-  codec = dimapCodec UnescapedTemplate getUnescapedTemplate codec
-
-instance J.FromJSON UnescapedTemplate where
-  parseJSON = J.withText "Template" (pure . UnescapedTemplate)
-
-instance J.ToJSON UnescapedTemplate where
-  toJSON = J.String . coerce
 
 -- | Wrap an 'UnescapedTemplate' with escaped double quotes.
 wrapUnescapedTemplate :: UnescapedTemplate -> Template

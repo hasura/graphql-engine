@@ -60,13 +60,13 @@ import Data.Text.NonEmpty
 import Data.Time.Clock qualified as Time
 import Database.PG.Query qualified as PG
 import Hasura.Prelude
-import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (EnvRecord, InputWebhook, ResolvedWebhook, SourceName (..), TriggerOnReplication (..))
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Headers (HeaderConf (..))
+import Hasura.RQL.Types.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import System.Cron (CronSchedule)
 import Text.Regex.TDFA qualified as TDFA
 

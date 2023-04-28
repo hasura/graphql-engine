@@ -28,6 +28,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.DDL.Webhook.Transform.Body (validateBodyTransformFn)
 import Hasura.RQL.DDL.Webhook.Transform.Class
+import Hasura.RQL.Types.Webhook.Transform.Class
 
 -------------------------------------------------------------------------------
 

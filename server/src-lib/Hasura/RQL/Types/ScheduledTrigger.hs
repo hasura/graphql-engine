@@ -59,10 +59,10 @@ import Data.Time.Clock.Units
 import Data.Time.Format.ISO8601
 import Database.PG.Query qualified as PG
 import Hasura.Prelude
-import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Common (InputWebhook (..))
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import PostgreSQL.Binary.Decoding qualified as PD
 import Refined (NonNegative, Refined, refineTH)
 import System.Cron.Types

@@ -842,6 +842,17 @@ library
                      , Hasura.RQL.Types.SourceCustomization
                      , Hasura.RQL.Types.Subscription
                      , Hasura.RQL.Types.Table
+
+                     , Hasura.RQL.Types.Webhook.Transform
+                     , Hasura.RQL.Types.Webhook.Transform.Body
+                     , Hasura.RQL.Types.Webhook.Transform.Class
+                     , Hasura.RQL.Types.Webhook.Transform.Headers
+                     , Hasura.RQL.Types.Webhook.Transform.Method
+                     , Hasura.RQL.Types.Webhook.Transform.QueryParams
+                     , Hasura.RQL.Types.Webhook.Transform.Request
+                     , Hasura.RQL.Types.Webhook.Transform.Url
+                     , Hasura.RQL.Types.Webhook.Transform.WithOptional
+
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ApiLimit
                      , Hasura.RQL.DDL.ComputedField
@@ -875,7 +886,6 @@ library
                      , Hasura.RQL.DDL.Webhook.Transform.Request
                      , Hasura.RQL.DDL.Webhook.Transform.Validation
                      , Hasura.RQL.DDL.Webhook.Transform.Url
-                     , Hasura.RQL.DDL.Webhook.Transform.WithOptional
                      , Hasura.RQL.DDL.SourceKinds
                      , Hasura.RQL.DDL.Schema
                      , Hasura.RQL.DDL.Schema.Cache

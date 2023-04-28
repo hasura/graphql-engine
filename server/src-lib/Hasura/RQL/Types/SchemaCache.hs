@@ -131,7 +131,6 @@ import Hasura.Function.Cache
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
 import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
-import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
@@ -157,6 +156,7 @@ import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Session (UserInfoM)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
+import Hasura.RQL.Types.Webhook.Transform
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
