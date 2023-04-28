@@ -21923,6 +21923,7 @@ instance Hasura.RQL.DDL.Schema.Cache.Config.HasCacheStaticConfig m => Hasura.RQL
 module Hasura.RQL.DDL.QueryTags
 data SetQueryTagsConfig
 runSetQueryTagsConfig :: (MonadError QErr m, MetadataM m, CacheRWM m) => SetQueryTagsConfig -> m EncJSON
+instance GHC.Generics.Generic Hasura.RQL.DDL.QueryTags.SetQueryTagsConfig
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.QueryTags.SetQueryTagsConfig
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.QueryTags.SetQueryTagsConfig
 
@@ -22156,6 +22157,25 @@ TestWebhookTransform :: Environment -> [Header] -> WebHookUrl -> Value -> Reques
 [_twtSessionVariables] :: TestWebhookTransform -> Maybe SessionVariables
 twtRequestTransformer :: Lens' TestWebhookTransform RequestTransform
 twtResponseTransformer :: Lens' TestWebhookTransform (Maybe MetadataResponseTransform)
+instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.ClearMetadata
+instance GHC.Generics.Generic Hasura.RQL.DDL.Metadata.Types.ClearMetadata
+instance GHC.Show.Show Hasura.RQL.DDL.Metadata.Types.ClearMetadata
+instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.ExportMetadata
+instance GHC.Show.Show Hasura.RQL.DDL.Metadata.Types.ExportMetadata
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.RQL.DDL.Metadata.Types.ReloadSpec a)
+instance GHC.Show.Show a => GHC.Show.Show (Hasura.RQL.DDL.Metadata.Types.ReloadSpec a)
+instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.ReloadMetadata
+instance GHC.Generics.Generic Hasura.RQL.DDL.Metadata.Types.ReloadMetadata
+instance GHC.Show.Show Hasura.RQL.DDL.Metadata.Types.ReloadMetadata
+instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.DumpInternalState
+instance GHC.Generics.Generic Hasura.RQL.DDL.Metadata.Types.DumpInternalState
+instance GHC.Show.Show Hasura.RQL.DDL.Metadata.Types.DumpInternalState
+instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.GetInconsistentMetadata
+instance GHC.Generics.Generic Hasura.RQL.DDL.Metadata.Types.GetInconsistentMetadata
+instance GHC.Show.Show Hasura.RQL.DDL.Metadata.Types.GetInconsistentMetadata
+instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.DropInconsistentMetadata
+instance GHC.Generics.Generic Hasura.RQL.DDL.Metadata.Types.DropInconsistentMetadata
+instance GHC.Show.Show Hasura.RQL.DDL.Metadata.Types.DropInconsistentMetadata
 instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.AllowInconsistentMetadata
 instance GHC.Show.Show Hasura.RQL.DDL.Metadata.Types.AllowInconsistentMetadata
 instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.ReplaceMetadataV1
@@ -22177,32 +22197,18 @@ instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Metadata.Types.AllowI
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Metadata.Types.AllowInconsistentMetadata
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Metadata.Types.DropInconsistentMetadata
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Metadata.Types.DropInconsistentMetadata
-instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.DropInconsistentMetadata
-instance GHC.Show.Show Hasura.RQL.DDL.Metadata.Types.DropInconsistentMetadata
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Metadata.Types.GetInconsistentMetadata
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Metadata.Types.GetInconsistentMetadata
-instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.GetInconsistentMetadata
-instance GHC.Show.Show Hasura.RQL.DDL.Metadata.Types.GetInconsistentMetadata
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Metadata.Types.DumpInternalState
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Metadata.Types.DumpInternalState
-instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.DumpInternalState
-instance GHC.Show.Show Hasura.RQL.DDL.Metadata.Types.DumpInternalState
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Metadata.Types.ReloadMetadata
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Metadata.Types.ReloadMetadata
-instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.ExportMetadata
-instance GHC.Show.Show Hasura.RQL.DDL.Metadata.Types.ExportMetadata
-instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.RQL.DDL.Metadata.Types.ReloadSpec a)
-instance GHC.Show.Show a => GHC.Show.Show (Hasura.RQL.DDL.Metadata.Types.ReloadSpec a)
-instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.ReloadMetadata
-instance GHC.Show.Show Hasura.RQL.DDL.Metadata.Types.ReloadMetadata
 instance Data.Aeson.Types.ToJSON.ToJSON a => Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.DDL.Metadata.Types.ReloadSpec a)
 instance (Data.Aeson.Types.FromJSON.FromJSON a, Data.Hashable.Class.Hashable a) => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Metadata.Types.ReloadSpec a)
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Metadata.Types.ExportMetadata
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Metadata.Types.ExportMetadata
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Metadata.Types.ClearMetadata
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Metadata.Types.ClearMetadata
-instance GHC.Classes.Eq Hasura.RQL.DDL.Metadata.Types.ClearMetadata
-instance GHC.Show.Show Hasura.RQL.DDL.Metadata.Types.ClearMetadata
 
 module Hasura.RQL.DDL.InheritedRoles
 runAddInheritedRole :: (MonadError QErr m, CacheRWM m, MetadataM m) => InheritedRole -> m EncJSON
@@ -22480,15 +22486,9 @@ CreateAction :: ActionName -> ActionDefinitionInput -> Maybe Text -> CreateActio
 [_caName] :: CreateAction -> ActionName
 [_caDefinition] :: CreateAction -> ActionDefinitionInput
 [_caComment] :: CreateAction -> Maybe Text
-caName :: Lens' CreateAction ActionName
-caDefinition :: Lens' CreateAction ActionDefinitionInput
-caComment :: Lens' CreateAction (Maybe Text)
 runCreateAction :: (QErrM m, CacheRWM m, MetadataM m) => CreateAction -> m EncJSON
 resolveAction :: QErrM m => Environment -> AnnotatedCustomTypes -> ActionDefinitionInput -> BackendMap ScalarMap -> m (ResolvedActionDefinition, AnnotatedOutputType)
 data UpdateAction
-uaName :: Lens' UpdateAction ActionName
-uaDefinition :: Lens' UpdateAction ActionDefinitionInput
-uaComment :: Lens' UpdateAction (Maybe Text)
 runUpdateAction :: forall m. (QErrM m, CacheRWM m, MetadataM m) => UpdateAction -> m EncJSON
 data DropAction
 runDropAction :: (MonadError QErr m, CacheRWM m, MetadataM m, MonadMetadataStorage m) => DropAction -> m EncJSON
@@ -22503,26 +22503,39 @@ runCreateActionPermission :: (QErrM m, CacheRWM m, MetadataM m) => CreateActionP
 data DropActionPermission
 runDropActionPermission :: (QErrM m, CacheRWM m, MetadataM m) => DropActionPermission -> m EncJSON
 dropActionPermissionInMetadata :: ActionName -> RoleName -> MetadataModifier
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Action.DropActionPermission
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Action.DropActionPermission
-instance GHC.Classes.Eq Hasura.RQL.DDL.Action.DropActionPermission
-instance GHC.Show.Show Hasura.RQL.DDL.Action.DropActionPermission
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Action.CreateActionPermission
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Action.ActionMetadataField
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Action.ActionMetadataField
-instance GHC.Classes.Eq Hasura.RQL.DDL.Action.ActionMetadataField
-instance GHC.Show.Show Hasura.RQL.DDL.Action.ActionMetadataField
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Action.DropAction
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Action.DropAction
+instance GHC.Generics.Generic Hasura.RQL.DDL.Action.CreateAction
+instance GHC.Generics.Generic Hasura.RQL.DDL.Action.UpdateAction
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Action.ClearActionData
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Action.ClearActionData
 instance GHC.Classes.Eq Hasura.RQL.DDL.Action.ClearActionData
 instance GHC.Show.Show Hasura.RQL.DDL.Action.ClearActionData
 instance GHC.Classes.Eq Hasura.RQL.DDL.Action.DropAction
+instance GHC.Generics.Generic Hasura.RQL.DDL.Action.DropAction
 instance GHC.Show.Show Hasura.RQL.DDL.Action.DropAction
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Action.ActionMetadataField
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Action.ActionMetadataField
+instance GHC.Classes.Eq Hasura.RQL.DDL.Action.ActionMetadataField
+instance GHC.Show.Show Hasura.RQL.DDL.Action.ActionMetadataField
+instance GHC.Generics.Generic Hasura.RQL.DDL.Action.CreateActionPermission
+instance GHC.Classes.Eq Hasura.RQL.DDL.Action.DropActionPermission
+instance GHC.Generics.Generic Hasura.RQL.DDL.Action.DropActionPermission
+instance GHC.Show.Show Hasura.RQL.DDL.Action.DropActionPermission
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Action.DropActionPermission
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Action.DropActionPermission
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Action.CreateActionPermission
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Action.DropAction
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Action.DropAction
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Action.UpdateAction
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Action.CreateAction
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Action.CreateAction
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Action.CreateAction
+
+module Hasura.RQL.DDL.Action.Lenses
+caName :: Lens' CreateAction ActionName
+caDefinition :: Lens' CreateAction ActionDefinitionInput
+caComment :: Lens' CreateAction (Maybe Text)
+uaName :: Lens' UpdateAction ActionName
+uaDefinition :: Lens' UpdateAction ActionDefinitionInput
+uaComment :: Lens' UpdateAction (Maybe Text)
 
 
 -- | Define and handle v1/metadata API operations to track, untrack, and
@@ -24262,22 +24275,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) TriggerOnReplication
-cteqCleanupConfig :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) (Maybe Text)
-cetqWebhook :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) (Maybe InputWebhook)
-cetqUpdate :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) (Maybe (SubscribeOpSpec b_aFrBp))
-cetqTable :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) (TableName b_aFrBp)
-cetqSource :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) SourceName
-cetqRetryConf :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) (Maybe RequestTransform)
-cetqReplace :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) Bool
-cetqName :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) TriggerName
-cetqInsert :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) (Maybe (SubscribeOpSpec b_aFrBp))
-cetqHeaders :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) (Maybe Bool)
-cetqDelete :: forall b_aFrBp. Lens' (CreateEventTriggerQuery b_aFrBp) (Maybe (SubscribeOpSpec b_aFrBp))
+cteqTriggerOnReplication :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) TriggerOnReplication
+cteqCleanupConfig :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) (Maybe Text)
+cetqWebhook :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) (Maybe InputWebhook)
+cetqUpdate :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) (Maybe (SubscribeOpSpec b_aFxE8))
+cetqTable :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) (TableName b_aFxE8)
+cetqSource :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) SourceName
+cetqRetryConf :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) (Maybe RequestTransform)
+cetqReplace :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) Bool
+cetqName :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) TriggerName
+cetqInsert :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) (Maybe (SubscribeOpSpec b_aFxE8))
+cetqHeaders :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) (Maybe Bool)
+cetqDelete :: forall b_aFxE8. Lens' (CreateEventTriggerQuery b_aFxE8) (Maybe (SubscribeOpSpec b_aFxE8))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -24831,6 +24844,7 @@ GetTableInfo :: SourceName -> TableName -> GetTableInfo
 -- | Fetch a schema information about a table for the requested data
 --   source. Currently this is only supported for Data Connectors.
 runGetTableInfo :: (CacheRM m, MonadError QErr m, MetadataM m) => GetTableInfo -> m EncJSON
+instance GHC.Generics.Generic Hasura.RQL.DDL.Schema.Source.RenameSource
 instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.Source.DropSource
 instance GHC.Show.Show Hasura.RQL.DDL.Schema.Source.DropSource
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.GetTableInfo
@@ -25210,13 +25224,13 @@ PartiallyResolvedSource :: SourceMetadata b -> SourceConfig b -> DBObjectsIntros
 --   elsewhere?
 buildRemoteFieldInfo :: QErrM m => LHSIdentifier -> HashMap FieldName lhsJoinField -> RemoteRelationship -> HashMap SourceName (AnyBackend PartiallyResolvedSource) -> PartiallyResolvedRemoteSchemaMap -> m (RemoteFieldInfo lhsJoinField, Seq SchemaDependency)
 getRemoteSchemaEntityJoinColumns :: MonadError QErr m => RemoteSchemaName -> RemoteSchemaIntrospection -> Name -> m (HashMap FieldName Name)
-instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.DDL.RemoteRelationship.PartiallyResolvedSource b)
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.RemoteRelationship.DeleteRemoteSchemaRemoteRelationship
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.RemoteRelationship.CreateRemoteSchemaRemoteRelationship
 instance GHC.Generics.Generic Hasura.RQL.DDL.RemoteRelationship.CreateRemoteSchemaRemoteRelationship
+instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.DDL.RemoteRelationship.PartiallyResolvedSource b)
 instance GHC.Classes.Eq (Hasura.RQL.Types.Backend.TableName b) => GHC.Classes.Eq (Hasura.RQL.DDL.RemoteRelationship.CreateFromSourceRelationship b)
 instance GHC.Show.Show (Hasura.RQL.Types.Backend.TableName b) => GHC.Show.Show (Hasura.RQL.DDL.RemoteRelationship.CreateFromSourceRelationship b)
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.RemoteRelationship.DeleteRemoteSchemaRemoteRelationship
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.RemoteRelationship.CreateRemoteSchemaRemoteRelationship
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.RemoteRelationship.CreateRemoteSchemaRemoteRelationship
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.RemoteRelationship.DeleteFromSourceRelationship b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.RemoteRelationship.CreateFromSourceRelationship b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.RQL.DDL.RemoteRelationship.CreateFromSourceRelationship b)
@@ -26241,11 +26255,12 @@ data RunSQLRes
 RunSQLRes :: Text -> Value -> RunSQLRes
 [rrResultType] :: RunSQLRes -> Text
 [rrResult] :: RunSQLRes -> Value
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Schema.RunSQLRes
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.RunSQLRes
-instance Database.PG.Query.Class.FromRes Hasura.RQL.DDL.Schema.RunSQLRes
 instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.RunSQLRes
+instance GHC.Generics.Generic Hasura.RQL.DDL.Schema.RunSQLRes
 instance GHC.Show.Show Hasura.RQL.DDL.Schema.RunSQLRes
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.RunSQLRes
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.Schema.RunSQLRes
+instance Database.PG.Query.Class.FromRes Hasura.RQL.DDL.Schema.RunSQLRes
 
 
 -- | Migrations for the Hasura catalog.
