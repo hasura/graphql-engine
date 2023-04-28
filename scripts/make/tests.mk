@@ -225,4 +225,9 @@ test-native-queries-bigquery: remove-tix-file
 .PHONY: py-tests
 ## py-tests: run the python-based test suite
 py-tests:
-	./server/tests-py/run-new.sh
+	./server/tests-py/run.sh
+
+.PHONY: upgrade-tests
+## upgrade-tests: run the server upgrade tests
+upgrade-tests:
+	cabal run upgrade-tests:test:upgrade-tests

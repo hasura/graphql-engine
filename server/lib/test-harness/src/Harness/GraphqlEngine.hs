@@ -38,6 +38,7 @@ module Harness.GraphqlEngine
 
     -- * Server Setup
     startServerThread,
+    runApp,
 
     -- * Re-exports
     serverUrl,
@@ -379,6 +380,7 @@ startServerThread = do
   thread <-
     Async.async
       ( runApp
+          Constants.postgresqlMetadataConnectionString
           Constants.serveOptions
             { soPort = unsafePort port,
               soMetadataDefaults = backendConfigs
@@ -391,17 +393,16 @@ startServerThread = do
 -------------------------------------------------------------------------------
 
 -- | Run the graphql-engine server.
-runApp :: ServeOptions Hasura.Logging.Hasura -> IO ()
-runApp serveOptions = do
+runApp :: String -> ServeOptions Hasura.Logging.Hasura -> IO ()
+runApp metadataDbUrl serveOptions = do
   let rci =
         PostgresConnInfo
           { _pciDatabaseConn = Nothing,
             _pciRetries = Nothing
           }
-      metadataDbUrl = Just Constants.postgresqlMetadataConnectionString
   env <- Env.getEnvironment
   initTime <- liftIO getCurrentTime
-  metadataConnectionInfo <- App.initMetadataConnectionInfo env metadataDbUrl rci
+  metadataConnectionInfo <- App.initMetadataConnectionInfo env (Just metadataDbUrl) rci
   let defaultConnInfo = App.BasicConnectionInfo metadataConnectionInfo Nothing
   (ekgStore, serverMetrics) <-
     liftIO $ do

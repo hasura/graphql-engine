@@ -135,7 +135,7 @@ healthCheck' url = loop [] httpHealthCheckAttempts
 -- * HTTP health checks
 
 httpHealthCheckAttempts :: Int
-httpHealthCheckAttempts = 5
+httpHealthCheckAttempts = 15
 
 httpHealthCheckIntervalSeconds :: DiffTime
 httpHealthCheckIntervalSeconds = 1
