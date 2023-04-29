@@ -21044,8 +21044,13 @@ mkDescriptionWith :: Maybe PGDescription -> Text -> Description
 takeValidTables :: forall b. Backend b => TableCache b -> TableCache b
 takeValidFunctions :: forall b. FunctionCache b -> FunctionCache b
 
--- | Currently we do no validation on native queries in schema. Should we?
+-- | @TODO: Currently we do no validation on native queries in schema.
+--   Should we?
 takeValidNativeQueries :: forall b. NativeQueryCache b -> NativeQueryCache b
+
+-- | @TODO: Currently we do no validation on stored procedures in schema.
+--   Should we?
+takeValidStoredProcedures :: forall b. StoredProcedureCache b -> StoredProcedureCache b
 requiredFieldParser :: (Functor n, Functor m) => (a -> b) -> m (FieldParser n a) -> m (Maybe (FieldParser n b))
 optionalFieldParser :: (Functor n, Functor m) => (a -> b) -> m (Maybe (FieldParser n a)) -> m (Maybe (FieldParser n b))
 
@@ -21241,6 +21246,7 @@ buildFunctionQueryFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRoo
 buildFunctionRelayQueryFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> FunctionName b -> FunctionInfo b -> TableName b -> NESeq (ColumnInfo b) -> SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildFunctionMutationFields :: (BackendSchema b, MonadBuildSchema b r m n) => MkRootFieldName -> FunctionName b -> FunctionInfo b -> TableName b -> SchemaT r m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildNativeQueryRootFields :: (BackendSchema b, MonadBuildSchema b r m n) => NativeQueryInfo b -> SchemaT r m (Maybe (FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+buildStoredProcedureRootFields :: (BackendSchema b, MonadBuildSchema b r m n) => StoredProcedureInfo b -> SchemaT r m (Maybe (FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 
 -- | Make a parser for relationships. Default implementaton elides
 --   relationships altogether.
@@ -24233,22 +24239,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) TriggerOnReplication
-cteqCleanupConfig :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) (Maybe Text)
-cetqWebhook :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) (Maybe InputWebhook)
-cetqUpdate :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) (Maybe (SubscribeOpSpec b_aFtaz))
-cetqTable :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) (TableName b_aFtaz)
-cetqSource :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) SourceName
-cetqRetryConf :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) (Maybe RequestTransform)
-cetqReplace :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) Bool
-cetqName :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) TriggerName
-cetqInsert :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) (Maybe (SubscribeOpSpec b_aFtaz))
-cetqHeaders :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) (Maybe Bool)
-cetqDelete :: forall b_aFtaz. Lens' (CreateEventTriggerQuery b_aFtaz) (Maybe (SubscribeOpSpec b_aFtaz))
+cteqTriggerOnReplication :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) TriggerOnReplication
+cteqCleanupConfig :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) (Maybe Text)
+cetqWebhook :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) (Maybe InputWebhook)
+cetqUpdate :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) (Maybe (SubscribeOpSpec b_aFuxc))
+cetqTable :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) (TableName b_aFuxc)
+cetqSource :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) SourceName
+cetqRetryConf :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) (Maybe RequestTransform)
+cetqReplace :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) Bool
+cetqName :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) TriggerName
+cetqInsert :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) (Maybe (SubscribeOpSpec b_aFuxc))
+cetqHeaders :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) (Maybe Bool)
+cetqDelete :: forall b_aFuxc. Lens' (CreateEventTriggerQuery b_aFuxc) (Maybe (SubscribeOpSpec b_aFuxc))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
