@@ -229,7 +229,7 @@ test-stored-procedures-sqlserver: remove-tix-file
 	docker compose up -d --wait postgres sqlserver-healthcheck
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
 		HSPEC_MATCH=StoredProcedures \
-		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: py-tests

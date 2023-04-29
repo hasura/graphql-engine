@@ -44,6 +44,7 @@ module Hasura.GraphQL.Schema.Common
     partialSQLExpToUnpreparedValue,
     requiredFieldParser,
     takeValidNativeQueries,
+    takeValidStoredProcedures,
     takeValidFunctions,
     takeValidTables,
     textToName,
@@ -90,6 +91,7 @@ import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.StoredProcedure.Cache (StoredProcedureCache)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
@@ -456,9 +458,13 @@ takeValidFunctions = HashMap.filter functionFilter
   where
     functionFilter = not . isSystemDefined . _fiSystemDefined
 
--- | Currently we do no validation on native queries in schema. Should we?
+-- | @TODO: Currently we do no validation on native queries in schema. Should we?
 takeValidNativeQueries :: forall b. NativeQueryCache b -> NativeQueryCache b
 takeValidNativeQueries = id
+
+-- | @TODO: Currently we do no validation on stored procedures in schema. Should we?
+takeValidStoredProcedures :: forall b. StoredProcedureCache b -> StoredProcedureCache b
+takeValidStoredProcedures = id
 
 -- root field builder helpers
 

@@ -68,6 +68,7 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types
+import Hasura.StoredProcedure.Cache (StoredProcedureCache, _spiReturns)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
@@ -352,11 +353,12 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
       runSourceSchema schemaContext schemaOptions sourceInfo do
         let validFunctions = takeValidFunctions _siFunctions
             validNativeQueries = takeValidNativeQueries _siNativeQueries
+            validStoredProcedures = takeValidStoredProcedures _siStoredProcedures
             validTables = takeValidTables _siTables
             mkRootFieldName = _rscRootFields _siCustomization
             makeTypename = SC._rscTypeNames _siCustomization
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields, apolloFedTableParsers) <-
-          buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions validNativeQueries
+          buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions validNativeQueries validStoredProcedures
         (,,,,apolloFedTableParsers)
           <$> customizeFields
             _siCustomization
@@ -668,6 +670,7 @@ buildQueryAndSubscriptionFields ::
   TableCache b ->
   FunctionCache b ->
   NativeQueryCache b ->
+  StoredProcedureCache b ->
   SchemaT
     r
     m
@@ -675,7 +678,7 @@ buildQueryAndSubscriptionFields ::
       [P.FieldParser n (SubscriptionRootField UnpreparedValue)],
       [(G.Name, Parser 'Output n (ApolloFederationParserFunction n))]
     )
-buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs FEAQuery -> functions) nativeQueries = do
+buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs FEAQuery -> functions) nativeQueries storedProcedures = do
   roleName <- retrieve scRole
   functionPermsCtx <- retrieve Options.soInferFunctionPermissions
   functionSelectExpParsers <-
@@ -690,6 +693,9 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
   nativeQueryRootFields <-
     buildNativeQueryFields sourceInfo nativeQueries
 
+  storedProceduresRootFields <-
+    buildStoredProcedureFields sourceInfo storedProcedures
+
   (tableQueryFields, tableSubscriptionFields, apolloFedTableParsers) <-
     unzip3 . catMaybes
       <$> for (HashMap.toList tables) \(tableName, tableInfo) -> runMaybeT $ do
@@ -700,7 +706,7 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
       tableSubscriptionRootFields = fmap mkRF $ concat tableSubscriptionFields
 
   pure
-    ( tableQueryRootFields <> functionSelectExpParsers <> nativeQueryRootFields,
+    ( tableQueryRootFields <> functionSelectExpParsers <> nativeQueryRootFields <> storedProceduresRootFields,
       tableSubscriptionRootFields <> functionSelectExpParsers <> nativeQueryRootFields,
       catMaybes apolloFedTableParsers
     )
@@ -733,6 +739,34 @@ buildNativeQueryFields sourceInfo nativeQueries = runMaybeTmempty $ do
         || roleName `HashMap.member` _lmiPermissions (_nqiReturns nativeQuery)
 
     lift (buildNativeQueryRootFields nativeQuery)
+  where
+    mkRF ::
+      FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)) ->
+      FieldParser n (QueryRootField UnpreparedValue)
+    mkRF = mkRootField sourceName sourceConfig queryTagsConfig QDBR
+    sourceName = _siName sourceInfo
+    sourceConfig = _siConfiguration sourceInfo
+    queryTagsConfig = _siQueryTagsConfig sourceInfo
+
+buildStoredProcedureFields ::
+  forall b r m n.
+  MonadBuildSchema b r m n =>
+  SourceInfo b ->
+  StoredProcedureCache b ->
+  SchemaT r m [P.FieldParser n (QueryRootField UnpreparedValue)]
+buildStoredProcedureFields sourceInfo storedProcedures = runMaybeTmempty $ do
+  roleName <- retrieve scRole
+
+  map mkRF . catMaybes <$> for (HashMap.elems storedProcedures) \storedProcedure -> do
+    -- only include this stored procedure in the schema
+    -- if the current role is admin, or we have a select permission
+    -- for this role (this is the broad strokes check. later, we'll filter
+    -- more granularly on columns and then rows)
+    guard $
+      roleName == adminRoleName
+        || roleName `HashMap.member` _lmiPermissions (_spiReturns storedProcedure)
+
+    lift (buildStoredProcedureRootFields storedProcedure)
   where
     mkRF ::
       FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)) ->

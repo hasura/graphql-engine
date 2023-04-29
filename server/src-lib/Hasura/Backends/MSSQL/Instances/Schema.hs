@@ -46,6 +46,7 @@ import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
+import Hasura.StoredProcedure.Schema qualified as StoredProcedures
 import Language.GraphQL.Draft.Syntax qualified as G
 
 ----------------------------------------------------------------
@@ -61,6 +62,7 @@ instance BackendSchema 'MSSQL where
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildTableUpdateMutationFields = GSB.buildSingleBatchTableUpdateMutationFields id
   buildNativeQueryRootFields = NativeQueries.defaultBuildNativeQueryRootFields
+  buildStoredProcedureRootFields = StoredProcedures.defaultBuildStoredProcedureRootFields
 
   buildFunctionQueryFields _ _ _ _ = pure []
   buildFunctionRelayQueryFields _ _ _ _ _ = pure []

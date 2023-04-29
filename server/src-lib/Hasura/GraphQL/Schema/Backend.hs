@@ -61,6 +61,7 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization (MkRootFieldName)
+import Hasura.StoredProcedure.Cache (StoredProcedureInfo)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Bag of constraints available to the methods of @BackendSchema@.
@@ -192,6 +193,15 @@ class
       m
       (Maybe (FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
   buildNativeQueryRootFields _ = pure Nothing
+
+  buildStoredProcedureRootFields ::
+    MonadBuildSchema b r m n =>
+    StoredProcedureInfo b ->
+    SchemaT
+      r
+      m
+      (Maybe (FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+  buildStoredProcedureRootFields _ = pure Nothing
 
   -- | Make a parser for relationships. Default implementaton elides
   -- relationships altogether.
