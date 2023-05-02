@@ -317,20 +317,26 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
                     Tracing.traceIdFromHex $ Char8.replicate 16 '0' <> rawTraceId
                 | otherwise ->
                     Nothing
-    for traceIdMaybe $ \traceId -> do
-      freshSpanId <- Tracing.randomSpanId
-      let parentSpanId = Tracing.spanIdFromHex =<< lookup "X-B3-SpanId" headers
-          samplingState = Tracing.samplingStateFromHeader $ lookup "X-B3-Sampled" headers
-      pure $ Tracing.TraceContext traceId freshSpanId parentSpanId samplingState
+
+    case traceIdMaybe of
+      Just traceId -> do
+        freshSpanId <- Tracing.randomSpanId
+        let parentSpanId = Tracing.spanIdFromHex =<< lookup "X-B3-SpanId" headers
+            samplingState = Tracing.samplingStateFromHeader $ lookup "X-B3-Sampled" headers
+        pure $ Tracing.TraceContext traceId freshSpanId parentSpanId samplingState
+      Nothing -> do
+        freshTraceId <- Tracing.randomTraceId
+        freshSpanId <- Tracing.randomSpanId
+        let samplingState = Tracing.samplingStateFromHeader $ lookup "X-B3-Sampled" headers
+        pure $ Tracing.TraceContext freshTraceId freshSpanId Nothing samplingState
 
   let runTrace ::
         forall m1 a1.
-        (MonadIO m1, MonadTrace m1) =>
+        (MonadTrace m1) =>
         m1 a1 ->
         m1 a1
-      runTrace = case tracingCtx of
-        Nothing -> Tracing.newTrace appEnvTraceSamplingPolicy (fromString (B8.unpack pathInfo))
-        Just ctx -> Tracing.newTraceWith ctx appEnvTraceSamplingPolicy (fromString (B8.unpack pathInfo))
+      runTrace =
+        Tracing.newTraceWith tracingCtx appEnvTraceSamplingPolicy (fromString (B8.unpack pathInfo))
 
   let getInfo parsedRequest = do
         authenticationResp <- lift (resolveUserInfo (_lsLogger appEnvLoggers) appEnvManager headers acAuthMode parsedRequest)
