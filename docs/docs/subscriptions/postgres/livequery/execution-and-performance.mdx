@@ -42,6 +42,19 @@ For example, with the default value, if there are 1000 subscription clients with
 subscriptions into 1 batch and make a single SQL query to the DB for that batch. So, in total there will be only 10 SQL
 queries to the DB for the 1000 subscriptions.
 
+Subscription requests are multiplexed if the following criteria are met:
+
+1. The associated Hasura roles are same.
+2. The selection set is identical and the input arguments only differ in scalar values.
+3. The connection template is resolved to the same database if [dynamic routing](/databases/database-config/dynamic-db-connection.mdx) is
+used.
+
+:::info Operation name
+
+The operation name does not prevent multiplexing.
+
+:::
+
 :::info Limitation
 
 **Subscriptions that rely on SQL functions, such as through [custom root fields](/schema/postgres/custom-functions.mdx)
@@ -55,6 +68,144 @@ the use of subscriptions with such functions. You can set the env variable
 `HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE: 1` to avoid multiplexing errors.
 
 :::
+
+#### Examples of subscription multiplexing
+
+1. Subscriptions with different scalar input argument values.
+
+Consider the following requests that are both run with the Hasura role: `user`.
+
+```graphql
+subscription GetUser {
+   users(where: {id: {_eq: 1}}) {
+       id
+       name
+   }
+}
+
+```
+
+```graphql
+subscription GetUser {
+   users(where: {id: {_eq: 2}}) {
+       id
+       name
+   }
+}
+
+```
+
+Although both of these subscription queries have a different value of the `id` parameter, they will get multiplexed
+together. If the subscription queries are analyzed, both of the queries will generate the same SQL query.
+
+2. Subscriptions that select the same columns in the selection set, but one of the subscriptions has an alias for a
+column.
+
+Consider the subscription requests are made with the same role.
+
+```graphql
+subscription GetUsers {
+  users {
+     id
+     name
+  }
+}
+```
+
+```graphql
+subscription GetUsersWithAlias {
+  users {
+     id
+     name: user_name
+  }
+}
+```
+
+The above two subscription queries **won’t be multiplexed** together because the `GetUsersWithAlias` query has an alias
+for the name field.
+
+3. Subscriptions with differing values of input arguments that don't multiplex together.
+
+Consider the subscription requests are both made with the same role.
+
+```graphql
+subscription GetUserWithVariableBoolExp ($boolExp: users_bool_exp!) {
+   users(where: $boolExp) {
+      id
+      name
+    }
+}
+```
+
+In this case, whether multiplexing happens or not, depends on the value of the variable `boolExp`.
+
+If the values of `boolExp` are
+
+```json
+{
+  "id": {
+    "_eq": 2
+  }
+}
+```
+
+and
+
+```json
+{
+  "name": {
+    "_eq": "ABC"
+  }
+}
+```
+
+The subscriptions won't get multiplexed together because the arguments have different input object fields.
+
+On the other hand, If the input object values of `boolExp` are
+
+```json
+{
+  "id": {
+    "_eq": 2
+  }
+}
+```
+
+and
+
+
+```json
+{
+  "id": {
+    "_eq": 3
+  }
+}
+```
+
+:::info Boolean expressions
+
+If boolean expressions are used as values in subscription queries, they will be multiplexed only if they differ in scalar values.
+
+:::
+
+4. Identical subscriptions requests made with different Hasura roles
+
+Consider the following subscription request executed with the roles, `author` and `editor`.
+
+```graphql
+subscription {
+  articles {
+    id
+    author {
+      name
+    }
+    is_public
+  }
+}
+```
+
+Even though identical subscription requests are made, **they are not muliplexed** together because the Hasura role is
+different.
 
 ### Example
 
