@@ -786,6 +786,18 @@ export const getEventInvocationsLogByID = (
   },
 });
 
+export const getEventTriggerInvocationByID = (
+  currentDriver: string,
+  event_id: string,
+  source?: string
+) => ({
+  type: `${currentDriver}_get_event_by_id`,
+  args: {
+    event_id,
+    source,
+  },
+});
+
 export const getEventInvocations = (
   type: SupportedEvents,
   limit: number,
@@ -863,6 +875,64 @@ export const getScheduledEvents = (
       limit,
       offset,
       get_rows_count: false,
+    },
+  };
+};
+
+export const getScheduledEventTrigger = (
+  currentDriver: string,
+  name: string,
+  status: string,
+  source?: string,
+  limit?: number,
+  offset?: number
+) => {
+  const api_prefix = currentDriver === 'postgres' ? 'pg' : currentDriver;
+  const query = {
+    type: `${api_prefix}_get_event_logs`,
+    args: {},
+  };
+  const statusPending = 'pending';
+  const statusProcessed = 'processed';
+
+  if (status === 'pending') {
+    query.args = {
+      ...query.args,
+      status: statusPending,
+    };
+  } else {
+    query.args = {
+      ...query.args,
+      status: statusProcessed,
+    };
+  }
+  return {
+    ...query,
+    args: {
+      ...query.args,
+      name,
+      source,
+      limit,
+      offset,
+    },
+  };
+};
+
+export const getEventTriggerInvocation = (
+  currentDriver: string,
+  name: string,
+  source?: string,
+  limit?: number,
+  offset?: number
+) => {
+  const api_prefix = currentDriver === 'postgres' ? 'pg' : currentDriver;
+  return {
+    type: `${api_prefix}_get_event_invocation_logs`,
+    args: {
+      name,
+      source,
+      limit,
+      offset,
     },
   };
 };

@@ -112,7 +112,7 @@ export const etInvocationLogsTable: BaseTable = {
   columns: [
     { column_name: 'id', data_type: 'uuid' },
     { column_name: 'event_id', data_type: 'uuid' },
-    { column_name: 'status', data_type: 'int' },
+    { column_name: 'http_status', data_type: 'int' },
     { column_name: 'request', data_type: 'text' },
     { column_name: 'response', data_type: 'text' },
     { column_name: 'created_at', data_type: 'timestamptz' },

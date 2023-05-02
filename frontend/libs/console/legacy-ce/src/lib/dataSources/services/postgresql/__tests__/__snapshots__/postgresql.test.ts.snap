@@ -40,24 +40,3 @@ exports[`postgresql datasource tests getDataTriggerInvocations should generate S
     WHERE event_id = '298f6a71-f503-46f1-814c-45daef0afe4d'
     ORDER BY created_at DESC NULLS LAST;"
 `;
-
-exports[`postgresql datasource tests getDataTriggerLogsQuery should generate SQL query for event invocation logs 1`] = `
-"SELECT *
-      FROM "hdb_catalog"."event_log" data_table
-      WHERE data_table.trigger_name = 'test_event'
-      AND (delivered=true OR error=true) AND archived=false ORDER BY created_at DESC  LIMIT 100 OFFSET 0;"
-`;
-
-exports[`postgresql datasource tests getDataTriggerLogsQuery should generate SQL query for pending event logs 1`] = `
-"SELECT *
-      FROM "hdb_catalog"."event_log" data_table
-      WHERE data_table.trigger_name = 'new_user'
-      AND delivered=false AND error=false AND archived=false ORDER BY created_at DESC  LIMIT 10 OFFSET 10;"
-`;
-
-exports[`postgresql datasource tests getDataTriggerLogsQuery should generate SQL query for processed event logs 1`] = `
-"SELECT *
-      FROM "hdb_catalog"."event_log" data_table
-      WHERE data_table.trigger_name = 'test_event'
-      AND (delivered=true OR error=true) AND archived=false ORDER BY created_at DESC  LIMIT 100 OFFSET 0;"
-`;

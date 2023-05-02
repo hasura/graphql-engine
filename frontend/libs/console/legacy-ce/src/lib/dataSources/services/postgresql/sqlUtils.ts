@@ -1,5 +1,4 @@
 import type { DataSourcesAPI } from '../..';
-import { TriggerOperation } from '../../../components/Common/FilterQuery/state';
 import { FrequentlyUsedColumn, IndexType } from '../../types';
 import { isColTypeString } from '.';
 import { FunctionState } from './types';
@@ -1329,61 +1328,6 @@ WHERE
 	AND schema_name NOT LIKE 'pg_toast%'
 	AND schema_name NOT LIKE 'pg_temp_%';
 `;
-
-export const getDataTriggerLogsQuery = (
-  triggerOp: TriggerOperation,
-  triggerName: string,
-  limit?: number,
-  offset?: number
-): string => {
-  const triggerTypes = {
-    pending: 'pending',
-    processed: 'processed',
-    invocation: 'invocation',
-  };
-  const eventRelTable = `"hdb_catalog"."event_log"`;
-  const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
-  let sql = '';
-
-  switch (triggerOp) {
-    case triggerTypes.pending:
-      sql = `SELECT *
-      FROM ${eventRelTable} data_table
-      WHERE data_table.trigger_name = '${triggerName}'
-      AND delivered=false AND error=false AND archived=false ORDER BY created_at DESC `;
-      break;
-
-    case triggerTypes.processed:
-      sql = `SELECT *
-      FROM ${eventRelTable} data_table
-      WHERE data_table.trigger_name = '${triggerName}'
-      AND (delivered=true OR error=true) AND archived=false ORDER BY created_at DESC `;
-      break;
-
-    case triggerTypes.invocation:
-      sql = `
-      SELECT data_table.*
-      FROM ${eventInvTable} data_table
-      WHERE data_table.trigger_name = '${triggerName}'
-      ORDER BY data_table.created_at DESC NULLS LAST`;
-      break;
-    default:
-      break;
-  }
-
-  if (limit) {
-    sql += ` LIMIT ${limit}`;
-  } else {
-    sql += ` LIMIT 10`;
-  }
-
-  if (offset) {
-    sql += ` OFFSET ${offset};`;
-  } else {
-    sql += ` OFFSET 0;`;
-  }
-  return sql;
-};
 
 export const getDataTriggerInvocations = (eventId: string): string => {
   const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
