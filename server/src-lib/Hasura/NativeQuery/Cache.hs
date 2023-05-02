@@ -9,7 +9,7 @@ where
 
 import Data.Aeson (ToJSON (toJSON), genericToJSON)
 import Hasura.LogicalModel.Cache (LogicalModelInfo)
-import Hasura.NativeQuery.Metadata (InterpolatedQuery, NativeQueryArgumentName, NativeQueryName)
+import Hasura.NativeQuery.Metadata (ArgumentName, InterpolatedQuery, NativeQueryName)
 import Hasura.NativeQuery.Types (NullableScalarType)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend)
@@ -24,9 +24,9 @@ type NativeQueryCache b = HashMap NativeQueryName (NativeQueryInfo b)
 -- 'Hasura/RQL/DDL/Schema/Cache.buildSchemaCacheRule'.
 data NativeQueryInfo (b :: BackendType) = NativeQueryInfo
   { _nqiRootFieldName :: NativeQueryName,
-    _nqiCode :: InterpolatedQuery NativeQueryArgumentName,
+    _nqiCode :: InterpolatedQuery ArgumentName,
     _nqiReturns :: LogicalModelInfo b,
-    _nqiArguments :: HashMap NativeQueryArgumentName (NullableScalarType b),
+    _nqiArguments :: HashMap ArgumentName (NullableScalarType b),
     _nqiArrayRelationships :: InsOrdHashMap RelName (RelInfo b),
     _nqiDescription :: Maybe Text
   }

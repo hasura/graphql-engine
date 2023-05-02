@@ -29,9 +29,9 @@ import Hasura.Base.Error
 import Hasura.LogicalModel.Common (columnsFromFields)
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.NativeQuery.Metadata
-  ( InterpolatedItem (..),
+  ( ArgumentName,
+    InterpolatedItem (..),
     InterpolatedQuery (..),
-    NativeQueryArgumentName,
     NativeQueryMetadata (..),
   )
 import Hasura.NativeQuery.Types (NullableScalarType (nstType))
@@ -137,20 +137,20 @@ invertPgTypeOidMap = Map.fromList . map swap . InsOrdHashMap.toList
 -- | The environment and fresh-name generator used by 'renameIQ'.
 data RenamingState = RenamingState
   { rsNextFree :: Int,
-    rsBoundVars :: Map NativeQueryArgumentName Int
+    rsBoundVars :: Map ArgumentName Int
   }
 
--- | 'Rename' an 'InterpolatedQuery' expression with 'NativeQueryArgumentName' variables
+-- | 'Rename' an 'InterpolatedQuery' expression with 'ArgumentName' variables
 -- into one which uses ordinal arguments instead of named arguments, suitable
 -- for a prepared query.
 renameIQ ::
-  InterpolatedQuery NativeQueryArgumentName ->
+  InterpolatedQuery ArgumentName ->
   ( InterpolatedQuery Int,
-    Map Int NativeQueryArgumentName
+    Map Int ArgumentName
   )
 renameIQ = runRenaming . fmap InterpolatedQuery . mapM renameII . getInterpolatedQuery
   where
-    runRenaming :: forall a. State RenamingState a -> (a, Map Int NativeQueryArgumentName)
+    runRenaming :: forall a. State RenamingState a -> (a, Map Int ArgumentName)
     runRenaming action =
       let (res, st) = runState action (RenamingState 1 mempty)
        in (res, inverseMap $ rsBoundVars st)
@@ -165,7 +165,7 @@ renameIQ = runRenaming . fmap InterpolatedQuery . mapM renameII . getInterpolate
     -- variables and reusing the previously assigned indices when encountering a
     -- previously treated variable accordingly.
     renameII ::
-      InterpolatedItem NativeQueryArgumentName ->
+      InterpolatedItem ArgumentName ->
       State RenamingState (InterpolatedItem Int)
     renameII = traverse \v -> do
       env <- gets rsBoundVars
@@ -210,7 +210,7 @@ nativeQueryToPreparedStatement logicalModel model = do
       logimoCode = renderIQ preparedIQ
       prepname = "_logimo_vali_"
 
-      occurringArguments, declaredArguments, undeclaredArguments :: Set NativeQueryArgumentName
+      occurringArguments, declaredArguments, undeclaredArguments :: Set ArgumentName
       occurringArguments = Set.fromList (Map.elems argumentMapping)
       declaredArguments = Set.fromList $ HashMap.keys (_nqmArguments model)
       undeclaredArguments = occurringArguments `Set.difference` declaredArguments

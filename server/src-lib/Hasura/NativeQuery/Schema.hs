@@ -19,7 +19,7 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.LogicalModel.Schema
 import Hasura.NativeQuery.Cache (NativeQueryInfo (..))
 import Hasura.NativeQuery.IR (NativeQuery (..))
-import Hasura.NativeQuery.Metadata (InterpolatedQuery (..), NativeQueryArgumentName (..))
+import Hasura.NativeQuery.Metadata (ArgumentName (..), InterpolatedQuery (..))
 import Hasura.NativeQuery.Types (NullableScalarType (..), getNativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
@@ -73,7 +73,7 @@ defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
   let interpolatedQuery nqArgs =
         InterpolatedQuery $
           (fmap . fmap)
-            ( \var@(NativeQueryArgumentName name) -> case HashMap.lookup var nqArgs of
+            ( \var@(ArgumentName name) -> case HashMap.lookup var nqArgs of
                 Just arg -> UVParameter (FromInternal name) arg
                 Nothing ->
                   -- the `nativeQueryArgsParser` will already have checked
@@ -120,8 +120,8 @@ nativeQueryArgumentsSchema ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   G.Name ->
-  HashMap NativeQueryArgumentName (NullableScalarType b) ->
-  MaybeT (SchemaT r m) (P.InputFieldsParser n (HashMap NativeQueryArgumentName (Column.ColumnValue b)))
+  HashMap ArgumentName (NullableScalarType b) ->
+  MaybeT (SchemaT r m) (P.InputFieldsParser n (HashMap ArgumentName (Column.ColumnValue b)))
 nativeQueryArgumentsSchema nativeQueryName argsSignature = do
   -- Lift 'SchemaT r m (InputFieldsParser ..)' into a monoid using Applicative.
   -- This lets us use 'foldMap' + monoid structure of hashmaps to avoid awkwardly
@@ -135,10 +135,10 @@ nativeQueryArgumentsSchema nativeQueryName argsSignature = do
                 <$> lift (columnParser (Column.ColumnScalar nstType) (G.Nullability nstNullable))
             -- TODO: Naming conventions?
             -- TODO: Custom fields? (Probably not)
-            argName <- hoistMaybe (G.mkName (getNativeQueryArgumentName name))
+            argName <- hoistMaybe (G.mkName (getArgumentName name))
             let description = case nstDescription of
                   Just desc -> G.Description desc
-                  Nothing -> G.Description ("Native query argument " <> getNativeQueryArgumentName name)
+                  Nothing -> G.Description ("Native query argument " <> getArgumentName name)
             pure $
               P.field
                 argName

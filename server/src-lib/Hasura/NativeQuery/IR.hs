@@ -17,7 +17,7 @@ data NativeQuery b field = NativeQuery
     -- | The raw sql to use in the query
     nqInterpolatedQuery :: InterpolatedQuery field,
     -- | The arguments passed to the query, if any.
-    nqArgs :: HashMap NativeQueryArgumentName (ColumnValue b),
+    nqArgs :: HashMap ArgumentName (ColumnValue b),
     -- | The return type of the native query
     nqLogicalModel :: LogicalModel b
   }

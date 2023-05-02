@@ -13,7 +13,7 @@ module Hasura.StoredProcedure.Metadata
     spmReturns,
     spmArrayRelationships,
     spmRootFieldName,
-    NativeQueryArgumentName (..),
+    ArgumentName (..),
     InterpolatedItem (..),
     InterpolatedQuery (..),
     parseInterpolatedQuery,
@@ -46,9 +46,9 @@ type Relationships = InsOrdHashMap RelName
 -- | The representation of native queries within the metadata structure.
 data StoredProcedureMetadata (b :: BackendType) = StoredProcedureMetadata
   { _spmRootFieldName :: StoredProcedureName,
-    _spmCode :: InterpolatedQuery NativeQueryArgumentName,
+    _spmCode :: InterpolatedQuery ArgumentName,
     _spmReturns :: LogicalModelName,
-    _spmArguments :: HashMap NativeQueryArgumentName (NullableScalarType b),
+    _spmArguments :: HashMap ArgumentName (NullableScalarType b),
     _spmArrayRelationships :: Relationships (RelDef (RelManualConfig b)),
     _spmDescription :: Maybe Text
   }

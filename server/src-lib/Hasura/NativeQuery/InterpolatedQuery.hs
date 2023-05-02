@@ -3,7 +3,7 @@
 
 -- | Parser and prettyprinter for native query code.
 module Hasura.NativeQuery.InterpolatedQuery
-  ( NativeQueryArgumentName (..),
+  ( ArgumentName (..),
     InterpolatedItem (..),
     InterpolatedQuery (..),
     parseInterpolatedQuery,
@@ -38,9 +38,9 @@ data InterpolatedItem variable
 
 -- | Converting an interpolated query back to text.
 --   Should roundtrip with the 'parseInterpolatedQuery'.
-ppInterpolatedItem :: InterpolatedItem NativeQueryArgumentName -> Text
+ppInterpolatedItem :: InterpolatedItem ArgumentName -> Text
 ppInterpolatedItem (IIText t) = t
-ppInterpolatedItem (IIVariable v) = "{{" <> getNativeQueryArgumentName v <> "}}"
+ppInterpolatedItem (IIVariable v) = "{{" <> getArgumentName v <> "}}"
 
 deriving instance (Hashable variable) => Hashable (InterpolatedItem variable)
 
@@ -60,12 +60,12 @@ deriving newtype instance (Hashable variable) => Hashable (InterpolatedQuery var
 
 deriving newtype instance (NFData variable) => NFData (InterpolatedQuery variable)
 
-ppInterpolatedQuery :: InterpolatedQuery NativeQueryArgumentName -> Text
+ppInterpolatedQuery :: InterpolatedQuery ArgumentName -> Text
 ppInterpolatedQuery (InterpolatedQuery parts) = foldMap ppInterpolatedItem parts
 
 -- | We store the interpolated query as the user text and parse it back
 --   when converting back to Haskell code.
-instance v ~ NativeQueryArgumentName => HasCodec (InterpolatedQuery v) where
+instance v ~ ArgumentName => HasCodec (InterpolatedQuery v) where
   codec =
     CommentCodec
       ("An interpolated query expressed in native code (SQL)")
@@ -75,36 +75,36 @@ instance v ~ NativeQueryArgumentName => HasCodec (InterpolatedQuery v) where
         textCodec
 
 deriving via
-  (Autodocodec (InterpolatedQuery NativeQueryArgumentName))
+  (Autodocodec (InterpolatedQuery ArgumentName))
   instance
-    v ~ NativeQueryArgumentName =>
+    v ~ ArgumentName =>
     ToJSON (InterpolatedQuery v)
 
 ---------------------------------------
 
-newtype NativeQueryArgumentName = NativeQueryArgumentName
-  { getNativeQueryArgumentName :: Text
+newtype ArgumentName = ArgumentName
+  { getArgumentName :: Text
   }
   deriving newtype (Eq, Ord, Show, Hashable)
   deriving stock (Generic)
 
-instance HasCodec NativeQueryArgumentName where
-  codec = dimapCodec NativeQueryArgumentName getNativeQueryArgumentName codec
+instance HasCodec ArgumentName where
+  codec = dimapCodec ArgumentName getArgumentName codec
 
-deriving newtype instance ToJSON NativeQueryArgumentName
+deriving newtype instance ToJSON ArgumentName
 
-deriving newtype instance FromJSON NativeQueryArgumentName
+deriving newtype instance FromJSON ArgumentName
 
-deriving newtype instance ToJSONKey NativeQueryArgumentName
+deriving newtype instance ToJSONKey ArgumentName
 
-deriving newtype instance FromJSONKey NativeQueryArgumentName
+deriving newtype instance FromJSONKey ArgumentName
 
-instance NFData NativeQueryArgumentName
+instance NFData ArgumentName
 
 -- | extract all of the `{{ variable }}` inside our query string
 parseInterpolatedQuery ::
   Text ->
-  Either Text (InterpolatedQuery NativeQueryArgumentName)
+  Either Text (InterpolatedQuery ArgumentName)
 parseInterpolatedQuery =
   fmap
     ( InterpolatedQuery
@@ -122,7 +122,7 @@ parseInterpolatedQuery =
       (a : rest) -> a : mergeAdjacent rest
       [] -> []
 
-    consumeString :: String -> Either Text [InterpolatedItem NativeQueryArgumentName]
+    consumeString :: String -> Either Text [InterpolatedItem ArgumentName]
     consumeString str =
       let (beforeCurly, fromCurly) = break (== '{') str
        in case fromCurly of
@@ -132,10 +132,10 @@ parseInterpolatedQuery =
               (IIText (T.pack (beforeCurly <> "{")) :) <$> consumeString other
             _other -> pure [IIText (T.pack beforeCurly)]
 
-    consumeVar :: String -> Either Text [InterpolatedItem NativeQueryArgumentName]
+    consumeVar :: String -> Either Text [InterpolatedItem ArgumentName]
     consumeVar str =
       let (beforeCloseCurly, fromClosedCurly) = break (== '}') str
        in case fromClosedCurly of
             ('}' : '}' : rest) ->
-              (IIVariable (NativeQueryArgumentName $ T.pack beforeCloseCurly) :) <$> consumeString rest
+              (IIVariable (ArgumentName $ T.pack beforeCloseCurly) :) <$> consumeString rest
             _ -> Left "Found '{{' without a matching closing '}}'"

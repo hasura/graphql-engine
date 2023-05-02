@@ -24,7 +24,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.LogicalModel.API (getCustomTypes)
 import Hasura.LogicalModel.Metadata (LogicalModelName)
-import Hasura.NativeQuery.Metadata (NativeQueryArgumentName, NativeQueryMetadata (..), parseInterpolatedQuery)
+import Hasura.NativeQuery.Metadata (ArgumentName, NativeQueryMetadata (..), parseInterpolatedQuery)
 import Hasura.NativeQuery.Types (NativeQueryName, NullableScalarType, nativeQueryArrayRelationshipsCodec)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend, SourceConnConfiguration)
@@ -50,7 +50,7 @@ data TrackNativeQuery (b :: BackendType) = TrackNativeQuery
   { tnqSource :: SourceName,
     tnqRootFieldName :: NativeQueryName,
     tnqCode :: Text,
-    tnqArguments :: HashMap NativeQueryArgumentName (NullableScalarType b),
+    tnqArguments :: HashMap ArgumentName (NullableScalarType b),
     tnqArrayRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
     tnqDescription :: Maybe Text,
     tnqReturns :: LogicalModelName

@@ -13,7 +13,7 @@ module Hasura.NativeQuery.Metadata
     nqmReturns,
     nqmArrayRelationships,
     nqmRootFieldName,
-    NativeQueryArgumentName (..),
+    ArgumentName (..),
     InterpolatedItem (..),
     InterpolatedQuery (..),
     parseInterpolatedQuery,
@@ -46,9 +46,9 @@ type Relationships = InsOrdHashMap RelName
 -- | The representation of native queries within the metadata structure.
 data NativeQueryMetadata (b :: BackendType) = NativeQueryMetadata
   { _nqmRootFieldName :: NativeQueryName,
-    _nqmCode :: InterpolatedQuery NativeQueryArgumentName,
+    _nqmCode :: InterpolatedQuery ArgumentName,
     _nqmReturns :: LogicalModelName,
-    _nqmArguments :: HashMap NativeQueryArgumentName (NullableScalarType b),
+    _nqmArguments :: HashMap ArgumentName (NullableScalarType b),
     _nqmArrayRelationships :: Relationships (RelDef (RelManualConfig b)),
     _nqmDescription :: Maybe Text
   }

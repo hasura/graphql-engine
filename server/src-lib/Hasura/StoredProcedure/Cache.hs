@@ -15,7 +15,7 @@ import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Common (RelName)
 import Hasura.RQL.Types.Relationships.Local (RelInfo)
 import Hasura.RQL.Types.Table (RolePermInfoMap)
-import Hasura.StoredProcedure.Metadata (InterpolatedQuery, NativeQueryArgumentName, StoredProcedureName)
+import Hasura.StoredProcedure.Metadata (ArgumentName, InterpolatedQuery, StoredProcedureName)
 import Hasura.StoredProcedure.Types (NullableScalarType)
 
 type StoredProcedureCache b = HashMap StoredProcedureName (StoredProcedureInfo b)
@@ -24,9 +24,9 @@ type StoredProcedureCache b = HashMap StoredProcedureName (StoredProcedureInfo b
 -- 'Hasura/RQL/DDL/Schema/Cache.buildSchemaCacheRule'.
 data StoredProcedureInfo (b :: BackendType) = StoredProcedureInfo
   { _spiRootFieldName :: StoredProcedureName,
-    _spiCode :: InterpolatedQuery NativeQueryArgumentName,
+    _spiCode :: InterpolatedQuery ArgumentName,
     _spiReturns :: LogicalModelInfo b,
-    _spiArguments :: HashMap NativeQueryArgumentName (NullableScalarType b),
+    _spiArguments :: HashMap ArgumentName (NullableScalarType b),
     _spiArrayRelationships :: InsOrdHashMap RelName (RelInfo b),
     _spiDescription :: Maybe Text
   }
