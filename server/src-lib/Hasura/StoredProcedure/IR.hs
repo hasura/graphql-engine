@@ -7,17 +7,17 @@ where
 import Hasura.LogicalModel.IR
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Column (ColumnValue)
 import Hasura.StoredProcedure.Metadata
+import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | The RQL IR representation of an invocation of a stored procedure.
 data StoredProcedure b field = StoredProcedure
-  { -- | The graphql name of the stored procedure.
-    spRootFieldName :: StoredProcedureName,
-    -- | The raw sql to use in the query
-    spInterpolatedQuery :: InterpolatedQuery field,
+  { -- | The SQL name of the stored procedure.
+    spStoredProcedure :: FunctionName b,
+    -- | The graphql name of the stored procedure.
+    spGraphqlName :: G.Name,
     -- | The arguments passed to the query, if any.
-    spArgs :: HashMap ArgumentName (ColumnValue b),
+    spArgs :: HashMap ArgumentName (ScalarType b, field),
     -- | The return type of the stored procedure
     spLogicalModel :: LogicalModel b
   }

@@ -84,7 +84,7 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata, StoredProcedureName, spmArrayRelationships)
+import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata, spmArrayRelationships)
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.Types.Extended
@@ -308,7 +308,7 @@ nativeQueryMetadataSetter source nativeQueryName =
 storedProcedureMetadataSetter ::
   (Backend b) =>
   SourceName ->
-  StoredProcedureName ->
+  FunctionName b ->
   ASetter' Metadata (StoredProcedureMetadata b)
 storedProcedureMetadataSetter source storedProcedureName =
   metaSources . ix source . toSourceMetadata . smStoredProcedures . ix storedProcedureName

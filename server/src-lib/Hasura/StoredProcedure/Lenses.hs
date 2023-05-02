@@ -1,9 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.StoredProcedure.Lenses
-  ( spiRootFieldName,
+  ( spiStoredProcedure,
+    spiGraphqlName,
+    spiConfig,
     spiArrayRelationships,
-    spiCode,
     spiReturns,
     spiArguments,
     spiDescription,

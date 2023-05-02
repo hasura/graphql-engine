@@ -46,7 +46,6 @@ import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Roles (RoleName, roleNameToTxt)
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.StoredProcedure.Types (StoredProcedureName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data TableObjId (b :: BackendType)
@@ -105,8 +104,8 @@ data SourceObjId (b :: BackendType)
   | SOIFunction (FunctionName b)
   | SOINativeQuery NativeQueryName
   | SOINativeQueryObj NativeQueryName (NativeQueryObjId b)
-  | SOIStoredProcedure StoredProcedureName
-  | SOIStoredProcedureObj StoredProcedureName (StoredProcedureObjId b)
+  | SOIStoredProcedure (FunctionName b)
+  | SOIStoredProcedureObj (FunctionName b) (StoredProcedureObjId b)
   | SOILogicalModel LogicalModelName
   | SOILogicalModelObj LogicalModelName (LogicalModelObjId b)
   deriving (Eq, Generic)

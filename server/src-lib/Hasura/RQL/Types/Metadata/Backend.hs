@@ -34,7 +34,7 @@ import Hasura.RQL.Types.Table
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Version
 import Hasura.Services.Network
-import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata)
+import Hasura.StoredProcedure.Metadata (StoredProcedureConfig, StoredProcedureMetadata)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
 
@@ -236,6 +236,14 @@ class
     m ()
   validateStoredProcedure _ _ _ _ =
     throw500 "validateStoredProcedure: not implemented for this backend."
+
+  getStoredProcedureGraphqlName ::
+    (MonadError QErr m) =>
+    FunctionName b ->
+    StoredProcedureConfig ->
+    m G.Name
+  getStoredProcedureGraphqlName _ _ =
+    throw500 "getStoredProcedureGraphqlName: not implemented for this backend."
 
   -- | How to convert a column to a field.
   -- For backends that don't support nested objects or arrays the default implementation

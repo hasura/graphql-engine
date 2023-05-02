@@ -37,8 +37,8 @@ import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.LogicalModel.Common (columnsFromFields)
 import Hasura.LogicalModel.IR (LogicalModel (..))
-import Hasura.LogicalModel.NullableScalarType (NullableScalarType (..))
 import Hasura.NativeQuery.IR qualified as IR
+import Hasura.NativeQuery.InterpolatedQuery
 import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -47,7 +47,6 @@ import Hasura.RQL.Types.Column qualified as IR
 import Hasura.RQL.Types.Common qualified as IR
 import Hasura.RQL.Types.Relationships.Local qualified as IR
 import Hasura.StoredProcedure.IR qualified as IR
-import Hasura.StoredProcedure.Types (StoredProcedureName (..))
 
 -- | This is the top-level entry point for translation of Query root fields.
 fromQueryRootField :: IR.QueryDB 'MSSQL Void Expression -> FromIr Select
@@ -347,17 +346,36 @@ fromNativeQuery nativeQuery = do
 
 fromStoredProcedure :: IR.StoredProcedure 'MSSQL Expression -> FromIr TSQL.From
 fromStoredProcedure storedProcedure = do
-  let storedProcedureName = IR.spRootFieldName storedProcedure
-      sql = IR.spInterpolatedQuery storedProcedure
+  let storedProcedureName = "hasura_sp_" <> T.toTxt (IR.spGraphqlName storedProcedure)
+      declares =
+        map
+          (\(arg, (typ, val)) -> Declare (getArgumentName arg) typ val)
+          (HashMap.toList (IR.spArgs storedProcedure))
+      sql =
+        InterpolatedQuery $
+          IIText ("EXECUTE " <> T.toTxt (IR.spStoredProcedure storedProcedure) <> " ")
+            : intercalate
+              [IIText ", "]
+              ( map
+                  ( \(ArgumentName name) ->
+                      [ IIText "@",
+                        IIText (T.toTxt name),
+                        IIText " = ",
+                        IIText "@",
+                        IIText (T.toTxt name)
+                      ]
+                  )
+                  (HashMap.keys (IR.spArgs storedProcedure))
+              )
       storedProcedureReturnType = IR.spLogicalModel storedProcedure
-      rawTempTableName = T.toTxt (getStoredProcedureName storedProcedureName)
+      rawTempTableName = T.toTxt storedProcedureName
       aliasedTempTableName = Aliased (TempTableName rawTempTableName) rawTempTableName
 
-  let columns =
+      columns =
         ( \(name, ty) ->
             UnifiedColumn
               { name = name,
-                type' = (nstType ty)
+                type' = nstType ty
               }
         )
           <$> InsOrdHashMap.toList (columnsFromFields $ lmFields storedProcedureReturnType)
@@ -366,7 +384,7 @@ fromStoredProcedure storedProcedure = do
   tellBefore (CreateTemp (TempTableName rawTempTableName) columns)
 
   -- \| add insert into temp table
-  tellBefore (InsertTemp (TempTableName rawTempTableName) sql)
+  tellBefore (InsertTemp declares (TempTableName rawTempTableName) sql)
 
   -- \| when we're done, drop the temp table
   tellAfter (DropTemp (TempTableName rawTempTableName))

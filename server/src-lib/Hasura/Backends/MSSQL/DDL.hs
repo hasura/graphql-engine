@@ -12,6 +12,7 @@ module Hasura.Backends.MSSQL.DDL
     buildFunctionInfo,
     updateColumnInEventTrigger,
     parseCollectableType,
+    getStoredProcedureGraphqlName,
     module M,
   )
 where
@@ -36,6 +37,8 @@ import Hasura.RQL.Types.Table
 import Hasura.SQL.Types
 import Hasura.Server.Utils
 import Hasura.Session
+import Hasura.StoredProcedure.Types
+import Language.GraphQL.Draft.Syntax qualified as G
 
 buildComputedFieldInfo ::
   (MonadError QErr m) =>
@@ -110,3 +113,11 @@ msColumnTypeToScalarType :: ColumnType 'MSSQL -> ScalarType 'MSSQL
 msColumnTypeToScalarType = \case
   ColumnScalar scalarType -> scalarType
   ColumnEnumReference _ -> MT.TextType
+
+getStoredProcedureGraphqlName ::
+  (MonadError QErr m) =>
+  MT.FunctionName ->
+  StoredProcedureConfig ->
+  m G.Name
+getStoredProcedureGraphqlName spname =
+  maybe (liftEither $ MT.getGQLFunctionName spname) pure . _spcCustomName

@@ -1118,9 +1118,8 @@
                         },
                         "type": "array"
                     },
-                    "code": {
-                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
-                        "type": "string"
+                    "configuration": {
+                        "$ref": "#/components/schemas/StoredProcedureConfig"
                     },
                     "description": {
                         "description": "A description of the stored procedure which appears in the graphql schema",
@@ -1130,14 +1129,13 @@
                         "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "root_field_name": {
-                        "description": "Root field name for the stored procedure",
-                        "type": "string"
+                    "stored_procedure": {
+                        "$ref": "#/components/schemas/BigQueryFunctionName"
                     }
                 },
                 "required": [
-                    "root_field_name",
-                    "code",
+                    "stored_procedure",
+                    "configuration",
                     "returns"
                 ],
                 "type": "object"
@@ -2036,9 +2034,8 @@
                         },
                         "type": "array"
                     },
-                    "code": {
-                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
-                        "type": "string"
+                    "configuration": {
+                        "$ref": "#/components/schemas/StoredProcedureConfig"
                     },
                     "description": {
                         "description": "A description of the stored procedure which appears in the graphql schema",
@@ -2048,14 +2045,22 @@
                         "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "root_field_name": {
-                        "description": "Root field name for the stored procedure",
-                        "type": "string"
+                    "stored_procedure": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresQualified_FunctionName"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "description": "The name of the SQL stored procedure"
                     }
                 },
                 "required": [
-                    "root_field_name",
-                    "code",
+                    "stored_procedure",
+                    "configuration",
                     "returns"
                 ],
                 "type": "object"
@@ -2961,9 +2966,8 @@
                         },
                         "type": "array"
                     },
-                    "code": {
-                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
-                        "type": "string"
+                    "configuration": {
+                        "$ref": "#/components/schemas/StoredProcedureConfig"
                     },
                     "description": {
                         "description": "A description of the stored procedure which appears in the graphql schema",
@@ -2973,14 +2977,22 @@
                         "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "root_field_name": {
-                        "description": "Root field name for the stored procedure",
-                        "type": "string"
+                    "stored_procedure": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresQualified_FunctionName"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "description": "The name of the SQL stored procedure"
                     }
                 },
                 "required": [
-                    "root_field_name",
-                    "code",
+                    "stored_procedure",
+                    "configuration",
                     "returns"
                 ],
                 "type": "object"
@@ -4027,9 +4039,8 @@
                         },
                         "type": "array"
                     },
-                    "code": {
-                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
-                        "type": "string"
+                    "configuration": {
+                        "$ref": "#/components/schemas/StoredProcedureConfig"
                     },
                     "description": {
                         "description": "A description of the stored procedure which appears in the graphql schema",
@@ -4039,14 +4050,17 @@
                         "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "root_field_name": {
-                        "description": "Root field name for the stored procedure",
-                        "type": "string"
+                    "stored_procedure": {
+                        "description": "The name of the SQL stored procedure",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
                     }
                 },
                 "required": [
-                    "root_field_name",
-                    "code",
+                    "stored_procedure",
+                    "configuration",
                     "returns"
                 ],
                 "type": "object"
@@ -4666,6 +4680,21 @@
                 ],
                 "type": "object"
             },
+            "MSSQLFunctionName": {
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "schema": {
+                        "default": "dbo",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name"
+                ],
+                "type": "object"
+            },
             "MSSQLPoolSettings": {
                 "properties": {
                     "idle_timeout": {
@@ -5121,8 +5150,16 @@
                         "$ref": "#/components/schemas/FunctionConfig"
                     },
                     "function": {
-                        "description": "Name of the SQL function",
-                        "type": "string"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MSSQLFunctionName"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "description": "Name of the SQL function"
                     },
                     "permissions": {
                         "default": [],
@@ -5590,9 +5627,8 @@
                         },
                         "type": "array"
                     },
-                    "code": {
-                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
-                        "type": "string"
+                    "configuration": {
+                        "$ref": "#/components/schemas/StoredProcedureConfig"
                     },
                     "description": {
                         "description": "A description of the stored procedure which appears in the graphql schema",
@@ -5602,14 +5638,22 @@
                         "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "root_field_name": {
-                        "description": "Root field name for the stored procedure",
-                        "type": "string"
+                    "stored_procedure": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MSSQLFunctionName"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "description": "The name of the SQL stored procedure"
                     }
                 },
                 "required": [
-                    "root_field_name",
-                    "code",
+                    "stored_procedure",
+                    "configuration",
                     "returns"
                 ],
                 "type": "object"
@@ -6506,9 +6550,8 @@
                         },
                         "type": "array"
                     },
-                    "code": {
-                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
-                        "type": "string"
+                    "configuration": {
+                        "$ref": "#/components/schemas/StoredProcedureConfig"
                     },
                     "description": {
                         "description": "A description of the stored procedure which appears in the graphql schema",
@@ -6518,14 +6561,14 @@
                         "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "root_field_name": {
-                        "description": "Root field name for the stored procedure",
+                    "stored_procedure": {
+                        "description": "The name of the SQL stored procedure",
                         "type": "string"
                     }
                 },
                 "required": [
-                    "root_field_name",
-                    "code",
+                    "stored_procedure",
+                    "configuration",
                     "returns"
                 ],
                 "type": "object"
@@ -7756,9 +7799,8 @@
                         },
                         "type": "array"
                     },
-                    "code": {
-                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
-                        "type": "string"
+                    "configuration": {
+                        "$ref": "#/components/schemas/StoredProcedureConfig"
                     },
                     "description": {
                         "description": "A description of the stored procedure which appears in the graphql schema",
@@ -7768,14 +7810,22 @@
                         "description": "Return type (table) of the expression",
                         "type": "string"
                     },
-                    "root_field_name": {
-                        "description": "Root field name for the stored procedure",
-                        "type": "string"
+                    "stored_procedure": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresQualified_FunctionName"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "description": "The name of the SQL stored procedure"
                     }
                 },
                 "required": [
-                    "root_field_name",
-                    "code",
+                    "stored_procedure",
+                    "configuration",
                     "returns"
                 ],
                 "type": "object"
@@ -9400,6 +9450,23 @@
                         "$ref": "#/components/schemas/GraphQLName"
                     }
                 },
+                "type": "object"
+            },
+            "StoredProcedureConfig": {
+                "properties": {
+                    "custom_name": {
+                        "$ref": "#/components/schemas/GraphQLName"
+                    },
+                    "exposed_as": {
+                        "enum": [
+                            "query"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "exposed_as"
+                ],
                 "type": "object"
             },
             "TableCustomRootFields": {

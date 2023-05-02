@@ -39,7 +39,6 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.StoredProcedure.Types (StoredProcedureName)
 
 --------------------------------------------------------------------------------
 -- Create local relationship
@@ -199,7 +198,7 @@ storedProcedureArrayRelationshipSetup ::
   forall b m.
   (QErrM m, Backend b) =>
   SourceName ->
-  StoredProcedureName ->
+  FunctionName b ->
   RelDef (RelManualConfig b) ->
   m (RelInfo b, Seq SchemaDependency)
 storedProcedureArrayRelationshipSetup sourceName storedProcedureName (RelDef relName manualConfig _) = do

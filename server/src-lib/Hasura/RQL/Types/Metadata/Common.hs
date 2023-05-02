@@ -108,7 +108,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata (..), StoredProcedureName)
+import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata (..))
 
 -- | Parse a list of objects into a map from a derived key,
 -- failing if the list has duplicates.
@@ -348,7 +348,7 @@ type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 
 type NativeQueries b = InsOrdHashMap NativeQueryName (NativeQueryMetadata b)
 
-type StoredProcedures b = InsOrdHashMap StoredProcedureName (StoredProcedureMetadata b)
+type StoredProcedures b = InsOrdHashMap (FunctionName b) (StoredProcedureMetadata b)
 
 type LogicalModels b = InsOrdHashMap LogicalModelName (LogicalModelMetadata b)
 
@@ -388,7 +388,7 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
     _smNativeQueries <- oMapFromL _nqmRootFieldName <$> o .:? "native_queries" .!= []
-    _smStoredProcedures <- oMapFromL _spmRootFieldName <$> o .:? "stored_procedures" .!= []
+    _smStoredProcedures <- oMapFromL _spmStoredProcedure <$> o .:? "stored_procedures" .!= []
     _smLogicalModels <- oMapFromL _lmmName <$> o .:? "logical_models" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
@@ -450,7 +450,7 @@ instance Backend b => HasCodec (SourceMetadata b) where
           .== _smFunctions
         <*> optionalFieldOrNullWithOmittedDefaultWith' "native_queries" (sortedElemsCodec _nqmRootFieldName) mempty
           .== _smNativeQueries
-        <*> optionalFieldOrNullWithOmittedDefaultWith' "stored_procedures" (sortedElemsCodec _spmRootFieldName) mempty
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "stored_procedures" (sortedElemsCodec _spmStoredProcedure) mempty
           .== _smStoredProcedures
         <*> optionalFieldOrNullWithOmittedDefaultWith' "logical_models" (sortedElemsCodec _lmmName) mempty
           .== _smLogicalModels

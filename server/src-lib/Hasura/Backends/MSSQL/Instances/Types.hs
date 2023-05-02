@@ -90,7 +90,7 @@ instance Backend 'MSSQL where
   functionToTable = error "Unexpected MSSQL error: calling functionToTable. Please report this error at https://github.com/hasura/graphql-engine/issues/6590"
 
   tableToFunction :: TableName 'MSSQL -> FunctionName 'MSSQL
-  tableToFunction = MSSQL.FunctionName . MSSQL.tableName
+  tableToFunction tn = MSSQL.FunctionName (MSSQL.tableName tn) (MSSQL.tableSchema tn)
 
   tableGraphQLName :: TableName 'MSSQL -> Either QErr G.Name
   tableGraphQLName = MSSQL.getGQLTableName
@@ -99,7 +99,7 @@ instance Backend 'MSSQL where
   functionGraphQLName = error "Unexpected MSSQL error: calling functionGraphQLName. Please report this error at https://github.com/hasura/graphql-engine/issues/6590"
 
   snakeCaseTableName :: TableName 'MSSQL -> Text
-  snakeCaseTableName = MSSQL.snakeCaseTableName
+  snakeCaseTableName tn = MSSQL.snakeCaseName (MSSQL.tableName tn) (MSSQL.tableSchema tn)
 
   getTableIdentifier :: TableName 'MSSQL -> Either QErr GQLNameIdentifier
   getTableIdentifier = MSSQL.getTableIdentifier

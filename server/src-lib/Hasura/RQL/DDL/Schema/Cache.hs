@@ -864,7 +864,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                     MetadataObject
                       ( MOSourceObjId sourceName $
                           AB.mkAnyBackend $
-                            SMOStoredProcedure @b _spmRootFieldName
+                            SMOStoredProcedure @b _spmStoredProcedure
                       )
                       (toJSON spm)
 
@@ -872,7 +872,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                   schemaObjId =
                     SOSourceObj sourceName $
                       AB.mkAnyBackend $
-                        SOIStoredProcedure @b _spmRootFieldName
+                        SOIStoredProcedure @b _spmStoredProcedure
 
                   dependency :: SchemaDependency
                   dependency =
@@ -898,20 +898,22 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
 
                 arrayRelationships <-
                   traverse
-                    (storedProcedureArrayRelationshipSetup sourceName _spmRootFieldName)
+                    (storedProcedureArrayRelationshipSetup sourceName _spmStoredProcedure)
                     _spmArrayRelationships
 
                 let sourceObject =
                       SOSourceObj sourceName $
                         AB.mkAnyBackend $
-                          SOIStoredProcedure @b _spmRootFieldName
+                          SOIStoredProcedure @b _spmStoredProcedure
 
                 recordDependenciesM metadataObject sourceObject (mconcat $ snd <$> InsOrdHashMap.elems arrayRelationships)
+                graphqlName <- getStoredProcedureGraphqlName @b _spmStoredProcedure _spmConfig
 
                 pure
                   StoredProcedureInfo
-                    { _spiRootFieldName = _spmRootFieldName,
-                      _spiCode = _spmCode,
+                    { _spiStoredProcedure = _spmStoredProcedure,
+                      _spiGraphqlName = graphqlName,
+                      _spiConfig = _spmConfig,
                       _spiReturns = logicalModel,
                       _spiArguments = _spmArguments,
                       _spiArrayRelationships = fst <$> arrayRelationships,
@@ -919,7 +921,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                     }
 
       let storedProcedureCache :: StoredProcedureCache b
-          storedProcedureCache = mapFromL _spiRootFieldName (catMaybes storedProcedureCacheMaybes)
+          storedProcedureCache = mapFromL _spiStoredProcedure (catMaybes storedProcedureCacheMaybes)
 
       returnA -< SourceInfo sourceName backendSourceKind tableCache functionCache nativeQueryCache storedProcedureCache logicalModelsCache sourceConfig queryTagsConfig resolvedCustomization dbObjectsIntrospection
 

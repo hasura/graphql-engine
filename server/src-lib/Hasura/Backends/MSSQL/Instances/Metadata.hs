@@ -33,3 +33,4 @@ instance BackendMetadata 'MSSQL where
   listAllTables = MSSQL.listAllTables
   validateNativeQuery _ _ _ _ = pure () -- for now, all queries are valid
   validateStoredProcedure _ _ _ _ = pure () -- for now, all stored procedures are valid
+  getStoredProcedureGraphqlName = MSSQL.getStoredProcedureGraphqlName

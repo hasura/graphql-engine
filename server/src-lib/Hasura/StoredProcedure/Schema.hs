@@ -34,8 +34,8 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.StoredProcedure.Cache (StoredProcedureInfo (..))
 import Hasura.StoredProcedure.IR (StoredProcedure (..))
-import Hasura.StoredProcedure.Metadata (ArgumentName (..), InterpolatedQuery (..))
-import Hasura.StoredProcedure.Types (NullableScalarType (..), getStoredProcedureName)
+import Hasura.StoredProcedure.Metadata (ArgumentName (..))
+import Hasura.StoredProcedure.Types (NullableScalarType (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 
@@ -50,7 +50,7 @@ defaultBuildStoredProcedureRootFields ::
     m
     (Maybe (P.FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 defaultBuildStoredProcedureRootFields StoredProcedureInfo {..} = runMaybeT $ do
-  let fieldName = getStoredProcedureName _spiRootFieldName
+  let fieldName = _spiGraphqlName
 
   storedProcedureArgsParser <-
     storedProcedureArgumentsSchema @b @r @m @n fieldName _spiArguments
@@ -70,23 +70,22 @@ defaultBuildStoredProcedureRootFields StoredProcedureInfo {..} = runMaybeT $ do
   (selectionSetParser, logicalModelsArgsParser) <-
     MaybeT $ buildLogicalModelFields _spiArrayRelationships _spiReturns
 
-  let interpolatedQuery spArgs =
-        InterpolatedQuery $
-          (fmap . fmap)
-            ( \var@(ArgumentName name) -> case HashMap.lookup var spArgs of
-                Just arg -> UVParameter (FromInternal name) arg
-                Nothing ->
-                  -- the `storedProcedureArgsParser` will already have checked
-                  -- we have all the args the query needs so this _should
-                  -- not_ happen
-                  error $ "No stored procedure arg passed for " <> show var
-            )
-            (getInterpolatedQuery _spiCode)
+  let arguments spArgs =
+        HashMap.mapWithKey
+          ( \(ArgumentName name) val ->
+              case Column.cvType val of
+                Column.ColumnScalar st ->
+                  (st, UVParameter (FromInternal name) val)
+                Column.ColumnEnumReference {} ->
+                  -- should not happen
+                  error "Enums are unsupported in stored procedures."
+          )
+          spArgs
 
   let sourceObj =
         MO.MOSourceObjId
           sourceName
-          (mkAnyBackend $ MO.SMOStoredProcedure @b _spiRootFieldName)
+          (mkAnyBackend $ MO.SMOStoredProcedure @b _spiStoredProcedure)
 
   pure $
     P.setFieldParserOrigin sourceObj $
@@ -105,9 +104,9 @@ defaultBuildStoredProcedureRootFields StoredProcedureInfo {..} = runMaybeT $ do
                 IR._asnFrom =
                   IR.FromStoredProcedure
                     StoredProcedure
-                      { spRootFieldName = _spiRootFieldName,
-                        spArgs,
-                        spInterpolatedQuery = interpolatedQuery spArgs,
+                      { spStoredProcedure = _spiStoredProcedure,
+                        spGraphqlName = _spiGraphqlName,
+                        spArgs = arguments spArgs,
                         spLogicalModel = buildLogicalModelIR _spiReturns
                       },
                 IR._asnPerm = logicalModelPermissions,

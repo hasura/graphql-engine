@@ -62,7 +62,6 @@ import Hasura.RQL.Types.QueryCollection (CollectionName, ListedQuery (_lqName))
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.StoredProcedure.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data TableMetadataObjId
@@ -103,8 +102,8 @@ data SourceMetadataObjId b
   | SMOTableObj (TableName b) TableMetadataObjId
   | SMONativeQuery NativeQueryName
   | SMONativeQueryObj NativeQueryName NativeQueryMetadataObjId
-  | SMOStoredProcedure StoredProcedureName
-  | SMOStoredProcedureObj StoredProcedureName StoredProcedureMetadataObjId
+  | SMOStoredProcedure (FunctionName b)
+  | SMOStoredProcedureObj (FunctionName b) StoredProcedureMetadataObjId
   | SMOLogicalModel LogicalModelName
   | SMOLogicalModelObj LogicalModelName LogicalModelMetadataObjId
   deriving (Generic)

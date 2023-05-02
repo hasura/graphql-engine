@@ -44,24 +44,22 @@ storedProcedureColumn name colType =
 data StoredProcedure = StoredProcedure
   { storedProcedureName :: Text,
     storedProcedureLogicalModel :: Text,
-    storedProcedureQuery :: Text,
     storedProcedureArguments :: [StoredProcedureColumn],
     storedProcedureArrayRelationships :: [J.Value]
   }
   deriving (Show, Eq)
 
-storedProcedure :: Text -> Text -> Text -> StoredProcedure
-storedProcedure storedProcedureName query returnType =
+storedProcedure :: Text -> Text -> StoredProcedure
+storedProcedure storedProcedureName returnType =
   StoredProcedure
     { storedProcedureName,
       storedProcedureLogicalModel = returnType,
-      storedProcedureQuery = query,
       storedProcedureArguments = mempty,
       storedProcedureArrayRelationships = mempty
     }
 
 trackStoredProcedureCommand :: String -> BackendTypeConfig -> StoredProcedure -> Value
-trackStoredProcedureCommand sourceName backendTypeConfig StoredProcedure {storedProcedureArrayRelationships, storedProcedureName, storedProcedureArguments, storedProcedureQuery, storedProcedureLogicalModel} =
+trackStoredProcedureCommand sourceName backendTypeConfig StoredProcedure {storedProcedureArrayRelationships, storedProcedureName, storedProcedureArguments, storedProcedureLogicalModel} =
   -- arguments are a map from name to type details
   let argsToJson =
         J.object
@@ -91,8 +89,9 @@ trackStoredProcedureCommand sourceName backendTypeConfig StoredProcedure {stored
         args:
           type: query
           source: *sourceName
-          root_field_name: *storedProcedureName
-          code: *storedProcedureQuery
+          stored_procedure: *storedProcedureName
+          configuration:
+            exposed_as: query
           arguments: *arguments
           array_relationships: *storedProcedureArrayRelationships
           returns: *storedProcedureLogicalModel
@@ -114,7 +113,7 @@ untrackStoredProcedureCommand source backendTypeMetadata StoredProcedure {stored
       type: *requestType
       args:
         source: *source
-        root_field_name: *storedProcedureName
+        stored_procedure: *storedProcedureName
     |]
 
 untrackStoredProcedure :: HasCallStack => String -> StoredProcedure -> TestEnvironment -> IO ()

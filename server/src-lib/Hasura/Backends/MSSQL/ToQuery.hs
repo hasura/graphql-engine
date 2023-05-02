@@ -455,14 +455,28 @@ fromTempTableDDL = \case
         fromColumnName name
           <+> " "
           <+> fromString (T.unpack (scalarTypeDBName DataLengthMax ty))
-  InsertTemp tempTableName interpolatedQuery ->
-    "INSERT INTO "
-      <+> fromTempTableName tempTableName
-      <+> " "
-      <+> renderInterpolatedQuery interpolatedQuery
+          <+> " null"
+  InsertTemp declares tempTableName interpolatedQuery ->
+    SepByPrinter
+      NewlinePrinter
+      ( map fromDeclare declares
+          <> [ "INSERT INTO "
+                 <+> fromTempTableName tempTableName
+                 <+> " "
+                 <+> renderInterpolatedQuery interpolatedQuery
+             ]
+      )
   DropTemp tempTableName ->
     "DROP TABLE "
       <+> fromTempTableName tempTableName
+
+fromDeclare :: Declare -> Printer
+fromDeclare (Declare dName dType dValue) =
+  SepByPrinter
+    NewlinePrinter
+    [ "DECLARE @" <+> fromRawUnescapedText dName <+> " " <+> fromRawUnescapedText (scalarTypeDBName DataLengthMax dType) <+> ";",
+      "SET @" <+> fromRawUnescapedText dName <+> " = " <+> fromExpression dValue <+> ";"
+    ]
 
 -- | Converts `SelectIntoTempTable`.
 --
