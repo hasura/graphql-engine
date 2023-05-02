@@ -2076,21 +2076,20 @@ Monad m =&gt;
 </span><span id="line-803"></span><span>
 </span><span id="line-804"></span><span class="annot"><a href="Hasura.Backends.BigQuery.FromIr.html#fromNativeQuery"><span class="hs-identifier hs-type">fromNativeQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQuery"><span class="hs-identifier hs-type">NativeQuery</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.FromIr.html#FromIr"><span class="hs-identifier hs-type">FromIr</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#From"><span class="hs-identifier hs-type">From</span></a></span><span>
 </span><span id="line-805"></span><span id="fromNativeQuery"><span class="annot"><span class="annottext">fromNativeQuery :: NativeQuery 'BigQuery Expression -&gt; FromIr From
-</span><a href="Hasura.Backends.BigQuery.FromIr.html#fromNativeQuery"><span class="hs-identifier hs-var hs-var">fromNativeQuery</span></a></span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQuery"><span class="hs-identifier hs-type">NativeQuery</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691031071"><span id="local-6989586621691031072"><span id="local-6989586621691031073"><span id="local-6989586621691031074"><span class="annot"><span class="annottext">HashMap NativeQueryArgumentName (ColumnValue 'BigQuery)
+</span><a href="Hasura.Backends.BigQuery.FromIr.html#fromNativeQuery"><span class="hs-identifier hs-var hs-var">fromNativeQuery</span></a></span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.IR.html#NativeQuery"><span class="hs-identifier hs-type">NativeQuery</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691031071"><span id="local-6989586621691031072"><span id="local-6989586621691031073"><span id="local-6989586621691031074"><span class="annot"><span class="annottext">HashMap ArgumentName (ColumnValue 'BigQuery)
 NativeQueryName
 InterpolatedQuery Expression
 LogicalModel 'BigQuery
 nqLogicalModel :: forall (b :: BackendType) field.
 NativeQuery b field -&gt; LogicalModel b
 nqArgs :: forall (b :: BackendType) field.
-NativeQuery b field
--&gt; HashMap NativeQueryArgumentName (ColumnValue b)
+NativeQuery b field -&gt; HashMap ArgumentName (ColumnValue b)
 nqInterpolatedQuery :: forall (b :: BackendType) field.
 NativeQuery b field -&gt; InterpolatedQuery field
 nqRootFieldName :: forall (b :: BackendType) field.
 NativeQuery b field -&gt; NativeQueryName
 nqLogicalModel :: LogicalModel 'BigQuery
-nqArgs :: HashMap NativeQueryArgumentName (ColumnValue 'BigQuery)
+nqArgs :: HashMap ArgumentName (ColumnValue 'BigQuery)
 nqInterpolatedQuery :: InterpolatedQuery Expression
 nqRootFieldName :: NativeQueryName
 </span><a href="Hasura.NativeQuery.IR.html#nqLogicalModel"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.

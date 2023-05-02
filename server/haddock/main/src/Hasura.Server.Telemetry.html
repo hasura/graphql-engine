@@ -995,8 +995,7 @@ Filterable f =&gt;
 </span><a href="#local-6989586621691194657"><span class="hs-identifier hs-var">nativeQuery</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-296"></span><span>            </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
-NativeQueryInfo b
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
+NativeQueryInfo b -&gt; HashMap ArgumentName (NullableScalarType b)
 </span><a href="Hasura.NativeQuery.Cache.html#_nqiArguments"><span class="hs-identifier hs-var">_nqiArguments</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueryInfo b
 </span><a href="#local-6989586621691194657"><span class="hs-identifier hs-var">nativeQuery</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-297"></span><span>              </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
@@ -1021,7 +1020,7 @@ NativeQueryInfo b
 </span><span id="line-305"></span><span>            </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
 StoredProcedureInfo b
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
+-&gt; HashMap ArgumentName (NullableScalarType b)
 </span><a href="Hasura.StoredProcedure.Cache.html#_spiArguments"><span class="hs-identifier hs-var">_spiArguments</span></a></span><span> </span><span class="annot"><span class="annottext">StoredProcedureInfo b
 </span><a href="#local-6989586621691194653"><span class="hs-identifier hs-var">storedProcedure</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-306"></span><span>              </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a

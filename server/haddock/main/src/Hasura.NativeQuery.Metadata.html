@@ -13,7 +13,7 @@
 </span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#nqmReturns"><span class="hs-identifier">nqmReturns</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#nqmArrayRelationships"><span class="hs-identifier">nqmArrayRelationships</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#nqmRootFieldName"><span class="hs-identifier">nqmRootFieldName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#NativeQueryArgumentName"><span class="hs-identifier">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#ArgumentName"><span class="hs-identifier">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedItem"><span class="hs-identifier">InterpolatedItem</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier">InterpolatedQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#parseInterpolatedQuery"><span class="hs-identifier">parseInterpolatedQuery</span></a></span><span class="hs-special">,</span><span>
@@ -48,15 +48,15 @@
 </span><span id="line-48"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_nqmRootFieldName"><span class="annot"><span class="annottext">forall (b :: BackendType). NativeQueryMetadata b -&gt; NativeQueryName
 </span><a href="Hasura.NativeQuery.Metadata.html#_nqmRootFieldName"><span class="hs-identifier hs-var hs-var">_nqmRootFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-49"></span><span>    </span><span id="_nqmCode"><span class="annot"><span class="annottext">forall (b :: BackendType).
-NativeQueryMetadata b -&gt; InterpolatedQuery NativeQueryArgumentName
-</span><a href="Hasura.NativeQuery.Metadata.html#_nqmCode"><span class="hs-identifier hs-var hs-var">_nqmCode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier hs-type">InterpolatedQuery</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span><span class="hs-special">,</span><span>
+NativeQueryMetadata b -&gt; InterpolatedQuery ArgumentName
+</span><a href="Hasura.NativeQuery.Metadata.html#_nqmCode"><span class="hs-identifier hs-var hs-var">_nqmCode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier hs-type">InterpolatedQuery</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-50"></span><span>    </span><span id="_nqmReturns"><span class="annot"><span class="annottext">forall (b :: BackendType).
 NativeQueryMetadata b -&gt; LogicalModelName
 </span><a href="Hasura.NativeQuery.Metadata.html#_nqmReturns"><span class="hs-identifier hs-var hs-var">_nqmReturns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-51"></span><span>    </span><span id="_nqmArguments"><span class="annot"><span class="annottext">forall (b :: BackendType).
 NativeQueryMetadata b
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
-</span><a href="Hasura.NativeQuery.Metadata.html#_nqmArguments"><span class="hs-identifier hs-var hs-var">_nqmArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690857747"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+-&gt; HashMap ArgumentName (NullableScalarType b)
+</span><a href="Hasura.NativeQuery.Metadata.html#_nqmArguments"><span class="hs-identifier hs-var hs-var">_nqmArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690857747"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-52"></span><span>    </span><span id="_nqmArrayRelationships"><span class="annot"><span class="annottext">forall (b :: BackendType).
 NativeQueryMetadata b -&gt; Relationships (RelDef (RelManualConfig b))
 </span><a href="Hasura.NativeQuery.Metadata.html#_nqmArrayRelationships"><span class="hs-identifier hs-var hs-var">_nqmArrayRelationships</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#Relationships"><span class="hs-identifier hs-type">Relationships</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelDef"><span class="hs-identifier hs-type">RelDef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelManualConfig"><span class="hs-identifier hs-type">RelManualConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690857747"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
@@ -97,9 +97,9 @@ Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span id="line-66"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 NativeQueryName
--&gt; InterpolatedQuery NativeQueryArgumentName
+-&gt; InterpolatedQuery ArgumentName
 -&gt; LogicalModelName
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
+-&gt; HashMap ArgumentName (NullableScalarType b)
 -&gt; Relationships (RelDef (RelManualConfig b))
 -&gt; Maybe Text
 -&gt; NativeQueryMetadata b
@@ -127,7 +127,7 @@ Text -&gt; Text -&gt; ObjectCodec output output
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
-NativeQueryMetadata b -&gt; InterpolatedQuery NativeQueryArgumentName
+NativeQueryMetadata b -&gt; InterpolatedQuery ArgumentName
 </span><a href="Hasura.NativeQuery.Metadata.html#_nqmCode"><span class="hs-identifier hs-var">_nqmCode</span></a></span><span>
 </span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
@@ -155,7 +155,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 NativeQueryMetadata b
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
+-&gt; HashMap ArgumentName (NullableScalarType b)
 </span><a href="Hasura.NativeQuery.Metadata.html#_nqmArguments"><span class="hs-identifier hs-var">_nqmArguments</span></a></span><span>
 </span><span id="line-75"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a k.

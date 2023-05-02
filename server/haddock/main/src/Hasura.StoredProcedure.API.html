@@ -42,7 +42,7 @@
 </span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html"><span class="hs-identifier">Hasura.SQL.AnyBackend</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AB</span></span><span>
 </span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html"><span class="hs-identifier">Hasura.Server.Init.FeatureFlag</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#HasFeatureFlagChecker"><span class="hs-identifier">HasFeatureFlagChecker</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html"><span class="hs-identifier">Hasura.Server.Init.FeatureFlag</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">FF</span></span><span>
-</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html"><span class="hs-identifier">Hasura.StoredProcedure.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#NativeQueryArgumentName"><span class="hs-identifier">NativeQueryArgumentName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier">StoredProcedureMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#parseInterpolatedQuery"><span class="hs-identifier">parseInterpolatedQuery</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html"><span class="hs-identifier">Hasura.StoredProcedure.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#ArgumentName"><span class="hs-identifier">ArgumentName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier">StoredProcedureMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#parseInterpolatedQuery"><span class="hs-identifier">parseInterpolatedQuery</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html"><span class="hs-identifier">Hasura.StoredProcedure.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier">NullableScalarType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureName"><span class="hs-identifier">StoredProcedureName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#storedProcedureArrayRelationshipsCodec"><span class="hs-identifier">storedProcedureArrayRelationshipsCodec</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-47"></span><span>
 </span><span id="line-48"></span><span class="hs-comment">-- | Default implementation of the 'track_stored_procedure_query' request payload.</span><span>
@@ -56,8 +56,8 @@ TrackStoredProcedure b -&gt; StoredProcedureName
 </span><a href="Hasura.StoredProcedure.API.html#tspCode"><span class="hs-identifier hs-var hs-var">tspCode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
 </span><span id="line-53"></span><span>    </span><span id="tspArguments"><span class="annot"><span class="annottext">forall (b :: BackendType).
 TrackStoredProcedure b
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
-</span><a href="Hasura.StoredProcedure.API.html#tspArguments"><span class="hs-identifier hs-var hs-var">tspArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691084524"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+-&gt; HashMap ArgumentName (NullableScalarType b)
+</span><a href="Hasura.StoredProcedure.API.html#tspArguments"><span class="hs-identifier hs-var hs-var">tspArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691084524"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-54"></span><span>    </span><span id="tspArrayRelationships"><span class="annot"><span class="annottext">forall (b :: BackendType).
 TrackStoredProcedure b
 -&gt; InsOrdHashMap RelName (RelDef (RelManualConfig b))
@@ -89,7 +89,7 @@ Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 SourceName
 -&gt; StoredProcedureName
 -&gt; Text
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
+-&gt; HashMap ArgumentName (NullableScalarType b)
 -&gt; InsOrdHashMap RelName (RelDef (RelManualConfig b))
 -&gt; Maybe Text
 -&gt; LogicalModelName
@@ -145,7 +145,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 TrackStoredProcedure b
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
+-&gt; HashMap ArgumentName (NullableScalarType b)
 </span><a href="Hasura.StoredProcedure.API.html#tspArguments"><span class="hs-identifier hs-var">tspArguments</span></a></span><span>
 </span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
@@ -248,7 +248,7 @@ Environment
 </span><a href="#local-6989586621691084069"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621691084068"><span class="annot"><span class="annottext">SourceConnConfiguration b
 </span><a href="#local-6989586621691084068"><span class="hs-identifier hs-var">sourceConnConfig</span></a></span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.API.html#TrackStoredProcedure"><span class="hs-identifier hs-type">TrackStoredProcedure</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691084061"><span id="local-6989586621691084062"><span id="local-6989586621691084063"><span id="local-6989586621691084064"><span id="local-6989586621691084065"><span id="local-6989586621691084066"><span id="local-6989586621691084067"><span class="annot"><span class="annottext">Maybe Text
 Text
-HashMap NativeQueryArgumentName (NullableScalarType b)
+HashMap ArgumentName (NullableScalarType b)
 InsOrdHashMap RelName (RelDef (RelManualConfig b))
 SourceName
 LogicalModelName
@@ -256,7 +256,7 @@ StoredProcedureName
 tspReturns :: LogicalModelName
 tspDescription :: Maybe Text
 tspArrayRelationships :: InsOrdHashMap RelName (RelDef (RelManualConfig b))
-tspArguments :: HashMap NativeQueryArgumentName (NullableScalarType b)
+tspArguments :: HashMap ArgumentName (NullableScalarType b)
 tspCode :: Text
 tspRootFieldName :: StoredProcedureName
 tspSource :: SourceName
@@ -268,14 +268,14 @@ TrackStoredProcedure b
 -&gt; InsOrdHashMap RelName (RelDef (RelManualConfig b))
 tspArguments :: forall (b :: BackendType).
 TrackStoredProcedure b
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
+-&gt; HashMap ArgumentName (NullableScalarType b)
 tspCode :: forall (b :: BackendType). TrackStoredProcedure b -&gt; Text
 tspRootFieldName :: forall (b :: BackendType).
 TrackStoredProcedure b -&gt; StoredProcedureName
 tspSource :: forall (b :: BackendType). TrackStoredProcedure b -&gt; SourceName
 </span><a href="#local-6989586621691084061"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-111"></span><span>  </span><span id="local-6989586621691084060"><span class="annot"><span class="annottext">InterpolatedQuery NativeQueryArgumentName
-</span><a href="#local-6989586621691084060"><span class="hs-identifier hs-var">code</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text (InterpolatedQuery NativeQueryArgumentName)
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621691084060"><span class="annot"><span class="annottext">InterpolatedQuery ArgumentName
+</span><a href="#local-6989586621691084060"><span class="hs-identifier hs-var">code</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text (InterpolatedQuery ArgumentName)
 </span><a href="Hasura.NativeQuery.InterpolatedQuery.html#parseInterpolatedQuery"><span class="hs-identifier hs-var">parseInterpolatedQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691084065"><span class="hs-identifier hs-var">tspCode</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
@@ -292,14 +292,14 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><span id="line-115"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_spmRootFieldName :: StoredProcedureName
 </span><a href="Hasura.StoredProcedure.Metadata.html#_spmRootFieldName"><span class="hs-identifier hs-var">_spmRootFieldName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StoredProcedureName
 </span><a href="#local-6989586621691084066"><span class="hs-identifier hs-var">tspRootFieldName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-116"></span><span>            </span><span class="annot"><span class="annottext">_spmCode :: InterpolatedQuery NativeQueryArgumentName
-</span><a href="Hasura.StoredProcedure.Metadata.html#_spmCode"><span class="hs-identifier hs-var">_spmCode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery NativeQueryArgumentName
+</span><span id="line-116"></span><span>            </span><span class="annot"><span class="annottext">_spmCode :: InterpolatedQuery ArgumentName
+</span><a href="Hasura.StoredProcedure.Metadata.html#_spmCode"><span class="hs-identifier hs-var">_spmCode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery ArgumentName
 </span><a href="#local-6989586621691084060"><span class="hs-identifier hs-var">code</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-117"></span><span>            </span><span class="annot"><span class="annottext">_spmReturns :: LogicalModelName
 </span><a href="Hasura.StoredProcedure.Metadata.html#_spmReturns"><span class="hs-identifier hs-var">_spmReturns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogicalModelName
 </span><a href="#local-6989586621691084061"><span class="hs-identifier hs-var">tspReturns</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-118"></span><span>            </span><span class="annot"><span class="annottext">_spmArguments :: HashMap NativeQueryArgumentName (NullableScalarType b)
-</span><a href="Hasura.StoredProcedure.Metadata.html#_spmArguments"><span class="hs-identifier hs-var">_spmArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap NativeQueryArgumentName (NullableScalarType b)
+</span><span id="line-118"></span><span>            </span><span class="annot"><span class="annottext">_spmArguments :: HashMap ArgumentName (NullableScalarType b)
+</span><a href="Hasura.StoredProcedure.Metadata.html#_spmArguments"><span class="hs-identifier hs-var">_spmArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap ArgumentName (NullableScalarType b)
 </span><a href="#local-6989586621691084064"><span class="hs-identifier hs-var">tspArguments</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-119"></span><span>            </span><span class="annot"><span class="annottext">_spmArrayRelationships :: InsOrdHashMap RelName (RelDef (RelManualConfig b))
 </span><a href="Hasura.StoredProcedure.Metadata.html#_spmArrayRelationships"><span class="hs-identifier hs-var">_spmArrayRelationships</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap RelName (RelDef (RelManualConfig b))

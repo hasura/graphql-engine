@@ -6732,12 +6732,12 @@ IIVariable :: variable -> InterpolatedItem variable
 newtype InterpolatedQuery variable
 InterpolatedQuery :: [InterpolatedItem variable] -> InterpolatedQuery variable
 [getInterpolatedQuery] :: InterpolatedQuery variable -> [InterpolatedItem variable]
-newtype NativeQueryArgumentName
-NativeQueryArgumentName :: Text -> NativeQueryArgumentName
-[getNativeQueryArgumentName] :: NativeQueryArgumentName -> Text
+newtype ArgumentName
+ArgumentName :: Text -> ArgumentName
+[getArgumentName] :: ArgumentName -> Text
 
 -- | extract all of the `{{ variable }}` inside our query string
-parseInterpolatedQuery :: Text -> Either Text (InterpolatedQuery NativeQueryArgumentName)
+parseInterpolatedQuery :: Text -> Either Text (InterpolatedQuery ArgumentName)
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.NativeQuery.InterpolatedQuery.RawQuery
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.NativeQuery.InterpolatedQuery.RawQuery
 instance GHC.Show.Show Hasura.NativeQuery.InterpolatedQuery.RawQuery
@@ -6761,23 +6761,23 @@ instance GHC.Generics.Generic (Hasura.NativeQuery.InterpolatedQuery.Interpolated
 instance GHC.Show.Show variable => GHC.Show.Show (Hasura.NativeQuery.InterpolatedQuery.InterpolatedQuery variable)
 instance GHC.Classes.Ord variable => GHC.Classes.Ord (Hasura.NativeQuery.InterpolatedQuery.InterpolatedQuery variable)
 instance GHC.Classes.Eq variable => GHC.Classes.Eq (Hasura.NativeQuery.InterpolatedQuery.InterpolatedQuery variable)
-instance GHC.Generics.Generic Hasura.NativeQuery.InterpolatedQuery.NativeQueryArgumentName
-instance Data.Hashable.Class.Hashable Hasura.NativeQuery.InterpolatedQuery.NativeQueryArgumentName
-instance GHC.Show.Show Hasura.NativeQuery.InterpolatedQuery.NativeQueryArgumentName
-instance GHC.Classes.Ord Hasura.NativeQuery.InterpolatedQuery.NativeQueryArgumentName
-instance GHC.Classes.Eq Hasura.NativeQuery.InterpolatedQuery.NativeQueryArgumentName
+instance GHC.Generics.Generic Hasura.NativeQuery.InterpolatedQuery.ArgumentName
+instance Data.Hashable.Class.Hashable Hasura.NativeQuery.InterpolatedQuery.ArgumentName
+instance GHC.Show.Show Hasura.NativeQuery.InterpolatedQuery.ArgumentName
+instance GHC.Classes.Ord Hasura.NativeQuery.InterpolatedQuery.ArgumentName
+instance GHC.Classes.Eq Hasura.NativeQuery.InterpolatedQuery.ArgumentName
 instance Data.Hashable.Class.Hashable variable => Data.Hashable.Class.Hashable (Hasura.NativeQuery.InterpolatedQuery.InterpolatedItem variable)
 instance Control.DeepSeq.NFData variable => Control.DeepSeq.NFData (Hasura.NativeQuery.InterpolatedQuery.InterpolatedItem variable)
 instance Data.Hashable.Class.Hashable variable => Data.Hashable.Class.Hashable (Hasura.NativeQuery.InterpolatedQuery.InterpolatedQuery variable)
 instance Control.DeepSeq.NFData variable => Control.DeepSeq.NFData (Hasura.NativeQuery.InterpolatedQuery.InterpolatedQuery variable)
-instance (v GHC.Types.~ Hasura.NativeQuery.InterpolatedQuery.NativeQueryArgumentName) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.NativeQuery.InterpolatedQuery.InterpolatedQuery v)
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.NativeQuery.InterpolatedQuery.NativeQueryArgumentName
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.NativeQuery.InterpolatedQuery.NativeQueryArgumentName
-instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.NativeQuery.InterpolatedQuery.NativeQueryArgumentName
-instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.NativeQuery.InterpolatedQuery.NativeQueryArgumentName
-instance (v GHC.Types.~ Hasura.NativeQuery.InterpolatedQuery.NativeQueryArgumentName) => Autodocodec.Class.HasCodec (Hasura.NativeQuery.InterpolatedQuery.InterpolatedQuery v)
-instance Autodocodec.Class.HasCodec Hasura.NativeQuery.InterpolatedQuery.NativeQueryArgumentName
-instance Control.DeepSeq.NFData Hasura.NativeQuery.InterpolatedQuery.NativeQueryArgumentName
+instance (v GHC.Types.~ Hasura.NativeQuery.InterpolatedQuery.ArgumentName) => Data.Aeson.Types.ToJSON.ToJSON (Hasura.NativeQuery.InterpolatedQuery.InterpolatedQuery v)
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.NativeQuery.InterpolatedQuery.ArgumentName
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.NativeQuery.InterpolatedQuery.ArgumentName
+instance Data.Aeson.Types.ToJSON.ToJSONKey Hasura.NativeQuery.InterpolatedQuery.ArgumentName
+instance Data.Aeson.Types.FromJSON.FromJSONKey Hasura.NativeQuery.InterpolatedQuery.ArgumentName
+instance (v GHC.Types.~ Hasura.NativeQuery.InterpolatedQuery.ArgumentName) => Autodocodec.Class.HasCodec (Hasura.NativeQuery.InterpolatedQuery.InterpolatedQuery v)
+instance Autodocodec.Class.HasCodec Hasura.NativeQuery.InterpolatedQuery.ArgumentName
+instance Control.DeepSeq.NFData Hasura.NativeQuery.InterpolatedQuery.ArgumentName
 instance Autodocodec.Class.HasCodec Hasura.NativeQuery.InterpolatedQuery.RawQuery
 
 
@@ -6787,19 +6787,19 @@ module Hasura.NativeQuery.Metadata
 
 -- | The representation of native queries within the metadata structure.
 data NativeQueryMetadata (b :: BackendType)
-NativeQueryMetadata :: NativeQueryName -> InterpolatedQuery NativeQueryArgumentName -> LogicalModelName -> HashMap NativeQueryArgumentName (NullableScalarType b) -> Relationships (RelDef (RelManualConfig b)) -> Maybe Text -> NativeQueryMetadata (b :: BackendType)
+NativeQueryMetadata :: NativeQueryName -> InterpolatedQuery ArgumentName -> LogicalModelName -> HashMap ArgumentName (NullableScalarType b) -> Relationships (RelDef (RelManualConfig b)) -> Maybe Text -> NativeQueryMetadata (b :: BackendType)
 [_nqmRootFieldName] :: NativeQueryMetadata (b :: BackendType) -> NativeQueryName
-[_nqmCode] :: NativeQueryMetadata (b :: BackendType) -> InterpolatedQuery NativeQueryArgumentName
+[_nqmCode] :: NativeQueryMetadata (b :: BackendType) -> InterpolatedQuery ArgumentName
 [_nqmReturns] :: NativeQueryMetadata (b :: BackendType) -> LogicalModelName
-[_nqmArguments] :: NativeQueryMetadata (b :: BackendType) -> HashMap NativeQueryArgumentName (NullableScalarType b)
+[_nqmArguments] :: NativeQueryMetadata (b :: BackendType) -> HashMap ArgumentName (NullableScalarType b)
 [_nqmArrayRelationships] :: NativeQueryMetadata (b :: BackendType) -> Relationships (RelDef (RelManualConfig b))
 [_nqmDescription] :: NativeQueryMetadata (b :: BackendType) -> Maybe Text
 nqmRootFieldName :: forall b_a9uqM. Lens' (NativeQueryMetadata b_a9uqM) NativeQueryName
 nqmReturns :: forall b_a9uqM. Lens' (NativeQueryMetadata b_a9uqM) LogicalModelName
 nqmDescription :: forall b_a9uqM. Lens' (NativeQueryMetadata b_a9uqM) (Maybe Text)
-nqmCode :: forall b_a9uqM. Lens' (NativeQueryMetadata b_a9uqM) (InterpolatedQuery NativeQueryArgumentName)
+nqmCode :: forall b_a9uqM. Lens' (NativeQueryMetadata b_a9uqM) (InterpolatedQuery ArgumentName)
 nqmArrayRelationships :: forall b_a9uqM. Lens' (NativeQueryMetadata b_a9uqM) (Relationships (RelDef (RelManualConfig b_a9uqM)))
-nqmArguments :: forall b_a9uqM. Lens' (NativeQueryMetadata b_a9uqM) (HashMap NativeQueryArgumentName (NullableScalarType b_a9uqM))
+nqmArguments :: forall b_a9uqM. Lens' (NativeQueryMetadata b_a9uqM) (HashMap ArgumentName (NullableScalarType b_a9uqM))
 instance GHC.Generics.Generic (Hasura.NativeQuery.Metadata.NativeQueryMetadata b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.NativeQuery.Metadata.NativeQueryMetadata b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.NativeQuery.Metadata.NativeQueryMetadata b)
@@ -7624,7 +7624,7 @@ module Hasura.NativeQuery.IR
 
 -- | The RQL IR representation of an invocation of a native query.
 data NativeQuery b field
-NativeQuery :: NativeQueryName -> InterpolatedQuery field -> HashMap NativeQueryArgumentName (ColumnValue b) -> LogicalModel b -> NativeQuery b field
+NativeQuery :: NativeQueryName -> InterpolatedQuery field -> HashMap ArgumentName (ColumnValue b) -> LogicalModel b -> NativeQuery b field
 
 -- | The graphql name of the native query.
 [nqRootFieldName] :: NativeQuery b field -> NativeQueryName
@@ -7633,7 +7633,7 @@ NativeQuery :: NativeQueryName -> InterpolatedQuery field -> HashMap NativeQuery
 [nqInterpolatedQuery] :: NativeQuery b field -> InterpolatedQuery field
 
 -- | The arguments passed to the query, if any.
-[nqArgs] :: NativeQuery b field -> HashMap NativeQueryArgumentName (ColumnValue b)
+[nqArgs] :: NativeQuery b field -> HashMap ArgumentName (ColumnValue b)
 
 -- | The return type of the native query
 [nqLogicalModel] :: NativeQuery b field -> LogicalModel b
@@ -14241,19 +14241,19 @@ module Hasura.StoredProcedure.Metadata
 
 -- | The representation of native queries within the metadata structure.
 data StoredProcedureMetadata (b :: BackendType)
-StoredProcedureMetadata :: StoredProcedureName -> InterpolatedQuery NativeQueryArgumentName -> LogicalModelName -> HashMap NativeQueryArgumentName (NullableScalarType b) -> Relationships (RelDef (RelManualConfig b)) -> Maybe Text -> StoredProcedureMetadata (b :: BackendType)
+StoredProcedureMetadata :: StoredProcedureName -> InterpolatedQuery ArgumentName -> LogicalModelName -> HashMap ArgumentName (NullableScalarType b) -> Relationships (RelDef (RelManualConfig b)) -> Maybe Text -> StoredProcedureMetadata (b :: BackendType)
 [_spmRootFieldName] :: StoredProcedureMetadata (b :: BackendType) -> StoredProcedureName
-[_spmCode] :: StoredProcedureMetadata (b :: BackendType) -> InterpolatedQuery NativeQueryArgumentName
+[_spmCode] :: StoredProcedureMetadata (b :: BackendType) -> InterpolatedQuery ArgumentName
 [_spmReturns] :: StoredProcedureMetadata (b :: BackendType) -> LogicalModelName
-[_spmArguments] :: StoredProcedureMetadata (b :: BackendType) -> HashMap NativeQueryArgumentName (NullableScalarType b)
+[_spmArguments] :: StoredProcedureMetadata (b :: BackendType) -> HashMap ArgumentName (NullableScalarType b)
 [_spmArrayRelationships] :: StoredProcedureMetadata (b :: BackendType) -> Relationships (RelDef (RelManualConfig b))
 [_spmDescription] :: StoredProcedureMetadata (b :: BackendType) -> Maybe Text
 spmRootFieldName :: forall b_anU0k. Lens' (StoredProcedureMetadata b_anU0k) StoredProcedureName
 spmReturns :: forall b_anU0k. Lens' (StoredProcedureMetadata b_anU0k) LogicalModelName
 spmDescription :: forall b_anU0k. Lens' (StoredProcedureMetadata b_anU0k) (Maybe Text)
-spmCode :: forall b_anU0k. Lens' (StoredProcedureMetadata b_anU0k) (InterpolatedQuery NativeQueryArgumentName)
+spmCode :: forall b_anU0k. Lens' (StoredProcedureMetadata b_anU0k) (InterpolatedQuery ArgumentName)
 spmArrayRelationships :: forall b_anU0k. Lens' (StoredProcedureMetadata b_anU0k) (Relationships (RelDef (RelManualConfig b_anU0k)))
-spmArguments :: forall b_anU0k. Lens' (StoredProcedureMetadata b_anU0k) (HashMap NativeQueryArgumentName (NullableScalarType b_anU0k))
+spmArguments :: forall b_anU0k. Lens' (StoredProcedureMetadata b_anU0k) (HashMap ArgumentName (NullableScalarType b_anU0k))
 instance GHC.Generics.Generic (Hasura.StoredProcedure.Metadata.StoredProcedureMetadata b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.StoredProcedure.Metadata.StoredProcedureMetadata b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.StoredProcedure.Metadata.StoredProcedureMetadata b)
@@ -14267,7 +14267,7 @@ module Hasura.StoredProcedure.IR
 
 -- | The RQL IR representation of an invocation of a stored procedure.
 data StoredProcedure b field
-StoredProcedure :: StoredProcedureName -> InterpolatedQuery field -> HashMap NativeQueryArgumentName (ColumnValue b) -> LogicalModel b -> StoredProcedure b field
+StoredProcedure :: StoredProcedureName -> InterpolatedQuery field -> HashMap ArgumentName (ColumnValue b) -> LogicalModel b -> StoredProcedure b field
 
 -- | The graphql name of the stored procedure.
 [spRootFieldName] :: StoredProcedure b field -> StoredProcedureName
@@ -14276,7 +14276,7 @@ StoredProcedure :: StoredProcedureName -> InterpolatedQuery field -> HashMap Nat
 [spInterpolatedQuery] :: StoredProcedure b field -> InterpolatedQuery field
 
 -- | The arguments passed to the query, if any.
-[spArgs] :: StoredProcedure b field -> HashMap NativeQueryArgumentName (ColumnValue b)
+[spArgs] :: StoredProcedure b field -> HashMap ArgumentName (ColumnValue b)
 
 -- | The return type of the stored procedure
 [spLogicalModel] :: StoredProcedure b field -> LogicalModel b
@@ -15659,11 +15659,11 @@ type StoredProcedureCache b = HashMap StoredProcedureName (StoredProcedureInfo b
 -- | The type into which <tt>StoredProcedureMetadata</tt> is resolved in
 --   'Hasura<i>RQL</i>DDL<i>Schema</i>Cache.buildSchemaCacheRule'.
 data StoredProcedureInfo (b :: BackendType)
-StoredProcedureInfo :: StoredProcedureName -> InterpolatedQuery NativeQueryArgumentName -> LogicalModelInfo b -> HashMap NativeQueryArgumentName (NullableScalarType b) -> InsOrdHashMap RelName (RelInfo b) -> Maybe Text -> StoredProcedureInfo (b :: BackendType)
+StoredProcedureInfo :: StoredProcedureName -> InterpolatedQuery ArgumentName -> LogicalModelInfo b -> HashMap ArgumentName (NullableScalarType b) -> InsOrdHashMap RelName (RelInfo b) -> Maybe Text -> StoredProcedureInfo (b :: BackendType)
 [_spiRootFieldName] :: StoredProcedureInfo (b :: BackendType) -> StoredProcedureName
-[_spiCode] :: StoredProcedureInfo (b :: BackendType) -> InterpolatedQuery NativeQueryArgumentName
+[_spiCode] :: StoredProcedureInfo (b :: BackendType) -> InterpolatedQuery ArgumentName
 [_spiReturns] :: StoredProcedureInfo (b :: BackendType) -> LogicalModelInfo b
-[_spiArguments] :: StoredProcedureInfo (b :: BackendType) -> HashMap NativeQueryArgumentName (NullableScalarType b)
+[_spiArguments] :: StoredProcedureInfo (b :: BackendType) -> HashMap ArgumentName (NullableScalarType b)
 [_spiArrayRelationships] :: StoredProcedureInfo (b :: BackendType) -> InsOrdHashMap RelName (RelInfo b)
 [_spiDescription] :: StoredProcedureInfo (b :: BackendType) -> Maybe Text
 instance GHC.Generics.Generic (Hasura.StoredProcedure.Cache.StoredProcedureInfo b)
@@ -15673,9 +15673,9 @@ module Hasura.StoredProcedure.Lenses
 spiRootFieldName :: forall b_ipVHT. Lens' (StoredProcedureInfo b_ipVHT) StoredProcedureName
 spiReturns :: forall b_ipVHT. Lens' (StoredProcedureInfo b_ipVHT) (LogicalModelInfo b_ipVHT)
 spiDescription :: forall b_ipVHT. Lens' (StoredProcedureInfo b_ipVHT) (Maybe Text)
-spiCode :: forall b_ipVHT. Lens' (StoredProcedureInfo b_ipVHT) (InterpolatedQuery NativeQueryArgumentName)
+spiCode :: forall b_ipVHT. Lens' (StoredProcedureInfo b_ipVHT) (InterpolatedQuery ArgumentName)
 spiArrayRelationships :: forall b_ipVHT. Lens' (StoredProcedureInfo b_ipVHT) (InsOrdHashMap RelName (RelInfo b_ipVHT))
-spiArguments :: forall b_ipVHT. Lens' (StoredProcedureInfo b_ipVHT) (HashMap NativeQueryArgumentName (NullableScalarType b_ipVHT))
+spiArguments :: forall b_ipVHT. Lens' (StoredProcedureInfo b_ipVHT) (HashMap ArgumentName (NullableScalarType b_ipVHT))
 
 
 -- | The representation of native queries as derived from the schema cache.
@@ -15685,11 +15685,11 @@ type NativeQueryCache b = HashMap NativeQueryName (NativeQueryInfo b)
 -- | The type into which <tt>NativeQueryMetadata</tt> is resolved in
 --   'Hasura<i>RQL</i>DDL<i>Schema</i>Cache.buildSchemaCacheRule'.
 data NativeQueryInfo (b :: BackendType)
-NativeQueryInfo :: NativeQueryName -> InterpolatedQuery NativeQueryArgumentName -> LogicalModelInfo b -> HashMap NativeQueryArgumentName (NullableScalarType b) -> InsOrdHashMap RelName (RelInfo b) -> Maybe Text -> NativeQueryInfo (b :: BackendType)
+NativeQueryInfo :: NativeQueryName -> InterpolatedQuery ArgumentName -> LogicalModelInfo b -> HashMap ArgumentName (NullableScalarType b) -> InsOrdHashMap RelName (RelInfo b) -> Maybe Text -> NativeQueryInfo (b :: BackendType)
 [_nqiRootFieldName] :: NativeQueryInfo (b :: BackendType) -> NativeQueryName
-[_nqiCode] :: NativeQueryInfo (b :: BackendType) -> InterpolatedQuery NativeQueryArgumentName
+[_nqiCode] :: NativeQueryInfo (b :: BackendType) -> InterpolatedQuery ArgumentName
 [_nqiReturns] :: NativeQueryInfo (b :: BackendType) -> LogicalModelInfo b
-[_nqiArguments] :: NativeQueryInfo (b :: BackendType) -> HashMap NativeQueryArgumentName (NullableScalarType b)
+[_nqiArguments] :: NativeQueryInfo (b :: BackendType) -> HashMap ArgumentName (NullableScalarType b)
 [_nqiArrayRelationships] :: NativeQueryInfo (b :: BackendType) -> InsOrdHashMap RelName (RelInfo b)
 [_nqiDescription] :: NativeQueryInfo (b :: BackendType) -> Maybe Text
 instance GHC.Generics.Generic (Hasura.NativeQuery.Cache.NativeQueryInfo b)
@@ -15799,9 +15799,9 @@ module Hasura.NativeQuery.Lenses
 nqiRootFieldName :: forall b_ipXqN. Lens' (NativeQueryInfo b_ipXqN) NativeQueryName
 nqiReturns :: forall b_ipXqN. Lens' (NativeQueryInfo b_ipXqN) (LogicalModelInfo b_ipXqN)
 nqiDescription :: forall b_ipXqN. Lens' (NativeQueryInfo b_ipXqN) (Maybe Text)
-nqiCode :: forall b_ipXqN. Lens' (NativeQueryInfo b_ipXqN) (InterpolatedQuery NativeQueryArgumentName)
+nqiCode :: forall b_ipXqN. Lens' (NativeQueryInfo b_ipXqN) (InterpolatedQuery ArgumentName)
 nqiArrayRelationships :: forall b_ipXqN. Lens' (NativeQueryInfo b_ipXqN) (InsOrdHashMap RelName (RelInfo b_ipXqN))
-nqiArguments :: forall b_ipXqN. Lens' (NativeQueryInfo b_ipXqN) (HashMap NativeQueryArgumentName (NullableScalarType b_ipXqN))
+nqiArguments :: forall b_ipXqN. Lens' (NativeQueryInfo b_ipXqN) (HashMap ArgumentName (NullableScalarType b_ipXqN))
 
 module Hasura.LogicalModel.Lenses
 lmiPermissions :: forall b_ipUg4. Lens' (LogicalModelInfo b_ipUg4) (RolePermInfoMap b_ipUg4)
@@ -22581,11 +22581,11 @@ module Hasura.StoredProcedure.API
 -- | Default implementation of the <tt>track_stored_procedure_query</tt>
 --   request payload.
 data TrackStoredProcedure (b :: BackendType)
-TrackStoredProcedure :: SourceName -> StoredProcedureName -> Text -> HashMap NativeQueryArgumentName (NullableScalarType b) -> InsOrdHashMap RelName (RelDef (RelManualConfig b)) -> Maybe Text -> LogicalModelName -> TrackStoredProcedure (b :: BackendType)
+TrackStoredProcedure :: SourceName -> StoredProcedureName -> Text -> HashMap ArgumentName (NullableScalarType b) -> InsOrdHashMap RelName (RelDef (RelManualConfig b)) -> Maybe Text -> LogicalModelName -> TrackStoredProcedure (b :: BackendType)
 [tspSource] :: TrackStoredProcedure (b :: BackendType) -> SourceName
 [tspRootFieldName] :: TrackStoredProcedure (b :: BackendType) -> StoredProcedureName
 [tspCode] :: TrackStoredProcedure (b :: BackendType) -> Text
-[tspArguments] :: TrackStoredProcedure (b :: BackendType) -> HashMap NativeQueryArgumentName (NullableScalarType b)
+[tspArguments] :: TrackStoredProcedure (b :: BackendType) -> HashMap ArgumentName (NullableScalarType b)
 [tspArrayRelationships] :: TrackStoredProcedure (b :: BackendType) -> InsOrdHashMap RelName (RelDef (RelManualConfig b))
 [tspDescription] :: TrackStoredProcedure (b :: BackendType) -> Maybe Text
 [tspReturns] :: TrackStoredProcedure (b :: BackendType) -> LogicalModelName
@@ -22633,11 +22633,11 @@ module Hasura.NativeQuery.API
 -- | Default implementation of the <tt>track_native_query</tt> request
 --   payload.
 data TrackNativeQuery (b :: BackendType)
-TrackNativeQuery :: SourceName -> NativeQueryName -> Text -> HashMap NativeQueryArgumentName (NullableScalarType b) -> InsOrdHashMap RelName (RelDef (RelManualConfig b)) -> Maybe Text -> LogicalModelName -> TrackNativeQuery (b :: BackendType)
+TrackNativeQuery :: SourceName -> NativeQueryName -> Text -> HashMap ArgumentName (NullableScalarType b) -> InsOrdHashMap RelName (RelDef (RelManualConfig b)) -> Maybe Text -> LogicalModelName -> TrackNativeQuery (b :: BackendType)
 [tnqSource] :: TrackNativeQuery (b :: BackendType) -> SourceName
 [tnqRootFieldName] :: TrackNativeQuery (b :: BackendType) -> NativeQueryName
 [tnqCode] :: TrackNativeQuery (b :: BackendType) -> Text
-[tnqArguments] :: TrackNativeQuery (b :: BackendType) -> HashMap NativeQueryArgumentName (NullableScalarType b)
+[tnqArguments] :: TrackNativeQuery (b :: BackendType) -> HashMap ArgumentName (NullableScalarType b)
 [tnqArrayRelationships] :: TrackNativeQuery (b :: BackendType) -> InsOrdHashMap RelName (RelDef (RelManualConfig b))
 [tnqDescription] :: TrackNativeQuery (b :: BackendType) -> Maybe Text
 [tnqReturns] :: TrackNativeQuery (b :: BackendType) -> LogicalModelName

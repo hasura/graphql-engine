@@ -24,7 +24,7 @@
 </span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Hasura.EncJSON</span></span><span>
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.API.html"><span class="hs-identifier">Hasura.LogicalModel.API</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.API.html#getCustomTypes"><span class="hs-identifier">getCustomTypes</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html"><span class="hs-identifier">Hasura.LogicalModel.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier">LogicalModelName</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html"><span class="hs-identifier">Hasura.NativeQuery.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#NativeQueryArgumentName"><span class="hs-identifier">NativeQueryArgumentName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryMetadata"><span class="hs-identifier">NativeQueryMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#parseInterpolatedQuery"><span class="hs-identifier">parseInterpolatedQuery</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html"><span class="hs-identifier">Hasura.NativeQuery.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#ArgumentName"><span class="hs-identifier">ArgumentName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryMetadata"><span class="hs-identifier">NativeQueryMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#parseInterpolatedQuery"><span class="hs-identifier">parseInterpolatedQuery</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html"><span class="hs-identifier">Hasura.NativeQuery.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier">NativeQueryName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier">NullableScalarType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#nativeQueryArrayRelationshipsCodec"><span class="hs-identifier">nativeQueryArrayRelationshipsCodec</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier">Backend</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConnConfiguration"><span class="hs-identifier">SourceConnConfiguration</span></a></span><span class="hs-special">)</span><span>
@@ -54,9 +54,8 @@
 </span><span id="line-52"></span><span>    </span><span id="tnqCode"><span class="annot"><span class="annottext">forall (b :: BackendType). TrackNativeQuery b -&gt; Text
 </span><a href="Hasura.NativeQuery.API.html#tnqCode"><span class="hs-identifier hs-var hs-var">tnqCode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
 </span><span id="line-53"></span><span>    </span><span id="tnqArguments"><span class="annot"><span class="annottext">forall (b :: BackendType).
-TrackNativeQuery b
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
-</span><a href="Hasura.NativeQuery.API.html#tnqArguments"><span class="hs-identifier hs-var hs-var">tnqArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#NativeQueryArgumentName"><span class="hs-identifier hs-type">NativeQueryArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691085391"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+TrackNativeQuery b -&gt; HashMap ArgumentName (NullableScalarType b)
+</span><a href="Hasura.NativeQuery.API.html#tnqArguments"><span class="hs-identifier hs-var hs-var">tnqArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691085391"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-54"></span><span>    </span><span id="tnqArrayRelationships"><span class="annot"><span class="annottext">forall (b :: BackendType).
 TrackNativeQuery b
 -&gt; InsOrdHashMap RelName (RelDef (RelManualConfig b))
@@ -87,7 +86,7 @@ Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 SourceName
 -&gt; NativeQueryName
 -&gt; Text
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
+-&gt; HashMap ArgumentName (NullableScalarType b)
 -&gt; InsOrdHashMap RelName (RelDef (RelManualConfig b))
 -&gt; Maybe Text
 -&gt; LogicalModelName
@@ -141,8 +140,7 @@ Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
-TrackNativeQuery b
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
+TrackNativeQuery b -&gt; HashMap ArgumentName (NullableScalarType b)
 </span><a href="Hasura.NativeQuery.API.html#tnqArguments"><span class="hs-identifier hs-var">tnqArguments</span></a></span><span>
 </span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
@@ -244,7 +242,7 @@ Environment
 </span><a href="#local-6989586621691084936"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621691084935"><span class="annot"><span class="annottext">SourceConnConfiguration b
 </span><a href="#local-6989586621691084935"><span class="hs-identifier hs-var">sourceConnConfig</span></a></span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.API.html#TrackNativeQuery"><span class="hs-identifier hs-type">TrackNativeQuery</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691084928"><span id="local-6989586621691084929"><span id="local-6989586621691084930"><span id="local-6989586621691084931"><span id="local-6989586621691084932"><span id="local-6989586621691084933"><span id="local-6989586621691084934"><span class="annot"><span class="annottext">Maybe Text
 Text
-HashMap NativeQueryArgumentName (NullableScalarType b)
+HashMap ArgumentName (NullableScalarType b)
 InsOrdHashMap RelName (RelDef (RelManualConfig b))
 SourceName
 LogicalModelName
@@ -252,7 +250,7 @@ NativeQueryName
 tnqReturns :: LogicalModelName
 tnqDescription :: Maybe Text
 tnqArrayRelationships :: InsOrdHashMap RelName (RelDef (RelManualConfig b))
-tnqArguments :: HashMap NativeQueryArgumentName (NullableScalarType b)
+tnqArguments :: HashMap ArgumentName (NullableScalarType b)
 tnqCode :: Text
 tnqRootFieldName :: NativeQueryName
 tnqSource :: SourceName
@@ -262,14 +260,13 @@ tnqArrayRelationships :: forall (b :: BackendType).
 TrackNativeQuery b
 -&gt; InsOrdHashMap RelName (RelDef (RelManualConfig b))
 tnqArguments :: forall (b :: BackendType).
-TrackNativeQuery b
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
+TrackNativeQuery b -&gt; HashMap ArgumentName (NullableScalarType b)
 tnqCode :: forall (b :: BackendType). TrackNativeQuery b -&gt; Text
 tnqRootFieldName :: forall (b :: BackendType). TrackNativeQuery b -&gt; NativeQueryName
 tnqSource :: forall (b :: BackendType). TrackNativeQuery b -&gt; SourceName
 </span><a href="#local-6989586621691084928"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-111"></span><span>  </span><span id="local-6989586621691084927"><span class="annot"><span class="annottext">InterpolatedQuery NativeQueryArgumentName
-</span><a href="#local-6989586621691084927"><span class="hs-identifier hs-var">code</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text (InterpolatedQuery NativeQueryArgumentName)
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621691084927"><span class="annot"><span class="annottext">InterpolatedQuery ArgumentName
+</span><a href="#local-6989586621691084927"><span class="hs-identifier hs-var">code</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text (InterpolatedQuery ArgumentName)
 </span><a href="Hasura.NativeQuery.InterpolatedQuery.html#parseInterpolatedQuery"><span class="hs-identifier hs-var">parseInterpolatedQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691084932"><span class="hs-identifier hs-var">tnqCode</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
@@ -286,14 +283,14 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><span id="line-115"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_nqmRootFieldName :: NativeQueryName
 </span><a href="Hasura.NativeQuery.Metadata.html#_nqmRootFieldName"><span class="hs-identifier hs-var">_nqmRootFieldName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NativeQueryName
 </span><a href="#local-6989586621691084933"><span class="hs-identifier hs-var">tnqRootFieldName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-116"></span><span>            </span><span class="annot"><span class="annottext">_nqmCode :: InterpolatedQuery NativeQueryArgumentName
-</span><a href="Hasura.NativeQuery.Metadata.html#_nqmCode"><span class="hs-identifier hs-var">_nqmCode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery NativeQueryArgumentName
+</span><span id="line-116"></span><span>            </span><span class="annot"><span class="annottext">_nqmCode :: InterpolatedQuery ArgumentName
+</span><a href="Hasura.NativeQuery.Metadata.html#_nqmCode"><span class="hs-identifier hs-var">_nqmCode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery ArgumentName
 </span><a href="#local-6989586621691084927"><span class="hs-identifier hs-var">code</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-117"></span><span>            </span><span class="annot"><span class="annottext">_nqmReturns :: LogicalModelName
 </span><a href="Hasura.NativeQuery.Metadata.html#_nqmReturns"><span class="hs-identifier hs-var">_nqmReturns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogicalModelName
 </span><a href="#local-6989586621691084928"><span class="hs-identifier hs-var">tnqReturns</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-118"></span><span>            </span><span class="annot"><span class="annottext">_nqmArguments :: HashMap NativeQueryArgumentName (NullableScalarType b)
-</span><a href="Hasura.NativeQuery.Metadata.html#_nqmArguments"><span class="hs-identifier hs-var">_nqmArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap NativeQueryArgumentName (NullableScalarType b)
+</span><span id="line-118"></span><span>            </span><span class="annot"><span class="annottext">_nqmArguments :: HashMap ArgumentName (NullableScalarType b)
+</span><a href="Hasura.NativeQuery.Metadata.html#_nqmArguments"><span class="hs-identifier hs-var">_nqmArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap ArgumentName (NullableScalarType b)
 </span><a href="#local-6989586621691084931"><span class="hs-identifier hs-var">tnqArguments</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-119"></span><span>            </span><span class="annot"><span class="annottext">_nqmArrayRelationships :: InsOrdHashMap RelName (RelDef (RelManualConfig b))
 </span><a href="Hasura.NativeQuery.Metadata.html#_nqmArrayRelationships"><span class="hs-identifier hs-var">_nqmArrayRelationships</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap RelName (RelDef (RelManualConfig b))

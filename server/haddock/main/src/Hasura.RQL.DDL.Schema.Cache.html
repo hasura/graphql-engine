@@ -3086,27 +3086,27 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="#local-6989586621691176557"><span class="hs-identifier hs-var">nativeQueries</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-794"></span><span>            </span><span class="hs-glyph">\</span><span id="local-6989586621691176439"><span class="annot"><span class="annottext">nqm :: NativeQueryMetadata b
 </span><a href="#local-6989586621691176439"><span class="hs-identifier hs-var">nqm</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryMetadata"><span class="hs-identifier hs-type">NativeQueryMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691176432"><span id="local-6989586621691176433"><span id="local-6989586621691176434"><span id="local-6989586621691176435"><span id="local-6989586621691176436"><span id="local-6989586621691176437"><span class="annot"><span class="annottext">Maybe Text
-HashMap NativeQueryArgumentName (NullableScalarType b)
+HashMap ArgumentName (NullableScalarType b)
 Relationships (RelDef (RelManualConfig b))
 LogicalModelName
 NativeQueryName
-InterpolatedQuery NativeQueryArgumentName
+InterpolatedQuery ArgumentName
 _nqmDescription :: forall (b :: BackendType). NativeQueryMetadata b -&gt; Maybe Text
 _nqmArrayRelationships :: forall (b :: BackendType).
 NativeQueryMetadata b -&gt; Relationships (RelDef (RelManualConfig b))
 _nqmArguments :: forall (b :: BackendType).
 NativeQueryMetadata b
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
+-&gt; HashMap ArgumentName (NullableScalarType b)
 _nqmReturns :: forall (b :: BackendType).
 NativeQueryMetadata b -&gt; LogicalModelName
 _nqmCode :: forall (b :: BackendType).
-NativeQueryMetadata b -&gt; InterpolatedQuery NativeQueryArgumentName
+NativeQueryMetadata b -&gt; InterpolatedQuery ArgumentName
 _nqmRootFieldName :: forall (b :: BackendType). NativeQueryMetadata b -&gt; NativeQueryName
 _nqmDescription :: Maybe Text
 _nqmArrayRelationships :: Relationships (RelDef (RelManualConfig b))
-_nqmArguments :: HashMap NativeQueryArgumentName (NullableScalarType b)
+_nqmArguments :: HashMap ArgumentName (NullableScalarType b)
 _nqmReturns :: LogicalModelName
-_nqmCode :: InterpolatedQuery NativeQueryArgumentName
+_nqmCode :: InterpolatedQuery ArgumentName
 _nqmRootFieldName :: NativeQueryName
 </span><a href="Hasura.NativeQuery.Metadata.html#_nqmDescription"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-795"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621691176425"><span class="hs-identifier hs-type">metadataObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span>
@@ -3267,14 +3267,14 @@ MetadataObject -&gt; SchemaObjId -&gt; Seq SchemaDependency -&gt; m ()
 </span><span id="line-846"></span><span>                    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_nqiRootFieldName :: NativeQueryName
 </span><a href="Hasura.NativeQuery.Cache.html#_nqiRootFieldName"><span class="hs-identifier hs-var">_nqiRootFieldName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NativeQueryName
 </span><a href="#local-6989586621691176437"><span class="hs-identifier hs-var">_nqmRootFieldName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-847"></span><span>                      </span><span class="annot"><span class="annottext">_nqiCode :: InterpolatedQuery NativeQueryArgumentName
-</span><a href="Hasura.NativeQuery.Cache.html#_nqiCode"><span class="hs-identifier hs-var">_nqiCode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery NativeQueryArgumentName
+</span><span id="line-847"></span><span>                      </span><span class="annot"><span class="annottext">_nqiCode :: InterpolatedQuery ArgumentName
+</span><a href="Hasura.NativeQuery.Cache.html#_nqiCode"><span class="hs-identifier hs-var">_nqiCode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery ArgumentName
 </span><a href="#local-6989586621691176436"><span class="hs-identifier hs-var">_nqmCode</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-848"></span><span>                      </span><span class="annot"><span class="annottext">_nqiReturns :: LogicalModelInfo b
 </span><a href="Hasura.NativeQuery.Cache.html#_nqiReturns"><span class="hs-identifier hs-var">_nqiReturns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogicalModelInfo b
 </span><a href="#local-6989586621691176415"><span class="hs-identifier hs-var">logicalModel</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-849"></span><span>                      </span><span class="annot"><span class="annottext">_nqiArguments :: HashMap NativeQueryArgumentName (NullableScalarType b)
-</span><a href="Hasura.NativeQuery.Cache.html#_nqiArguments"><span class="hs-identifier hs-var">_nqiArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap NativeQueryArgumentName (NullableScalarType b)
+</span><span id="line-849"></span><span>                      </span><span class="annot"><span class="annottext">_nqiArguments :: HashMap ArgumentName (NullableScalarType b)
+</span><a href="Hasura.NativeQuery.Cache.html#_nqiArguments"><span class="hs-identifier hs-var">_nqiArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap ArgumentName (NullableScalarType b)
 </span><a href="#local-6989586621691176434"><span class="hs-identifier hs-var">_nqmArguments</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-850"></span><span>                      </span><span class="annot"><span class="annottext">_nqiArrayRelationships :: InsOrdHashMap RelName (RelInfo b)
 </span><a href="Hasura.NativeQuery.Cache.html#_nqiArrayRelationships"><span class="hs-identifier hs-var">_nqiArrayRelationships</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
@@ -3309,10 +3309,10 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="#local-6989586621691176556"><span class="hs-identifier hs-var">storedProcedures</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-861"></span><span>            </span><span class="hs-glyph">\</span><span id="local-6989586621691176401"><span class="annot"><span class="annottext">spm :: StoredProcedureMetadata b
 </span><a href="#local-6989586621691176401"><span class="hs-identifier hs-var">spm</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier hs-type">StoredProcedureMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691176394"><span id="local-6989586621691176395"><span id="local-6989586621691176396"><span id="local-6989586621691176397"><span id="local-6989586621691176398"><span id="local-6989586621691176399"><span class="annot"><span class="annottext">Maybe Text
-HashMap NativeQueryArgumentName (NullableScalarType b)
+HashMap ArgumentName (NullableScalarType b)
 Relationships (RelDef (RelManualConfig b))
 LogicalModelName
-InterpolatedQuery NativeQueryArgumentName
+InterpolatedQuery ArgumentName
 StoredProcedureName
 _spmDescription :: forall (b :: BackendType). StoredProcedureMetadata b -&gt; Maybe Text
 _spmArrayRelationships :: forall (b :: BackendType).
@@ -3320,19 +3320,18 @@ StoredProcedureMetadata b
 -&gt; Relationships (RelDef (RelManualConfig b))
 _spmArguments :: forall (b :: BackendType).
 StoredProcedureMetadata b
--&gt; HashMap NativeQueryArgumentName (NullableScalarType b)
+-&gt; HashMap ArgumentName (NullableScalarType b)
 _spmReturns :: forall (b :: BackendType).
 StoredProcedureMetadata b -&gt; LogicalModelName
 _spmCode :: forall (b :: BackendType).
-StoredProcedureMetadata b
--&gt; InterpolatedQuery NativeQueryArgumentName
+StoredProcedureMetadata b -&gt; InterpolatedQuery ArgumentName
 _spmRootFieldName :: forall (b :: BackendType).
 StoredProcedureMetadata b -&gt; StoredProcedureName
 _spmDescription :: Maybe Text
 _spmArrayRelationships :: Relationships (RelDef (RelManualConfig b))
-_spmArguments :: HashMap NativeQueryArgumentName (NullableScalarType b)
+_spmArguments :: HashMap ArgumentName (NullableScalarType b)
 _spmReturns :: LogicalModelName
-_spmCode :: InterpolatedQuery NativeQueryArgumentName
+_spmCode :: InterpolatedQuery ArgumentName
 _spmRootFieldName :: StoredProcedureName
 </span><a href="Hasura.StoredProcedure.Metadata.html#_spmDescription"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-862"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621691176387"><span class="hs-identifier hs-type">metadataObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span>
@@ -3494,14 +3493,14 @@ MetadataObject -&gt; SchemaObjId -&gt; Seq SchemaDependency -&gt; m ()
 </span><span id="line-913"></span><span>                    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_spiRootFieldName :: StoredProcedureName
 </span><a href="Hasura.StoredProcedure.Cache.html#_spiRootFieldName"><span class="hs-identifier hs-var">_spiRootFieldName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StoredProcedureName
 </span><a href="#local-6989586621691176399"><span class="hs-identifier hs-var">_spmRootFieldName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-914"></span><span>                      </span><span class="annot"><span class="annottext">_spiCode :: InterpolatedQuery NativeQueryArgumentName
-</span><a href="Hasura.StoredProcedure.Cache.html#_spiCode"><span class="hs-identifier hs-var">_spiCode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery NativeQueryArgumentName
+</span><span id="line-914"></span><span>                      </span><span class="annot"><span class="annottext">_spiCode :: InterpolatedQuery ArgumentName
+</span><a href="Hasura.StoredProcedure.Cache.html#_spiCode"><span class="hs-identifier hs-var">_spiCode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery ArgumentName
 </span><a href="#local-6989586621691176398"><span class="hs-identifier hs-var">_spmCode</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-915"></span><span>                      </span><span class="annot"><span class="annottext">_spiReturns :: LogicalModelInfo b
 </span><a href="Hasura.StoredProcedure.Cache.html#_spiReturns"><span class="hs-identifier hs-var">_spiReturns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogicalModelInfo b
 </span><a href="#local-6989586621691176382"><span class="hs-identifier hs-var">logicalModel</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-916"></span><span>                      </span><span class="annot"><span class="annottext">_spiArguments :: HashMap NativeQueryArgumentName (NullableScalarType b)
-</span><a href="Hasura.StoredProcedure.Cache.html#_spiArguments"><span class="hs-identifier hs-var">_spiArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap NativeQueryArgumentName (NullableScalarType b)
+</span><span id="line-916"></span><span>                      </span><span class="annot"><span class="annottext">_spiArguments :: HashMap ArgumentName (NullableScalarType b)
+</span><a href="Hasura.StoredProcedure.Cache.html#_spiArguments"><span class="hs-identifier hs-var">_spiArguments</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap ArgumentName (NullableScalarType b)
 </span><a href="#local-6989586621691176396"><span class="hs-identifier hs-var">_spmArguments</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-917"></span><span>                      </span><span class="annot"><span class="annottext">_spiArrayRelationships :: InsOrdHashMap RelName (RelInfo b)
 </span><a href="Hasura.StoredProcedure.Cache.html#_spiArrayRelationships"><span class="hs-identifier hs-var">_spiArrayRelationships</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
