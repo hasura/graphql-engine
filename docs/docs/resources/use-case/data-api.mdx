@@ -64,6 +64,12 @@ To save you time, we've generated three **read-only** databases for you to use i
 | Stocks      | A database containing historic, proprietary market information   | `postgresql://read_only:kd4555jkfjfkdj39f8f8d9d@35.236.11.122:5432/growth-docs-data-layer-2` |
 | Real Estate | A database containing real estate information                    | `postgresql://read_only:kd4555jkfjfkdj39f8f8d9d@35.236.11.122:5432/growth-docs-data-layer-3` |
 
+:::info Only available from Hasura Cloud
+
+These databases are only accessible from Hasura Cloud.
+
+:::
+
 To connect to these, head to the `Data` tab of your **Hasura Console** — the UI that allows you to interact with your
 Hasura instance. Connecting an existing database to Hasura is as easy as pasting in a connection string. Let's name the
 first database `Banking` and paste in the connection string from the table above:
