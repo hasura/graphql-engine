@@ -453,6 +453,7 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
         { appEnvPort = soPort,
           appEnvHost = soHost,
           appEnvMetadataDbPool = metadataDbPool,
+          appEnvIntrospectionDbPool = Nothing, -- No introspection storage for self-hosted CE
           appEnvManager = httpManager,
           appEnvLoggers = loggers,
           appEnvMetadataVersionRef = metaVersionRef,

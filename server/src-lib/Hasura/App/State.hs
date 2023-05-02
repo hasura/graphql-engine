@@ -104,6 +104,7 @@ data AppEnv = AppEnv
   { appEnvPort :: Port,
     appEnvHost :: HostPreference,
     appEnvMetadataDbPool :: PG.PGPool,
+    appEnvIntrospectionDbPool :: Maybe PG.PGPool,
     appEnvManager :: HTTP.Manager,
     appEnvLoggers :: Loggers,
     appEnvMetadataVersionRef :: STM.TMVar MetadataResourceVersion,
