@@ -23,7 +23,7 @@
 </span><span id="line-23"></span><span class="hs-comment">-- | Compressed encodings which hasura supports</span><span>
 </span><span id="line-24"></span><span class="hs-keyword">data</span><span> </span><span id="CompressionType"><span class="annot"><a href="Hasura.Server.Compression.html#CompressionType"><span class="hs-identifier hs-var">CompressionType</span></a></span></span><span>
 </span><span id="line-25"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CTGZip"><span class="annot"><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span></span><span>
-</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690843111"><span id="local-6989586621690843113"><span id="local-6989586621690843115"><span class="annot"><span class="annottext">Int -&gt; CompressionType -&gt; ShowS
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690843110"><span id="local-6989586621690843112"><span id="local-6989586621690843114"><span class="annot"><span class="annottext">Int -&gt; CompressionType -&gt; ShowS
 [CompressionType] -&gt; ShowS
 CompressionType -&gt; String
 forall a.
@@ -34,13 +34,13 @@ show :: CompressionType -&gt; String
 $cshow :: CompressionType -&gt; String
 showsPrec :: Int -&gt; CompressionType -&gt; ShowS
 $cshowsPrec :: Int -&gt; CompressionType -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690843106"><span id="local-6989586621690843108"><span class="annot"><span class="annottext">CompressionType -&gt; CompressionType -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690843105"><span id="local-6989586621690843107"><span class="annot"><span class="annottext">CompressionType -&gt; CompressionType -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: CompressionType -&gt; CompressionType -&gt; Bool
 $c/= :: CompressionType -&gt; CompressionType -&gt; Bool
 == :: CompressionType -&gt; CompressionType -&gt; Bool
 $c== :: CompressionType -&gt; CompressionType -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690843086"><span id="local-6989586621690843088"><span id="local-6989586621690843091"><span id="local-6989586621690843094"><span id="local-6989586621690843097"><span id="local-6989586621690843099"><span id="local-6989586621690843101"><span class="annot"><span class="annottext">Eq CompressionType
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690843085"><span id="local-6989586621690843087"><span id="local-6989586621690843090"><span id="local-6989586621690843093"><span id="local-6989586621690843096"><span id="local-6989586621690843098"><span id="local-6989586621690843100"><span class="annot"><span class="annottext">Eq CompressionType
 CompressionType -&gt; CompressionType -&gt; Bool
 CompressionType -&gt; CompressionType -&gt; Ordering
 CompressionType -&gt; CompressionType -&gt; CompressionType
@@ -102,12 +102,12 @@ $ccompare :: CompressionType -&gt; CompressionType -&gt; Ordering
 </span><span id="line-49"></span><span>  </span><span class="hs-comment">-- | The response body (possibly compressed), and the encoding chosen</span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Compression.html#EncodingType"><span class="hs-identifier hs-type">EncodingType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span id="compressResponse"><span class="annot"><span class="annottext">compressResponse :: RequestHeaders -&gt; ByteString -&gt; (ByteString, EncodingType)
-</span><a href="Hasura.Server.Compression.html#compressResponse"><span class="hs-identifier hs-var hs-var">compressResponse</span></a></span></span><span> </span><span id="local-6989586621690843084"><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621690843084"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span id="local-6989586621690843083"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690843083"><span class="hs-identifier hs-var">unCompressedResp</span></a></span></span><span>
+</span><a href="Hasura.Server.Compression.html#compressResponse"><span class="hs-identifier hs-var hs-var">compressResponse</span></a></span></span><span> </span><span id="local-6989586621690843083"><span class="annot"><span class="annottext">RequestHeaders
+</span><a href="#local-6989586621690843083"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span id="local-6989586621690843082"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621690843082"><span class="hs-identifier hs-var">unCompressedResp</span></a></span></span><span>
 </span><span id="line-52"></span><span>  </span><span class="hs-comment">-- we have option to gzip:</span><span>
 </span><span id="line-53"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Set EncodingType
-</span><a href="#local-6989586621690843082"><span class="hs-identifier hs-var">acceptedEncodings</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690843081"><span class="hs-identifier hs-var">acceptedEncodings</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; [a] -&gt; Set a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-var">Set.fromList</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">EncodingType
 </span><a href="Hasura.Server.Compression.html#identityEncoding"><span class="hs-identifier hs-var">identityEncoding</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
@@ -115,18 +115,18 @@ $ccompare :: CompressionType -&gt; CompressionType -&gt; Ordering
 </span><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-54"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Bool
 </span><a href="Hasura.Server.Compression.html#shouldSkipCompression"><span class="hs-identifier hs-var">shouldSkipCompression</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690843083"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span>
+</span><a href="#local-6989586621690843082"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span>
 </span><span id="line-55"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">(ByteString, EncodingType)
-</span><a href="#local-6989586621690843079"><span class="hs-identifier hs-var">notCompressed</span></a></span><span>
+</span><a href="#local-6989586621690843078"><span class="hs-identifier hs-var">notCompressed</span></a></span><span>
 </span><span id="line-56"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CompressionType -&gt; ByteString -&gt; ByteString
 </span><a href="Hasura.Server.Compression.html#compressFast"><span class="hs-identifier hs-var">compressFast</span></a></span><span> </span><span class="annot"><span class="annottext">CompressionType
 </span><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690843083"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><a href="#local-6989586621690843082"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">CompressionType
 </span><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-57"></span><span>  </span><span class="hs-comment">-- we MUST gzip:</span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Set EncodingType
-</span><a href="#local-6989586621690843082"><span class="hs-identifier hs-var">acceptedEncodings</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690843081"><span class="hs-identifier hs-var">acceptedEncodings</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; [a] -&gt; Set a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-var">Set.fromList</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">CompressionType
@@ -134,31 +134,31 @@ $ccompare :: CompressionType -&gt; CompressionType -&gt; Ordering
 </span><span id="line-59"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CompressionType -&gt; ByteString -&gt; ByteString
 </span><a href="Hasura.Server.Compression.html#compressFast"><span class="hs-identifier hs-var">compressFast</span></a></span><span> </span><span class="annot"><span class="annottext">CompressionType
 </span><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690843083"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><a href="#local-6989586621690843082"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">CompressionType
 </span><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-60"></span><span>  </span><span class="hs-comment">-- we must ONLY return an uncompressed response:</span><span>
 </span><span id="line-61"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Set EncodingType
-</span><a href="#local-6989586621690843082"><span class="hs-identifier hs-var">acceptedEncodings</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690843081"><span class="hs-identifier hs-var">acceptedEncodings</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; [a] -&gt; Set a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-var">Set.fromList</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">EncodingType
 </span><a href="Hasura.Server.Compression.html#identityEncoding"><span class="hs-identifier hs-var">identityEncoding</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-62"></span><span>      </span><span class="annot"><span class="annottext">(ByteString, EncodingType)
-</span><a href="#local-6989586621690843079"><span class="hs-identifier hs-var">notCompressed</span></a></span><span>
+</span><a href="#local-6989586621690843078"><span class="hs-identifier hs-var">notCompressed</span></a></span><span>
 </span><span id="line-63"></span><span>  </span><span class="hs-comment">-- this is technically a client error, but ignore for now (maintaining</span><span>
 </span><span id="line-64"></span><span>  </span><span class="hs-comment">-- current behavior); assume identity:</span><span>
 </span><span id="line-65"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-66"></span><span>      </span><span class="annot"><span class="annottext">(ByteString, EncodingType)
-</span><a href="#local-6989586621690843079"><span class="hs-identifier hs-var">notCompressed</span></a></span><span>
+</span><a href="#local-6989586621690843078"><span class="hs-identifier hs-var">notCompressed</span></a></span><span>
 </span><span id="line-67"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-68"></span><span>    </span><span id="local-6989586621690843082"><span class="annot"><span class="annottext">acceptedEncodings :: Set EncodingType
-</span><a href="#local-6989586621690843082"><span class="hs-identifier hs-var hs-var">acceptedEncodings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestHeaders -&gt; Set EncodingType
+</span><span id="line-68"></span><span>    </span><span id="local-6989586621690843081"><span class="annot"><span class="annottext">acceptedEncodings :: Set EncodingType
+</span><a href="#local-6989586621690843081"><span class="hs-identifier hs-var hs-var">acceptedEncodings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestHeaders -&gt; Set EncodingType
 </span><a href="Hasura.Server.Compression.html#getAcceptedEncodings"><span class="hs-identifier hs-var">getAcceptedEncodings</span></a></span><span> </span><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621690843084"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
-</span><span id="line-69"></span><span>    </span><span id="local-6989586621690843079"><span class="annot"><span class="annottext">notCompressed :: (ByteString, EncodingType)
-</span><a href="#local-6989586621690843079"><span class="hs-identifier hs-var hs-var">notCompressed</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690843083"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EncodingType
+</span><a href="#local-6989586621690843083"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
+</span><span id="line-69"></span><span>    </span><span id="local-6989586621690843078"><span class="annot"><span class="annottext">notCompressed :: (ByteString, EncodingType)
+</span><a href="#local-6989586621690843078"><span class="hs-identifier hs-var hs-var">notCompressed</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621690843082"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EncodingType
 </span><a href="Hasura.Server.Compression.html#identityEncoding"><span class="hs-identifier hs-var">identityEncoding</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-70"></span><span>
 </span><span id="line-71"></span><span class="hs-comment">-- | Compress the bytestring preferring speed over compression ratio</span><span>
@@ -168,10 +168,10 @@ $ccompare :: CompressionType -&gt; CompressionType -&gt; Ordering
 </span><span id="line-74"></span><span>  </span><span class="annot"><span class="annottext">CompressionType
 </span><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CompressParams -&gt; ByteString -&gt; ByteString
 </span><span class="hs-identifier hs-var">GZ.compressWith</span></span><span> </span><span class="annot"><span class="annottext">CompressParams
-</span><a href="#local-6989586621690843077"><span class="hs-identifier hs-var">gzipCompressionParams</span></a></span><span>
+</span><a href="#local-6989586621690843076"><span class="hs-identifier hs-var">gzipCompressionParams</span></a></span><span>
 </span><span id="line-75"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-76"></span><span>    </span><span id="local-6989586621690843077"><span class="annot"><span class="annottext">gzipCompressionParams :: CompressParams
-</span><a href="#local-6989586621690843077"><span class="hs-identifier hs-var hs-var">gzipCompressionParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621690843076"><span class="annot"><span class="annottext">gzipCompressionParams :: CompressParams
+</span><a href="#local-6989586621690843076"><span class="hs-identifier hs-var hs-var">gzipCompressionParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-77"></span><span>      </span><span class="hs-comment">-- See Note [Compression ratios]</span><span>
 </span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">CompressParams
 </span><span class="hs-identifier hs-var">GZ.defaultCompressParams</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">compressLevel :: CompressionLevel
@@ -183,10 +183,10 @@ $ccompare :: CompressionType -&gt; CompressionType -&gt; Ordering
 </span><span id="line-81"></span><span class="hs-comment">-- identity AND gzip), should we skip compression?</span><span>
 </span><span id="line-82"></span><span class="annot"><a href="Hasura.Server.Compression.html#shouldSkipCompression"><span class="hs-identifier hs-type">shouldSkipCompression</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span>
 </span><span id="line-83"></span><span id="shouldSkipCompression"><span class="annot"><span class="annottext">shouldSkipCompression :: ByteString -&gt; Bool
-</span><a href="Hasura.Server.Compression.html#shouldSkipCompression"><span class="hs-identifier hs-var hs-var">shouldSkipCompression</span></a></span></span><span> </span><span id="local-6989586621690843073"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690843073"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Int64
+</span><a href="Hasura.Server.Compression.html#shouldSkipCompression"><span class="hs-identifier hs-var hs-var">shouldSkipCompression</span></a></span></span><span> </span><span id="local-6989586621690843072"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621690843072"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Int64
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-var">BL.length</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690843073"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690843072"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&lt;</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
 </span><span class="hs-number">700</span></span><span>
 </span><span id="line-84"></span><span>
@@ -224,30 +224,30 @@ compression level 1:
 </span><span id="line-116"></span><span class="hs-comment">-- https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding</span><span>
 </span><span id="line-117"></span><span class="annot"><a href="Hasura.Server.Compression.html#getAcceptedEncodings"><span class="hs-identifier hs-type">getAcceptedEncodings</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NH.RequestHeaders</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-type">Set.Set</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Compression.html#EncodingType"><span class="hs-identifier hs-type">EncodingType</span></a></span><span>
 </span><span id="line-118"></span><span id="getAcceptedEncodings"><span class="annot"><span class="annottext">getAcceptedEncodings :: RequestHeaders -&gt; Set EncodingType
-</span><a href="Hasura.Server.Compression.html#getAcceptedEncodings"><span class="hs-identifier hs-var hs-var">getAcceptedEncodings</span></a></span></span><span> </span><span id="local-6989586621690843070"><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621690843070"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; [a] -&gt; Set a
+</span><a href="Hasura.Server.Compression.html#getAcceptedEncodings"><span class="hs-identifier hs-var hs-var">getAcceptedEncodings</span></a></span></span><span> </span><span id="local-6989586621690843069"><span class="annot"><span class="annottext">RequestHeaders
+</span><a href="#local-6989586621690843069"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; [a] -&gt; Set a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-var">Set.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">[EncodingType]
-</span><a href="#local-6989586621690843069"><span class="hs-identifier hs-var">acceptedEncodingTypes</span></a></span><span>
+</span><a href="#local-6989586621690843068"><span class="hs-identifier hs-var">acceptedEncodingTypes</span></a></span><span>
 </span><span id="line-119"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-120"></span><span>    </span><span id="local-6989586621690843068"><span class="annot"><span class="annottext">rawHeaderVals :: [Text]
-</span><a href="#local-6989586621690843068"><span class="hs-identifier hs-var hs-var">rawHeaderVals</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-120"></span><span>    </span><span id="local-6989586621690843067"><span class="annot"><span class="annottext">rawHeaderVals :: [Text]
+</span><a href="#local-6989586621690843067"><span class="hs-identifier hs-var hs-var">rawHeaderVals</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-121"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">concatMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; [Text]
-</span><a href="#local-6989586621690843066"><span class="hs-identifier hs-var">splitHeaderVal</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="#local-6989586621690843065"><span class="hs-identifier hs-var">splitHeaderVal</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">snd</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-122"></span><span>        </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621690843064"><span class="annot"><span class="annottext">Header
-</span><a href="#local-6989586621690843064"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621690843063"><span class="annot"><span class="annottext">Header
+</span><a href="#local-6989586621690843063"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fst</span></a></span><span> </span><span class="annot"><span class="annottext">Header
-</span><a href="#local-6989586621690843064"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690843063"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-identifier hs-var">NH.hAcceptEncoding</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621690843070"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
-</span><span id="line-123"></span><span>    </span><span id="local-6989586621690843066"><span class="annot"><span class="annottext">splitHeaderVal :: ByteString -&gt; [Text]
-</span><a href="#local-6989586621690843066"><span class="hs-identifier hs-var hs-var">splitHeaderVal</span></a></span></span><span> </span><span id="local-6989586621690843061"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690843061"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><a href="#local-6989586621690843069"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
+</span><span id="line-123"></span><span>    </span><span id="local-6989586621690843065"><span class="annot"><span class="annottext">splitHeaderVal :: ByteString -&gt; [Text]
+</span><a href="#local-6989586621690843065"><span class="hs-identifier hs-var hs-var">splitHeaderVal</span></a></span></span><span> </span><span id="local-6989586621690843060"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621690843060"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.strip</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; [Text]
@@ -255,66 +255,66 @@ compression level 1:
 </span><span class="hs-string">&quot;,&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690843061"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><a href="#local-6989586621690843060"><span class="hs-identifier hs-var">bs</span></a></span><span>
 </span><span id="line-124"></span><span>    </span><span class="hs-comment">-- we'll ignore qvalues, except (crucially) to determine if 'identity' is rejected:</span><span>
-</span><span id="line-125"></span><span>    </span><span id="local-6989586621690843057"><span class="annot"><span class="annottext">identityRejected :: Bool
-</span><a href="#local-6989586621690843057"><span class="hs-identifier hs-var hs-var">identityRejected</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-125"></span><span>    </span><span id="local-6989586621690843056"><span class="annot"><span class="annottext">identityRejected :: Bool
+</span><a href="#local-6989586621690843056"><span class="hs-identifier hs-var hs-var">identityRejected</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-126"></span><span>      </span><span class="hs-comment">-- ...if we're explicitly rejecting identity, or...</span><span>
 </span><span id="line-127"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;identity;q=0&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">`elem`</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621690843068"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span>
+</span><a href="#local-6989586621690843067"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span>
 </span><span id="line-128"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span>
 </span><span id="line-129"></span><span>        </span><span class="hs-comment">-- ...rejecting anything not listed and identity is not listed</span><span>
 </span><span id="line-130"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;*;q=0&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">`elem`</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621690843068"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span>
+</span><a href="#local-6989586621690843067"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span>
 </span><span id="line-131"></span><span>            </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&amp;&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">any</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;identity&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 </span><span class="hs-operator hs-var">`T.isPrefixOf`</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621690843068"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690843067"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-132"></span><span>        </span><span class="hs-special">)</span><span>
-</span><span id="line-133"></span><span>    </span><span id="local-6989586621690843050"><span class="annot"><span class="annottext">gzipAccepted :: Bool
-</span><a href="#local-6989586621690843050"><span class="hs-identifier hs-var hs-var">gzipAccepted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-133"></span><span>    </span><span id="local-6989586621690843049"><span class="annot"><span class="annottext">gzipAccepted :: Bool
+</span><a href="#local-6989586621690843049"><span class="hs-identifier hs-var hs-var">gzipAccepted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-134"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">any</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;gzip&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 </span><span class="hs-operator hs-var">`T.isPrefixOf`</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621690843068"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span>
+</span><a href="#local-6989586621690843067"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span>
 </span><span id="line-135"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&amp;&amp;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;gzip;q=0&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">`notElem`</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621690843068"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690843067"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-136"></span><span>    </span><span class="hs-comment">-- AFAICT missing header, or *,  implies &#8220;send whatever you want&#8221;</span><span>
 </span><span id="line-137"></span><span>    </span><span class="hs-comment">-- https://www.rfc-editor.org/rfc/rfc7231#section-5.3.4</span><span>
-</span><span id="line-138"></span><span>    </span><span id="local-6989586621690843048"><span class="annot"><span class="annottext">anyEncodingTechnicallyAcceptable :: Bool
-</span><a href="#local-6989586621690843048"><span class="hs-identifier hs-var hs-var">anyEncodingTechnicallyAcceptable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-138"></span><span>    </span><span id="local-6989586621690843047"><span class="annot"><span class="annottext">anyEncodingTechnicallyAcceptable :: Bool
+</span><a href="#local-6989586621690843047"><span class="hs-identifier hs-var hs-var">anyEncodingTechnicallyAcceptable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-139"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621690843068"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621690843067"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621690843068"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690843067"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;*&quot;</span></span><span class="hs-special">]</span><span>
-</span><span id="line-140"></span><span>    </span><span id="local-6989586621690843069"><span class="annot"><span class="annottext">acceptedEncodingTypes :: [EncodingType]
-</span><a href="#local-6989586621690843069"><span class="hs-identifier hs-var hs-var">acceptedEncodingTypes</span></a></span></span><span>
+</span><span id="line-140"></span><span>    </span><span id="local-6989586621690843068"><span class="annot"><span class="annottext">acceptedEncodingTypes :: [EncodingType]
+</span><a href="#local-6989586621690843068"><span class="hs-identifier hs-var hs-var">acceptedEncodingTypes</span></a></span></span><span>
 </span><span id="line-141"></span><span>      </span><span class="hs-comment">-- \| anyEncodingTechnicallyAcceptable = [Just CTGZip, identityEncoding]</span><span>
 </span><span id="line-142"></span><span>      </span><span class="hs-comment">-- NOTE!: For now to be conservative and maintain historical behavior we</span><span>
 </span><span id="line-143"></span><span>      </span><span class="hs-comment">-- will treat this case as &#8220;only identity is acceptable&#8221;:</span><span>
 </span><span id="line-144"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690843048"><span class="hs-identifier hs-var">anyEncodingTechnicallyAcceptable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">EncodingType
+</span><a href="#local-6989586621690843047"><span class="hs-identifier hs-var">anyEncodingTechnicallyAcceptable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">EncodingType
 </span><a href="Hasura.Server.Compression.html#identityEncoding"><span class="hs-identifier hs-var">identityEncoding</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-145"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-146"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">guard</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690843050"><span class="hs-identifier hs-var">gzipAccepted</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><a href="#local-6989586621690843049"><span class="hs-identifier hs-var">gzipAccepted</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">CompressionType
 </span><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span><span class="hs-special">)</span><span>
@@ -322,7 +322,7 @@ compression level 1:
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">guard</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690843057"><span class="hs-identifier hs-var">identityRejected</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><a href="#local-6989586621690843056"><span class="hs-identifier hs-var">identityRejected</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">EncodingType
 </span><a href="Hasura.Server.Compression.html#identityEncoding"><span class="hs-identifier hs-var">identityEncoding</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-148"></span><span>
