@@ -4,61 +4,21 @@
 module Hasura.StoredProcedure.Types
   ( NullableScalarType (..),
     nullableScalarTypeMapCodec,
-    storedProcedureArrayRelationshipsCodec,
+    arrayRelationshipsCodec,
     StoredProcedureConfig (..),
     StoredProcedureExposedAs (..),
   )
 where
 
-import Autodocodec (HasCodec (codec), HasObjectCodec (..), bimapCodec)
+import Autodocodec (HasCodec (codec))
 import Autodocodec qualified as AC
 import Autodocodec.Extended (graphQLFieldNameCodec)
 import Data.Aeson
 import Data.Char (toLower)
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Hasura.LogicalModel.NullableScalarType
+import Hasura.LogicalModelResolver.Codec (arrayRelationshipsCodec)
 import Hasura.Prelude hiding (first)
-import Hasura.RQL.Types.Backend (Backend (..))
-import Hasura.RQL.Types.Common (RelName)
-import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualConfig)
 import Language.GraphQL.Draft.Syntax qualified as G
-
-data MergedObject a b = MergedObject
-  { moFst :: a,
-    moSnd :: b
-  }
-
-instance (HasObjectCodec a, HasObjectCodec b) => HasObjectCodec (MergedObject a b) where
-  objectCodec = MergedObject <$> bimapCodec Right moFst objectCodec <*> bimapCodec Right moSnd objectCodec
-
-newtype NameField a = NameField {nameField :: a}
-
-instance (HasCodec a) => HasObjectCodec (NameField a) where
-  objectCodec = NameField <$> AC.requiredField "name" "name" AC..= nameField
-
-storedProcedureArrayRelationshipsCodec ::
-  forall b.
-  (Backend b) =>
-  AC.Codec
-    Value
-    (InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)))
-    (InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)))
-storedProcedureArrayRelationshipsCodec =
-  AC.dimapCodec
-    ( InsOrdHashMap.fromList
-        . fmap
-          ( \(MergedObject (NameField name) nst) ->
-              (name, nst)
-          )
-    )
-    ( fmap (\(fld, nst) -> MergedObject (NameField fld) nst) . InsOrdHashMap.toList
-    )
-    ( AC.listCodec $
-        AC.object "RelDefRelManualConfig" $
-          AC.objectCodec @(MergedObject (NameField RelName) (RelDef (RelManualConfig b)))
-    )
-
--- * Configuration
 
 -- | Tracked stored procedure configuration, and payload of the 'pg_track_stored procedure'.
 data StoredProcedureConfig = StoredProcedureConfig

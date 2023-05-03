@@ -745,6 +745,10 @@ library
                      , Hasura.Server.Auth.JWT
                      , Hasura.GC
 
+                     , Hasura.LogicalModelResolver.Codec
+                     , Hasura.LogicalModelResolver.Schema
+                     , Hasura.LogicalModelResolver.Types
+
                      , Hasura.NativeQuery.IR
                      , Hasura.NativeQuery.Cache
                      , Hasura.NativeQuery.Lenses

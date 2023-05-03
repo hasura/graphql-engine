@@ -13,9 +13,6 @@ module Hasura.StoredProcedure.Metadata
     spmReturns,
     spmArrayRelationships,
     ArgumentName (..),
-    InterpolatedItem (..),
-    InterpolatedQuery (..),
-    parseInterpolatedQuery,
     module Hasura.StoredProcedure.Types,
   )
 where
@@ -27,7 +24,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Data.Text.Extended qualified as T
 import Hasura.LogicalModel.Types
-import Hasura.NativeQuery.InterpolatedQuery
+import Hasura.LogicalModelResolver.Types (ArgumentName (..))
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendPrefix)
@@ -42,7 +39,7 @@ type Relationships = InsOrdHashMap RelName
 
 ---------------------------------------
 
--- | The representation of native queries within the metadata structure.
+-- | The representation of stored procedures within the metadata structure.
 data StoredProcedureMetadata (b :: BackendType) = StoredProcedureMetadata
   { _spmStoredProcedure :: FunctionName b,
     _spmConfig :: StoredProcedureConfig,

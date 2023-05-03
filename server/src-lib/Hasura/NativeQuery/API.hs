@@ -25,7 +25,7 @@ import Hasura.EncJSON
 import Hasura.LogicalModel.API (getCustomTypes)
 import Hasura.LogicalModel.Metadata (LogicalModelName)
 import Hasura.NativeQuery.Metadata (ArgumentName, NativeQueryMetadata (..), parseInterpolatedQuery)
-import Hasura.NativeQuery.Types (NativeQueryName, NullableScalarType, nativeQueryArrayRelationshipsCodec)
+import Hasura.NativeQuery.Types (NativeQueryName, NullableScalarType, arrayRelationshipsCodec)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend, SourceConnConfiguration)
 import Hasura.RQL.Types.BackendTag
@@ -70,7 +70,7 @@ instance (Backend b) => HasCodec (TrackNativeQuery b) where
           AC..= tnqCode
         <*> AC.optionalFieldWithDefault "arguments" mempty argumentsDoc
           AC..= tnqArguments
-        <*> AC.optionalFieldWithDefaultWith "array_relationships" nativeQueryArrayRelationshipsCodec mempty arrayRelationshipsDoc
+        <*> AC.optionalFieldWithDefaultWith "array_relationships" arrayRelationshipsCodec mempty arrayRelationshipsDoc
           AC..= tnqArrayRelationships
         <*> AC.optionalField "description" descriptionDoc
           AC..= tnqDescription

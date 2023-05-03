@@ -1,14 +1,10 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 -- | Schema parsers for native queries.
 module Hasura.NativeQuery.Schema (defaultBuildNativeQueryRootFields) where
 
 import Data.Has (Has (getter))
 import Data.HashMap.Strict qualified as HashMap
-import Data.Monoid (Ap (Ap, getAp))
 import Hasura.GraphQL.Schema.Backend
   ( BackendLogicalModelSelectSchema (..),
-    BackendSchema (columnParser),
     MonadBuildSchema,
   )
 import Hasura.GraphQL.Schema.Common
@@ -17,6 +13,7 @@ import Hasura.GraphQL.Schema.Common
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.LogicalModel.Schema
+import Hasura.LogicalModelResolver.Schema (argumentsSchema)
 import Hasura.NativeQuery.Cache (NativeQueryInfo (..))
 import Hasura.NativeQuery.IR (NativeQuery (..))
 import Hasura.NativeQuery.Metadata (ArgumentName (..), InterpolatedQuery (..))
@@ -25,7 +22,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Select (QueryDB (QDBMultipleRows))
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Value (Provenance (FromInternal), UnpreparedValue (UVParameter), openValueOrigin)
+import Hasura.RQL.IR.Value (Provenance (FromInternal), UnpreparedValue (UVParameter))
 import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.Metadata.Object qualified as MO
 import Hasura.RQL.Types.Schema.Options qualified as Options
@@ -37,7 +34,6 @@ import Hasura.RQL.Types.SourceCustomization
   )
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Language.GraphQL.Draft.Syntax qualified as G
-import Language.GraphQL.Draft.Syntax.QQ qualified as G
 
 defaultBuildNativeQueryRootFields ::
   forall b r m n.
@@ -122,38 +118,4 @@ nativeQueryArgumentsSchema ::
   G.Name ->
   HashMap ArgumentName (NullableScalarType b) ->
   MaybeT (SchemaT r m) (P.InputFieldsParser n (HashMap ArgumentName (Column.ColumnValue b)))
-nativeQueryArgumentsSchema nativeQueryName argsSignature = do
-  -- Lift 'SchemaT r m (InputFieldsParser ..)' into a monoid using Applicative.
-  -- This lets us use 'foldMap' + monoid structure of hashmaps to avoid awkwardly
-  -- traversing the arguments and building the resulting parser.
-  argsParser <-
-    getAp $
-      foldMap
-        ( \(name, NullableScalarType {nstType, nstNullable, nstDescription}) -> Ap do
-            argValueParser <-
-              fmap (HashMap.singleton name . openValueOrigin)
-                <$> lift (columnParser (Column.ColumnScalar nstType) (G.Nullability nstNullable))
-            -- TODO: Naming conventions?
-            -- TODO: Custom fields? (Probably not)
-            argName <- hoistMaybe (G.mkName (getArgumentName name))
-            let description = case nstDescription of
-                  Just desc -> G.Description desc
-                  Nothing -> G.Description ("Native query argument " <> getArgumentName name)
-            pure $
-              P.field
-                argName
-                (Just description)
-                argValueParser
-        )
-        (HashMap.toList argsSignature)
-
-  let desc = Just $ G.Description $ G.unName nativeQueryName <> " Native Query Arguments"
-
-  pure $
-    if null argsSignature
-      then mempty
-      else
-        P.field
-          [G.name|args|]
-          desc
-          (P.object (nativeQueryName <> [G.name|_arguments|]) desc argsParser)
+nativeQueryArgumentsSchema = argumentsSchema "Native Query"

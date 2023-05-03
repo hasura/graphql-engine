@@ -70,7 +70,7 @@ instance (Backend b) => HasCodec (TrackStoredProcedure b) where
           AC..= tspConfig
         <*> AC.optionalFieldWithDefault "arguments" mempty argumentsDoc
           AC..= tspArguments
-        <*> AC.optionalFieldWithDefaultWith "array_relationships" storedProcedureArrayRelationshipsCodec mempty arrayRelationshipsDoc
+        <*> AC.optionalFieldWithDefaultWith "array_relationships" arrayRelationshipsCodec mempty arrayRelationshipsDoc
           AC..= tspArrayRelationships
         <*> AC.optionalField "description" descriptionDoc
           AC..= tspDescription
@@ -170,7 +170,7 @@ runGetStoredProcedure q = do
 
   pure (encJFromJValue (InsOrdHashMap.elems <$> storedProcedure))
 
--- | Handler for the 'track_native_query' endpoint. The type 'TrackStoredProcedure b'
+-- | Handler for the 'track_stored_procedure' endpoint. The type 'TrackStoredProcedure b'
 -- (appearing here in wrapped as 'BackendTrackStoredProcedure b' for 'AnyBackend'
 -- compatibility) is defined in 'class StoredProcedureMetadata'.
 runTrackStoredProcedure ::

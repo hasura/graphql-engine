@@ -13,10 +13,11 @@ where
 
 import Autodocodec
 import Autodocodec qualified as AC
-import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Bifunctor (first)
 import Data.Text qualified as T
 import Hasura.LogicalModel.NullableScalarType (NullableScalarType (..), nullableScalarTypeMapCodec)
+import Hasura.LogicalModelResolver.Types (ArgumentName (..))
 import Hasura.Prelude hiding (first)
 import Language.Haskell.TH.Syntax (Lift)
 
@@ -81,25 +82,6 @@ deriving via
     ToJSON (InterpolatedQuery v)
 
 ---------------------------------------
-
-newtype ArgumentName = ArgumentName
-  { getArgumentName :: Text
-  }
-  deriving newtype (Eq, Ord, Show, Hashable)
-  deriving stock (Generic)
-
-instance HasCodec ArgumentName where
-  codec = dimapCodec ArgumentName getArgumentName codec
-
-deriving newtype instance ToJSON ArgumentName
-
-deriving newtype instance FromJSON ArgumentName
-
-deriving newtype instance ToJSONKey ArgumentName
-
-deriving newtype instance FromJSONKey ArgumentName
-
-instance NFData ArgumentName
 
 -- | extract all of the `{{ variable }}` inside our query string
 parseInterpolatedQuery ::
