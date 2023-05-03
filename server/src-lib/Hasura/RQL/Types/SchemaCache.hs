@@ -776,7 +776,7 @@ getLogicalModelColExpDeps ::
   AnnBoolExpFld b (PartialSQLExp b) ->
   [SchemaDependency]
 getLogicalModelColExpDeps source logicalModelName = \case
-  AVRelationship _ _ -> []
+  AVRelationship {} -> []
   AVComputedField _ -> []
   AVAggregationPredicates _ -> []
   AVColumn colInfo opExps -> do
@@ -841,7 +841,7 @@ getColExpDeps bexp = do
           colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
           colDep = mkColDep @b colDepReason source currTable columnName
        in (colDep :) <$> getOpExpDeps opExps
-    AVRelationship relInfo relBoolExp ->
+    AVRelationship relInfo RelationshipFilters {rfTargetTablePermissions, rfFilter} ->
       let relationshipName = riName relInfo
           relationshipTable = riRTable relInfo
           schemaDependency =
@@ -851,7 +851,18 @@ getColExpDeps bexp = do
                     SOITableObj @b currTable (TORel relationshipName)
               )
               DROnType
-       in (schemaDependency :) <$> local (\e -> e {currTable = relationshipTable}) (getBoolExpDeps' relBoolExp)
+       in do
+            boolExpDeps <- local (\e -> e {currTable = relationshipTable}) (getBoolExpDeps' rfFilter)
+            permDeps <-
+              local
+                ( \e ->
+                    e
+                      { currTable = relationshipTable,
+                        rootTable = relationshipTable
+                      }
+                )
+                (getBoolExpDeps' rfTargetTablePermissions)
+            return (schemaDependency : boolExpDeps <> permDeps)
     AVComputedField computedFieldBoolExp ->
       let mkComputedFieldDep' r =
             mkComputedFieldDep @b r source currTable $ _acfbName computedFieldBoolExp

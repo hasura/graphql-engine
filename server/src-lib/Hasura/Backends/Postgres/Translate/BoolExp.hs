@@ -124,14 +124,32 @@ translateBoolExp = \case
       let colFld = fromCol @('Postgres pgKind) $ ciColumn colInfo
           bExps = map (mkFieldCompExp rootReference currTableReference $ LColumn colFld) opExps
       return $ sqlAnd bExps
-    AVRelationship (RelInfo _ _ colMapping relTN _ _) nesAnn -> do
-      -- Convert the where clause on the relationship
-      relTNAlias <- S.toTableAlias <$> freshIdentifier relTN
-      let relTNIdentifier = S.tableAliasToIdentifier relTNAlias
-      annRelBoolExp <- withCurrentTable (S.QualifiedIdentifier relTNIdentifier Nothing) (translateBoolExp nesAnn)
-      tableRelExp <- translateTableRelationship colMapping relTNIdentifier
-      let innerBoolExp = S.BEBin S.AndOp tableRelExp annRelBoolExp
-      return $ S.mkExists (S.FISimple relTN $ Just $ relTNAlias) innerBoolExp
+    AVRelationship
+      (RelInfo _ _ colMapping relTN _ _)
+      RelationshipFilters
+        { rfTargetTablePermissions,
+          rfFilter
+        } -> do
+        -- Convert the where clause on the relationship
+        relTNAlias <- S.toTableAlias <$> freshIdentifier relTN
+        let relTNIdentifier = S.tableAliasToIdentifier relTNAlias
+            relTNQual = S.QualifiedIdentifier relTNIdentifier Nothing
+
+        -- '$' references in permissions of the relationship target table refer to that table, so we
+        -- reset both here.
+        permBoolExp <-
+          local
+            ( \e ->
+                e
+                  { currTableReference = relTNQual,
+                    rootReference = relTNQual
+                  }
+            )
+            (translateBoolExp rfTargetTablePermissions)
+        annRelBoolExp <- withCurrentTable relTNQual (translateBoolExp rfFilter)
+        tableRelExp <- translateTableRelationship colMapping relTNIdentifier
+        let innerBoolExp = S.BEBin S.AndOp tableRelExp (S.BEBin S.AndOp permBoolExp annRelBoolExp)
+        return $ S.mkExists (S.FISimple relTN $ Just $ relTNAlias) innerBoolExp
     AVComputedField (AnnComputedFieldBoolExp _ _ function sessionArgPresence cfBoolExp) -> do
       case cfBoolExp of
         CFBEScalar opExps -> do

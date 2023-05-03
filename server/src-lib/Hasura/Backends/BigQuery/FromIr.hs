@@ -814,11 +814,11 @@ fromAnnBoolExpFld =
       expression <- fmap ColumnExpression (fromColumnInfo columnInfo)
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
-    Ir.AVRelationship Rql.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
+    Ir.AVRelationship Rql.RelInfo {riMapping = mapping, riRTable = table} (Ir.RelationshipFilters tablePerms annBoolExp) -> do
       selectFrom <- lift (fromQualifiedTable table)
       foreignKeyConditions <- fromMapping selectFrom mapping
       whereExpression <-
-        local (const (fromAlias selectFrom)) (fromAnnBoolExp annBoolExp)
+        local (const (fromAlias selectFrom)) (fromAnnBoolExp (Ir.BoolAnd [tablePerms, annBoolExp]))
       pure
         ( ExistsExpression
             Select

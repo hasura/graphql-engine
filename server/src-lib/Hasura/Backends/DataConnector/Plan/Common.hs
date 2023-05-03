@@ -233,9 +233,10 @@ translateBoolExp sessionVariables sourceTableName = \case
     API.Not <$> (translateBoolExp' sourceTableName) x
   BoolField (AVColumn c xs) ->
     lift $ mkIfZeroOrMany API.And <$> traverse (translateOp sessionVariables (Witch.from $ ciColumn c) (Witch.from . columnTypeToScalarType $ ciType c)) xs
-  BoolField (AVRelationship relationshipInfo boolExp) -> do
+  BoolField (AVRelationship relationshipInfo (RelationshipFilters {rfTargetTablePermissions, rfFilter})) -> do
     (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
-    API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp' _rTargetTable boolExp
+    -- TODO: How does this function keep track of the root table?
+    API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp' _rTargetTable (BoolAnd [rfTargetTablePermissions, rfFilter])
   BoolExists GExists {..} ->
     let tableName = Witch.from _geTable
      in API.Exists (API.UnrelatedTable tableName) <$> translateBoolExp' tableName _geWhere

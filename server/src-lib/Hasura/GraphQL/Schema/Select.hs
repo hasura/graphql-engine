@@ -1467,7 +1467,7 @@ relationshipField table ri = runMaybeT do
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
   roleName <- retrieve scRole
   optimizePermissionFilters <- retrieve Options.soOptimizePermissionFilters
-  tableInfo <- lift $ askTableInfo table
+  tableInfo <- lift $ askTableInfo @b table
   otherTableInfo <- lift $ askTableInfo $ riRTable ri
   tablePerms <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   remotePerms <- hoistMaybe $ tableSelectPermissions roleName otherTableInfo
@@ -1477,17 +1477,28 @@ relationshipField table ri = runMaybeT do
       deduplicatePermissions :: AnnBoolExp b (IR.UnpreparedValue b) -> AnnBoolExp b (IR.UnpreparedValue b)
       deduplicatePermissions x =
         case (optimizePermissionFilters, x) of
-          (OptimizePermissionFilters, BoolAnd [BoolField (AVRelationship remoteRI remoteTablePerm)]) ->
-            -- Here we try to figure out if the "forwards" joining condition
-            -- from `table` to the related table `riRTable ri` is equal to the
-            -- "backwards" joining condition from the related table back to
-            -- `table`.  If it is, then we can optimize the row-level permission
-            -- filters by dropping them here.
-            if (riRTable remoteRI == table)
-              && (riMapping remoteRI `HashMap.isInverseOf` riMapping ri)
-              && (thisTablePerm == remoteTablePerm)
-              then BoolAnd []
-              else x
+          ( OptimizePermissionFilters,
+            BoolAnd
+              [ BoolField
+                  ( AVRelationship
+                      remoteRI
+                      RelationshipFilters
+                        { rfTargetTablePermissions,
+                          rfFilter
+                        }
+                    )
+                ]
+            ) ->
+              -- Here we try to figure out if the "forwards" joining condition
+              -- from `table` to the related table `riRTable ri` is equal to the
+              -- "backwards" joining condition from the related table back to
+              -- `table`.  If it is, then we can optimize the row-level permission
+              -- filters by dropping them here.
+              if (riRTable remoteRI == table)
+                && (riMapping remoteRI `HashMap.isInverseOf` riMapping ri)
+                && (thisTablePerm == rfTargetTablePermissions)
+                then rfFilter
+                else x
           _ -> x
       deduplicatePermissions' :: SelectExp b -> SelectExp b
       deduplicatePermissions' expr =

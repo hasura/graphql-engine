@@ -86,12 +86,12 @@ args:
       create table items (
         id serial primary key,
         name text,
-        quantity int
+        item_quantity int
       );
       create table order_cart (
         id serial primary key,
         item_id int not null references items(id),
-        quantity int
+        order_cart_quantity int
       );
 
 
@@ -605,11 +605,11 @@ args:
     table: order_cart
     role:  user
     permission:
-      columns: [item_id, quantity]
+      columns: [item_id, order_cart_quantity]
       check:
         item:
-          quantity:
+          item_quantity:
             _cgte:
               - $
-              - quantity
+              - order_cart_quantity
       set: {}

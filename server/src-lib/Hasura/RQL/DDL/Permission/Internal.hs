@@ -184,7 +184,16 @@ annColExp rhsParser rootFieldInfoMap colInfoMap (ColExp fieldName colVal) = do
       relBoolExp <- decodeValue colVal
       relFieldInfoMap <- askFieldInfoMapSource $ riRTable relInfo
       annRelBoolExp <- annBoolExp rhsParser rootFieldInfoMap relFieldInfoMap $ unBoolExp relBoolExp
-      return $ AVRelationship relInfo annRelBoolExp
+      return $
+        AVRelationship
+          relInfo
+          ( RelationshipFilters
+              { -- Note that we do not include the permissions of the target table, since
+                -- those only apply to GraphQL queries.
+                rfTargetTablePermissions = BoolAnd [],
+                rfFilter = annRelBoolExp
+              }
+          )
     FIComputedField computedFieldInfo ->
       AVComputedField <$> buildComputedFieldBooleanExp (BoolExpResolver annBoolExp) rhsParser rootFieldInfoMap colInfoMap computedFieldInfo colVal
     -- Using remote fields in the boolean expression is not supported.

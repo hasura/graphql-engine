@@ -119,18 +119,32 @@ genAnnBoolExpFld
       relationship =
         AVRelationship
           <$> genRelInfo genTableName genColumn
-          <*> genAnnBoolExp
-            ( genAnnBoolExpFld
-                genColumn
-                genTableName
-                genScalarType
-                genFunctionName
-                genXComputedField
-                genBooleanOperators
-                genFunctionArgumentExp
-                genA
-            )
-            genTableName
+          <*> ( RelationshipFilters
+                  <$> genAnnBoolExp
+                    ( genAnnBoolExpFld
+                        genColumn
+                        genTableName
+                        genScalarType
+                        genFunctionName
+                        genXComputedField
+                        genBooleanOperators
+                        genFunctionArgumentExp
+                        genA
+                    )
+                    genTableName
+                  <*> genAnnBoolExp
+                    ( genAnnBoolExpFld
+                        genColumn
+                        genTableName
+                        genScalarType
+                        genFunctionName
+                        genXComputedField
+                        genBooleanOperators
+                        genFunctionArgumentExp
+                        genA
+                    )
+                    genTableName
+              )
       computedField =
         AVComputedField
           <$> genAnnComputedFieldBolExp

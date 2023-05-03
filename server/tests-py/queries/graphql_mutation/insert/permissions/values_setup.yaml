@@ -54,6 +54,6 @@ args:
     table: items
     objects:
       - name: Apsara Pencil
-        quantity: 10
+        item_quantity: 10
       - name: Reynolds Trimax
-        quantity: 1323
+        item_quantity: 1323

@@ -84,10 +84,10 @@ fromAnnBoolExpFld =
     IR.AVColumn columnInfo opExpGs -> do
       expressions <- traverse (fromOpExpG columnInfo) opExpGs
       pure (AndExpression expressions)
-    IR.AVRelationship IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
+    IR.AVRelationship IR.RelInfo {riMapping = mapping, riRTable = table} (IR.RelationshipFilters tablePerm annBoolExp) -> do
       selectFrom <- lift (aliasQualifiedTable table)
       mappingExpression <- translateMapping selectFrom mapping
-      whereExpression <- scopedTo selectFrom (fromGBoolExp annBoolExp)
+      whereExpression <- scopedTo selectFrom (fromGBoolExp (IR.BoolAnd [tablePerm, annBoolExp]))
       pure
         ( ExistsExpression
             emptySelect

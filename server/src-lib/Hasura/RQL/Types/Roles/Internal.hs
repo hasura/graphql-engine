@@ -158,8 +158,8 @@ instance
     case (annBoolExpFldL, annBoolExpFldR) of
       (AVColumn colInfoL opExpsL, AVColumn colInfoR opExpsR) ->
         colInfoL == colInfoR && Set.fromList opExpsL == Set.fromList opExpsR
-      (AVRelationship relInfoL annBoolExpL, AVRelationship relInfoR annBoolExpR) ->
-        relInfoL == relInfoR && annBoolExpL ==~ annBoolExpR
+      (AVRelationship relInfoL (RelationshipFilters permsL annBoolExpL), AVRelationship relInfoR (RelationshipFilters permsR annBoolExpR)) ->
+        relInfoL == relInfoR && annBoolExpL ==~ annBoolExpR && permsL ==~ permsR
       (AVComputedField annCompFldBoolExpL, AVComputedField annCompFldBoolExpR) ->
         annCompFldBoolExpL ==~ annCompFldBoolExpR
       (_, _) -> False

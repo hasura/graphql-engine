@@ -135,13 +135,14 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
           lift $ fmap (AVColumn columnInfo) <$> comparisonExps @b (ciType columnInfo)
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
-          remoteTableInfo <- askTableInfo $ riRTable relationshipInfo
-          let remoteTableFilter =
-                (fmap . fmap) partialSQLExpToUnpreparedValue $
+          let remoteTable = riRTable relationshipInfo
+          remoteTableInfo <- askTableInfo $ remoteTable
+          let remoteTablePermissions =
+                (fmap . fmap) (partialSQLExpToUnpreparedValue) $
                   maybe annBoolExpTrue spiFilter $
                     tableSelectPermissions roleName remoteTableInfo
           remoteBoolExp <- lift $ tableBoolExp remoteTableInfo
-          pure $ fmap (AVRelationship relationshipInfo . andAnnBoolExps remoteTableFilter) remoteBoolExp
+          pure $ fmap (AVRelationship relationshipInfo . RelationshipFilters remoteTablePermissions) remoteBoolExp
         FIComputedField ComputedFieldInfo {..} -> do
           let ComputedFieldFunction {..} = _cfiFunction
           -- For a computed field to qualify in boolean expression it shouldn't have any input arguments

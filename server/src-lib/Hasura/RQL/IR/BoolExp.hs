@@ -24,6 +24,7 @@ module Hasura.RQL.IR.BoolExp
     ComputedFieldBoolExp (..),
     AnnComputedFieldBoolExp (..),
     AnnBoolExpFld (..),
+    RelationshipFilters (..),
     AnnBoolExp,
     AnnColumnCaseBoolExpPartialSQL,
     AnnColumnCaseBoolExp,
@@ -479,7 +480,9 @@ instance
 -- This type is parameterized over the type of leaf values, the values on which we operate.
 data AnnBoolExpFld (backend :: BackendType) leaf
   = AVColumn (ColumnInfo backend) [OpExpG backend leaf]
-  | AVRelationship (RelInfo backend) (AnnBoolExp backend leaf)
+  | AVRelationship
+      (RelInfo backend)
+      (RelationshipFilters backend leaf)
   | AVComputedField (AnnComputedFieldBoolExp backend leaf)
   | AVAggregationPredicates (AggregationPredicates backend leaf)
   deriving (Functor, Foldable, Traversable, Generic)
@@ -533,9 +536,9 @@ instance
       ( K.fromText $ toTxt $ ciColumn pci,
         toJSON (pci, object . pure . toJSONKeyValue <$> opExps)
       )
-    AVRelationship ri relBoolExp ->
+    AVRelationship ri filters ->
       ( K.fromText $ relNameToTxt $ riName ri,
-        toJSON (ri, toJSON relBoolExp)
+        toJSON (ri, toJSON filters)
       )
     AVComputedField cfBoolExp ->
       ( K.fromText $ toTxt $ _acfbName cfBoolExp,
@@ -545,6 +548,45 @@ instance
               CFBETable _ boolExp -> toJSON (function, toJSON boolExp)
       )
     AVAggregationPredicates avAggregationPredicates -> toJSONKeyValue avAggregationPredicates
+
+-- | This type represents a boolean expression over a relationship. In addition
+-- to the actual user-specified predicate, we need to also consider the
+-- permissions of the target table.
+--
+-- Because the permissions may include column-comparison-operators, they need to
+-- be translated in the context of the table they apply to. Thus we keep the
+-- permissions and filters separate.
+data RelationshipFilters (backend :: BackendType) leaf = RelationshipFilters
+  { rfTargetTablePermissions :: AnnBoolExp backend leaf,
+    rfFilter :: AnnBoolExp backend leaf
+  }
+  deriving (Functor, Foldable, Traversable, Generic)
+
+deriving instance
+  ( Backend b,
+    Eq (AnnBoolExp b a)
+  ) =>
+  Eq (RelationshipFilters b a)
+
+deriving instance
+  ( Backend b,
+    Show (AnnBoolExp b a)
+  ) =>
+  Show (RelationshipFilters b a)
+
+instance
+  ( Backend b,
+    NFData (AnnBoolExp b a)
+  ) =>
+  NFData (RelationshipFilters b a)
+
+instance
+  ( Backend b,
+    Hashable (AnnBoolExp b a)
+  ) =>
+  Hashable (RelationshipFilters b a)
+
+instance (ToJSON (AnnBoolExp backend leaf)) => ToJSON (RelationshipFilters backend leaf)
 
 -- | A simple alias for the kind of boolean expressions used in the schema, that ties together
 -- 'GBoolExp', 'OpExpG', and 'AnnBoolExpFld'.
