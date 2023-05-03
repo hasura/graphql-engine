@@ -122,40 +122,40 @@ newtype ShowHeadersAndEnvVarInfo = ShowHeadersAndEnvVarInfo {unShowHeadersAndEnv
 serializeHTTPExceptionWithErrorMessage :: ShowHeadersAndEnvVarInfo -> HTTP.HttpException -> Text
 serializeHTTPExceptionWithErrorMessage (ShowHeadersAndEnvVarInfo isShowHeaderAndEnvVarInfo) = \case
   HTTP.HttpExceptionRequest _ err -> case err of
-    HTTP.StatusCodeException response _ -> "response status code indicated failure" <> (tshow . HTTP.statusCode $ HTTP.responseStatus response)
-    HTTP.TooManyRedirects redirects -> "too many redirects: " <> tshow (length redirects) <> " redirects"
-    HTTP.OverlongHeaders -> "overlong headers"
-    HTTP.ResponseTimeout -> "response timeout"
-    HTTP.ConnectionTimeout -> "connection timeout"
-    HTTP.ConnectionFailure exn -> "connection failure: " <> serializeExceptionForDebugging exn
-    HTTP.InvalidStatusLine statusLine -> "invalid status line: " <> fromUtf8 statusLine
+    HTTP.StatusCodeException response _ -> "Response status code indicated failure" <> (tshow . HTTP.statusCode $ HTTP.responseStatus response)
+    HTTP.TooManyRedirects redirects -> "Too many redirects: " <> tshow (length redirects) <> " redirects"
+    HTTP.OverlongHeaders -> "Overlong headers"
+    HTTP.ResponseTimeout -> "Response timeout"
+    HTTP.ConnectionTimeout -> "Connection timeout"
+    HTTP.ConnectionFailure exn -> "Connection failure: " <> serializeExceptionForDebugging exn
+    HTTP.InvalidStatusLine statusLine -> "Invalid HTTP status line: " <> fromUtf8 statusLine
     HTTP.InvalidHeader header ->
       if isShowHeaderAndEnvVarInfo
-        then "invalid header: " <> fromUtf8 header
-        else "invalid Header"
+        then "Invalid header: " <> fromUtf8 header
+        else "Invalid Header"
     HTTP.InvalidRequestHeader requestHeader ->
       if isShowHeaderAndEnvVarInfo
-        then "invalid request header: " <> fromUtf8 requestHeader
-        else "invalid request header"
+        then "Invalid request header: " <> fromUtf8 requestHeader
+        else "Invalid request header"
     HTTP.InternalException exn -> case fromException exn of
-      Just (Restricted.ConnectionRestricted _ _) -> "blocked connection to private IP address: " <> serializeExceptionForDebugging exn
-      Nothing -> "internal error: " <> serializeExceptionForDebugging exn
-    HTTP.ProxyConnectException proxyHost port status -> "proxy connection to " <> fromUtf8 proxyHost <> ":" <> tshow port <> " returned response with status code that indicated failure: " <> tshow (HTTP.statusCode status)
-    HTTP.NoResponseDataReceived -> "no response data received"
+      Just (Restricted.ConnectionRestricted _ _) -> "Blocked connection to private IP address: " <> serializeExceptionForDebugging exn
+      Nothing -> "Internal error: " <> serializeExceptionForDebugging exn
+    HTTP.ProxyConnectException proxyHost port status -> "Proxy connection to " <> fromUtf8 proxyHost <> ":" <> tshow port <> " returned response with status code that indicated failure: " <> tshow (HTTP.statusCode status)
+    HTTP.NoResponseDataReceived -> "No response data received"
     HTTP.TlsNotSupported -> "TLS not supported"
-    HTTP.WrongRequestBodyStreamSize expected actual -> "wrong request body stream size. expected: " <> tshow expected <> ", actual: " <> tshow actual
-    HTTP.ResponseBodyTooShort expected actual -> "response body too short. expected: " <> tshow expected <> ", actual: " <> tshow actual
-    HTTP.InvalidChunkHeaders -> "invalid chunk headers"
-    HTTP.IncompleteHeaders -> "incomplete headers"
-    HTTP.InvalidDestinationHost host -> "invalid destination host: " <> fromUtf8 host
+    HTTP.WrongRequestBodyStreamSize expected actual -> "Wrong request body stream size. expected: " <> tshow expected <> ", actual: " <> tshow actual
+    HTTP.ResponseBodyTooShort expected actual -> "Response body too short. expected: " <> tshow expected <> ", actual: " <> tshow actual
+    HTTP.InvalidChunkHeaders -> "Invalid chunk headers"
+    HTTP.IncompleteHeaders -> "Incomplete headers"
+    HTTP.InvalidDestinationHost host -> "Invalid destination host: " <> fromUtf8 host
     HTTP.HttpZlibException exn -> "HTTP zlib error: " <> serializeExceptionForDebugging exn
     HTTP.InvalidProxyEnvironmentVariable name value ->
       if isShowHeaderAndEnvVarInfo
-        then "invalid proxy environment variable: " <> name <> "=" <> value
-        else "invalid proxy environment variable: " <> name
-    HTTP.ConnectionClosed -> "connection closed"
-    HTTP.InvalidProxySettings err' -> "invalid proxy settings: " <> err'
-  HTTP.InvalidUrlException url' reason -> "invalid url: " <> T.pack url' <> "; reason: " <> T.pack reason
+        then "Invalid proxy environment variable: " <> name <> "=" <> value
+        else "Invalid proxy environment variable: " <> name
+    HTTP.ConnectionClosed -> "Connection closed"
+    HTTP.InvalidProxySettings err' -> "Invalid proxy settings: " <> err'
+  HTTP.InvalidUrlException url' reason -> "Invalid url: " <> T.pack url' <> "; reason: " <> T.pack reason
   where
     fromUtf8 = TE.decodeUtf8With TE.lenientDecode
 

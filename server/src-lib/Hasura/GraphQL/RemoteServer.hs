@@ -491,7 +491,7 @@ throwRemoteSchemaHttp ::
 throwRemoteSchemaHttp urlEnvRecord exception =
   throwError $
     (baseError urlEnvRecord)
-      { qeInternal = Just $ ExtraInternal $ J.toJSON $ HttpException exception
+      { qeInternal = Just $ ExtraInternal $ getHttpExceptionJson (ShowErrorInfo True) $ HttpException exception
       }
   where
     baseError val = err400 RemoteSchemaError (httpExceptMsg val)

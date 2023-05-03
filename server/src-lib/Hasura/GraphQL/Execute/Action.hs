@@ -613,7 +613,7 @@ callWebhook
       Left e ->
         throw500WithDetail "http exception when calling webhook" $
           J.toJSON $
-            ActionInternalError (J.toJSON $ HttpException e) requestInfo Nothing
+            ActionInternalError (getHttpExceptionJson (ShowErrorInfo True) $ HttpException e) requestInfo Nothing
       Right responseWreq -> do
         -- TODO(SOLOMON): Remove 'wreq'
         let responseBody = responseWreq ^. Wreq.responseBody
