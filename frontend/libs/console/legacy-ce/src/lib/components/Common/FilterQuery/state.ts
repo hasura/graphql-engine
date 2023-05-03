@@ -124,7 +124,14 @@ export const useFilterQuery = (
       requestAction(endpoint, options, undefined, undefined, true, true)
     ).then(
       (data: any) => {
-        setRows(data ?? []);
+        if (triggerType === 'data') {
+          setRows(data ?? []);
+        } else if (triggerOp !== 'invocation') {
+          setRows(data?.events ?? []);
+        } else {
+          setRows(data?.invocations ?? []);
+        }
+
         setLoading(false);
         if (offset !== undefined) {
           setState(s => ({ ...s, offset }));
