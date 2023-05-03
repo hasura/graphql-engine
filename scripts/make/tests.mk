@@ -240,3 +240,9 @@ py-tests:
 ## upgrade-tests: run the server upgrade tests
 upgrade-tests:
 	cabal run upgrade-tests:test:upgrade-tests
+
+.PHONY: test-dc-postgres-agent
+## test-dc-postgres-agent: run the dc-api test suite against the postgres agent
+test-dc-postgres-agent:
+	$(DC_POSTGRES_DOCKER_COMPOSE) up --wait
+	cabal run test:tests-dc-api -- test --agent-base-url "http://localhost:8888" --agent-config '{ "connection": "postgresql://hasura:hasura@localhost:65002/hasura"}' sandwich --tui

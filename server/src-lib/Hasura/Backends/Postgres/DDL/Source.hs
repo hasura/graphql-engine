@@ -20,6 +20,8 @@ module Hasura.Backends.Postgres.DDL.Source
     resolveDatabaseMetadata,
     resolveSourceConfig,
     logPGSourceCatalogMigrationLockedQueries,
+    -- naughty exports, forgive me padre
+    pgFetchTableMetadata,
   )
 where
 

@@ -21,3 +21,13 @@ run-pro-server: $(CONSOLE_EE_ASSETS_PATH)
 		serve \
 		--enable-console --console-assets-dir '$(CONSOLE_EE_ASSETS_PATH)' \
 		--enabled-log-types '$(ENABLED_LOG_TYPES)'
+
+.PHONY: run-dc-postgres-agent
+## run-dc-postgres-agent:  run the new exciting Postgres data connector
+run-dc-postgres-agent:
+	cabal run postgres-agent
+
+.PHONY: run-dc-postgres-agent-watch
+## run-dc-postgres-agent-watch
+run-dc-postgres-agent-watch:
+	watchexec -r -e .hs make run-dc-postgres-agent
