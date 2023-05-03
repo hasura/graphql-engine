@@ -23677,6 +23677,9 @@ prepareCatalog :: (MonadIO m, MonadBaseControl IO m) => SourceConfig ('Postgres 
 --   <a>https://github.com/cockroachdb/cockroach/issues/86375</a>
 class FetchTableMetadata (pgKind :: PostgresKind)
 fetchTableMetadata :: forall m. (FetchTableMetadata pgKind, Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadTx m) => HashSet QualifiedTable -> m (DBTablesMetadata ('Postgres pgKind))
+
+-- | Fetch Postgres metadata of all user tables
+pgFetchTableMetadata :: forall pgKind m. (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind, MonadTx m) => HashSet QualifiedTable -> m (DBTablesMetadata ('Postgres pgKind))
 class FetchFunctionMetadata (pgKind :: PostgresKind)
 fetchFunctionMetadata :: (FetchFunctionMetadata pgKind, MonadTx m) => HashSet QualifiedFunction -> m (DBFunctionsMetadata ('Postgres pgKind))
 
