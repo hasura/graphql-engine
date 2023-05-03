@@ -1,15 +1,19 @@
 import React from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { InputField } from '../../../../../new-components/Form';
+import {
+  AdvancedSelectField,
+  CheckboxesField,
+  InputField,
+} from '../../../../../new-components/Form';
 import { Button } from '../../../../../new-components/Button';
 import { Analytics } from '../../../../Analytics';
 import { ConsentCheckbox } from './ConsentCheckbox';
 import {
   ActivateEEFormSchema,
+  activationSchema,
   RegisterEEFormSchema,
   registrationSchema,
-  activationSchema,
 } from './schema';
 import { useRegisterEETrial } from './useRegisterEETrial';
 import { useActivateEETrial } from './useActivateEETrial';
@@ -275,6 +279,47 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
             name="phoneNumber"
             label="Phone Number"
             placeholder="+1 123-345-6789"
+          />
+        </Analytics>
+        <Analytics
+          name="ee-registration-form-enterprise-use-case"
+          passHtmlAttributesToChildren
+        >
+          <CheckboxesField
+            name="eeUseCase"
+            label="What brings you to Hasura Enterprise? *"
+            options={[
+              {
+                value: 'ee-db-support',
+                label:
+                  'Enterprise only database support (MySQL, Oracle, Snowflake etc.)',
+              },
+              {
+                value: 'ee-features',
+                label:
+                  'Enterprise-only features (Observability, Security, Performance etc.)',
+              },
+            ]}
+            orientation="horizontal"
+          />
+        </Analytics>
+        <Analytics
+          name="ee-registration-form-hasura-use-case"
+          passHtmlAttributesToChildren
+        >
+          <AdvancedSelectField
+            name="hasuraUseCase"
+            options={[
+              { value: 'data-api', label: 'Data API on my databases' },
+              {
+                value: 'data-federation',
+                label: 'Data Federation across APIs and databases',
+              },
+              { value: 'gql-backend', label: 'GraphQL Backend' },
+              { value: 'api-gateway', label: 'API Gateway' },
+            ].sort(() => Math.random() - 0.5)}
+            label="What would you like to Build with Hasura? *"
+            placeholder="Please select"
           />
         </Analytics>
         <Analytics name="ee-registration-form-tos-consent">

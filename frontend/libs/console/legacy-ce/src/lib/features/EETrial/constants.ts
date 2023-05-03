@@ -17,6 +17,9 @@ export const REGISTER_EE_TRIALS_MUTATION = gql(`
         $organization: String!
         $phone: String!
         $password: String!
+        $hasuraUseCase: String!
+        $eeUseCase: [String]!
+
   ) {
      registerEETrial(
         first: $first,
@@ -26,6 +29,8 @@ export const REGISTER_EE_TRIALS_MUTATION = gql(`
         organization: $organization,
         phone: $phone
         password: $password
+        hasuraUseCase: $hasuraUseCase
+        eeUseCase: $eeUseCase
     ){
       client_id
       client_secret
