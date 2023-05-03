@@ -4,6 +4,7 @@ import { trackCustomEvent } from '../../../Analytics';
 import { useOnboardingData } from './useOnboardingData';
 import { getWizardState } from '../utils';
 import { AllowedSurveyNames } from '../../../Surveys/types';
+import { LS_KEYS, setLSItem } from '../../../../utils';
 
 export type WizardState =
   | 'familiarity-survey'
@@ -35,6 +36,9 @@ export function useWizardState() {
 
   useEffect(() => {
     const wizardState = getWizardState(showSurvey, onboardingData);
+    if (wizardState !== 'hidden') {
+      setLSItem(LS_KEYS.showUseCaseOverviewPopup, 'true');
+    }
     setState(wizardState);
   }, [onboardingData, showSurvey]);
 
