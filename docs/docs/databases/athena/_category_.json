@@ -1,4 +1,5 @@
 {
   "label": "Amazon Athena",
-  "position": 10
+  "position": 10,
+  "className": "beta-cat"
 }

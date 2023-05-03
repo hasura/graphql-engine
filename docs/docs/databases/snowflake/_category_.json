@@ -1,4 +1,5 @@
 {
   "label": "Snowflake",
-  "position": 90
+  "position": 90,
+  "className": "beta-cat"
 }
