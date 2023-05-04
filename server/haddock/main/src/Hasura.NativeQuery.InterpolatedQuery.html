@@ -1,0 +1,1286 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621690889830"><span id="local-6989586621690889831"><span id="local-6989586621690889832"><span id="local-6989586621690889833"><span id="local-6989586621690889834"></span></span></span></span></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | Parser and prettyprinter for native query code.</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.NativeQuery.InterpolatedQuery</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedItem"><span class="hs-identifier">InterpolatedItem</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier">InterpolatedQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#parseInterpolatedQuery"><span class="hs-identifier">parseInterpolatedQuery</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html"><span class="hs-identifier">Hasura.LogicalModel.NullableScalarType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AC</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Bifunctor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">first</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html"><span class="hs-identifier">Hasura.LogicalModel.NullableScalarType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier">NullableScalarType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#nullableScalarTypeMapCodec"><span class="hs-identifier">nullableScalarTypeMapCodec</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html"><span class="hs-identifier">Hasura.LogicalModelResolver.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">first</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier">Language.Haskell.TH.Syntax</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier">Lift</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">newtype</span><span> </span><span id="RawQuery"><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#RawQuery"><span class="hs-identifier hs-var">RawQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RawQuery"><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#RawQuery"><span class="hs-identifier hs-var">RawQuery</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getRawQuery"><span class="annot"><span class="annottext">RawQuery -&gt; Text
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#getRawQuery"><span class="hs-identifier hs-var hs-var">getRawQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690889791"><span id="local-6989586621690889796"><span class="annot"><span class="annottext">RawQuery -&gt; RawQuery -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: RawQuery -&gt; RawQuery -&gt; Bool
+$c/= :: RawQuery -&gt; RawQuery -&gt; Bool
+== :: RawQuery -&gt; RawQuery -&gt; Bool
+$c== :: RawQuery -&gt; RawQuery -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889758"><span id="local-6989586621690889762"><span id="local-6989586621690889766"><span id="local-6989586621690889770"><span id="local-6989586621690889774"><span id="local-6989586621690889778"><span id="local-6989586621690889783"><span class="annot"><span class="annottext">Eq RawQuery
+RawQuery -&gt; RawQuery -&gt; Bool
+RawQuery -&gt; RawQuery -&gt; Ordering
+RawQuery -&gt; RawQuery -&gt; RawQuery
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: RawQuery -&gt; RawQuery -&gt; RawQuery
+$cmin :: RawQuery -&gt; RawQuery -&gt; RawQuery
+max :: RawQuery -&gt; RawQuery -&gt; RawQuery
+$cmax :: RawQuery -&gt; RawQuery -&gt; RawQuery
+&gt;= :: RawQuery -&gt; RawQuery -&gt; Bool
+$c&gt;= :: RawQuery -&gt; RawQuery -&gt; Bool
+&gt; :: RawQuery -&gt; RawQuery -&gt; Bool
+$c&gt; :: RawQuery -&gt; RawQuery -&gt; Bool
+&lt;= :: RawQuery -&gt; RawQuery -&gt; Bool
+$c&lt;= :: RawQuery -&gt; RawQuery -&gt; Bool
+&lt; :: RawQuery -&gt; RawQuery -&gt; Bool
+$c&lt; :: RawQuery -&gt; RawQuery -&gt; Bool
+compare :: RawQuery -&gt; RawQuery -&gt; Ordering
+$ccompare :: RawQuery -&gt; RawQuery -&gt; Ordering
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889743"><span id="local-6989586621690889747"><span id="local-6989586621690889752"><span class="annot"><span class="annottext">Int -&gt; RawQuery -&gt; ShowS
+[RawQuery] -&gt; ShowS
+RawQuery -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [RawQuery] -&gt; ShowS
+$cshowList :: [RawQuery] -&gt; ShowS
+show :: RawQuery -&gt; String
+$cshow :: RawQuery -&gt; String
+showsPrec :: Int -&gt; RawQuery -&gt; ShowS
+$cshowsPrec :: Int -&gt; RawQuery -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889732"><span id="local-6989586621690889737"><span class="annot"><span class="annottext">Value -&gt; Parser [RawQuery]
+Value -&gt; Parser RawQuery
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [RawQuery]
+$cparseJSONList :: Value -&gt; Parser [RawQuery]
+parseJSON :: Value -&gt; Parser RawQuery
+$cparseJSON :: Value -&gt; Parser RawQuery
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889713"><span id="local-6989586621690889717"><span id="local-6989586621690889721"><span id="local-6989586621690889726"><span class="annot"><span class="annottext">[RawQuery] -&gt; Value
+[RawQuery] -&gt; Encoding
+RawQuery -&gt; Value
+RawQuery -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [RawQuery] -&gt; Encoding
+$ctoEncodingList :: [RawQuery] -&gt; Encoding
+toJSONList :: [RawQuery] -&gt; Value
+$ctoJSONList :: [RawQuery] -&gt; Value
+toEncoding :: RawQuery -&gt; Encoding
+$ctoEncoding :: RawQuery -&gt; Encoding
+toJSON :: RawQuery -&gt; Value
+$ctoJSON :: RawQuery -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690889706"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#RawQuery"><span class="hs-identifier hs-type">RawQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621690889702"><span class="annot"><span class="annottext">codec :: JSONCodec RawQuery
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+(oldOutput -&gt; newOutput)
+-&gt; (newInput -&gt; oldInput)
+-&gt; Codec context oldInput oldOutput
+-&gt; Codec context newInput newOutput
+</span><span class="hs-identifier hs-var">AC.dimapCodec</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; RawQuery
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#RawQuery"><span class="hs-identifier hs-var">RawQuery</span></a></span><span> </span><span class="annot"><span class="annottext">RawQuery -&gt; Text
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#getRawQuery"><span class="hs-identifier hs-var">getRawQuery</span></a></span><span> </span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
+</span><span class="hs-identifier hs-var">codec</span></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-comment">---------------------------------------</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- | A component of an interpolated query</span><span>
+</span><span id="line-33"></span><span id="local-6989586621690889698"><span id="local-6989586621690889699"></span></span><span class="hs-keyword">data</span><span> </span><span id="InterpolatedItem"><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedItem"><span class="hs-identifier hs-var">InterpolatedItem</span></a></span></span><span> </span><span id="local-6989586621690890202"><span class="annot"><a href="#local-6989586621690890202"><span class="hs-identifier hs-type">variable</span></a></span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | normal text</span><span>
+</span><span id="line-35"></span><span>    </span><span id="IIText"><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#IIText"><span class="hs-identifier hs-var">IIText</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | a captured variable</span><span>
+</span><span id="line-37"></span><span>    </span><span id="IIVariable"><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#IIVariable"><span class="hs-identifier hs-var">IIVariable</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621690890202"><span class="hs-identifier hs-type">variable</span></a></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690889690"><span id="local-6989586621690889694"><span class="annot"><span class="annottext">InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+forall variable.
+Eq variable =&gt;
+InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+$c/= :: forall variable.
+Eq variable =&gt;
+InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+== :: InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+$c== :: forall variable.
+Eq variable =&gt;
+InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889667"><span id="local-6989586621690889669"><span id="local-6989586621690889672"><span id="local-6989586621690889675"><span id="local-6989586621690889678"><span id="local-6989586621690889682"><span id="local-6989586621690889686"><span class="annot"><span class="annottext">InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Ordering
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall {variable}. Ord variable =&gt; Eq (InterpolatedItem variable)
+forall variable.
+Ord variable =&gt;
+InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+forall variable.
+Ord variable =&gt;
+InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Ordering
+forall variable.
+Ord variable =&gt;
+InterpolatedItem variable
+-&gt; InterpolatedItem variable -&gt; InterpolatedItem variable
+min :: InterpolatedItem variable
+-&gt; InterpolatedItem variable -&gt; InterpolatedItem variable
+$cmin :: forall variable.
+Ord variable =&gt;
+InterpolatedItem variable
+-&gt; InterpolatedItem variable -&gt; InterpolatedItem variable
+max :: InterpolatedItem variable
+-&gt; InterpolatedItem variable -&gt; InterpolatedItem variable
+$cmax :: forall variable.
+Ord variable =&gt;
+InterpolatedItem variable
+-&gt; InterpolatedItem variable -&gt; InterpolatedItem variable
+&gt;= :: InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+$c&gt;= :: forall variable.
+Ord variable =&gt;
+InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+&gt; :: InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+$c&gt; :: forall variable.
+Ord variable =&gt;
+InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+&lt;= :: InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+$c&lt;= :: forall variable.
+Ord variable =&gt;
+InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+&lt; :: InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+$c&lt; :: forall variable.
+Ord variable =&gt;
+InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Bool
+compare :: InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Ordering
+$ccompare :: forall variable.
+Ord variable =&gt;
+InterpolatedItem variable -&gt; InterpolatedItem variable -&gt; Ordering
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889656"><span id="local-6989586621690889658"><span id="local-6989586621690889665"><span class="annot"><span class="annottext">Int -&gt; InterpolatedItem variable -&gt; ShowS
+forall variable.
+Show variable =&gt;
+Int -&gt; InterpolatedItem variable -&gt; ShowS
+forall variable.
+Show variable =&gt;
+[InterpolatedItem variable] -&gt; ShowS
+forall variable.
+Show variable =&gt;
+InterpolatedItem variable -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [InterpolatedItem variable] -&gt; ShowS
+$cshowList :: forall variable.
+Show variable =&gt;
+[InterpolatedItem variable] -&gt; ShowS
+show :: InterpolatedItem variable -&gt; String
+$cshow :: forall variable.
+Show variable =&gt;
+InterpolatedItem variable -&gt; String
+showsPrec :: Int -&gt; InterpolatedItem variable -&gt; ShowS
+$cshowsPrec :: forall variable.
+Show variable =&gt;
+Int -&gt; InterpolatedItem variable -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889652"><span id="local-6989586621690889654"><span class="annot"><span class="annottext">forall a b. a -&gt; InterpolatedItem b -&gt; InterpolatedItem a
+forall a b. (a -&gt; b) -&gt; InterpolatedItem a -&gt; InterpolatedItem b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: forall a b. a -&gt; InterpolatedItem b -&gt; InterpolatedItem a
+$c&lt;$ :: forall a b. a -&gt; InterpolatedItem b -&gt; InterpolatedItem a
+fmap :: forall a b. (a -&gt; b) -&gt; InterpolatedItem a -&gt; InterpolatedItem b
+$cfmap :: forall a b. (a -&gt; b) -&gt; InterpolatedItem a -&gt; InterpolatedItem b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889614"><span id="local-6989586621690889616"><span id="local-6989586621690889618"><span id="local-6989586621690889620"><span id="local-6989586621690889622"><span id="local-6989586621690889624"><span id="local-6989586621690889626"><span id="local-6989586621690889628"><span id="local-6989586621690889630"><span id="local-6989586621690889632"><span id="local-6989586621690889634"><span id="local-6989586621690889636"><span id="local-6989586621690889638"><span id="local-6989586621690889640"><span id="local-6989586621690889642"><span id="local-6989586621690889646"><span id="local-6989586621690889648"><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; InterpolatedItem a -&gt; Bool
+forall a. Num a =&gt; InterpolatedItem a -&gt; a
+forall a. Ord a =&gt; InterpolatedItem a -&gt; a
+forall m. Monoid m =&gt; InterpolatedItem m -&gt; m
+forall a. InterpolatedItem a -&gt; Bool
+forall a. InterpolatedItem a -&gt; Int
+forall a. InterpolatedItem a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; InterpolatedItem a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; InterpolatedItem a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; InterpolatedItem a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; InterpolatedItem a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: forall a. Num a =&gt; InterpolatedItem a -&gt; a
+$cproduct :: forall a. Num a =&gt; InterpolatedItem a -&gt; a
+sum :: forall a. Num a =&gt; InterpolatedItem a -&gt; a
+$csum :: forall a. Num a =&gt; InterpolatedItem a -&gt; a
+minimum :: forall a. Ord a =&gt; InterpolatedItem a -&gt; a
+$cminimum :: forall a. Ord a =&gt; InterpolatedItem a -&gt; a
+maximum :: forall a. Ord a =&gt; InterpolatedItem a -&gt; a
+$cmaximum :: forall a. Ord a =&gt; InterpolatedItem a -&gt; a
+elem :: forall a. Eq a =&gt; a -&gt; InterpolatedItem a -&gt; Bool
+$celem :: forall a. Eq a =&gt; a -&gt; InterpolatedItem a -&gt; Bool
+length :: forall a. InterpolatedItem a -&gt; Int
+$clength :: forall a. InterpolatedItem a -&gt; Int
+null :: forall a. InterpolatedItem a -&gt; Bool
+$cnull :: forall a. InterpolatedItem a -&gt; Bool
+toList :: forall a. InterpolatedItem a -&gt; [a]
+$ctoList :: forall a. InterpolatedItem a -&gt; [a]
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; InterpolatedItem a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; InterpolatedItem a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; InterpolatedItem a -&gt; a
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; InterpolatedItem a -&gt; a
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; InterpolatedItem a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; InterpolatedItem a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; InterpolatedItem a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; InterpolatedItem a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; InterpolatedItem a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; InterpolatedItem a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; InterpolatedItem a -&gt; b
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; InterpolatedItem a -&gt; b
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; InterpolatedItem a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; InterpolatedItem a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; InterpolatedItem a -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; InterpolatedItem a -&gt; m
+fold :: forall m. Monoid m =&gt; InterpolatedItem m -&gt; m
+$cfold :: forall m. Monoid m =&gt; InterpolatedItem m -&gt; m
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889573"><span id="local-6989586621690889575"><span id="local-6989586621690889577"><span id="local-6989586621690889579"><span id="local-6989586621690889581"><span id="local-6989586621690889583"><span id="local-6989586621690889585"><span id="local-6989586621690889587"><span id="local-6989586621690889589"><span id="local-6989586621690889595"><span id="local-6989586621690889597"><span id="local-6989586621690889599"><span id="local-6989586621690889603"><span id="local-6989586621690889608"><span class="annot"><span class="annottext">InterpolatedItem variable -&gt; DataType
+InterpolatedItem variable -&gt; Constr
+forall {variable}.
+Data variable =&gt;
+Typeable (InterpolatedItem variable)
+forall variable.
+Data variable =&gt;
+InterpolatedItem variable -&gt; DataType
+forall variable.
+Data variable =&gt;
+InterpolatedItem variable -&gt; Constr
+forall variable.
+Data variable =&gt;
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; InterpolatedItem variable -&gt; InterpolatedItem variable
+forall variable u.
+Data variable =&gt;
+Int
+-&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; InterpolatedItem variable -&gt; u
+forall variable u.
+Data variable =&gt;
+(forall d. Data d =&gt; d -&gt; u) -&gt; InterpolatedItem variable -&gt; [u]
+forall variable r r'.
+Data variable =&gt;
+(r -&gt; r' -&gt; r)
+-&gt; r
+-&gt; (forall d. Data d =&gt; d -&gt; r')
+-&gt; InterpolatedItem variable
+-&gt; r
+forall variable r r'.
+Data variable =&gt;
+(r' -&gt; r -&gt; r)
+-&gt; r
+-&gt; (forall d. Data d =&gt; d -&gt; r')
+-&gt; InterpolatedItem variable
+-&gt; r
+forall variable (m :: * -&gt; *).
+(Data variable, Monad m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedItem variable -&gt; m (InterpolatedItem variable)
+forall variable (m :: * -&gt; *).
+(Data variable, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedItem variable -&gt; m (InterpolatedItem variable)
+forall variable (c :: * -&gt; *).
+Data variable =&gt;
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (InterpolatedItem variable)
+forall variable (c :: * -&gt; *).
+Data variable =&gt;
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; InterpolatedItem variable
+-&gt; c (InterpolatedItem variable)
+forall variable (t :: * -&gt; *) (c :: * -&gt; *).
+(Data variable, Typeable t) =&gt;
+(forall d. Data d =&gt; c (t d))
+-&gt; Maybe (c (InterpolatedItem variable))
+forall variable (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+(Data variable, Typeable t) =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (InterpolatedItem variable))
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (InterpolatedItem variable)
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; InterpolatedItem variable
+-&gt; c (InterpolatedItem variable)
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d))
+-&gt; Maybe (c (InterpolatedItem variable))
+gmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedItem variable -&gt; m (InterpolatedItem variable)
+$cgmapMo :: forall variable (m :: * -&gt; *).
+(Data variable, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedItem variable -&gt; m (InterpolatedItem variable)
+gmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedItem variable -&gt; m (InterpolatedItem variable)
+$cgmapMp :: forall variable (m :: * -&gt; *).
+(Data variable, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedItem variable -&gt; m (InterpolatedItem variable)
+gmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedItem variable -&gt; m (InterpolatedItem variable)
+$cgmapM :: forall variable (m :: * -&gt; *).
+(Data variable, Monad m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedItem variable -&gt; m (InterpolatedItem variable)
+gmapQi :: forall u.
+Int
+-&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; InterpolatedItem variable -&gt; u
+$cgmapQi :: forall variable u.
+Data variable =&gt;
+Int
+-&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; InterpolatedItem variable -&gt; u
+gmapQ :: forall u.
+(forall d. Data d =&gt; d -&gt; u) -&gt; InterpolatedItem variable -&gt; [u]
+$cgmapQ :: forall variable u.
+Data variable =&gt;
+(forall d. Data d =&gt; d -&gt; u) -&gt; InterpolatedItem variable -&gt; [u]
+gmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r
+-&gt; (forall d. Data d =&gt; d -&gt; r')
+-&gt; InterpolatedItem variable
+-&gt; r
+$cgmapQr :: forall variable r r'.
+Data variable =&gt;
+(r' -&gt; r -&gt; r)
+-&gt; r
+-&gt; (forall d. Data d =&gt; d -&gt; r')
+-&gt; InterpolatedItem variable
+-&gt; r
+gmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r
+-&gt; (forall d. Data d =&gt; d -&gt; r')
+-&gt; InterpolatedItem variable
+-&gt; r
+$cgmapQl :: forall variable r r'.
+Data variable =&gt;
+(r -&gt; r' -&gt; r)
+-&gt; r
+-&gt; (forall d. Data d =&gt; d -&gt; r')
+-&gt; InterpolatedItem variable
+-&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b)
+-&gt; InterpolatedItem variable -&gt; InterpolatedItem variable
+$cgmapT :: forall variable.
+Data variable =&gt;
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; InterpolatedItem variable -&gt; InterpolatedItem variable
+dataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (InterpolatedItem variable))
+$cdataCast2 :: forall variable (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+(Data variable, Typeable t) =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (InterpolatedItem variable))
+dataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d))
+-&gt; Maybe (c (InterpolatedItem variable))
+$cdataCast1 :: forall variable (t :: * -&gt; *) (c :: * -&gt; *).
+(Data variable, Typeable t) =&gt;
+(forall d. Data d =&gt; c (t d))
+-&gt; Maybe (c (InterpolatedItem variable))
+dataTypeOf :: InterpolatedItem variable -&gt; DataType
+$cdataTypeOf :: forall variable.
+Data variable =&gt;
+InterpolatedItem variable -&gt; DataType
+toConstr :: InterpolatedItem variable -&gt; Constr
+$ctoConstr :: forall variable.
+Data variable =&gt;
+InterpolatedItem variable -&gt; Constr
+gunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (InterpolatedItem variable)
+$cgunfold :: forall variable (c :: * -&gt; *).
+Data variable =&gt;
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (InterpolatedItem variable)
+gfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; InterpolatedItem variable
+-&gt; c (InterpolatedItem variable)
+$cgfoldl :: forall variable (c :: * -&gt; *).
+Data variable =&gt;
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; InterpolatedItem variable
+-&gt; c (InterpolatedItem variable)
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall variable x.
+Rep (InterpolatedItem variable) x -&gt; InterpolatedItem variable
+forall variable x.
+InterpolatedItem variable -&gt; Rep (InterpolatedItem variable) x
+$cto :: forall variable x.
+Rep (InterpolatedItem variable) x -&gt; InterpolatedItem variable
+$cfrom :: forall variable x.
+InterpolatedItem variable -&gt; Rep (InterpolatedItem variable) x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889556"><span id="local-6989586621690889566"><span class="annot"><span class="annottext">forall variable (m :: * -&gt; *).
+(Lift variable, Quote m) =&gt;
+InterpolatedItem variable -&gt; m Exp
+forall variable (m :: * -&gt; *).
+(Lift variable, Quote m) =&gt;
+InterpolatedItem variable -&gt; Code m (InterpolatedItem variable)
+forall t.
+(forall (m :: * -&gt; *). Quote m =&gt; t -&gt; m Exp)
+-&gt; (forall (m :: * -&gt; *). Quote m =&gt; t -&gt; Code m t) -&gt; Lift t
+forall (m :: * -&gt; *). Quote m =&gt; InterpolatedItem variable -&gt; m Exp
+forall (m :: * -&gt; *).
+Quote m =&gt;
+InterpolatedItem variable -&gt; Code m (InterpolatedItem variable)
+liftTyped :: forall (m :: * -&gt; *).
+Quote m =&gt;
+InterpolatedItem variable -&gt; Code m (InterpolatedItem variable)
+$cliftTyped :: forall variable (m :: * -&gt; *).
+(Lift variable, Quote m) =&gt;
+InterpolatedItem variable -&gt; Code m (InterpolatedItem variable)
+lift :: forall (m :: * -&gt; *). Quote m =&gt; InterpolatedItem variable -&gt; m Exp
+$clift :: forall variable (m :: * -&gt; *).
+(Lift variable, Quote m) =&gt;
+InterpolatedItem variable -&gt; m Exp
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889531"><span id="local-6989586621690889533"><span id="local-6989586621690889535"><span id="local-6989586621690889541"><span class="annot"><span class="annottext">Functor InterpolatedItem
+Foldable InterpolatedItem
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+InterpolatedItem (m a) -&gt; m (InterpolatedItem a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+InterpolatedItem (f a) -&gt; f (InterpolatedItem a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; InterpolatedItem a -&gt; m (InterpolatedItem b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; InterpolatedItem a -&gt; f (InterpolatedItem b)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+InterpolatedItem (m a) -&gt; m (InterpolatedItem a)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+InterpolatedItem (m a) -&gt; m (InterpolatedItem a)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; InterpolatedItem a -&gt; m (InterpolatedItem b)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; InterpolatedItem a -&gt; m (InterpolatedItem b)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+InterpolatedItem (f a) -&gt; f (InterpolatedItem a)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+InterpolatedItem (f a) -&gt; f (InterpolatedItem a)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; InterpolatedItem a -&gt; f (InterpolatedItem b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; InterpolatedItem a -&gt; f (InterpolatedItem b)
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- | Converting an interpolated query back to text.</span><span>
+</span><span id="line-41"></span><span class="hs-comment">--   Should roundtrip with the 'parseInterpolatedQuery'.</span><span>
+</span><span id="line-42"></span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#ppInterpolatedItem"><span class="hs-identifier hs-type">ppInterpolatedItem</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedItem"><span class="hs-identifier hs-type">InterpolatedItem</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-43"></span><span id="ppInterpolatedItem"><span class="annot"><span class="annottext">ppInterpolatedItem :: InterpolatedItem ArgumentName -&gt; Text
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#ppInterpolatedItem"><span class="hs-identifier hs-var hs-var">ppInterpolatedItem</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#IIText"><span class="hs-identifier hs-type">IIText</span></a></span><span> </span><span id="local-6989586621690889527"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690889527"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690889527"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-44"></span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#ppInterpolatedItem"><span class="hs-identifier hs-var">ppInterpolatedItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#IIVariable"><span class="hs-identifier hs-type">IIVariable</span></a></span><span> </span><span id="local-6989586621690889526"><span class="annot"><span class="annottext">ArgumentName
+</span><a href="#local-6989586621690889526"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;{{&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ArgumentName -&gt; Text
+</span><a href="Hasura.LogicalModelResolver.Types.html#getArgumentName"><span class="hs-identifier hs-var">getArgumentName</span></a></span><span> </span><span class="annot"><span class="annottext">ArgumentName
+</span><a href="#local-6989586621690889526"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;}}&quot;</span></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span id="local-6989586621690889519"><span id="local-6989586621690889521"><span id="local-6989586621690890118"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621690890118"><span class="hs-identifier hs-type">variable</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedItem"><span class="hs-identifier hs-type">InterpolatedItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690890118"><span class="hs-identifier hs-type">variable</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span id="local-6989586621690889516"><span id="local-6989586621690890116"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690890116"><span class="hs-identifier hs-type">variable</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedItem"><span class="hs-identifier hs-type">InterpolatedItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690890116"><span class="hs-identifier hs-type">variable</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-comment">---------------------------------------</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- | A list of stored procedure components representing a single stored procedure,</span><span>
+</span><span id="line-53"></span><span class="hs-comment">--   separating the variables from the text.</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">newtype</span><span> </span><span id="InterpolatedQuery"><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier hs-var">InterpolatedQuery</span></a></span></span><span> </span><span id="local-6989586621690890115"><span class="annot"><a href="#local-6989586621690890115"><span class="hs-identifier hs-type">variable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="InterpolatedQuery"><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier hs-var">InterpolatedQuery</span></a></span></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="getInterpolatedQuery"><span class="annot"><span class="annottext">forall variable.
+InterpolatedQuery variable -&gt; [InterpolatedItem variable]
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#getInterpolatedQuery"><span class="hs-identifier hs-var hs-var">getInterpolatedQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedItem"><span class="hs-identifier hs-type">InterpolatedItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690890115"><span class="hs-identifier hs-type">variable</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690889504"><span id="local-6989586621690889510"><span class="annot"><span class="annottext">InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+forall variable.
+Eq variable =&gt;
+InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+$c/= :: forall variable.
+Eq variable =&gt;
+InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+== :: InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+$c== :: forall variable.
+Eq variable =&gt;
+InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889463"><span id="local-6989586621690889468"><span id="local-6989586621690889473"><span id="local-6989586621690889478"><span id="local-6989586621690889483"><span id="local-6989586621690889488"><span id="local-6989586621690889494"><span class="annot"><span class="annottext">InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+InterpolatedQuery variable
+-&gt; InterpolatedQuery variable -&gt; Ordering
+InterpolatedQuery variable
+-&gt; InterpolatedQuery variable -&gt; InterpolatedQuery variable
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall {variable}. Ord variable =&gt; Eq (InterpolatedQuery variable)
+forall variable.
+Ord variable =&gt;
+InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+forall variable.
+Ord variable =&gt;
+InterpolatedQuery variable
+-&gt; InterpolatedQuery variable -&gt; Ordering
+forall variable.
+Ord variable =&gt;
+InterpolatedQuery variable
+-&gt; InterpolatedQuery variable -&gt; InterpolatedQuery variable
+min :: InterpolatedQuery variable
+-&gt; InterpolatedQuery variable -&gt; InterpolatedQuery variable
+$cmin :: forall variable.
+Ord variable =&gt;
+InterpolatedQuery variable
+-&gt; InterpolatedQuery variable -&gt; InterpolatedQuery variable
+max :: InterpolatedQuery variable
+-&gt; InterpolatedQuery variable -&gt; InterpolatedQuery variable
+$cmax :: forall variable.
+Ord variable =&gt;
+InterpolatedQuery variable
+-&gt; InterpolatedQuery variable -&gt; InterpolatedQuery variable
+&gt;= :: InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+$c&gt;= :: forall variable.
+Ord variable =&gt;
+InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+&gt; :: InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+$c&gt; :: forall variable.
+Ord variable =&gt;
+InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+&lt;= :: InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+$c&lt;= :: forall variable.
+Ord variable =&gt;
+InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+&lt; :: InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+$c&lt; :: forall variable.
+Ord variable =&gt;
+InterpolatedQuery variable -&gt; InterpolatedQuery variable -&gt; Bool
+compare :: InterpolatedQuery variable
+-&gt; InterpolatedQuery variable -&gt; Ordering
+$ccompare :: forall variable.
+Ord variable =&gt;
+InterpolatedQuery variable
+-&gt; InterpolatedQuery variable -&gt; Ordering
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889445"><span id="local-6989586621690889450"><span id="local-6989586621690889456"><span class="annot"><span class="annottext">Int -&gt; InterpolatedQuery variable -&gt; ShowS
+[InterpolatedQuery variable] -&gt; ShowS
+InterpolatedQuery variable -&gt; String
+forall variable.
+Show variable =&gt;
+Int -&gt; InterpolatedQuery variable -&gt; ShowS
+forall variable.
+Show variable =&gt;
+[InterpolatedQuery variable] -&gt; ShowS
+forall variable.
+Show variable =&gt;
+InterpolatedQuery variable -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [InterpolatedQuery variable] -&gt; ShowS
+$cshowList :: forall variable.
+Show variable =&gt;
+[InterpolatedQuery variable] -&gt; ShowS
+show :: InterpolatedQuery variable -&gt; String
+$cshow :: forall variable.
+Show variable =&gt;
+InterpolatedQuery variable -&gt; String
+showsPrec :: Int -&gt; InterpolatedQuery variable -&gt; ShowS
+$cshowsPrec :: forall variable.
+Show variable =&gt;
+Int -&gt; InterpolatedQuery variable -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889433"><span id="local-6989586621690889439"><span class="annot"><span class="annottext">forall x.
+Rep (InterpolatedQuery variable) x -&gt; InterpolatedQuery variable
+forall x.
+InterpolatedQuery variable -&gt; Rep (InterpolatedQuery variable) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall variable x.
+Rep (InterpolatedQuery variable) x -&gt; InterpolatedQuery variable
+forall variable x.
+InterpolatedQuery variable -&gt; Rep (InterpolatedQuery variable) x
+to :: forall x.
+Rep (InterpolatedQuery variable) x -&gt; InterpolatedQuery variable
+$cto :: forall variable x.
+Rep (InterpolatedQuery variable) x -&gt; InterpolatedQuery variable
+from :: forall x.
+InterpolatedQuery variable -&gt; Rep (InterpolatedQuery variable) x
+$cfrom :: forall variable x.
+InterpolatedQuery variable -&gt; Rep (InterpolatedQuery variable) x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690889389"><span id="local-6989586621690889391"><span id="local-6989586621690889393"><span id="local-6989586621690889395"><span id="local-6989586621690889397"><span id="local-6989586621690889399"><span id="local-6989586621690889401"><span id="local-6989586621690889403"><span id="local-6989586621690889405"><span id="local-6989586621690889411"><span id="local-6989586621690889413"><span id="local-6989586621690889415"><span id="local-6989586621690889419"><span id="local-6989586621690889424"><span class="annot"><span class="annottext">InterpolatedQuery variable -&gt; DataType
+InterpolatedQuery variable -&gt; Constr
+forall {variable}.
+Data variable =&gt;
+Typeable (InterpolatedQuery variable)
+forall variable.
+Data variable =&gt;
+InterpolatedQuery variable -&gt; DataType
+forall variable.
+Data variable =&gt;
+InterpolatedQuery variable -&gt; Constr
+forall variable.
+Data variable =&gt;
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; InterpolatedQuery variable -&gt; InterpolatedQuery variable
+forall variable u.
+Data variable =&gt;
+Int
+-&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; InterpolatedQuery variable -&gt; u
+forall variable u.
+Data variable =&gt;
+(forall d. Data d =&gt; d -&gt; u) -&gt; InterpolatedQuery variable -&gt; [u]
+forall variable r r'.
+Data variable =&gt;
+(r -&gt; r' -&gt; r)
+-&gt; r
+-&gt; (forall d. Data d =&gt; d -&gt; r')
+-&gt; InterpolatedQuery variable
+-&gt; r
+forall variable r r'.
+Data variable =&gt;
+(r' -&gt; r -&gt; r)
+-&gt; r
+-&gt; (forall d. Data d =&gt; d -&gt; r')
+-&gt; InterpolatedQuery variable
+-&gt; r
+forall variable (m :: * -&gt; *).
+(Data variable, Monad m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedQuery variable -&gt; m (InterpolatedQuery variable)
+forall variable (m :: * -&gt; *).
+(Data variable, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedQuery variable -&gt; m (InterpolatedQuery variable)
+forall variable (c :: * -&gt; *).
+Data variable =&gt;
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (InterpolatedQuery variable)
+forall variable (c :: * -&gt; *).
+Data variable =&gt;
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; InterpolatedQuery variable
+-&gt; c (InterpolatedQuery variable)
+forall variable (t :: * -&gt; *) (c :: * -&gt; *).
+(Data variable, Typeable t) =&gt;
+(forall d. Data d =&gt; c (t d))
+-&gt; Maybe (c (InterpolatedQuery variable))
+forall variable (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+(Data variable, Typeable t) =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (InterpolatedQuery variable))
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (InterpolatedQuery variable)
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; InterpolatedQuery variable
+-&gt; c (InterpolatedQuery variable)
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d))
+-&gt; Maybe (c (InterpolatedQuery variable))
+gmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedQuery variable -&gt; m (InterpolatedQuery variable)
+$cgmapMo :: forall variable (m :: * -&gt; *).
+(Data variable, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedQuery variable -&gt; m (InterpolatedQuery variable)
+gmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedQuery variable -&gt; m (InterpolatedQuery variable)
+$cgmapMp :: forall variable (m :: * -&gt; *).
+(Data variable, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedQuery variable -&gt; m (InterpolatedQuery variable)
+gmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedQuery variable -&gt; m (InterpolatedQuery variable)
+$cgmapM :: forall variable (m :: * -&gt; *).
+(Data variable, Monad m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; InterpolatedQuery variable -&gt; m (InterpolatedQuery variable)
+gmapQi :: forall u.
+Int
+-&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; InterpolatedQuery variable -&gt; u
+$cgmapQi :: forall variable u.
+Data variable =&gt;
+Int
+-&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; InterpolatedQuery variable -&gt; u
+gmapQ :: forall u.
+(forall d. Data d =&gt; d -&gt; u) -&gt; InterpolatedQuery variable -&gt; [u]
+$cgmapQ :: forall variable u.
+Data variable =&gt;
+(forall d. Data d =&gt; d -&gt; u) -&gt; InterpolatedQuery variable -&gt; [u]
+gmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r
+-&gt; (forall d. Data d =&gt; d -&gt; r')
+-&gt; InterpolatedQuery variable
+-&gt; r
+$cgmapQr :: forall variable r r'.
+Data variable =&gt;
+(r' -&gt; r -&gt; r)
+-&gt; r
+-&gt; (forall d. Data d =&gt; d -&gt; r')
+-&gt; InterpolatedQuery variable
+-&gt; r
+gmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r
+-&gt; (forall d. Data d =&gt; d -&gt; r')
+-&gt; InterpolatedQuery variable
+-&gt; r
+$cgmapQl :: forall variable r r'.
+Data variable =&gt;
+(r -&gt; r' -&gt; r)
+-&gt; r
+-&gt; (forall d. Data d =&gt; d -&gt; r')
+-&gt; InterpolatedQuery variable
+-&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b)
+-&gt; InterpolatedQuery variable -&gt; InterpolatedQuery variable
+$cgmapT :: forall variable.
+Data variable =&gt;
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; InterpolatedQuery variable -&gt; InterpolatedQuery variable
+dataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (InterpolatedQuery variable))
+$cdataCast2 :: forall variable (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+(Data variable, Typeable t) =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (InterpolatedQuery variable))
+dataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d))
+-&gt; Maybe (c (InterpolatedQuery variable))
+$cdataCast1 :: forall variable (t :: * -&gt; *) (c :: * -&gt; *).
+(Data variable, Typeable t) =&gt;
+(forall d. Data d =&gt; c (t d))
+-&gt; Maybe (c (InterpolatedQuery variable))
+dataTypeOf :: InterpolatedQuery variable -&gt; DataType
+$cdataTypeOf :: forall variable.
+Data variable =&gt;
+InterpolatedQuery variable -&gt; DataType
+toConstr :: InterpolatedQuery variable -&gt; Constr
+$ctoConstr :: forall variable.
+Data variable =&gt;
+InterpolatedQuery variable -&gt; Constr
+gunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (InterpolatedQuery variable)
+$cgunfold :: forall variable (c :: * -&gt; *).
+Data variable =&gt;
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (InterpolatedQuery variable)
+gfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; InterpolatedQuery variable
+-&gt; c (InterpolatedQuery variable)
+$cgfoldl :: forall variable (c :: * -&gt; *).
+Data variable =&gt;
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g)
+-&gt; InterpolatedQuery variable
+-&gt; c (InterpolatedQuery variable)
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889382"><span id="local-6989586621690889387"><span class="annot"><span class="annottext">forall a b. a -&gt; InterpolatedQuery b -&gt; InterpolatedQuery a
+forall a b. (a -&gt; b) -&gt; InterpolatedQuery a -&gt; InterpolatedQuery b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: forall a b. a -&gt; InterpolatedQuery b -&gt; InterpolatedQuery a
+$c&lt;$ :: forall a b. a -&gt; InterpolatedQuery b -&gt; InterpolatedQuery a
+fmap :: forall a b. (a -&gt; b) -&gt; InterpolatedQuery a -&gt; InterpolatedQuery b
+$cfmap :: forall a b. (a -&gt; b) -&gt; InterpolatedQuery a -&gt; InterpolatedQuery b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889336"><span id="local-6989586621690889338"><span id="local-6989586621690889340"><span id="local-6989586621690889342"><span id="local-6989586621690889344"><span id="local-6989586621690889346"><span id="local-6989586621690889350"><span id="local-6989586621690889352"><span id="local-6989586621690889354"><span id="local-6989586621690889356"><span id="local-6989586621690889358"><span id="local-6989586621690889360"><span id="local-6989586621690889362"><span id="local-6989586621690889366"><span id="local-6989586621690889368"><span id="local-6989586621690889375"><span id="local-6989586621690889377"><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; InterpolatedQuery a -&gt; Bool
+forall a. Num a =&gt; InterpolatedQuery a -&gt; a
+forall a. Ord a =&gt; InterpolatedQuery a -&gt; a
+forall m. Monoid m =&gt; InterpolatedQuery m -&gt; m
+forall a. InterpolatedQuery a -&gt; Bool
+forall a. InterpolatedQuery a -&gt; Int
+forall a. InterpolatedQuery a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; InterpolatedQuery a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; InterpolatedQuery a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; InterpolatedQuery a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; InterpolatedQuery a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: forall a. Num a =&gt; InterpolatedQuery a -&gt; a
+$cproduct :: forall a. Num a =&gt; InterpolatedQuery a -&gt; a
+sum :: forall a. Num a =&gt; InterpolatedQuery a -&gt; a
+$csum :: forall a. Num a =&gt; InterpolatedQuery a -&gt; a
+minimum :: forall a. Ord a =&gt; InterpolatedQuery a -&gt; a
+$cminimum :: forall a. Ord a =&gt; InterpolatedQuery a -&gt; a
+maximum :: forall a. Ord a =&gt; InterpolatedQuery a -&gt; a
+$cmaximum :: forall a. Ord a =&gt; InterpolatedQuery a -&gt; a
+elem :: forall a. Eq a =&gt; a -&gt; InterpolatedQuery a -&gt; Bool
+$celem :: forall a. Eq a =&gt; a -&gt; InterpolatedQuery a -&gt; Bool
+length :: forall a. InterpolatedQuery a -&gt; Int
+$clength :: forall a. InterpolatedQuery a -&gt; Int
+null :: forall a. InterpolatedQuery a -&gt; Bool
+$cnull :: forall a. InterpolatedQuery a -&gt; Bool
+toList :: forall a. InterpolatedQuery a -&gt; [a]
+$ctoList :: forall a. InterpolatedQuery a -&gt; [a]
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; InterpolatedQuery a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; InterpolatedQuery a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; InterpolatedQuery a -&gt; a
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; InterpolatedQuery a -&gt; a
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; InterpolatedQuery a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; InterpolatedQuery a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; InterpolatedQuery a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; InterpolatedQuery a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; InterpolatedQuery a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; InterpolatedQuery a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; InterpolatedQuery a -&gt; b
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; InterpolatedQuery a -&gt; b
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; InterpolatedQuery a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; InterpolatedQuery a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; InterpolatedQuery a -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; InterpolatedQuery a -&gt; m
+fold :: forall m. Monoid m =&gt; InterpolatedQuery m -&gt; m
+$cfold :: forall m. Monoid m =&gt; InterpolatedQuery m -&gt; m
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889325"><span id="local-6989586621690889333"><span class="annot"><span class="annottext">forall variable (m :: * -&gt; *).
+(Lift variable, Quote m) =&gt;
+InterpolatedQuery variable -&gt; m Exp
+forall variable (m :: * -&gt; *).
+(Lift variable, Quote m) =&gt;
+InterpolatedQuery variable -&gt; Code m (InterpolatedQuery variable)
+forall t.
+(forall (m :: * -&gt; *). Quote m =&gt; t -&gt; m Exp)
+-&gt; (forall (m :: * -&gt; *). Quote m =&gt; t -&gt; Code m t) -&gt; Lift t
+forall (m :: * -&gt; *).
+Quote m =&gt;
+InterpolatedQuery variable -&gt; m Exp
+forall (m :: * -&gt; *).
+Quote m =&gt;
+InterpolatedQuery variable -&gt; Code m (InterpolatedQuery variable)
+liftTyped :: forall (m :: * -&gt; *).
+Quote m =&gt;
+InterpolatedQuery variable -&gt; Code m (InterpolatedQuery variable)
+$cliftTyped :: forall variable (m :: * -&gt; *).
+(Lift variable, Quote m) =&gt;
+InterpolatedQuery variable -&gt; Code m (InterpolatedQuery variable)
+lift :: forall (m :: * -&gt; *).
+Quote m =&gt;
+InterpolatedQuery variable -&gt; m Exp
+$clift :: forall variable (m :: * -&gt; *).
+(Lift variable, Quote m) =&gt;
+InterpolatedQuery variable -&gt; m Exp
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889299"><span id="local-6989586621690889301"><span id="local-6989586621690889303"><span id="local-6989586621690889313"><span class="annot"><span class="annottext">Functor InterpolatedQuery
+Foldable InterpolatedQuery
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+InterpolatedQuery (m a) -&gt; m (InterpolatedQuery a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+InterpolatedQuery (f a) -&gt; f (InterpolatedQuery a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; InterpolatedQuery a -&gt; m (InterpolatedQuery b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; InterpolatedQuery a -&gt; f (InterpolatedQuery b)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+InterpolatedQuery (m a) -&gt; m (InterpolatedQuery a)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+InterpolatedQuery (m a) -&gt; m (InterpolatedQuery a)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; InterpolatedQuery a -&gt; m (InterpolatedQuery b)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; InterpolatedQuery a -&gt; m (InterpolatedQuery b)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+InterpolatedQuery (f a) -&gt; f (InterpolatedQuery a)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+InterpolatedQuery (f a) -&gt; f (InterpolatedQuery a)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; InterpolatedQuery a -&gt; f (InterpolatedQuery b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; InterpolatedQuery a -&gt; f (InterpolatedQuery b)
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span id="local-6989586621690889287"><span id="local-6989586621690889293"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690890093"><span class="annot"><a href="#local-6989586621690890093"><span class="hs-keyword hs-type">newtype</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621690890093"><span class="hs-identifier hs-type">variable</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier hs-type">InterpolatedQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690890093"><span class="hs-identifier hs-type">variable</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span id="local-6989586621690889280"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690890090"><span class="annot"><a href="#local-6989586621690890090"><span class="hs-keyword hs-type">newtype</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690890090"><span class="hs-identifier hs-type">variable</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier hs-type">InterpolatedQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690890090"><span class="hs-identifier hs-type">variable</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#ppInterpolatedQuery"><span class="hs-identifier hs-type">ppInterpolatedQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier hs-type">InterpolatedQuery</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-65"></span><span id="ppInterpolatedQuery"><span class="annot"><span class="annottext">ppInterpolatedQuery :: InterpolatedQuery ArgumentName -&gt; Text
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#ppInterpolatedQuery"><span class="hs-identifier hs-var hs-var">ppInterpolatedQuery</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier hs-type">InterpolatedQuery</span></a></span><span> </span><span id="local-6989586621690889273"><span class="annot"><span class="annottext">[InterpolatedItem ArgumentName]
+</span><a href="#local-6989586621690889273"><span class="hs-identifier hs-var">parts</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
+(Foldable t, Monoid m) =&gt;
+(a -&gt; m) -&gt; t a -&gt; m
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="annot"><span class="annottext">InterpolatedItem ArgumentName -&gt; Text
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#ppInterpolatedItem"><span class="hs-identifier hs-var">ppInterpolatedItem</span></a></span><span> </span><span class="annot"><span class="annottext">[InterpolatedItem ArgumentName]
+</span><a href="#local-6989586621690889273"><span class="hs-identifier hs-var">parts</span></a></span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- | We store the interpolated query as the user text and parse it back</span><span>
+</span><span id="line-68"></span><span class="hs-comment">--   when converting back to Haskell code.</span><span>
+</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690889269"><span id="local-6989586621690890089"><span class="annot"><a href="#local-6989586621690890089"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-type">~</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier hs-type">InterpolatedQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690890089"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621690889265"><span class="annot"><span class="annottext">codec :: JSONCodec (InterpolatedQuery v)
+</span><a href="#local-6989586621690889265"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+Text -&gt; ValueCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">CommentCodec</span></span><span>
+</span><span id="line-72"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;An interpolated query expressed in native code (SQL)&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+(oldOutput -&gt; Either String newOutput)
+-&gt; (newInput -&gt; oldInput)
+-&gt; Codec context oldInput oldOutput
+-&gt; Codec context newInput newOutput
+</span><span class="hs-identifier hs-var">bimapCodec</span></span><span>
+</span><span id="line-74"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (p :: * -&gt; * -&gt; *) a b c.
+Bifunctor p =&gt;
+(a -&gt; b) -&gt; p a c -&gt; p b c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">first</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text (InterpolatedQuery ArgumentName)
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#parseInterpolatedQuery"><span class="hs-identifier hs-var">parseInterpolatedQuery</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>        </span><span class="annot"><span class="annottext">InterpolatedQuery ArgumentName -&gt; Text
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#ppInterpolatedQuery"><span class="hs-identifier hs-var">ppInterpolatedQuery</span></a></span><span>
+</span><span id="line-76"></span><span>        </span><span class="annot"><span class="annottext">JSONCodec Text
+</span><span class="hs-identifier hs-var">textCodec</span></span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span id="local-6989586621690889237"><span id="local-6989586621690889243"><span id="local-6989586621690889249"><span id="local-6989586621690889257"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690890066"><span class="hs-keyword">via</span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier hs-type">InterpolatedQuery</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><a href="#local-6989586621690890066"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-type">~</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-82"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier hs-type">InterpolatedQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690890066"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span class="hs-comment">---------------------------------------</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-comment">-- | extract all of the `{{ variable }}` inside our query string</span><span>
+</span><span id="line-87"></span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#parseInterpolatedQuery"><span class="hs-identifier hs-type">parseInterpolatedQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-88"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-89"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier hs-type">InterpolatedQuery</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span id="parseInterpolatedQuery"><span class="annot"><span class="annottext">parseInterpolatedQuery :: Text -&gt; Either Text (InterpolatedQuery ArgumentName)
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#parseInterpolatedQuery"><span class="hs-identifier hs-var hs-var">parseInterpolatedQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span>
+</span><span id="line-92"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall variable.
+[InterpolatedItem variable] -&gt; InterpolatedQuery variable
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedQuery"><span class="hs-identifier hs-var">InterpolatedQuery</span></a></span><span>
+</span><span id="line-93"></span><span>        </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall {variable}.
+[InterpolatedItem variable] -&gt; [InterpolatedItem variable]
+</span><a href="#local-6989586621690889230"><span class="hs-identifier hs-var">mergeAdjacent</span></a></span><span>
+</span><span id="line-94"></span><span>        </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">[InterpolatedItem ArgumentName] -&gt; [InterpolatedItem ArgumentName]
+</span><a href="#local-6989586621690889229"><span class="hs-identifier hs-var">trashEmpties</span></a></span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Either Text [InterpolatedItem ArgumentName]
+</span><a href="#local-6989586621690889228"><span class="hs-identifier hs-var">consumeString</span></a></span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span class="hs-identifier hs-var">T.unpack</span></span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-99"></span><span>    </span><span id="local-6989586621690889229"><span class="annot"><span class="annottext">trashEmpties :: [InterpolatedItem ArgumentName] -&gt; [InterpolatedItem ArgumentName]
+</span><a href="#local-6989586621690889229"><span class="hs-identifier hs-var hs-var">trashEmpties</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">/=</span></a></span><span> </span><span class="annot"><span class="annottext">forall variable. Text -&gt; InterpolatedItem variable
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#IIText"><span class="hs-identifier hs-var">IIText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span>    </span><span id="local-6989586621690889230"><span class="annot"><span class="annottext">mergeAdjacent :: [InterpolatedItem variable] -&gt; [InterpolatedItem variable]
+</span><a href="#local-6989586621690889230"><span class="hs-identifier hs-var hs-var">mergeAdjacent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-102"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#IIText"><span class="hs-identifier hs-type">IIText</span></a></span><span> </span><span id="local-6989586621690889221"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690889221"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-type">:</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#IIText"><span class="hs-identifier hs-type">IIText</span></a></span><span> </span><span id="local-6989586621690889220"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690889220"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-type">:</span></a></span><span> </span><span id="local-6989586621690889219"><span class="annot"><span class="annottext">[InterpolatedItem variable]
+</span><a href="#local-6989586621690889219"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-103"></span><span>        </span><span class="annot"><span class="annottext">[InterpolatedItem variable] -&gt; [InterpolatedItem variable]
+</span><a href="#local-6989586621690889230"><span class="hs-identifier hs-var">mergeAdjacent</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall variable. Text -&gt; InterpolatedItem variable
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#IIText"><span class="hs-identifier hs-var">IIText</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690889221"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690889220"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span> </span><span class="annot"><span class="annottext">[InterpolatedItem variable]
+</span><a href="#local-6989586621690889219"><span class="hs-identifier hs-var">rest</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621690889218"><span class="annot"><span class="annottext">InterpolatedItem variable
+</span><a href="#local-6989586621690889218"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-type">:</span></a></span><span> </span><span id="local-6989586621690889217"><span class="annot"><span class="annottext">[InterpolatedItem variable]
+</span><a href="#local-6989586621690889217"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InterpolatedItem variable
+</span><a href="#local-6989586621690889218"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span> </span><span class="annot"><span class="annottext">[InterpolatedItem variable] -&gt; [InterpolatedItem variable]
+</span><a href="#local-6989586621690889230"><span class="hs-identifier hs-var">mergeAdjacent</span></a></span><span> </span><span class="annot"><span class="annottext">[InterpolatedItem variable]
+</span><a href="#local-6989586621690889217"><span class="hs-identifier hs-var">rest</span></a></span><span>
+</span><span id="line-105"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><a href="#local-6989586621690889228"><span class="hs-identifier hs-type">consumeString</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedItem"><span class="hs-identifier hs-type">InterpolatedItem</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-108"></span><span>    </span><span id="local-6989586621690889228"><span class="annot"><span class="annottext">consumeString :: String -&gt; Either Text [InterpolatedItem ArgumentName]
+</span><a href="#local-6989586621690889228"><span class="hs-identifier hs-var hs-var">consumeString</span></a></span></span><span> </span><span id="local-6989586621690889216"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889216"><span class="hs-identifier hs-var">str</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-109"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690889215"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889215"><span class="hs-identifier hs-var">beforeCurly</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889214"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889214"><span class="hs-identifier hs-var">fromCurly</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; ([a], [a])
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">break</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'{'</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889216"><span class="hs-identifier hs-var">str</span></a></span><span>
+</span><span id="line-110"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889214"><span class="hs-identifier hs-var">fromCurly</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-111"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'{'</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-type">:</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'{'</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-type">:</span></a></span><span> </span><span id="local-6989586621690889212"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889212"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-112"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall variable. Text -&gt; InterpolatedItem variable
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#IIText"><span class="hs-identifier hs-var">IIText</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889215"><span class="hs-identifier hs-var">beforeCurly</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Either Text [InterpolatedItem ArgumentName]
+</span><a href="#local-6989586621690889209"><span class="hs-identifier hs-var">consumeVar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889212"><span class="hs-identifier hs-var">rest</span></a></span><span>
+</span><span id="line-113"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'{'</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-type">:</span></a></span><span> </span><span id="local-6989586621690889208"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889208"><span class="hs-identifier hs-var">other</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-114"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall variable. Text -&gt; InterpolatedItem variable
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#IIText"><span class="hs-identifier hs-var">IIText</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889215"><span class="hs-identifier hs-var">beforeCurly</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;{&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Either Text [InterpolatedItem ArgumentName]
+</span><a href="#local-6989586621690889228"><span class="hs-identifier hs-var">consumeString</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889208"><span class="hs-identifier hs-var">other</span></a></span><span>
+</span><span id="line-115"></span><span>            </span><span id="local-6989586621690889207"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889207"><span class="hs-identifier hs-var">_other</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall variable. Text -&gt; InterpolatedItem variable
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#IIText"><span class="hs-identifier hs-var">IIText</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889215"><span class="hs-identifier hs-var">beforeCurly</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-116"></span><span>
+</span><span id="line-117"></span><span>    </span><span class="annot"><a href="#local-6989586621690889209"><span class="hs-identifier hs-type">consumeVar</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.NativeQuery.InterpolatedQuery.html#InterpolatedItem"><span class="hs-identifier hs-type">InterpolatedItem</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-118"></span><span>    </span><span id="local-6989586621690889209"><span class="annot"><span class="annottext">consumeVar :: String -&gt; Either Text [InterpolatedItem ArgumentName]
+</span><a href="#local-6989586621690889209"><span class="hs-identifier hs-var hs-var">consumeVar</span></a></span></span><span> </span><span id="local-6989586621690889206"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889206"><span class="hs-identifier hs-var">str</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-119"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690889205"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889205"><span class="hs-identifier hs-var">beforeCloseCurly</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690889204"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889204"><span class="hs-identifier hs-var">fromClosedCurly</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; ([a], [a])
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">break</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'}'</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889206"><span class="hs-identifier hs-var">str</span></a></span><span>
+</span><span id="line-120"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889204"><span class="hs-identifier hs-var">fromClosedCurly</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-121"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'}'</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-type">:</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'}'</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-type">:</span></a></span><span> </span><span id="local-6989586621690889203"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889203"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-122"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall variable. variable -&gt; InterpolatedItem variable
+</span><a href="Hasura.NativeQuery.InterpolatedQuery.html#IIVariable"><span class="hs-identifier hs-var">IIVariable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ArgumentName
+</span><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-var">ArgumentName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889205"><span class="hs-identifier hs-var">beforeCloseCurly</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Either Text [InterpolatedItem ArgumentName]
+</span><a href="#local-6989586621690889228"><span class="hs-identifier hs-var">consumeString</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690889203"><span class="hs-identifier hs-var">rest</span></a></span><span>
+</span><span id="line-123"></span><span>            </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; Either a b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Found '{{' without a matching closing '}}'&quot;</span></span><span>
+</span><span id="line-124"></span></pre></body></html>
