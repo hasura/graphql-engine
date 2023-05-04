@@ -1,0 +1,37 @@
+---
+sidebar_label: Event Trigger performance tuning
+sidebar_position: 2.5
+keywords:
+  - hasura
+  - docs
+  - event trigger
+  - delivery
+---
+
+# Event Trigger Performance Tuning
+
+Event Trigger processing can be tuned by few server settings as described below.
+
+## Events fetch batch size
+
+The "events fetch batch size" setting which defaults to 100 and is the maximum number of database events that can be
+fetched in a single batch.
+
+See the [Hasura Engine flags documentation](/deployment/graphql-engine-flags/reference.mdx#events-fetch-batch-size) for
+more information on events fetch batch size.
+
+## Events HTTP pool size
+
+The "events HTTP pool size" sets the maximum number of concurrent HTTP workers for event delivery. Its value is an
+integer and defaults to 100.
+
+See the [Hasura Engine flags documentation](/deployment/graphql-engine-flags/reference.mdx#events-http-pool-size) for
+more information on events HTTP pool size.
+
+## Events fetch interval
+
+The "events fetch interval" is the interval time, in milliseconds, to sleep before trying to fetch events again after a
+fetch returned no events from the database.
+
+See the [Hasura Engine flags documentation](/deployment/graphql-engine-flags/reference.mdx#events-fetch-interval) for
+more information on events fetch interval.
