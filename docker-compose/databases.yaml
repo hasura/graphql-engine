@@ -46,7 +46,7 @@ services:
       retries: 20
 
   citus:
-    image: citusdata/citus:11.2.1
+    image: citusdata/citus:11.3.0
     platform: linux/amd64
     command:
       - -F # turn fsync off for speed

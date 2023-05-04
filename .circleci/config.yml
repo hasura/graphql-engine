@@ -380,7 +380,7 @@ jobs:
       - image: *server_builder_image
       - image: hasura/postgres-13.0-alpine-postgis3:latest
         <<: *test_pg_env
-      - image: citusdata/citus:11.2.1
+      - image: citusdata/citus:11.3.0
         <<: *test_citus_env
     environment:
       # Setting default number of threads to 2

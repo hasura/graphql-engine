@@ -115,11 +115,12 @@ instance PostgresMetadata 'Vanilla where
             JOIN pg_namespace nmsp_child    ON nmsp_child.oid   = child.relnamespace
           ) as names
         )
-        SELECT info_schema.table_name, info_schema.table_schema
+        SELECT info_schema.table_schema, info_schema.table_name
         FROM information_schema.tables as info_schema, partitions
         WHERE
           info_schema.table_schema NOT IN ('information_schema', 'pg_catalog', 'hdb_catalog', '_timescaledb_internal')
           AND NOT (info_schema.table_name = ANY (partitions.names))
+        ORDER BY info_schema.table_schema, info_schema.table_name
       |]
 
 instance PostgresMetadata 'Citus where
@@ -206,12 +207,13 @@ instance PostgresMetadata 'Citus where
             JOIN pg_namespace nmsp_child    ON nmsp_child.oid   = child.relnamespace
           ) as names
         )
-        SELECT info_schema.table_name, info_schema.table_schema
+        SELECT info_schema.table_schema, info_schema.table_name
         FROM information_schema.tables as info_schema, partitions
         WHERE
           info_schema.table_schema NOT IN ('pg_catalog', 'citus', 'information_schema', 'columnar', 'columnar_internal', 'guest', 'INFORMATION_SCHEMA', 'sys', 'db_owner', 'db_securityadmin', 'db_accessadmin', 'db_backupoperator', 'db_ddladmin', 'db_datawriter', 'db_datareader', 'db_denydatawriter', 'db_denydatareader', 'hdb_catalog', '_timescaledb_internal')
           AND NOT (info_schema.table_name = ANY (partitions.names))
           AND info_schema.table_name NOT IN ('citus_tables')
+        ORDER BY info_schema.table_schema, info_schema.table_name
       |]
 
 instance PostgresMetadata 'Cockroach where
@@ -237,11 +239,12 @@ instance PostgresMetadata 'Cockroach where
             JOIN pg_namespace nmsp_child    ON nmsp_child.oid   = child.relnamespace
           ) as names
         )
-        SELECT info_schema.table_name, info_schema.table_schema
+        SELECT info_schema.table_schema, info_schema.table_name
         FROM information_schema.tables as info_schema, partitions
         WHERE
           info_schema.table_schema NOT IN ('pg_catalog', 'crdb_internal', 'information_schema', 'columnar', 'guest', 'INFORMATION_SCHEMA', 'sys', 'db_owner', 'db_securityadmin', 'db_accessadmin', 'db_backupoperator', 'db_ddladmin', 'db_datawriter', 'db_datareader', 'db_denydatawriter', 'db_denydatareader', 'hdb_catalog', '_timescaledb_internal', 'pg_extension')
-          AND NOT (info_schema.table_name = ANY (partitions.names));
+          AND NOT (info_schema.table_name = ANY (partitions.names))
+        ORDER BY info_schema.table_schema, info_schema.table_name
       |]
 
 ----------------------------------------------------------------
@@ -280,4 +283,4 @@ instance
       runPgSourceReadTx sourceConfig (Query.multiQE fromPGTxErr (listAllTablesSql @pgKind))
         `onLeftM` \err -> throwError (prefixQErr "failed to fetch source tables: " err)
 
-    pure [QualifiedObject {..} | (qName, qSchema) <- results]
+    pure [QualifiedObject {..} | (qSchema, qName) <- results]

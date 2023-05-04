@@ -493,7 +493,7 @@ func StartCitusContainer(t TestingT) (string, func()) {
 	pgopts := &dockertest.RunOptions{
 		Name:       fmt.Sprintf("%s-%s", uniqueName, "pg"),
 		Repository: "citusdata/citus",
-		Tag:        "11.2.1",
+		Tag:        "11.3.0",
 		Env: []string{
 			fmt.Sprintf("POSTGRES_PASSWORD=%s", password),
 		},
