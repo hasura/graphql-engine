@@ -23,103 +23,102 @@
 </span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.Server.API.Backend.html#computedFieldCommands"><span class="hs-identifier">computedFieldCommands</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-24"></span><span>    </span><span class="annot"><a href="Hasura.Server.API.Backend.html#connectionTemplateCommands"><span class="hs-identifier">connectionTemplateCommands</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-25"></span><span>    </span><span class="annot"><a href="Hasura.Server.API.Backend.html#nativeQueriesCommands"><span class="hs-identifier">nativeQueriesCommands</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-26"></span><span>    </span><span class="annot"><a href="Hasura.Server.API.Backend.html#storedProceduresCommands"><span class="hs-identifier">storedProceduresCommands</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Hasura.Server.API.Backend.html#logicalModelsCommands"><span class="hs-identifier">logicalModelsCommands</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-special">)</span><span>
-</span><span id="line-29"></span><span class="hs-keyword">where</span><span>
-</span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(&lt;?&gt;)</span></span><span class="hs-special">)</span><span>
-</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Extended</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSONWithContext</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Types</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">modifyFailure</span></span><span class="hs-special">)</span><span>
-</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Types</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
-</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
-</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
-</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span>
-</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html"><span class="hs-identifier">Hasura.SQL.AnyBackend</span></a></span><span>
-</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html"><span class="hs-identifier">Hasura.Server.API.Metadata.Types</span></a></span><span>
-</span><span id="line-41"></span><span>
-</span><span id="line-42"></span><span class="hs-comment">-- API class</span><span>
-</span><span id="line-43"></span><span>
-</span><span id="line-44"></span><span class="hs-keyword">type</span><span> </span><span id="CommandParser"><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-var">CommandParser</span></a></span></span><span> </span><span id="local-6989586621691221359"><span class="annot"><a href="#local-6989586621691221359"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221359"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV1"><span class="hs-identifier hs-type">RQLMetadataV1</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span class="hs-keyword">class</span><span> </span><span id="BackendAPI"><span class="annot"><a href="Hasura.Server.API.Backend.html#BackendAPI"><span class="hs-identifier hs-var">BackendAPI</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221358"><span class="annot"><a href="#local-6989586621691221358"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-47"></span><span>  </span><span id="metadataV1CommandParsers"><span class="annot"><a href="Hasura.Server.API.Backend.html#metadataV1CommandParsers"><span class="hs-identifier hs-type">metadataV1CommandParsers</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221358"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-48"></span><span>
-</span><span id="line-49"></span><span class="hs-comment">-- helpers</span><span>
-</span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span id="local-6989586621691221539"><span id="local-6989586621691221542"><span class="annot"><a href="Hasura.Server.API.Backend.html#commandParserWithExplicitParser"><span class="hs-identifier hs-type">commandParserWithExplicitParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-52"></span><span>  </span><span class="hs-comment">-- | Explicit parsing function that also takes a BackendKind</span><span>
-</span><span id="line-53"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221542"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="annot"><a href="#local-6989586621691221539"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-54"></span><span>  </span><span class="hs-comment">-- | expected command name</span><span>
-</span><span id="line-55"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-56"></span><span>  </span><span class="hs-comment">-- | corresponding parser</span><span>
-</span><span id="line-57"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691221539"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV1"><span class="hs-identifier hs-type">RQLMetadataV1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-58"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221542"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
-</span><span id="line-59"></span><span id="commandParserWithExplicitParser"><span class="annot"><span class="annottext">commandParserWithExplicitParser :: forall (b :: BackendType) a.
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="Hasura.Server.API.Backend.html#logicalModelsCommands"><span class="hs-identifier">logicalModelsCommands</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(&lt;?&gt;)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Extended</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSONWithContext</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Types</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">modifyFailure</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Types</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html"><span class="hs-identifier">Hasura.SQL.AnyBackend</span></a></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html"><span class="hs-identifier">Hasura.Server.API.Metadata.Types</span></a></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- API class</span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">type</span><span> </span><span id="CommandParser"><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-var">CommandParser</span></a></span></span><span> </span><span id="local-6989586621691007147"><span class="annot"><a href="#local-6989586621691007147"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007147"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV1"><span class="hs-identifier hs-type">RQLMetadataV1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">class</span><span> </span><span id="BackendAPI"><span class="annot"><a href="Hasura.Server.API.Backend.html#BackendAPI"><span class="hs-identifier hs-var">BackendAPI</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691007146"><span class="annot"><a href="#local-6989586621691007146"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-46"></span><span>  </span><span id="metadataV1CommandParsers"><span class="annot"><a href="Hasura.Server.API.Backend.html#metadataV1CommandParsers"><span class="hs-identifier hs-type">metadataV1CommandParsers</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007146"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- helpers</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span id="local-6989586621691007319"><span id="local-6989586621691007322"><span class="annot"><a href="Hasura.Server.API.Backend.html#commandParserWithExplicitParser"><span class="hs-identifier hs-type">commandParserWithExplicitParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-comment">-- | Explicit parsing function that also takes a BackendKind</span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007322"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Parser</span></span><span> </span><span class="annot"><a href="#local-6989586621691007319"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-comment">-- | expected command name</span><span>
+</span><span id="line-54"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-comment">-- | corresponding parser</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691007319"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV1"><span class="hs-identifier hs-type">RQLMetadataV1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007322"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
+</span><span id="line-58"></span><span id="commandParserWithExplicitParser"><span class="annot"><span class="annottext">commandParserWithExplicitParser :: forall (b :: BackendType) a.
 (BackendSourceKind b -&gt; Value -&gt; Parser a)
 -&gt; Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
-</span><a href="Hasura.Server.API.Backend.html#commandParserWithExplicitParser"><span class="hs-identifier hs-var hs-var">commandParserWithExplicitParser</span></a></span></span><span> </span><span id="local-6989586621691221336"><span class="annot"><span class="annottext">BackendSourceKind b -&gt; Value -&gt; Parser a
-</span><a href="#local-6989586621691221336"><span class="hs-identifier hs-var">parseJSONWithBackendKind</span></a></span></span><span> </span><span id="local-6989586621691221335"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621691221335"><span class="hs-identifier hs-var">expected</span></a></span></span><span> </span><span id="local-6989586621691221334"><span class="annot"><span class="annottext">a -&gt; RQLMetadataV1
-</span><a href="#local-6989586621691221334"><span class="hs-identifier hs-var">constructor</span></a></span></span><span> </span><span id="local-6989586621691221333"><span class="annot"><span class="annottext">BackendSourceKind b
-</span><a href="#local-6989586621691221333"><span class="hs-identifier hs-var">backendKind</span></a></span></span><span> </span><span id="local-6989586621691221332"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621691221332"><span class="hs-identifier hs-var">provided</span></a></span></span><span> </span><span id="local-6989586621691221331"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621691221331"><span class="hs-identifier hs-var">arguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-60"></span><span>  </span><span class="hs-comment">-- We return a Maybe parser here if the command name doesn't match, as Aeson's alternative</span><span>
-</span><span id="line-61"></span><span>  </span><span class="hs-comment">-- instance backtracks: if we used 'fail', we would not be able to distinguish between &quot;this is</span><span>
-</span><span id="line-62"></span><span>  </span><span class="hs-comment">-- the correct branch, the name matches, but the argument fails to parse, we must fail&quot; and &quot;this</span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-comment">-- is not the command we were expecting here, it is fine to continue with another&quot;.</span><span>
-</span><span id="line-64"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Bool -&gt; m a -&gt; m (Maybe a)
+</span><a href="Hasura.Server.API.Backend.html#commandParserWithExplicitParser"><span class="hs-identifier hs-var hs-var">commandParserWithExplicitParser</span></a></span></span><span> </span><span id="local-6989586621691007124"><span class="annot"><span class="annottext">BackendSourceKind b -&gt; Value -&gt; Parser a
+</span><a href="#local-6989586621691007124"><span class="hs-identifier hs-var">parseJSONWithBackendKind</span></a></span></span><span> </span><span id="local-6989586621691007123"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691007123"><span class="hs-identifier hs-var">expected</span></a></span></span><span> </span><span id="local-6989586621691007122"><span class="annot"><span class="annottext">a -&gt; RQLMetadataV1
+</span><a href="#local-6989586621691007122"><span class="hs-identifier hs-var">constructor</span></a></span></span><span> </span><span id="local-6989586621691007121"><span class="annot"><span class="annottext">BackendSourceKind b
+</span><a href="#local-6989586621691007121"><span class="hs-identifier hs-var">backendKind</span></a></span></span><span> </span><span id="local-6989586621691007120"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691007120"><span class="hs-identifier hs-var">provided</span></a></span></span><span> </span><span id="local-6989586621691007119"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621691007119"><span class="hs-identifier hs-var">arguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-comment">-- We return a Maybe parser here if the command name doesn't match, as Aeson's alternative</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-comment">-- instance backtracks: if we used 'fail', we would not be able to distinguish between &quot;this is</span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-comment">-- the correct branch, the name matches, but the argument fails to parse, we must fail&quot; and &quot;this</span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-comment">-- is not the command we were expecting here, it is fine to continue with another&quot;.</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Bool -&gt; m a -&gt; m (Maybe a)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">whenMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621691221335"><span class="hs-identifier hs-var">expected</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621691007123"><span class="hs-identifier hs-var">expected</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621691221332"><span class="hs-identifier hs-var">provided</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621691007120"><span class="hs-identifier hs-var">provided</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-65"></span><span>    </span><span class="annot"><span class="annottext">forall a. ([Char] -&gt; [Char]) -&gt; Parser a -&gt; Parser a
+</span><span id="line-64"></span><span>    </span><span class="annot"><span class="annottext">forall a. ([Char] -&gt; [Char]) -&gt; Parser a -&gt; Parser a
 </span><span class="hs-identifier hs-var">modifyFailure</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; [Char]
-</span><a href="#local-6989586621691221329"><span class="hs-identifier hs-var">withDetails</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621691007117"><span class="hs-identifier hs-var">withDetails</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-66"></span><span>      </span><span class="annot"><span class="annottext">a -&gt; RQLMetadataV1
-</span><a href="#local-6989586621691221334"><span class="hs-identifier hs-var">constructor</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">a -&gt; RQLMetadataV1
+</span><a href="#local-6989586621691007122"><span class="hs-identifier hs-var">constructor</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BackendSourceKind b -&gt; Value -&gt; Parser a
-</span><a href="#local-6989586621691221336"><span class="hs-identifier hs-var">parseJSONWithBackendKind</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind b
-</span><a href="#local-6989586621691221333"><span class="hs-identifier hs-var">backendKind</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621691221331"><span class="hs-identifier hs-var">arguments</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
+</span><a href="#local-6989586621691007124"><span class="hs-identifier hs-var">parseJSONWithBackendKind</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind b
+</span><a href="#local-6989586621691007121"><span class="hs-identifier hs-var">backendKind</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621691007119"><span class="hs-identifier hs-var">arguments</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; JSONPathElement -&gt; Parser a
 </span><span class="hs-operator hs-var">&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
 </span><span class="hs-identifier hs-var">J.Key</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;args&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-67"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-68"></span><span>    </span><span id="local-6989586621691221329"><span class="annot"><span class="annottext">withDetails :: [Char] -&gt; [Char]
-</span><a href="#local-6989586621691221329"><span class="hs-identifier hs-var hs-var">withDetails</span></a></span></span><span> </span><span id="local-6989586621691221326"><span class="annot"><span class="annottext">[Char]
-</span><a href="#local-6989586621691221326"><span class="hs-identifier hs-var">internalErrorMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-69"></span><span>      </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [[a]] -&gt; [a]
+</span><span id="line-66"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-67"></span><span>    </span><span id="local-6989586621691007117"><span class="annot"><span class="annottext">withDetails :: [Char] -&gt; [Char]
+</span><a href="#local-6989586621691007117"><span class="hs-identifier hs-var hs-var">withDetails</span></a></span></span><span> </span><span id="local-6989586621691007114"><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621691007114"><span class="hs-identifier hs-var">internalErrorMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-68"></span><span>      </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [[a]] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">intercalate</span></a></span><span>
-</span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">[Char]
+</span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;\n&quot;</span></span><span>
-</span><span id="line-71"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span id="line-70"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;Error when parsing command &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Char]
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621691221335"><span class="hs-identifier hs-var">expected</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621691007123"><span class="hs-identifier hs-var">expected</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;.&quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-72"></span><span>          </span><span class="annot"><span class="annottext">[Char]
+</span><span id="line-71"></span><span>          </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;See our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.&quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-73"></span><span>          </span><span class="annot"><span class="annottext">[Char]
+</span><span id="line-72"></span><span>          </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;Internal error message: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
-</span><a href="#local-6989586621691221326"><span class="hs-identifier hs-var">internalErrorMessage</span></a></span><span>
-</span><span id="line-74"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-75"></span><span>
-</span><span id="line-76"></span><span id="local-6989586621691221513"><span id="local-6989586621691221515"><span class="annot"><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-type">commandParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-77"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621691221515"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-78"></span><span>  </span><span class="hs-comment">-- | expected command name</span><span>
-</span><span id="line-79"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-80"></span><span>  </span><span class="hs-comment">-- | corresponding parser</span><span>
-</span><span id="line-81"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691221515"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV1"><span class="hs-identifier hs-type">RQLMetadataV1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221513"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
-</span><span id="line-83"></span><span id="commandParser"><span class="annot"><span class="annottext">commandParser :: forall a (b :: BackendType).
+</span><a href="#local-6989586621691007114"><span class="hs-identifier hs-var">internalErrorMessage</span></a></span><span>
+</span><span id="line-73"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span id="local-6989586621691007293"><span id="local-6989586621691007295"><span class="annot"><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-type">commandParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621691007295"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-comment">-- | expected command name</span><span>
+</span><span id="line-78"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-comment">-- | corresponding parser</span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691007295"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV1"><span class="hs-identifier hs-type">RQLMetadataV1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007293"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
+</span><span id="line-82"></span><span id="commandParser"><span class="annot"><span class="annottext">commandParser :: forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var hs-var">commandParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) a.
@@ -128,28 +127,28 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParserWithExplicitParser"><span class="hs-identifier hs-var">commandParserWithExplicitParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. a -&gt; b -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- Ignore the backend source kind and just parse using the FromJSON instance</span><span>
-</span><span id="line-84"></span><span>
-</span><span id="line-85"></span><span id="local-6989586621691221507"><span id="local-6989586621691221508"><span class="annot"><a href="Hasura.Server.API.Backend.html#commandParserWithBackendKind"><span class="hs-identifier hs-type">commandParserWithBackendKind</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-86"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">FromJSONWithContext</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221508"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621691221507"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-87"></span><span>  </span><span class="hs-comment">-- | expected command name</span><span>
-</span><span id="line-88"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-89"></span><span>  </span><span class="hs-comment">-- | corresponding parser</span><span>
-</span><span id="line-90"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691221507"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV1"><span class="hs-identifier hs-type">RQLMetadataV1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-91"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221508"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
-</span><span id="line-92"></span><span id="commandParserWithBackendKind"><span class="annot"><span class="annottext">commandParserWithBackendKind :: forall (b :: BackendType) a.
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span id="local-6989586621691007287"><span id="local-6989586621691007288"><span class="annot"><a href="Hasura.Server.API.Backend.html#commandParserWithBackendKind"><span class="hs-identifier hs-type">commandParserWithBackendKind</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-85"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">FromJSONWithContext</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007288"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621691007287"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-comment">-- | expected command name</span><span>
+</span><span id="line-87"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-comment">-- | corresponding parser</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691007287"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV1"><span class="hs-identifier hs-type">RQLMetadataV1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-90"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007288"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
+</span><span id="line-91"></span><span id="commandParserWithBackendKind"><span class="annot"><span class="annottext">commandParserWithBackendKind :: forall (b :: BackendType) a.
 FromJSONWithContext (BackendSourceKind b) a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParserWithBackendKind"><span class="hs-identifier hs-var hs-var">commandParserWithBackendKind</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-93"></span><span>  </span><span class="annot"><span class="annottext">forall (b :: BackendType) a.
+</span><span id="line-92"></span><span>  </span><span class="annot"><span class="annottext">forall (b :: BackendType) a.
 (BackendSourceKind b -&gt; Value -&gt; Parser a)
 -&gt; Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParserWithExplicitParser"><span class="hs-identifier hs-var">commandParserWithExplicitParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall ctx a. FromJSONWithContext ctx a =&gt; ctx -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSONWithContext</span></span><span>
-</span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#sourceCommands"><span class="hs-identifier hs-type">sourceCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221501"><span class="annot"><a href="#local-6989586621691221501"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221501"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221501"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-96"></span><span id="sourceCommands"><span class="annot"><span class="annottext">sourceCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#sourceCommands"><span class="hs-identifier hs-type">sourceCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691007281"><span class="annot"><a href="#local-6989586621691007281"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007281"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007281"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-95"></span><span id="sourceCommands"><span class="annot"><span class="annottext">sourceCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
 </span><a href="Hasura.Server.API.Backend.html#sourceCommands"><span class="hs-identifier hs-var hs-var">sourceCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-97"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) a.
+</span><span id="line-96"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) a.
 FromJSONWithContext (BackendSourceKind b) a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParserWithBackendKind"><span class="hs-identifier hs-var">commandParserWithBackendKind</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -159,15 +158,15 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221501"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-98"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007281"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;drop_source&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">DropSource -&gt; RQLMetadataV1
 </span><a href="Hasura.Server.API.Metadata.Types.html#RMDropSource"><span class="hs-identifier hs-var">RMDropSource</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-99"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><span id="line-98"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -177,8 +176,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221501"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-100"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007281"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -188,8 +187,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221501"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-101"></span><span>    </span><span class="annot"><span class="annottext">forall (b :: BackendType) a.
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007281"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-100"></span><span>    </span><span class="annot"><span class="annottext">forall (b :: BackendType) a.
 FromJSONWithContext (BackendSourceKind b) a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParserWithBackendKind"><span class="hs-identifier hs-var">commandParserWithBackendKind</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -199,13 +198,13 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221501"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-102"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-103"></span><span>
-</span><span id="line-104"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#tableCommands"><span class="hs-identifier hs-type">tableCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221285"><span class="annot"><a href="#local-6989586621691221285"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221285"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221285"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-105"></span><span id="tableCommands"><span class="annot"><span class="annottext">tableCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007281"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#tableCommands"><span class="hs-identifier hs-type">tableCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691007073"><span class="annot"><a href="#local-6989586621691007073"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007073"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007073"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-104"></span><span id="tableCommands"><span class="annot"><span class="annottext">tableCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
 </span><a href="Hasura.Server.API.Backend.html#tableCommands"><span class="hs-identifier hs-var hs-var">tableCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-106"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><span id="line-105"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -215,8 +214,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221285"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007073"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-106"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -226,8 +225,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221285"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-108"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007073"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -237,13 +236,13 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221285"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-109"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-110"></span><span>
-</span><span id="line-111"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#tablePermissionsCommands"><span class="hs-identifier hs-type">tablePermissionsCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221267"><span class="annot"><a href="#local-6989586621691221267"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221267"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221267"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-112"></span><span id="tablePermissionsCommands"><span class="annot"><span class="annottext">tablePermissionsCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007073"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#tablePermissionsCommands"><span class="hs-identifier hs-type">tablePermissionsCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691007055"><span class="annot"><a href="#local-6989586621691007055"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007055"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007055"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-111"></span><span id="tablePermissionsCommands"><span class="annot"><span class="annottext">tablePermissionsCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
 </span><a href="Hasura.Server.API.Backend.html#tablePermissionsCommands"><span class="hs-identifier hs-var hs-var">tablePermissionsCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-113"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><span id="line-112"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -253,8 +252,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221267"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-114"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007055"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -264,8 +263,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221267"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-115"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007055"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-114"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -275,8 +274,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221267"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-116"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007055"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-115"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -286,8 +285,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221267"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-117"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007055"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-116"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -297,8 +296,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221267"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-118"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007055"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-117"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -308,8 +307,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221267"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-119"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007055"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-118"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -319,8 +318,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221267"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-120"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007055"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-119"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -330,8 +329,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221267"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-121"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007055"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-120"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -341,13 +340,13 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221267"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-122"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-123"></span><span>
-</span><span id="line-124"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#functionCommands"><span class="hs-identifier hs-type">functionCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221217"><span class="annot"><a href="#local-6989586621691221217"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221217"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221217"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-125"></span><span id="functionCommands"><span class="annot"><span class="annottext">functionCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007055"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-122"></span><span>
+</span><span id="line-123"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#functionCommands"><span class="hs-identifier hs-type">functionCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691007005"><span class="annot"><a href="#local-6989586621691007005"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007005"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691007005"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-124"></span><span id="functionCommands"><span class="annot"><span class="annottext">functionCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
 </span><a href="Hasura.Server.API.Backend.html#functionCommands"><span class="hs-identifier hs-var hs-var">functionCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-126"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><span id="line-125"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -357,8 +356,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221217"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-127"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007005"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -368,8 +367,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221217"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-128"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007005"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-127"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -379,13 +378,13 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221217"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-129"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-130"></span><span>
-</span><span id="line-131"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#functionPermissionsCommands"><span class="hs-identifier hs-type">functionPermissionsCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221199"><span class="annot"><a href="#local-6989586621691221199"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221199"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221199"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-132"></span><span id="functionPermissionsCommands"><span class="annot"><span class="annottext">functionPermissionsCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691007005"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-129"></span><span>
+</span><span id="line-130"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#functionPermissionsCommands"><span class="hs-identifier hs-type">functionPermissionsCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691006987"><span class="annot"><a href="#local-6989586621691006987"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006987"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006987"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-131"></span><span id="functionPermissionsCommands"><span class="annot"><span class="annottext">functionPermissionsCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
 </span><a href="Hasura.Server.API.Backend.html#functionPermissionsCommands"><span class="hs-identifier hs-var hs-var">functionPermissionsCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-133"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><span id="line-132"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -395,8 +394,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221199"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-134"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006987"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -406,13 +405,13 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221199"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-135"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-136"></span><span>
-</span><span id="line-137"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#relationshipCommands"><span class="hs-identifier hs-type">relationshipCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221187"><span class="annot"><a href="#local-6989586621691221187"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221187"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221187"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-138"></span><span id="relationshipCommands"><span class="annot"><span class="annottext">relationshipCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006987"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-135"></span><span>
+</span><span id="line-136"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#relationshipCommands"><span class="hs-identifier hs-type">relationshipCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691006975"><span class="annot"><a href="#local-6989586621691006975"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006975"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006975"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-137"></span><span id="relationshipCommands"><span class="annot"><span class="annottext">relationshipCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
 </span><a href="Hasura.Server.API.Backend.html#relationshipCommands"><span class="hs-identifier hs-var hs-var">relationshipCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-139"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><span id="line-138"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -422,8 +421,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221187"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-140"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006975"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-139"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -433,8 +432,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221187"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-141"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006975"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-140"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -444,8 +443,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221187"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-142"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006975"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-141"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -455,8 +454,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221187"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-143"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006975"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-142"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -466,8 +465,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221187"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-144"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006975"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-143"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -477,13 +476,13 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221187"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-145"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-146"></span><span>
-</span><span id="line-147"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#remoteRelationshipCommands"><span class="hs-identifier hs-type">remoteRelationshipCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221154"><span class="annot"><a href="#local-6989586621691221154"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221154"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221154"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-148"></span><span id="remoteRelationshipCommands"><span class="annot"><span class="annottext">remoteRelationshipCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006975"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-144"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-145"></span><span>
+</span><span id="line-146"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#remoteRelationshipCommands"><span class="hs-identifier hs-type">remoteRelationshipCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691006942"><span class="annot"><a href="#local-6989586621691006942"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006942"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006942"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-147"></span><span id="remoteRelationshipCommands"><span class="annot"><span class="annottext">remoteRelationshipCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
 </span><a href="Hasura.Server.API.Backend.html#remoteRelationshipCommands"><span class="hs-identifier hs-var hs-var">remoteRelationshipCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-149"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><span id="line-148"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -493,8 +492,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221154"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-150"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006942"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-149"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -504,8 +503,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221154"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-151"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006942"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-150"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -515,13 +514,13 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221154"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-152"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-153"></span><span>
-</span><span id="line-154"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#eventTriggerCommands"><span class="hs-identifier hs-type">eventTriggerCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221137"><span class="annot"><a href="#local-6989586621691221137"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221137"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221137"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-155"></span><span id="eventTriggerCommands"><span class="annot"><span class="annottext">eventTriggerCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006942"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-151"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-152"></span><span>
+</span><span id="line-153"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#eventTriggerCommands"><span class="hs-identifier hs-type">eventTriggerCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691006925"><span class="annot"><a href="#local-6989586621691006925"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006925"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006925"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-154"></span><span id="eventTriggerCommands"><span class="annot"><span class="annottext">eventTriggerCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
 </span><a href="Hasura.Server.API.Backend.html#eventTriggerCommands"><span class="hs-identifier hs-var hs-var">eventTriggerCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-156"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><span id="line-155"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -531,8 +530,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221137"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-157"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006925"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-156"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -542,8 +541,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221137"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-158"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006925"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-157"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -553,8 +552,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221137"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-159"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006925"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-158"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -564,8 +563,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221137"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-160"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006925"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-159"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -575,8 +574,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221137"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-161"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006925"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-160"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -586,8 +585,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221137"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-162"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006925"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-161"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -597,13 +596,13 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221137"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-163"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-164"></span><span>
-</span><span id="line-165"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#computedFieldCommands"><span class="hs-identifier hs-type">computedFieldCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221097"><span class="annot"><a href="#local-6989586621691221097"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221097"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221097"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-166"></span><span id="computedFieldCommands"><span class="annot"><span class="annottext">computedFieldCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006925"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-162"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-163"></span><span>
+</span><span id="line-164"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#computedFieldCommands"><span class="hs-identifier hs-type">computedFieldCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691006885"><span class="annot"><a href="#local-6989586621691006885"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006885"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006885"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-165"></span><span id="computedFieldCommands"><span class="annot"><span class="annottext">computedFieldCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
 </span><a href="Hasura.Server.API.Backend.html#computedFieldCommands"><span class="hs-identifier hs-var hs-var">computedFieldCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-167"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><span id="line-166"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -613,8 +612,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221097"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-168"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006885"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-167"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -624,13 +623,13 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221097"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-169"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-170"></span><span>
-</span><span id="line-171"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#connectionTemplateCommands"><span class="hs-identifier hs-type">connectionTemplateCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221084"><span class="annot"><a href="#local-6989586621691221084"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221084"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221084"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-172"></span><span id="connectionTemplateCommands"><span class="annot"><span class="annottext">connectionTemplateCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006885"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-168"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-169"></span><span>
+</span><span id="line-170"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#connectionTemplateCommands"><span class="hs-identifier hs-type">connectionTemplateCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691006872"><span class="annot"><a href="#local-6989586621691006872"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006872"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006872"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-171"></span><span id="connectionTemplateCommands"><span class="annot"><span class="annottext">connectionTemplateCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
 </span><a href="Hasura.Server.API.Backend.html#connectionTemplateCommands"><span class="hs-identifier hs-var hs-var">connectionTemplateCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-173"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><span id="line-172"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -640,13 +639,13 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221084"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-174"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-175"></span><span>
-</span><span id="line-176"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#nativeQueriesCommands"><span class="hs-identifier hs-type">nativeQueriesCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221076"><span class="annot"><a href="#local-6989586621691221076"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221076"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221076"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-177"></span><span id="nativeQueriesCommands"><span class="annot"><span class="annottext">nativeQueriesCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006872"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-173"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-174"></span><span>
+</span><span id="line-175"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#nativeQueriesCommands"><span class="hs-identifier hs-type">nativeQueriesCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691006864"><span class="annot"><a href="#local-6989586621691006864"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006864"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006864"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-176"></span><span id="nativeQueriesCommands"><span class="annot"><span class="annottext">nativeQueriesCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
 </span><a href="Hasura.Server.API.Backend.html#nativeQueriesCommands"><span class="hs-identifier hs-var hs-var">nativeQueriesCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-178"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><span id="line-177"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -656,8 +655,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221076"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-179"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006864"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-178"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -667,8 +666,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221076"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-180"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006864"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-179"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -678,51 +677,13 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221076"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-181"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-182"></span><span>
-</span><span id="line-183"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#storedProceduresCommands"><span class="hs-identifier hs-type">storedProceduresCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221058"><span class="annot"><a href="#local-6989586621691221058"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221058"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221058"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-184"></span><span id="storedProceduresCommands"><span class="annot"><span class="annottext">storedProceduresCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
-</span><a href="Hasura.Server.API.Backend.html#storedProceduresCommands"><span class="hs-identifier hs-var hs-var">storedProceduresCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-185"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
-FromJSON a =&gt;
-Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
-</span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;get_stored_procedure&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend GetStoredProcedure -&gt; RQLMetadataV1
-</span><a href="Hasura.Server.API.Metadata.Types.html#RMGetStoredProcedure"><span class="hs-identifier hs-var">RMGetStoredProcedure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
-HasTag b =&gt;
-i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221058"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-186"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
-FromJSON a =&gt;
-Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
-</span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;track_stored_procedure&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend TrackStoredProcedure -&gt; RQLMetadataV1
-</span><a href="Hasura.Server.API.Metadata.Types.html#RMTrackStoredProcedure"><span class="hs-identifier hs-var">RMTrackStoredProcedure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
-HasTag b =&gt;
-i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221058"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-187"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
-FromJSON a =&gt;
-Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
-</span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;untrack_stored_procedure&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend UntrackStoredProcedure -&gt; RQLMetadataV1
-</span><a href="Hasura.Server.API.Metadata.Types.html#RMUntrackStoredProcedure"><span class="hs-identifier hs-var">RMUntrackStoredProcedure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
-HasTag b =&gt;
-i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221058"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-188"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-189"></span><span>
-</span><span id="line-190"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#logicalModelsCommands"><span class="hs-identifier hs-type">logicalModelsCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691221040"><span class="annot"><a href="#local-6989586621691221040"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221040"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691221040"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-191"></span><span id="logicalModelsCommands"><span class="annot"><span class="annottext">logicalModelsCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006864"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-180"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-181"></span><span>
+</span><span id="line-182"></span><span class="annot"><a href="Hasura.Server.API.Backend.html#logicalModelsCommands"><span class="hs-identifier hs-type">logicalModelsCommands</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691006846"><span class="annot"><a href="#local-6989586621691006846"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006846"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Backend.html#CommandParser"><span class="hs-identifier hs-type">CommandParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691006846"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-183"></span><span id="logicalModelsCommands"><span class="annot"><span class="annottext">logicalModelsCommands :: forall (b :: BackendType). Backend b =&gt; [CommandParser b]
 </span><a href="Hasura.Server.API.Backend.html#logicalModelsCommands"><span class="hs-identifier hs-var hs-var">logicalModelsCommands</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-192"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><span id="line-184"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -732,8 +693,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221040"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-193"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006846"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-185"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -743,8 +704,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221040"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-194"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006846"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-186"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -754,8 +715,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221040"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-195"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006846"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-187"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -765,8 +726,8 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221040"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-196"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006846"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-188"></span><span>    </span><span class="annot"><span class="annottext">forall a (b :: BackendType).
 FromJSON a =&gt;
 Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="Hasura.Server.API.Backend.html#commandParser"><span class="hs-identifier hs-var">commandParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -776,6 +737,6 @@ Text -&gt; (a -&gt; RQLMetadataV1) -&gt; CommandParser b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691221040"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-197"></span><span>  </span><span class="hs-special">]</span><span>
-</span><span id="line-198"></span></pre></body></html>
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691006846"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-189"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-190"></span></pre></body></html>
