@@ -99,6 +99,7 @@ library
     Test.API.Metadata.BulkKeepGoingSpec
     Test.API.Metadata.ComputedFieldsSpec
     Test.API.Metadata.InconsistentSpec
+    Test.API.Metadata.LogicalModelsSpec
     Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.TablesSpec
     Test.API.Metadata.TestConnectionTemplateSpec

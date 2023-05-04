@@ -40,7 +40,10 @@ schema = []
 
 tests :: SpecWith TestEnvironment
 tests = do
-  let helloWorldLogicalModel :: Schema.LogicalModel
+  let query :: Text
+      query = "SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t(\"one\", \"two\")"
+
+      helloWorldLogicalModel :: Schema.LogicalModel
       helloWorldLogicalModel =
         (Schema.logicalModel "hello_world_return_type")
           { Schema.logicalModelColumns =
@@ -49,14 +52,22 @@ tests = do
               ]
           }
 
+      helloWorldNativeQuery :: Schema.NativeQuery
+      helloWorldNativeQuery =
+        (Schema.nativeQuery "hello_world_function" query "hello_world_return_type")
+
   describe "Testing Native Queries" $ do
     it "We cannot even set up a Logical Model in OSS" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
           source = BackendType.backendSourceName backendTypeMetadata
+
+      GraphqlEngine.postMetadata_
+        testEnvironment
+        (Schema.trackLogicalModelCommand source backendTypeMetadata helloWorldLogicalModel)
 
       -- we expect this to fail
       void $
         GraphqlEngine.postMetadataWithStatus
           400
           testEnvironment
-          (Schema.trackLogicalModelCommand source backendTypeMetadata helloWorldLogicalModel)
+          (Schema.trackNativeQueryCommand source backendTypeMetadata helloWorldNativeQuery)

@@ -41,8 +41,6 @@ import Hasura.RQL.Types.Permission (PermDef (_pdRole), SelPerm)
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker (..))
-import Hasura.Server.Init.FeatureFlag qualified as FF
 
 -- | Default implementation of the 'track_logical_model' request payload.
 data TrackLogicalModel (b :: BackendType) = TrackLogicalModel
@@ -119,15 +117,11 @@ instance Backend b => ToJSON (GetLogicalModel b) where
 runGetLogicalModel ::
   forall b m.
   ( BackendMetadata b,
-    MetadataM m,
-    HasFeatureFlagChecker m,
-    MonadError QErr m
+    MetadataM m
   ) =>
   GetLogicalModel b ->
   m EncJSON
 runGetLogicalModel q = do
-  throwIfFeatureDisabled
-
   metadata <- getMetadata
 
   let logicalModels :: Maybe (LogicalModels b)
@@ -147,14 +141,11 @@ runTrackLogicalModel ::
   ( BackendMetadata b,
     CacheRWM m,
     MetadataM m,
-    MonadError QErr m,
-    HasFeatureFlagChecker m
+    MonadError QErr m
   ) =>
   TrackLogicalModel b ->
   m EncJSON
 runTrackLogicalModel trackLogicalModelRequest = do
-  throwIfFeatureDisabled
-
   sourceMetadata <-
     maybe (throw400 NotFound $ "Source " <> sourceNameToText source <> " not found.") pure
       . preview (metaSources . ix source . toSourceMetadata @b)
@@ -269,11 +260,10 @@ instance
 
 runCreateSelectLogicalModelPermission ::
   forall b m.
-  (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) =>
+  (Backend b, CacheRWM m, MetadataM m, MonadError QErr m) =>
   CreateLogicalModelPermission SelPerm b ->
   m EncJSON
 runCreateSelectLogicalModelPermission CreateLogicalModelPermission {..} = do
-  throwIfFeatureDisabled
   assertLogicalModelExists @b clmpSource clmpName
 
   let metadataObj :: MetadataObjId
@@ -308,11 +298,10 @@ instance FromJSON (DropLogicalModelPermission b) where
 
 runDropSelectLogicalModelPermission ::
   forall b m.
-  (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) =>
+  (Backend b, CacheRWM m, MetadataM m, MonadError QErr m) =>
   DropLogicalModelPermission b ->
   m EncJSON
 runDropSelectLogicalModelPermission DropLogicalModelPermission {..} = do
-  throwIfFeatureDisabled
   assertLogicalModelExists @b dlmpSource dlmpName
 
   let metadataObj :: MetadataObjId
@@ -334,12 +323,6 @@ dropLogicalModelInMetadata source name = do
   MetadataModifier $
     metaSources . ix source . toSourceMetadata @b . smLogicalModels
       %~ InsOrdHashMap.delete name
-
--- | check feature flag is enabled before carrying out any actions
-throwIfFeatureDisabled :: (HasFeatureFlagChecker m, MonadError QErr m) => m ()
-throwIfFeatureDisabled = do
-  enableLogicalModels <- checkFlag FF.nativeQueryInterface
-  unless enableLogicalModels $ throw500 "LogicalModels is disabled!"
 
 -- | Check whether a logical model with the given root field name exists for
 -- the given source.

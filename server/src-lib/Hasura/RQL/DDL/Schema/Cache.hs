@@ -770,9 +770,6 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
             (InsOrdHashMap.elems logicalModels)
             \lmm@LogicalModelMetadata {..} ->
               withRecordInconsistencyM (mkLogicalModelMetadataObject lmm) $ do
-                unless (_cscAreNativeQueriesEnabled cacheStaticConfig) $
-                  throw400 InvalidConfiguration "The Logical Model feature is disabled"
-
                 logicalModelPermissions <-
                   buildLogicalModelPermissions sourceName tableCoreInfos _lmmName _lmmFields _lmmSelectPermissions orderedRoles
 
