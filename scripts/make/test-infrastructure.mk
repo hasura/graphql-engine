@@ -32,6 +32,7 @@ stop-everything:
 	$(API_TESTS_DOCKER_COMPOSE) down --volumes
 	$(API_PRO_TESTS_DOCKER_COMPOSE) down --volumes
 	$(PYTHON_TESTS_DOCKER_COMPOSE) down --volumes
+	$(DC_POSTGRES_DOCKER_COMPOSE) down --volumes
 
 .PHONY: remove-tix-file
 remove-tix-file:
