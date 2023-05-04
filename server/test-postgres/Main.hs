@@ -113,6 +113,7 @@ main = do
                 EventingEnabled
                 readOnlyMode
                 False
+                False
             dynamicConfig =
               CacheDynamicConfig
                 Options.InferFunctionPermissions

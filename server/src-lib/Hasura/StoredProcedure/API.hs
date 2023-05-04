@@ -287,7 +287,7 @@ dropStoredProcedureInMetadata source rootFieldName = do
 -- | check feature flag is enabled before carrying out any actions
 throwIfFeatureDisabled :: (HasFeatureFlagChecker m, MonadError QErr m) => m ()
 throwIfFeatureDisabled = do
-  enableStoredProcedures <- checkFlag FF.nativeQueryInterface -- TODO: make our own feature flag
+  enableStoredProcedures <- checkFlag FF.storedProceduresFlag
   unless enableStoredProcedures (throw500 "Stored Procedures are disabled!")
 
 -- | Check whether a stored procedure exists for the given source.

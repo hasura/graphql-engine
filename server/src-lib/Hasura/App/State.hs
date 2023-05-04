@@ -326,7 +326,8 @@ buildCacheStaticConfig AppEnv {..} =
     { _cscMaintenanceMode = appEnvEnableMaintenanceMode,
       _cscEventingMode = appEnvEventingMode,
       _cscReadOnlyMode = appEnvEnableReadOnlyMode,
-      _cscAreNativeQueriesEnabled = False
+      _cscAreNativeQueriesEnabled = False,
+      _cscAreStoredProceduresEnabled = False
     }
 
 buildCacheDynamicConfig :: AppContext -> CacheDynamicConfig

@@ -33,7 +33,10 @@ data CacheStaticConfig = CacheStaticConfig
     _cscReadOnlyMode :: ReadOnlyMode,
     -- | Native queries can be enabled or disabled on the fly via a feature
     -- flag, however we only recognise a change on a restart
-    _cscAreNativeQueriesEnabled :: Bool
+    _cscAreNativeQueriesEnabled :: Bool,
+    -- | Stored procedures can be enabled or disabled on the fly via a feature
+    -- flag, however we only recognise a change on a restart
+    _cscAreStoredProceduresEnabled :: Bool
   }
 
 class Monad m => HasCacheStaticConfig m where

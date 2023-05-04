@@ -882,7 +882,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                       }
 
               withRecordInconsistencyM metadataObject $ do
-                unless (_cscAreNativeQueriesEnabled cacheStaticConfig) $ -- @TODO: use a different flag
+                unless (_cscAreStoredProceduresEnabled cacheStaticConfig) $
                   throw400 InvalidConfiguration "The Stored Procedure feature is disabled"
 
                 logicalModel <-
