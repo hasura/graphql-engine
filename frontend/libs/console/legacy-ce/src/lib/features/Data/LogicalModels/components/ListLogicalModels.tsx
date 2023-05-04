@@ -7,8 +7,8 @@ import React from 'react';
 import { Button } from '../../../../new-components/Button';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { LogicalModel } from '../../../hasura-metadata-types';
-import { CardedTableFromReactTable } from './CardedTableFromReactTable';
 import Skeleton from 'react-loading-skeleton';
+import { CardedTableFromReactTable } from './CardedTableFromReactTable';
 
 const columnHelper = createColumnHelper<LogicalModel>();
 

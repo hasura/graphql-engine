@@ -5,9 +5,9 @@ import {
   MssqlConfiguration,
   PostgresConfiguration,
 } from './configuration';
-import { MetadataTable } from './table';
 import { LogicalModel } from './logicalModel';
 import { NativeQuery } from './nativeQuery';
+import { MetadataTable } from './table';
 
 export type NativeDrivers =
   | 'postgres'

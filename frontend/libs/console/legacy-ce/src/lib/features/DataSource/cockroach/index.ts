@@ -16,6 +16,7 @@ import {
 } from './introspection';
 import { getTableRows } from './query';
 import { postgresCapabilities } from '../common/capabilities';
+import { consoleDataTypeToSQLTypeMap } from './utils';
 
 export type CockroachDBTable = { name: string; schema: string };
 
@@ -84,6 +85,7 @@ export const cockroach: Database = {
     getSupportedOperators,
     getDatabaseSchemas: async () => Feature.NotImplemented,
     getIsTableView,
+    getSupportedDataTypes: async () => consoleDataTypeToSQLTypeMap,
   },
   query: {
     getTableRows,

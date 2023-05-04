@@ -20,6 +20,7 @@ import {
   getIsTableView,
 } from './introspection';
 import { getTableRows } from './query';
+import { consoleDataTypeToSQLTypeMap } from './utils';
 
 export type PostgresTable = { name: string; schema: string };
 
@@ -62,6 +63,7 @@ export const postgres: Database = {
     getSupportedOperators,
     getDatabaseSchemas,
     getIsTableView,
+    getSupportedDataTypes: async () => consoleDataTypeToSQLTypeMap,
   },
   query: {
     getTableRows,

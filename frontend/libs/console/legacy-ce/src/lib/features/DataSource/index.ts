@@ -145,6 +145,9 @@ export type Database = {
     getIsTableView: (
       props: GetIsTableViewProps
     ) => Promise<boolean | Feature.NotImplemented>;
+    getSupportedDataTypes: () => Promise<
+      Record<TableColumn['consoleDataType'], string[]> | Feature.NotImplemented
+    >;
   };
   query?: {
     getTableRows: (
@@ -595,5 +598,15 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     if (isView === Feature.NotImplemented) return false;
 
     return isView;
+  },
+  getSupportedDataTypes: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+    return (
+      database.introspection?.getSupportedDataTypes() ?? Feature.NotImplemented
+    );
   },
 });

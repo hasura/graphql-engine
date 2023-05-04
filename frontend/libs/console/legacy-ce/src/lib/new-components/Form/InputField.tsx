@@ -99,6 +99,7 @@ export const InputField = <T extends z.infer<Schema>>({
   prependLabel = '',
   appendLabel = '',
   dataTest,
+  dataTestId,
   inputTransform,
   renderDescriptionLineBreaks = false,
   clearButton,
@@ -170,6 +171,7 @@ export const InputField = <T extends z.infer<Schema>>({
         prependLabel={prependLabel}
         appendLabel={appendLabel}
         dataTest={dataTest}
+        dataTestId={dataTestId}
         clearButton={showClearButton}
         inputClassName={inputClassName}
         maybeError={maybeError}

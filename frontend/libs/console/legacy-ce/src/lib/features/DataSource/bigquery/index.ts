@@ -12,6 +12,7 @@ import {
 } from './introspection';
 import { getTableRows } from './query';
 import { Capabilities } from '@hasura/dc-api-types';
+import { DataTypeToSQLTypeMap } from './utils';
 
 export type BigQueryTable = { name: string; dataset: string };
 
@@ -43,6 +44,7 @@ export const bigquery: Database = {
     getSupportedOperators,
     getDatabaseSchemas: async () => Feature.NotImplemented,
     getIsTableView: async () => Feature.NotImplemented,
+    getSupportedDataTypes: async () => DataTypeToSQLTypeMap,
   },
   query: {
     getTableRows,

@@ -1,0 +1,32 @@
+import {
+  FieldWrapper,
+  FieldWrapperPassThroughProps,
+} from '../../../../../new-components/Form';
+import { Switch } from '../../../../../new-components/Switch';
+import { Controller } from 'react-hook-form';
+
+type BooleanInputProps = FieldWrapperPassThroughProps & {
+  name: string;
+  disabled?: boolean;
+};
+
+export const BooleanInput = ({
+  name,
+  disabled,
+  ...wrapperProps
+}: BooleanInputProps) => {
+  return (
+    <Controller
+      name={name}
+      render={({ field: { onChange, value }, fieldState }) => (
+        <FieldWrapper id={name} {...wrapperProps} error={fieldState.error}>
+          <Switch
+            checked={value}
+            onCheckedChange={onChange}
+            disabled={disabled}
+          />
+        </FieldWrapper>
+      )}
+    />
+  );
+};

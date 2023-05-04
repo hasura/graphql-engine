@@ -105,6 +105,10 @@ export const metadataQueryTypes = [
   'dc_delete_agent',
   'suggest_relationships',
   'pg_test_connection_template',
+  'track_logical_model',
+  'untrack_logical_model',
+  'track_native_query',
+  'untrack_native_query',
 ] as const;
 
 export type MetadataQueryType = (typeof metadataQueryTypes)[number];
