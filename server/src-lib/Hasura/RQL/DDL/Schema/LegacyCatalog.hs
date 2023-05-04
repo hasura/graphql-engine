@@ -902,4 +902,9 @@ recreateSystemMetadata = do
     objectRel name using = Left $ RelDef (RelName name) using Nothing
     arrayRel name using = Right $ RelDef (RelName name) using Nothing
     manualConfig schemaName tableName columns =
-      RUManual $ RelManualConfig (QualifiedObject schemaName tableName) (HashMap.fromList columns) Nothing
+      RUManual $
+        RelManualTableConfig
+          ( RelManualTableConfigC
+              (QualifiedObject schemaName tableName)
+              (RelManualCommon (HashMap.fromList columns) Nothing)
+          )

@@ -11,6 +11,9 @@ module Hasura.RQL.Types.Relationships.Local
     RelDef (..),
     RelInfo (..),
     RelManualConfig (..),
+    RelManualTableConfig (..),
+    RelManualNativeQueryConfig (..),
+    RelManualCommon (..),
     RelUsing (..),
     WithTable (..),
     boolToNullable,
@@ -30,6 +33,7 @@ import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.Text qualified as T
 import Data.Typeable (Typeable)
+import Hasura.NativeQuery.Types (NativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendPrefix)
@@ -66,41 +70,70 @@ instance (ToJSON a) => ToAesonPairs (RelDef a) where
       "comment" .= rc
     ]
 
-data RelManualConfig (b :: BackendType) = RelManualConfig
-  { rmTable :: TableName b,
-    rmColumns :: HashMap (Column b) (Column b),
+data RelManualConfig (b :: BackendType)
+  = RelManualTableConfig (RelManualTableConfig b)
+  | RelManualNativeQueryConfig (RelManualNativeQueryConfig b)
+  deriving (Eq, Show, Generic)
+  deriving (FromJSON, ToJSON) via AC.Autodocodec (RelManualConfig b)
+
+data RelManualTableConfig (b :: BackendType) = RelManualTableConfigC
+  { rmtTable :: TableName b,
+    rmtCommon :: RelManualCommon b
+  }
+  deriving (Generic)
+
+deriving instance Backend b => Eq (RelManualTableConfig b)
+
+deriving instance Backend b => Show (RelManualTableConfig b)
+
+data RelManualNativeQueryConfig (b :: BackendType) = RelManualNativeQueryConfigC
+  { rmnNativeQueryName :: NativeQueryName,
+    rmnCommon :: RelManualCommon b
+  }
+  deriving (Generic)
+
+deriving instance Backend b => Eq (RelManualNativeQueryConfig b)
+
+deriving instance Backend b => Show (RelManualNativeQueryConfig b)
+
+data RelManualCommon (b :: BackendType) = RelManualCommon
+  { rmColumns :: HashMap (Column b) (Column b),
     rmInsertOrder :: Maybe InsertOrder
   }
   deriving (Generic)
 
-deriving instance Backend b => Eq (RelManualConfig b)
+deriving instance Backend b => Eq (RelManualCommon b)
 
-deriving instance Backend b => Show (RelManualConfig b)
+deriving instance Backend b => Show (RelManualCommon b)
+
+instance (Backend b) => HasCodec (RelManualTableConfig b) where
+  codec =
+    AC.object (backendPrefix @b <> "RelManualTableConfig") $
+      RelManualTableConfigC
+        <$> requiredField' "remote_table" AC..= rmtTable
+        <*> AC.objectCodec AC..= rmtCommon
+
+instance (Backend b) => HasCodec (RelManualNativeQueryConfig b) where
+  codec =
+    AC.object (backendPrefix @b <> "RelManualNativeQueryConfig") $
+      RelManualNativeQueryConfigC
+        <$> requiredField' "remote_native_query" AC..= rmnNativeQueryName
+        <*> AC.objectCodec AC..= rmnCommon
 
 instance (Backend b) => HasCodec (RelManualConfig b) where
-  codec =
-    AC.object (backendPrefix @b <> "RelManualConfig") $
-      RelManualConfig
-        <$> requiredField' "remote_table" AC..= rmTable
-        <*> requiredField' "column_mapping" AC..= rmColumns
-        <*> optionalFieldOrIncludedNull' "insertion_order" AC..= rmInsertOrder
+  codec = AC.matchChoiceCodec tableCase nativeQueryCase chooser
+    where
+      tableCase = RelManualTableConfig <$> codec
+      nativeQueryCase = RelManualNativeQueryConfig <$> codec
 
-instance (Backend b) => FromJSON (RelManualConfig b) where
-  parseJSON (Object v) =
-    RelManualConfig
-      <$> v .: "remote_table"
-      <*> v .: "column_mapping"
-      <*> v .:? "insertion_order"
-  parseJSON _ =
-    fail "manual_configuration should be an object"
+      chooser (RelManualTableConfig c) = Left c
+      chooser (RelManualNativeQueryConfig c) = Right c
 
-instance (Backend b) => ToJSON (RelManualConfig b) where
-  toJSON (RelManualConfig qt cm io) =
-    object
-      [ "remote_table" .= qt,
-        "column_mapping" .= cm,
-        "insertion_order" .= io
-      ]
+instance (Backend b) => AC.HasObjectCodec (RelManualCommon b) where
+  objectCodec =
+    RelManualCommon
+      <$> requiredField' "column_mapping" AC..= rmColumns
+      <*> optionalFieldOrIncludedNull' "insertion_order" AC..= rmInsertOrder
 
 data RelUsing (b :: BackendType) a
   = RUFKeyOn a

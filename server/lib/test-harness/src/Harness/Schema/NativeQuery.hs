@@ -46,7 +46,8 @@ data NativeQuery = NativeQuery
     nativeQueryLogicalModel :: Text,
     nativeQueryQuery :: Text,
     nativeQueryArguments :: [NativeQueryColumn],
-    nativeQueryArrayRelationships :: [J.Value]
+    nativeQueryArrayRelationships :: [J.Value],
+    nativeQueryObjectRelationships :: [J.Value]
   }
   deriving (Show, Eq)
 
@@ -57,11 +58,12 @@ nativeQuery nativeQueryName query returnType =
       nativeQueryLogicalModel = returnType,
       nativeQueryQuery = query,
       nativeQueryArguments = mempty,
-      nativeQueryArrayRelationships = mempty
+      nativeQueryArrayRelationships = mempty,
+      nativeQueryObjectRelationships = mempty
     }
 
 trackNativeQueryCommand :: String -> BackendTypeConfig -> NativeQuery -> Value
-trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryArrayRelationships, nativeQueryName, nativeQueryArguments, nativeQueryQuery, nativeQueryLogicalModel}) =
+trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryObjectRelationships, nativeQueryArrayRelationships, nativeQueryName, nativeQueryArguments, nativeQueryQuery, nativeQueryLogicalModel}) =
   -- arguments are a map from name to type details
   let argsToJson =
         J.object
@@ -95,6 +97,7 @@ trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryAr
           code: *nativeQueryQuery
           arguments: *arguments
           array_relationships: *nativeQueryArrayRelationships
+          object_relationships: *nativeQueryObjectRelationships
           returns: *nativeQueryLogicalModel
       |]
 

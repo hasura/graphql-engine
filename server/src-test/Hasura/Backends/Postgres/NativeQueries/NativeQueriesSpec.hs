@@ -81,6 +81,7 @@ spec = do
               _nqmReturns = LogicalModelName (G.unsafeMkName "logical_model_name"),
               _nqmArguments = mempty,
               _nqmArrayRelationships = mempty,
+              _nqmObjectRelationships = mempty,
               _nqmDescription = mempty
             }
 

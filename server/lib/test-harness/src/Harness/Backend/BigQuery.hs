@@ -150,7 +150,7 @@ scalarType = \case
   Schema.TInt -> "INT64"
   Schema.TStr -> "STRING"
   Schema.TUTCTime -> "DATETIME"
-  Schema.TBool -> "BOOLEAN"
+  Schema.TBool -> "BOOL"
   Schema.TGeography -> "GEOGRAPHY"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstBigQuery
 

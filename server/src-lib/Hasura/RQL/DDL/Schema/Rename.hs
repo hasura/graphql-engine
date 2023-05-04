@@ -280,9 +280,11 @@ updateRelDefs source qt rn renameTable = do
     updateObjRelDef (oldQT, newQT) =
       rdUsing %~ \case
         RUFKeyOn fk -> RUFKeyOn fk
-        RUManual (RelManualConfig origQT rmCols rmIO) ->
+        RUManual (RelManualTableConfig (RelManualTableConfigC origQT (RelManualCommon rmCols rmIO))) ->
           let updQT = bool origQT newQT $ oldQT == origQT
-           in RUManual $ RelManualConfig updQT rmCols rmIO
+           in RUManual $ RelManualTableConfig (RelManualTableConfigC updQT (RelManualCommon rmCols rmIO))
+        RUManual (RelManualNativeQueryConfig (RelManualNativeQueryConfigC nqn (RelManualCommon rmCols rmIO))) ->
+          RUManual (RelManualNativeQueryConfig (RelManualNativeQueryConfigC nqn (RelManualCommon rmCols rmIO)))
 
     updateArrRelDef :: RenameTable b -> ArrRelDef b -> ArrRelDef b
     updateArrRelDef (oldQT, newQT) =
@@ -290,9 +292,11 @@ updateRelDefs source qt rn renameTable = do
         RUFKeyOn (ArrRelUsingFKeyOn origQT c) ->
           let updQT = getUpdQT origQT
            in RUFKeyOn $ ArrRelUsingFKeyOn updQT c
-        RUManual (RelManualConfig origQT rmCols rmIO) ->
+        RUManual (RelManualTableConfig (RelManualTableConfigC origQT (RelManualCommon rmCols rmIO))) ->
           let updQT = getUpdQT origQT
-           in RUManual $ RelManualConfig updQT rmCols rmIO
+           in RUManual $ RelManualTableConfig (RelManualTableConfigC updQT (RelManualCommon rmCols rmIO))
+        RUManual (RelManualNativeQueryConfig (RelManualNativeQueryConfigC nqn (RelManualCommon rmCols rmIO))) ->
+          RUManual (RelManualNativeQueryConfig (RelManualNativeQueryConfigC nqn (RelManualCommon rmCols rmIO)))
       where
         getUpdQT origQT = bool origQT newQT $ oldQT == origQT
 
@@ -712,9 +716,11 @@ updateRelManualConfig ::
   RelManualConfig b ->
   RelManualConfig b
 updateRelManualConfig fromQT toQT rnCol manConfig =
-  RelManualConfig tn (updateColMap fromQT toQT rnCol colMap) io
-  where
-    RelManualConfig tn colMap io = manConfig
+  case manConfig of
+    (RelManualTableConfig (RelManualTableConfigC tn (RelManualCommon colMap io))) ->
+      RelManualTableConfig (RelManualTableConfigC tn (RelManualCommon (updateColMap fromQT toQT rnCol colMap) io))
+    (RelManualNativeQueryConfig (RelManualNativeQueryConfigC nqn (RelManualCommon colMap io))) ->
+      RelManualNativeQueryConfig (RelManualNativeQueryConfigC nqn (RelManualCommon (updateColMap fromQT toQT rnCol colMap) io))
 
 updateColMap ::
   forall b.

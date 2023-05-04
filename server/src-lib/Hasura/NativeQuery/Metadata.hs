@@ -8,6 +8,7 @@ module Hasura.NativeQuery.Metadata
   ( NativeQueryName (..),
     NativeQueryMetadata (..),
     nqmArguments,
+    nqmObjectRelationships,
     nqmCode,
     nqmDescription,
     nqmReturns,
@@ -29,7 +30,7 @@ import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Data.Text.Extended qualified as T
 import Hasura.LogicalModel.Types
 import Hasura.NativeQuery.InterpolatedQuery
-import Hasura.NativeQuery.Types (NativeQueryName (..), NullableScalarType (..), nullableScalarTypeMapCodec)
+import Hasura.NativeQuery.Types (NativeQueryName (..), NullableScalarType (..))
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendPrefix)
@@ -50,6 +51,7 @@ data NativeQueryMetadata (b :: BackendType) = NativeQueryMetadata
     _nqmReturns :: LogicalModelName,
     _nqmArguments :: HashMap ArgumentName (NullableScalarType b),
     _nqmArrayRelationships :: Relationships (RelDef (RelManualConfig b)),
+    _nqmObjectRelationships :: Relationships (RelDef (RelManualConfig b)),
     _nqmDescription :: Maybe Text
   }
   deriving (Generic)
@@ -74,6 +76,8 @@ instance (Backend b) => HasCodec (NativeQueryMetadata b) where
           AC..= _nqmArguments
         <*> optSortedList "array_relationships" _rdName
           AC..= _nqmArrayRelationships
+        <*> optSortedList "object_relationships" _rdName
+          AC..= _nqmObjectRelationships
         <*> optionalField "description" descriptionDoc
           AC..= _nqmDescription
     where

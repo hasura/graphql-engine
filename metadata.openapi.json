@@ -836,6 +836,13 @@
                         "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
+                    "object_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__BigQuery"
+                        },
+                        "type": "array"
+                    },
                     "returns": {
                         "description": "Return type (table) of the expression",
                         "type": "string"
@@ -909,7 +916,15 @@
             "BigqueryRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/BigqueryRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/BigqueryRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BigqueryRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -917,7 +932,33 @@
                 ],
                 "type": "object"
             },
-            "BigqueryRelManualConfig": {
+            "BigqueryRelManualNativeQueryConfig": {
+                "properties": {
+                    "column_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "insertion_order": {
+                        "enum": [
+                            "before_parent",
+                            "after_parent"
+                        ],
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "remote_native_query": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "remote_native_query",
+                    "column_mapping"
+                ],
+                "type": "object"
+            },
+            "BigqueryRelManualTableConfig": {
                 "properties": {
                     "column_mapping": {
                         "additionalProperties": {
@@ -1724,6 +1765,13 @@
                         "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
+                    "object_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Citus_"
+                        },
+                        "type": "array"
+                    },
                     "returns": {
                         "description": "Return type (table) of the expression",
                         "type": "string"
@@ -1814,7 +1862,15 @@
             "CitusRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/CitusRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CitusRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/CitusRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -1822,7 +1878,33 @@
                 ],
                 "type": "object"
             },
-            "CitusRelManualConfig": {
+            "CitusRelManualNativeQueryConfig": {
+                "properties": {
+                    "column_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "insertion_order": {
+                        "enum": [
+                            "before_parent",
+                            "after_parent"
+                        ],
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "remote_native_query": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "remote_native_query",
+                    "column_mapping"
+                ],
+                "type": "object"
+            },
+            "CitusRelManualTableConfig": {
                 "properties": {
                     "column_mapping": {
                         "additionalProperties": {
@@ -2656,6 +2738,13 @@
                         "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
+                    "object_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Cockroach_"
+                        },
+                        "type": "array"
+                    },
                     "returns": {
                         "description": "Return type (table) of the expression",
                         "type": "string"
@@ -2746,7 +2835,15 @@
             "CockroachRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/CockroachRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CockroachRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/CockroachRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -2754,7 +2851,33 @@
                 ],
                 "type": "object"
             },
-            "CockroachRelManualConfig": {
+            "CockroachRelManualNativeQueryConfig": {
+                "properties": {
+                    "column_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "insertion_order": {
+                        "enum": [
+                            "before_parent",
+                            "after_parent"
+                        ],
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "remote_native_query": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "remote_native_query",
+                    "column_mapping"
+                ],
+                "type": "object"
+            },
+            "CockroachRelManualTableConfig": {
                 "properties": {
                     "column_mapping": {
                         "additionalProperties": {
@@ -3743,6 +3866,13 @@
                         "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
+                    "object_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__DataConnector"
+                        },
+                        "type": "array"
+                    },
                     "returns": {
                         "description": "Return type (table) of the expression",
                         "type": "string"
@@ -3822,7 +3952,15 @@
             "DataconnectorRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/DataconnectorRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DataconnectorRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DataconnectorRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -3830,7 +3968,33 @@
                 ],
                 "type": "object"
             },
-            "DataconnectorRelManualConfig": {
+            "DataconnectorRelManualNativeQueryConfig": {
+                "properties": {
+                    "column_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "insertion_order": {
+                        "enum": [
+                            "before_parent",
+                            "after_parent"
+                        ],
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "remote_native_query": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "remote_native_query",
+                    "column_mapping"
+                ],
+                "type": "object"
+            },
+            "DataconnectorRelManualTableConfig": {
                 "properties": {
                     "column_mapping": {
                         "additionalProperties": {
@@ -5318,6 +5482,13 @@
                         "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
+                    "object_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__MSSQL"
+                        },
+                        "type": "array"
+                    },
                     "returns": {
                         "description": "Return type (table) of the expression",
                         "type": "string"
@@ -5407,7 +5578,15 @@
             "MssqlRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/MssqlRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MssqlRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/MssqlRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -5415,7 +5594,33 @@
                 ],
                 "type": "object"
             },
-            "MssqlRelManualConfig": {
+            "MssqlRelManualNativeQueryConfig": {
+                "properties": {
+                    "column_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "insertion_order": {
+                        "enum": [
+                            "before_parent",
+                            "after_parent"
+                        ],
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "remote_native_query": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "remote_native_query",
+                    "column_mapping"
+                ],
+                "type": "object"
+            },
+            "MssqlRelManualTableConfig": {
                 "properties": {
                     "column_mapping": {
                         "additionalProperties": {
@@ -6213,6 +6418,13 @@
                         "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
+                    "object_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__MySQL"
+                        },
+                        "type": "array"
+                    },
                     "returns": {
                         "description": "Return type (table) of the expression",
                         "type": "string"
@@ -6333,7 +6545,15 @@
             "MysqlRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/MysqlRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MysqlRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/MysqlRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -6341,7 +6561,33 @@
                 ],
                 "type": "object"
             },
-            "MysqlRelManualConfig": {
+            "MysqlRelManualNativeQueryConfig": {
+                "properties": {
+                    "column_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "insertion_order": {
+                        "enum": [
+                            "before_parent",
+                            "after_parent"
+                        ],
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "remote_native_query": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "remote_native_query",
+                    "column_mapping"
+                ],
+                "type": "object"
+            },
+            "MysqlRelManualTableConfig": {
                 "properties": {
                     "column_mapping": {
                         "additionalProperties": {
@@ -7375,6 +7621,13 @@
                         "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
                     },
+                    "object_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Vanilla_"
+                        },
+                        "type": "array"
+                    },
                     "returns": {
                         "description": "Return type (table) of the expression",
                         "type": "string"
@@ -7540,7 +7793,15 @@
             "PostgresRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/PostgresRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PostgresRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -7548,7 +7809,33 @@
                 ],
                 "type": "object"
             },
-            "PostgresRelManualConfig": {
+            "PostgresRelManualNativeQueryConfig": {
+                "properties": {
+                    "column_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "insertion_order": {
+                        "enum": [
+                            "before_parent",
+                            "after_parent"
+                        ],
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "remote_native_query": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "remote_native_query",
+                    "column_mapping"
+                ],
+                "type": "object"
+            },
+            "PostgresRelManualTableConfig": {
                 "properties": {
                     "column_mapping": {
                         "additionalProperties": {
@@ -8466,7 +8753,15 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/BigqueryRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/BigqueryRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BigqueryRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -8484,7 +8779,15 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/DataconnectorRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DataconnectorRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DataconnectorRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -8502,7 +8805,15 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/MssqlRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MssqlRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/MssqlRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -8520,7 +8831,15 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/MysqlRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MysqlRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/MysqlRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -8538,7 +8857,15 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/CitusRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CitusRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/CitusRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -8556,7 +8883,15 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/CockroachRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CockroachRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/CockroachRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -8574,7 +8909,15 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/PostgresRelManualConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PostgresRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [

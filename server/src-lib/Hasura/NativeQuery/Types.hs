@@ -2,8 +2,6 @@
 module Hasura.NativeQuery.Types
   ( NativeQueryName (..),
     NullableScalarType (..),
-    nullableScalarTypeMapCodec,
-    arrayRelationshipsCodec,
   )
 where
 
@@ -11,7 +9,6 @@ import Autodocodec (HasCodec (codec), dimapCodec)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Text.Extended (ToTxt)
 import Hasura.LogicalModel.NullableScalarType
-import Hasura.LogicalModelResolver.Codec (arrayRelationshipsCodec)
 import Hasura.Prelude hiding (first)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax (Lift)

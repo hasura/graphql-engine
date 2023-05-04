@@ -24,8 +24,9 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.LogicalModel.API (getCustomTypes)
 import Hasura.LogicalModel.Metadata (LogicalModelName)
+import Hasura.LogicalModelResolver.Codec (arrayRelationshipsCodec)
 import Hasura.NativeQuery.Metadata (ArgumentName, NativeQueryMetadata (..), parseInterpolatedQuery)
-import Hasura.NativeQuery.Types (NativeQueryName, NullableScalarType, arrayRelationshipsCodec)
+import Hasura.NativeQuery.Types (NativeQueryName, NullableScalarType)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend, SourceConnConfiguration)
 import Hasura.RQL.Types.BackendTag
@@ -52,6 +53,7 @@ data TrackNativeQuery (b :: BackendType) = TrackNativeQuery
     tnqCode :: Text,
     tnqArguments :: HashMap ArgumentName (NullableScalarType b),
     tnqArrayRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
+    tnqObjectRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
     tnqDescription :: Maybe Text,
     tnqReturns :: LogicalModelName
   }
@@ -72,12 +74,15 @@ instance (Backend b) => HasCodec (TrackNativeQuery b) where
           AC..= tnqArguments
         <*> AC.optionalFieldWithDefaultWith "array_relationships" arrayRelationshipsCodec mempty arrayRelationshipsDoc
           AC..= tnqArrayRelationships
+        <*> AC.optionalFieldWithDefaultWith "object_relationships" arrayRelationshipsCodec mempty objectRelationshipsDoc
+          AC..= tnqObjectRelationships
         <*> AC.optionalField "description" descriptionDoc
           AC..= tnqDescription
         <*> AC.requiredField "returns" returnsDoc
           AC..= tnqReturns
     where
       arrayRelationshipsDoc = "Any relationships between an output value and multiple values in another data source"
+      objectRelationshipsDoc = "Any relationships between an output value and a single value in another data source"
       sourceDoc = "The source in which this native query should be tracked"
       rootFieldDoc = "Root field name for the native query"
       codeDoc = "Native code expression (SQL) to run"
@@ -117,6 +122,7 @@ nativeQueryTrackToMetadata env sourceConnConfig TrackNativeQuery {..} = do
             _nqmReturns = tnqReturns,
             _nqmArguments = tnqArguments,
             _nqmArrayRelationships = tnqArrayRelationships,
+            _nqmObjectRelationships = tnqObjectRelationships,
             _nqmDescription = tnqDescription
           }
 
