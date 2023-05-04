@@ -22581,14 +22581,14 @@ GetLogicalModel :: SourceName -> GetLogicalModel (b :: BackendType)
 [glmSource] :: GetLogicalModel (b :: BackendType) -> SourceName
 
 -- | Handler for the <tt>get_logical_model</tt> endpoint.
-runGetLogicalModel :: forall b m. (BackendMetadata b, MetadataM m, HasFeatureFlagChecker m, MonadError QErr m) => GetLogicalModel b -> m EncJSON
+runGetLogicalModel :: forall b m. (BackendMetadata b, MetadataM m) => GetLogicalModel b -> m EncJSON
 getCustomTypes :: forall b. Backend b => SourceName -> Traversal' Metadata (LogicalModels b)
 
 -- | Handler for the <tt>track_logical_model</tt> endpoint. The type
 --   'TrackLogicalModel b' (appearing here in wrapped as
 --   'BackendTrackLogicalModel b' for <tt>AnyBackend</tt> compatibility) is
 --   defined in 'class LogicalModelMetadata'.
-runTrackLogicalModel :: forall b m. (BackendMetadata b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) => TrackLogicalModel b -> m EncJSON
+runTrackLogicalModel :: forall b m. (BackendMetadata b, CacheRWM m, MetadataM m, MonadError QErr m) => TrackLogicalModel b -> m EncJSON
 
 -- | API payload for the <tt>untrack_logical_model</tt> endpoint.
 data UntrackLogicalModel (b :: BackendType)
@@ -22607,7 +22607,7 @@ CreateLogicalModelPermission :: SourceName -> LogicalModelName -> PermDef b a ->
 [clmpSource] :: CreateLogicalModelPermission a (b :: BackendType) -> SourceName
 [clmpName] :: CreateLogicalModelPermission a (b :: BackendType) -> LogicalModelName
 [clmpInfo] :: CreateLogicalModelPermission a (b :: BackendType) -> PermDef b a
-runCreateSelectLogicalModelPermission :: forall b m. (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) => CreateLogicalModelPermission SelPerm b -> m EncJSON
+runCreateSelectLogicalModelPermission :: forall b m. (Backend b, CacheRWM m, MetadataM m, MonadError QErr m) => CreateLogicalModelPermission SelPerm b -> m EncJSON
 
 -- | To drop a permission, we need to know the source and name of the
 --   logical model, as well as the role whose permission we want to drop.
@@ -22616,7 +22616,7 @@ DropLogicalModelPermission :: SourceName -> LogicalModelName -> RoleName -> Drop
 [dlmpSource] :: DropLogicalModelPermission (b :: BackendType) -> SourceName
 [dlmpName] :: DropLogicalModelPermission (b :: BackendType) -> LogicalModelName
 [dlmpRole] :: DropLogicalModelPermission (b :: BackendType) -> RoleName
-runDropSelectLogicalModelPermission :: forall b m. (Backend b, CacheRWM m, MetadataM m, MonadError QErr m, HasFeatureFlagChecker m) => DropLogicalModelPermission b -> m EncJSON
+runDropSelectLogicalModelPermission :: forall b m. (Backend b, CacheRWM m, MetadataM m, MonadError QErr m) => DropLogicalModelPermission b -> m EncJSON
 
 -- | TODO: should this cascade and also delete associated permissions?
 dropLogicalModelInMetadata :: forall b. BackendMetadata b => SourceName -> LogicalModelName -> MetadataModifier
@@ -24305,22 +24305,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) TriggerOnReplication
-cteqCleanupConfig :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) (Maybe Text)
-cetqWebhook :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) (Maybe InputWebhook)
-cetqUpdate :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) (Maybe (SubscribeOpSpec b_aFCOt))
-cetqTable :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) (TableName b_aFCOt)
-cetqSource :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) SourceName
-cetqRetryConf :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) (Maybe RequestTransform)
-cetqReplace :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) Bool
-cetqName :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) TriggerName
-cetqInsert :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) (Maybe (SubscribeOpSpec b_aFCOt))
-cetqHeaders :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) (Maybe Bool)
-cetqDelete :: forall b_aFCOt. Lens' (CreateEventTriggerQuery b_aFCOt) (Maybe (SubscribeOpSpec b_aFCOt))
+cteqTriggerOnReplication :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) TriggerOnReplication
+cteqCleanupConfig :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) (Maybe Text)
+cetqWebhook :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) (Maybe InputWebhook)
+cetqUpdate :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) (Maybe (SubscribeOpSpec b_aFCDR))
+cetqTable :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) (TableName b_aFCDR)
+cetqSource :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) SourceName
+cetqRetryConf :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) (Maybe RequestTransform)
+cetqReplace :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) Bool
+cetqName :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) TriggerName
+cetqInsert :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) (Maybe (SubscribeOpSpec b_aFCDR))
+cetqHeaders :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) (Maybe Bool)
+cetqDelete :: forall b_aFCDR. Lens' (CreateEventTriggerQuery b_aFCDR) (Maybe (SubscribeOpSpec b_aFCDR))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
