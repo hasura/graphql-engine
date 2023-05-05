@@ -24,7 +24,8 @@ run-pro-server: $(CONSOLE_EE_ASSETS_PATH)
 
 .PHONY: run-dc-postgres-agent
 ## run-dc-postgres-agent:  run the new exciting Postgres data connector
-run-dc-postgres-agent:
+run-dc-postgres-agent: remove-tix-file
+	$(DC_POSTGRES_DOCKER_COMPOSE) up --wait
 	cabal run postgres-agent
 
 .PHONY: run-dc-postgres-agent-watch

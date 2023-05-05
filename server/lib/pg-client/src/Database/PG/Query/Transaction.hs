@@ -31,13 +31,14 @@ module Database.PG.Query.Transaction
     getQueryText,
     describePreparedStatement,
     PreparedDescription (..),
+    transformerJoinTxET,
   )
 where
 
 -------------------------------------------------------------------------------
 
 import Control.Monad.Base (MonadBase)
-import Control.Monad.Except (MonadError)
+import Control.Monad.Except (MonadError, runExceptT, throwError)
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Morph (MFunctor (..), MonadTrans (..))
@@ -94,6 +95,16 @@ newtype TxET e m a = TxET
       MonadReader PGConn,
       MonadFix
     )
+
+transformerJoinTxET :: Monad m => TxET e (TxET e m) a -> TxET e m a
+transformerJoinTxET x =
+  TxET $ ReaderT $ \pgConn -> do
+    result <- runReaderT (txHandler $ runExceptT (runReaderT (txHandler x) pgConn)) pgConn
+    case result of
+      Left err -> throwError err
+      Right r -> pure r
+
+{- HLINT ignore "Use onLeft" -}
 
 instance MonadTrans (TxET e) where
   lift = TxET . lift . lift

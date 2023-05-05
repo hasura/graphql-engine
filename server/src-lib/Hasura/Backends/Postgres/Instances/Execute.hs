@@ -10,6 +10,7 @@
 -- This module includes the Postgres implementation of queries, mutations, and more.
 module Hasura.Backends.Postgres.Instances.Execute
   ( PreparedSql (..),
+    pgDBQueryPlanSimple,
   )
 where
 
@@ -153,6 +154,21 @@ pgDBQueryPlan userInfo sourceName sourceConfig qrf reqHeaders operationName = do
   let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags
 
   pure $ DBStepInfo @('Postgres pgKind) sourceName sourceConfig preparedSQL (fmap withNoStatistics action) resolvedConnectionTemplate
+
+-- | Used by the @dc-postgres-agent to compile a query.
+pgDBQueryPlanSimple ::
+  MonadError QErr m =>
+  UserInfo ->
+  QueryTagsComment ->
+  QueryDB ('Postgres 'Vanilla) Void (UnpreparedValue ('Postgres 'Vanilla)) ->
+  m (OnBaseMonad (PG.TxET QErr) EncJSON, Maybe PreparedSql)
+pgDBQueryPlanSimple userInfo queryTagsComment query = do
+  (preparedQuery, PlanningSt {_psPrepped = planVals}) <-
+    flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) query
+  let preparedSQLWithQueryTags =
+        appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals preparedQuery) queryTagsComment
+  let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags
+  pure (action, preparedSQL)
 
 pgDBQueryExplain ::
   forall pgKind m.
