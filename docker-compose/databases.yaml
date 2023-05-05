@@ -1,29 +1,6 @@
 version: "3.6"
 
 services:
-  mariadb:
-    image: mariadb:10
-    ports:
-      - 3306
-    environment:
-      MARIADB_USER: "hasura"
-      MARIADB_PASSWORD: "hasura"
-      MARIADB_DATABASE: "hasura"
-      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "true"
-      MARIADB_MYSQL_LOCALHOST_USER: "1"
-    volumes:
-      - /var/lib/mysql
-    healthcheck:
-      test:
-        - CMD
-        - /usr/local/bin/healthcheck.sh
-        - --connect
-        - --innodb_initialized
-      start_period: 5s
-      interval: 5s
-      timeout: 10s
-      retries: 20
-
   postgres:
     image: postgis/postgis:15-3.3-alpine
     platform: linux/amd64

@@ -72,8 +72,7 @@ defaultDateTimeType :: Schema.ScalarType
 defaultDateTimeType =
   Schema.TCustomType $
     Schema.defaultBackendScalarType
-      { Schema.bstMysql = Nothing,
-        Schema.bstMssql = Just "DATETIME DEFAULT GETDATE()",
+      { Schema.bstMssql = Just "DATETIME DEFAULT GETDATE()",
         Schema.bstCitus = Just "TIMESTAMP DEFAULT NOW()",
         Schema.bstPostgres = Just "TIMESTAMP DEFAULT NOW()",
         Schema.bstBigQuery = Nothing

@@ -40,7 +40,6 @@ library
     , managed
     , morpheus-graphql
     , mtl
-    , mysql-simple
     , network
     , odbc
     , openapi3

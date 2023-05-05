@@ -35,8 +35,7 @@ import Hasura.Prelude
 -- very simple to achive instead of making you define a new sum type
 -- and handling it.
 data BackendScalarType = BackendScalarType
-  { bstMysql :: Maybe Text,
-    bstCitus :: Maybe Text,
+  { bstCitus :: Maybe Text,
     bstCockroach :: Maybe Text,
     bstPostgres :: Maybe Text,
     bstBigQuery :: Maybe Text,
@@ -50,8 +49,7 @@ data BackendScalarType = BackendScalarType
 defaultBackendScalarType :: BackendScalarType
 defaultBackendScalarType =
   BackendScalarType
-    { bstMysql = Nothing,
-      bstCitus = Nothing,
+    { bstCitus = Nothing,
       bstCockroach = Nothing,
       bstMssql = Nothing,
       bstPostgres = Nothing,
@@ -101,8 +99,7 @@ formatBackendScalarValueType (Unquoted text) = text
 -- for Microsoft's SQL server backend. This type provides flexibility
 -- to provide such options.
 data BackendScalarValue = BackendScalarValue
-  { bsvMysql :: Maybe BackendScalarValueType,
-    bsvCitus :: Maybe BackendScalarValueType,
+  { bsvCitus :: Maybe BackendScalarValueType,
     bsvCockroach :: Maybe BackendScalarValueType,
     bsvPostgres :: Maybe BackendScalarValueType,
     bsvBigQuery :: Maybe BackendScalarValueType,
@@ -116,8 +113,7 @@ data BackendScalarValue = BackendScalarValue
 defaultBackendScalarValue :: BackendScalarValue
 defaultBackendScalarValue =
   BackendScalarValue
-    { bsvMysql = Nothing,
-      bsvCitus = Nothing,
+    { bsvCitus = Nothing,
       bsvCockroach = Nothing,
       bsvPostgres = Nothing,
       bsvBigQuery = Nothing,
@@ -165,8 +161,7 @@ defaultSerialType :: ScalarType
 defaultSerialType =
   TCustomType $
     defaultBackendScalarType
-      { bstMysql = Nothing,
-        bstMssql = Just "INT IDENTITY(1,1)",
+      { bstMssql = Just "INT IDENTITY(1,1)",
         bstCitus = Just "SERIAL",
         -- cockroachdb's serial behaves differently than postgresql's serial:
         -- https://www.cockroachlabs.com/docs/v22.1/serial

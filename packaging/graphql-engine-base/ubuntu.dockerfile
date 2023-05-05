@@ -17,7 +17,7 @@ RUN set -ex; \
     apt-get update; \
     apt-get install -y apt-transport-https curl gnupg2; \
     apt-get update; \
-    apt-get install -y ca-certificates libkrb5-3 libpq5 libssl1.1 libnuma1 unixodbc-dev libmariadb-dev-compat mariadb-client
+    apt-get install -y ca-certificates libkrb5-3 libpq5 libssl1.1 libnuma1 unixodbc-dev
 
 RUN set -ex; \
     curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -; \

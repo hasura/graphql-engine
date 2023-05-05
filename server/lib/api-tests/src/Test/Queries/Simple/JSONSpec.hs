@@ -72,8 +72,7 @@ schema =
             Schema.column "address" $
               Schema.TCustomType
                 Schema.defaultBackendScalarType
-                  { Schema.bstMysql = Just "JSON",
-                    Schema.bstCitus = Just "JSON",
+                  { Schema.bstCitus = Just "JSON",
                     Schema.bstCockroach = Just "JSON",
                     Schema.bstPostgres = Just "JSON",
                     Schema.bstBigQuery = Just "JSON"
@@ -85,8 +84,7 @@ schema =
               Schema.VStr "Justin",
               Schema.VCustomValue $
                 Schema.defaultBackendScalarValue
-                  { Schema.bsvMysql = Just (Schema.Quoted "{ \"city\": \"Bristol\" }"),
-                    Schema.bsvCitus = Just (Schema.Quoted "{ \"city\": \"Bristol\" }"),
+                  { Schema.bsvCitus = Just (Schema.Quoted "{ \"city\": \"Bristol\" }"),
                     Schema.bsvCockroach = Just (Schema.Quoted "{ \"city\": \"Bristol\" }"),
                     Schema.bsvPostgres = Just (Schema.Quoted "{ \"city\": \"Bristol\" }"),
                     Schema.bsvBigQuery = Just (Schema.Unquoted "JSON '{ \"city\": \"Bristol\" }'")

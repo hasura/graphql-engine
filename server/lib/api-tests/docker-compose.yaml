@@ -73,6 +73,5 @@ services:
 volumes:
   citus-data:
   cockroach-data:
-  mariadb-data:
   mssql-data:
   postgres-data:
