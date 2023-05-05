@@ -3,7 +3,7 @@
 {-# LANGUAGE CPP #-}
 -- NOTE: This module previously used Template Haskell to generate its instances,
 -- but additional restrictions on Template Haskell splices introduced in GHC 9.0 impose an ordering
--- on the generated instances that is difficult to satisfy (see ../MySQL/Types/Instances.hs).
+-- on the generated instances that is difficult to satisfy
 -- To avoid these difficulties, we now use CPP.
 
 -- | MSSQL Types Instances

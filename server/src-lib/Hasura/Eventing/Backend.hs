@@ -448,32 +448,6 @@ instance BackendEventTrigger 'BigQuery where
   fetchEventInvocationLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
   fetchEventById _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
 
-instance BackendEventTrigger 'MySQL where
-  insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  fetchUndeliveredEvents _ _ _ _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  setRetry _ _ _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  recordSuccess _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  getMaintenanceModeVersion _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  recordError _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  recordError' _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  dropTriggerAndArchiveEvents _ _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  dropDanglingSQLTrigger _ _ _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  createTableEventTrigger _ _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
-  createMissingSQLTriggers _ _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  checkIfTriggerExists _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  addCleanupSchedules _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  deleteAllScheduledCleanups _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  getCleanupEventsForDeletion _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  updateCleanupEventStatusToDead _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  updateCleanupEventStatusToPaused _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  updateCleanupEventStatusToCompleted _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  deleteEventTriggerLogs _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  fetchEventLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  fetchEventInvocationLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-  fetchEventById _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
-
 --------------------------------------------------------------------------------
 
 -- TODO(jkachmar): See if there isn't a way to define the function that

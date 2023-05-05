@@ -20,7 +20,6 @@ import Hasura.Backends.BigQuery.DDL.RunSQL qualified as BigQuery
 import Hasura.Backends.DataConnector.Adapter.RunSQL qualified as DataConnector
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName, mkDataConnectorName)
 import Hasura.Backends.MSSQL.DDL.RunSQL qualified as MSSQL
-import Hasura.Backends.MySQL.SQL qualified as MySQL
 import Hasura.Backends.Postgres.DDL.RunSQL qualified as Postgres
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -63,7 +62,6 @@ data RQLQuery
   | RQMssqlRunSql !MSSQL.MSSQLRunSQL
   | RQCitusRunSql !Postgres.RunSQL
   | RQCockroachRunSql !Postgres.RunSQL
-  | RQMysqlRunSql !MySQL.RunSQL
   | RQBigqueryRunSql !BigQuery.BigQueryRunSQL
   | RQDataConnectorRunSql !DataConnectorName !DataConnector.DataConnectorRunSQL
   | RQBigqueryDatabaseInspection !BigQuery.BigQueryRunSQL
@@ -95,7 +93,6 @@ instance FromJSON RQLQuery where
       "mssql_run_sql" -> RQMssqlRunSql <$> args
       "citus_run_sql" -> RQCitusRunSql <$> args
       "cockroach_run_sql" -> RQCockroachRunSql <$> args
-      "mysql_run_sql" -> RQMysqlRunSql <$> args
       "bigquery_run_sql" -> RQBigqueryRunSql <$> args
       (dcNameFromRunSql -> Just t') -> RQDataConnectorRunSql t' <$> args
       "bigquery_database_inspection" -> RQBigqueryDatabaseInspection <$> args
@@ -159,7 +156,6 @@ queryModifiesSchema = \case
   RQCitusRunSql q -> Postgres.isSchemaCacheBuildRequiredRunSQL q
   RQCockroachRunSql q -> Postgres.isSchemaCacheBuildRequiredRunSQL q
   RQMssqlRunSql q -> MSSQL.isSchemaCacheBuildRequiredRunSQL q
-  RQMysqlRunSql _ -> False
   RQBigqueryRunSql _ -> False
   RQDataConnectorRunSql _ _ -> False
   RQBigqueryDatabaseInspection _ -> False
@@ -187,7 +183,6 @@ runQueryM sqlGen rq = Tracing.newSpan (T.pack $ constrName rq) $ case rq of
   RQCount q -> runCount q
   RQRunSql q -> Postgres.runRunSQL @'Vanilla sqlGen q
   RQMssqlRunSql q -> MSSQL.runSQL q
-  RQMysqlRunSql q -> MySQL.runSQL q
   RQCitusRunSql q -> Postgres.runRunSQL @'Citus sqlGen q
   RQCockroachRunSql q -> Postgres.runRunSQL @'Cockroach sqlGen q
   RQBigqueryRunSql q -> BigQuery.runSQL q
@@ -210,7 +205,6 @@ queryModifiesUserDB = \case
   RQCitusRunSql runsql -> not (Postgres.isReadOnly runsql)
   RQCockroachRunSql runsql -> not (Postgres.isReadOnly runsql)
   RQMssqlRunSql _ -> True
-  RQMysqlRunSql _ -> True
   RQBigqueryRunSql _ -> True
   RQDataConnectorRunSql _ _ -> True
   RQBigqueryDatabaseInspection _ -> False

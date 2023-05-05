@@ -354,7 +354,7 @@ runSetupActions logger acts = go acts []
 data Fixture a = Fixture
   { -- | A name describing the given context.
     --
-    -- e.g. @Postgres@ or @MySQL@
+    -- e.g. @Postgres@ or @BigQuery@
     name :: FixtureName,
     -- | Setup actions associated with creating a local testEnvironment for this
     -- 'Fixture'; for example, starting remote servers.

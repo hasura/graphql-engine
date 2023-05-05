@@ -122,7 +122,6 @@ extra-source-files:
   src-rsr/mssql/mssql_table_metadata.sql
   src-rsr/mssql/mssql_unlock_events.sql.shakespeare
   src-rsr/mssql/mssql_update_trigger.sql.shakespeare
-  src-rsr/mysql_table_metadata.sql
   src-rsr/pg_function_metadata.sql
   src-rsr/pg_source_migrations/0_to_1.sql
   src-rsr/pg_source_migrations/1_to_2.sql
@@ -475,9 +474,6 @@ common lib-depends
                      , data-default-class
                      , x509-system
                      , tagged
-                     -- mysql
-                     , mysql
-                     , mysql-simple
                       -- dependency of vendored 'ip':
                      , wide-word
 
@@ -633,26 +629,6 @@ library
                      , Hasura.Backends.Postgres.Types.Insert
                      , Hasura.Backends.Postgres.Types.Table
                      , Hasura.Backends.Postgres.Types.Update
-
-                     , Hasura.Backends.MySQL.DataLoader.Execute
-                     , Hasura.Backends.MySQL.DataLoader.Plan
-                     , Hasura.Backends.MySQL.Types
-                     , Hasura.Backends.MySQL.Types.Internal
-                     , Hasura.Backends.MySQL.Types.Instances
-                     , Hasura.Backends.MySQL.Plan
-                     , Hasura.Backends.MySQL.FromIr
-                     , Hasura.Backends.MySQL.Connection
-                     , Hasura.Backends.MySQL.Meta
-                     , Hasura.Backends.MySQL.Instances.Types
-                     , Hasura.Backends.MySQL.Instances.Metadata
-                     , Hasura.Backends.MySQL.Instances.Schema
-                     , Hasura.Backends.MySQL.Instances.SchemaCache
-                     , Hasura.Backends.MySQL.Instances.Execute
-                     , Hasura.Backends.MySQL.Instances.Transport
-                     , Hasura.Backends.MySQL.Schema.Introspection
-                     , Hasura.Backends.MySQL.SQL
-                     , Hasura.Backends.MySQL.ToQuery
-                     , Hasura.Backends.MySQL.Instances.API
 
                      -- GraphQL Data Connector
                      , Hasura.Backends.DataConnector.Adapter.API
@@ -1189,8 +1165,6 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataConnector.API.V0.ScalarSpec
     Hasura.Backends.DataConnector.API.V0.SchemaSpec
     Hasura.Backends.DataConnector.API.V0.TableSpec
-    Hasura.Backends.MySQL.DataLoader.ExecuteTests
-    Hasura.Backends.MySQL.TypesSpec
     Hasura.Backends.Postgres.Connection.VersionCheckSpec
     Hasura.Backends.Postgres.Execute.PrepareSpec
     Hasura.Backends.Postgres.NativeQueries.NativeQueriesSpec

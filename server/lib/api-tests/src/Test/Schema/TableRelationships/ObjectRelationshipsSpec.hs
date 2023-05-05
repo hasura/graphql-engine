@@ -3,7 +3,6 @@
 -- |
 -- Queries over object relationships between tables in the schema.
 --
--- TODO: MySQL link when docs are released?
 -- https://hasura.io/docs/latest/schema/postgres/table-relationships/index
 -- https://hasura.io/docs/latest/schema/ms-sql-server/table-relationships/index
 -- https://hasura.io/docs/latest/schema/bigquery/table-relationships/index/

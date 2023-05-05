@@ -8,9 +8,12 @@ module Hasura.Base.Instances () where
 import Autodocodec qualified as AC
 import Control.Monad.Fix
 import Data.Aeson qualified as J
+import Data.ByteString (ByteString)
 import Data.Fixed (Fixed (..))
 import Data.OpenApi.Declare as D
 import Data.Text qualified as T
+import Data.Text.Encoding (decodeUtf8With, encodeUtf8)
+import Data.Text.Encoding.Error (lenientDecode)
 import Data.Text.Extended (ToTxt (toTxt))
 import Data.Time (NominalDiffTime)
 import Data.URL.Template qualified as UT
@@ -113,6 +116,12 @@ instance J.ToJSON C.CronSchedule where
   toJSON = J.String . C.serializeCronSchedule
 
 instance J.ToJSONKey Void
+
+instance J.FromJSON ByteString where
+  parseJSON = J.withText "ByteString" (pure . encodeUtf8)
+
+instance J.ToJSON ByteString where
+  toJSON = J.String . decodeUtf8With lenientDecode
 
 --------------------------------------------------------------------------------
 -- ODBC

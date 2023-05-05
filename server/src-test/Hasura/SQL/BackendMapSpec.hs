@@ -22,7 +22,7 @@ import Test.Hspec.Expectations.Json (shouldBeJson)
 spec :: Spec
 spec = describe "BackendMap" do
   it "serializes via Autodocodec" do
-    let mysqlConfig = BM.singleton @'MySQL @BackendConfigWrapper (BackendConfigWrapper ())
+    let mssqlConfig = BM.singleton @'MSSQL @BackendConfigWrapper (BackendConfigWrapper ())
     let dataconnectorConfig =
           BM.singleton @'DataConnector @BackendConfigWrapper
             ( BackendConfigWrapper $
@@ -34,12 +34,12 @@ spec = describe "BackendMap" do
                       }
                   )
             )
-    let configs = mysqlConfig <> dataconnectorConfig
+    let configs = mssqlConfig <> dataconnectorConfig
 
     let expected =
           [aesonQQ|
             {
-              "mysql": [],
+              "mssql": [],
               "dataconnector": {
                 "MyConnector": {
                   "uri": "https://somehost.org",

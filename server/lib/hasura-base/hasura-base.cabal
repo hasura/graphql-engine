@@ -45,6 +45,7 @@ library
     , arrows-extra
     , autodocodec
     , base
+    , bytestring
     , cron
     , hasura-prelude
     , hasura-extras

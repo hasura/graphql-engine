@@ -324,10 +324,6 @@ schemaCrudTests = describe "A series of actions to setup and teardown a source w
                     kind: bigquery
                     display_name: bigquery
                     available: true
-                  - builtin: true
-                    kind: mysql
-                    display_name: mysql
-                    available: true
                   - builtin: false
                     display_name: "FOOBARDB"
                     kind: foobar

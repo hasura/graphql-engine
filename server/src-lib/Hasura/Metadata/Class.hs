@@ -54,7 +54,7 @@ TODO: Reference to open issue or rfc?
 -- This type class enables storing and managing Hasura metadata in an isolated
 -- database which will not interfere with user's database where tables/functions
 -- are defined. Hence, it'll enable support for databases of multiple backends
--- like MySQL, MSSQL etc.
+-- like MSSQL etc.
 --
 -- Error-handling is handled explicitly, with every function returning an
 -- `Either QErr`. This is inelegant, but is required: we want the caller to
