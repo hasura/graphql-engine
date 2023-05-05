@@ -243,6 +243,36 @@ upgrade-tests:
 
 .PHONY: test-dc-postgres-agent
 ## test-dc-postgres-agent: run the dc-api test suite against the postgres agent
+# The commands below are obtuse, so here they are, explained. (We can't comment inline.)
+#   1. Build the agent.
+#   2. Bring up the PostgreSQL container.
+#   3. Run the agent on port 8889, and wait a second for it to start.
+#   4. Ensure we clean up after ourselves.
+#   5. Get the port of the PostgreSQL container.
+#   6. Run the tests, pointing to the correct port for the DB.
 test-dc-postgres-agent:
+	cabal build postgres-agent:exe:postgres-agent
 	$(DC_POSTGRES_DOCKER_COMPOSE) up --wait
-	cabal run test:tests-dc-api -- test --agent-base-url "http://localhost:8888" --agent-config '{ "connection": "postgresql://hasura:hasura@localhost:65002/hasura"}' sandwich --tui
+	@ echo 'cabal run postgres-agent:exe:postgres-agent'; \
+		cabal run postgres-agent:exe:postgres-agent -- --port 8889 & trap "kill $$!" EXIT; \
+		sleep 1; \
+		PG_PORT="$$($(DC_POSTGRES_DOCKER_COMPOSE) port postgres 5432 | sed 's/.*://')"; \
+		echo 'cabal run test:tests-dc-api -- test'; \
+		cabal run test:tests-dc-api -- \
+			test \
+			--agent-base-url 'http://localhost:8889' \
+			--agent-config "{\"connection\": \"postgresql://postgres:password@localhost:$${PG_PORT}\"}" \
+			sandwich
+
+.PHONY: test-dc-postgres-agent-only
+## test-dc-postgres-agent-only: run the dc-api test suite against an already-running postgres agent on port 8888
+test-dc-postgres-agent-only:
+	# See above for an explanation.
+	$(DC_POSTGRES_DOCKER_COMPOSE) up --wait
+	@ echo 'cabal run test:tests-dc-api -- test'
+	@ PG_PORT="$$($(DC_POSTGRES_DOCKER_COMPOSE) port postgres 5432 | sed 's/.*://')"; \
+		cabal run test:tests-dc-api -- \
+			test \
+			--agent-base-url "http://localhost:8888" \
+			--agent-config "{\"connection\": \"postgresql://postgres:password@localhost:$${PG_PORT}\"}" \
+			sandwich --tui
