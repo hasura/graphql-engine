@@ -500,12 +500,16 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       Tracing.attachMetadata [("graphql.operation.type", "query")]
       let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
           cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
+          collectRemoteJoins = maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins)
           remoteSchemas =
             InsOrdHashMap.elems queryPlan >>= \case
-              E.ExecStepDB _remoteHeaders _ remoteJoins ->
-                maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins) remoteJoins
-              E.ExecStepRemote remoteSchemaInfo _ _ _ -> [remoteSchemaInfo]
+              E.ExecStepDB _headers _dbAST remoteJoins ->
+                collectRemoteJoins remoteJoins
+              E.ExecStepRemote remoteSchemaInfo _ _ remoteJoins ->
+                [remoteSchemaInfo] <> collectRemoteJoins remoteJoins
+              E.ExecStepAction _ _ remoteJoins -> collectRemoteJoins remoteJoins
               _ -> []
+
           actionsInfo =
             foldl getExecStepActionWithActionInfo [] $
               InsOrdHashMap.elems $
