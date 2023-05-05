@@ -34,7 +34,6 @@ import Autodocodec.Extended (optionalFieldOrIncludedNull')
 import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson.Casing (snakeCase)
-import Data.Aeson.TH
 import Data.HashSet qualified as Set
 import Data.Hashable
 import Data.Kind (Type)
@@ -479,15 +478,15 @@ type UpdPermDef b = PermDef b UpdPerm
 $(return [])
 
 instance Backend b => FromJSON (PermDef b SelPerm) where
-  parseJSON = $(mkParseJSON hasuraJSON ''PermDef)
+  parseJSON = genericParseJSON hasuraJSON
 
 instance Backend b => FromJSON (PermDef b InsPerm) where
-  parseJSON = $(mkParseJSON hasuraJSON ''PermDef)
+  parseJSON = genericParseJSON hasuraJSON
 
 instance Backend b => FromJSON (PermDef b UpdPerm) where
-  parseJSON = $(mkParseJSON hasuraJSON ''PermDef)
+  parseJSON = genericParseJSON hasuraJSON
 
 instance Backend b => FromJSON (PermDef b DelPerm) where
-  parseJSON = $(mkParseJSON hasuraJSON ''PermDef)
+  parseJSON = genericParseJSON hasuraJSON
 
 $(makeLenses ''PermDef)

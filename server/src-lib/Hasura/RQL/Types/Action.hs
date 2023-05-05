@@ -62,7 +62,6 @@ import Control.Lens (makeLenses)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.Extended
-import Data.Aeson.TH qualified as J
 import Data.Text.Extended
 import Data.Time.Clock qualified as UTC
 import Data.Typeable (Typeable)
@@ -308,7 +307,7 @@ data ActionLogResponse = ActionLogResponse
     _alrErrors :: Maybe J.Value,
     _alrSessionVariables :: SessionVariables
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
 type ActionLogResponseMap = HashMap ActionId ActionLogResponse
 
@@ -341,10 +340,26 @@ instance PG.ToPrepArg LockedActionIdArray where
 -- ...and other instances that need to live here in a particular order, due to
 -- GHC 9.0 TH changes...
 
-$(J.deriveJSON hasuraJSON {J.omitNothingFields = True} ''ActionPermissionMetadata)
+instance FromJSON ActionPermissionMetadata where
+  parseJSON = genericParseJSON hasuraJSON {J.omitNothingFields = True}
 
-$(J.deriveJSON hasuraJSON ''ArgumentDefinition)
-$(J.deriveJSON J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 6} ''ActionMutationKind)
+instance ToJSON ActionPermissionMetadata where
+  toJSON = genericToJSON hasuraJSON {J.omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {J.omitNothingFields = True}
+
+instance FromJSON arg => FromJSON (ArgumentDefinition arg) where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON arg => ToJSON (ArgumentDefinition arg) where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
+
+instance FromJSON ActionMutationKind where
+  parseJSON = genericParseJSON hasuraJSON {J.constructorTagModifier = J.snakeCase . drop 6}
+
+instance ToJSON ActionMutationKind where
+  toJSON = genericToJSON hasuraJSON {J.constructorTagModifier = J.snakeCase . drop 6}
+  toEncoding = genericToEncoding hasuraJSON {J.constructorTagModifier = J.snakeCase . drop 6}
 
 instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
   parseJSON = J.withObject "ActionDefinition" $ \o -> do
@@ -393,9 +408,17 @@ instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
               ]
             <> typeAndKind
 
-$(J.deriveToJSON hasuraJSON ''ActionLogResponse)
-$(J.deriveToJSON hasuraJSON ''ActionMetadata)
-$(J.deriveToJSON hasuraJSON ''ActionInfo)
+instance ToJSON ActionLogResponse where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
+
+instance ToJSON ActionMetadata where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
+
+instance ToJSON ActionInfo where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 $(makeLenses ''ActionMetadata)
 $(makeLenses ''ActionDefinition)

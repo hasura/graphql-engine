@@ -51,7 +51,6 @@ import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Casing
-import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.Text qualified as T
 import Data.Time.Clock
@@ -127,7 +126,9 @@ instance FromJSON STRetryConf where
       then fail "num_retries cannot be a negative value"
       else pure $ STRetryConf numRetries' retryInterval timeout tolerance
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''STRetryConf)
+instance ToJSON STRetryConf where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 data CronTriggerMetadata = CronTriggerMetadata
   { ctName :: TriggerName,
@@ -175,7 +176,9 @@ instance FromJSON CronTriggerMetadata where
       ctResponseTransform <- o .:? "response_transform"
       pure CronTriggerMetadata {..}
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''CronTriggerMetadata)
+instance ToJSON CronTriggerMetadata where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 data CreateCronTrigger = CreateCronTrigger
   { _cctName :: TriggerName,
@@ -212,12 +215,19 @@ instance FromJSON CreateCronTrigger where
       _cctResponseTransform <- o .:? "response_transform"
       pure CreateCronTrigger {..}
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''CreateCronTrigger)
+instance ToJSON CreateCronTrigger where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 newtype ScheduledTriggerName = ScheduledTriggerName {unName :: TriggerName}
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON ''ScheduledTriggerName)
+instance FromJSON ScheduledTriggerName where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+
+instance ToJSON ScheduledTriggerName where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 formatTime' :: UTCTime -> Text
 formatTime' = T.pack . iso8601Show
@@ -250,7 +260,9 @@ instance FromJSON CreateScheduledEvent where
         <*> o .:? "request_transform"
         <*> o .:? "response_transform"
 
-$(deriveToJSON hasuraJSON ''CreateScheduledEvent)
+instance ToJSON CreateScheduledEvent where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 -- | The 'ScheduledEventType' data type is needed to differentiate
 --   between a 'CronScheduledEvent' and 'OneOffScheduledEvent' scheduled
@@ -267,9 +279,14 @@ data ScheduledEventType
   | -- | A One-off scheduled event doesn't have any template defined
     -- so all the configuration is fetched along the scheduled events.
     OneOff
-  deriving (Eq, Show)
+  deriving stock (Eq, Show, Generic)
 
-$(deriveJSON defaultOptions {constructorTagModifier = snakeCase} ''ScheduledEventType)
+instance FromJSON ScheduledEventType where
+  parseJSON = genericParseJSON hasuraJSON {constructorTagModifier = snakeCase}
+
+instance ToJSON ScheduledEventType where
+  toJSON = genericToJSON hasuraJSON {constructorTagModifier = snakeCase}
+  toEncoding = genericToEncoding hasuraJSON {constructorTagModifier = snakeCase}
 
 data ScheduledEventInvocation = ScheduledEventInvocation
   { _seiId :: InvocationId,
@@ -279,9 +296,14 @@ data ScheduledEventInvocation = ScheduledEventInvocation
     _seiResponse :: Maybe Value,
     _seiCreatedAt :: UTCTime
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON ''ScheduledEventInvocation)
+instance FromJSON ScheduledEventInvocation where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON ScheduledEventInvocation where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data ScheduledEvent
   = SEOneOff
@@ -364,9 +386,14 @@ data OneOffScheduledEvent = OneOffScheduledEvent
     _ooseRequestTransform :: Maybe RequestTransform,
     _ooseResponseTransform :: Maybe MetadataResponseTransform
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON ''OneOffScheduledEvent)
+instance FromJSON OneOffScheduledEvent where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON OneOffScheduledEvent where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data CronEvent = CronEvent
   { _ceId :: CronEventId,
@@ -381,9 +408,14 @@ data CronEvent = CronEvent
     _ceCreatedAt :: UTCTime,
     _ceNextRetryAt :: Maybe UTCTime
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON ''CronEvent)
+instance FromJSON CronEvent where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON CronEvent where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data ScheduledEventPagination = ScheduledEventPagination
   { _sepLimit :: Maybe Int,
@@ -447,9 +479,14 @@ data DeleteScheduledEvent = DeleteScheduledEvent
   { _dseType :: ScheduledEventType,
     _dseEventId :: ScheduledEventId
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON ''DeleteScheduledEvent)
+instance FromJSON DeleteScheduledEvent where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON DeleteScheduledEvent where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data GetScheduledEventInvocationsBy
   = GIBEventId EventId ScheduledEventType

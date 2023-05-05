@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RQL.Types.Allowlist
   ( -- | The schema cache representation of the allowlist
     InlinedAllowlist (..),
@@ -23,7 +21,6 @@ import Autodocodec (HasCodec, bimapCodec, disjointEitherCodec, optionalFieldWith
 import Autodocodec qualified as AC
 import Autodocodec.Extended (discriminatorBoolField)
 import Data.Aeson
-import Data.Aeson.TH (deriveJSON, deriveToJSON)
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.HashSet qualified as S
@@ -37,9 +34,14 @@ import Language.GraphQL.Draft.Syntax qualified as G
 newtype DropCollectionFromAllowlist = DropCollectionFromAllowlist
   { _dcfaCollection :: CollectionName
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON ''DropCollectionFromAllowlist)
+instance FromJSON DropCollectionFromAllowlist where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON DropCollectionFromAllowlist where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data AllowlistScope
   = AllowlistScopeGlobal
@@ -97,7 +99,9 @@ instance HasCodec AllowlistEntry where
         <$> requiredField' "collection" AC..= aeCollection
         <*> optionalFieldWithDefault' "scope" AllowlistScopeGlobal AC..= aeScope
 
-$(deriveToJSON hasuraJSON ''AllowlistEntry)
+instance ToJSON AllowlistEntry where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 instance FromJSON AllowlistEntry where
   parseJSON = withObject "AllowlistEntry" \o -> do
@@ -199,9 +203,11 @@ data InlinedAllowlist = InlinedAllowlist
   { iaGlobal :: HashSet NormalizedQuery,
     iaPerRole :: HashMap RoleName (HashSet NormalizedQuery)
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveToJSON hasuraJSON ''InlinedAllowlist)
+instance ToJSON InlinedAllowlist where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 inlineAllowlist :: QueryCollections -> MetadataAllowlist -> InlinedAllowlist
 inlineAllowlist collections allowlist = InlinedAllowlist global perRole

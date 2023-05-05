@@ -29,7 +29,6 @@ import Autodocodec qualified as AC
 import Autodocodec.Extended (optionalFieldOrIncludedNull', typeableName)
 import Control.Lens (makeLenses)
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.Text qualified as T
 import Data.Typeable (Typeable)
@@ -57,7 +56,9 @@ instance (HasCodec a) => HasObjectCodec (RelDef a) where
       <*> requiredField' "using" AC..= _rdUsing
       <*> optionalField' "comment" AC..= _rdComment
 
-$(deriveFromJSON hasuraJSON {omitNothingFields = True} ''RelDef)
+instance FromJSON a => FromJSON (RelDef a) where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+
 $(makeLenses ''RelDef)
 
 instance (ToJSON a) => ToJSON (RelDef a) where

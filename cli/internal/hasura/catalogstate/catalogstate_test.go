@@ -74,7 +74,7 @@ func TestClientCatalogState_Set(t *testing.T) {
 				require.Equal(t, errors.KindHasuraAPI.String(), errors.GetKind(err).String())
 				require.JSONEq(t, err.(*errors.Error).Err.Error(), `{
   "code": "parse-failed",
-  "error": "When parsing Hasura.RQL.Types.Metadata.Common.CatalogStateType expected a String with the tag of a constructor but got some_state.",
+  "error": "parsing Hasura.RQL.Types.Metadata.Common.CatalogStateType failed, expected one of the tags [\"cli\",\"console\"], but found tag \"some_state\"",
   "path": "$.args.type"
 }`)
 			}),

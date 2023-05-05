@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | This module contains types which are common to event triggers and scheduled triggers.
 module Hasura.RQL.Types.Eventing
   ( ClientError (..),
@@ -18,7 +16,6 @@ module Hasura.RQL.Types.Eventing
 where
 
 import Data.Aeson
-import Data.Aeson.TH
 import Data.SerializableBlob qualified as SB
 import Data.Text.Extended
 import Database.PG.Query qualified as PG
@@ -38,20 +35,29 @@ data WebhookRequest = WebhookRequest
     _rqHeaders :: [HeaderConf],
     _rqVersion :: Text
   }
+  deriving stock (Generic)
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''WebhookRequest)
+instance ToJSON WebhookRequest where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 data WebhookResponse = WebhookResponse
   { _wrsBody :: SB.SerializableBlob,
     _wrsHeaders :: [HeaderConf],
     _wrsStatus :: Int
   }
+  deriving stock (Generic)
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''WebhookResponse)
+instance ToJSON WebhookResponse where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 newtype ClientError = ClientError {_ceMessage :: SB.SerializableBlob}
+  deriving stock (Generic)
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''ClientError)
+instance ToJSON ClientError where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 data Response (a :: TriggerTypes)
   = ResponseHTTP WebhookResponse

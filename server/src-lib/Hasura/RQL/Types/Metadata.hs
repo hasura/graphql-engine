@@ -54,7 +54,6 @@ import Control.Lens hiding (set, (.=))
 import Data.Aeson.Extended (FromJSONWithContext (..), mapWithJSONPath)
 import Data.Aeson.KeyMap (singleton)
 import Data.Aeson.Ordered qualified as AO
-import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Monoid (Dual (..), Endo (..))
@@ -341,9 +340,10 @@ data MetadataNoSources = MetadataNoSources
     _mnsActions :: Actions,
     _mnsCronTriggers :: CronTriggers
   }
-  deriving (Eq)
+  deriving stock (Eq, Generic)
 
-$(deriveToJSON hasuraJSON ''MetadataNoSources)
+instance ToJSON MetadataNoSources where
+  toJSON = genericToJSON hasuraJSON
 
 instance FromJSON MetadataNoSources where
   parseJSON = withObject "MetadataNoSources" $ \o -> do

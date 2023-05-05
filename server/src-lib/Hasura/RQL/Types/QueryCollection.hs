@@ -30,7 +30,6 @@ import Autodocodec qualified as AC
 import Autodocodec.Extended (graphQLExecutableDocumentCodec)
 import Control.Lens
 import Data.Aeson
-import Data.Aeson.TH
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
@@ -109,7 +108,12 @@ instance HasCodec ListedQuery where
         <$> requiredField' "name" AC..= _lqName
         <*> requiredField' "query" AC..= _lqQuery
 
-$(deriveJSON hasuraJSON ''ListedQuery)
+instance FromJSON ListedQuery where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON ListedQuery where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 newtype CollectionDef = CollectionDef
   {_cdQueries :: [ListedQuery]}
@@ -121,7 +125,13 @@ instance HasCodec CollectionDef where
       CollectionDef
         <$> requiredField' "queries" AC..= _cdQueries
 
-$(deriveJSON hasuraJSON ''CollectionDef)
+instance FromJSON CollectionDef where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON CollectionDef where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
+
 $(makeLenses ''CollectionDef)
 
 data CreateCollection = CreateCollection
@@ -139,7 +149,13 @@ instance HasCodec CreateCollection where
         <*> requiredField' "definition" AC..= _ccDefinition
         <*> optionalField' "comment" AC..= _ccComment
 
-$(deriveJSON hasuraJSON ''CreateCollection)
+instance FromJSON CreateCollection where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON CreateCollection where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
+
 $(makeLenses ''CreateCollection)
 
 collectionQueries :: CreateCollection -> [G.ExecutableDocument G.Name]
@@ -151,32 +167,53 @@ data RenameCollection = RenameCollection
   }
   deriving (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON ''RenameCollection)
+instance FromJSON RenameCollection where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON RenameCollection where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
+
 $(makeLenses ''RenameCollection)
 
 data DropCollection = DropCollection
   { _dcCollection :: CollectionName,
     _dcCascade :: Bool
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON ''DropCollection)
+instance FromJSON DropCollection where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON DropCollection where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data AddQueryToCollection = AddQueryToCollection
   { _aqtcCollectionName :: CollectionName,
     _aqtcQueryName :: QueryName,
     _aqtcQuery :: GQLQueryWithText
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON ''AddQueryToCollection)
+instance FromJSON AddQueryToCollection where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON AddQueryToCollection where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data DropQueryFromCollection = DropQueryFromCollection
   { _dqfcCollectionName :: CollectionName,
     _dqfcQueryName :: QueryName
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON ''DropQueryFromCollection)
+instance FromJSON DropQueryFromCollection where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON DropQueryFromCollection where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 type QueryCollections = InsOrdHashMap CollectionName CreateCollection

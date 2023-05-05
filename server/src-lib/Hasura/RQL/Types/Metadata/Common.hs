@@ -72,7 +72,6 @@ import Control.Lens hiding (set, (.=))
 import Data.Aeson.Casing
 import Data.Aeson.Extended (FromJSONWithContext (..))
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec, sortedElemsCodecWith)
 import Data.HashSet qualified as HS
@@ -582,32 +581,46 @@ instance Backend b => HasCodec (BackendConfigWrapper b) where
 data CatalogStateType
   = CSTCli
   | CSTConsole
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON defaultOptions {constructorTagModifier = snakeCase . drop 3} ''CatalogStateType)
+instance FromJSON CatalogStateType where
+  parseJSON = genericParseJSON defaultOptions {constructorTagModifier = snakeCase . drop 3}
+
+instance ToJSON CatalogStateType where
+  toJSON = genericToJSON defaultOptions {constructorTagModifier = snakeCase . drop 3}
+  toEncoding = genericToEncoding defaultOptions {constructorTagModifier = snakeCase . drop 3}
 
 data SetCatalogState = SetCatalogState
   { _scsType :: CatalogStateType,
     _scsState :: Value
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON ''SetCatalogState)
+instance FromJSON SetCatalogState where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON SetCatalogState where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data CatalogState = CatalogState
   { _csId :: Text,
     _csCliState :: Value,
     _csConsoleState :: Value
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveToJSON hasuraJSON ''CatalogState)
+instance ToJSON CatalogState where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data GetCatalogState
   = GetCatalogState
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveToJSON defaultOptions ''GetCatalogState)
+instance ToJSON GetCatalogState where
+  toJSON = genericToJSON defaultOptions
+  toEncoding = genericToEncoding defaultOptions
 
 instance FromJSON GetCatalogState where
   parseJSON _ = pure GetCatalogState

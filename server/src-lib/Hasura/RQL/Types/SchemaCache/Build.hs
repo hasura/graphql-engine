@@ -1,6 +1,5 @@
 {-# LANGUAGE Arrows #-}
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Types and functions used in the process of building the schema cache from metadata information
@@ -32,8 +31,7 @@ where
 import Control.Arrow.Extended
 import Control.Monad.Morph
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Aeson (Value, toJSON)
-import Data.Aeson.TH
+import Data.Aeson (FromJSON (..), ToJSON (..), Value, genericParseJSON, genericToEncoding, genericToJSON)
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.Multi qualified as MultiMap
@@ -212,8 +210,14 @@ data CacheInvalidations = CacheInvalidations
     -- | Force re-fetching of `DataConnectorInfo` from the named data connectors.
     ciDataConnectors :: HashSet DataConnectorName
   }
+  deriving stock (Generic)
 
-$(deriveJSON hasuraJSON ''CacheInvalidations)
+instance FromJSON CacheInvalidations where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON CacheInvalidations where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 instance Semigroup CacheInvalidations where
   CacheInvalidations a1 b1 c1 d1 <> CacheInvalidations a2 b2 c2 d2 =
