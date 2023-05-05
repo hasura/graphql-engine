@@ -92,6 +92,10 @@ type FieldWrapperProps = FieldWrapperPassThroughProps & {
   error?: FieldError | undefined;
 };
 
+export const fieldLabelStyles = clsx(
+  'block pt-1 text-gray-600 mb-xs font-semibold'
+);
+
 export const ErrorComponentTemplate = (props: {
   label: React.ReactNode;
   ariaLabel?: string;
@@ -168,7 +172,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
 
   if (label) {
     FieldLabel = () => (
-      <label htmlFor={id} className={clsx('block pt-1 text-gray-600 mb-xs')}>
+      <label htmlFor={id} className={fieldLabelStyles}>
         <span className={clsx('flex items-center')}>
           <span className={clsx('font-semibold', { relative: !!loading })}>
             <FieldLabelIcon />

@@ -1,3 +1,4 @@
+import { DevTool } from '@hookform/devtools';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as React from 'react';
 import {
@@ -12,7 +13,6 @@ import {
   Schema,
   UseConsoleFormProps,
 } from './form.types';
-import { DevTool } from '@hookform/devtools';
 
 // available as a standlone if needed for advanced usage
 const ConsoleFormWrapper = <

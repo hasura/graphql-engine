@@ -1,10 +1,10 @@
-import React from 'react';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
+import { ComponentMeta, ComponentStory } from '@storybook/react';
 
 import { z } from 'zod';
 import { InputField, SimpleForm } from '.';
 import { Button } from '../Button';
+import { FormDebugWindow } from './dev-components/FormDebugWindow';
 
 export default {
   title: 'components/Forms 📁/Form 📁/Simple forms 🧬',
@@ -124,6 +124,37 @@ export const FormDebug: ComponentStory<typeof SimpleForm> = () => {
 };
 FormDebug.storyName = '💠 Form Debugger';
 FormDebug.parameters = {
+  docs: {
+    description: {
+      story: `In this example, the react dev tool component is rendered.`,
+    },
+  },
+};
+export const FormWithDebugWindow: ComponentStory<typeof SimpleForm> = () => {
+  const validationSchema = z.object({
+    inputFieldName: z.string().min(1),
+  });
+
+  return (
+    <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
+      <FormDebugWindow />
+      <div className="space-y-xs">
+        <h1 className="text-xl font-semibold mb-xs">Default value</h1>
+        <InputField
+          name="inputFieldName"
+          label="The input field label"
+          placeholder="Input field placeholder"
+          clearButton
+        />
+        <Button type="submit" mode="primary">
+          Submit
+        </Button>
+      </div>
+    </SimpleForm>
+  );
+};
+FormWithDebugWindow.storyName = '💠 Form With Debug Window';
+FormWithDebugWindow.parameters = {
   docs: {
     description: {
       story: `In this example, a form debugger window is shown that displays form values and errors.`,

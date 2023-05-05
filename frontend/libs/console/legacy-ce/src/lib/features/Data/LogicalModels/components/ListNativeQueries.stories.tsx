@@ -1,14 +1,13 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react';
-
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import { handlers } from '../mocks';
+import { handlers } from '../AddNativeQuery/mocks/handlers';
 import { ListNativeQueries } from './ListNativeQueries';
 
 export default {
   component: ListNativeQueries,
   decorators: [ReactQueryDecorator()],
   parameters: {
-    msw: handlers(),
+    msw: handlers({ postgres: { models: true, queries: true } }),
   },
   argTypes: {
     dataSourceName: { defaultValue: 'postgres' },

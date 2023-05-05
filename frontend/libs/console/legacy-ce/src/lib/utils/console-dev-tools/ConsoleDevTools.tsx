@@ -3,22 +3,14 @@ import clsx from 'clsx';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { HasuraLogoIcon } from '../../new-components/HasuraLogo';
 import { Switch } from '../../new-components/Switch';
+import { consoleDevToolsEnabled } from './consoleDevToolsEnabled';
 
 export interface ConsoleDevToolsProps {}
 
 export function ConsoleDevTools(props: ConsoleDevToolsProps) {
-  const explicitlyDisabled =
-    window.location.search.includes('console-dev-tools=false') ||
-    window.localStorage.getItem('console-dev-tools') === 'false';
-  const explicitlyEnabled =
-    window.location.search.includes('console-dev-tools=true') ||
-    window.localStorage.getItem('console-dev-tools') === 'true';
-  if (
-    !explicitlyEnabled &&
-    (process.env.NODE_ENV !== 'development' || explicitlyDisabled)
-  ) {
-    return null;
-  }
+  const enabled = consoleDevToolsEnabled();
+
+  if (!enabled) return null;
 
   return <ConsoleDevToolsInner {...props} />;
 }

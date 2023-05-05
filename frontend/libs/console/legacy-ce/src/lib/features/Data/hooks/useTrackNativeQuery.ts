@@ -6,10 +6,10 @@ import { NativeQuery } from '../../hasura-metadata-types';
 import { getSourceDriver } from './utils';
 
 export type TrackNativeQuery = {
-  dataSourceName: string;
+  source: string;
 } & NativeQuery;
 
-export type UntrackNativeQuery = { dataSourceName: string } & Pick<
+export type UntrackNativeQuery = { source: string } & Pick<
   NativeQuery,
   'root_field_name'
 >;
@@ -37,7 +37,7 @@ export const useTrackNativeQuery = (
   });
 
   const trackNativeQuery = async ({
-    data: { dataSourceName, ...args },
+    data: args,
     ...options
   }: {
     data: TrackNativeQuery;
@@ -46,14 +46,8 @@ export const useTrackNativeQuery = (
       {
         query: {
           resource_version,
-          type: `${getSourceDriver(
-            sources,
-            dataSourceName
-          )}_track_native_query`,
-          args: {
-            source: dataSourceName,
-            ...args,
-          },
+          type: `${getSourceDriver(sources, args.source)}_track_native_query`,
+          args,
         },
       },
       options
@@ -61,7 +55,7 @@ export const useTrackNativeQuery = (
   };
 
   const untrackNativeQuery = async ({
-    data: { dataSourceName, ...args },
+    data: args,
     ...options
   }: {
     data: UntrackNativeQuery;
@@ -70,14 +64,8 @@ export const useTrackNativeQuery = (
       {
         query: {
           resource_version,
-          type: `${getSourceDriver(
-            sources,
-            dataSourceName
-          )}_untrack_native_query`,
-          args: {
-            source: dataSourceName,
-            ...args,
-          },
+          type: `${getSourceDriver(sources, args.source)}_untrack_native_query`,
+          args,
         },
       },
       options

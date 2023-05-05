@@ -129,7 +129,7 @@ export const hasuraToast = ({
               {title}
             </div>
           ) : null}
-          <div className="w-full">{message}</div>
+          <div className="w-full whitespace-pre">{message}</div>
           <div className="w-full">{children}</div>
           {button ? (
             <div>

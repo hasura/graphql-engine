@@ -5,7 +5,7 @@ import {
   SubmitHandler,
   UseFormProps,
 } from 'react-hook-form';
-import { ZodType, ZodTypeDef, infer as ZodInfer } from 'zod';
+import { infer as ZodInfer, ZodType, ZodTypeDef } from 'zod';
 
 // hook props:
 export type UseConsoleFormProps<
