@@ -511,7 +511,7 @@ if [ "$MODE" = "graphql-engine" ] || [ "$MODE" = "graphql-engine-pro" ]; then
     echo_pretty ""
     echo_pretty "  If the console was modified since your last build (re)build assets with:"
     echo_pretty "      $ cd \"$PROJECT_ROOT/frontend\""
-    echo_pretty "      $ npm ci && npm run server-build:$EDITION_ABBREV"
+    echo_pretty "      $ yarn install && yarn server-build:$EDITION_ABBREV"
     echo_pretty ""
     echo_pretty "Useful endpoints when compiling with '$EDITION_NAME:developer' and running with '+RTS -T'"
     echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/subscriptions"

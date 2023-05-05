@@ -17,30 +17,13 @@
     "format:write": "nx format:write --base=origin/main",
     "format:write:all": "nx format:write --all",
     "install-git-hooks": "cd .. && husky install frontend/.husky",
-    "generate-control-plane-gql-types": "graphql-codegen --config control-plane-graphql-codegen.yml"
+    "generate-control-plane-gql-types": "graphql-codegen --config control-plane-graphql-codegen.yml",
+    "check-lock-files": "node ./tools/scripts/check-lock-files.js",
+    "postinstall": "yarn check-lock-files"
   },
   "private": true,
-  "overrides": {
-    "codemirror": "5.51.0",
-    "graphql-language-service-utils": "2.4.3",
-    "msw": {
-      "graphql": "14.5.8"
-    },
-    "graphql": "14.5.8",
-    "format-graphql": {
-      "graphql": "14.5.8"
-    },
-    "graphql-language-service-interface": "2.4.2",
-    "graphiql": {
-      "codemirror-graphql": {
-        ".": "0.12.2",
-        "graphql-language-service-parser": "1.6.4",
-        "graphql-language-service-interface": {
-          ".": "2.4.2",
-          "graphql-language-service-types": "1.6.3"
-        }
-      }
-    }
+  "resolutions": {
+    "@types/react": "17.0.39"
   },
   "engines": {
     "node": ">=16",

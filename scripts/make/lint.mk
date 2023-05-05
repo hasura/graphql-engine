@@ -87,25 +87,25 @@ check-format-nix:
 ## format-frontend: auto-format all frontend code
 format-frontend: frontend/node_modules
 	@echo 'running nx format:write'
-	cd frontend && npm run format:write:all
+	cd frontend && yarn format:write:all
 
 .PHONY: format-frontend-changed
 ## format-frontend-changed: auto-format all frontend code (changed files only)
 format-frontend-changed: frontend/node_modules
 	@echo 'running nx format:write'
-	cd frontend && npm run format:write
+	cd frontend && yarn format:write
 
 .PHONY: check-format-frontend
 ## check-format-frontend: check frontend code
 check-format-frontend: frontend/node_modules
 	@echo 'running nx format:check'
-	cd frontend && npx nx format:check --base=origin/main
+	cd frontend && yarn nx format:check --base=origin/main
 
 .PHONY: check-format-frontend-changed
 ## check-format-frontend-changed: check frontend code (changed files only)
 check-format-frontend-changed: frontend/node_modules
 	@echo 'running nx format:check'
-	cd frontend && npx nx format:check --base=origin/main
+	cd frontend && yarn nx format:check --base=origin/main
 
 .PHONY: format
 format: format-hs format-nix format-frontend
@@ -175,13 +175,13 @@ lint-shell-changed:
 ## lint-frontend: lint all frontend code
 lint-frontend: frontend/node_modules
 	@echo 'running nx lint'
-	cd frontend && npm run lint
+	cd frontend && yarn lint
 
 .PHONY: lint-frontend-changed
 ## lint-frontend-changed: lint all frontend code
 lint-frontend-changed: frontend/node_modules
 	@echo 'running nx lint'
-	cd frontend && npx nx affected --target=lint --fix --parallel=3 --base=origin/main
+	cd frontend && yarn nx affected --target=lint --fix --parallel=3 --base=origin/main
 
 .PHONY: lint
 ## lint: run all lint commands, and check formatting
