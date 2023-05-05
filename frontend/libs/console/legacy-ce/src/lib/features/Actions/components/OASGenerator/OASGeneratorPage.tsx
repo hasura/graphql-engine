@@ -90,7 +90,7 @@ export const OASGeneratorPage = () => {
 
   const onDelete = (actionName: string) => {
     const action = metadata?.metadata?.actions?.find(
-      a => a.name === actionName
+      a => a.name.toLowerCase() === actionName.toLowerCase()
     );
     if (action) {
       setBusy(true);

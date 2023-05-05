@@ -70,7 +70,7 @@ describe('generateAction', () => {
       method: 'GET',
       baseUrl: 'http://petstore.swagger.io/api',
       path: '/pets',
-      requestTransforms: '',
+      requestTransforms: undefined,
       responseTransforms: '',
       sampleInput: JSON.stringify(
         {
@@ -87,7 +87,7 @@ describe('generateAction', () => {
       ),
       headers: [],
       queryParams:
-        '{{ concat ([concat({{ range _, x := $body.input.tags }} "tags={{x}}&" {{ end }}), "limit={{$body.input.limit}}&"]) }}',
+        '{{ concat ([concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}), "limit={{$body.input?.limit}}&"]) }}',
     });
   });
 
@@ -102,19 +102,19 @@ describe('generateQueryParams', () => {
   it('should generate query params with one non-array param', async () => {
     const queryParams = await generateQueryParams([status]);
     expect(queryParams).toStrictEqual([
-      { name: 'status', value: '{{$body.input.status}}' },
+      { name: 'status', value: '{{$body.input?.status}}' },
     ]);
   });
   it('should generate query params with one non-array param and one array param', async () => {
     const queryParams = await generateQueryParams([status, tags]);
     expect(queryParams).toBe(
-      '{{ concat (["status={{$body.input.status}}&", concat({{ range _, x := $body.input.tags }} "tags={{x}}&" {{ end }})]) }}'
+      '{{ concat (["status={{$body.input?.status}}&", concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }})]) }}'
     );
   });
   it('should generate query params with one non-array param and one array param (reversed)', async () => {
     const queryParams = await generateQueryParams([tags, status]);
     expect(queryParams).toBe(
-      '{{ concat ([concat({{ range _, x := $body.input.tags }} "tags={{x}}&" {{ end }}), "status={{$body.input.status}}&"]) }}'
+      '{{ concat ([concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}), "status={{$body.input?.status}}&"]) }}'
     );
   });
 });
