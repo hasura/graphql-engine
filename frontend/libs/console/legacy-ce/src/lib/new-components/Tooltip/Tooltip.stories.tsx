@@ -104,6 +104,23 @@ VariantAlign.parameters = {
   },
 };
 
+export const VariantTheme: ComponentStory<typeof Tooltip> = () => (
+  <>
+    <Tooltip tooltipContentChildren={<TooltipChildrenExample />}>
+      <ChildrenExample />
+    </Tooltip>
+    <Tooltip theme="light" tooltipContentChildren={<TooltipChildrenExample />}>
+      <ChildrenExample />
+    </Tooltip>
+  </>
+);
+VariantTheme.storyName = '🎭 Variant - Theme';
+VariantTheme.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
 export const TestingHoveredStyle: ComponentStory<typeof Tooltip> = () => (
   <Tooltip tooltipContentChildren={<TooltipChildrenExample />} defaultOpen>
     <ChildrenExample />

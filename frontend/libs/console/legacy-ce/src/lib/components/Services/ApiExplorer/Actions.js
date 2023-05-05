@@ -491,7 +491,8 @@ const processResponseDetails =
     responseSize,
     isResponseCached,
     responseTrackingId,
-    cacheWarning
+    cacheWarning,
+    isRequestCachable
   ) =>
   dispatch => {
     dispatch({
@@ -502,6 +503,7 @@ const processResponseDetails =
         isResponseCached,
         responseTrackingId,
         cacheWarning,
+        isRequestCachable,
       },
     });
   };
@@ -733,6 +735,7 @@ const apiExplorerReducer = (state = defaultState, action) => {
             isResponseCached: action.data.isResponseCached,
             responseTrackingId: action.data.responseTrackingId,
             cacheWarning: action.data.cacheWarning,
+            isRequestCachable: action.data.isRequestCachable,
           },
         },
       };

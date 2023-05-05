@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 import React, { Component } from 'react';
 import GraphiQL from 'graphiql';
 import { connect } from 'react-redux';
@@ -44,6 +45,10 @@ import { isQueryValid } from '../Rest/utils';
 import { LS_KEYS, setLSItem } from '../../../../utils/localStorage';
 import { CodeExporterEventTracer } from './CodeExporterEventTracer';
 import { trackGraphiQlToolbarButtonClick } from '../customAnalyticsEvents';
+import {
+  ResponseTimeWarning,
+  RESPONSE_TIME_CACHE_WARNING,
+} from './ResponseTimeWarning';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -100,6 +105,7 @@ class GraphiQLWrapper extends Component {
       isResponseCached,
       responseTrackingId,
       cacheWarning,
+      isRequestCachable,
     } = this.props.response;
 
     const graphQLFetcher = graphQLParams => {
@@ -210,6 +216,29 @@ class GraphiQLWrapper extends Component {
       }
     };
 
+    const _addCacheDirective = () => {
+      try {
+        const editor = graphiqlContext.getQueryEditor();
+        const operationString = editor.getValue();
+        const cacheToggledOperationString = toggleCacheDirective(
+          operationString,
+          true
+        );
+        editor.setValue(cacheToggledOperationString);
+      } catch {
+        // throw a generic error
+        throw new Error(
+          'Caching directives can only be added to valid GraphQL queries.'
+        );
+      }
+    };
+
+    const shouldShowResponseTimeWarning =
+      isRequestCachable &&
+      responseTime > RESPONSE_TIME_CACHE_WARNING &&
+      !isResponseCached &&
+      !cacheWarning;
+
     const renderGraphiqlFooter = responseTime &&
       responseTrackingId === requestTrackingId && (
         <GraphiQL.Footer>
@@ -218,6 +247,9 @@ class GraphiQLWrapper extends Component {
               Response Time
             </span>
             <span className="text-sm text-black mr-md">{responseTime} ms</span>
+            {shouldShowResponseTimeWarning && (
+              <ResponseTimeWarning onAddCacheDirective={_addCacheDirective} />
+            )}
             {responseSize && (
               <>
                 <span className="text-xs text-[#777777] mr-sm uppercase font-semibold">

@@ -2,6 +2,13 @@ import React from 'react';
 import * as RadixTooltip from '@radix-ui/react-tooltip';
 import clsx from 'clsx';
 
+type Theme = 'dark' | 'light';
+
+export const themes: Record<Theme, string> = {
+  dark: 'bg-gray-800 text-white',
+  light: 'bg-white text-gray-800 border border-gray-800',
+};
+
 export type TooltipProps = {
   /**
    * The component children
@@ -15,6 +22,10 @@ export type TooltipProps = {
    * The tooltip classes
    */
   className?: string;
+  /**
+   * The theme of the tooltip
+   */
+  theme?: Theme;
   /**  The radix tooltip options */
   options?: {
     provider?: RadixTooltip.TooltipProviderProps;
@@ -35,6 +46,7 @@ export const Tooltip: React.VFC<TooltipProps> = ({
   align = 'center',
   defaultOpen = false,
   options = {},
+  theme = 'dark',
 }) => (
   <RadixTooltip.Provider {...options?.provider}>
     <RadixTooltip.Root
@@ -55,7 +67,7 @@ export const Tooltip: React.VFC<TooltipProps> = ({
         <RadixTooltip.Content
           side={side}
           align={align}
-          className="bg-gray-800 p-sm text-white rounded max-w-lg z-[102]"
+          className={clsx(themes[theme], 'p-sm rounded max-w-lg z-[102]')}
           {...options?.content}
         >
           <RadixTooltip.Arrow
