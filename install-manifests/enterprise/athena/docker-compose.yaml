@@ -35,7 +35,8 @@ services:
       ## enable debugging mode. It is recommended to disable this in production
       HASURA_GRAPHQL_DEV_MODE: 'true'
       # HASURA_GRAPHQL_LOG_LEVEL: debug
-      HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: '/srv/console-assets'
+      ## enable offline console assets if you wish to access console without internet connectivity
+      # HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: '/srv/console-assets'
       HASURA_GRAPHQL_REDIS_URL: redis://redis:6379
       HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: 'redis://redis:6379'
       HASURA_GRAPHQL_MAX_CACHE_SIZE: '200'

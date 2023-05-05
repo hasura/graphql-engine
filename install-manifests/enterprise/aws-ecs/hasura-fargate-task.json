@@ -47,10 +47,6 @@
           "value": "startup, http-log, response-caching-log"
         },
         {
-          "name": "HASURA_GRAPHQL_CONSOLE_ASSETS_DIR",
-          "value": "/srv/console-assets"
-        },
-        {
           "name": "HASURA_GRAPHQL_MAX_CACHE_SIZE",
           "value": "200"
         },
