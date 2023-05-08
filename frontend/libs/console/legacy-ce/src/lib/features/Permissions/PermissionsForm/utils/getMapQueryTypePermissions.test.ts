@@ -49,7 +49,15 @@ describe('getMapQueryTypePermissions should', () => {
         },
       },
       {
-        queryType: 'update',
+        queryType: 'pre_update',
+        data: {
+          columns: { Title: true },
+          filter: { Title: { _eq: 'X-Hasura-User-Id' } },
+          check: { Title: { _eq: 'X-Hasura-User-Id' } },
+        },
+      },
+      {
+        queryType: 'post_update',
         data: {
           columns: { Title: true },
           filter: { Title: { _eq: 'X-Hasura-User-Id' } },

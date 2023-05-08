@@ -48,7 +48,7 @@ const createSelectObject = (input: PermissionsSchema) => {
     const permissionObject: SelectPermissionMetadata = {
       columns,
       filter,
-      set: [],
+      set: {},
       allow_aggregations: input.aggregationEnabled,
     };
 

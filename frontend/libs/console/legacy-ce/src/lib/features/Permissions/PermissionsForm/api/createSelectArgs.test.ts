@@ -20,7 +20,7 @@ test('create select args object from form data', () => {
         permission: {
           columns: ['AlbumId', 'Title', 'ArtistId'],
           filter: { _not: { AlbumId: { _eq: 'X-Hasura-User-Id' } } },
-          set: [],
+          set: {},
           allow_aggregations: false,
         },
         source: 'Chinook',

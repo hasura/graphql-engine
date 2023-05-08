@@ -57,7 +57,7 @@ GDCUpdateTableCloneSelectPermission.play = async ({ canvasElement }) => {
 
   await userEvent.click(tableUserUpdateButton);
   const selectCheckbox = await canvas.findByTestId(
-    'external-user-select-input-pre'
+    'external-user-select-input-pre_update'
   );
   await userEvent.click(selectCheckbox);
 

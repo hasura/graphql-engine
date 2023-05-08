@@ -14,7 +14,6 @@ const getPermissionsMappedByRole = ({
   key,
   currentRole,
   currentQueryType,
-  tally,
   queryType,
 }: {
   tableData: MetadataTable;
@@ -25,7 +24,6 @@ const getPermissionsMappedByRole = ({
     | 'update_permissions';
   currentRole: string;
   currentQueryType: string;
-  tally: Record<string, any>[];
   queryType: string;
 }) => {
   const permissions =
@@ -34,21 +32,24 @@ const getPermissionsMappedByRole = ({
     tableData?.[key]?.find(
       (data: { role: string }) => data.role === currentRole
     )?.permission;
-  if (!permissions) return tally;
-  if (currentQueryType === 'update' || currentQueryType === 'insert') {
+  if (!permissions) return null;
+  if (currentQueryType === 'pre_update') {
+    if (!permissions.check) permissions.check = permissions?.filter;
+  }
+  if (currentQueryType === 'post_update') {
+    if (!permissions.filter) permissions.filter = permissions?.check;
+  }
+  if (currentQueryType === 'insert') {
     if (!permissions.check) permissions.check = permissions?.filter;
   } else if (currentQueryType === 'select' || currentQueryType === 'delete') {
     if (!permissions.filter) permissions.filter = permissions?.check;
   }
   permissions.columns = formatColumns(permissions.columns);
 
-  return [
-    ...tally,
-    {
-      queryType,
-      data: permissions,
-    },
-  ];
+  return {
+    queryType,
+    data: permissions,
+  };
 };
 
 export const getNonSelectedQueryTypePermissions = (
@@ -67,49 +68,64 @@ export const getNonSelectedQueryTypePermissions = (
         key === 'delete_permissions' ||
         key === 'insert_permissions'
     )
-    ?.reduce((tally: Record<string, any>[], key: string) => {
+    ?.reduce((tally: any[], key: string) => {
       if (key === 'select_permissions' && currentQueryType !== 'select') {
-        return getPermissionsMappedByRole({
-          tableData,
-          key,
-          currentRole,
-          currentQueryType,
-          tally,
-          queryType: 'select',
-        });
+        return [
+          ...tally,
+          getPermissionsMappedByRole({
+            tableData,
+            key,
+            currentRole,
+            currentQueryType,
+            queryType: 'select',
+          }),
+        ].filter(Boolean);
       }
       if (key === 'update_permissions' && currentQueryType !== 'update') {
-        return getPermissionsMappedByRole({
+        const pre = getPermissionsMappedByRole({
           tableData,
           key,
           currentRole,
-          currentQueryType,
-          tally,
-          queryType: 'update',
+          currentQueryType: 'pre_update',
+          queryType: 'pre_update',
         });
+        const post = getPermissionsMappedByRole({
+          tableData,
+          key,
+          currentRole,
+          currentQueryType: 'post_update',
+          queryType: 'post_update',
+        });
+
+        return [...tally, pre, post].filter(Boolean);
       }
 
       if (key === 'delete_permissions' && currentQueryType !== 'delete') {
-        return getPermissionsMappedByRole({
-          tableData,
-          key,
-          currentRole,
-          currentQueryType,
-          tally,
-          queryType: 'delete',
-        });
+        return [
+          ...tally,
+          getPermissionsMappedByRole({
+            tableData,
+            key,
+            currentRole,
+            currentQueryType,
+            queryType: 'delete',
+          }),
+        ].filter(Boolean);
       }
 
       if (key === 'insert_permissions' && currentQueryType !== 'insert') {
-        return getPermissionsMappedByRole({
-          tableData,
-          key,
-          currentRole,
-          currentQueryType,
-          tally,
-          queryType: 'insert',
-        });
+        return [
+          ...tally,
+          getPermissionsMappedByRole({
+            tableData,
+            key,
+            currentRole,
+            currentQueryType,
+            queryType: 'insert',
+          }),
+        ].filter(Boolean);
       }
+
       return tally;
     }, []);
 
