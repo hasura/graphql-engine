@@ -51,6 +51,14 @@
               - question
             filter: {}
           role: user
+    - name: nonsense
+      fields:
+        something:
+          nullable: false
+          type: integer
+        something_else:
+          nullable: false
+          type: text
   native_queries:
     - arguments:
         unused:
@@ -60,6 +68,21 @@
       code: select question, answer, added_by_user_id from questions
       returns: quiz_answer
       root_field_name: quiz_answers
+  stored_procedures:
+    - stored_procedure:
+        schema: public
+        name: swap
+      configuration:
+        custom_name: swap_it
+        exposed_as: query
+      arguments:
+        one:
+          nullable: false
+          type: text
+        two:
+          nullable: false
+          type: integer
+      returns: nonsense
   tables: !include "s1/tables/tables.yaml"
   functions: !include "s1/functions/functions.yaml"
 - name: s2
