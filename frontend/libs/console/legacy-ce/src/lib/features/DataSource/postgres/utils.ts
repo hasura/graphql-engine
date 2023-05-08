@@ -1,5 +1,6 @@
 import { getEntries } from '../../../components/Services/Data/Common/tsUtils';
-import { TableColumn } from '../types';
+import { RunSQLResponse } from '../api';
+import { IntrospectedTable, TableColumn } from '../types';
 
 function containsUppercase(str: string) {
   return /[A-Z]/.test(str);
@@ -81,3 +82,27 @@ export function adaptSQLDataType(
 
   return dataType;
 }
+
+export const adaptIntrospectedTables = ([
+  fullTableListResult,
+  partitionsTablesResult,
+]: RunSQLResponse[]): IntrospectedTable[] => {
+  const partitionNames =
+    partitionsTablesResult.result?.map(row => row[0]) ?? [];
+  /* 
+    The `slice(1)` on the result is done because the first item of the result is always the columns names from the SQL output.
+    It is not required for the final result and should be avoided 
+  */
+  const adaptedResponse = fullTableListResult?.result
+    ?.slice(1)
+    .map((row: string[]) => ({
+      name: `${row[1]}.${row[0]}`,
+      table: {
+        name: row[0],
+        schema: row[1],
+      },
+      type: partitionNames.includes(row[0]) ? 'PARTITION' : row[2],
+    }));
+
+  return adaptedResponse ?? [];
+};

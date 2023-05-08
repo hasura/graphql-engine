@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { FaAngleLeft, FaAngleRight } from 'react-icons/fa';
-// import { useTrackTable } from '../..';
 import { Badge } from '../../../../new-components/Badge';
 import { Button } from '../../../../new-components/Button';
 import { CardedTable } from '../../../../new-components/CardedTable';
@@ -19,6 +18,8 @@ import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
 import { useTrackTables } from '../../hooks/useTrackTables';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { APIError } from '../../../../hooks/error';
+import { useInvalidateMetadata } from '../../../hasura-metadata-api';
+import { TableDisplayName } from '../components/TableDisplayName';
 
 interface TableListProps {
   dataSourceName: string;
@@ -45,39 +46,66 @@ export const TableList = (props: TableListProps) => {
     checkboxRef.current.indeterminate = inputStatus === 'indeterminate';
   }, [inputStatus]);
 
-  const { trackTables, untrackTables, isLoading } = useTrackTables({
-    dataSourceName,
-  });
+  const { untrackTablesInBatches, isLoading, trackTablesInBatches } =
+    useTrackTables({
+      dataSourceName,
+    });
+
+  const [progress, setProgress] = useState<undefined | number>();
+  const invalidateMetadata = useInvalidateMetadata();
 
   const onClick = async () => {
     const tables = filteredTables.filter(({ name }) =>
       checkedIds.includes(name)
     );
+
     if (mode === 'track') {
-      untrackTables({
-        tablesToBeTracked: tables,
-        onSuccess: response => {
-          response.forEach(result => {
-            if ('error' in result) {
+      untrackTablesInBatches({
+        tablesToBeUntracked: tables,
+        onSuccess: (data, variables, ctx, batchInfo) => {
+          const { batchNumber, totalBatchSize, aggregatedResults } = batchInfo;
+
+          setProgress((batchNumber / totalBatchSize) * 100);
+
+          if (batchNumber === totalBatchSize) {
+            const failedResults = aggregatedResults.reduce<TrackableTable[]>(
+              (acc, result, index) => {
+                if ('error' in result)
+                  return [...acc, { ...tables[index], status: result.error }];
+
+                return acc;
+              },
+              []
+            );
+
+            if (failedResults.length) {
               hasuraToast({
-                type: 'error',
-                title: 'Error while untracking table',
-                children: result.error,
+                type: 'info',
+                title: `Complete (${
+                  tables.length - failedResults.length
+                } untracked, ${failedResults.length} failed)`,
+                children: (
+                  <div>
+                    Some tables in the list could not be untracked due to
+                    conflicts -
+                    <div>
+                      {failedResults.map(table => (
+                        <TableDisplayName table={table.table} />
+                      ))}
+                    </div>
+                  </div>
+                ),
+              });
+            } else {
+              hasuraToast({
+                type: 'success',
+                title: 'Successfully untracked',
+                message: `${tables.length} objects untracked`,
               });
             }
-          });
-
-          const successfullyUntrackedCounter = response.filter(
-            result => 'message' in result && result.message === 'success'
-          ).length;
-
-          const plural = successfullyUntrackedCounter > 1 ? 's' : '';
-
-          hasuraToast({
-            type: 'success',
-            title: 'Successfully untracked',
-            message: `${successfullyUntrackedCounter} object${plural} untracked`,
-          });
+            invalidateMetadata();
+            setProgress(undefined);
+          }
         },
         onError: err => {
           hasuraToast({
@@ -88,29 +116,52 @@ export const TableList = (props: TableListProps) => {
         },
       });
     } else {
-      trackTables({
+      trackTablesInBatches({
         tablesToBeTracked: tables,
-        onSuccess: response => {
-          response.forEach(result => {
-            if ('error' in result) {
+        onSuccess: (data, variables, ctx, batchInfo) => {
+          const { batchNumber, totalBatchSize, aggregatedResults } = batchInfo;
+
+          setProgress((batchNumber / totalBatchSize) * 100);
+
+          if (batchNumber === totalBatchSize) {
+            const failedResults = aggregatedResults.reduce<TrackableTable[]>(
+              (acc, result, index) => {
+                if ('error' in result)
+                  return [...acc, { ...tables[index], status: result.error }];
+
+                return acc;
+              },
+              []
+            );
+
+            if (failedResults.length) {
               hasuraToast({
-                type: 'error',
-                title: 'Error while tracking table',
-                children: result.error,
+                type: 'info',
+                title: `Complete (${
+                  tables.length - failedResults.length
+                } tracked, ${failedResults.length} failed)`,
+                children: (
+                  <div>
+                    Some tables in the list could not be tracked due to
+                    conflicts -
+                    <div>
+                      {failedResults.map(table => (
+                        <TableDisplayName table={table.table} />
+                      ))}
+                    </div>
+                  </div>
+                ),
+              });
+            } else {
+              hasuraToast({
+                type: 'success',
+                title: 'Successfully tracked',
+                message: `${tables.length} objects tracked`,
               });
             }
-          });
-
-          const successfulTrackingsCounter = response.filter(
-            result => 'message' in result && result.message === 'success'
-          ).length;
-          const plural = successfulTrackingsCounter > 1 ? 's' : '';
-
-          hasuraToast({
-            type: 'success',
-            title: 'Successfully untracked',
-            message: `${successfulTrackingsCounter} object${plural} tracked`,
-          });
+            invalidateMetadata();
+            setProgress(undefined);
+          }
         },
         onError: err => {
           hasuraToast({
@@ -137,7 +188,6 @@ export const TableList = (props: TableListProps) => {
       </div>
     );
   }
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between space-x-4">
@@ -147,7 +197,11 @@ export const TableList = (props: TableListProps) => {
             disabled={!checkedIds.length}
             onClick={onClick}
             isLoading={isLoading}
-            loadingText="Please Wait"
+            loadingText={
+              progress
+                ? `Please Wait (${Math.floor(progress)}%)`
+                : 'Please Wait'
+            }
           >
             {`${mode === 'track' ? 'Untrack' : 'Track'} Selected (${
               checkedIds.length

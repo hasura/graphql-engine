@@ -63,7 +63,7 @@ export const TableRow = React.memo(
 
     const untrack = () => {
       untrackTables({
-        tablesToBeTracked: [table],
+        tablesToBeUntracked: [table],
         onSuccess: () => {
           hasuraToast({
             type: 'success',
@@ -122,6 +122,7 @@ export const TableRow = React.memo(
               >
                 Track
               </Button>
+
               {/* Hiding this customize button while loading as it looks odd to have two buttons in "loading mode" */}
               {!isLoading && (
                 <Button

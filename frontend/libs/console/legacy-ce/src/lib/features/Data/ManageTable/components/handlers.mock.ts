@@ -136,7 +136,11 @@ export const handlers = (amountOfTables = 1700) => [
     }
     return res(ctx.json({ ...metadata }));
   }),
-  rest.post(`http://localhost:8080/v2/query`, (req, res, ctx) => {
-    return res(ctx.json(runSQLResponse(amountOfTables)));
+  rest.post(`http://localhost:8080/v2/query`, async (req, res, ctx) => {
+    const body = (await req.json()) as TMigration['query'];
+
+    console.log('!!1', body);
+
+    return res(ctx.json([runSQLResponse(amountOfTables), []]));
   }),
 ];
