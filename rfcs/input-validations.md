@@ -1,5 +1,19 @@
 # Input Validations
 
+## Index
+
+- [Validation for `insert` mutations](#validation-for--insert--mutations)
+  * [Alternative approach](#alternative-approach)
+- [Behaviour](#behaviour)
+- [Webhook specification](#webhook-specification)
+  * [Request](#request)
+  * [Response](#response)
+- [Examples](#examples)
+- [Updates and Deletes](#updates-and-deletes)
+  * [Update mutation](#update-mutation)
+  * [Delete mutation](#delete-mutation)
+- [Enhancements](#enhancements)
+
 We want to consider model-level validations during mutations i.e. what type of input values are allowed when mutating a model. As of date, we can already restrict many types of mutations using `check` rule in mutation permissions. But, this is dependent on the type of operators that is available for a given model. We want to give an ability to hook an external (or internal) function for the purposes of validation.
 
 For the first version, we will consider only `insert` mutations for tables.
@@ -155,6 +169,128 @@ The arguments used in `author` model i.e. `$name`, `$email` and `$articles_conte
 The arguments used in `article` model i.e. `$articles_content` is sent to the `validate_input` handler of `article` model.
 
 If both handlers return success, then the mutation proceeds else the error(s) from the handler(s) is forwarded.
+
+## Updates and Deletes
+
+Let's discuss extending the scope of input validations to update and delete mutations.
+
+### Update mutation
+
+Consider the following sample mutation query:
+```graphql
+mutation update_author {
+  update_author(where: { id: { _eq: 3 } }, _set: { name: "Jane" }) {
+    affected_rows
+  }
+}
+```
+
+The user may want to validate the input values in the `where` and `_set` clause. So, the upstream webhook is expected to receive those
+values in the payload.
+
+```json
+{
+    "role": "<role_name>",
+    "data": {
+        "set": {
+            "name": "Jane"
+        },
+        "where": {
+            "id": {
+                "_eq": 3
+            }
+        }
+    }
+}
+```
+
+The `data` field contains necessary information for validation such as
+- `where`: a json-ised boolean expression
+- `set`: input data to be updated in the table
+
+Also, if provided, json-ised data of other update operators such as
+- `_inc` using `inc` field
+- `_append` using `append` field
+- `_prepend` using `prepend` field
+- `_delete_key` using `delete_key` field
+- `_delete_at_path` using `delete_at_path` field
+
+are sent in the payload.
+
+Configuration in update permission for http webhook is similar to that of insert permission. Find a sample below.
+
+```yaml
+type: pg_create_update_permission
+args:
+  table: article,
+  source: default,
+  role: user,
+  permission:
+    check:
+      author_id: "X-HASURA-USER-ID"
+    filter:
+      author_id: "X-HASURA-USER-ID"
+    set:
+      updated_at: "NOW()"
+    columns: ["name","author_id"]
+    validate_input:
+      type: http
+      definition:
+        handler: http://www.somedomain.com/validateUpdateArticle
+        headers:
+        - name: X-Handler-API-Key
+          value_from_env: VALIDATION_HOOK_API_KEY
+```
+
+### Delete mutation
+
+Consider the following sample mutation query:
+
+```graphql
+mutation delete_articles {
+  delete_article(where: { author: { id: { _eq: 7 } } }) {
+    affected_rows
+    returning {
+      id
+    }
+  }
+}
+```
+
+The delete mutation allows only `where` input field. Hence, only json-ised boolean expression is sent in the payload.
+
+```json
+{
+    "role": "<role_name>",
+    "data": {
+        "where": {
+            "id": {
+                "_eq": 7
+            }
+        }
+    }
+}
+```
+
+Configuration in delete permission for http webhook is similar to that of insert permission. Find a sample below.
+
+```yaml
+type: pg_create_delete_permission
+args:
+  table: article,
+  source: default,
+  role: user,
+  permission:
+    filter:
+      author_id: "X-HASURA-USER-ID"
+    validate_input:
+      type: http
+      definition:
+        handler: http://www.somedomain.com/validateDeleteArticle
+        headers:
+        - name: X-Handler-API-Key
+          value_from_env: VALIDATION_HOOK_API_KEY
+```
 
 ## Enhancements
 
