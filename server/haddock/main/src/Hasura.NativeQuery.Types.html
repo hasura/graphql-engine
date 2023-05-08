@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621690466954"><span id="local-6989586621690466955"></span></span><span class="hs-comment">-- | A name for a native query as it is recognized by the graphql schema.</span><span>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621690467062"><span id="local-6989586621690467063"></span></span><span class="hs-comment">-- | A name for a native query as it is recognized by the graphql schema.</span><span>
 </span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.NativeQuery.Types</span><span>
 </span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier">NativeQueryName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier">NullableScalarType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
@@ -14,15 +14,15 @@
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier">Language.Haskell.TH.Syntax</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier">Lift</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span><span>
 </span><span id="line-16"></span><span class="hs-comment">-- The name of a native query. This appears as a root field name in the graphql schema.</span><span>
-</span><span id="line-17"></span><span id="local-6989586621690466949"><span id="local-6989586621690466950"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="NativeQueryName"><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-var">NativeQueryName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueryName"><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-var">NativeQueryName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getNativeQueryName"><span class="annot"><span class="annottext">NativeQueryName -&gt; Name
+</span><span id="line-17"></span><span id="local-6989586621690467057"><span id="local-6989586621690467058"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="NativeQueryName"><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-var">NativeQueryName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueryName"><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-var">NativeQueryName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getNativeQueryName"><span class="annot"><span class="annottext">NativeQueryName -&gt; Name
 </span><a href="Hasura.NativeQuery.Types.html#getNativeQueryName"><span class="hs-identifier hs-var hs-var">getNativeQueryName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-18"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690466940"><span id="local-6989586621690466945"><span class="annot"><span class="annottext">NativeQueryName -&gt; NativeQueryName -&gt; Bool
+</span><span id="line-18"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690467048"><span id="local-6989586621690467053"><span class="annot"><span class="annottext">NativeQueryName -&gt; NativeQueryName -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
 $c/= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
 == :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
 $c== :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466907"><span id="local-6989586621690466911"><span id="local-6989586621690466915"><span id="local-6989586621690466919"><span id="local-6989586621690466923"><span id="local-6989586621690466927"><span id="local-6989586621690466932"><span class="annot"><span class="annottext">Eq NativeQueryName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690467015"><span id="local-6989586621690467019"><span id="local-6989586621690467023"><span id="local-6989586621690467027"><span id="local-6989586621690467031"><span id="local-6989586621690467035"><span id="local-6989586621690467040"><span class="annot"><span class="annottext">Eq NativeQueryName
 NativeQueryName -&gt; NativeQueryName -&gt; Bool
 NativeQueryName -&gt; NativeQueryName -&gt; Ordering
 NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
@@ -50,7 +50,7 @@ $c&lt;= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
 $c&lt; :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
 compare :: NativeQueryName -&gt; NativeQueryName -&gt; Ordering
 $ccompare :: NativeQueryName -&gt; NativeQueryName -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466892"><span id="local-6989586621690466896"><span id="local-6989586621690466901"><span class="annot"><span class="annottext">Int -&gt; NativeQueryName -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690467000"><span id="local-6989586621690467004"><span id="local-6989586621690467009"><span class="annot"><span class="annottext">Int -&gt; NativeQueryName -&gt; ShowS
 [NativeQueryName] -&gt; ShowS
 NativeQueryName -&gt; String
 forall a.
@@ -61,7 +61,7 @@ show :: NativeQueryName -&gt; String
 $cshow :: NativeQueryName -&gt; String
 showsPrec :: Int -&gt; NativeQueryName -&gt; ShowS
 $cshowsPrec :: Int -&gt; NativeQueryName -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466879"><span id="local-6989586621690466884"><span class="annot"><span class="annottext">Eq NativeQueryName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466987"><span id="local-6989586621690466992"><span class="annot"><span class="annottext">Eq NativeQueryName
 Int -&gt; NativeQueryName -&gt; Int
 NativeQueryName -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -69,11 +69,11 @@ hash :: NativeQueryName -&gt; Int
 $chash :: NativeQueryName -&gt; Int
 hashWithSalt :: Int -&gt; NativeQueryName -&gt; Int
 $chashWithSalt :: Int -&gt; NativeQueryName -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466873"><span class="annot"><span class="annottext">NativeQueryName -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466981"><span class="annot"><span class="annottext">NativeQueryName -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: NativeQueryName -&gt; ()
 $crnf :: NativeQueryName -&gt; ()
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466853"><span id="local-6989586621690466857"><span id="local-6989586621690466861"><span id="local-6989586621690466866"><span class="annot"><span class="annottext">[NativeQueryName] -&gt; Value
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466961"><span id="local-6989586621690466965"><span id="local-6989586621690466969"><span id="local-6989586621690466974"><span class="annot"><span class="annottext">[NativeQueryName] -&gt; Value
 [NativeQueryName] -&gt; Encoding
 NativeQueryName -&gt; Value
 NativeQueryName -&gt; Encoding
@@ -91,7 +91,7 @@ toEncoding :: NativeQueryName -&gt; Encoding
 $ctoEncoding :: NativeQueryName -&gt; Encoding
 toJSON :: NativeQueryName -&gt; Value
 $ctoJSON :: NativeQueryName -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466843"><span id="local-6989586621690466848"><span class="annot"><span class="annottext">Value -&gt; Parser [NativeQueryName]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466951"><span id="local-6989586621690466956"><span class="annot"><span class="annottext">Value -&gt; Parser [NativeQueryName]
 Value -&gt; Parser NativeQueryName
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -99,12 +99,12 @@ parseJSONList :: Value -&gt; Parser [NativeQueryName]
 $cparseJSONList :: Value -&gt; Parser [NativeQueryName]
 parseJSON :: Value -&gt; Parser NativeQueryName
 $cparseJSON :: Value -&gt; Parser NativeQueryName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466838"><span class="annot"><span class="annottext">NativeQueryName -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466946"><span class="annot"><span class="annottext">NativeQueryName -&gt; Text
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: NativeQueryName -&gt; Text
 $ctoTxt :: NativeQueryName -&gt; Text
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-19"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690466800"><span id="local-6989586621690466802"><span id="local-6989586621690466804"><span id="local-6989586621690466806"><span id="local-6989586621690466808"><span id="local-6989586621690466810"><span id="local-6989586621690466812"><span id="local-6989586621690466814"><span id="local-6989586621690466816"><span id="local-6989586621690466818"><span id="local-6989586621690466820"><span id="local-6989586621690466822"><span id="local-6989586621690466825"><span id="local-6989586621690466829"><span class="annot"><span class="annottext">Typeable NativeQueryName
+</span><span id="line-19"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690466908"><span id="local-6989586621690466910"><span id="local-6989586621690466912"><span id="local-6989586621690466914"><span id="local-6989586621690466916"><span id="local-6989586621690466918"><span id="local-6989586621690466920"><span id="local-6989586621690466922"><span id="local-6989586621690466924"><span id="local-6989586621690466926"><span id="local-6989586621690466928"><span id="local-6989586621690466930"><span id="local-6989586621690466933"><span id="local-6989586621690466937"><span class="annot"><span class="annottext">Typeable NativeQueryName
 NativeQueryName -&gt; DataType
 NativeQueryName -&gt; Constr
 (forall b. Data b =&gt; b -&gt; b) -&gt; NativeQueryName -&gt; NativeQueryName
@@ -251,7 +251,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep NativeQueryName x -&gt; NativeQueryName
 $cfrom :: forall x. NativeQueryName -&gt; Rep NativeQueryName x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466786"><span id="local-6989586621690466793"><span class="annot"><span class="annottext">forall t.
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690466894"><span id="local-6989586621690466901"><span class="annot"><span class="annottext">forall t.
 (forall (m :: * -&gt; *). Quote m =&gt; t -&gt; m Exp)
 -&gt; (forall (m :: * -&gt; *). Quote m =&gt; t -&gt; Code m t) -&gt; Lift t
 forall (m :: * -&gt; *). Quote m =&gt; NativeQueryName -&gt; m Exp
@@ -268,9 +268,9 @@ lift :: forall (m :: * -&gt; *). Quote m =&gt; NativeQueryName -&gt; m Exp
 $clift :: forall (m :: * -&gt; *). Quote m =&gt; NativeQueryName -&gt; m Exp
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690466777"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-22"></span><span>  </span><span id="local-6989586621690466773"><span class="annot"><span class="annottext">codec :: JSONCodec NativeQueryName
-</span><a href="#local-6989586621690466773"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690466885"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>  </span><span id="local-6989586621690466881"><span class="annot"><span class="annottext">codec :: JSONCodec NativeQueryName
+</span><a href="#local-6989586621690466881"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
@@ -280,7 +280,7 @@ $clift :: forall (m :: * -&gt; *). Quote m =&gt; NativeQueryName -&gt; m Exp
 </span><a href="Hasura.NativeQuery.Types.html#getNativeQueryName"><span class="hs-identifier hs-var">getNativeQueryName</span></a></span><span> </span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
 </span><span class="hs-identifier hs-var">codec</span></span><span>
 </span><span id="line-23"></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690466769"><span id="local-6989586621690466771"><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690466877"><span id="local-6989586621690466879"><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span></span><span>
 </span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690466764"><span id="local-6989586621690466766"><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690466872"><span id="local-6989586621690466874"><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span></span><span>
 </span><span id="line-27"></span></pre></body></html>
