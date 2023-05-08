@@ -16,6 +16,8 @@ import {
   fetchAllOnboardingDataQueryVariables,
   oneClickDeploymentOnboardingShown,
   useCaseExperimentOnboarding,
+  skippedOnboardingWizardVariables,
+  skippedNeonOnboardingVariables,
 } from './constants';
 import { WizardState } from './hooks/useWizardState';
 import { OnboardingResponseData, UserOnboarding } from './types';
@@ -33,8 +35,13 @@ export function shouldShowOnboarding(onboardingData: UserOnboarding) {
     userActivity?.[templateSummaryRunQueryClickVariables.kind]?.value ===
       'true' ||
     userActivity?.[oneClickDeploymentOnboardingShown.kind]?.value === 'true' ||
-    userActivity?.[useCaseExperimentOnboarding.kind]?.value === 'true'
+    userActivity?.[useCaseExperimentOnboarding.kind]?.value === 'true' ||
+    userActivity?.[oneClickDeploymentOnboardingShown.kind]?.value === 'true'
   ) {
+    return false;
+  }
+  if (getLSItem(LS_KEYS.skipOnboarding) === 'true') {
+    persistOnboardingType(skippedOnboardingWizardVariables);
     return false;
   }
   return true;
@@ -104,6 +111,23 @@ export const persistSkippedOnboarding = () => {
   cloudDataServiceApiClient<ResponseDataOnMutation, ResponseDataOnMutation>(
     trackOnboardingActivityMutation,
     skippedOnboardingVariables,
+    cloudHeaders
+  ).catch(error => {
+    programmaticallyTraceError(error);
+    throw error;
+  });
+};
+
+type OnboardingType =
+  | typeof skippedOnboardingWizardVariables
+  | typeof skippedOnboardingVariables
+  | typeof skippedNeonOnboardingVariables;
+
+export const persistOnboardingType = (variables: OnboardingType) => {
+  // mutate server data
+  cloudDataServiceApiClient<ResponseDataOnMutation, ResponseDataOnMutation>(
+    trackOnboardingActivityMutation,
+    variables,
     cloudHeaders
   ).catch(error => {
     programmaticallyTraceError(error);
