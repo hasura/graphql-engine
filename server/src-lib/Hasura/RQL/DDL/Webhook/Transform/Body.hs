@@ -104,6 +104,7 @@ foldFormEncoded =
             TE.encodeUtf8 (escapeURIText k)
               <> "="
               <> escapeURIBS v
+          | v /= "null"
         ]
 
 -- | URI-escape 'Text' blobs.
