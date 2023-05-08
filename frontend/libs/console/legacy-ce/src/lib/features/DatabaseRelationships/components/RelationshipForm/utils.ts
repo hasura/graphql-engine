@@ -16,6 +16,8 @@ import {
 } from '../../types';
 import { generateLhsFields } from './parts/MapRemoteSchemaFields/utils';
 import { Schema } from './schema';
+import { useDriverRelationshipSupport } from '../../../Data/hooks/useDriverRelationshipSupport';
+import { hasuraToast } from '../../../../new-components/Toasts';
 
 export const getTableLabel = ({
   dataSourceName,
@@ -49,8 +51,8 @@ export const useHandleSubmit = ({
   dataSourceName: string;
   table: Table;
   mode: MODE;
-  onSuccess: () => void;
-  onError: (err: Error) => void;
+  onSuccess?: () => void;
+  onError?: (err: Error) => void;
 }) => {
   const { createRelationship: createLocalRelationship, isLoading } =
     useManageLocalRelationship({
@@ -80,39 +82,30 @@ export const useHandleSubmit = ({
     onError,
   });
 
+  const { driverSupportsLocalRelationship, driverSupportsRemoteRelationship } =
+    useDriverRelationshipSupport({
+      dataSourceName,
+    });
   const handleSubmit = useCallback(
     (formData: Schema) => {
-      console.log('this is the submitted data', formData);
-
       const { fromSource, toSource, details } = formData;
 
-      // Local relationship
       if (
-        toSource.type === 'table' &&
-        toSource.dataSourceName === dataSourceName &&
-        'columnMap' in details
+        !driverSupportsLocalRelationship &&
+        !driverSupportsRemoteRelationship
       ) {
-        const localRelationship: LocalRelationship = {
-          name: formData.name,
-          type: 'localRelationship',
-          fromSource: fromSource.dataSourceName,
-          fromTable: fromSource.table,
-          relationshipType: details.relationshipType,
-          definition: {
-            toTable: toSource.table,
-            mapping: (details.columnMap ?? []).reduce(
-              (acc, entry) => ({ ...acc, [entry.from]: entry.to }),
-              {}
-            ),
-          },
-        };
-        createLocalRelationship(localRelationship);
+        hasuraToast({
+          type: 'error',
+          title: 'Not able to track',
+          message: `This datasource does not support tracking of relationships.`,
+        });
+        return;
       }
 
       // remote database relationship
       if (
+        driverSupportsRemoteRelationship &&
         toSource.type === 'table' &&
-        toSource.dataSourceName !== dataSourceName &&
         'columnMap' in details
       ) {
         const remoteDatabaseRelationship: RemoteDatabaseRelationship = {
@@ -130,9 +123,31 @@ export const useHandleSubmit = ({
             ),
           },
         };
+
         if (mode === MODE.CREATE)
           createRemoteDatabaseRelationship(remoteDatabaseRelationship);
         else editRemoteDatabaseRelationship(remoteDatabaseRelationship);
+      } else if (
+        toSource.type === 'table' &&
+        toSource.dataSourceName === dataSourceName &&
+        'columnMap' in details &&
+        driverSupportsLocalRelationship
+      ) {
+        const localRelationship: LocalRelationship = {
+          name: formData.name,
+          type: 'localRelationship',
+          fromSource: fromSource.dataSourceName,
+          fromTable: fromSource.table,
+          relationshipType: details.relationshipType,
+          definition: {
+            toTable: toSource.table,
+            mapping: (details.columnMap ?? []).reduce(
+              (acc, entry) => ({ ...acc, [entry.from]: entry.to }),
+              {}
+            ),
+          },
+        };
+        createLocalRelationship(localRelationship);
       }
 
       // remote schema relationship

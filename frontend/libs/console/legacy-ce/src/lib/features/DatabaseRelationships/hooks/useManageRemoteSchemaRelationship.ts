@@ -84,7 +84,6 @@ export const useManageRemoteSchemaRelationship = ({
   const deleteRelationship = useCallback(
     async (relationship: RemoteSchemaRelationship) => {
       if (!resource_version || !driver) throw Error('Metadata not ready');
-
       mutate(
         {
           query: generateRemoteRelationshipDeleteRequest({

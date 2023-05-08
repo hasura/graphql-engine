@@ -48,8 +48,8 @@ export const TrackedRelationshipsContainer: React.VFC<
       isLoading={isLoadingRelationships || isLoadingMetadata}
       relationships={relationships}
       onUpdate={async () => {
-        await refetchMetadata();
         await refetchRelationships();
+        await refetchMetadata();
       }}
       driver={driver}
     />

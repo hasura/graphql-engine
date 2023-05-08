@@ -17,10 +17,43 @@ import {
 } from '../../../../hasura-metadata-types';
 import { getTrackedRelationshipsCacheKey } from '../../../../Data/TrackResources/components/hooks/useTrackedRelationships';
 import { hasuraToast } from '../../../../../new-components/Toasts';
+import { useDriverRelationshipSupport } from '../../../../Data/hooks/useDriverRelationshipSupport';
+
+type QueriesType =
+  | {
+      type: string;
+      args: {
+        table: unknown;
+        name: string;
+        source: string;
+        using: {
+          foreign_key_constraint_on:
+            | string[]
+            | { table: unknown; columns: string[] };
+        };
+      };
+    }[]
+  | {
+      type: string;
+      args: {
+        table: unknown;
+        name: string;
+        source: string;
+        definition: {
+          to_source: {
+            relationship_type: 'object' | 'array';
+            source: any;
+            table: any;
+            field_mapping: { [x: string]: string };
+          };
+        };
+      };
+    }[];
 
 export type AddSuggestedRelationship = {
   name: string;
-  columnNames: string[];
+  fromColumnNames: string[];
+  toColumnNames: string[];
   relationshipType: 'object' | 'array';
   toTable?: Table;
   fromTable?: Table;
@@ -46,6 +79,11 @@ export const useAllSuggestedRelationships = ({
   const { data: metadataSource, isFetching } = useMetadata(
     MetadataSelectors.findSource(dataSourceName)
   );
+
+  const { driverSupportsLocalRelationship, driverSupportsRemoteRelationship } =
+    useDriverRelationshipSupport({
+      dataSourceName,
+    });
 
   const dataSourcePrefix = metadataSource?.kind
     ? getDriverPrefix(metadataSource?.kind)
@@ -79,7 +117,6 @@ export const useAllSuggestedRelationships = ({
         httpClient,
         body,
       });
-
       return result;
     },
     enabled: isEnabled && !isFetching,
@@ -100,25 +137,64 @@ export const useAllSuggestedRelationships = ({
   const onAddMultipleSuggestedRelationships = async (
     relationships: AddSuggestedRelationship[]
   ) => {
-    const queries = relationships.map(relationship => {
-      return {
-        type: `${dataSourcePrefix}_create_${relationship.relationshipType}_relationship`,
-        args: {
-          table: relationship.fromTable,
-          name: relationship.name,
-          source: dataSourceName,
-          using: {
-            foreign_key_constraint_on:
-              relationship.relationshipType === 'object'
-                ? relationship.columnNames
-                : {
-                    table: relationship.toTable,
-                    columns: relationship.columnNames,
+    let queries: QueriesType = [];
+
+    if (!driverSupportsLocalRelationship && !driverSupportsRemoteRelationship) {
+      hasuraToast({
+        type: 'error',
+        title: 'Not able to track',
+        message: `This datasource does not support tracking of relationships.`,
+      });
+      return;
+    }
+    if (driverSupportsRemoteRelationship) {
+      queries = relationships.map(relationship => {
+        return {
+          type: `${dataSourcePrefix}_create_remote_relationship`,
+          args: {
+            table: relationship.fromTable,
+            name: relationship.name,
+            source: dataSourceName,
+            definition: {
+              to_source: {
+                relationship_type: relationship.relationshipType,
+                source: dataSourceName,
+                table: relationship.fromTable,
+                field_mapping: relationship?.fromColumnNames?.reduce(
+                  (tally, curr, i) => {
+                    return {
+                      ...tally,
+                      [curr]: relationship.toColumnNames[i],
+                    };
                   },
+                  {}
+                ),
+              },
+            },
           },
-        },
-      };
-    });
+        };
+      });
+    } else if (driverSupportsLocalRelationship) {
+      queries = relationships.map(relationship => {
+        return {
+          type: `${dataSourcePrefix}_create_${relationship.relationshipType}_relationship`,
+          args: {
+            table: relationship.fromTable,
+            name: relationship.name,
+            source: dataSourceName,
+            using: {
+              foreign_key_constraint_on:
+                relationship.relationshipType === 'object'
+                  ? relationship.fromColumnNames
+                  : {
+                      table: relationship.toTable,
+                      columns: relationship.toColumnNames,
+                    },
+            },
+          },
+        };
+      });
+    }
 
     await metadataMutation.mutateAsync(
       {

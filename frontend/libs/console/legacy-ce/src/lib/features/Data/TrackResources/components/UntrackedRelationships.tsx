@@ -18,6 +18,7 @@ import {
   useAllSuggestedRelationships,
 } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
 import { useCheckRows } from '../../../DatabaseRelationships/hooks/useCheckRows';
+import { useTrackedRelationships } from './hooks/useTrackedRelationships';
 
 interface UntrackedRelationshipsProps {
   dataSourceName: string;
@@ -29,9 +30,8 @@ const adaptTrackRelationship = (
   const isObjectRelationship = !!relationship.from?.constraint_name;
   return {
     name: relationship.constraintName,
-    columnNames: isObjectRelationship
-      ? relationship.from.columns
-      : relationship.to.columns,
+    fromColumnNames: relationship.from.columns,
+    toColumnNames: relationship.to.columns,
     relationshipType: isObjectRelationship ? 'object' : 'array',
     toTable: isObjectRelationship ? undefined : relationship.to.table,
     fromTable: relationship.from.table,
@@ -59,6 +59,9 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
     omitTracked: true,
   });
 
+  const { data: trackedRelationships } =
+    useTrackedRelationships(dataSourceName);
+
   const checkboxRef = React.useRef<HTMLInputElement>(null);
   const { checkedIds, onCheck, allChecked, toggleAll, reset, inputStatus } =
     useCheckRows(
@@ -68,7 +71,8 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
   const [filteredRelationships, setFilteredRelationships] = useState<
     SuggestedRelationshipWithName[]
   >(suggestedRelationships);
-
+  console.log('trackedRelationships', trackedRelationships);
+  console.log('suggestedRelationships', suggestedRelationships);
   const serializedRelationshipNames = suggestedRelationships
     .map(rel => rel.constraintName)
     .join('-');
@@ -91,8 +95,10 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
     checkboxRef.current.indeterminate = inputStatus === 'indeterminate';
   }, [inputStatus]);
 
-  const onTrackRelationship = (relationship: SuggestedRelationshipWithName) => {
-    return onAddMultipleSuggestedRelationships([
+  const onTrackRelationship = async (
+    relationship: SuggestedRelationshipWithName
+  ) => {
+    await onAddMultipleSuggestedRelationships([
       adaptTrackRelationship(relationship),
     ]);
   };
