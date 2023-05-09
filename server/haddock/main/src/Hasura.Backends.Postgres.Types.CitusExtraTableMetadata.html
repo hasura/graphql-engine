@@ -1,27 +1,25 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
-</span><span id="line-2"></span><span>
-</span><span id="line-3"></span><span class="hs-comment">-- | Postgres Types CitusExtraTableMetadata</span><span>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | Postgres Types CitusExtraTableMetadata</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Additional metadata information for Citus tables.</span><span>
 </span><span id="line-4"></span><span class="hs-comment">--</span><span>
-</span><span id="line-5"></span><span class="hs-comment">-- Additional metadata information for Citus tables.</span><span>
-</span><span id="line-6"></span><span class="hs-comment">--</span><span>
-</span><span id="line-7"></span><span class="hs-comment">-- See https://www.citusdata.com/blog/2017/07/27/database-table-types-with-citus-and-postgres/</span><span>
-</span><span id="line-8"></span><span class="hs-comment">-- for more details on the Citus table types.</span><span>
-</span><span id="line-9"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.Types.CitusExtraTableMetadata</span><span>
-</span><span id="line-10"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier">ExtraTableMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
-</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
-</span><span id="line-13"></span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Casing</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">JC</span></span><span>
-</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
-</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Typeable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Typeable</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span id="local-6989586621690432651"><span id="local-6989586621690432652"></span></span><span class="hs-keyword">data</span><span> </span><span id="ExtraTableMetadata"><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier hs-var">ExtraTableMetadata</span></a></span></span><span>
-</span><span id="line-20"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Local"><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#Local"><span class="hs-identifier hs-var">Local</span></a></span></span><span>
-</span><span id="line-21"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Reference"><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#Reference"><span class="hs-identifier hs-var">Reference</span></a></span></span><span>
-</span><span id="line-22"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Distributed"><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#Distributed"><span class="hs-identifier hs-var">Distributed</span></a></span></span><span> </span><span class="hs-special">{</span><span id="distributionColumn"><span class="annot"><span class="annottext">ExtraTableMetadata -&gt; Text
+</span><span id="line-5"></span><span class="hs-comment">-- See https://www.citusdata.com/blog/2017/07/27/database-table-types-with-citus-and-postgres/</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- for more details on the Citus table types.</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.Types.CitusExtraTableMetadata</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier">ExtraTableMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Casing</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">JC</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Typeable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Typeable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span id="local-6989586621690478699"><span id="local-6989586621690478700"></span></span><span class="hs-keyword">data</span><span> </span><span id="ExtraTableMetadata"><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier hs-var">ExtraTableMetadata</span></a></span></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Local"><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#Local"><span class="hs-identifier hs-var">Local</span></a></span></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Reference"><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#Reference"><span class="hs-identifier hs-var">Reference</span></a></span></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Distributed"><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#Distributed"><span class="hs-identifier hs-var">Distributed</span></a></span></span><span> </span><span class="hs-special">{</span><span id="distributionColumn"><span class="annot"><span class="annottext">ExtraTableMetadata -&gt; Text
 </span><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#distributionColumn"><span class="hs-identifier hs-var hs-var">distributionColumn</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690432637"><span id="local-6989586621690432639"><span id="local-6989586621690432645"><span class="annot"><span class="annottext">Int -&gt; ExtraTableMetadata -&gt; ShowS
+</span><span id="line-21"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690478685"><span id="local-6989586621690478687"><span id="local-6989586621690478693"><span class="annot"><span class="annottext">Int -&gt; ExtraTableMetadata -&gt; ShowS
 [ExtraTableMetadata] -&gt; ShowS
 ExtraTableMetadata -&gt; String
 forall a.
@@ -32,7 +30,7 @@ show :: ExtraTableMetadata -&gt; String
 $cshow :: ExtraTableMetadata -&gt; String
 showsPrec :: Int -&gt; ExtraTableMetadata -&gt; ShowS
 $cshowsPrec :: Int -&gt; ExtraTableMetadata -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690432630"><span id="local-6989586621690432634"><span class="annot"><span class="annottext">ExtraTableMetadata -&gt; ExtraTableMetadata -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690478678"><span id="local-6989586621690478682"><span class="annot"><span class="annottext">ExtraTableMetadata -&gt; ExtraTableMetadata -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: ExtraTableMetadata -&gt; ExtraTableMetadata -&gt; Bool
 $c/= :: ExtraTableMetadata -&gt; ExtraTableMetadata -&gt; Bool
@@ -45,10 +43,57 @@ forall a.
 $cto :: forall x. Rep ExtraTableMetadata x -&gt; ExtraTableMetadata
 $cfrom :: forall x. ExtraTableMetadata -&gt; Rep ExtraTableMetadata x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Typeable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690478668"><span id="local-6989586621690478670"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier hs-type">ExtraTableMetadata</span></a></span></span></span><span>
 </span><span id="line-24"></span><span>
-</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690432620"><span id="local-6989586621690432622"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier hs-type">ExtraTableMetadata</span></a></span></span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690478665"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier hs-type">ExtraTableMetadata</span></a></span></span><span>
 </span><span id="line-26"></span><span>
-</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690432617"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier hs-type">ExtraTableMetadata</span></a></span></span><span>
-</span><span id="line-28"></span><span>
-</span><span id="line-29"></span><span class="hs-special">$</span><span id="local-6989586621690432565"><span id="local-6989586621690432567"><span id="local-6989586621690432577"><span id="local-6989586621690432593"><span id="local-6989586621690432595"><span id="local-6989586621690432614"><span class="hs-special">(</span><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">J.defaultOptions</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.constructorTagModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">JC.snakeCase</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">J.fieldLabelModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">JC.snakeCase</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ExtraTableMetadata</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
-</span><span id="line-30"></span></pre></body></html>
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690478661"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier hs-type">ExtraTableMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621690478543"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ExtraTableMetadata
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="annottext">forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><span class="hs-identifier hs-var">J.genericParseJSON</span></span><span>
+</span><span id="line-30"></span><span>      </span><span class="annot"><span class="annottext">Options
+</span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
+</span><span id="line-31"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">constructorTagModifier :: ShowS
+</span><a href="#local-6989586621690478539"><span class="hs-identifier hs-var">J.constructorTagModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">JC.snakeCase</span></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>          </span><span class="annot"><span class="annottext">fieldLabelModifier :: ShowS
+</span><a href="#local-6989586621690478537"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">JC.snakeCase</span></span><span>
+</span><span id="line-33"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690478531"><span id="local-6989586621690478533"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html#ExtraTableMetadata"><span class="hs-identifier hs-type">ExtraTableMetadata</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-36"></span><span>  </span><span id="local-6989586621690478415"><span class="annot"><span class="annottext">toJSON :: ExtraTableMetadata -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><span class="annottext">forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.genericToJSON</span></span><span>
+</span><span id="line-38"></span><span>      </span><span class="annot"><span class="annottext">Options
+</span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
+</span><span id="line-39"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">constructorTagModifier :: ShowS
+</span><a href="#local-6989586621690478539"><span class="hs-identifier hs-var">J.constructorTagModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">JC.snakeCase</span></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>          </span><span class="annot"><span class="annottext">fieldLabelModifier :: ShowS
+</span><a href="#local-6989586621690478537"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">JC.snakeCase</span></span><span>
+</span><span id="line-41"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621690478313"><span class="annot"><span class="annottext">toEncoding :: ExtraTableMetadata -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><span class="annottext">forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><span class="hs-identifier hs-var">J.genericToEncoding</span></span><span>
+</span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">Options
+</span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
+</span><span id="line-45"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">constructorTagModifier :: ShowS
+</span><a href="#local-6989586621690478539"><span class="hs-identifier hs-var">J.constructorTagModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">JC.snakeCase</span></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>          </span><span class="annot"><span class="annottext">fieldLabelModifier :: ShowS
+</span><a href="#local-6989586621690478537"><span class="hs-identifier hs-var">J.fieldLabelModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">JC.snakeCase</span></span><span>
+</span><span id="line-47"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-48"></span></pre></body></html>
