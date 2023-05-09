@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | MSSQL Connection
@@ -32,7 +31,6 @@ import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control
 import Data.Aeson
 import Data.Aeson qualified as J
-import Data.Aeson.TH
 import Data.Environment qualified as Env
 import Data.Text (pack, unpack)
 import Data.Time (localTimeToUTC)
@@ -109,7 +107,9 @@ instance Hashable MSSQLPoolSettings
 
 instance NFData MSSQLPoolSettings
 
-$(deriveToJSON hasuraJSON ''MSSQLPoolSettings)
+instance ToJSON MSSQLPoolSettings where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 instance FromJSON MSSQLPoolSettings where
   parseJSON = withObject "MSSQL pool settings" $ \o ->
@@ -154,7 +154,9 @@ instance HasCodec MSSQLConnectionInfo where
         <$> requiredField' "connection_string" AC..= _mciConnectionString
         <*> requiredField' "pool_settings" AC..= _mciPoolSettings
 
-$(deriveToJSON hasuraJSON ''MSSQLConnectionInfo)
+instance ToJSON MSSQLConnectionInfo where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 instance FromJSON MSSQLConnectionInfo where
   parseJSON = withObject "Object" $ \o ->
@@ -179,7 +181,12 @@ instance HasCodec MSSQLConnConfiguration where
         <$> requiredField' "connection_info" AC..= _mccConnectionInfo
         <*> optionalFieldOrNull' "read_replicas" AC..= _mccReadReplicas
 
-$(deriveJSON hasuraJSON {omitNothingFields = True} ''MSSQLConnConfiguration)
+instance FromJSON MSSQLConnConfiguration where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+
+instance ToJSON MSSQLConnConfiguration where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 createMSSQLPool ::
   MonadIO m =>

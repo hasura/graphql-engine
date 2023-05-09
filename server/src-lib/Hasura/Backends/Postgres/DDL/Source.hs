@@ -27,8 +27,7 @@ where
 
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Aeson (ToJSON, toJSON)
-import Data.Aeson.TH
+import Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToEncoding, genericToJSON, toJSON)
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
 import Data.HashMap.Strict.Extended qualified as HashMap
@@ -98,8 +97,14 @@ data PGSourceLockQuery = PGSourceLockQuery
     _psqaWaitEventType :: Text,
     _psqaBlockingQuery :: Text
   }
+  deriving stock (Generic)
 
-$(deriveJSON hasuraJSON ''PGSourceLockQuery)
+instance FromJSON PGSourceLockQuery where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON PGSourceLockQuery where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 instance ToEngineLog [PGSourceLockQuery] Hasura where
   toEngineLog resp = (LevelInfo, sourceCatalogMigrationLogType, toJSON resp)

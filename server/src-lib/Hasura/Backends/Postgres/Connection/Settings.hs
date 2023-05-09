@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | Postgres Connection Settings
@@ -23,26 +22,14 @@ module Hasura.Backends.Postgres.Connection.Settings
     defaultPostgresPoolSettings,
     defaultPostgresExtensionsSchema,
     setPostgresPoolSettings,
-    pccConnectionInfo,
-    pccReadReplicas,
-    pccExtensionsSchema,
-    psciDatabaseUrl,
-    psciPoolSettings,
-    psciUsePreparedStatements,
-    psciIsolationLevel,
-    psciSslConfiguration,
-    pccConnectionTemplate,
-    pccConnectionSet,
   )
 where
 
 import Autodocodec hiding (object, (.=))
 import Autodocodec qualified as AC
-import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson.Casing (aesonDrop)
 import Data.Aeson.Extended (mapWithJSONPath)
-import Data.Aeson.TH
 import Data.Bifoldable
 import Data.Bifunctor
 import Data.Bitraversable
@@ -114,7 +101,9 @@ instance HasCodec PostgresPoolSettings where
       infix 8 .==
       (.==) = (AC..=)
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''PostgresPoolSettings)
+instance ToJSON PostgresPoolSettings where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 instance FromJSON PostgresPoolSettings where
   parseJSON = withObject "PostgresPoolSettings" $ \o ->
@@ -268,8 +257,12 @@ instance (HasCodec p, HasCodec a) => HasCodec (PGClientCerts p a) where
       infix 8 .==
       (.==) = (AC..=)
 
-$(deriveFromJSON (aesonDrop 3 (fmap toLower)) ''PGClientCerts)
-$(deriveToJSON (aesonDrop 3 (fmap toLower)) {omitNothingFields = True} ''PGClientCerts)
+instance (FromJSON p, FromJSON a) => FromJSON (PGClientCerts p a) where
+  parseJSON = genericParseJSON (aesonDrop 3 (fmap toLower))
+
+instance (ToJSON p, ToJSON a) => ToJSON (PGClientCerts p a) where
+  toJSON = genericToJSON (aesonDrop 3 (fmap toLower)) {omitNothingFields = True}
+  toEncoding = genericToEncoding (aesonDrop 3 (fmap toLower)) {omitNothingFields = True}
 
 instance Bifunctor PGClientCerts where
   bimap f g oldCerts@(PGClientCerts {pgcSslPassword}) =
@@ -364,8 +357,9 @@ instance HasCodec PostgresSourceConnInfo where
       infix 8 .==
       (.==) = (AC..=)
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''PostgresSourceConnInfo)
-$(makeLenses ''PostgresSourceConnInfo)
+instance ToJSON PostgresSourceConnInfo where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 instance FromJSON PostgresSourceConnInfo where
   parseJSON = withObject "PostgresSourceConnInfo" $ \o ->
@@ -480,7 +474,12 @@ data PostgresConnectionSetMember = PostgresConnectionSetMember
   }
   deriving (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON {omitNothingFields = True} ''PostgresConnectionSetMember)
+instance FromJSON PostgresConnectionSetMember where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+
+instance ToJSON PostgresConnectionSetMember where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 instance Hashable PostgresConnectionSetMember
 
@@ -561,5 +560,3 @@ instance HasCodec PostgresConnConfiguration where
       connectionSetDoc = "connection set used for connection template (supported only for cloud/enterprise edition)"
       infix 8 .==
       (.==) = (AC..=)
-
-$(makeLenses ''PostgresConnConfiguration)

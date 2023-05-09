@@ -1,6 +1,3 @@
-{-# LANGUAGE NumericUnderscores #-}
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.Backends.BigQuery.Connection
   ( BigQueryProblem,
     resolveConfigurationInput,
@@ -19,7 +16,6 @@ import Crypto.PubKey.RSA.PKCS15 (signSafer)
 import Crypto.PubKey.RSA.Types as Cry (Error)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
-import Data.Aeson.TH qualified as J
 import Data.ByteArray.Encoding qualified as BAE
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as B8
@@ -45,9 +41,14 @@ data GoogleAccessTokenRequest = GoogleAccessTokenRequest
   { _gatrGrantType :: Text,
     _gatrAssertion :: Text
   }
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) {J.omitNothingFields = False} ''GoogleAccessTokenRequest)
+instance J.FromJSON GoogleAccessTokenRequest where
+  parseJSON = J.genericParseJSON (J.aesonDrop 5 J.snakeCase) {J.omitNothingFields = False}
+
+instance J.ToJSON GoogleAccessTokenRequest where
+  toJSON = J.genericToJSON (J.aesonDrop 5 J.snakeCase) {J.omitNothingFields = False}
+  toEncoding = J.genericToEncoding (J.aesonDrop 5 J.snakeCase) {J.omitNothingFields = False}
 
 mkTokenRequest :: Text -> GoogleAccessTokenRequest
 mkTokenRequest = GoogleAccessTokenRequest "urn:ietf:params:oauth:grant-type:jwt-bearer"

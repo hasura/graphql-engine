@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.Backends.BigQuery.Source
@@ -26,7 +25,6 @@ import Crypto.PubKey.RSA.Types qualified as Cry
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.TH qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Int qualified as Int
 import Data.Scientific (Scientific)
@@ -115,7 +113,12 @@ instance HasCodec ServiceAccount where
         <*> requiredField' "private_key" .= _saPrivateKey
         <*> requiredField' "project_id" .= _saProjectId
 
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = False} ''ServiceAccount)
+instance J.FromJSON ServiceAccount where
+  parseJSON = J.genericParseJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = False}
+
+instance J.ToJSON ServiceAccount where
+  toJSON = J.genericToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = False}
+  toEncoding = J.genericToEncoding (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = False}
 
 data ConfigurationJSON a
   = FromEnvJSON Text
@@ -254,7 +257,12 @@ data BigQueryConnSourceConfig = BigQueryConnSourceConfig
   }
   deriving (Eq, Generic, NFData)
 
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''BigQueryConnSourceConfig)
+instance J.FromJSON BigQueryConnSourceConfig where
+  parseJSON = J.genericParseJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True}
+
+instance J.ToJSON BigQueryConnSourceConfig where
+  toJSON = J.genericToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True}
 
 -- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON
 -- instances.

@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- |
 -- Working example:
 --
@@ -21,7 +19,6 @@ module Hasura.Backends.BigQuery.DDL.RunSQL
 where
 
 import Data.Aeson qualified as J
-import Data.Aeson.TH (deriveJSON)
 import Data.Aeson.Text (encodeToLazyText)
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text qualified as T
@@ -43,9 +40,14 @@ data BigQueryRunSQL = BigQueryRunSQL
   { _mrsSql :: Text,
     _mrsSource :: SourceName
   }
-  deriving (Show, Eq)
+  deriving (Eq, Generic, Show)
 
-$(deriveJSON hasuraJSON ''BigQueryRunSQL)
+instance J.FromJSON BigQueryRunSQL where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON BigQueryRunSQL where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 runSQL ::
   (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) =>
