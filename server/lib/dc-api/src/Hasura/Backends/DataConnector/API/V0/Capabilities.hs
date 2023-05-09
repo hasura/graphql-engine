@@ -23,6 +23,9 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     cDatasets,
     defaultCapabilities,
     DataSchemaCapabilities (..),
+    dscSupportsPrimaryKeys,
+    dscSupportsForeignKeys,
+    dscColumnNullability,
     defaultDataSchemaCapabilities,
     ColumnNullability (..),
     QueryCapabilities (..),
@@ -560,3 +563,4 @@ instance HasCodec Licensing where
 $(makeLenses ''CapabilitiesResponse)
 $(makeLenses ''Capabilities)
 $(makeLenses ''QueryCapabilities)
+$(makeLenses ''DataSchemaCapabilities)
