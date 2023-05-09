@@ -490,10 +490,12 @@ updateColExp qt rf (ColExp fld val) =
           FINestedObject _ -> pure val
           FIComputedField _ -> pure val
           FIRelationship ri -> do
-            let remTable = riRTable ri
-            case decodeValue val of
-              Left _ -> pure val
-              Right be -> toJSON <$> updateFieldInBoolExp remTable rf be
+            case riTarget ri of
+              RelTargetNativeQuery _ -> error "updateColExp RelTargetNativeQuery"
+              RelTargetTable remTable ->
+                case decodeValue val of
+                  Left _ -> pure val
+                  Right be -> toJSON <$> updateFieldInBoolExp remTable rf be
           FIRemoteRelationship {} -> pure val
 
     (oFld, nFld, opQT) = case rf of
@@ -514,8 +516,10 @@ updateColInRel source fromQT rn rnCol = do
   let maybeRelInfo =
         tables ^? ix fromQT . tiCoreInfo . tciFieldInfoMap . ix (fromRel rn) . _FIRelationship
   forM_ maybeRelInfo $ \relInfo ->
-    let relTableName = riRTable relInfo
-     in tell $
+    case riTarget relInfo of
+      RelTargetNativeQuery _ -> error "updateColInRel RelTargetNativeQuery"
+      RelTargetTable relTableName ->
+        tell $
           MetadataModifier $
             tableMetadataSetter source fromQT
               %~ case riType relInfo of

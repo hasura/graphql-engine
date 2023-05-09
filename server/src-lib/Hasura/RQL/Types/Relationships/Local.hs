@@ -9,6 +9,7 @@ module Hasura.RQL.Types.Relationships.Local
     ObjRelUsing,
     ObjRelUsingChoice (..),
     RelDef (..),
+    RelTarget (..),
     RelInfo (..),
     RelManualConfig (..),
     RelManualTableConfig (..),
@@ -347,11 +348,34 @@ type ObjRelUsing b = RelUsing b (ObjRelUsingChoice b)
 
 type ObjRelDef b = RelDef (ObjRelUsing b)
 
+---
+
+data RelTarget b
+  = RelTargetTable (TableName b)
+  | RelTargetNativeQuery NativeQueryName
+  deriving (Generic)
+
+deriving instance Backend b => Eq (RelTarget b)
+
+deriving instance Backend b => Show (RelTarget b)
+
+instance Backend b => NFData (RelTarget b)
+
+instance Backend b => Hashable (RelTarget b)
+
+instance (Backend b) => FromJSON (RelTarget b) where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance (Backend b) => ToJSON (RelTarget b) where
+  toJSON = genericToJSON hasuraJSON
+
+---
+
 data RelInfo (b :: BackendType) = RelInfo
   { riName :: RelName,
     riType :: RelType,
     riMapping :: HashMap (Column b) (Column b),
-    riRTable :: TableName b,
+    riTarget :: RelTarget b,
     riIsManual :: Bool,
     riInsertOrder :: InsertOrder
   }

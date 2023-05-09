@@ -28,6 +28,7 @@ data NativeQueryInfo (b :: BackendType) = NativeQueryInfo
     _nqiReturns :: LogicalModelInfo b,
     _nqiArguments :: HashMap ArgumentName (NullableScalarType b),
     _nqiArrayRelationships :: InsOrdHashMap RelName (RelInfo b),
+    _nqiObjectRelationships :: InsOrdHashMap RelName (RelInfo b),
     _nqiDescription :: Maybe Text
   }
   deriving stock (Generic)

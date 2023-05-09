@@ -7,6 +7,7 @@ module Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes
     genTableName,
     genXComputedField,
     genFunctionArgumentExp,
+    genIdentifier,
   )
 where
 

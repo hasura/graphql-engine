@@ -842,27 +842,29 @@ getColExpDeps bexp = do
           colDep = mkColDep @b colDepReason source currTable columnName
        in (colDep :) <$> getOpExpDeps opExps
     AVRelationship relInfo RelationshipFilters {rfTargetTablePermissions, rfFilter} ->
-      let relationshipName = riName relInfo
-          relationshipTable = riRTable relInfo
-          schemaDependency =
-            SchemaDependency
-              ( SOSourceObj source $
-                  AB.mkAnyBackend $
-                    SOITableObj @b currTable (TORel relationshipName)
-              )
-              DROnType
-       in do
-            boolExpDeps <- local (\e -> e {currTable = relationshipTable}) (getBoolExpDeps' rfFilter)
-            permDeps <-
-              local
-                ( \e ->
-                    e
-                      { currTable = relationshipTable,
-                        rootTable = relationshipTable
-                      }
-                )
-                (getBoolExpDeps' rfTargetTablePermissions)
-            return (schemaDependency : boolExpDeps <> permDeps)
+      case riTarget relInfo of
+        RelTargetNativeQuery _ -> error "getColExpDeps RelTargetNativeQuery"
+        RelTargetTable relationshipTable ->
+          let relationshipName = riName relInfo
+              schemaDependency =
+                SchemaDependency
+                  ( SOSourceObj source $
+                      AB.mkAnyBackend $
+                        SOITableObj @b currTable (TORel relationshipName)
+                  )
+                  DROnType
+           in do
+                boolExpDeps <- local (\e -> e {currTable = relationshipTable}) (getBoolExpDeps' rfFilter)
+                permDeps <-
+                  local
+                    ( \e ->
+                        e
+                          { currTable = relationshipTable,
+                            rootTable = relationshipTable
+                          }
+                    )
+                    (getBoolExpDeps' rfTargetTablePermissions)
+                return (schemaDependency : boolExpDeps <> permDeps)
     AVComputedField computedFieldBoolExp ->
       let mkComputedFieldDep' r =
             mkComputedFieldDep @b r source currTable $ _acfbName computedFieldBoolExp

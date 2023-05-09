@@ -125,7 +125,10 @@ translateBoolExp = \case
           bExps = map (mkFieldCompExp rootReference currTableReference $ LColumn colFld) opExps
       return $ sqlAnd bExps
     AVRelationship
-      (RelInfo _ _ colMapping relTN _ _)
+      (RelInfo {riTarget = RelTargetNativeQuery _})
+      _ -> error "translateBoolExp RelTargetNativeQuery"
+    AVRelationship
+      (RelInfo {riMapping = colMapping, riTarget = RelTargetTable relTN})
       RelationshipFilters
         { rfTargetTablePermissions,
           rfFilter
@@ -217,7 +220,7 @@ translateAVAggregationPredicates ::
   AggregationPredicatesImplementation ('Postgres pgKind) (SQLExpression ('Postgres pgKind)) ->
   BoolExpM S.BoolExp
 translateAVAggregationPredicates
-  api@(AggregationPredicatesImplementation (RelInfo {riRTable = relTableName, riMapping = colMapping}) _rowPermissions predicate) = do
+  api@(AggregationPredicatesImplementation (RelInfo {riTarget = RelTargetTable relTableName, riMapping = colMapping}) _rowPermissions predicate) = do
     -- e.g. __be_0_<schema>_<table_name>
     relTableNameAlias <- S.toTableAlias <$> freshIdentifier relTableName
     let relTableNameIdentifier = S.tableAliasToIdentifier relTableNameAlias
@@ -231,6 +234,8 @@ translateAVAggregationPredicates
         $ translateAggPredsSubselect subselectAlias relTableNameAlias tableRelExp api
     outerWhereFrag <- translateAggPredBoolExp relTableName subselectIdentifier predicate
     pure $ S.mkExists subselect outerWhereFrag
+translateAVAggregationPredicates (AggregationPredicatesImplementation (RelInfo {riTarget = RelTargetNativeQuery _}) _rowPermissions _predicate) =
+  error "translateAVAggregationPredicates RelTargetNativeQuery"
 
 translateAggPredBoolExp ::
   forall pgKind.
@@ -259,11 +264,20 @@ translateAggPredsSubselect ::
   AggregationPredicatesImplementation ('Postgres pgKind) S.SQLExp ->
   BoolExpM S.FromItem
 translateAggPredsSubselect
+  _subselectAlias
+  _relTableNameAlias
+  _tableRelExp
+  ( AggregationPredicatesImplementation
+      RelInfo {riTarget = RelTargetNativeQuery _}
+      _rowPermissions
+      _predicate
+    ) = error "translateAggPredsSubselect RelTargetNativeQuery"
+translateAggPredsSubselect
   subselectAlias
   relTableNameAlias
   tableRelExp
   ( AggregationPredicatesImplementation
-      RelInfo {riRTable = relTableName}
+      RelInfo {riTarget = RelTargetTable relTableName}
       rowPermissions
       predicate
     ) = do

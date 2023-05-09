@@ -232,8 +232,11 @@ tableSelectFields tableInfo = do
     canBeSelected _ (Just permissions) (FINestedObject NestedObjectInfo {..}) =
       pure $! HashMap.member _noiColumn (spiCols permissions)
     canBeSelected role _ (FIRelationship relationshipInfo) = do
-      tableInfo' <- askTableInfo $ riRTable relationshipInfo
-      pure $! isJust $ tableSelectPermissions @b role tableInfo'
+      case riTarget relationshipInfo of
+        RelTargetNativeQuery _ -> error "tableSelectFields RelTargetNativeQuery"
+        RelTargetTable tableName -> do
+          tableInfo' <- askTableInfo tableName
+          pure $! isJust $ tableSelectPermissions @b role tableInfo'
     canBeSelected role (Just permissions) (FIComputedField computedFieldInfo) =
       case computedFieldReturnType @b (_cfiReturnType computedFieldInfo) of
         ReturnsScalar _ ->

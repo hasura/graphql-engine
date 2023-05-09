@@ -72,7 +72,10 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
 
   collectOptionalFieldsNE . succeedingBranchesNE $
     arrayRelationships <&> \rel -> do
-      relTable <- askTableInfo $ riRTable rel
+      relTableName <- case riTarget rel of
+        RelTargetNativeQuery _ -> error "defaultAggregationPredicatesParser RelTargetNativeQuery"
+        RelTargetTable tn -> pure tn
+      relTable <- askTableInfo relTableName
       selectPermissions <- hoistMaybe $ tableSelectPermissions roleName relTable
       guard $ spiAllowAgg selectPermissions
       let rowPermissions = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions

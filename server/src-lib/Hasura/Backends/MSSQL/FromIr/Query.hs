@@ -938,7 +938,9 @@ unfurlAnnotatedOrderByElement =
             -- text/ntext/image. See ToQuery for more explanation.
             _ -> Nothing
         )
-    IR.AOCObjectRelation IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp annOrderByElementG -> do
+    IR.AOCObjectRelation IR.RelInfo {riTarget = IR.RelTargetNativeQuery _} _annBoolExp _annOrderByElementG ->
+      error "unfurlAnnotatedOrderByElement RelTargetNativeQuery"
+    IR.AOCObjectRelation IR.RelInfo {riMapping = mapping, riTarget = IR.RelTargetTable table} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
       joinAliasEntity <-
         lift (lift (generateAlias (ForOrderAlias (tableNameText table))))
@@ -980,7 +982,9 @@ unfurlAnnotatedOrderByElement =
       local
         (const (EntityAlias joinAliasEntity))
         (unfurlAnnotatedOrderByElement annOrderByElementG)
-    IR.AOCArrayAggregation IR.RelInfo {riMapping = mapping, riRTable = tableName} annBoolExp annAggregateOrderBy -> do
+    IR.AOCArrayAggregation IR.RelInfo {riTarget = IR.RelTargetNativeQuery _} _annBoolExp _annAggregateOrderBy ->
+      error "unfurlAnnotatedOrderByElement RelTargetNativeQuery"
+    IR.AOCArrayAggregation IR.RelInfo {riMapping = mapping, riTarget = IR.RelTargetTable tableName} annBoolExp annAggregateOrderBy -> do
       selectFrom <- lift (lift (fromQualifiedTable tableName))
       let alias = aggFieldName
       joinAliasEntity <-

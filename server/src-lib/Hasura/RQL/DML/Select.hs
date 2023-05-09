@@ -59,10 +59,12 @@ convSelCol fieldInfoMap _ (SCExtRel rn malias selQ) = do
   relInfo <-
     withPathK "name" $
       askRelType fieldInfoMap rn pgWhenRelErr
-  let (RelInfo _ _ _ relTab _ _) = relInfo
-  (rfim, rspi) <- fetchRelDet rn relTab
-  resolvedSelQ <- resolveStar rfim rspi selQ
-  pure [ECRel rn malias resolvedSelQ]
+  case relInfo of
+    (RelInfo {riTarget = RelTargetNativeQuery _}) -> error "convSelCol RelTargetNativeQuery"
+    (RelInfo {riTarget = RelTargetTable relTable}) -> do
+      (rfim, rspi) <- fetchRelDet rn relTable
+      resolvedSelQ <- resolveStar rfim rspi selQ
+      pure [ECRel rn malias resolvedSelQ]
 convSelCol fieldInfoMap spi (SCStar wildcard) =
   convWildcard fieldInfoMap spi wildcard
 
@@ -83,10 +85,10 @@ convWildcard fieldInfoMap selPermInfo wildcard =
 
     simpleCols = map ECSimple $ filter (`HashMap.member` cols) pgCols
 
-    mkRelCol wc relInfo = do
-      let relName = riName relInfo
-          relTab = riRTable relInfo
-      relTabInfo <- fetchRelTabInfo relTab
+    mkRelCol _wc (RelInfo {riTarget = RelTargetNativeQuery _}) =
+      error "convWildcard RelTargetNativeQuery"
+    mkRelCol wc (RelInfo {riName = relName, riTarget = RelTargetTable relTableName}) = do
+      relTabInfo <- fetchRelTabInfo relTableName
       mRelSelPerm <- askPermInfo permSel relTabInfo
 
       forM mRelSelPerm $ \relSelPermInfo -> do
@@ -161,10 +163,13 @@ convOrderByElem sessVarBldr (flds, spi) = \case
         throw400 UnexpectedPayload $
           fldName <<> " is a computed field and can't be used in 'order_by'"
       FIRelationship relInfo -> do
+        relTableName <- case riTarget relInfo of
+          RelTargetTable tn -> pure tn
+          RelTargetNativeQuery _ -> error "convOrderByElem RelTargetNativeQuery"
         when (riType relInfo == ArrRel) $
           throw400 UnexpectedPayload $
             fldName <<> " is an array relationship and can't be used in 'order_by'"
-        (relFim, relSelPermInfo) <- fetchRelDet (riName relInfo) (riRTable relInfo)
+        (relFim, relSelPermInfo) <- fetchRelDet (riName relInfo) relTableName
         resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSelPermInfo
         AOCObjectRelation relInfo resolvedSelFltr <$> convOrderByElem sessVarBldr (relFim, relSelPermInfo) rest
       FIRemoteRelationship {} ->
@@ -268,16 +273,19 @@ convExtRel sqlGen fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
   relInfo <-
     withPathK "name" $
       askRelType fieldInfoMap relName pgWhenRelErr
-  let (RelInfo _ relTy colMapping relTab _ _) = relInfo
-  (relCIM, relSPI) <- fetchRelDet relName relTab
-  annSel <- convSelectQ sqlGen relTab relCIM relSPI selQ sessVarBldr prepValBldr
+  let (RelInfo {riType = relTy, riMapping = colMapping, riTarget = relTarget}) = relInfo
+  relTableName <- case relTarget of
+    RelTargetNativeQuery _ -> error "convExtRel RelTargetNativeQuery"
+    RelTargetTable tn -> pure tn
+  (relCIM, relSPI) <- fetchRelDet relName relTableName
+  annSel <- convSelectQ sqlGen relTableName relCIM relSPI selQ sessVarBldr prepValBldr
   case relTy of
     ObjRel -> do
       when misused $ throw400 UnexpectedPayload objRelMisuseMsg
       pure $
         Left $
           AnnRelationSelectG (fromMaybe relName mAlias) colMapping $
-            AnnObjectSelectG (_asnFields annSel) relTab $
+            AnnObjectSelectG (_asnFields annSel) relTableName $
               _tpFilter $
                 _asnPerm annSel
     ArrRel ->

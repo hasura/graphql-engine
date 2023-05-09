@@ -36,7 +36,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata.Backend
-import Hasura.RQL.Types.Relationships.Local (RelInfo (riMapping, riRTable))
+import Hasura.RQL.Types.Relationships.Local (RelInfo (riMapping, riTarget), RelTarget (..))
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Table (ForeignKey, UniqueConstraint, _cName, _fkColumnMapping, _fkConstraint, _fkForeignTable, _ucColumns)
@@ -166,7 +166,19 @@ suggestRelsFK omitTracked tables name uniqueConstraints tracked predicate foreig
     constraintName = J.toJSON (_cName (_fkConstraint foreignKey))
     discard b x = bool Nothing (Just x) (not b)
     invert = HashMap.fromList . map swap . HashMap.toList
-    trackedBack = H.fromList $ mapMaybe (relationships (riRTable &&& riMapping)) $ maybe [] (HashMap.elems . _tciFieldInfoMap) relatedTable
+    trackedBack =
+      H.fromList $
+        mapMaybe (relationships (getRelationshipsInputs @b)) $
+          maybe [] (HashMap.elems . _tciFieldInfoMap) relatedTable
+
+-- we're only interested in suggesting table-based relationships for now
+getRelationshipsInputs ::
+  RelInfo b ->
+  Maybe (TableName b, HashMap (Column b) (Column b))
+getRelationshipsInputs ri =
+  case riTarget ri of
+    RelTargetTable tn -> Just (tn, riMapping ri)
+    _ -> Nothing
 
 suggestRelsTable ::
   forall b.
@@ -181,10 +193,14 @@ suggestRelsTable omitTracked tables predicate (name, table) =
   where
     foreignKeys = _tciForeignKeys table
     constraints = _tciUniqueConstraints table
-    tracked = H.fromList $ mapMaybe (relationships (riRTable &&& riMapping)) $ HashMap.elems $ _tciFieldInfoMap table
+    tracked =
+      H.fromList $
+        mapMaybe (relationships (getRelationshipsInputs @b)) $
+          HashMap.elems $
+            _tciFieldInfoMap table
 
-relationships :: (RelInfo b1 -> b2) -> FieldInfo b1 -> Maybe b2
-relationships f = fmap f . preview _FIRelationship
+relationships :: (RelInfo b1 -> Maybe b2) -> FieldInfo b1 -> Maybe b2
+relationships f = (=<<) f . preview _FIRelationship
 
 -- NOTE: This could be grouped by table instead of a list, console stakeholders are happy with this being a list.
 suggestRelsResponse ::

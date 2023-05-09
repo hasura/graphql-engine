@@ -241,8 +241,10 @@ mkDefaultRelationshipParser ::
   RelInfo b ->
   SchemaT r m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (IR.UnpreparedValue b)))))
 mkDefaultRelationshipParser backendInsertAction xNestedInserts relationshipInfo = runMaybeT do
-  let otherTableName = riRTable relationshipInfo
-      relName = riName relationshipInfo
+  otherTableName <- case riTarget relationshipInfo of
+    RelTargetNativeQuery _ -> error "mkDefaultRelationshipParser RelTargetNativeQuery"
+    RelTargetTable tn -> pure tn
+  let relName = riName relationshipInfo
   otherTableInfo <- askTableInfo otherTableName
   relFieldName <- lift $ textToName $ relNameToTxt relName
   case riType relationshipInfo of

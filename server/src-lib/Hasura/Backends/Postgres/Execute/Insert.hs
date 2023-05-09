@@ -243,7 +243,9 @@ insertObjRel planVars userInfo stringifyNum tCase objRelIns =
   where
     IR.RelationInsert singleObjIns relInfo = objRelIns
     relName = riName relInfo
-    table = riRTable relInfo
+    table = case riTarget relInfo of
+      RelTargetNativeQuery _ -> error "insertObjRel RelTargetNativeQuery"
+      RelTargetTable tn -> tn
     mapCols = riMapping relInfo
     allCols = IR._aiTableColumns singleObjIns
     rCols = HashMap.elems mapCols

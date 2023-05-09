@@ -828,15 +828,24 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
 
                 arrayRelationships <-
                   traverse
-                    (nativeQueryArrayRelationshipSetup sourceName _nqmRootFieldName)
+                    (nativeQueryRelationshipSetup sourceName _nqmRootFieldName ArrRel)
                     _nqmArrayRelationships
+
+                objectRelationships <-
+                  traverse
+                    (nativeQueryRelationshipSetup sourceName _nqmRootFieldName ObjRel)
+                    _nqmObjectRelationships
 
                 let sourceObject =
                       SOSourceObj sourceName $
                         AB.mkAnyBackend $
                           SOINativeQuery @b _nqmRootFieldName
 
-                recordDependenciesM metadataObject sourceObject (mconcat $ snd <$> InsOrdHashMap.elems arrayRelationships)
+                let dependencies =
+                      mconcat (snd <$> InsOrdHashMap.elems arrayRelationships)
+                        <> mconcat (snd <$> InsOrdHashMap.elems objectRelationships)
+
+                recordDependenciesM metadataObject sourceObject dependencies
 
                 pure
                   NativeQueryInfo
@@ -845,6 +854,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                       _nqiReturns = logicalModel,
                       _nqiArguments = _nqmArguments,
                       _nqiArrayRelationships = fst <$> arrayRelationships,
+                      _nqiObjectRelationships = fst <$> objectRelationships,
                       _nqiDescription = _nqmDescription
                     }
 

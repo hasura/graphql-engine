@@ -46,7 +46,7 @@ import Hasura.RQL.Types.Backend (SessionVarType)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Relationships.Local (RelInfo (..))
+import Hasura.RQL.Types.Relationships.Local (RelInfo (..), RelTarget (..))
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Session
 import Witch qualified
@@ -103,17 +103,20 @@ recordTableRelationshipFromRelInfo sourceTableName RelInfo {..} = do
   let relationshipType = case riType of
         ObjRel -> API.ObjectRelationship
         ArrRel -> API.ArrayRelationship
-  let relationship =
-        API.Relationship
-          { _rTargetTable = Witch.from riRTable,
-            _rRelationshipType = relationshipType,
-            _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList riMapping
-          }
-  recordTableRelationship
-    sourceTableName
-    relationshipName
-    relationship
-  pure (relationshipName, relationship)
+  case riTarget of
+    RelTargetNativeQuery _ -> error "recordTableRelationshipFromRelInfo RelTargetNativeQuery"
+    RelTargetTable targetTableName -> do
+      let relationship =
+            API.Relationship
+              { _rTargetTable = Witch.from targetTableName,
+                _rRelationshipType = relationshipType,
+                _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList riMapping
+              }
+      recordTableRelationship
+        sourceTableName
+        relationshipName
+        relationship
+      pure (relationshipName, relationship)
 
 --------------------------------------------------------------------------------
 

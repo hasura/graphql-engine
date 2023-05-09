@@ -1468,7 +1468,10 @@ relationshipField table ri = runMaybeT do
   roleName <- retrieve scRole
   optimizePermissionFilters <- retrieve Options.soOptimizePermissionFilters
   tableInfo <- lift $ askTableInfo @b table
-  otherTableInfo <- lift $ askTableInfo $ riRTable ri
+  otherTableName <- case riTarget ri of
+    RelTargetNativeQuery _ -> error "relationshipField RelTargetNativeQuery"
+    RelTargetTable tn -> pure tn
+  otherTableInfo <- lift $ askTableInfo otherTableName
   tablePerms <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   remotePerms <- hoistMaybe $ tableSelectPermissions roleName otherTableInfo
   relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
@@ -1494,11 +1497,14 @@ relationshipField table ri = runMaybeT do
               -- "backwards" joining condition from the related table back to
               -- `table`.  If it is, then we can optimize the row-level permission
               -- filters by dropping them here.
-              if (riRTable remoteRI == table)
-                && (riMapping remoteRI `HashMap.isInverseOf` riMapping ri)
-                && (thisTablePerm == rfTargetTablePermissions)
-                then rfFilter
-                else x
+              let remoteTableName = case riTarget remoteRI of
+                    RelTargetTable tn -> Just tn
+                    _ -> Nothing
+               in if (remoteTableName == Just table)
+                    && (riMapping remoteRI `HashMap.isInverseOf` riMapping ri)
+                    && (thisTablePerm == rfTargetTablePermissions)
+                    then rfFilter
+                    else x
           _ -> x
       deduplicatePermissions' :: SelectExp b -> SelectExp b
       deduplicatePermissions' expr =
@@ -1563,7 +1569,7 @@ relationshipField table ri = runMaybeT do
               <&> \fields ->
                 IR.AFObjectRelation $
                   IR.AnnRelationSelectG (riName ri) (riMapping ri) $
-                    IR.AnnObjectSelectG fields (riRTable ri) $
+                    IR.AnnObjectSelectG fields otherTableName $
                       deduplicatePermissions $
                         IR._tpFilter $
                           tablePermissionsInfo remotePerms
@@ -1614,7 +1620,10 @@ logicalModelRelationshipField ::
   RelInfo b ->
   MaybeT (SchemaT r m) (FieldParser n (AnnotatedField b))
 logicalModelRelationshipField relationshipType ri = do
-  otherTableInfo <- lift $ askTableInfo $ riRTable ri
+  otherTableName <- case riTarget ri of
+    RelTargetNativeQuery _ -> error "logicalModelRelationshipField RelTargetNativeQuery"
+    RelTargetTable tn -> pure tn
+  otherTableInfo <- lift $ askTableInfo otherTableName
   relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
   case (relationshipType, riType ri) of
     (ObjectReference, ObjRel) -> do

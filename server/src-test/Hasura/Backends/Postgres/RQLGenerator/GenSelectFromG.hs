@@ -3,7 +3,7 @@ module Hasura.Backends.Postgres.RQLGenerator.GenSelectFromG
   )
 where
 
-import Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes
+import Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes hiding (genIdentifier)
 import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude hiding (choice, maybe)
 import Hasura.RQL.IR.Generator (genFunctionArgsExpG, genIdentifier)

@@ -29,7 +29,7 @@ import Hasura.RQL.IR.Value (Provenance (Unknown), UnpreparedValue (UVParameter))
 import Hasura.RQL.Types.BackendType (BackendSourceKind (PostgresVanillaKind), BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnType (ColumnScalar), ColumnValue (..))
 import Hasura.RQL.Types.Common (InsertOrder (..), RelName (..), RelType (..), SourceName (..))
-import Hasura.RQL.Types.Relationships.Local (RelInfo (..))
+import Hasura.RQL.Types.Relationships.Local (RelInfo (..), RelTarget (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source (DBObjectsIntrospection (..), SourceInfo (..))
 import Hasura.RQL.Types.SourceCustomization (ResolvedSourceCustomization (..))
@@ -309,7 +309,7 @@ spec = do
         { riName = RelName [nonEmptyTextQQ|tracks|],
           riType = ArrRel,
           riMapping = HashMap.fromList [("id", "album_id")],
-          riRTable = (mkTable "track"),
+          riTarget = RelTargetTable (mkTable "track"),
           riIsManual = False,
           riInsertOrder = AfterParent
         }

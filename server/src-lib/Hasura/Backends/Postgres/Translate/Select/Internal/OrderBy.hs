@@ -116,46 +116,52 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
               toIdentifier $
                 ciColumn pgColInfo
         AOCObjectRelation relInfo relFilter rest -> withWriteObjectRelation $ do
-          let RelInfo relName _ colMapping relTable _ _ = relInfo
+          let RelInfo {riName = relName, riMapping = colMapping, riTarget = relTarget} = relInfo
               relSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
               fieldName = mkOrderByFieldName relName
-          (relOrderByAlias, relOrdByExp) <-
-            processAnnotatedOrderByElement relSourcePrefix fieldName rest
-          let selectSource =
-                ObjectSelectSource
-                  (tableIdentifierToIdentifier relSourcePrefix)
-                  (S.FISimple relTable Nothing)
-                  (toSQLBoolExp (S.QualTable relTable) relFilter)
-              relSource = ObjectRelationSource relName colMapping selectSource
-          pure
-            ( relSource,
-              HashMap.singleton relOrderByAlias relOrdByExp,
-              S.mkQIdenExp relSourcePrefix relOrderByAlias
-            )
+          case relTarget of
+            RelTargetNativeQuery _ -> error "processAnnotatedOrderByElement RelTargetNativeQuery (AOCObjectRelation)"
+            RelTargetTable relTable -> do
+              (relOrderByAlias, relOrdByExp) <-
+                processAnnotatedOrderByElement relSourcePrefix fieldName rest
+              let selectSource =
+                    ObjectSelectSource
+                      (tableIdentifierToIdentifier relSourcePrefix)
+                      (S.FISimple relTable Nothing)
+                      (toSQLBoolExp (S.QualTable relTable) relFilter)
+                  relSource = ObjectRelationSource relName colMapping selectSource
+              pure
+                ( relSource,
+                  HashMap.singleton relOrderByAlias relOrdByExp,
+                  S.mkQIdenExp relSourcePrefix relOrderByAlias
+                )
         AOCArrayAggregation relInfo relFilter aggOrderBy -> withWriteArrayRelation $ do
-          let RelInfo relName _ colMapping relTable _ _ = relInfo
-              fieldName = mkOrderByFieldName relName
-              relSourcePrefix =
-                mkArrayRelationSourcePrefix
-                  sourcePrefix
-                  fieldAlias
-                  similarArrayFields
-                  fieldName
-              relAlias = mkArrayRelationAlias fieldAlias similarArrayFields fieldName
-              (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
-              selectSource =
-                SelectSource
-                  (tableIdentifierToIdentifier relSourcePrefix)
-                  (S.FISimple relTable Nothing)
-                  (toSQLBoolExp (S.QualTable relTable) relFilter)
-                  noSortingAndSlicing
-              relSource = ArrayRelationSource relAlias colMapping selectSource
-          pure
-            ( relSource,
-              topExtractor,
-              HashMap.fromList $ aggregateFieldsToExtractorExps relSourcePrefix fields,
-              S.mkQIdenExp relSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
-            )
+          let RelInfo {riName = relName, riMapping = colMapping, riTarget = relTarget} = relInfo
+          case relTarget of
+            RelTargetNativeQuery _ -> error "processAnnotatedOrderByElement RelTargetNativeQuery (AOCArrayAggregation)"
+            RelTargetTable relTable -> do
+              let fieldName = mkOrderByFieldName relName
+                  relSourcePrefix =
+                    mkArrayRelationSourcePrefix
+                      sourcePrefix
+                      fieldAlias
+                      similarArrayFields
+                      fieldName
+                  relAlias = mkArrayRelationAlias fieldAlias similarArrayFields fieldName
+                  (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
+                  selectSource =
+                    SelectSource
+                      (tableIdentifierToIdentifier relSourcePrefix)
+                      (S.FISimple relTable Nothing)
+                      (toSQLBoolExp (S.QualTable relTable) relFilter)
+                      noSortingAndSlicing
+                  relSource = ArrayRelationSource relAlias colMapping selectSource
+              pure
+                ( relSource,
+                  topExtractor,
+                  HashMap.fromList $ aggregateFieldsToExtractorExps relSourcePrefix fields,
+                  S.mkQIdenExp relSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
+                )
         AOCComputedField ComputedFieldOrderBy {..} ->
           case _cfobOrderByElement of
             CFOBEScalar _ -> do

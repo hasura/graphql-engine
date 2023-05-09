@@ -275,11 +275,14 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
     let cn = ciColumn colInfo
     checkSelOnCol spi cn
     return annFld
-  AVRelationship relInfo (RelationshipFilters targetPerm nesAnn) -> do
-    relSPI <- snd <$> fetchRelDet (riName relInfo) (riRTable relInfo)
-    modAnn <- checkSelPerm relSPI sessVarBldr nesAnn
-    resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSPI
-    return $ AVRelationship relInfo (RelationshipFilters targetPerm (andAnnBoolExps modAnn resolvedFltr))
+  AVRelationship relInfo (RelationshipFilters targetPerm nesAnn) ->
+    case riTarget relInfo of
+      RelTargetNativeQuery _ -> error "checkOnColExp RelTargetNativeQuery"
+      RelTargetTable tableName -> do
+        relSPI <- snd <$> fetchRelDet (riName relInfo) tableName
+        modAnn <- checkSelPerm relSPI sessVarBldr nesAnn
+        resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSPI
+        return $ AVRelationship relInfo (RelationshipFilters targetPerm (andAnnBoolExps modAnn resolvedFltr))
   AVComputedField cfBoolExp -> do
     roleName <- askCurRole
     let fieldName = _acfbName cfBoolExp

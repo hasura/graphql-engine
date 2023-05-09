@@ -13,6 +13,7 @@ import Hasura.RQL.IR.BoolExp.AggregationPredicates
   )
 import Hasura.RQL.Types.Relationships.Local
   ( RelInfo (..),
+    RelTarget (..),
   )
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
@@ -26,7 +27,9 @@ defaultGetAggregationPredicateDeps ::
 defaultGetAggregationPredicateDeps (AggregationPredicatesImplementation relInfo _rowPermissions functions) = do
   BoolExpCtx {source, currTable} <- ask
   let relationshipName = riName relInfo
-      relationshipTable = riRTable relInfo
+      relationshipTable = case riTarget relInfo of
+        RelTargetNativeQuery _ -> error "defaultGetAggregationPredicateDeps RelTargetNativeQuery"
+        RelTargetTable tn -> tn
       schemaDependency =
         SchemaDependency
           ( SOSourceObj source $

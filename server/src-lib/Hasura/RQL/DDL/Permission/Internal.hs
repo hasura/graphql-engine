@@ -181,19 +181,22 @@ annColExp rhsParser rootFieldInfoMap colInfoMap (ColExp fieldName colVal) = do
     FINestedObject {} ->
       throw400 NotSupported "nested object not supported"
     FIRelationship relInfo -> do
-      relBoolExp <- decodeValue colVal
-      relFieldInfoMap <- askFieldInfoMapSource $ riRTable relInfo
-      annRelBoolExp <- annBoolExp rhsParser rootFieldInfoMap relFieldInfoMap $ unBoolExp relBoolExp
-      return $
-        AVRelationship
-          relInfo
-          ( RelationshipFilters
-              { -- Note that we do not include the permissions of the target table, since
-                -- those only apply to GraphQL queries.
-                rfTargetTablePermissions = BoolAnd [],
-                rfFilter = annRelBoolExp
-              }
-          )
+      case riTarget relInfo of
+        RelTargetNativeQuery _ -> error "annColExp RelTargetNativeQuery"
+        RelTargetTable rhsTableName -> do
+          relBoolExp <- decodeValue colVal
+          relFieldInfoMap <- askFieldInfoMapSource rhsTableName
+          annRelBoolExp <- annBoolExp rhsParser rootFieldInfoMap relFieldInfoMap $ unBoolExp relBoolExp
+          return $
+            AVRelationship
+              relInfo
+              ( RelationshipFilters
+                  { -- Note that we do not include the permissions of the target table, since
+                    -- those only apply to GraphQL queries.
+                    rfTargetTablePermissions = BoolAnd [],
+                    rfFilter = annRelBoolExp
+                  }
+              )
     FIComputedField computedFieldInfo ->
       AVComputedField <$> buildComputedFieldBooleanExp (BoolExpResolver annBoolExp) rhsParser rootFieldInfoMap colInfoMap computedFieldInfo colVal
     -- Using remote fields in the boolean expression is not supported.

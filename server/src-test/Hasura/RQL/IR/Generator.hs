@@ -1,3 +1,7 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "avoid Language.GraphQL.Draft.Syntax.unsafeMkName" #-}
+
 -- | This module provides generators for the IR query selection type.
 --
 -- The generators in this module generally take the low-level Backend-specific
@@ -20,8 +24,10 @@ module Hasura.RQL.IR.Generator
   )
 where
 
+import Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes qualified as Assoc
 import Hasura.Function.Cache
 import Hasura.Generator.Common
+import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude hiding (bool, choice, maybe, nonEmpty)
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy
@@ -33,6 +39,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
 import Hedgehog
 import Hedgehog.Gen
+import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Generate a list of pairs of field names and 'a's.
 --
@@ -168,9 +175,19 @@ genRelInfo genTableName genColumn =
     <$> genRelName
     <*> genRelType
     <*> genHashMap genColumn genColumn defaultRange
-    <*> genTableName
+    <*> genRelTarget genTableName
     <*> bool_
     <*> genInsertOrder
+
+genRelTarget :: MonadGen m => m (TableName b) -> m (RelTarget b)
+genRelTarget genTableName =
+  choice
+    [ RelTargetTable <$> genTableName,
+      RelTargetNativeQuery <$> genNativeQueryName
+    ]
+
+genNativeQueryName :: MonadGen m => m NativeQueryName
+genNativeQueryName = NativeQueryName . G.unsafeMkName <$> Assoc.genIdentifier
 
 genRelName :: MonadGen m => m RelName
 genRelName = RelName <$> genNonEmptyText defaultRange
