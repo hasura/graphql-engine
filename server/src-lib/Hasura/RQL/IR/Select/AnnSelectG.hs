@@ -1,24 +1,15 @@
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | More leaves from `RQL.IR.Select`
 module Hasura.RQL.IR.Select.AnnSelectG
-  ( asnArgs,
-    asnFields,
-    asnFrom,
-    asnPerm,
-    asnStrfyNum,
-    asnNamingConvention,
-    AnnSelectG (..),
+  ( AnnSelectG (..),
     AnnSelectStreamG (..),
     bifoldMapAnnSelectStreamG,
     bifoldMapAnnSelectG,
   )
 where
 
-import Control.Lens.TH (makeLenses)
 import Data.Bifoldable
 import Data.Kind (Type)
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
@@ -116,7 +107,3 @@ bifoldMapAnnSelectStreamG f g AnnSelectStreamG {..} =
     <> foldMap g _assnFrom
     <> foldMap g _assnPerm
     <> foldMap g _assnArgs
-
--- Lenses
-
-$(makeLenses ''AnnSelectG)

@@ -1,14 +1,8 @@
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.IR.Select.OrderBy
-  ( _AOCArrayAggregation,
-    _AOCColumn,
-    _AOCComputedField,
-    _AOCObjectRelation,
-    AnnotatedAggregateOrderBy (..),
+  ( AnnotatedAggregateOrderBy (..),
     AnnotatedOrderByElement (..),
     AnnotatedOrderByItem,
     AnnotatedOrderByItemG,
@@ -17,7 +11,6 @@ module Hasura.RQL.IR.Select.OrderBy
   )
 where
 
-import Control.Lens.TH (makePrisms)
 import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -153,7 +146,3 @@ instance
     Hashable (FunctionArgsExp b v)
   ) =>
   Hashable (ComputedFieldOrderBy b v)
-
--- Lenses
-
-$(makePrisms ''AnnotatedOrderByElement)

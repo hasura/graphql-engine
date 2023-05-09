@@ -913,6 +913,7 @@ library
                      , Hasura.RQL.IR.Select.AnnSelectG
                      , Hasura.RQL.IR.Select.Args
                      , Hasura.RQL.IR.Select.From
+                     , Hasura.RQL.IR.Select.Lenses
                      , Hasura.RQL.IR.Select.OrderBy
                      , Hasura.RQL.IR.Select.RelationSelect
                      , Hasura.RQL.IR.Select.TablePerm

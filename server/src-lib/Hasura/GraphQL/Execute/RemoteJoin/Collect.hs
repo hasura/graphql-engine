@@ -20,6 +20,7 @@ import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
+import Hasura.RQL.IR.Select.Lenses
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField

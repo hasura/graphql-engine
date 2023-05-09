@@ -46,6 +46,7 @@ import Hasura.RQL.IR.OrderBy
   ( OrderByItemG (OrderByItemG, obiColumn),
   )
 import Hasura.RQL.IR.Select
+import Hasura.RQL.IR.Select.Lenses
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column

@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | This modules defines the tree of Select types: how we represent a query internally, from its top
@@ -76,37 +75,10 @@ module Hasura.RQL.IR.Select
     TableAggregateFields,
     TableAggregateFieldsG,
     CountDistinct (..),
-    anosSupportsNestedObjects,
-    anosColumn,
-    anosFields,
-    aosFields,
-    aosTableFrom,
-    aosTableFilter,
-    csXRelay,
-    csPrimaryKeyColumns,
-    csSplit,
-    csSlice,
-    csSelect,
     insertFunctionArg,
     mkAnnColumnField,
     mkAnnColumnFieldAsText,
     traverseSourceRelationshipSelection,
-    _AFArrayRelation,
-    _AFColumn,
-    _AFComputedField,
-    _AFExpression,
-    _AFNodeId,
-    _AFObjectRelation,
-    _AFRemote,
-    _TAFAgg,
-    _TAFNodes,
-    _TAFExp,
-    _ConnectionTypename,
-    _ConnectionPageInfo,
-    _ConnectionEdges,
-    _EdgeTypename,
-    _EdgeCursor,
-    _EdgeNode,
     module Hasura.RQL.IR.Select.AnnSelectG,
     module Hasura.RQL.IR.Select.Args,
     module Hasura.RQL.IR.Select.From,
@@ -116,7 +88,6 @@ module Hasura.RQL.IR.Select
   )
 where
 
-import Control.Lens.TH (makeLenses, makePrisms)
 import Data.Bifoldable
 import Data.HashMap.Strict qualified as HashMap
 import Data.Kind (Type)
@@ -730,13 +701,3 @@ insertFunctionArg argName idx value (FunctionArgsExp positional named) =
 data CountDistinct
   = SelectCountDistinct
   | SelectCountNonDistinct
-
--- Lenses
-
-$(makeLenses ''AnnObjectSelectG)
-$(makeLenses ''AnnNestedObjectSelectG)
-$(makeLenses ''ConnectionSelect)
-$(makePrisms ''AnnFieldG)
-$(makePrisms ''TableAggregateFieldG)
-$(makePrisms ''ConnectionField)
-$(makePrisms ''EdgeField)

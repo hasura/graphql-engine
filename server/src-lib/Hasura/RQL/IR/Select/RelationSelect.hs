@@ -1,19 +1,13 @@
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- | More leaves cut from RQL.IR.Select for sake of breaking up the big
--- blocking Template Haskell lense-creation party
+-- | More leaves cut from RQL.IR.Select for sake of breaking up the big pile of
+-- things
 module Hasura.RQL.IR.Select.RelationSelect
   ( AnnRelationSelectG (..),
-    aarRelationshipName,
-    aarColumnMapping,
-    aarAnnSelect,
   )
 where
 
-import Control.Lens.TH (makeLenses)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
@@ -31,5 +25,3 @@ data AnnRelationSelectG (b :: BackendType) a = AnnRelationSelectG
 deriving stock instance (Backend b, Eq v) => Eq (AnnRelationSelectG b v)
 
 deriving stock instance (Backend b, Show v) => Show (AnnRelationSelectG b v)
-
-$(makeLenses ''AnnRelationSelectG)
