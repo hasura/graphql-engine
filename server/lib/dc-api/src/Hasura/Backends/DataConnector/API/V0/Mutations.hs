@@ -61,6 +61,7 @@ import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
+import Data.Set (Set)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Hasura.Backends.DataConnector.API.V0.Capabilities qualified as API.V0
@@ -78,8 +79,8 @@ import Prelude
 -- The table relationships and insert schema represent metadata that will be
 -- used by agents interpreting the operations, and are shared across all operations.
 data MutationRequest = MutationRequest
-  { _mrTableRelationships :: [API.V0.TableRelationships],
-    _mrInsertSchema :: [TableInsertSchema],
+  { _mrTableRelationships :: Set API.V0.TableRelationships,
+    _mrInsertSchema :: Set TableInsertSchema,
     _mrOperations :: [MutationOperation]
   }
   deriving stock (Eq, Ord, Show)
@@ -405,7 +406,7 @@ data UpdateMutationOperation = UpdateMutationOperation
     -- | An expression to select which rows should be updated
     _umoWhere :: Maybe API.V0.Expression,
     -- | The updates to perform against each row
-    _umoUpdates :: [RowUpdate],
+    _umoUpdates :: Set RowUpdate,
     -- | An expression that all updated rows must match after they have been updated,
     -- otherwise the changes must be reverted
     _umoPostUpdateCheck :: Maybe API.V0.Expression,

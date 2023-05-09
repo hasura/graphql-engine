@@ -50,6 +50,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
 import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
+import Data.Set (Set)
 import Data.Text (Text)
 import Data.Text qualified as T
 import GHC.Generics (Generic)
@@ -68,7 +69,7 @@ import Prelude
 -- source.
 data QueryRequest = QueryRequest
   { _qrTable :: API.V0.TableName,
-    _qrTableRelationships :: [API.V0.TableRelationships],
+    _qrTableRelationships :: Set API.V0.TableRelationships,
     _qrQuery :: Query,
     _qrForeach :: Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue))
   }

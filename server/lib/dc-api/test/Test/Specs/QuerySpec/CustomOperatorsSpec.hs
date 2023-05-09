@@ -36,7 +36,7 @@ spec TestData {..} (ScalarTypesCapabilities scalarTypesCapabilities) = describe 
       let queryRequest =
             let fields = Data.mkFieldsMap [(unColumnName columnName, _tdColumnField tableName (unColumnName columnName))]
                 query' = Data.emptyQuery & qFields ?~ fields
-             in QueryRequest tableName [] query' Nothing
+             in QueryRequest tableName mempty query' Nothing
           where' =
             ApplyBinaryComparisonOperator
               (CustomBinaryComparisonOperator (unName operatorName))

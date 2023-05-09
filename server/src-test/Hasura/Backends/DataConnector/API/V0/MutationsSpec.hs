@@ -249,8 +249,8 @@ spec = do
 genMutationRequest :: Gen MutationRequest
 genMutationRequest =
   MutationRequest
-    <$> Gen.list defaultRange genTableRelationships
-    <*> Gen.list defaultRange genTableInsertSchema
+    <$> Gen.set defaultRange genTableRelationships
+    <*> Gen.set defaultRange genTableInsertSchema
     <*> Gen.list defaultRange genMutationOperation
 
 genTableInsertSchema :: Gen TableInsertSchema
@@ -321,7 +321,7 @@ genUpdateMutationOperation =
   UpdateMutationOperation
     <$> genTableName
     <*> Gen.maybe genExpression
-    <*> Gen.list defaultRange genRowUpdate
+    <*> Gen.set defaultRange genRowUpdate
     <*> Gen.maybe genExpression
     <*> genFieldMap genField
 

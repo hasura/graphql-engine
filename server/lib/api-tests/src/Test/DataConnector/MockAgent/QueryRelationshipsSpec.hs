@@ -10,6 +10,7 @@ import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
+import Data.Set qualified as Set
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockConfig, MockRequestResults (..), mockAgentGraphqlTest, mockAgentMetadataTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
@@ -216,29 +217,30 @@ tests = describe "Object Relationships Tests" $ do
                   & API.qLimit ?~ 1
               )
               & API.qrTableRelationships
-                .~ [ API.TableRelationships
-                       { _trSourceTable = mkTableName "Track",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "Genre",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "Genre",
-                                     _rRelationshipType = API.ObjectRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
-                                   }
-                               ),
-                               ( API.RelationshipName "MediaType",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "MediaType",
-                                     _rRelationshipType = API.ObjectRelationship,
-                                     _rColumnMapping =
-                                       HashMap.fromList
-                                         [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
-                                   }
-                               )
-                             ]
-                       }
-                   ]
+                .~ Set.fromList
+                  [ API.TableRelationships
+                      { _trSourceTable = mkTableName "Track",
+                        _trRelationships =
+                          HashMap.fromList
+                            [ ( API.RelationshipName "Genre",
+                                API.Relationship
+                                  { _rTargetTable = mkTableName "Genre",
+                                    _rRelationshipType = API.ObjectRelationship,
+                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+                                  }
+                              ),
+                              ( API.RelationshipName "MediaType",
+                                API.Relationship
+                                  { _rTargetTable = mkTableName "MediaType",
+                                    _rRelationshipType = API.ObjectRelationship,
+                                    _rColumnMapping =
+                                      HashMap.fromList
+                                        [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
+                                  }
+                              )
+                            ]
+                      }
+                  ]
         )
 
   mockAgentGraphqlTest "works with an order by that navigates relationships" $ \_testEnv performGraphqlRequest -> do
@@ -339,33 +341,34 @@ tests = describe "Object Relationships Tests" $ do
                       )
               )
               & API.qrTableRelationships
-                .~ [ API.TableRelationships
-                       { _trSourceTable = mkTableName "Track",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "Album",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "Album",
-                                     _rRelationshipType = API.ObjectRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
-                                   }
-                               )
-                             ]
-                       },
-                     API.TableRelationships
-                       { _trSourceTable = mkTableName "Album",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "Artist",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "Artist",
-                                     _rRelationshipType = API.ObjectRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                   }
-                               )
-                             ]
-                       }
-                   ]
+                .~ Set.fromList
+                  [ API.TableRelationships
+                      { _trSourceTable = mkTableName "Track",
+                        _trRelationships =
+                          HashMap.fromList
+                            [ ( API.RelationshipName "Album",
+                                API.Relationship
+                                  { _rTargetTable = mkTableName "Album",
+                                    _rRelationshipType = API.ObjectRelationship,
+                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
+                                  }
+                              )
+                            ]
+                      },
+                    API.TableRelationships
+                      { _trSourceTable = mkTableName "Album",
+                        _trRelationships =
+                          HashMap.fromList
+                            [ ( API.RelationshipName "Artist",
+                                API.Relationship
+                                  { _rTargetTable = mkTableName "Artist",
+                                    _rRelationshipType = API.ObjectRelationship,
+                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                  }
+                              )
+                            ]
+                      }
+                  ]
         )
 
   mockAgentGraphqlTest "works with an order by that navigates a relationship with table permissions" $ \_testEnv performGraphqlRequest -> do
@@ -429,33 +432,34 @@ tests = describe "Object Relationships Tests" $ do
                       (API.OrderByElement [API.RelationshipName "SupportRepForCustomers"] API.OrderByStarCountAggregate API.Descending :| [])
               )
               & API.qrTableRelationships
-                .~ [ API.TableRelationships
-                       { _trSourceTable = mkTableName "Customer",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "SupportRep",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "Employee",
-                                     _rRelationshipType = API.ObjectRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
-                                   }
-                               )
-                             ]
-                       },
-                     API.TableRelationships
-                       { _trSourceTable = mkTableName "Employee",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "SupportRepForCustomers",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "Customer",
-                                     _rRelationshipType = API.ArrayRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
-                                   }
-                               )
-                             ]
-                       }
-                   ]
+                .~ Set.fromList
+                  [ API.TableRelationships
+                      { _trSourceTable = mkTableName "Customer",
+                        _trRelationships =
+                          HashMap.fromList
+                            [ ( API.RelationshipName "SupportRep",
+                                API.Relationship
+                                  { _rTargetTable = mkTableName "Employee",
+                                    _rRelationshipType = API.ObjectRelationship,
+                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
+                                  }
+                              )
+                            ]
+                      },
+                    API.TableRelationships
+                      { _trSourceTable = mkTableName "Employee",
+                        _trRelationships =
+                          HashMap.fromList
+                            [ ( API.RelationshipName "SupportRepForCustomers",
+                                API.Relationship
+                                  { _rTargetTable = mkTableName "Customer",
+                                    _rRelationshipType = API.ArrayRelationship,
+                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
+                                  }
+                              )
+                            ]
+                      }
+                  ]
         )
 
 --------------------------------------------------------------------------------

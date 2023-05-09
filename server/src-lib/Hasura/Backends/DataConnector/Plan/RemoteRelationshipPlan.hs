@@ -13,6 +13,7 @@ import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
+import Data.Set qualified as Set
 import Data.Text qualified as Text
 import Data.Text.Extended (toTxt)
 import Hasura.Backends.DataConnector.API qualified as API
@@ -80,7 +81,7 @@ mkRemoteRelationshipPlan sessionVariables _sourceConfig joinIds joinIdsSchema ar
         fields <- QueryPlan.translateAnnFields sessionVariables noPrefix tableName _aosFields
         whereClause <- translateBoolExpToExpression sessionVariables tableName _aosTableFilter
         pure (fields, whereClause)
-      let apiTableRelationships = uncurry API.TableRelationships <$> HashMap.toList tableRelationships
+      let apiTableRelationships = Set.fromList $ uncurry API.TableRelationships <$> HashMap.toList tableRelationships
       pure $
         API.QueryRequest
           { _qrTable = tableName,

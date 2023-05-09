@@ -32,6 +32,8 @@ import Data.Bifunctor (Bifunctor (bimap))
 import Data.ByteString qualified as BS
 import Data.Has (Has (modifier))
 import Data.HashMap.Strict qualified as HashMap
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (toTxt, (<<>), (<>>))
@@ -248,21 +250,21 @@ translateBoolExp sessionVariables sourceTableName = \case
 
     -- Makes an 'API.Expression' like 'API.And' if there is zero or many input expressions otherwise
     -- just returns the singleton expression. This helps remove redundant 'API.And' etcs from the expression.
-    mkIfZeroOrMany :: ([API.Expression] -> API.Expression) -> [API.Expression] -> API.Expression
+    mkIfZeroOrMany :: (Set API.Expression -> API.Expression) -> [API.Expression] -> API.Expression
     mkIfZeroOrMany mk = \case
       [singleExp] -> singleExp
-      zeroOrManyExps -> mk zeroOrManyExps
+      zeroOrManyExps -> mk $ Set.fromList zeroOrManyExps
 
 removeAlwaysTrueExpression :: API.Expression -> Maybe API.Expression
 removeAlwaysTrueExpression = \case
-  API.And [] -> Nothing
-  API.Not (API.Or []) -> Nothing
+  API.And exprs | exprs == mempty -> Nothing
+  API.Not (API.Or exprs) | exprs == mempty -> Nothing
   other -> Just other
 
 removeAlwaysFalseExpression :: API.Expression -> Maybe API.Expression
 removeAlwaysFalseExpression = \case
-  API.Or [] -> Nothing
-  API.Not (API.And []) -> Nothing
+  API.Or exprs | exprs == mempty -> Nothing
+  API.Not (API.And exprs) | exprs == mempty -> Nothing
   other -> Just other
 
 translateOp ::

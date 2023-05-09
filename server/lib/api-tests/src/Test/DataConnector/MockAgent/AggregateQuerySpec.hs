@@ -8,6 +8,7 @@ import Control.Lens ((.~), (?~))
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
+import Data.Set qualified as Set
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
@@ -164,20 +165,21 @@ tests = describe "Aggregate Query Tests" $ do
                   & API.qLimit ?~ 1
               )
               & API.qrTableRelationships
-                .~ [ API.TableRelationships
-                       { _trSourceTable = mkTableName "Artist",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "Albums",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "Album",
-                                     _rRelationshipType = API.ArrayRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                   }
-                               )
-                             ]
-                       }
-                   ]
+                .~ Set.fromList
+                  [ API.TableRelationships
+                      { _trSourceTable = mkTableName "Artist",
+                        _trRelationships =
+                          HashMap.fromList
+                            [ ( API.RelationshipName "Albums",
+                                API.Relationship
+                                  { _rTargetTable = mkTableName "Album",
+                                    _rRelationshipType = API.ArrayRelationship,
+                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                  }
+                              )
+                            ]
+                      }
+                  ]
         )
 
   mockAgentGraphqlTest "works with multiple aggregate fields and through array relations" $ \_testEnv performGraphqlRequest -> do
@@ -283,20 +285,21 @@ tests = describe "Aggregate Query Tests" $ do
                   & API.qAggregatesLimit ?~ 2
               )
               & API.qrTableRelationships
-                .~ [ API.TableRelationships
-                       { _trSourceTable = mkTableName "Invoice",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "InvoiceLines",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "InvoiceLine",
-                                     _rRelationshipType = API.ArrayRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
-                                   }
-                               )
-                             ]
-                       }
-                   ]
+                .~ Set.fromList
+                  [ API.TableRelationships
+                      { _trSourceTable = mkTableName "Invoice",
+                        _trRelationships =
+                          HashMap.fromList
+                            [ ( API.RelationshipName "InvoiceLines",
+                                API.Relationship
+                                  { _rTargetTable = mkTableName "InvoiceLine",
+                                    _rRelationshipType = API.ArrayRelationship,
+                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
+                                  }
+                              )
+                            ]
+                      }
+                  ]
         )
 
 singleColumnAggregateMax :: API.ColumnName -> API.ScalarType -> API.SingleColumnAggregate

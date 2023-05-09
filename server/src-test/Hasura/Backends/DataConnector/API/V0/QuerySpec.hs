@@ -191,7 +191,7 @@ genQueryRequest :: Gen QueryRequest
 genQueryRequest =
   QueryRequest
     <$> genTableName
-    <*> Gen.list defaultRange genTableRelationships
+    <*> Gen.set defaultRange genTableRelationships
     <*> genQuery
     <*> Gen.maybe (Gen.nonEmpty defaultRange (genHashMap genColumnName genScalarValue defaultRange))
 

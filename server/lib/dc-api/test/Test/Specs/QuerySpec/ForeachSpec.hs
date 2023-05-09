@@ -11,6 +11,7 @@ import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (maybeToList)
 import Data.Ord (Down (..))
+import Data.Set qualified as Set
 import Data.Text (Text)
 import Hasura.Backends.DataConnector.API
 import Test.AgentAPI (queryGuarded)
@@ -178,7 +179,7 @@ spec TestData {..} Capabilities {..} = describe "Foreach Queries" $ do
               & qrForeach ?~ foreachIds
               -- Add the Artist object relationship field
               & qrQuery %~ (qFields . _Just . Data.fieldAt "Artist" ?~ RelField (RelationshipField _tdArtistRelationshipName artistsQuery))
-              & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+              & qrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
       receivedForeachResponse <- queryGuarded query
 
       let joinInArtist (album :: HashMap FieldName FieldValue) =
@@ -211,7 +212,7 @@ spec TestData {..} Capabilities {..} = describe "Foreach Queries" $ do
               & qrForeach ?~ foreachIds
               -- Add the Tracks array relationship field
               & qrQuery %~ (qFields . _Just . Data.fieldAt "Tracks" ?~ RelField (RelationshipField _tdTracksRelationshipName tracksQuery))
-              & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships]
+              & qrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships]
       receivedForeachResponse <- queryGuarded query
 
       let joinInTracks (album :: HashMap FieldName FieldValue) =
@@ -249,13 +250,13 @@ spec TestData {..} Capabilities {..} = describe "Foreach Queries" $ do
     albumsQueryRequest =
       let fields = Data.mkFieldsMap [("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"), ("ArtistId", _tdColumnField _tdAlbumsTableName "ArtistId"), ("Title", _tdColumnField _tdAlbumsTableName "Title")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdAlbumsTableName [] query Nothing
+       in QueryRequest _tdAlbumsTableName mempty query Nothing
 
     playlistTracksQueryRequest :: QueryRequest
     playlistTracksQueryRequest =
       let fields = Data.mkFieldsMap [("PlaylistId", _tdColumnField _tdPlaylistTracksTableName "PlaylistId"), ("TrackId", _tdColumnField _tdPlaylistTracksTableName "TrackId")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdPlaylistTracksTableName [] query Nothing
+       in QueryRequest _tdPlaylistTracksTableName mempty query Nothing
 
     mkForeachIds :: TableName -> [(Text, J.Value)] -> HashMap ColumnName ScalarValue
     mkForeachIds tableName =

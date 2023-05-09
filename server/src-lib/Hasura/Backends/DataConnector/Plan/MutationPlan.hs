@@ -9,6 +9,8 @@ import Data.Aeson.Encoding qualified as JE
 import Data.Has (Has, modifier)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Semigroup.Foldable (toNonEmpty)
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Text.Extended (toTxt)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Backend
@@ -90,11 +92,12 @@ translateMutationDB ::
 translateMutationDB sessionVariables = \case
   MDBInsert insert -> do
     (insertOperation, (tableRelationships, tableInsertSchemas)) <- CPS.runWriterT $ translateInsert sessionVariables insert
-    let apiTableRelationships = uncurry API.TableRelationships <$> HashMap.toList (unTableRelationships tableRelationships)
+    let apiTableRelationships = Set.fromList $ uncurry API.TableRelationships <$> HashMap.toList (unTableRelationships tableRelationships)
     let apiTableInsertSchema =
           unTableInsertSchemas tableInsertSchemas
             & HashMap.toList
             & fmap (\(tableName, TableInsertSchema {..}) -> API.TableInsertSchema tableName _tisPrimaryKey _tisFields)
+            & Set.fromList
     pure $
       API.MutationRequest
         { _mrTableRelationships = apiTableRelationships,
@@ -103,20 +106,20 @@ translateMutationDB sessionVariables = \case
         }
   MDBUpdate update -> do
     (updateOperations, tableRelationships) <- CPS.runWriterT $ translateUpdate sessionVariables update
-    let apiTableRelationships = uncurry API.TableRelationships <$> HashMap.toList (unTableRelationships tableRelationships)
+    let apiTableRelationships = Set.fromList $ uncurry API.TableRelationships <$> HashMap.toList (unTableRelationships tableRelationships)
     pure $
       API.MutationRequest
         { _mrTableRelationships = apiTableRelationships,
-          _mrInsertSchema = [],
+          _mrInsertSchema = mempty,
           _mrOperations = API.UpdateOperation <$> updateOperations
         }
   MDBDelete delete -> do
     (deleteOperation, tableRelationships) <- CPS.runWriterT $ translateDelete sessionVariables delete
-    let apiTableRelationships = uncurry API.TableRelationships <$> HashMap.toList (unTableRelationships tableRelationships)
+    let apiTableRelationships = Set.fromList $ uncurry API.TableRelationships <$> HashMap.toList (unTableRelationships tableRelationships)
     pure $
       API.MutationRequest
         { _mrTableRelationships = apiTableRelationships,
-          _mrInsertSchema = [],
+          _mrInsertSchema = mempty,
           _mrOperations = [API.DeleteOperation deleteOperation]
         }
   MDBFunction _returnsSet _select ->
@@ -248,9 +251,9 @@ translateUpdateOperations ::
   MonadError QErr m =>
   SessionVariables ->
   HashMap ColumnName (UpdateOperator (UnpreparedValue 'DataConnector)) ->
-  m [API.RowUpdate]
+  m (Set API.RowUpdate)
 translateUpdateOperations sessionVariables columnUpdates =
-  forM (HashMap.toList columnUpdates) $ \(columnName, updateOperator) -> do
+  fmap Set.fromList . forM (HashMap.toList columnUpdates) $ \(columnName, updateOperator) -> do
     let (mkRowUpdate, value) =
           case updateOperator of
             UpdateSet value' -> (API.SetColumn, value')

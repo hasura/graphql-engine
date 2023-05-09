@@ -9,6 +9,7 @@ import Control.Lens ((.~), (?~))
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
+import Data.Set qualified as Set
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
@@ -184,20 +185,21 @@ tests = describe "Order By Tests" $ do
                       )
               )
               & API.qrTableRelationships
-                .~ [ API.TableRelationships
-                       { _trSourceTable = mkTableName "Artist",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "Albums",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "Album",
-                                     _rRelationshipType = API.ArrayRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                   }
-                               )
-                             ]
-                       }
-                   ]
+                .~ Set.fromList
+                  [ API.TableRelationships
+                      { _trSourceTable = mkTableName "Artist",
+                        _trRelationships =
+                          HashMap.fromList
+                            [ ( API.RelationshipName "Albums",
+                                API.Relationship
+                                  { _rTargetTable = mkTableName "Album",
+                                    _rRelationshipType = API.ArrayRelationship,
+                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                  }
+                              )
+                            ]
+                      }
+                  ]
         )
 
 rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse

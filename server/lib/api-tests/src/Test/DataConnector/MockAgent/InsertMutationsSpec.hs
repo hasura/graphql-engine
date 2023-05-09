@@ -8,6 +8,7 @@ import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
+import Data.Set qualified as Set
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockMutationResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
@@ -170,32 +171,34 @@ tests = do
     let expectedRequest =
           emptyMutationRequest
             & API.mrTableRelationships
-              .~ [ API.TableRelationships
-                     { API._trSourceTable = mkTableName "Album",
-                       API._trRelationships =
-                         HashMap.fromList
-                           [ ( API.RelationshipName "Artist",
-                               API.Relationship
-                                 { API._rTargetTable = mkTableName "Artist",
-                                   API._rRelationshipType = API.ObjectRelationship,
-                                   API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                 }
-                             )
-                           ]
-                     }
-                 ]
+              .~ Set.fromList
+                [ API.TableRelationships
+                    { API._trSourceTable = mkTableName "Album",
+                      API._trRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "Artist",
+                              API.Relationship
+                                { API._rTargetTable = mkTableName "Artist",
+                                  API._rRelationshipType = API.ObjectRelationship,
+                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                }
+                            )
+                          ]
+                    }
+                ]
             & API.mrInsertSchema
-              .~ [ API.TableInsertSchema
-                     { API._tisTable = mkTableName "Album",
-                       API._tisPrimaryKey = Just $ API.ColumnName "AlbumId" :| [],
-                       API._tisFields =
-                         mkFieldsMap
-                           [ ("AlbumId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "AlbumId") (API.ScalarType "number") False (Just API.AutoIncrement)),
-                             ("ArtistId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "ArtistId") (API.ScalarType "number") False Nothing),
-                             ("Title", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "Title") (API.ScalarType "string") False Nothing)
-                           ]
-                     }
-                 ]
+              .~ Set.fromList
+                [ API.TableInsertSchema
+                    { API._tisTable = mkTableName "Album",
+                      API._tisPrimaryKey = Just $ API.ColumnName "AlbumId" :| [],
+                      API._tisFields =
+                        mkFieldsMap
+                          [ ("AlbumId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "AlbumId") (API.ScalarType "number") False (Just API.AutoIncrement)),
+                            ("ArtistId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "ArtistId") (API.ScalarType "number") False Nothing),
+                            ("Title", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "Title") (API.ScalarType "string") False Nothing)
+                          ]
+                    }
+                ]
             & API.mrOperations
               .~ [ API.InsertOperation $
                      API.InsertMutationOperation

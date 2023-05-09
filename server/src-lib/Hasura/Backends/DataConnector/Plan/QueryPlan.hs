@@ -21,6 +21,7 @@ import Data.Has (Has)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Min (..))
+import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Backend
 import Hasura.Backends.DataConnector.Adapter.Types
@@ -106,7 +107,7 @@ translateAnnSelectToQueryRequest ::
 translateAnnSelectToQueryRequest sessionVariables translateFieldsAndAggregates selectG = do
   tableName <- extractTableName selectG
   (query, (TableRelationships tableRelationships)) <- CPS.runWriterT (translateAnnSelect sessionVariables translateFieldsAndAggregates tableName selectG)
-  let apiTableRelationships = uncurry API.TableRelationships <$> HashMap.toList tableRelationships
+  let apiTableRelationships = Set.fromList $ uncurry API.TableRelationships <$> HashMap.toList tableRelationships
   pure $
     API.QueryRequest
       { _qrTable = tableName,

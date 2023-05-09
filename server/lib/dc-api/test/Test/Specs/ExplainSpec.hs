@@ -26,4 +26,4 @@ spec TestData {..} _ = do
     artistsQueryRequest =
       let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdArtistsTableName [] query Nothing
+       in QueryRequest _tdArtistsTableName mempty query Nothing

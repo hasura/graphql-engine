@@ -22,6 +22,7 @@ import Data.Data (Data)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
+import Data.Set (Set)
 import Data.Text (Text)
 import Data.Tuple.Extra
 import GHC.Generics (Generic)
@@ -119,9 +120,9 @@ instance HasCodec UnaryComparisonOperator where
 -- | A serializable representation of query filter expressions.
 data Expression
   = -- | A logical AND fold
-    And [Expression]
+    And (Set Expression)
   | -- | A logical OR fold
-    Or [Expression]
+    Or (Set Expression)
   | -- | A logical NOT function
     Not Expression
   | -- | There must exist a row in the table specified by 'ExistsInTable' that

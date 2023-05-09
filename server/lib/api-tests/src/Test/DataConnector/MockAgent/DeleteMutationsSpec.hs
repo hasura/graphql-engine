@@ -8,6 +8,7 @@ import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
+import Data.Set qualified as Set
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockMutationResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
@@ -178,27 +179,28 @@ tests = do
     let expectedRequest =
           emptyMutationRequest
             & API.mrTableRelationships
-              .~ [ API.TableRelationships
-                     { API._trSourceTable = mkTableName "Album",
-                       API._trRelationships =
-                         HashMap.fromList
-                           [ ( API.RelationshipName "Artist",
-                               API.Relationship
-                                 { API._rTargetTable = mkTableName "Artist",
-                                   API._rRelationshipType = API.ObjectRelationship,
-                                   API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                 }
-                             )
-                           ]
-                     }
-                 ]
+              .~ Set.fromList
+                [ API.TableRelationships
+                    { API._trSourceTable = mkTableName "Album",
+                      API._trRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "Artist",
+                              API.Relationship
+                                { API._rTargetTable = mkTableName "Artist",
+                                  API._rRelationshipType = API.ObjectRelationship,
+                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                }
+                            )
+                          ]
+                    }
+                ]
             & API.mrOperations
               .~ [ API.DeleteOperation $
                      API.DeleteMutationOperation
                        { API._dmoTable = mkTableName "Album",
                          API._dmoWhere =
-                           Just $
-                             API.And
+                           Just . API.And $
+                             Set.fromList
                                [ API.ApplyBinaryComparisonOperator
                                    API.Equal
                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
@@ -284,27 +286,28 @@ tests = do
     let expectedRequest =
           emptyMutationRequest
             & API.mrTableRelationships
-              .~ [ API.TableRelationships
-                     { API._trSourceTable = mkTableName "Album",
-                       API._trRelationships =
-                         HashMap.fromList
-                           [ ( API.RelationshipName "Artist",
-                               API.Relationship
-                                 { API._rTargetTable = mkTableName "Artist",
-                                   API._rRelationshipType = API.ObjectRelationship,
-                                   API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                 }
-                             )
-                           ]
-                     }
-                 ]
+              .~ Set.fromList
+                [ API.TableRelationships
+                    { API._trSourceTable = mkTableName "Album",
+                      API._trRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "Artist",
+                              API.Relationship
+                                { API._rTargetTable = mkTableName "Artist",
+                                  API._rRelationshipType = API.ObjectRelationship,
+                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                }
+                            )
+                          ]
+                    }
+                ]
             & API.mrOperations
               .~ [ API.DeleteOperation $
                      API.DeleteMutationOperation
                        { API._dmoTable = mkTableName "Album",
                          API._dmoWhere =
-                           Just $
-                             API.And
+                           Just . API.And $
+                             Set.fromList
                                [ API.ApplyBinaryComparisonOperator
                                    API.Equal
                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")

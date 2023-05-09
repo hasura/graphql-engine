@@ -9,6 +9,7 @@ module Test.DataConnector.MockAgent.CustomScalarsSpec (spec) where
 import Control.Lens ((?~))
 import Data.Aeson qualified as J
 import Data.List.NonEmpty qualified as NE
+import Data.Set qualified as Set
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
@@ -159,31 +160,33 @@ tests = describe "Custom scalar parsing tests" $ do
                   & API.qLimit ?~ 1
                   & API.qWhere
                     ?~ And
-                      [ ApplyBinaryComparisonOperator
-                          Equal
-                          (ComparisonColumn CurrentTable (ColumnName "MyBooleanColumn") (ScalarType "MyBoolean"))
-                          (ScalarValueComparison $ ScalarValue (J.Bool True) (ScalarType "MyBoolean")),
-                        ApplyBinaryComparisonOperator
-                          Equal
-                          (ComparisonColumn CurrentTable (ColumnName "MyFloatColumn") (ScalarType "MyFloat"))
-                          (ScalarValueComparison $ ScalarValue (J.Number 3.14) (ScalarType "MyFloat")),
-                        ApplyBinaryComparisonOperator
-                          Equal
-                          (ComparisonColumn CurrentTable (ColumnName "MyStringColumn") (ScalarType "MyString"))
-                          (ScalarValueComparison $ ScalarValue (J.String "foo") (ScalarType "MyString")),
-                        ApplyBinaryComparisonOperator
-                          Equal
-                          (ComparisonColumn CurrentTable (ColumnName "MyIDColumn") (ScalarType "MyID"))
-                          (ScalarValueComparison $ ScalarValue (J.String "x") (ScalarType "MyID")),
-                        ApplyBinaryComparisonOperator
-                          Equal
-                          (ComparisonColumn CurrentTable (ColumnName "MyIntColumn") (ScalarType "MyInt"))
-                          (ScalarValueComparison $ ScalarValue (J.Number 42.0) (ScalarType "MyInt")),
-                        ApplyBinaryComparisonOperator
-                          Equal
-                          (ComparisonColumn CurrentTable (ColumnName "MyAnythingColumn") (ScalarType "MyAnything"))
-                          (ScalarValueComparison $ ScalarValue (J.Object mempty) (ScalarType "MyAnything"))
-                      ]
+                      ( Set.fromList
+                          [ ApplyBinaryComparisonOperator
+                              Equal
+                              (ComparisonColumn CurrentTable (ColumnName "MyBooleanColumn") (ScalarType "MyBoolean"))
+                              (ScalarValueComparison $ ScalarValue (J.Bool True) (ScalarType "MyBoolean")),
+                            ApplyBinaryComparisonOperator
+                              Equal
+                              (ComparisonColumn CurrentTable (ColumnName "MyFloatColumn") (ScalarType "MyFloat"))
+                              (ScalarValueComparison $ ScalarValue (J.Number 3.14) (ScalarType "MyFloat")),
+                            ApplyBinaryComparisonOperator
+                              Equal
+                              (ComparisonColumn CurrentTable (ColumnName "MyStringColumn") (ScalarType "MyString"))
+                              (ScalarValueComparison $ ScalarValue (J.String "foo") (ScalarType "MyString")),
+                            ApplyBinaryComparisonOperator
+                              Equal
+                              (ComparisonColumn CurrentTable (ColumnName "MyIDColumn") (ScalarType "MyID"))
+                              (ScalarValueComparison $ ScalarValue (J.String "x") (ScalarType "MyID")),
+                            ApplyBinaryComparisonOperator
+                              Equal
+                              (ComparisonColumn CurrentTable (ColumnName "MyIntColumn") (ScalarType "MyInt"))
+                              (ScalarValueComparison $ ScalarValue (J.Number 42.0) (ScalarType "MyInt")),
+                            ApplyBinaryComparisonOperator
+                              Equal
+                              (ComparisonColumn CurrentTable (ColumnName "MyAnythingColumn") (ScalarType "MyAnything"))
+                              (ScalarValueComparison $ ScalarValue (J.Object mempty) (ScalarType "MyAnything"))
+                          ]
+                      )
               )
         )
 

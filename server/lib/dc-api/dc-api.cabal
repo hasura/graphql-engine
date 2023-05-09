@@ -63,6 +63,7 @@ library
     autodocodec-openapi3,
     base,
     bytestring,
+    containers,
     deepseq,
     extra,
     graphql-parser,

@@ -39,6 +39,8 @@ module Test.Data
     mkSubqueryFieldValue,
     mkSubqueryRowsFieldValue,
     mkSubqueryAggregatesFieldValue,
+    mkAndExpr,
+    mkOrExpr,
   )
 where
 
@@ -55,6 +57,7 @@ import Data.ByteString.Lazy qualified as BSL
 import Data.CaseInsensitive (CI)
 import Data.CaseInsensitive qualified as CI
 import Data.FileEmbed (embedFile, makeRelativeToProject)
+import Data.Foldable qualified as Foldable
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List (find, sortOn)
@@ -62,6 +65,7 @@ import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Scientific (Scientific)
+import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
@@ -750,3 +754,9 @@ mkSubqueryRowsFieldValue rows =
 mkSubqueryAggregatesFieldValue :: HashMap API.FieldName J.Value -> API.FieldValue
 mkSubqueryAggregatesFieldValue aggregates =
   API.mkRelationshipFieldValue $ API.QueryResponse Nothing (Just aggregates)
+
+mkAndExpr :: Foldable f => f API.Expression -> API.Expression
+mkAndExpr = API.And . Set.fromList . Foldable.toList
+
+mkOrExpr :: Foldable f => f API.Expression -> API.Expression
+mkOrExpr = API.Or . Set.fromList . Foldable.toList

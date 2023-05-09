@@ -282,4 +282,4 @@ genExpression =
       Exists <$> genExistsInTable <*> genExpression
     ]
   where
-    genExpressions = Gen.list defaultRange genExpression
+    genExpressions = Gen.set defaultRange genExpression

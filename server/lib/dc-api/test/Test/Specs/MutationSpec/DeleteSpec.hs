@@ -10,6 +10,7 @@ import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, maybeToList)
+import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
 import Test.AgentAPI (mutationGuarded, queryGuarded)
 import Test.AgentDatasets (chinookTemplate, usesDataset)
@@ -56,7 +57,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
 
   usesDataset chinookTemplate $ it "can delete a range of rows" $ do
     let whereExp =
-          And
+          Data.mkAndExpr
             [ ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (Data.scalarValueComparison (J.Number 10) invoiceLineIdScalarType),
               ApplyBinaryComparisonOperator LessThanOrEqual (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (Data.scalarValueComparison (J.Number 20) invoiceLineIdScalarType)
             ]
@@ -117,7 +118,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
       let deleteOperation =
             mkDeleteOperation _tdInvoiceLinesTableName
               & dmoWhere ?~ whereExp
-      let tableRelationships = [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
+      let tableRelationships = Set.fromList [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [DeleteOperation deleteOperation]
@@ -180,7 +181,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                           )
                         )
                       ]
-        let tableRelationships = [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
+        let tableRelationships = Set.fromList [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
@@ -243,9 +244,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                         )
                       ]
         let tableRelationships =
-              [ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
-                Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
-              ]
+              Set.fromList
+                [ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
+                  Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
+                ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
@@ -303,9 +305,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                         )
                       ]
         let tableRelationships =
-              [ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
-                Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
-              ]
+              Set.fromList
+                [ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
+                  Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
+                ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
@@ -366,9 +369,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                         )
                       ]
         let tableRelationships =
-              [ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
-                Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
-              ]
+              Set.fromList
+                [ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
+                  Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
+                ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
@@ -403,7 +407,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
         let firstNameScalarType = _ectdFindColumnScalarType _ectdNoPrimaryKeyTableName "FirstName"
         let lastNameScalarType = _ectdFindColumnScalarType _ectdNoPrimaryKeyTableName "LastName"
         let whereExp =
-              And
+              Data.mkAndExpr
                 [ ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "FirstName" firstNameScalarType) (Data.scalarValueComparison (J.String "Beverly") firstNameScalarType),
                   ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "LastName" lastNameScalarType) (Data.scalarValueComparison (J.String "Crusher") lastNameScalarType)
                 ]
@@ -448,7 +452,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
     invoiceLinesQueryRequest :: QueryRequest
     invoiceLinesQueryRequest =
       let query = Data.emptyQuery & qFields ?~ invoiceLinesFields & qOrderBy ?~ OrderBy mempty (_tdOrderByColumn [] "InvoiceId" Ascending :| [])
-       in QueryRequest _tdInvoiceLinesTableName [] query Nothing
+       in QueryRequest _tdInvoiceLinesTableName mempty query Nothing
 
     invoiceIdScalarType = _tdFindColumnScalarType _tdInvoiceLinesTableName "InvoiceId"
     invoiceLineIdScalarType = _tdFindColumnScalarType _tdInvoiceLinesTableName "InvoiceLineId"
