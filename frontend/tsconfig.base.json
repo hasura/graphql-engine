@@ -13,6 +13,7 @@
     "lib": ["es2019", "dom", "dom.iterable"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
+    "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
       "@hasura/console-legacy-ce": ["libs/console/legacy-ce/src/index.ts"],

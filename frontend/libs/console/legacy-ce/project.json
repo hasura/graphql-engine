@@ -23,7 +23,6 @@
     "storybook": {
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "uiFramework": "@storybook/react",
         "port": 4400,
         "configDir": "libs/console/legacy-ce/.storybook"
       },
@@ -37,7 +36,6 @@
       "executor": "@nrwl/storybook:build",
       "outputs": ["{options.outputDir}"],
       "options": {
-        "uiFramework": "@storybook/react",
         "configDir": "libs/console/legacy-ce/.storybook",
         "outputDir": "dist/storybook/console/legacy-ce"
       },

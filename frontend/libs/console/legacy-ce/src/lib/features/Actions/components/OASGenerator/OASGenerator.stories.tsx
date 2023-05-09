@@ -7,7 +7,7 @@ import { expect } from '@storybook/jest';
 import { OASGenerator, OASGeneratorProps } from './OASGenerator';
 import petstore from './petstore.json';
 
-export default {
+const meta = {
   title: 'Features/Actions/OASGenerator',
   component: OASGenerator,
   decorators: [ReactQueryDecorator()],
@@ -17,9 +17,11 @@ export default {
   argTypes: {
     onGenerate: { action: 'Create Action' },
     onDelete: { action: 'Create Action' },
-    disabled: false,
+    disabled: { type: 'boolean' },
   },
-} as unknown as Meta;
+} satisfies Meta<typeof OASGenerator>;
+
+export default meta;
 
 export const Default: Story<OASGeneratorProps> = args => {
   return <OASGenerator {...args} />;

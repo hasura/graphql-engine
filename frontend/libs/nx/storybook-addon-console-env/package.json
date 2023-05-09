@@ -1,17 +1,20 @@
 {
   "name": "storybook-addon-console-env",
-  "version": "0.0.1",
+  "version": "2.0.4",
   "main": "./preset.js",
   "files": [
-    "dist/**/*",
-    "README.md",
-    "*.js"
+    "**/*"
   ],
   "peerDependencies": {
-    "@storybook/addons": "^6.1.15",
-    "@storybook/api": "^6.1.15",
-    "@storybook/components": "^6.1.15",
+    "@storybook/addons": "^7.0.7",
+    "@storybook/api": "^7.0.7",
+    "@storybook/components": "^7.0.7",
     "react": "17.0.2",
     "react-dom": "17.0.2"
+  },
+  "exports": {
+    ".": {
+      "require": "./preset.js"
+    }
   }
 }

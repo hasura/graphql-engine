@@ -1,4 +1,4 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { handlers } from '../AddNativeQuery/mocks/handlers';
 import { ListLogicalModels } from './ListLogicalModels';
@@ -14,8 +14,10 @@ export default {
     onEditClick: { action: 'onEdit' },
     onRemoveClick: { action: 'onRemove' },
   },
-} as ComponentMeta<typeof ListLogicalModels>;
+} satisfies Meta<typeof ListLogicalModels>;
 
-export const Basic: ComponentStory<typeof ListLogicalModels> = args => {
-  return <ListLogicalModels {...args} />;
+export const Basic: StoryObj<typeof ListLogicalModels> = {
+  args: {
+    dataSourceName: 'postgres',
+  },
 };

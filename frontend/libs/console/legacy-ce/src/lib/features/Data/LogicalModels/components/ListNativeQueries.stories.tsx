@@ -1,4 +1,4 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { handlers } from '../AddNativeQuery/mocks/handlers';
 import { ListNativeQueries } from './ListNativeQueries';
@@ -14,8 +14,10 @@ export default {
     onEditClick: { action: 'onEdit' },
     onRemoveClick: { action: 'onRemove' },
   },
-} as ComponentMeta<typeof ListNativeQueries>;
+} satisfies Meta<typeof ListNativeQueries>;
 
-export const Basic: ComponentStory<typeof ListNativeQueries> = args => {
-  return <ListNativeQueries {...args} />;
+export const Basic: StoryObj<typeof ListNativeQueries> = {
+  args: {
+    dataSourceName: 'postgres',
+  },
 };

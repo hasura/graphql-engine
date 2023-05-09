@@ -45,7 +45,6 @@
       "dependsOn": ["build"],
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "uiFramework": "@storybook/react",
         "port": 4400,
         "configDir": "libs/nx/storybook-addon-console-env/.storybook"
       },
