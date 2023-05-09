@@ -150,6 +150,7 @@ export { FeatureFlags } from './lib/features/FeatureFlags';
 export {
   isMonitoringTabSupportedEnvironment,
   isEnvironmentSupportMultiTenantConnectionPooling,
+  isEEClassicConsole,
 } from './lib/utils/proConsole';
 
 export { isCloudConsole } from './lib/utils/cloudConsole';
