@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "UpdateGeneratorsScopeAndTypes",
+  "title": "",
+  "type": "object",
+  "properties": {},
+  "required": []
+}

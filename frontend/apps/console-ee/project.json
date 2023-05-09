@@ -90,7 +90,7 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/console-ee/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": ["apps/console-ee/**/*.{ts,tsx,js,jsx,json}"]
       }
     },
     "test": {
@@ -102,5 +102,5 @@
       }
     }
   },
-  "tags": []
+  "tags": ["scope:console", "type:app", "meta:legacy"]
 }

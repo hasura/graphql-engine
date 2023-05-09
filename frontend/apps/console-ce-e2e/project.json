@@ -25,10 +25,10 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/console-ce-e2e/**/*.{js,ts}"]
+        "lintFilePatterns": ["apps/console-ce-e2e/**/*.{js,ts,json}"]
       }
     }
   },
-  "tags": [],
+  "tags": ["scope:console", "type:e2e", "meta:legacy"],
   "implicitDependencies": ["console-ce"]
 }

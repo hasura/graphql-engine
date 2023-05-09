@@ -31,7 +31,10 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["libs/nx/unplugin-dynamic-asset-loader/**/*.ts"]
+        "lintFilePatterns": [
+          "libs/nx/unplugin-dynamic-asset-loader/**/*.ts",
+          "libs/nx/unplugin-dynamic-asset-loader/**/*.json"
+        ]
       }
     },
     "test": {
@@ -45,5 +48,5 @@
       }
     }
   },
-  "tags": []
+  "tags": ["scope:shared", "type:feature", "meta:package"]
 }

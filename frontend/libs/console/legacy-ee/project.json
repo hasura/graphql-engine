@@ -3,13 +3,13 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/console/legacy-ee/src",
   "projectType": "library",
-  "tags": ["legacy"],
+  "tags": ["scope:console", "type:feature", "meta:legacy"],
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["libs/console/legacy-ee/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": ["libs/console/legacy-ee/**/*.{ts,tsx,js,jsx,json}"]
       }
     },
     "test": {

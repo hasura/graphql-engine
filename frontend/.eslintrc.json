@@ -8,6 +8,7 @@
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "extends": ["plugin:storybook/recommended"],
       "rules": {
+        "@nrwl/nx/workspace/additional-dep-constraints": "error",
         "@nrwl/nx/enforce-module-boundaries": [
           "error",
           {
@@ -15,8 +16,68 @@
             "allow": [],
             "depConstraints": [
               {
-                "sourceTag": "*",
-                "onlyDependOnLibsWithTags": ["*"]
+                "sourceTag": "scope:shared",
+                "onlyDependOnLibsWithTags": ["scope:shared"]
+              },
+              {
+                "sourceTag": "scope:console",
+                "onlyDependOnLibsWithTags": ["scope:console", "scope:shared"]
+              },
+              {
+                "sourceTag": "scope:nx-plugins",
+                "onlyDependOnLibsWithTags": ["scope:shared", "scope:nx-plugins"]
+              },
+              {
+                "sourceTag": "type:utils",
+                "onlyDependOnLibsWithTags": ["type:utils"]
+              },
+              {
+                "sourceTag": "type:data",
+                "onlyDependOnLibsWithTags": ["type:data", "type:utils"]
+              },
+              {
+                "sourceTag": "type:ui",
+                "onlyDependOnLibsWithTags": ["type:ui", "type:utils"]
+              },
+              {
+                "sourceTag": "type:feature",
+                "onlyDependOnLibsWithTags": [
+                  "type:data",
+                  "type:feature",
+                  "type:ui",
+                  "type:utils"
+                ]
+              },
+              {
+                "sourceTag": "type:app",
+                "onlyDependOnLibsWithTags": [
+                  "type:data",
+                  "type:utils",
+                  "type:ui",
+                  "type:feature"
+                ]
+              },
+              {
+                "sourceTag": "type:storybook",
+                "onlyDependOnLibsWithTags": [
+                  "type:data",
+                  "type:storybook",
+                  "type:utils",
+                  "type:feature",
+                  "type:ui"
+                ]
+              },
+              {
+                "sourceTag": "type:e2e",
+                "onlyDependOnLibsWithTags": [
+                  "type:data",
+                  "type:e2e",
+                  "type:app",
+                  "type:ui",
+                  "type:storybook",
+                  "type:feature",
+                  "type:utils"
+                ]
               }
             ]
           }
@@ -78,7 +139,41 @@
     {
       "files": "*.json",
       "parser": "jsonc-eslint-parser",
-      "rules": {}
+      "rules": {
+        "@nrwl/nx/workspace/allowed-project-tags": [
+          "error",
+          {
+            "tags": {
+              "scope": {
+                "prefix": "scope:",
+                "allowMultiplePerProject": false,
+                "enforceAtLeastOne": true,
+                "allowedTags": ["console", "nx-plugins", "shared"]
+              },
+              "type": {
+                "prefix": "type:",
+                "allowMultiplePerProject": false,
+                "enforceAtLeastOne": true,
+                "allowedTags": [
+                  "utils",
+                  "data",
+                  "ui",
+                  "feature",
+                  "app",
+                  "storybook",
+                  "e2e"
+                ]
+              },
+              "meta": {
+                "prefix": "meta:",
+                "allowMultiplePerProject": true,
+                "enforceAtLeastOne": false,
+                "allowedTags": ["legacy", "package"]
+              }
+            }
+          }
+        ]
+      }
     }
   ]
 }
