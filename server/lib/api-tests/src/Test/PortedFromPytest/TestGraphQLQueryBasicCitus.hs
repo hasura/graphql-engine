@@ -579,11 +579,10 @@ tests = do
                     arguments:
                     - (Oid 114,Just ("{\"x-hasura-role\":\"admin\"}",Binary))
                     error:
-                      description: There exist a reference table in the outer part of the outer
-                        join
+                      description: null
                       exec_status: FatalError
-                      hint:
-                      message: cannot pushdown the subquery
+                      hint: null
+                      message: cannot perform a lateral outer join when a distributed subquery references a reference table
                       status_code: 0A000
                     prepared: true
                     statement: "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT\
@@ -684,11 +683,10 @@ tests = do
                     - (Oid 114,Just ("{\"x-hasura-role\":\"admin\"}",Binary))
                     - (Oid 25,Just ("sarga",Binary))
                     error:
-                      description: Complex subqueries, CTEs and local tables cannot be in the outer
-                        part of an outer join with a distributed table
+                      description: null
                       exec_status: FatalError
-                      hint:
-                      message: cannot pushdown the subquery
+                      hint: null
+                      message: cannot perform a lateral outer join when a distributed subquery references complex subqueries, CTEs or local tables
                       status_code: 0A000
                     prepared: true
                     statement: "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT\
