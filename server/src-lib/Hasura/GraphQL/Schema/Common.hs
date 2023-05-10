@@ -35,6 +35,7 @@ module Hasura.GraphQL.Schema.Common
     getLogicalModelRoles,
     askTableInfo,
     askLogicalModelInfo,
+    askNativeQueryInfo,
     comparisonAggOperators,
     mapField,
     mkDescriptionWith,
@@ -76,7 +77,8 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
 import Hasura.LogicalModel.Cache (LogicalModelInfo (_lmiPermissions))
 import Hasura.LogicalModel.Types (LogicalModelName)
-import Hasura.NativeQuery.Cache (NativeQueryCache)
+import Hasura.NativeQuery.Cache (NativeQueryCache, NativeQueryInfo)
+import Hasura.NativeQuery.Types (NativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
@@ -350,7 +352,7 @@ askTableInfo tableName = do
   HashMap.lookup tableName _siTables
     `onNothing` throw500 ("askTableInfo: no info for table " <> dquote tableName <> " in source " <> dquote _siName)
 
--- | Looks up custom return type information for the given custom return type name. This function
+-- | Looks up logical model information for the given logical model name. This function
 -- should never fail, since the schema cache construction process is
 -- supposed to ensure all dependencies are resolved.
 -- TODO: deduplicate this with `CacheRM`.
@@ -363,6 +365,20 @@ askLogicalModelInfo logicalModelName = do
   SourceInfo {..} <- asks getter
   HashMap.lookup logicalModelName _siLogicalModels
     `onNothing` throw500 ("askLogicalModelInfo: no info for logical model " <> dquote logicalModelName <> " in source " <> dquote _siName)
+
+-- | Looks up native query information for the given native query name. This function
+-- should never fail, since the schema cache construction process is
+-- supposed to ensure all dependencies are resolved.
+-- TODO: deduplicate this with `CacheRM`.
+askNativeQueryInfo ::
+  forall b r m.
+  (MonadError QErr m, MonadReader r m, Has (SourceInfo b) r) =>
+  NativeQueryName ->
+  m (NativeQueryInfo b)
+askNativeQueryInfo nativeQueryName = do
+  SourceInfo {..} <- asks getter
+  HashMap.lookup nativeQueryName _siNativeQueries
+    `onNothing` throw500 ("askNativeQueryInfo: no info for native query " <> dquote nativeQueryName <> " in source " <> dquote _siName)
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)

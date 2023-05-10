@@ -169,15 +169,15 @@ processSelectParams
         FromIdentifier i -> pure $ S.QualifiedIdentifier (TableIdentifier $ unFIIdentifier i) Nothing
         FromFunction qf _ _ -> pure $ S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText qf) Nothing
         FromStoredProcedure {} -> error "selectFromToQual: FromStoredProcedure"
-        FromNativeQuery lm -> do
+        FromNativeQuery nq -> do
           -- we are going to cram our SQL in a CTE, and this is what we will call it
-          let cteName = nativeQueryNameToAlias (nqRootFieldName lm)
+          let cteName = nativeQueryNameToAlias (nqRootFieldName nq)
 
           -- emit the query itself to the Writer
           tell $
             mempty
               { _swCustomSQLCTEs =
-                  CustomSQLCTEs (HashMap.singleton cteName (nqInterpolatedQuery lm))
+                  CustomSQLCTEs (HashMap.singleton cteName (nqInterpolatedQuery nq))
               }
 
           pure $ S.QualifiedIdentifier (S.tableAliasToIdentifier cteName) Nothing
@@ -299,21 +299,47 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
         AFColumn c -> toSQLCol c
         AFObjectRelation objSel -> withWriteObjectRelation $ do
           let AnnRelationSelectG relName relMapping annObjSel = objSel
-              AnnObjectSelectG objAnnFields tableFrom tableFilter = annObjSel
+              AnnObjectSelectG objAnnFields target targetFilter = annObjSel
               objRelSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
               sourcePrefixes = mkSourcePrefixes objRelSourcePrefix
           annFieldsExtr <- processAnnFields (identifierToTableIdentifier $ _pfThis sourcePrefixes) fieldName HashMap.empty objAnnFields tCase
-          let selectSource =
-                ObjectSelectSource
-                  (_pfThis sourcePrefixes)
-                  (S.FISimple tableFrom Nothing)
-                  (toSQLBoolExp (S.QualTable tableFrom) tableFilter)
-              objRelSource = ObjectRelationSource relName relMapping selectSource
-          pure
-            ( objRelSource,
-              HashMap.fromList [annFieldsExtr],
-              S.mkQIdenExp objRelSourcePrefix fieldName
-            )
+          case target of
+            FromNativeQuery nq -> do
+              let cteName = nativeQueryNameToAlias (nqRootFieldName nq)
+
+                  nativeQueryIdentifier = S.tableAliasToIdentifier cteName
+
+              -- emit the query itself to the Writer
+              tell $
+                mempty
+                  { _swCustomSQLCTEs =
+                      CustomSQLCTEs (HashMap.singleton cteName (nqInterpolatedQuery nq))
+                  }
+
+              let selectSource =
+                    ObjectSelectSource
+                      (_pfThis sourcePrefixes)
+                      (S.FIIdentifier nativeQueryIdentifier)
+                      (toSQLBoolExp (S.QualifiedIdentifier nativeQueryIdentifier Nothing) targetFilter)
+                  objRelSource = ObjectRelationSource relName relMapping selectSource
+              pure
+                ( objRelSource,
+                  HashMap.fromList [annFieldsExtr],
+                  S.mkQIdenExp objRelSourcePrefix fieldName
+                )
+            FromTable tableFrom -> do
+              let selectSource =
+                    ObjectSelectSource
+                      (_pfThis sourcePrefixes)
+                      (S.FISimple tableFrom Nothing)
+                      (toSQLBoolExp (S.QualTable tableFrom) targetFilter)
+                  objRelSource = ObjectRelationSource relName relMapping selectSource
+              pure
+                ( objRelSource,
+                  HashMap.fromList [annFieldsExtr],
+                  S.mkQIdenExp objRelSourcePrefix fieldName
+                )
+            other -> error $ "processAnnFields: " <> show other
         AFArrayRelation arrSel -> do
           let arrRelSourcePrefix = mkArrayRelationSourcePrefix sourcePrefix fieldAlias similarArrFields fieldName
               arrRelAlias = mkArrayRelationAlias fieldAlias similarArrFields fieldName

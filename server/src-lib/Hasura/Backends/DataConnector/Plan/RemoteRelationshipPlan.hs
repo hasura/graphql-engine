@@ -76,10 +76,12 @@ mkRemoteRelationshipPlan sessionVariables _sourceConfig joinIds joinIdsSchema ar
       AnnObjectSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
       m API.QueryRequest
     translateAnnObjectSelectToQueryRequest foreachRowFilter AnnObjectSelectG {..} = do
-      let tableName = Witch.from _aosTableFrom
+      let tableName = case _aosTarget of
+            FromTable table -> Witch.from table
+            other -> error $ "translateAnnObjectSelectToQueryRequest: " <> show other
       ((fields, whereClause), (TableRelationships tableRelationships)) <- CPS.runWriterT $ do
         fields <- QueryPlan.translateAnnFields sessionVariables noPrefix tableName _aosFields
-        whereClause <- translateBoolExpToExpression sessionVariables tableName _aosTableFilter
+        whereClause <- translateBoolExpToExpression sessionVariables tableName _aosTargetFilter
         pure (fields, whereClause)
       let apiTableRelationships = Set.fromList $ uncurry API.TableRelationships <$> HashMap.toList tableRelationships
       pure $

@@ -291,6 +291,15 @@ instance
   logicalModelSelectionSet = defaultLogicalModelSelectionSet
 
 instance
+  ( PostgresSchema pgKind,
+    Backend ('Postgres pgKind)
+  ) =>
+  BS.BackendNativeQuerySelectSchema ('Postgres pgKind)
+  where
+  selectNativeQuery = NativeQueries.defaultSelectNativeQuery
+  selectNativeQueryObject = NativeQueries.defaultSelectNativeQueryObject
+
+instance
   ( Backend ('Postgres pgKind),
     PostgresSchema pgKind
   ) =>

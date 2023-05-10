@@ -27,6 +27,7 @@ module Hasura.GraphQL.Schema.Backend
     BackendSchema (..),
     BackendTableSelectSchema (..),
     BackendLogicalModelSelectSchema (..),
+    BackendNativeQuerySelectSchema (..),
     BackendUpdateOperatorsSchema (..),
     MonadBuildSchema,
 
@@ -324,6 +325,26 @@ class Backend b => BackendLogicalModelSelectSchema (b :: BackendType) where
     InsOrdHashMap RelName (RelInfo b) ->
     LogicalModelInfo b ->
     SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+
+class BackendLogicalModelSelectSchema b => BackendNativeQuerySelectSchema (b :: BackendType) where
+  selectNativeQuery ::
+    MonadBuildSourceSchema b r m n =>
+    NativeQueryInfo b ->
+    G.Name ->
+    Maybe G.Description ->
+    SchemaT r m (Maybe (FieldParser n (AnnSimpleSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+  selectNativeQuery _ _ _ = pure Nothing
+
+  selectNativeQueryObject ::
+    MonadBuildSchema b r m n =>
+    NativeQueryInfo b ->
+    G.Name ->
+    Maybe G.Description ->
+    SchemaT
+      r
+      m
+      (Maybe (FieldParser n (AnnObjectSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+  selectNativeQueryObject _ _ _ = pure Nothing
 
 class Backend b => BackendUpdateOperatorsSchema (b :: BackendType) where
   -- | Intermediate Representation of the set of update operators that act

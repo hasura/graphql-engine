@@ -290,34 +290,37 @@ translateAnnField sessionVariables sourceTableName = \case
     -- TODO: make sure certain fields in colField are not in use, since we don't
     -- support them
     pure . Just $ API.ColumnField (Witch.from $ _acfColumn colField) (Witch.from . columnTypeToScalarType $ _acfType colField)
-  AFObjectRelation objRel -> do
-    let targetTable = Witch.from $ _aosTableFrom (_aarAnnSelect objRel)
-    let relationshipName = mkRelationshipName $ _aarRelationshipName objRel
-    fields <- translateAnnFields sessionVariables noPrefix targetTable (_aosFields (_aarAnnSelect objRel))
-    whereClause <- translateBoolExpToExpression sessionVariables targetTable (_aosTableFilter (_aarAnnSelect objRel))
+  AFObjectRelation objRel ->
+    case _aosTarget (_aarAnnSelect objRel) of
+      FromTable tableName -> do
+        let targetTable = Witch.from tableName
+        let relationshipName = mkRelationshipName $ _aarRelationshipName objRel
+        fields <- translateAnnFields sessionVariables noPrefix targetTable (_aosFields (_aarAnnSelect objRel))
+        whereClause <- translateBoolExpToExpression sessionVariables targetTable (_aosTargetFilter (_aarAnnSelect objRel))
 
-    recordTableRelationship
-      sourceTableName
-      relationshipName
-      API.Relationship
-        { _rTargetTable = targetTable,
-          _rRelationshipType = API.ObjectRelationship,
-          _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList (_aarColumnMapping objRel)
-        }
-
-    pure . Just . API.RelField $
-      API.RelationshipField
-        relationshipName
-        ( API.Query
-            { _qFields = Just $ mapFieldNameHashMap fields,
-              _qAggregates = mempty,
-              _qWhere = whereClause,
-              _qAggregatesLimit = Nothing,
-              _qLimit = Nothing,
-              _qOffset = Nothing,
-              _qOrderBy = Nothing
+        recordTableRelationship
+          sourceTableName
+          relationshipName
+          API.Relationship
+            { _rTargetTable = targetTable,
+              _rRelationshipType = API.ObjectRelationship,
+              _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList (_aarColumnMapping objRel)
             }
-        )
+
+        pure . Just . API.RelField $
+          API.RelationshipField
+            relationshipName
+            ( API.Query
+                { _qFields = Just $ mapFieldNameHashMap fields,
+                  _qAggregates = mempty,
+                  _qWhere = whereClause,
+                  _qAggregatesLimit = Nothing,
+                  _qLimit = Nothing,
+                  _qOffset = Nothing,
+                  _qOrderBy = Nothing
+                }
+            )
+      other -> error $ "translateAnnField: " <> show other
   AFArrayRelation (ASSimple arrayRelationSelect) -> do
     Just <$> translateArrayRelationSelect sessionVariables sourceTableName (translateAnnFieldsWithNoAggregates sessionVariables noPrefix) arrayRelationSelect
   AFArrayRelation (ASAggregate arrayRelationSelect) ->

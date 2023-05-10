@@ -88,6 +88,8 @@ instance BackendTableSelectSchema 'BigQuery where
   selectTableAggregate = defaultSelectTableAggregate
   tableSelectionSet = defaultTableSelectionSet
 
+instance BackendNativeQuerySelectSchema 'BigQuery
+
 instance BackendLogicalModelSelectSchema 'BigQuery where
   logicalModelArguments = defaultLogicalModelArgs
   logicalModelSelectionSet = defaultLogicalModelSelectionSet

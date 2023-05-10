@@ -853,8 +853,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                       _nqiCode = _nqmCode,
                       _nqiReturns = logicalModel,
                       _nqiArguments = _nqmArguments,
-                      _nqiArrayRelationships = fst <$> arrayRelationships,
-                      _nqiObjectRelationships = fst <$> objectRelationships,
+                      _nqiRelationships = fst <$> (arrayRelationships <> objectRelationships),
                       _nqiDescription = _nqmDescription
                     }
 

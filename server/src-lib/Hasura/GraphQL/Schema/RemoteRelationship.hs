@@ -212,7 +212,7 @@ remoteRelationshipToSourceField context options sourceCache RemoteSourceFieldInf
                 pure $
                   P.subselection_ fieldName Nothing selectionSetParser <&> \fields ->
                     IR.SourceRelationshipObject $
-                      IR.AnnObjectSelectG fields _rsfiTable $
+                      IR.AnnObjectSelectG fields (IR.FromTable _rsfiTable) $
                         IR._tpFilter $
                           tablePermissionsInfo tablePerms
           ArrRel -> do

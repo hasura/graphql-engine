@@ -17,7 +17,7 @@ import Hasura.Function.Lenses (fiPermissions)
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
 import Hasura.LogicalModel.Lenses (lmiPermissions)
 import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiReturns))
-import Hasura.NativeQuery.Lenses (nqiArrayRelationships)
+import Hasura.NativeQuery.Lenses (nqiRelationships)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -330,7 +330,7 @@ deleteMetadataObject = \case
       SMONativeQuery name -> siNativeQueries %~ HashMap.delete name
       SMONativeQueryObj nativeQueryName nativeQueryObjId ->
         siNativeQueries . ix nativeQueryName %~ case nativeQueryObjId of
-          NQMORel name _ -> nqiArrayRelationships %~ InsOrdHashMap.delete name
+          NQMORel name _ -> nqiRelationships %~ InsOrdHashMap.delete name
       SMOStoredProcedure name -> siStoredProcedures %~ HashMap.delete name
       SMOStoredProcedureObj storedProcedureName storedProcedureObjId ->
         siStoredProcedures . ix storedProcedureName %~ case storedProcedureObjId of

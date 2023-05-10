@@ -528,13 +528,14 @@ type ArrayAggregateSelect b = ArrayAggregateSelectG b Void (SQLExpression b)
 
 data AnnObjectSelectG (b :: BackendType) (r :: Type) v = AnnObjectSelectG
   { _aosFields :: AnnFieldsG b r v,
-    _aosTableFrom :: TableName b,
-    _aosTableFilter :: (AnnBoolExp b v)
+    _aosTarget :: SelectFromG b v,
+    _aosTargetFilter :: (AnnBoolExp b v)
   }
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
   ( Backend b,
+    Eq (SelectFromG b v),
     Eq (AnnBoolExp b v),
     Eq (AnnFieldsG b r v)
   ) =>
@@ -542,6 +543,7 @@ deriving stock instance
 
 deriving stock instance
   ( Backend b,
+    Show (SelectFromG b v),
     Show (AnnBoolExp b v),
     Show (AnnFieldsG b r v)
   ) =>
@@ -549,7 +551,7 @@ deriving stock instance
 
 instance Backend b => Bifoldable (AnnObjectSelectG b) where
   bifoldMap f g AnnObjectSelectG {..} =
-    foldMap (foldMap $ bifoldMap f g) _aosFields <> foldMap (foldMap g) _aosTableFilter
+    foldMap (foldMap $ bifoldMap f g) _aosFields <> foldMap (foldMap g) _aosTargetFilter
 
 type AnnObjectSelect b r = AnnObjectSelectG b r (SQLExpression b)
 

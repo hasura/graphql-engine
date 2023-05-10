@@ -719,6 +719,9 @@ fromObjectRelationSelectG ::
   IR.ObjectRelationSelectG 'MSSQL Void Expression ->
   ReaderT EntityAlias FromIr Join
 fromObjectRelationSelectG existingJoins annRelationSelectG = do
+  let tableFrom = case target of
+        IR.FromTable t -> t
+        other -> error $ "fromObjectRelationSelectG: " <> show other
   eitherAliasOrFrom <- lift (lookupTableFrom existingJoins tableFrom)
   let entityAlias :: EntityAlias = either id fromAlias eitherAliasOrFrom
   fieldSources <-
@@ -773,8 +776,8 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
   where
     IR.AnnObjectSelectG
       { _aosFields = fields :: IR.AnnFieldsG 'MSSQL Void Expression,
-        _aosTableFrom = tableFrom :: TableName,
-        _aosTableFilter = tableFilter :: IR.AnnBoolExp 'MSSQL Expression
+        _aosTarget = target :: IR.SelectFromG 'MSSQL Expression,
+        _aosTargetFilter = tableFilter :: IR.AnnBoolExp 'MSSQL Expression
       } = annObjectSelectG
     IR.AnnRelationSelectG
       { _aarRelationshipName,

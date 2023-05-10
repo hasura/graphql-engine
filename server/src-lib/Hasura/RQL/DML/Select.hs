@@ -285,7 +285,7 @@ convExtRel sqlGen fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
       pure $
         Left $
           AnnRelationSelectG (fromMaybe relName mAlias) colMapping $
-            AnnObjectSelectG (_asnFields annSel) relTableName $
+            AnnObjectSelectG (_asnFields annSel) (FromTable relTableName) $
               _tpFilter $
                 _asnPerm annSel
     ArrRel ->

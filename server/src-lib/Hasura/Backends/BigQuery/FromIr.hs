@@ -1224,6 +1224,9 @@ fromObjectRelationSelectG ::
 -- We're not using existingJoins at the moment, which was used to
 -- avoid re-joining on the same table twice.
 fromObjectRelationSelectG _existingJoins annRelationSelectG = do
+  let tableFrom = case target of
+        Ir.FromTable t -> t
+        other -> error $ "fromObjectRelationSelectG: " <> show other
   selectFrom <- lift (fromQualifiedTable tableFrom)
   let entityAlias :: EntityAlias = fromAlias selectFrom
   fieldSources <-
@@ -1288,8 +1291,8 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
   where
     Ir.AnnObjectSelectG
       { _aosFields = fields :: Ir.AnnFieldsG 'BigQuery Void Expression,
-        _aosTableFrom = tableFrom :: TableName,
-        _aosTableFilter = tableFilter :: Ir.AnnBoolExp 'BigQuery Expression
+        _aosTarget = target :: Ir.SelectFromG 'BigQuery Expression,
+        _aosTargetFilter = tableFilter :: Ir.AnnBoolExp 'BigQuery Expression
       } = annObjectSelectG
     Ir.AnnRelationSelectG
       { _aarRelationshipName,

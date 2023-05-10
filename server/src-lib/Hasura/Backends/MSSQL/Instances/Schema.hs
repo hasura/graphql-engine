@@ -106,6 +106,8 @@ instance BackendLogicalModelSelectSchema 'MSSQL where
   logicalModelArguments = defaultLogicalModelArgs
   logicalModelSelectionSet = defaultLogicalModelSelectionSet
 
+instance BackendNativeQuerySelectSchema 'MSSQL
+
 instance BackendUpdateOperatorsSchema 'MSSQL where
   type UpdateOperators 'MSSQL = UpdateOperator
 
