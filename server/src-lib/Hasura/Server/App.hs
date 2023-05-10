@@ -727,6 +727,11 @@ configApiGetHandler appStateRef = do
     onlyWhenApiEnabled isConfigEnabled appStateRef $ do
       AppEnv {..} <- lift askAppEnv
       AppContext {..} <- liftIO $ getAppContext appStateRef
+      let (CheckFeatureFlag checkFeatureFlag) = appEnvCheckFeatureFlag
+      featureFlagSettings <-
+        traverse
+          (\ff -> (,) ff <$> liftIO (checkFeatureFlag ff))
+          (HashMap.elems (getFeatureFlags featureFlags))
       mkSpockAction appStateRef encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
@@ -742,6 +747,7 @@ configApiGetHandler appStateRef = do
                   acExperimentalFeatures
                   acEnabledAPIs
                   acDefaultNamingConvention
+                  featureFlagSettings
           return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue res) [])
 
 data HasuraApp = HasuraApp
