@@ -53,5 +53,6 @@ export function useMetadata(
     queryFn,
     ...queryOptions,
     select: d => transformFn(select(d)),
+    refetchOnWindowFocus: false,
   });
 }
