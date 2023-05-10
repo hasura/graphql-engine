@@ -142,38 +142,38 @@
 </span><span id="line-97"></span><span class="annot"><a href="Hasura.Server.Prometheus.html#makeDummyPrometheusMetrics"><span class="hs-identifier hs-type">makeDummyPrometheusMetrics</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#PrometheusMetrics"><span class="hs-identifier hs-type">PrometheusMetrics</span></a></span><span>
 </span><span id="line-98"></span><span id="makeDummyPrometheusMetrics"><span class="annot"><span class="annottext">makeDummyPrometheusMetrics :: IO PrometheusMetrics
 </span><a href="Hasura.Server.Prometheus.html#makeDummyPrometheusMetrics"><span class="hs-identifier hs-var hs-var">makeDummyPrometheusMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-99"></span><span>  </span><span id="local-6989586621690518440"><span class="annot"><span class="annottext">ConnectionsGauge
-</span><a href="#local-6989586621690518440"><span class="hs-identifier hs-var">pmConnections</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO ConnectionsGauge
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621690518584"><span class="annot"><span class="annottext">ConnectionsGauge
+</span><a href="#local-6989586621690518584"><span class="hs-identifier hs-var">pmConnections</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO ConnectionsGauge
 </span><a href="Hasura.Server.Prometheus.html#newConnectionsGauge"><span class="hs-identifier hs-var">newConnectionsGauge</span></a></span><span>
-</span><span id="line-100"></span><span>  </span><span id="local-6989586621690518439"><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621690518439"><span class="hs-identifier hs-var">pmActiveSubscriptions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Gauge
+</span><span id="line-100"></span><span>  </span><span id="local-6989586621690518583"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621690518583"><span class="hs-identifier hs-var">pmActiveSubscriptions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Gauge
 </span><span class="hs-identifier hs-var">Gauge.new</span></span><span>
-</span><span id="line-101"></span><span>  </span><span id="local-6989586621690518437"><span class="annot"><span class="annottext">GraphQLRequestMetrics
-</span><a href="#local-6989586621690518437"><span class="hs-identifier hs-var">pmGraphQLRequestMetrics</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO GraphQLRequestMetrics
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621690518581"><span class="annot"><span class="annottext">GraphQLRequestMetrics
+</span><a href="#local-6989586621690518581"><span class="hs-identifier hs-var">pmGraphQLRequestMetrics</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO GraphQLRequestMetrics
 </span><a href="Hasura.Server.Prometheus.html#makeDummyGraphQLRequestMetrics"><span class="hs-identifier hs-var">makeDummyGraphQLRequestMetrics</span></a></span><span>
-</span><span id="line-102"></span><span>  </span><span id="local-6989586621690518435"><span class="annot"><span class="annottext">EventTriggerMetrics
-</span><a href="#local-6989586621690518435"><span class="hs-identifier hs-var">pmEventTriggerMetrics</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO EventTriggerMetrics
+</span><span id="line-102"></span><span>  </span><span id="local-6989586621690518579"><span class="annot"><span class="annottext">EventTriggerMetrics
+</span><a href="#local-6989586621690518579"><span class="hs-identifier hs-var">pmEventTriggerMetrics</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO EventTriggerMetrics
 </span><a href="Hasura.Server.Prometheus.html#makeDummyEventTriggerMetrics"><span class="hs-identifier hs-var">makeDummyEventTriggerMetrics</span></a></span><span>
-</span><span id="line-103"></span><span>  </span><span id="local-6989586621690518433"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518433"><span class="hs-identifier hs-var">pmWebSocketBytesReceived</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-103"></span><span>  </span><span id="local-6989586621690518577"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518577"><span class="hs-identifier hs-var">pmWebSocketBytesReceived</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-104"></span><span>  </span><span id="local-6989586621690518431"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518431"><span class="hs-identifier hs-var">pmWebSocketBytesSent</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-104"></span><span>  </span><span id="local-6989586621690518575"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518575"><span class="hs-identifier hs-var">pmWebSocketBytesSent</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-105"></span><span>  </span><span id="local-6989586621690518430"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518430"><span class="hs-identifier hs-var">pmActionBytesReceived</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621690518574"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518574"><span class="hs-identifier hs-var">pmActionBytesReceived</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-106"></span><span>  </span><span id="local-6989586621690518429"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518429"><span class="hs-identifier hs-var">pmActionBytesSent</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-106"></span><span>  </span><span id="local-6989586621690518573"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518573"><span class="hs-identifier hs-var">pmActionBytesSent</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-107"></span><span>  </span><span id="local-6989586621690518428"><span class="annot"><span class="annottext">ScheduledTriggerMetrics
-</span><a href="#local-6989586621690518428"><span class="hs-identifier hs-var">pmScheduledTriggerMetrics</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO ScheduledTriggerMetrics
+</span><span id="line-107"></span><span>  </span><span id="local-6989586621690518572"><span class="annot"><span class="annottext">ScheduledTriggerMetrics
+</span><a href="#local-6989586621690518572"><span class="hs-identifier hs-var">pmScheduledTriggerMetrics</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO ScheduledTriggerMetrics
 </span><a href="Hasura.Server.Prometheus.html#makeDummyScheduledTriggerMetrics"><span class="hs-identifier hs-var">makeDummyScheduledTriggerMetrics</span></a></span><span>
-</span><span id="line-108"></span><span>  </span><span id="local-6989586621690518426"><span class="annot"><span class="annottext">SubscriptionMetrics
-</span><a href="#local-6989586621690518426"><span class="hs-identifier hs-var">pmSubscriptionMetrics</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO SubscriptionMetrics
+</span><span id="line-108"></span><span>  </span><span id="local-6989586621690518570"><span class="annot"><span class="annottext">SubscriptionMetrics
+</span><a href="#local-6989586621690518570"><span class="hs-identifier hs-var">pmSubscriptionMetrics</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO SubscriptionMetrics
 </span><a href="Hasura.Server.Prometheus.html#makeDummySubscriptionMetrics"><span class="hs-identifier hs-var">makeDummySubscriptionMetrics</span></a></span><span>
-</span><span id="line-109"></span><span>  </span><span id="local-6989586621690518424"><span class="annot"><span class="annottext">Histogram
-</span><a href="#local-6989586621690518424"><span class="hs-identifier hs-var">pmWebsocketMsgQueueTimeSeconds</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
+</span><span id="line-109"></span><span>  </span><span id="local-6989586621690518568"><span class="annot"><span class="annottext">Histogram
+</span><a href="#local-6989586621690518568"><span class="hs-identifier hs-var">pmWebsocketMsgQueueTimeSeconds</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
 </span><span class="hs-identifier hs-var">Histogram.new</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-110"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#PrometheusMetrics"><span class="hs-identifier hs-type">PrometheusMetrics</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Counter
@@ -206,37 +206,37 @@ pmEventTriggerMetrics :: EventTriggerMetrics
 pmGraphQLRequestMetrics :: GraphQLRequestMetrics
 pmActiveSubscriptions :: Gauge
 pmConnections :: ConnectionsGauge
-</span><a href="#local-6989586621690518424"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621690518568"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-111"></span><span>
 </span><span id="line-112"></span><span class="annot"><a href="Hasura.Server.Prometheus.html#makeDummyGraphQLRequestMetrics"><span class="hs-identifier hs-type">makeDummyGraphQLRequestMetrics</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#GraphQLRequestMetrics"><span class="hs-identifier hs-type">GraphQLRequestMetrics</span></a></span><span>
 </span><span id="line-113"></span><span id="makeDummyGraphQLRequestMetrics"><span class="annot"><span class="annottext">makeDummyGraphQLRequestMetrics :: IO GraphQLRequestMetrics
 </span><a href="Hasura.Server.Prometheus.html#makeDummyGraphQLRequestMetrics"><span class="hs-identifier hs-var hs-var">makeDummyGraphQLRequestMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-114"></span><span>  </span><span id="local-6989586621690518422"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518422"><span class="hs-identifier hs-var">gqlRequestsQuerySuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-114"></span><span>  </span><span id="local-6989586621690518566"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518566"><span class="hs-identifier hs-var">gqlRequestsQuerySuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-115"></span><span>  </span><span id="local-6989586621690518421"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518421"><span class="hs-identifier hs-var">gqlRequestsQueryFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-115"></span><span>  </span><span id="local-6989586621690518565"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518565"><span class="hs-identifier hs-var">gqlRequestsQueryFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-116"></span><span>  </span><span id="local-6989586621690518420"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518420"><span class="hs-identifier hs-var">gqlRequestsMutationSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-116"></span><span>  </span><span id="local-6989586621690518564"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518564"><span class="hs-identifier hs-var">gqlRequestsMutationSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-117"></span><span>  </span><span id="local-6989586621690518419"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518419"><span class="hs-identifier hs-var">gqlRequestsMutationFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-117"></span><span>  </span><span id="local-6989586621690518563"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518563"><span class="hs-identifier hs-var">gqlRequestsMutationFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-118"></span><span>  </span><span id="local-6989586621690518418"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518418"><span class="hs-identifier hs-var">gqlRequestsSubscriptionSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-118"></span><span>  </span><span id="local-6989586621690518562"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518562"><span class="hs-identifier hs-var">gqlRequestsSubscriptionSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-119"></span><span>  </span><span id="local-6989586621690518417"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518417"><span class="hs-identifier hs-var">gqlRequestsSubscriptionFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-119"></span><span>  </span><span id="local-6989586621690518561"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518561"><span class="hs-identifier hs-var">gqlRequestsSubscriptionFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-120"></span><span>  </span><span id="local-6989586621690518416"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518416"><span class="hs-identifier hs-var">gqlRequestsUnknownFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-120"></span><span>  </span><span id="local-6989586621690518560"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518560"><span class="hs-identifier hs-var">gqlRequestsUnknownFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-121"></span><span>  </span><span id="local-6989586621690518415"><span class="annot"><span class="annottext">Histogram
-</span><a href="#local-6989586621690518415"><span class="hs-identifier hs-var">gqlExecutionTimeSecondsQuery</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
+</span><span id="line-121"></span><span>  </span><span id="local-6989586621690518559"><span class="annot"><span class="annottext">Histogram
+</span><a href="#local-6989586621690518559"><span class="hs-identifier hs-var">gqlExecutionTimeSecondsQuery</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
 </span><span class="hs-identifier hs-var">Histogram.new</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-122"></span><span>  </span><span id="local-6989586621690518414"><span class="annot"><span class="annottext">Histogram
-</span><a href="#local-6989586621690518414"><span class="hs-identifier hs-var">gqlExecutionTimeSecondsMutation</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
+</span><span id="line-122"></span><span>  </span><span id="local-6989586621690518558"><span class="annot"><span class="annottext">Histogram
+</span><a href="#local-6989586621690518558"><span class="hs-identifier hs-var">gqlExecutionTimeSecondsMutation</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
 </span><span class="hs-identifier hs-var">Histogram.new</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-123"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#GraphQLRequestMetrics"><span class="hs-identifier hs-type">GraphQLRequestMetrics</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Counter
@@ -259,43 +259,43 @@ gqlRequestsMutationFailure :: Counter
 gqlRequestsMutationSuccess :: Counter
 gqlRequestsQueryFailure :: Counter
 gqlRequestsQuerySuccess :: Counter
-</span><a href="#local-6989586621690518414"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621690518558"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-124"></span><span>
 </span><span id="line-125"></span><span class="annot"><a href="Hasura.Server.Prometheus.html#makeDummyEventTriggerMetrics"><span class="hs-identifier hs-type">makeDummyEventTriggerMetrics</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#EventTriggerMetrics"><span class="hs-identifier hs-type">EventTriggerMetrics</span></a></span><span>
 </span><span id="line-126"></span><span id="makeDummyEventTriggerMetrics"><span class="annot"><span class="annottext">makeDummyEventTriggerMetrics :: IO EventTriggerMetrics
 </span><a href="Hasura.Server.Prometheus.html#makeDummyEventTriggerMetrics"><span class="hs-identifier hs-var hs-var">makeDummyEventTriggerMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-127"></span><span>  </span><span id="local-6989586621690518413"><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621690518413"><span class="hs-identifier hs-var">eventTriggerHTTPWorkers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Gauge
+</span><span id="line-127"></span><span>  </span><span id="local-6989586621690518557"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621690518557"><span class="hs-identifier hs-var">eventTriggerHTTPWorkers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Gauge
 </span><span class="hs-identifier hs-var">Gauge.new</span></span><span>
-</span><span id="line-128"></span><span>  </span><span id="local-6989586621690518412"><span class="annot"><span class="annottext">Histogram
-</span><a href="#local-6989586621690518412"><span class="hs-identifier hs-var">eventQueueTimeSeconds</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
+</span><span id="line-128"></span><span>  </span><span id="local-6989586621690518556"><span class="annot"><span class="annottext">Histogram
+</span><a href="#local-6989586621690518556"><span class="hs-identifier hs-var">eventQueueTimeSeconds</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
 </span><span class="hs-identifier hs-var">Histogram.new</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-129"></span><span>  </span><span id="local-6989586621690518411"><span class="annot"><span class="annottext">Histogram
-</span><a href="#local-6989586621690518411"><span class="hs-identifier hs-var">eventsFetchTimePerBatch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
+</span><span id="line-129"></span><span>  </span><span id="local-6989586621690518555"><span class="annot"><span class="annottext">Histogram
+</span><a href="#local-6989586621690518555"><span class="hs-identifier hs-var">eventsFetchTimePerBatch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
 </span><span class="hs-identifier hs-var">Histogram.new</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-130"></span><span>  </span><span id="local-6989586621690518410"><span class="annot"><span class="annottext">Histogram
-</span><a href="#local-6989586621690518410"><span class="hs-identifier hs-var">eventWebhookProcessingTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621690518554"><span class="annot"><span class="annottext">Histogram
+</span><a href="#local-6989586621690518554"><span class="hs-identifier hs-var">eventWebhookProcessingTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
 </span><span class="hs-identifier hs-var">Histogram.new</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-131"></span><span>  </span><span id="local-6989586621690518409"><span class="annot"><span class="annottext">Histogram
-</span><a href="#local-6989586621690518409"><span class="hs-identifier hs-var">eventProcessingTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
+</span><span id="line-131"></span><span>  </span><span id="local-6989586621690518553"><span class="annot"><span class="annottext">Histogram
+</span><a href="#local-6989586621690518553"><span class="hs-identifier hs-var">eventProcessingTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[UpperBound] -&gt; IO Histogram
 </span><span class="hs-identifier hs-var">Histogram.new</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-132"></span><span>  </span><span id="local-6989586621690518408"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518408"><span class="hs-identifier hs-var">eventTriggerBytesReceived</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-132"></span><span>  </span><span id="local-6989586621690518552"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518552"><span class="hs-identifier hs-var">eventTriggerBytesReceived</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-133"></span><span>  </span><span id="local-6989586621690518407"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518407"><span class="hs-identifier hs-var">eventTriggerBytesSent</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-133"></span><span>  </span><span id="local-6989586621690518551"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518551"><span class="hs-identifier hs-var">eventTriggerBytesSent</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-134"></span><span>  </span><span id="local-6989586621690518406"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518406"><span class="hs-identifier hs-var">eventProcessedTotalSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-134"></span><span>  </span><span id="local-6989586621690518550"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518550"><span class="hs-identifier hs-var">eventProcessedTotalSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-135"></span><span>  </span><span id="local-6989586621690518405"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518405"><span class="hs-identifier hs-var">eventProcessedTotalFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-135"></span><span>  </span><span id="local-6989586621690518549"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518549"><span class="hs-identifier hs-var">eventProcessedTotalFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-136"></span><span>  </span><span id="local-6989586621690518404"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518404"><span class="hs-identifier hs-var">eventInvocationTotalSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-136"></span><span>  </span><span id="local-6989586621690518548"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518548"><span class="hs-identifier hs-var">eventInvocationTotalSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-137"></span><span>  </span><span id="local-6989586621690518403"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518403"><span class="hs-identifier hs-var">eventInvocationTotalFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-137"></span><span>  </span><span id="local-6989586621690518547"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518547"><span class="hs-identifier hs-var">eventInvocationTotalFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
 </span><span id="line-138"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#EventTriggerMetrics"><span class="hs-identifier hs-type">EventTriggerMetrics</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Counter
@@ -323,40 +323,40 @@ eventWebhookProcessingTime :: Histogram
 eventsFetchTimePerBatch :: Histogram
 eventQueueTimeSeconds :: Histogram
 eventTriggerHTTPWorkers :: Gauge
-</span><a href="#local-6989586621690518403"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621690518547"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-139"></span><span>
 </span><span id="line-140"></span><span class="annot"><a href="Hasura.Server.Prometheus.html#makeDummyScheduledTriggerMetrics"><span class="hs-identifier hs-type">makeDummyScheduledTriggerMetrics</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#ScheduledTriggerMetrics"><span class="hs-identifier hs-type">ScheduledTriggerMetrics</span></a></span><span>
 </span><span id="line-141"></span><span id="makeDummyScheduledTriggerMetrics"><span class="annot"><span class="annottext">makeDummyScheduledTriggerMetrics :: IO ScheduledTriggerMetrics
 </span><a href="Hasura.Server.Prometheus.html#makeDummyScheduledTriggerMetrics"><span class="hs-identifier hs-var hs-var">makeDummyScheduledTriggerMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-142"></span><span>  </span><span id="local-6989586621690518402"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518402"><span class="hs-identifier hs-var">stmScheduledTriggerBytesReceived</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-142"></span><span>  </span><span id="local-6989586621690518546"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518546"><span class="hs-identifier hs-var">stmScheduledTriggerBytesReceived</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-143"></span><span>  </span><span id="local-6989586621690518401"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518401"><span class="hs-identifier hs-var">stmScheduledTriggerBytesSent</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-143"></span><span>  </span><span id="local-6989586621690518545"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518545"><span class="hs-identifier hs-var">stmScheduledTriggerBytesSent</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-144"></span><span>  </span><span id="local-6989586621690518400"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518400"><span class="hs-identifier hs-var">stmCronEventsInvocationTotalSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-144"></span><span>  </span><span id="local-6989586621690518544"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518544"><span class="hs-identifier hs-var">stmCronEventsInvocationTotalSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-145"></span><span>  </span><span id="local-6989586621690518399"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518399"><span class="hs-identifier hs-var">stmCronEventsInvocationTotalFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-145"></span><span>  </span><span id="local-6989586621690518543"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518543"><span class="hs-identifier hs-var">stmCronEventsInvocationTotalFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-146"></span><span>  </span><span id="local-6989586621690518398"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518398"><span class="hs-identifier hs-var">stmOneOffEventsInvocationTotalSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-146"></span><span>  </span><span id="local-6989586621690518542"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518542"><span class="hs-identifier hs-var">stmOneOffEventsInvocationTotalSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-147"></span><span>  </span><span id="local-6989586621690518397"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518397"><span class="hs-identifier hs-var">stmOneOffEventsInvocationTotalFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-147"></span><span>  </span><span id="local-6989586621690518541"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518541"><span class="hs-identifier hs-var">stmOneOffEventsInvocationTotalFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-148"></span><span>  </span><span id="local-6989586621690518396"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518396"><span class="hs-identifier hs-var">stmCronEventsProcessedTotalSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-148"></span><span>  </span><span id="local-6989586621690518540"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518540"><span class="hs-identifier hs-var">stmCronEventsProcessedTotalSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-149"></span><span>  </span><span id="local-6989586621690518395"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518395"><span class="hs-identifier hs-var">stmCronEventsProcessedTotalFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-149"></span><span>  </span><span id="local-6989586621690518539"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518539"><span class="hs-identifier hs-var">stmCronEventsProcessedTotalFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-150"></span><span>  </span><span id="local-6989586621690518394"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518394"><span class="hs-identifier hs-var">stmOneOffEventsProcessedTotalSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-150"></span><span>  </span><span id="local-6989586621690518538"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518538"><span class="hs-identifier hs-var">stmOneOffEventsProcessedTotalSuccess</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
-</span><span id="line-151"></span><span>  </span><span id="local-6989586621690518393"><span class="annot"><span class="annottext">Counter
-</span><a href="#local-6989586621690518393"><span class="hs-identifier hs-var">stmOneOffEventsProcessedTotalFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
+</span><span id="line-151"></span><span>  </span><span id="local-6989586621690518537"><span class="annot"><span class="annottext">Counter
+</span><a href="#local-6989586621690518537"><span class="hs-identifier hs-var">stmOneOffEventsProcessedTotalFailure</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Counter
 </span><span class="hs-identifier hs-var">Counter.new</span></span><span>
 </span><span id="line-152"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#ScheduledTriggerMetrics"><span class="hs-identifier hs-type">ScheduledTriggerMetrics</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Counter
@@ -380,22 +380,22 @@ stmCronEventsInvocationTotalFailure :: Counter
 stmCronEventsInvocationTotalSuccess :: Counter
 stmScheduledTriggerBytesSent :: Counter
 stmScheduledTriggerBytesReceived :: Counter
-</span><a href="#local-6989586621690518393"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621690518537"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-153"></span><span>
 </span><span id="line-154"></span><span class="annot"><a href="Hasura.Server.Prometheus.html#makeDummySubscriptionMetrics"><span class="hs-identifier hs-type">makeDummySubscriptionMetrics</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#SubscriptionMetrics"><span class="hs-identifier hs-type">SubscriptionMetrics</span></a></span><span>
 </span><span id="line-155"></span><span id="makeDummySubscriptionMetrics"><span class="annot"><span class="annottext">makeDummySubscriptionMetrics :: IO SubscriptionMetrics
 </span><a href="Hasura.Server.Prometheus.html#makeDummySubscriptionMetrics"><span class="hs-identifier hs-var hs-var">makeDummySubscriptionMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-156"></span><span>  </span><span id="local-6989586621690518392"><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621690518392"><span class="hs-identifier hs-var">submActiveLiveQueryPollers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Gauge
+</span><span id="line-156"></span><span>  </span><span id="local-6989586621690518536"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621690518536"><span class="hs-identifier hs-var">submActiveLiveQueryPollers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Gauge
 </span><span class="hs-identifier hs-var">Gauge.new</span></span><span>
-</span><span id="line-157"></span><span>  </span><span id="local-6989586621690518391"><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621690518391"><span class="hs-identifier hs-var">submActiveStreamingPollers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Gauge
+</span><span id="line-157"></span><span>  </span><span id="local-6989586621690518535"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621690518535"><span class="hs-identifier hs-var">submActiveStreamingPollers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Gauge
 </span><span class="hs-identifier hs-var">Gauge.new</span></span><span>
-</span><span id="line-158"></span><span>  </span><span id="local-6989586621690518390"><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621690518390"><span class="hs-identifier hs-var">submActiveLiveQueryPollersInError</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Gauge
+</span><span id="line-158"></span><span>  </span><span id="local-6989586621690518534"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621690518534"><span class="hs-identifier hs-var">submActiveLiveQueryPollersInError</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Gauge
 </span><span class="hs-identifier hs-var">Gauge.new</span></span><span>
-</span><span id="line-159"></span><span>  </span><span id="local-6989586621690518389"><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621690518389"><span class="hs-identifier hs-var">submActiveStreamingPollersInError</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Gauge
+</span><span id="line-159"></span><span>  </span><span id="local-6989586621690518533"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621690518533"><span class="hs-identifier hs-var">submActiveStreamingPollersInError</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Gauge
 </span><span class="hs-identifier hs-var">Gauge.new</span></span><span>
 </span><span id="line-160"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#SubscriptionMetrics"><span class="hs-identifier hs-type">SubscriptionMetrics</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Gauge
@@ -407,7 +407,7 @@ submActiveStreamingPollersInError :: Gauge
 submActiveLiveQueryPollersInError :: Gauge
 submActiveStreamingPollers :: Gauge
 submActiveLiveQueryPollers :: Gauge
-</span><a href="#local-6989586621690518389"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621690518533"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-161"></span><span>
 </span><span id="line-162"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-163"></span><span>
@@ -441,23 +441,23 @@ submActiveLiveQueryPollers :: Gauge
 </span><span id="line-181"></span><span>
 </span><span id="line-182"></span><span class="annot"><a href="Hasura.Server.Prometheus.html#readConnectionsGauge"><span class="hs-identifier hs-type">readConnectionsGauge</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#ConnectionsGauge"><span class="hs-identifier hs-type">ConnectionsGauge</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#Connections"><span class="hs-identifier hs-type">Connections</span></a></span><span>
 </span><span id="line-183"></span><span id="readConnectionsGauge"><span class="annot"><span class="annottext">readConnectionsGauge :: ConnectionsGauge -&gt; IO Connections
-</span><a href="Hasura.Server.Prometheus.html#readConnectionsGauge"><span class="hs-identifier hs-var hs-var">readConnectionsGauge</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Prometheus.html#ConnectionsGauge"><span class="hs-identifier hs-type">ConnectionsGauge</span></a></span><span> </span><span id="local-6989586621690518383"><span class="annot"><span class="annottext">IORef Connections
-</span><a href="#local-6989586621690518383"><span class="hs-identifier hs-var">ref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. IORef a -&gt; IO a
+</span><a href="Hasura.Server.Prometheus.html#readConnectionsGauge"><span class="hs-identifier hs-var hs-var">readConnectionsGauge</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Prometheus.html#ConnectionsGauge"><span class="hs-identifier hs-type">ConnectionsGauge</span></a></span><span> </span><span id="local-6989586621690518527"><span class="annot"><span class="annottext">IORef Connections
+</span><a href="#local-6989586621690518527"><span class="hs-identifier hs-var">ref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. IORef a -&gt; IO a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">readIORef</span></a></span><span> </span><span class="annot"><span class="annottext">IORef Connections
-</span><a href="#local-6989586621690518383"><span class="hs-identifier hs-var">ref</span></a></span><span>
+</span><a href="#local-6989586621690518527"><span class="hs-identifier hs-var">ref</span></a></span><span>
 </span><span id="line-184"></span><span>
 </span><span id="line-185"></span><span class="annot"><a href="Hasura.Server.Prometheus.html#incWarpThreads"><span class="hs-identifier hs-type">incWarpThreads</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#ConnectionsGauge"><span class="hs-identifier hs-type">ConnectionsGauge</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-186"></span><span id="incWarpThreads"><span class="annot"><span class="annottext">incWarpThreads :: ConnectionsGauge -&gt; IO ()
 </span><a href="Hasura.Server.Prometheus.html#incWarpThreads"><span class="hs-identifier hs-var hs-var">incWarpThreads</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-187"></span><span>  </span><span class="annot"><span class="annottext">(Connections -&gt; Connections) -&gt; ConnectionsGauge -&gt; IO ()
 </span><a href="Hasura.Server.Prometheus.html#modifyConnectionsGauge"><span class="hs-identifier hs-var">modifyConnectionsGauge</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690518381"><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518381"><span class="hs-identifier hs-var">connections</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690518525"><span class="annot"><span class="annottext">Connections
+</span><a href="#local-6989586621690518525"><span class="hs-identifier hs-var">connections</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-188"></span><span>    </span><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518381"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">connWarpThreads :: Int64
+</span><a href="#local-6989586621690518525"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">connWarpThreads :: Int64
 </span><a href="Hasura.Server.Prometheus.html#connWarpThreads"><span class="hs-identifier hs-var">connWarpThreads</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Connections -&gt; Int64
 </span><a href="Hasura.Server.Prometheus.html#connWarpThreads"><span class="hs-identifier hs-var">connWarpThreads</span></a></span><span> </span><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518381"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690518525"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
 </span><span class="hs-number">1</span></span><span class="hs-special">}</span><span>
 </span><span id="line-189"></span><span>
@@ -466,13 +466,13 @@ submActiveLiveQueryPollers :: Gauge
 </span><a href="Hasura.Server.Prometheus.html#decWarpThreads"><span class="hs-identifier hs-var hs-var">decWarpThreads</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-192"></span><span>  </span><span class="annot"><span class="annottext">(Connections -&gt; Connections) -&gt; ConnectionsGauge -&gt; IO ()
 </span><a href="Hasura.Server.Prometheus.html#modifyConnectionsGauge"><span class="hs-identifier hs-var">modifyConnectionsGauge</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690518379"><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518379"><span class="hs-identifier hs-var">connections</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690518523"><span class="annot"><span class="annottext">Connections
+</span><a href="#local-6989586621690518523"><span class="hs-identifier hs-var">connections</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-193"></span><span>    </span><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518379"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">connWarpThreads :: Int64
+</span><a href="#local-6989586621690518523"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">connWarpThreads :: Int64
 </span><a href="Hasura.Server.Prometheus.html#connWarpThreads"><span class="hs-identifier hs-var">connWarpThreads</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Connections -&gt; Int64
 </span><a href="Hasura.Server.Prometheus.html#connWarpThreads"><span class="hs-identifier hs-var">connWarpThreads</span></a></span><span> </span><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518379"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690518523"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-glyph hs-var">-</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
 </span><span class="hs-number">1</span></span><span class="hs-special">}</span><span>
 </span><span id="line-194"></span><span>
@@ -481,13 +481,13 @@ submActiveLiveQueryPollers :: Gauge
 </span><a href="Hasura.Server.Prometheus.html#incWebsocketConnections"><span class="hs-identifier hs-var hs-var">incWebsocketConnections</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-197"></span><span>  </span><span class="annot"><span class="annottext">(Connections -&gt; Connections) -&gt; ConnectionsGauge -&gt; IO ()
 </span><a href="Hasura.Server.Prometheus.html#modifyConnectionsGauge"><span class="hs-identifier hs-var">modifyConnectionsGauge</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690518378"><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518378"><span class="hs-identifier hs-var">connections</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690518522"><span class="annot"><span class="annottext">Connections
+</span><a href="#local-6989586621690518522"><span class="hs-identifier hs-var">connections</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-198"></span><span>    </span><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518378"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">connWebsockets :: Int64
+</span><a href="#local-6989586621690518522"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">connWebsockets :: Int64
 </span><a href="Hasura.Server.Prometheus.html#connWebsockets"><span class="hs-identifier hs-var">connWebsockets</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Connections -&gt; Int64
 </span><a href="Hasura.Server.Prometheus.html#connWebsockets"><span class="hs-identifier hs-var">connWebsockets</span></a></span><span> </span><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518378"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690518522"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
 </span><span class="hs-number">1</span></span><span class="hs-special">}</span><span>
 </span><span id="line-199"></span><span>
@@ -496,27 +496,27 @@ submActiveLiveQueryPollers :: Gauge
 </span><a href="Hasura.Server.Prometheus.html#decWebsocketConnections"><span class="hs-identifier hs-var hs-var">decWebsocketConnections</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-202"></span><span>  </span><span class="annot"><span class="annottext">(Connections -&gt; Connections) -&gt; ConnectionsGauge -&gt; IO ()
 </span><a href="Hasura.Server.Prometheus.html#modifyConnectionsGauge"><span class="hs-identifier hs-var">modifyConnectionsGauge</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690518377"><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518377"><span class="hs-identifier hs-var">connections</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690518521"><span class="annot"><span class="annottext">Connections
+</span><a href="#local-6989586621690518521"><span class="hs-identifier hs-var">connections</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-203"></span><span>    </span><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518377"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">connWebsockets :: Int64
+</span><a href="#local-6989586621690518521"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">connWebsockets :: Int64
 </span><a href="Hasura.Server.Prometheus.html#connWebsockets"><span class="hs-identifier hs-var">connWebsockets</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Connections -&gt; Int64
 </span><a href="Hasura.Server.Prometheus.html#connWebsockets"><span class="hs-identifier hs-var">connWebsockets</span></a></span><span> </span><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518377"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690518521"><span class="hs-identifier hs-var">connections</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-glyph hs-var">-</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
 </span><span class="hs-number">1</span></span><span class="hs-special">}</span><span>
 </span><span id="line-204"></span><span>
 </span><span id="line-205"></span><span class="annot"><a href="Hasura.Server.Prometheus.html#modifyConnectionsGauge"><span class="hs-identifier hs-type">modifyConnectionsGauge</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-206"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Prometheus.html#Connections"><span class="hs-identifier hs-type">Connections</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#Connections"><span class="hs-identifier hs-type">Connections</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#ConnectionsGauge"><span class="hs-identifier hs-type">ConnectionsGauge</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-207"></span><span id="modifyConnectionsGauge"><span class="annot"><span class="annottext">modifyConnectionsGauge :: (Connections -&gt; Connections) -&gt; ConnectionsGauge -&gt; IO ()
-</span><a href="Hasura.Server.Prometheus.html#modifyConnectionsGauge"><span class="hs-identifier hs-var hs-var">modifyConnectionsGauge</span></a></span></span><span> </span><span id="local-6989586621690518376"><span class="annot"><span class="annottext">Connections -&gt; Connections
-</span><a href="#local-6989586621690518376"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Prometheus.html#ConnectionsGauge"><span class="hs-identifier hs-type">ConnectionsGauge</span></a></span><span> </span><span id="local-6989586621690518375"><span class="annot"><span class="annottext">IORef Connections
-</span><a href="#local-6989586621690518375"><span class="hs-identifier hs-var">ref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.Prometheus.html#modifyConnectionsGauge"><span class="hs-identifier hs-var hs-var">modifyConnectionsGauge</span></a></span></span><span> </span><span id="local-6989586621690518520"><span class="annot"><span class="annottext">Connections -&gt; Connections
+</span><a href="#local-6989586621690518520"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Prometheus.html#ConnectionsGauge"><span class="hs-identifier hs-type">ConnectionsGauge</span></a></span><span> </span><span id="local-6989586621690518519"><span class="annot"><span class="annottext">IORef Connections
+</span><a href="#local-6989586621690518519"><span class="hs-identifier hs-var">ref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-208"></span><span>  </span><span class="annot"><span class="annottext">forall a b. IORef a -&gt; (a -&gt; (a, b)) -&gt; IO b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">atomicModifyIORef'</span></a></span><span> </span><span class="annot"><span class="annottext">IORef Connections
-</span><a href="#local-6989586621690518375"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690518374"><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518374"><span class="hs-identifier hs-var">connections</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Connections -&gt; Connections
-</span><a href="#local-6989586621690518376"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Connections
-</span><a href="#local-6989586621690518374"><span class="hs-identifier hs-var">connections</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690518519"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690518518"><span class="annot"><span class="annottext">Connections
+</span><a href="#local-6989586621690518518"><span class="hs-identifier hs-var">connections</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Connections -&gt; Connections
+</span><a href="#local-6989586621690518520"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Connections
+</span><a href="#local-6989586621690518518"><span class="hs-identifier hs-var">connections</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-209"></span></pre></body></html>
