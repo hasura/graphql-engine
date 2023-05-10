@@ -31,4 +31,5 @@ run-dc-postgres-agent: remove-tix-file
 .PHONY: run-dc-postgres-agent-watch
 ## run-dc-postgres-agent-watch
 run-dc-postgres-agent-watch:
-	watchexec -r -e .hs make run-dc-postgres-agent
+	$(DC_POSTGRES_DOCKER_COMPOSE) up --wait
+	watchexec -r -e .hs cabal run postgres-agent
