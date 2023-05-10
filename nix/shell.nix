@@ -122,10 +122,4 @@ let
 in
 pkgs.mkShell {
   buildInputs = baseInputs ++ consoleInputs ++ docsInputs ++ serverDeps ++ devInputs ++ ciInputs;
-
-  LD_LIBRARY_PATH = pkgs.lib.strings.makeLibraryPath dynamicLibraries;
-  shellHook = pkgs.lib.strings.optionalString pkgs.stdenv.targetPlatform.isDarwin ''
-    # Without this, GHC will use the system `libcrypto` and `libssl` libraries, which fail.
-    export DYLD_LIBRARY_PATH="$LD_LIBRARY_PATH";
-  '';
 }
