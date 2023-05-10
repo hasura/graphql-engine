@@ -76,7 +76,7 @@ services:
     image: hasura/graphql-engine:latest
 
     # Using a build image can be done like this (need to download from build kite)
-    # image: hasura/graphql-engine:dev-e3bc433-main.ubuntu.arm64
+    # image: hasura/graphql-engine:dev-80b04ef-main.ubuntu.arm64
 
     ports:
       - '8080:8080'
@@ -96,7 +96,7 @@ services:
       HASURA_GRAPHQL_DEV_MODE: 'true'
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
       HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: 'naming_convention'
-      HASURA_GRAPHQL_ADMIN_SECRET: moocow
+      HASURA_GRAPHQL_ADMIN_SECRET: 'moocow'
       HASURA_FF_NATIVE_QUERY_INTERFACE: 'True'
       # HASURA_GRAPHQL_EE_LICENSE_KEY: ''
   data-connector-agent:

@@ -5,42 +5,34 @@ import {
 } from '@tanstack/react-table';
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
-import { Button } from '../../../../new-components/Button';
-import { useMetadata } from '../../../hasura-metadata-api';
-import { NativeQuery } from '../../../hasura-metadata-types';
-import { CardedTableFromReactTable } from './CardedTableFromReactTable';
+import { Button } from '../../../../../new-components/Button';
+import { CardedTableFromReactTable } from '../../components/CardedTableFromReactTable';
+import { LogicalModelWithSource } from '../../types';
 
-const columnHelper = createColumnHelper<NativeQuery>();
+const columnHelper = createColumnHelper<LogicalModelWithSource>();
 
-export const ListNativeQueries = ({
-  dataSourceName,
+export const ListLogicalModels = ({
+  logicalModels,
   onEditClick,
   onRemoveClick,
+  isLoading,
 }: {
-  dataSourceName: string;
-  onEditClick: (model: NativeQuery) => void;
-  onRemoveClick: (model: NativeQuery) => void;
+  isLoading?: boolean;
+  logicalModels: LogicalModelWithSource[];
+  onEditClick: (model: LogicalModelWithSource) => void;
+  onRemoveClick: (model: LogicalModelWithSource) => void;
 }) => {
-  const { data: nativeQueries, isLoading } = useMetadata(
-    m => m.metadata.sources.find(s => s.name === dataSourceName)?.native_queries
-  );
-
   const columns = React.useCallback(
     () => [
-      columnHelper.accessor('root_field_name', {
+      columnHelper.accessor('name', {
         id: 'name',
         cell: info => <span>{info.getValue()}</span>,
         header: info => <span>Name</span>,
       }),
-      columnHelper.display({
+      columnHelper.accessor('source', {
         id: 'database',
-        cell: () => <span>{dataSourceName}</span>,
-        header: 'Database',
-      }),
-      columnHelper.accessor('returns', {
-        id: 'logical_model',
         cell: info => <span>{info.getValue()}</span>,
-        header: info => <span>Logical Model</span>,
+        header: info => <span>Database</span>,
       }),
       columnHelper.display({
         id: 'actions',
@@ -58,11 +50,11 @@ export const ListNativeQueries = ({
         ),
       }),
     ],
-    []
+    [onEditClick, onRemoveClick]
   );
 
   const table = useReactTable({
-    data: nativeQueries ?? [],
+    data: logicalModels ?? [],
     columns: columns(),
     getCoreRowModel: getCoreRowModel(),
   });
@@ -70,5 +62,11 @@ export const ListNativeQueries = ({
   if (isLoading) {
     return <Skeleton count={5} height={30} />;
   }
-  return <CardedTableFromReactTable table={table} />;
+
+  return (
+    <CardedTableFromReactTable
+      table={table}
+      noRowsMessage="No Logical Models found."
+    />
+  );
 };

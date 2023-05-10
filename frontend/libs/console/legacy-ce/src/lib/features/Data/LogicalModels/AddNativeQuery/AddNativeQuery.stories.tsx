@@ -3,13 +3,16 @@ import { ComponentMeta, ComponentStory } from '@storybook/react';
 import { screen, userEvent, within } from '@storybook/testing-library';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { AddNativeQuery } from './AddNativeQuery';
-import { handlers } from './mocks';
+import { nativeQueryHandlers } from './mocks';
 
 export default {
   component: AddNativeQuery,
   decorators: [ReactQueryDecorator()],
   parameters: {
-    msw: handlers({ postgres: { models: true, queries: true } }, 'success'),
+    msw: nativeQueryHandlers({
+      metadataOptions: { postgres: { models: true, queries: true } },
+      trackNativeQueryResult: 'success',
+    }),
     layout: 'fullscreen',
   },
 } as ComponentMeta<typeof AddNativeQuery>;
@@ -116,10 +119,10 @@ export const ErrorExists: ComponentStory<typeof AddNativeQuery> = args => {
 };
 ErrorExists.storyName = '🚨 Already Exists';
 ErrorExists.parameters = {
-  msw: handlers(
-    { postgres: { models: true, queries: true } },
-    'already_exists'
-  ),
+  msw: nativeQueryHandlers({
+    metadataOptions: { postgres: { models: true, queries: true } },
+    trackNativeQueryResult: 'already_exists',
+  }),
 };
 
 ErrorExists.play = async ({ canvasElement }) => {
@@ -149,10 +152,10 @@ export const ErrorValidation: ComponentStory<typeof AddNativeQuery> = args => {
 };
 ErrorValidation.storyName = '🚨 Validation Error';
 ErrorValidation.parameters = {
-  msw: handlers(
-    { postgres: { models: true, queries: true } },
-    'validation_failed'
-  ),
+  msw: nativeQueryHandlers({
+    metadataOptions: { postgres: { models: true, queries: true } },
+    trackNativeQueryResult: 'validation_failed',
+  }),
 };
 
 ErrorValidation.play = async ({ canvasElement }) => {
@@ -182,10 +185,10 @@ export const ErrorDisabled: ComponentStory<typeof AddNativeQuery> = args => {
 };
 ErrorDisabled.storyName = '🚨 Logical Models Disabled';
 ErrorDisabled.parameters = {
-  msw: handlers(
-    { postgres: { models: true, queries: true } },
-    'native_queries_disabled'
-  ),
+  msw: nativeQueryHandlers({
+    metadataOptions: { postgres: { models: true, queries: true } },
+    trackNativeQueryResult: 'native_queries_disabled',
+  }),
 };
 
 ErrorDisabled.play = async ({ canvasElement }) => {

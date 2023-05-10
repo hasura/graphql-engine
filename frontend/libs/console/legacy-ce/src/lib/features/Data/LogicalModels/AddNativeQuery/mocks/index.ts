@@ -1,1 +1,1 @@
-export { handlers } from './handlers';
+export { nativeQueryHandlers } from './native-query-handlers';

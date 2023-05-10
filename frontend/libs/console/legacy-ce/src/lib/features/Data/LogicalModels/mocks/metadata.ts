@@ -1,3 +1,5 @@
+import { Metadata } from '../../../hasura-metadata-types';
+
 const testQueries = {
   postgres: [
     {
@@ -101,7 +103,10 @@ export type MockMetadataOptions = {
   mssql?: { models?: boolean; queries?: boolean };
 };
 
-export const metadata = ({ postgres, mssql }: MockMetadataOptions) => {
+export const buildMetadata = ({
+  postgres,
+  mssql,
+}: MockMetadataOptions): Metadata => {
   return {
     resource_version: 528,
     metadata: {
@@ -113,6 +118,11 @@ export const metadata = ({ postgres, mssql }: MockMetadataOptions) => {
           tables: [],
           native_queries: mssql?.queries ? testQueries.mssql : [],
           logical_models: mssql?.models ? testModels.mssql : [],
+          configuration: {
+            connection_info: {
+              connection_string: '',
+            },
+          },
         },
         {
           name: 'postgres',
@@ -120,6 +130,11 @@ export const metadata = ({ postgres, mssql }: MockMetadataOptions) => {
           tables: [],
           native_queries: postgres?.queries ? testQueries.postgres : [],
           logical_models: postgres?.models ? testModels.postgres : [],
+          configuration: {
+            connection_info: {
+              database_url: '',
+            },
+          },
         },
       ],
     },

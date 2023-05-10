@@ -16,7 +16,11 @@ export type BreadcrumbsProps = {
 export const Breadcrumbs = ({ items }: BreadcrumbsProps) => (
   <div className="flex items-center gap-1" data-testid="breadcrumbs">
     {items.map((item, i) => (
-      <BreadcrumbItemView item={item} isLastItem={i === items.length - 1} />
+      <BreadcrumbItemView
+        key={typeof item === 'string' ? item : item.title}
+        item={item}
+        isLastItem={i === items.length - 1}
+      />
     ))}
   </div>
 );

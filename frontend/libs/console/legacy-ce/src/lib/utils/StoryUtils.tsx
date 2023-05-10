@@ -1,4 +1,11 @@
+import {
+  screen,
+  userEvent,
+  waitForElementToBeRemoved,
+  within,
+} from '@storybook/testing-library';
 import React from 'react';
+import { dismissAllToasts } from '../new-components/Toasts';
 
 export const TemplateStoriesFactory =
   (
@@ -24,3 +31,27 @@ export const TemplateStoriesFactory =
           ))}
       </div>
     );
+
+export const dismissToast = (delay = 500) => {
+  return new Promise<void>(resolve => {
+    // waiting a brief delay to ensures toast is available to dismiss after slide in transition
+    setTimeout(() => {
+      dismissAllToasts();
+      resolve();
+    }, delay);
+  });
+};
+
+// confirms a hasuraAlert by button text
+export const confirmAlert = async (
+  confirmText = 'Remove',
+  removalTimout = 3000
+) => {
+  const alert = await screen.findByRole('alertdialog');
+  await userEvent.click(await within(alert).findByText(confirmText));
+
+  // this is important b/c in successfull async workflows, the alert remains on screen to indicate success
+  await waitForElementToBeRemoved(() => screen.queryByRole('alertdialog'), {
+    timeout: removalTimout,
+  });
+};
