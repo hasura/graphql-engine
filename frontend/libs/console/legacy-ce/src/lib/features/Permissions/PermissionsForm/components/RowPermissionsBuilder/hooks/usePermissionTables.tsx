@@ -1,4 +1,4 @@
-import { tableRelationships } from '../../../../../DatabaseRelationships/utils/tableRelationships';
+import { getAllTableRelationships } from '../../../../../DatabaseRelationships/utils/tableRelationships';
 import { useTablesWithColumns } from './useTablesWithColumns';
 import { useSources } from '../../../../../MetadataAPI';
 import { Tables } from '../components';
@@ -29,7 +29,7 @@ export const usePermissionTables = ({
       return {
         table: metadataTable.table,
         dataSource: sources?.find(source => source.name === dataSourceName),
-        relationships: tableRelationships(
+        relationships: getAllTableRelationships(
           metadataTable,
           dataSourceName,
           suggestedRelationships

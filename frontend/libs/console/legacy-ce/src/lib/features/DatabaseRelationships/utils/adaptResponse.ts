@@ -83,7 +83,7 @@ const getFkDefinition = (
   };
 };
 
-export const adaptLocalObjectRelationshipWithManualConfigruation = ({
+export const adaptLocalObjectRelationshipWithManualConfiguration = ({
   table,
   dataSourceName,
   relationship,

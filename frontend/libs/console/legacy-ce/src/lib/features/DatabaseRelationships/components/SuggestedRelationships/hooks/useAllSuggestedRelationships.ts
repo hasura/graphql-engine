@@ -147,7 +147,27 @@ export const useAllSuggestedRelationships = ({
       });
       return;
     }
-    if (driverSupportsRemoteRelationship) {
+    if (driverSupportsLocalRelationship) {
+      queries = relationships.map(relationship => {
+        return {
+          type: `${dataSourcePrefix}_create_${relationship.relationshipType}_relationship`,
+          args: {
+            table: relationship.fromTable,
+            name: relationship.name,
+            source: dataSourceName,
+            using: {
+              foreign_key_constraint_on:
+                relationship.relationshipType === 'object'
+                  ? relationship.fromColumnNames
+                  : {
+                      table: relationship.toTable,
+                      columns: relationship.toColumnNames,
+                    },
+            },
+          },
+        };
+      });
+    } else if (driverSupportsRemoteRelationship) {
       queries = relationships.map(relationship => {
         return {
           type: `${dataSourcePrefix}_create_remote_relationship`,
@@ -170,26 +190,6 @@ export const useAllSuggestedRelationships = ({
                   {}
                 ),
               },
-            },
-          },
-        };
-      });
-    } else if (driverSupportsLocalRelationship) {
-      queries = relationships.map(relationship => {
-        return {
-          type: `${dataSourcePrefix}_create_${relationship.relationshipType}_relationship`,
-          args: {
-            table: relationship.fromTable,
-            name: relationship.name,
-            source: dataSourceName,
-            using: {
-              foreign_key_constraint_on:
-                relationship.relationshipType === 'object'
-                  ? relationship.fromColumnNames
-                  : {
-                      table: relationship.toTable,
-                      columns: relationship.toColumnNames,
-                    },
             },
           },
         };

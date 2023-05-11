@@ -177,6 +177,8 @@ export const useHandleSubmit = ({
       editRemoteDatabaseRelationship,
       editRemoteSchemaRelationship,
       mode,
+      driverSupportsLocalRelationship,
+      driverSupportsRemoteRelationship,
     ]
   );
 

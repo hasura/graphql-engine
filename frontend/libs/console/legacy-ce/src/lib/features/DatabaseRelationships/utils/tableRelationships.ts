@@ -17,16 +17,16 @@ import {
   adaptLocalArrayRelationshipWithFkConstraint,
   adaptLocalArrayRelationshipWithManualConfiguration,
   adaptLocalObjectRelationshipWithFkConstraint,
-  adaptLocalObjectRelationshipWithManualConfigruation,
+  adaptLocalObjectRelationshipWithManualConfiguration,
   adaptRemoteDatabaseRelationship,
   adaptRemoteSchemaRelationship,
 } from '../utils/adaptResponse';
 
-export function tableRelationships(
+export const getTableLocalRelationships = (
   metadataTable: MetadataTable | undefined,
   dataSourceName: string,
   suggestedRelationships: SuggestedRelationship[]
-): Relationship[] {
+) => {
   const table = metadataTable?.table;
   // adapt local array relationships
   const localArrayRelationships = (
@@ -52,7 +52,7 @@ export function tableRelationships(
     metadataTable?.object_relationships ?? []
   ).map<LocalRelationship>(relationship => {
     if (isManualObjectRelationship(relationship))
-      return adaptLocalObjectRelationshipWithManualConfigruation({
+      return adaptLocalObjectRelationshipWithManualConfiguration({
         table,
         dataSourceName,
         relationship,
@@ -64,6 +64,22 @@ export function tableRelationships(
       suggestedRelationships,
     });
   });
+
+  return [...localArrayRelationships, ...localObjectRelationships];
+};
+
+export const getAllTableRelationships = (
+  metadataTable: MetadataTable | undefined,
+  dataSourceName: string,
+  suggestedRelationships: SuggestedRelationship[]
+): Relationship[] => {
+  const table = metadataTable?.table;
+  // adapt local array relationships
+  const localRelationships = getTableLocalRelationships(
+    metadataTable,
+    dataSourceName,
+    suggestedRelationships
+  );
 
   const remoteRelationships = (metadataTable?.remote_relationships ?? []).map<
     RemoteSchemaRelationship | RemoteDatabaseRelationship
@@ -89,9 +105,5 @@ export function tableRelationships(
     });
   });
 
-  return [
-    ...localArrayRelationships,
-    ...localObjectRelationships,
-    ...remoteRelationships,
-  ];
-}
+  return [...localRelationships, ...remoteRelationships];
+};
