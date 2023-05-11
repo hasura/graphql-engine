@@ -45,6 +45,7 @@ import Data.HashSet qualified as HashSet
 import Data.Int (Int64)
 import Data.Set.NonEmpty qualified as NE
 import Data.Text.Lazy qualified as TL
+import Data.Time (UTCTime)
 import Data.Time.Clock qualified as Time
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
@@ -437,12 +438,24 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
                     ORDER BY locked NULLS FIRST, next_retry_at NULLS FIRST, created_at
                     LIMIT $1
                     FOR UPDATE SKIP LOCKED )
-      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at, next_retry_at
+      RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at, next_retry_at, 
+      -- We need the UTC values of `created_at` and `next_retry_at` for metrics
+      -- calculation.
+      --
+      -- Only `TIMESTAMPZ` (time with timezone offset) values can be used for proper  
+      -- conversions between timezones.
+      --
+      -- Since `created_at` and `next_retry_at` are `TIMESTAMP` values (time without
+      -- timezone offset), we first convert them to TIMESTAMPZ` values by appending
+      -- the timezone offset of the database. And then convert the `TIMESTAMPZ`
+      -- values to UTC.
+      (select (select created_at at time zone (select current_setting ('TIMEZONE'))) at time zone 'UTC'), 
+      (select (select next_retry_at at time zone (select current_setting ('TIMEZONE'))) at time zone 'UTC');
       |]
       (limit, triggerNamesTxt)
       True
   where
-    uncurryEvent (id', sourceName, tableName, triggerName, PG.ViaJSON payload, tries, created, retryAt) =
+    uncurryEvent (id', sourceName, tableName, triggerName, PG.ViaJSON payload, tries, created, retryAt, createdAtUTC, retryAtUTC :: Maybe UTCTime) =
       Event
         { eId = id',
           eSource = source,
@@ -451,7 +464,10 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
           eEvent = payload,
           eTries = tries,
           eCreatedAt = created,
-          eRetryAt = retryAt
+          eRetryAt = retryAt,
+          -- eCreatedAtUTC and eRetryAtUTC are used for calculating metrics only
+          eCreatedAtUTC = createdAtUTC,
+          eRetryAtUTC = retryAtUTC
         }
     limit = fromIntegral fetchBatchSize :: Word64
 
@@ -474,12 +490,14 @@ fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
                       ORDER BY created_at
                       LIMIT $1
                       FOR UPDATE SKIP LOCKED )
-        RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at, next_retry_at
+        RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at, next_retry_at,
+        (select (select created_at at time zone (select current_setting ('TIMEZONE'))) at time zone 'UTC'), 
+        (select (select next_retry_at at time zone (select current_setting ('TIMEZONE'))) at time zone 'UTC');
         |]
         (Identity limit)
         True
     where
-      uncurryEvent (id', sn, tn, trn, PG.ViaJSON payload, tries, created, retryAt) =
+      uncurryEvent (id', sn, tn, trn, PG.ViaJSON payload, tries, created, retryAt, createdAtUTC, retryAtUTC) =
         Event
           { eId = id',
             eSource = SNDefault, -- in v1, there'll only be the default source
@@ -488,7 +506,10 @@ fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
             eEvent = payload,
             eTries = tries,
             eCreatedAt = created,
-            eRetryAt = retryAt
+            eRetryAt = retryAt,
+            -- eCreatedAtUTC and eRetryAtUTC are used for calculating metrics only
+            eCreatedAtUTC = createdAtUTC,
+            eRetryAtUTC = retryAtUTC
           }
       limit = fromIntegral (_unFetchBatchSize fetchBatchSize) :: Word64
   CurrentMMVersion -> fetchEvents sourceName triggerNames fetchBatchSize

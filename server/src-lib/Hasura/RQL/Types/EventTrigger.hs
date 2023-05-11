@@ -58,6 +58,7 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.Time.Clock qualified as Time
+import Data.Time.LocalTime (LocalTime)
 import Database.PG.Query qualified as PG
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -496,8 +497,22 @@ data Event (b :: BackendType) = Event
     eTrigger :: TriggerMetadata,
     eEvent :: Value,
     eTries :: Int,
-    eCreatedAt :: Time.UTCTime,
-    eRetryAt :: Maybe Time.UTCTime
+    -- Ideally 'eCreatedAt' should have been a Time.UTCTime, but while intializing the
+    -- hdb_catalog.event_log tables for Postgres, we incorrectly created `created_at :: TIMESTAMP`
+    -- column as a Timestamp type. This means the `created_at` column for Postgres stores
+    -- the local time in which the Postgres DB is in. Hence to avoid confusion and
+    -- other time related problems, we use the `LocalTime` type for `created_at`.
+    --
+    -- Note, this problem only exists for PG sources since for MSSQL the `created_at`
+    -- stores  UTCTime. Since the `Event` type is common for all sources, we have to do
+    -- a redundant conversion of UTCTime to LocalTime for MSSQL sources while fetching
+    -- events for MSSQL source.
+    eCreatedAt :: LocalTime,
+    eRetryAt :: Maybe Time.UTCTime,
+    -- | The values `eCreatedAtUTC` and `eRetryAtUTC` are only used for
+    --   calculating the `event_processing_time` metric.
+    eCreatedAtUTC :: Time.UTCTime,
+    eRetryAtUTC :: Maybe Time.UTCTime
   }
   deriving (Generic)
 

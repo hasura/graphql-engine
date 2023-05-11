@@ -65,8 +65,8 @@ import Data.String
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
+import Data.Time qualified as Time
 import Data.Time.Clock
-import Data.Time.Clock qualified as Time
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Base.Error
 import Hasura.Eventing.Backend
@@ -163,7 +163,7 @@ data EventPayload (b :: BackendType) = EventPayload
     epTrigger :: TriggerMetadata,
     epEvent :: J.Value,
     epDeliveryInfo :: DeliveryInfo,
-    epCreatedAt :: Time.UTCTime
+    epCreatedAt :: Time.LocalTime
   }
   deriving (Generic)
 
@@ -556,11 +556,12 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                         eventExecutionFinishTime <- liftIO getCurrentTime
                         let eventWebhookProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventExecutionStartTime
                             -- For event_processing_time, the start time is defined as the expected delivery time for an event, i.e.:
-                            --  - For event with no retries: created_at time
-                            --  - For event with retries: next_retry_at time
-                            eventStartTime = fromMaybe (eCreatedAt e) (eRetryAt e)
+                            --  - For event with no retries: created_at (at UTC) time
+                            --  - For event with retries: next_retry_at (at UTC) time
+
                             -- The timestamps in the DB are supposed to be UTC time, so the timestamps (`eventExecutionFinishTime` and
                             -- `eventStartTime`) used here in calculation are all UTC time.
+                            eventStartTime = fromMaybe (eCreatedAtUTC e) (eRetryAtUTC e)
                             eventProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventStartTime
                         observeHistogramWithLabel getPrometheusMetricsGranularity True (eventProcessingTime eventTriggerMetrics) (TriggerNameLabel (etiName eti)) eventProcessingTime'
                         liftIO $ do

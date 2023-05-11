@@ -466,8 +466,10 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) = do
             eTrigger = TriggerMetadata (TriggerName $ mkNonEmptyTextUnsafe trn),
             eEvent = payload',
             eTries = tries,
-            eCreatedAt = createdAt',
-            eRetryAt = retryAt
+            eCreatedAt = utcToLocalTime utc createdAt',
+            eRetryAt = retryAt,
+            eCreatedAtUTC = createdAt',
+            eRetryAtUTC = retryAt
           }
 
 dropTriggerQ :: TriggerName -> SchemaName -> TxE QErr ()

@@ -137,6 +137,9 @@ instance FromCol TimeOfDay where
 instance FromCol UTCTime where
   fromCol = fromColHelper PD.timestamptz_int
 
+instance FromCol LocalTime where
+  fromCol = fromColHelper PD.timestamp_int
+
 instance FromCol Bool where
   fromCol = fromColHelper PD.bool
 
