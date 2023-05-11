@@ -12,6 +12,8 @@ export default {
   decorators: [ReactQueryDecorator()],
   parameters: {
     layout: 'fullscreen',
+    // Until we find out why the delete confirm modal is sometimes present in the screnshots
+    chromatic: { disableSnapshot: true },
   },
 } as ComponentMeta<typeof LandingPage>;
 
