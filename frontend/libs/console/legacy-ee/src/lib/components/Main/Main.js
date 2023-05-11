@@ -34,6 +34,7 @@ import {
   InitializeTelemetry,
   telemetryUserEventsTracker,
   Analytics,
+  isEEClassicConsole,
 } from '@hasura/console-legacy-ce';
 
 import {
@@ -554,7 +555,7 @@ class Main extends React.Component {
         <WithEELiteAccess globals={globals}>
           {({ access }) => {
             const getLogoSrc = () => {
-              if (this.isEnterpriseProject()) {
+              if (this.isEnterpriseProject() || isEEClassicConsole()) {
                 return EELogo;
               }
               if (access === 'active') {
