@@ -1,0 +1,374 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE OverloadedLists #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Metadata.DTO.MetadataV3</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier">MetadataV3</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><span class="hs-identifier">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">codec</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><span class="hs-identifier">object</span></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><span class="hs-identifier">optionalFieldWithOmittedDefault</span></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><span class="hs-identifier">optionalFieldWithOmittedDefault'</span></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><span class="hs-identifier">optionalFieldWithOmittedDefaultWith</span></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><span class="hs-identifier">requiredFieldWith</span></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec.Extended</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">versionField</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec.OpenAPI</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd.Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">sortedElemsCodec</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.OpenApi</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OpenApi</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html"><span class="hs-identifier">Hasura.RQL.Types.Action</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMetadata"><span class="hs-identifier">ActionMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#_amName"><span class="hs-identifier">_amName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Allowlist.html"><span class="hs-identifier">Hasura.RQL.Types.Allowlist</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Allowlist.html#AllowlistEntry"><span class="hs-identifier">AllowlistEntry</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Allowlist.html#aeCollection"><span class="hs-identifier">aeCollection</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Allowlist.html#MetadataAllowlist"><span class="hs-identifier">MetadataAllowlist</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html"><span class="hs-identifier">Hasura.RQL.Types.ApiLimit</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#ApiLimit"><span class="hs-identifier">ApiLimit</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#emptyApiLimit"><span class="hs-identifier">emptyApiLimit</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#MetricsConfig"><span class="hs-identifier">MetricsConfig</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#emptyMetricsConfig"><span class="hs-identifier">emptyMetricsConfig</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html"><span class="hs-identifier">Hasura.RQL.Types.CustomTypes</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#CustomTypes"><span class="hs-identifier">CustomTypes</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#emptyCustomTypes"><span class="hs-identifier">emptyCustomTypes</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html"><span class="hs-identifier">Hasura.RQL.Types.Endpoint</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#_ceName"><span class="hs-identifier">_ceName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html"><span class="hs-identifier">Hasura.RQL.Types.GraphqlSchemaIntrospection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier">SetGraphqlIntrospectionOptions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Actions"><span class="hs-identifier">Actions</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#BackendConfigWrapper"><span class="hs-identifier">BackendConfigWrapper</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#CronTriggers"><span class="hs-identifier">CronTriggers</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Endpoints"><span class="hs-identifier">Endpoints</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#InheritedRoles"><span class="hs-identifier">InheritedRoles</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryCollections"><span class="hs-identifier">QueryCollections</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#RemoteSchemas"><span class="hs-identifier">RemoteSchemas</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Sources"><span class="hs-identifier">Sources</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#sourcesCodec"><span class="hs-identifier">sourcesCodec</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html"><span class="hs-identifier">Hasura.RQL.Types.OpenTelemetry</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OpenTelemetryConfig"><span class="hs-identifier">OpenTelemetryConfig</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#emptyOpenTelemetryConfig"><span class="hs-identifier">emptyOpenTelemetryConfig</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html"><span class="hs-identifier">Hasura.RQL.Types.QueryCollection</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">QC</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html"><span class="hs-identifier">Hasura.RQL.Types.Roles</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier">Role</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#_rRoleName"><span class="hs-identifier">_rRoleName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html"><span class="hs-identifier">Hasura.RQL.Types.ScheduledTrigger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#CronTriggerMetadata"><span class="hs-identifier">CronTriggerMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ctName"><span class="hs-identifier">ctName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html"><span class="hs-identifier">Hasura.RemoteSchema.Metadata.Core</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadataG"><span class="hs-identifier">RemoteSchemaMetadataG</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#_rsmName"><span class="hs-identifier">_rsmName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.BackendMap.html"><span class="hs-identifier">Hasura.SQL.BackendMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.BackendMap.html#BackendMap"><span class="hs-identifier">BackendMap</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.Types.Extended</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Network</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">emptyNetwork</span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- | Revision 3 of the Metadata export format. Note that values of the types,</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- 'PlaceholderArray' and 'PlaceholderObject' will eventually be expanded to represent more detail.</span><span>
+</span><span id="line-39"></span><span id="local-6989586621691056335"><span id="local-6989586621691056336"></span></span><span class="hs-keyword">data</span><span> </span><span id="MetadataV3"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-var">MetadataV3</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MetadataV3"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-var">MetadataV3</span></a></span></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="metaV3Sources"><span class="annot"><span class="annottext">MetadataV3 -&gt; Sources
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Sources"><span class="hs-identifier hs-var hs-var">metaV3Sources</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Sources"><span class="hs-identifier hs-type">Sources</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>    </span><span id="metaV3RemoteSchemas"><span class="annot"><span class="annottext">MetadataV3 -&gt; RemoteSchemas
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3RemoteSchemas"><span class="hs-identifier hs-var hs-var">metaV3RemoteSchemas</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#RemoteSchemas"><span class="hs-identifier hs-type">RemoteSchemas</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span id="metaV3QueryCollections"><span class="annot"><span class="annottext">MetadataV3 -&gt; QueryCollections
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3QueryCollections"><span class="hs-identifier hs-var hs-var">metaV3QueryCollections</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryCollections"><span class="hs-identifier hs-type">QueryCollections</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span id="metaV3Allowlist"><span class="annot"><span class="annottext">MetadataV3 -&gt; MetadataAllowlist
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Allowlist"><span class="hs-identifier hs-var hs-var">metaV3Allowlist</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Allowlist.html#MetadataAllowlist"><span class="hs-identifier hs-type">MetadataAllowlist</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>    </span><span id="metaV3Actions"><span class="annot"><span class="annottext">MetadataV3 -&gt; Actions
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Actions"><span class="hs-identifier hs-var hs-var">metaV3Actions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Actions"><span class="hs-identifier hs-type">Actions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span id="metaV3CustomTypes"><span class="annot"><span class="annottext">MetadataV3 -&gt; CustomTypes
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3CustomTypes"><span class="hs-identifier hs-var hs-var">metaV3CustomTypes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#CustomTypes"><span class="hs-identifier hs-type">CustomTypes</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>    </span><span id="metaV3CronTriggers"><span class="annot"><span class="annottext">MetadataV3 -&gt; CronTriggers
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3CronTriggers"><span class="hs-identifier hs-var hs-var">metaV3CronTriggers</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#CronTriggers"><span class="hs-identifier hs-type">CronTriggers</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span id="metaV3RestEndpoints"><span class="annot"><span class="annottext">MetadataV3 -&gt; Endpoints
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3RestEndpoints"><span class="hs-identifier hs-var hs-var">metaV3RestEndpoints</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Endpoints"><span class="hs-identifier hs-type">Endpoints</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span id="metaV3ApiLimits"><span class="annot"><span class="annottext">MetadataV3 -&gt; ApiLimit
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3ApiLimits"><span class="hs-identifier hs-var hs-var">metaV3ApiLimits</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#ApiLimit"><span class="hs-identifier hs-type">ApiLimit</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span id="metaV3MetricsConfig"><span class="annot"><span class="annottext">MetadataV3 -&gt; MetricsConfig
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3MetricsConfig"><span class="hs-identifier hs-var hs-var">metaV3MetricsConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#MetricsConfig"><span class="hs-identifier hs-type">MetricsConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>    </span><span id="metaV3InheritedRoles"><span class="annot"><span class="annottext">MetadataV3 -&gt; InheritedRoles
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3InheritedRoles"><span class="hs-identifier hs-var hs-var">metaV3InheritedRoles</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#InheritedRoles"><span class="hs-identifier hs-type">InheritedRoles</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>    </span><span id="metaV3GraphqlSchemaIntrospection"><span class="annot"><span class="annottext">MetadataV3 -&gt; SetGraphqlIntrospectionOptions
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3GraphqlSchemaIntrospection"><span class="hs-identifier hs-var hs-var">metaV3GraphqlSchemaIntrospection</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>    </span><span id="metaV3Network"><span class="annot"><span class="annottext">MetadataV3 -&gt; Network
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Network"><span class="hs-identifier hs-var hs-var">metaV3Network</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Network</span></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>    </span><span id="metaV3BackendConfigs"><span class="annot"><span class="annottext">MetadataV3 -&gt; BackendMap BackendConfigWrapper
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3BackendConfigs"><span class="hs-identifier hs-var hs-var">metaV3BackendConfigs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.BackendMap.html#BackendMap"><span class="hs-identifier hs-type">BackendMap</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#BackendConfigWrapper"><span class="hs-identifier hs-type">BackendConfigWrapper</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>    </span><span id="metaV3OpenTelemetryConfig"><span class="annot"><span class="annottext">MetadataV3 -&gt; OpenTelemetryConfig
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3OpenTelemetryConfig"><span class="hs-identifier hs-var hs-var">metaV3OpenTelemetryConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OpenTelemetryConfig"><span class="hs-identifier hs-type">OpenTelemetryConfig</span></a></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691056272"><span id="local-6989586621691056274"><span id="local-6989586621691056317"><span class="annot"><span class="annottext">Int -&gt; MetadataV3 -&gt; ShowS
+[MetadataV3] -&gt; ShowS
+MetadataV3 -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [MetadataV3] -&gt; ShowS
+$cshowList :: [MetadataV3] -&gt; ShowS
+show :: MetadataV3 -&gt; String
+$cshow :: MetadataV3 -&gt; String
+showsPrec :: Int -&gt; MetadataV3 -&gt; ShowS
+$cshowsPrec :: Int -&gt; MetadataV3 -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691056158"><span id="local-6989586621691056199"><span class="annot"><span class="annottext">MetadataV3 -&gt; MetadataV3 -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: MetadataV3 -&gt; MetadataV3 -&gt; Bool
+$c/= :: MetadataV3 -&gt; MetadataV3 -&gt; Bool
+== :: MetadataV3 -&gt; MetadataV3 -&gt; Bool
+$c== :: MetadataV3 -&gt; MetadataV3 -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep MetadataV3 x -&gt; MetadataV3
+forall x. MetadataV3 -&gt; Rep MetadataV3 x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep MetadataV3 x -&gt; MetadataV3
+$cfrom :: forall x. MetadataV3 -&gt; Rep MetadataV3 x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691056092"><span id="local-6989586621691056098"><span class="annot"><span class="annottext">Value -&gt; Parser [MetadataV3]
+Value -&gt; Parser MetadataV3
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [MetadataV3]
+$cparseJSONList :: Value -&gt; Parser [MetadataV3]
+parseJSON :: Value -&gt; Parser MetadataV3
+$cparseJSON :: Value -&gt; Parser MetadataV3
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691056069"><span id="local-6989586621691056074"><span id="local-6989586621691056079"><span id="local-6989586621691056085"><span class="annot"><span class="annottext">[MetadataV3] -&gt; Value
+[MetadataV3] -&gt; Encoding
+MetadataV3 -&gt; Value
+MetadataV3 -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [MetadataV3] -&gt; Encoding
+$ctoEncodingList :: [MetadataV3] -&gt; Encoding
+toJSONList :: [MetadataV3] -&gt; Value
+$ctoJSONList :: [MetadataV3] -&gt; Value
+toEncoding :: MetadataV3 -&gt; Encoding
+$ctoEncoding :: MetadataV3 -&gt; Encoding
+toJSON :: MetadataV3 -&gt; Value
+$ctoJSON :: MetadataV3 -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691056060"><span class="annot"><span class="annottext">Typeable MetadataV3
+Proxy MetadataV3 -&gt; Declare (Definitions Schema) NamedSchema
+forall a.
+Typeable a
+-&gt; (Proxy a -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema a
+declareNamedSchema :: Proxy MetadataV3 -&gt; Declare (Definitions Schema) NamedSchema
+$cdeclareNamedSchema :: Proxy MetadataV3 -&gt; Declare (Definitions Schema) NamedSchema
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">OpenApi.ToSchema</span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- | Codecs simultaneously provide serialization logic for a type, and</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- documentation. A codec can be used to generate a specification in OpenAPI or</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- another format that matches the JSON serialization of the same type.</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- Documentation strings (the second argument to 'optionalField' and to</span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- 'requiredField') appear in the generated specification for users' reference.</span><span>
+</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691056050"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621691055832"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataV3
+</span><a href="#local-6989586621691055832"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;MetadataV3&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">Sources
+-&gt; RemoteSchemas
+-&gt; QueryCollections
+-&gt; MetadataAllowlist
+-&gt; Actions
+-&gt; CustomTypes
+-&gt; CronTriggers
+-&gt; Endpoints
+-&gt; ApiLimit
+-&gt; MetricsConfig
+-&gt; InheritedRoles
+-&gt; SetGraphqlIntrospectionOptions
+-&gt; Network
+-&gt; BackendMap BackendConfigWrapper
+-&gt; OpenTelemetryConfig
+-&gt; MetadataV3
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-var">MetadataV3</span></a></span><span>
+</span><span id="line-68"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Integer -&gt; ObjectCodec a Scientific
+</span><span class="hs-identifier hs-var">versionField</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><span class="hs-number">3</span></span><span>
+</span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+Text -&gt; ValueCodec input output -&gt; Text -&gt; ObjectCodec input output
+</span><span class="hs-identifier hs-var">requiredFieldWith</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;sources&quot;</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec Sources
+</span><a href="Hasura.RQL.Types.Metadata.Common.html#sourcesCodec"><span class="hs-identifier hs-var">sourcesCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;configured databases&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Sources
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Sources"><span class="hs-identifier hs-var">metaV3Sources</span></a></span><span>
+</span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+Eq output =&gt;
+Text
+-&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;remote_schemas&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a k.
+(HasCodec a, Hashable k, Ord k, ToTxt k) =&gt;
+(a -&gt; k) -&gt; JSONCodec (InsOrdHashMap k a)
+</span><span class="hs-identifier hs-var">sortedElemsCodec</span></span><span> </span><span class="annot"><span class="annottext">forall r. RemoteSchemaMetadataG r -&gt; RemoteSchemaName
+</span><a href="Hasura.RemoteSchema.Metadata.Core.html#_rsmName"><span class="hs-identifier hs-var">_rsmName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;merge remote GraphQL schemas and provide a unified GraphQL API&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; RemoteSchemas
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3RemoteSchemas"><span class="hs-identifier hs-var">metaV3RemoteSchemas</span></a></span><span>
+</span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+Eq output =&gt;
+Text
+-&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></span><span>
+</span><span id="line-72"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;query_collections&quot;</span></span><span>
+</span><span id="line-73"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a k.
+(HasCodec a, Hashable k, Ord k, ToTxt k) =&gt;
+(a -&gt; k) -&gt; JSONCodec (InsOrdHashMap k a)
+</span><span class="hs-identifier hs-var">sortedElemsCodec</span></span><span> </span><span class="annot"><span class="annottext">CreateCollection -&gt; CollectionName
+</span><a href="Hasura.RQL.Types.QueryCollection.html#_ccName"><span class="hs-identifier hs-var">QC._ccName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>          </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span id="line-75"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;group queries using query collections&quot;</span></span><span>
+</span><span id="line-76"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; QueryCollections
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3QueryCollections"><span class="hs-identifier hs-var">metaV3QueryCollections</span></a></span><span>
+</span><span id="line-77"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+Eq output =&gt;
+Text
+-&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;allowlist&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a k.
+(HasCodec a, Hashable k, Ord k, ToTxt k) =&gt;
+(a -&gt; k) -&gt; JSONCodec (InsOrdHashMap k a)
+</span><span class="hs-identifier hs-var">sortedElemsCodec</span></span><span> </span><span class="annot"><span class="annottext">AllowlistEntry -&gt; CollectionName
+</span><a href="Hasura.RQL.Types.Allowlist.html#aeCollection"><span class="hs-identifier hs-var">aeCollection</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;safe GraphQL operations - when allow lists are enabled only these operations are allowed&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; MetadataAllowlist
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Allowlist"><span class="hs-identifier hs-var">metaV3Allowlist</span></a></span><span>
+</span><span id="line-78"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+Eq output =&gt;
+Text
+-&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;actions&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a k.
+(HasCodec a, Hashable k, Ord k, ToTxt k) =&gt;
+(a -&gt; k) -&gt; JSONCodec (InsOrdHashMap k a)
+</span><span class="hs-identifier hs-var">sortedElemsCodec</span></span><span> </span><span class="annot"><span class="annottext">ActionMetadata -&gt; ActionName
+</span><a href="Hasura.RQL.Types.Action.html#_amName"><span class="hs-identifier hs-var">_amName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;action definitions which extend Hasura's schema with custom business logic using custom queries and mutations&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Actions
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Actions"><span class="hs-identifier hs-var">metaV3Actions</span></a></span><span>
+</span><span id="line-79"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+(Eq output, HasCodec output) =&gt;
+Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;custom_types&quot;</span></span><span> </span><span class="annot"><span class="annottext">CustomTypes
+</span><a href="Hasura.RQL.Types.CustomTypes.html#emptyCustomTypes"><span class="hs-identifier hs-var">emptyCustomTypes</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;custom type definitions&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; CustomTypes
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3CustomTypes"><span class="hs-identifier hs-var">metaV3CustomTypes</span></a></span><span>
+</span><span id="line-80"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+Eq output =&gt;
+Text
+-&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;cron_triggers&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a k.
+(HasCodec a, Hashable k, Ord k, ToTxt k) =&gt;
+(a -&gt; k) -&gt; JSONCodec (InsOrdHashMap k a)
+</span><span class="hs-identifier hs-var">sortedElemsCodec</span></span><span> </span><span class="annot"><span class="annottext">CronTriggerMetadata -&gt; TriggerName
+</span><a href="Hasura.RQL.Types.ScheduledTrigger.html#ctName"><span class="hs-identifier hs-var">ctName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;reliably trigger HTTP endpoints to run custom business logic periodically based on a cron schedule&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; CronTriggers
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3CronTriggers"><span class="hs-identifier hs-var">metaV3CronTriggers</span></a></span><span>
+</span><span id="line-81"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+Eq output =&gt;
+Text
+-&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;rest_endpoints&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a k.
+(HasCodec a, Hashable k, Ord k, ToTxt k) =&gt;
+(a -&gt; k) -&gt; JSONCodec (InsOrdHashMap k a)
+</span><span class="hs-identifier hs-var">sortedElemsCodec</span></span><span> </span><span class="annot"><span class="annottext">forall query. EndpointMetadata query -&gt; EndpointName
+</span><a href="Hasura.RQL.Types.Endpoint.html#_ceName"><span class="hs-identifier hs-var">_ceName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;REST interfaces to saved GraphQL queries and mutations&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Endpoints
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3RestEndpoints"><span class="hs-identifier hs-var">metaV3RestEndpoints</span></a></span><span>
+</span><span id="line-82"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+(Eq output, HasCodec output) =&gt;
+Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;api_limits&quot;</span></span><span> </span><span class="annot"><span class="annottext">ApiLimit
+</span><a href="Hasura.RQL.Types.ApiLimit.html#emptyApiLimit"><span class="hs-identifier hs-var">emptyApiLimit</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;limts to depth and/or rate of API requests&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; ApiLimit
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3ApiLimits"><span class="hs-identifier hs-var">metaV3ApiLimits</span></a></span><span>
+</span><span id="line-83"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+(Eq output, HasCodec output) =&gt;
+Text -&gt; output -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;metrics_config&quot;</span></span><span> </span><span class="annot"><span class="annottext">MetricsConfig
+</span><a href="Hasura.RQL.Types.Common.html#emptyMetricsConfig"><span class="hs-identifier hs-var">emptyMetricsConfig</span></a></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; MetricsConfig
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3MetricsConfig"><span class="hs-identifier hs-var">metaV3MetricsConfig</span></a></span><span>
+</span><span id="line-84"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+Eq output =&gt;
+Text
+-&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;inherited_roles&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a k.
+(HasCodec a, Hashable k, Ord k, ToTxt k) =&gt;
+(a -&gt; k) -&gt; JSONCodec (InsOrdHashMap k a)
+</span><span class="hs-identifier hs-var">sortedElemsCodec</span></span><span> </span><span class="annot"><span class="annottext">Role -&gt; RoleName
+</span><a href="Hasura.RQL.Types.Roles.html#_rRoleName"><span class="hs-identifier hs-var">_rRoleName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;an inherited role is a way to create a new role which inherits permissions from two or more roles&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; InheritedRoles
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3InheritedRoles"><span class="hs-identifier hs-var">metaV3InheritedRoles</span></a></span><span>
+</span><span id="line-85"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+(Eq output, HasCodec output) =&gt;
+Text -&gt; output -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;graphql_schema_introspection&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; SetGraphqlIntrospectionOptions
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3GraphqlSchemaIntrospection"><span class="hs-identifier hs-var">metaV3GraphqlSchemaIntrospection</span></a></span><span>
+</span><span id="line-86"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+(Eq output, HasCodec output) =&gt;
+Text -&gt; output -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;network&quot;</span></span><span> </span><span class="annot"><span class="annottext">Network
+</span><span class="hs-identifier hs-var">emptyNetwork</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Network
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Network"><span class="hs-identifier hs-var">metaV3Network</span></a></span><span>
+</span><span id="line-87"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+(Eq output, HasCodec output) =&gt;
+Text -&gt; output -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;backend_configs&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; BackendMap BackendConfigWrapper
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3BackendConfigs"><span class="hs-identifier hs-var">metaV3BackendConfigs</span></a></span><span>
+</span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+(Eq output, HasCodec output) =&gt;
+Text -&gt; output -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;opentelemetry&quot;</span></span><span> </span><span class="annot"><span class="annottext">OpenTelemetryConfig
+</span><a href="Hasura.RQL.Types.OpenTelemetry.html#emptyOpenTelemetryConfig"><span class="hs-identifier hs-var">emptyOpenTelemetryConfig</span></a></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; OpenTelemetryConfig
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3OpenTelemetryConfig"><span class="hs-identifier hs-var">metaV3OpenTelemetryConfig</span></a></span><span>
+</span><span id="line-89"></span></pre></body></html>

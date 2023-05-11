@@ -1,0 +1,427 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataConnector.Agent.Client</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentLicenseKey"><span class="hs-identifier">AgentLicenseKey</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier">AgentClientContext</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier">AgentClientT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#runAgentClientT"><span class="hs-identifier">runAgentClientT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Control.Exception</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">try</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(%=)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(&amp;~)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier">Data.ByteString</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier">ByteString</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html"><span class="hs-identifier">Hasura.Backends.DataConnector.Logging</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#logAgentRequest"><span class="hs-identifier">logAgentRequest</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Logging.html#logClientError"><span class="hs-identifier">logClientError</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Hasura.Base.Error</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.HTTP.html"><span class="hs-identifier">Hasura.HTTP</span></a></span><span> </span><span class="hs-keyword">qualified</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier">Hasura</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier">Logger</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.html"><span class="hs-identifier">Hasura.Tracing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier">MonadTrace</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Utils.html#traceHTTPRequest"><span class="hs-identifier">traceHTTPRequest</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Client.Transformable</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Types.Status</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Status</span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Servant.Client</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Servant.Client.Core</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Request</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">RunClient</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Servant.Client.Internal.HttpClient</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">clientResponseToResponse</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">mkFailureResponse</span></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-comment">-------------------------------------------------------------------------------rs</span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- | Auth Key provided to the GDC Agent in 'Request' headers.</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">newtype</span><span> </span><span id="AgentLicenseKey"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentLicenseKey"><span class="hs-identifier hs-var">AgentLicenseKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AgentLicenseKey"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentLicenseKey"><span class="hs-identifier hs-var">AgentLicenseKey</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unAgentLicenseKey"><span class="annot"><span class="annottext">AgentLicenseKey -&gt; ByteString
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#unAgentLicenseKey"><span class="hs-identifier hs-var hs-var">unAgentLicenseKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">ByteString</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">data</span><span> </span><span id="AgentClientContext"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-var">AgentClientContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AgentClientContext"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-var">AgentClientContext</span></a></span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_accLogger"><span class="annot"><span class="annottext">AgentClientContext -&gt; Logger Hasura
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#_accLogger"><span class="hs-identifier hs-var hs-var">_accLogger</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span id="_accBaseUrl"><span class="annot"><span class="annottext">AgentClientContext -&gt; BaseUrl
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#_accBaseUrl"><span class="hs-identifier hs-var hs-var">_accBaseUrl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BaseUrl</span></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span id="_accHttpManager"><span class="annot"><span class="annottext">AgentClientContext -&gt; Manager
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#_accHttpManager"><span class="hs-identifier hs-var hs-var">_accHttpManager</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span id="_accResponseTimeout"><span class="annot"><span class="annottext">AgentClientContext -&gt; Maybe Int
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#_accResponseTimeout"><span class="hs-identifier hs-var hs-var">_accResponseTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>    </span><span id="_accAgentLicenseKey"><span class="annot"><span class="annottext">AgentClientContext -&gt; Maybe AgentLicenseKey
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#_accAgentLicenseKey"><span class="hs-identifier hs-var hs-var">_accAgentLicenseKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentLicenseKey"><span class="hs-identifier hs-type">AgentLicenseKey</span></a></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">newtype</span><span> </span><span id="AgentClientT"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-var">AgentClientT</span></a></span></span><span> </span><span id="local-6989586621691160358"><span class="annot"><a href="#local-6989586621691160358"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621691160273"><span class="annot"><a href="#local-6989586621691160273"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AgentClientT"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-var">AgentClientT</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ReaderT</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-type">AgentClientContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160358"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160273"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691160162"><span id="local-6989586621691160167"><span class="annot"><span class="annottext">forall a b. a -&gt; AgentClientT m b -&gt; AgentClientT m a
+forall a b. (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; AgentClientT m b -&gt; AgentClientT m a
+forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: forall a b. a -&gt; AgentClientT m b -&gt; AgentClientT m a
+$c&lt;$ :: forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; AgentClientT m b -&gt; AgentClientT m a
+fmap :: forall a b. (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+$cfmap :: forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691160135"><span id="local-6989586621691160139"><span id="local-6989586621691160143"><span id="local-6989586621691160147"><span id="local-6989586621691160152"><span class="annot"><span class="annottext">forall a. a -&gt; AgentClientT m a
+forall a b.
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m a
+forall a b.
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+forall a b.
+AgentClientT m (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+forall a b c.
+(a -&gt; b -&gt; c)
+-&gt; AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m c
+forall (f :: * -&gt; *).
+Functor f
+-&gt; (forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+forall {m :: * -&gt; *}. Applicative m =&gt; Functor (AgentClientT m)
+forall (m :: * -&gt; *) a. Applicative m =&gt; a -&gt; AgentClientT m a
+forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m a
+forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+AgentClientT m (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+forall (m :: * -&gt; *) a b c.
+Applicative m =&gt;
+(a -&gt; b -&gt; c)
+-&gt; AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m c
+&lt;* :: forall a b.
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m a
+$c&lt;* :: forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m a
+*&gt; :: forall a b.
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+$c*&gt; :: forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+liftA2 :: forall a b c.
+(a -&gt; b -&gt; c)
+-&gt; AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m c
+$cliftA2 :: forall (m :: * -&gt; *) a b c.
+Applicative m =&gt;
+(a -&gt; b -&gt; c)
+-&gt; AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m c
+&lt;*&gt; :: forall a b.
+AgentClientT m (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+$c&lt;*&gt; :: forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+AgentClientT m (a -&gt; b) -&gt; AgentClientT m a -&gt; AgentClientT m b
+pure :: forall a. a -&gt; AgentClientT m a
+$cpure :: forall (m :: * -&gt; *) a. Applicative m =&gt; a -&gt; AgentClientT m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></a></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691160115"><span id="local-6989586621691160119"><span id="local-6989586621691160124"><span class="annot"><span class="annottext">forall a. a -&gt; AgentClientT m a
+forall a b.
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+forall a b.
+AgentClientT m a -&gt; (a -&gt; AgentClientT m b) -&gt; AgentClientT m b
+forall {m :: * -&gt; *}. Monad m =&gt; Applicative (AgentClientT m)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; AgentClientT m a
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+AgentClientT m a -&gt; (a -&gt; AgentClientT m b) -&gt; AgentClientT m b
+forall (m :: * -&gt; *).
+Applicative m
+-&gt; (forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+return :: forall a. a -&gt; AgentClientT m a
+$creturn :: forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; AgentClientT m a
+&gt;&gt; :: forall a b.
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+$c&gt;&gt; :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+AgentClientT m a -&gt; AgentClientT m b -&gt; AgentClientT m b
+&gt;&gt;= :: forall a b.
+AgentClientT m a -&gt; (a -&gt; AgentClientT m b) -&gt; AgentClientT m b
+$c&gt;&gt;= :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+AgentClientT m a -&gt; (a -&gt; AgentClientT m b) -&gt; AgentClientT m b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691160099"><span id="local-6989586621691160104"><span id="local-6989586621691160307"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160307"><span class="hs-identifier hs-type">e</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691160075"><span id="local-6989586621691160079"><span id="local-6989586621691160083"><span id="local-6989586621691160088"><span class="annot"><span class="annottext">AgentClientT m (Maybe TraceContext)
+TraceMetadata -&gt; AgentClientT m ()
+forall a. SpanId -&gt; Text -&gt; AgentClientT m a -&gt; AgentClientT m a
+forall a.
+TraceContext
+-&gt; SamplingPolicy -&gt; Text -&gt; AgentClientT m a -&gt; AgentClientT m a
+forall (m :: * -&gt; *).
+Monad m
+-&gt; (forall a. TraceContext -&gt; SamplingPolicy -&gt; Text -&gt; m a -&gt; m a)
+-&gt; (forall a. SpanId -&gt; Text -&gt; m a -&gt; m a)
+-&gt; m (Maybe TraceContext)
+-&gt; (TraceMetadata -&gt; m ())
+-&gt; MonadTrace m
+forall {m :: * -&gt; *}. MonadTrace m =&gt; Monad (AgentClientT m)
+forall (m :: * -&gt; *).
+MonadTrace m =&gt;
+AgentClientT m (Maybe TraceContext)
+forall (m :: * -&gt; *).
+MonadTrace m =&gt;
+TraceMetadata -&gt; AgentClientT m ()
+forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+SpanId -&gt; Text -&gt; AgentClientT m a -&gt; AgentClientT m a
+forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+TraceContext
+-&gt; SamplingPolicy -&gt; Text -&gt; AgentClientT m a -&gt; AgentClientT m a
+attachMetadata :: TraceMetadata -&gt; AgentClientT m ()
+$cattachMetadata :: forall (m :: * -&gt; *).
+MonadTrace m =&gt;
+TraceMetadata -&gt; AgentClientT m ()
+currentContext :: AgentClientT m (Maybe TraceContext)
+$ccurrentContext :: forall (m :: * -&gt; *).
+MonadTrace m =&gt;
+AgentClientT m (Maybe TraceContext)
+newSpanWith :: forall a. SpanId -&gt; Text -&gt; AgentClientT m a -&gt; AgentClientT m a
+$cnewSpanWith :: forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+SpanId -&gt; Text -&gt; AgentClientT m a -&gt; AgentClientT m a
+newTraceWith :: forall a.
+TraceContext
+-&gt; SamplingPolicy -&gt; Text -&gt; AgentClientT m a -&gt; AgentClientT m a
+$cnewTraceWith :: forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+TraceContext
+-&gt; SamplingPolicy -&gt; Text -&gt; AgentClientT m a -&gt; AgentClientT m a
+</span><a href="Hasura.Tracing.Class.html#C%3AMonadTrace"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadTrace</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691160064"><span class="annot"><span class="annottext">forall a. IO a -&gt; AgentClientT m a
+forall (m :: * -&gt; *).
+Monad m -&gt; (forall a. IO a -&gt; m a) -&gt; MonadIO m
+forall {m :: * -&gt; *}. MonadIO m =&gt; Monad (AgentClientT m)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; AgentClientT m a
+liftIO :: forall a. IO a -&gt; AgentClientT m a
+$cliftIO :: forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; AgentClientT m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadIO</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span id="local-6989586621691160284"><span id="local-6989586621691160285"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#runAgentClientT"><span class="hs-identifier hs-type">runAgentClientT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160285"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160284"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-type">AgentClientContext</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691160285"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160284"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-45"></span><span id="runAgentClientT"><span class="annot"><span class="annottext">runAgentClientT :: forall (m :: * -&gt; *) a.
+AgentClientT m a -&gt; AgentClientContext -&gt; m a
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#runAgentClientT"><span class="hs-identifier hs-var hs-var">runAgentClientT</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span id="local-6989586621691160057"><span class="annot"><span class="annottext">ReaderT AgentClientContext m a
+</span><a href="#local-6989586621691160057"><span class="hs-identifier hs-var">action</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621691160056"><span class="annot"><span class="annottext">AgentClientContext
+</span><a href="#local-6989586621691160056"><span class="hs-identifier hs-var">ctx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runReaderT</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT AgentClientContext m a
+</span><a href="#local-6989586621691160057"><span class="hs-identifier hs-var">action</span></a></span><span> </span><span class="annot"><span class="annottext">AgentClientContext
+</span><a href="#local-6989586621691160056"><span class="hs-identifier hs-var">ctx</span></a></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span id="local-6989586621691160278"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#askClientContext"><span class="hs-identifier hs-type">askClientContext</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Monad</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160278"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160278"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-type">AgentClientContext</span></a></span></span><span>
+</span><span id="line-48"></span><span id="askClientContext"><span class="annot"><span class="annottext">askClientContext :: forall (m :: * -&gt; *). Monad m =&gt; AgentClientT m AgentClientContext
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#askClientContext"><span class="hs-identifier hs-var hs-var">askClientContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+ReaderT AgentClientContext m a -&gt; AgentClientT m a
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-var">AgentClientT</span></a></span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">ask</span></a></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691160261"><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160261"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160261"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691160261"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">RunClient</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160261"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621691160036"><span class="annot"><span class="annottext">runRequestAcceptStatus :: Maybe [Status] -&gt; Request -&gt; AgentClientT m Response
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">runRequestAcceptStatus</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+(MonadIO m, MonadTrace m, MonadError QErr m) =&gt;
+Maybe [Status] -&gt; Request -&gt; AgentClientT m Response
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#runRequestAcceptStatus%27"><span class="hs-identifier hs-var">runRequestAcceptStatus'</span></a></span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621691160030"><span class="annot"><span class="annottext">throwClientError :: forall a. ClientError -&gt; AgentClientT m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">throwClientError</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+(MonadIO m, MonadTrace m, MonadError QErr m) =&gt;
+ClientError -&gt; AgentClientT m a
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#throwClientError%27"><span class="hs-identifier hs-var">throwClientError'</span></a></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span id="local-6989586621691160027"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#runRequestAcceptStatus%27"><span class="hs-identifier hs-type">runRequestAcceptStatus'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160027"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160027"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691160027"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Status</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Request</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160027"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Response</span></span></span><span>
+</span><span id="line-55"></span><span id="runRequestAcceptStatus%27"><span class="annot"><span class="annottext">runRequestAcceptStatus' :: forall (m :: * -&gt; *).
+(MonadIO m, MonadTrace m, MonadError QErr m) =&gt;
+Maybe [Status] -&gt; Request -&gt; AgentClientT m Response
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#runRequestAcceptStatus%27"><span class="hs-identifier hs-var hs-var">runRequestAcceptStatus'</span></a></span></span><span> </span><span id="local-6989586621691159976"><span class="annot"><span class="annottext">Maybe [Status]
+</span><a href="#local-6989586621691159976"><span class="hs-identifier hs-var">acceptStatus</span></a></span></span><span> </span><span id="local-6989586621691159975"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621691159975"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-type">AgentClientContext</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691159970"><span id="local-6989586621691159971"><span id="local-6989586621691159972"><span id="local-6989586621691159973"><span id="local-6989586621691159974"><span class="annot"><span class="annottext">Maybe Int
+Maybe AgentLicenseKey
+BaseUrl
+Manager
+Logger Hasura
+_accAgentLicenseKey :: Maybe AgentLicenseKey
+_accResponseTimeout :: Maybe Int
+_accHttpManager :: Manager
+_accBaseUrl :: BaseUrl
+_accLogger :: Logger Hasura
+_accAgentLicenseKey :: AgentClientContext -&gt; Maybe AgentLicenseKey
+_accResponseTimeout :: AgentClientContext -&gt; Maybe Int
+_accHttpManager :: AgentClientContext -&gt; Manager
+_accBaseUrl :: AgentClientContext -&gt; BaseUrl
+_accLogger :: AgentClientContext -&gt; Logger Hasura
+</span><a href="#local-6989586621691159970"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). Monad m =&gt; AgentClientT m AgentClientContext
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#askClientContext"><span class="hs-identifier hs-var">askClientContext</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691159969"><span class="annot"><span class="annottext">transformableReq :: Request
+</span><a href="#local-6989586621691159969"><span class="hs-identifier hs-var hs-var">transformableReq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BaseUrl -&gt; Request -&gt; Request
+</span><span class="hs-identifier hs-var">defaultMakeClientRequest</span></span><span> </span><span class="annot"><span class="annottext">BaseUrl
+</span><a href="#local-6989586621691159973"><span class="hs-identifier hs-var">_accBaseUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621691159975"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-comment">-- Set the response timeout explicitly if it is provided</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691159967"><span class="annot"><span class="annottext">transformableReq' :: Request
+</span><a href="#local-6989586621691159967"><span class="hs-identifier hs-var hs-var">transformableReq'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-61"></span><span>        </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621691159969"><span class="hs-identifier hs-var">transformableReq</span></a></span><span> </span><span class="annot"><span class="annottext">forall s a. s -&gt; State s a -&gt; s
+</span><span class="hs-operator hs-var">&amp;~</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-62"></span><span>          </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Foldable t, Applicative f) =&gt;
+t a -&gt; (a -&gt; f b) -&gt; f ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for_</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621691159971"><span class="hs-identifier hs-var">_accResponseTimeout</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691159965"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621691159965"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Lens' Request ResponseTimeout
+</span><span class="hs-identifier hs-var">HTTP.timeout</span></span><span> </span><span class="annot"><span class="annottext">forall s (m :: * -&gt; *) a b.
+MonadState s m =&gt;
+ASetter s s a b -&gt; b -&gt; m ()
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ResponseTimeout
+</span><span class="hs-identifier hs-var">HTTP.responseTimeoutMicro</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621691159965"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-63"></span><span>          </span><span class="annot"><span class="annottext">Lens' Request [Header]
+</span><span class="hs-identifier hs-var">HTTP.headers</span></span><span>
+</span><span id="line-64"></span><span>            </span><span class="annot"><span class="annottext">forall s (m :: * -&gt; *) a b.
+MonadState s m =&gt;
+ASetter s s a b -&gt; (a -&gt; b) -&gt; m ()
+</span><span class="hs-operator hs-var">%=</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691159961"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621691159961"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621691159961"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentLicenseKey"><span class="hs-identifier hs-type">AgentLicenseKey</span></a></span><span> </span><span id="local-6989586621691159959"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621691159959"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;X-Hasura-License&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621691159959"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621691159961"><span class="hs-identifier hs-var">headers</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe AgentLicenseKey
+</span><a href="#local-6989586621691159970"><span class="hs-identifier hs-var">_accAgentLicenseKey</span></a></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621691159958"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621691159958"><span class="hs-identifier hs-var">tracedReq</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691159957"><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
+</span><a href="#local-6989586621691159957"><span class="hs-identifier hs-var">responseOrException</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+(MonadIO m, MonadTrace m) =&gt;
+Request -&gt; (Request -&gt; m a) -&gt; m a
+</span><a href="Hasura.Tracing.Utils.html#traceHTTPRequest"><span class="hs-identifier hs-var">traceHTTPRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621691159967"><span class="hs-identifier hs-var">transformableReq'</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691159956"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621691159956"><span class="hs-identifier hs-var">tracedReq</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621691159956"><span class="hs-identifier hs-var">tracedReq</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall e a. Exception e =&gt; IO a -&gt; IO (Either e a)
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">try</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">HTTP.HttpException</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; Manager -&gt; IO (Response ByteString)
+</span><span class="hs-identifier hs-var">HTTP.httpLbs</span></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621691159956"><span class="hs-identifier hs-var">tracedReq</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621691159972"><span class="hs-identifier hs-var">_accHttpManager</span></a></span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+(MonadIO m, MonadTrace m) =&gt;
+Logger Hasura
+-&gt; Request -&gt; Either HttpException (Response ByteString) -&gt; m ()
+</span><a href="Hasura.Backends.DataConnector.Logging.html#logAgentRequest"><span class="hs-identifier hs-var">logAgentRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621691159974"><span class="hs-identifier hs-var">_accLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621691159958"><span class="hs-identifier hs-var">tracedReq</span></a></span><span> </span><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
+</span><a href="#local-6989586621691159957"><span class="hs-identifier hs-var">responseOrException</span></a></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
+</span><a href="#local-6989586621691159957"><span class="hs-identifier hs-var">responseOrException</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-70"></span><span>    </span><span class="hs-comment">-- throwConnectionError is used here in order to avoid a metadata inconsistency error</span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span id="local-6989586621691159952"><span class="annot"><span class="annottext">HttpException
+</span><a href="#local-6989586621691159952"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><span class="hs-identifier hs-var">throwConnectionError</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Error in Data Connector backend: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; Text
+</span><a href="Hasura.HTTP.html#serializeHTTPExceptionMessage"><span class="hs-identifier hs-var">Hasura.HTTP.serializeHTTPExceptionMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HttpException -&gt; HttpException
+</span><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-var">Hasura.HTTP.HttpException</span></a></span><span> </span><span class="annot"><span class="annottext">HttpException
+</span><a href="#local-6989586621691159952"><span class="hs-identifier hs-var">ex</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span id="local-6989586621691159948"><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621691159948"><span class="hs-identifier hs-var">response</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-73"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691159947"><span class="annot"><span class="annottext">status :: Status
+</span><a href="#local-6989586621691159947"><span class="hs-identifier hs-var hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall body. Response body -&gt; Status
+</span><span class="hs-identifier hs-var">HTTP.responseStatus</span></span><span> </span><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621691159948"><span class="hs-identifier hs-var">response</span></a></span><span>
+</span><span id="line-74"></span><span>          </span><span id="local-6989586621691159945"><span class="annot"><span class="annottext">servantResponse :: Response
+</span><a href="#local-6989586621691159945"><span class="hs-identifier hs-var hs-var">servantResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; Response a -&gt; ResponseF b
+</span><span class="hs-identifier hs-var">clientResponseToResponse</span></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">id</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621691159948"><span class="hs-identifier hs-var">response</span></a></span><span>
+</span><span id="line-75"></span><span>          </span><span id="local-6989586621691159943"><span class="annot"><span class="annottext">goodStatus :: Bool
+</span><a href="#local-6989586621691159943"><span class="hs-identifier hs-var hs-var">goodStatus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe [Status]
+</span><a href="#local-6989586621691159976"><span class="hs-identifier hs-var">acceptStatus</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-76"></span><span>            </span><span class="annot"><span class="annottext">Maybe [Status]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Status -&gt; Bool
+</span><span class="hs-identifier hs-var">HTTP.statusIsSuccessful</span></span><span> </span><span class="annot"><span class="annottext">Status
+</span><a href="#local-6989586621691159947"><span class="hs-identifier hs-var">status</span></a></span><span>
+</span><span id="line-77"></span><span>            </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691159941"><span class="annot"><span class="annottext">[Status]
+</span><a href="#local-6989586621691159941"><span class="hs-identifier hs-var">good</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Status
+</span><a href="#local-6989586621691159947"><span class="hs-identifier hs-var">status</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">`elem`</span></a></span><span> </span><span class="annot"><span class="annottext">[Status]
+</span><a href="#local-6989586621691159941"><span class="hs-identifier hs-var">good</span></a></span><span>
+</span><span id="line-78"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621691159943"><span class="hs-identifier hs-var">goodStatus</span></a></span><span>
+</span><span id="line-79"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Response
+</span><a href="#local-6989586621691159945"><span class="hs-identifier hs-var">servantResponse</span></a></span><span>
+</span><span id="line-80"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. RunClient m =&gt; ClientError -&gt; m a
+</span><span class="hs-identifier hs-var">throwClientError</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">BaseUrl -&gt; Request -&gt; Response -&gt; ClientError
+</span><span class="hs-identifier hs-var">mkFailureResponse</span></span><span> </span><span class="annot"><span class="annottext">BaseUrl
+</span><a href="#local-6989586621691159973"><span class="hs-identifier hs-var">_accBaseUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621691159975"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Response
+</span><a href="#local-6989586621691159945"><span class="hs-identifier hs-var">servantResponse</span></a></span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span id="local-6989586621691160259"><span id="local-6989586621691160260"><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#throwClientError%27"><span class="hs-identifier hs-type">throwClientError'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160260"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160260"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691160260"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ClientError</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientT"><span class="hs-identifier hs-type">AgentClientT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691160260"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621691160259"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-83"></span><span id="throwClientError%27"><span class="annot"><span class="annottext">throwClientError' :: forall (m :: * -&gt; *) a.
+(MonadIO m, MonadTrace m, MonadError QErr m) =&gt;
+ClientError -&gt; AgentClientT m a
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#throwClientError%27"><span class="hs-identifier hs-var hs-var">throwClientError'</span></a></span></span><span> </span><span id="local-6989586621691159924"><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621691159924"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-84"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentClientContext"><span class="hs-identifier hs-type">AgentClientContext</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691159919"><span id="local-6989586621691159920"><span id="local-6989586621691159921"><span id="local-6989586621691159922"><span id="local-6989586621691159923"><span class="annot"><span class="annottext">Maybe Int
+Maybe AgentLicenseKey
+BaseUrl
+Manager
+Logger Hasura
+_accAgentLicenseKey :: Maybe AgentLicenseKey
+_accResponseTimeout :: Maybe Int
+_accHttpManager :: Manager
+_accBaseUrl :: BaseUrl
+_accLogger :: Logger Hasura
+_accAgentLicenseKey :: AgentClientContext -&gt; Maybe AgentLicenseKey
+_accResponseTimeout :: AgentClientContext -&gt; Maybe Int
+_accHttpManager :: AgentClientContext -&gt; Manager
+_accBaseUrl :: AgentClientContext -&gt; BaseUrl
+_accLogger :: AgentClientContext -&gt; Logger Hasura
+</span><a href="#local-6989586621691159919"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). Monad m =&gt; AgentClientT m AgentClientContext
+</span><a href="Hasura.Backends.DataConnector.Agent.Client.html#askClientContext"><span class="hs-identifier hs-var">askClientContext</span></a></span><span>
+</span><span id="line-85"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+(MonadIO m, MonadTrace m) =&gt;
+Logger Hasura -&gt; ClientError -&gt; m ()
+</span><a href="Hasura.Backends.DataConnector.Logging.html#logClientError"><span class="hs-identifier hs-var">logClientError</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621691159923"><span class="hs-identifier hs-var">_accLogger</span></a></span><span> </span><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621691159924"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621691159924"><span class="hs-identifier hs-var">err</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-87"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">FailureResponse</span></span><span> </span><span class="annot"><span class="annottext">RequestF () (BaseUrl, ByteString)
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621691159917"><span class="annot"><span class="annottext">Response
+</span><a href="#local-6989586621691159917"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">forall a. ResponseF a -&gt; Status
+</span><span class="hs-identifier hs-var">responseStatusCode</span></span><span> </span><span class="annot"><span class="annottext">Response
+</span><a href="#local-6989586621691159917"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Status
+</span><span class="hs-identifier hs-var">HTTP.status401</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><span class="hs-identifier hs-var">throw401</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;EE License Key Required.&quot;</span></span><span>
+</span><span id="line-88"></span><span>    </span><span class="annot"><span class="annottext">ClientError
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Error in Data Connector backend: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ClientError -&gt; Text
+</span><a href="Hasura.HTTP.html#serializeServantClientErrorMessage"><span class="hs-identifier hs-var">Hasura.HTTP.serializeServantClientErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621691159924"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-89"></span></pre></body></html>
