@@ -138,26 +138,29 @@ const HasuraConBanner = props => {
     );
   }
 
-  return null;
-
-  // return (
-  //   <a className={styles['hasura-con-banner']} href="https://hasura.io/events/hasura-con-2022/">
-  //     <div className={styles['hasura-con-brand']}>
-  //       <img className={styles['brand-dark']} src={hasuraConDark} alt="Hasura Con" />
-  //       <img className={styles['brand-light']} src={hasuraConLight} alt="Hasura Con" />
-  //     </div>
-  //     <div className={styles['hasura-con-space-between']}>
-  //       <div>
-  //         <div className={styles['hasura-con-desc']}>The Hasura User Conference</div>
-  //         <div className={styles['hasura-con-title']}>New Product Announcements</div>
-  //       </div>
-  //       <div className={styles['hasura-con-register'] + ' ' + styles['hasura-con-register-mobile-hide']}>
-  //         View Recordings
-  //         <ArrowRight />
-  //       </div>
-  //     </div>
-  //   </a>
-  // );
+  return (
+    <a className={styles['hasura-con-banner']} href="https://hasura.io/events/hasura-con-2023/">
+      <div className={styles['hasura-con-brand']}>
+        <img
+          className={styles['hasuracon23-img']}
+          src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1683727035/main-web/Group_2608664_c10sky.png"
+          alt="Hasura Con"
+        />
+      </div>
+      <div className={styles['hasura-con-space-between']}>
+        <div>
+          <div className={styles['hasura-con-23-title']}>The fourth annual Hasura User Conference</div>
+        </div>
+        <div className={styles['hasura-con-register-button'] + ' ' + styles['hasura-con-register-mobile-hide']}>
+          Read more
+          <img
+            src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1683723549/main-web/chevron-right_ldbi7d.png"
+            alt="arrow-icon"
+          />
+        </div>
+      </div>
+    </a>
+  );
 };
 
 export default HasuraConBanner;
