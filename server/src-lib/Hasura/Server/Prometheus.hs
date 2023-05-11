@@ -16,18 +16,27 @@ module Hasura.Server.Prometheus
     decWebsocketConnections,
     ScheduledTriggerMetrics (..),
     SubscriptionMetrics (..),
+    TriggerNameLabel (..),
+    GranularPrometheusMetricsState (..),
+    observeHistogramWithLabel,
   )
 where
 
+import Data.HashMap.Internal.Strict qualified as Map
 import Data.IORef (IORef, atomicModifyIORef', newIORef, readIORef)
 import Data.Int (Int64)
 import Hasura.Prelude
+import Hasura.RQL.Types.EventTrigger (TriggerName, triggerNameToTxt)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..))
+import System.Metrics.Prometheus (ToLabels (..))
 import System.Metrics.Prometheus.Counter (Counter)
 import System.Metrics.Prometheus.Counter qualified as Counter
 import System.Metrics.Prometheus.Gauge (Gauge)
 import System.Metrics.Prometheus.Gauge qualified as Gauge
 import System.Metrics.Prometheus.Histogram (Histogram)
 import System.Metrics.Prometheus.Histogram qualified as Histogram
+import System.Metrics.Prometheus.HistogramVector (HistogramVector)
+import System.Metrics.Prometheus.HistogramVector qualified as HistogramVector
 
 --------------------------------------------------------------------------------
 
@@ -63,7 +72,7 @@ data EventTriggerMetrics = EventTriggerMetrics
     eventQueueTimeSeconds :: Histogram,
     eventsFetchTimePerBatch :: Histogram,
     eventWebhookProcessingTime :: Histogram,
-    eventProcessingTime :: Histogram,
+    eventProcessingTime :: HistogramVector (Maybe TriggerNameLabel),
     eventTriggerBytesReceived :: Counter,
     eventTriggerBytesSent :: Counter,
     eventProcessedTotalSuccess :: Counter,
@@ -128,7 +137,7 @@ makeDummyEventTriggerMetrics = do
   eventQueueTimeSeconds <- Histogram.new []
   eventsFetchTimePerBatch <- Histogram.new []
   eventWebhookProcessingTime <- Histogram.new []
-  eventProcessingTime <- Histogram.new []
+  eventProcessingTime <- HistogramVector.new []
   eventTriggerBytesReceived <- Counter.new
   eventTriggerBytesSent <- Counter.new
   eventProcessedTotalSuccess <- Counter.new
@@ -206,3 +215,52 @@ modifyConnectionsGauge ::
   (Connections -> Connections) -> ConnectionsGauge -> IO ()
 modifyConnectionsGauge f (ConnectionsGauge ref) =
   atomicModifyIORef' ref $ \connections -> (f connections, ())
+
+newtype TriggerNameLabel = TriggerNameLabel TriggerName
+  deriving (Ord, Eq)
+
+instance ToLabels (Maybe TriggerNameLabel) where
+  toLabels Nothing = Map.empty
+  toLabels (Just (TriggerNameLabel triggerName)) = Map.singleton "trigger_name" (triggerNameToTxt triggerName)
+
+-- | Record metrics with dynamic label
+recordMetricWithLabel ::
+  (MonadIO m) =>
+  (IO GranularPrometheusMetricsState) ->
+  -- should the metric be observed without a label when granularMetricsState is OFF
+  Bool ->
+  -- the action to perform when granularMetricsState is ON
+  IO () ->
+  -- the action to perform when granularMetricsState is OFF
+  IO () ->
+  m ()
+recordMetricWithLabel getMetricState alwaysObserve metricActionWithLabel metricActionWithoutLabel = do
+  metricState <- liftIO $ getMetricState
+  case metricState of
+    GranularMetricsOn -> liftIO $ metricActionWithLabel
+    -- Some metrics do not make sense without a dynamic label, hence only record the
+    -- metric when alwaysObserve is set to true else do not record the metric
+    GranularMetricsOff -> do
+      when alwaysObserve $
+        liftIO $
+          metricActionWithoutLabel
+
+-- | Observe a histogram metric with a label.
+--
+-- If the granularity is set to 'GranularMetricsOn', the label will be
+-- included in the metric. Otherwise, the label will be set to `Nothing`
+observeHistogramWithLabel ::
+  (Ord l, MonadIO m) =>
+  (IO GranularPrometheusMetricsState) ->
+  -- should the metric be observed without a label when granularMetricsState is OFF
+  Bool ->
+  HistogramVector (Maybe l) ->
+  l ->
+  Double ->
+  m ()
+observeHistogramWithLabel getMetricState alwaysObserve histogramVector label value = do
+  recordMetricWithLabel
+    getMetricState
+    alwaysObserve
+    (liftIO $ HistogramVector.observe histogramVector (Just label) value)
+    (liftIO $ HistogramVector.observe histogramVector Nothing value)

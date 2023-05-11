@@ -59,6 +59,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Session
 import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
 import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker)
+import Hasura.Server.Types (MonadGetPolicies (..))
 import Hasura.Services.Network
 import Hasura.Tracing (TraceT)
 import Hasura.Tracing qualified as Tracing
@@ -270,6 +271,10 @@ instance (Monad m) => MetadataM (MetadataT m) where
 
 instance (UserInfoM m) => UserInfoM (MetadataT m) where
   askUserInfo = lift askUserInfo
+
+instance (MonadGetPolicies m) => MonadGetPolicies (MetadataT m) where
+  runGetApiTimeLimit = lift runGetApiTimeLimit
+  runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
 
 -- | @runMetadataT@ puts a stateful metadata in scope. @MetadataDefaults@ is
 -- provided so that it can be considered from the --metadataDefaults arguments.

@@ -25,7 +25,6 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.DDL.Action
-import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.Endpoint
@@ -189,7 +188,7 @@ runQuery ::
     MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m,
+    MonadGetPolicies m,
     UserInfoM m
   ) =>
   AppContext ->
@@ -402,7 +401,7 @@ runQueryM ::
     Has (L.Logger L.Hasura) r,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m
+    MonadGetPolicies m
   ) =>
   Env.Environment ->
   SQLGenCtx ->

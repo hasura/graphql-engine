@@ -84,6 +84,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Logging (MetadataLog (..))
+import Hasura.Server.Types (MonadGetPolicies (..))
 import Hasura.StoredProcedure.API (dropStoredProcedureInMetadata)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Types.Extended
@@ -130,7 +131,7 @@ runClearMetadata ::
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
     MonadEventLogCleanup m,
-    MonadGetApiTimeLimit m
+    MonadGetPolicies m
   ) =>
   ClearMetadata ->
   m EncJSON
@@ -203,7 +204,7 @@ runReplaceMetadata ::
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
     MonadEventLogCleanup m,
-    MonadGetApiTimeLimit m
+    MonadGetPolicies m
   ) =>
   ReplaceMetadata ->
   m EncJSON
@@ -221,7 +222,7 @@ runReplaceMetadataV1 ::
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
     MonadEventLogCleanup m,
-    MonadGetApiTimeLimit m
+    MonadGetPolicies m
   ) =>
   ReplaceMetadataV1 ->
   m EncJSON
@@ -239,7 +240,7 @@ runReplaceMetadataV2 ::
     MonadError QErr m,
     Has (HL.Logger HL.Hasura) r,
     MonadEventLogCleanup m,
-    MonadGetApiTimeLimit m
+    MonadGetPolicies m
   ) =>
   ReplaceMetadataV2 ->
   m EncJSON
@@ -264,7 +265,7 @@ runReplaceMetadataV2' ::
     Has (HL.Logger HL.Hasura) r,
     MonadEventLogCleanup m,
     MonadWarnings m,
-    MonadGetApiTimeLimit m
+    MonadGetPolicies m
   ) =>
   ReplaceMetadataV2 ->
   m [InconsistentMetadata]

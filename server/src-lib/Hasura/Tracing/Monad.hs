@@ -14,6 +14,7 @@ import Control.Monad.Trans.Control
 import Data.IORef
 import Hasura.Prelude
 import Hasura.RQL.Types.Session (UserInfoM (..))
+import Hasura.Server.Types (MonadGetPolicies (..))
 import Hasura.Tracing.Class
 import Hasura.Tracing.Context
 import Hasura.Tracing.Reporter
@@ -113,6 +114,10 @@ instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (TraceT m) where
 
 instance (UserInfoM m) => UserInfoM (TraceT m) where
   askUserInfo = lift askUserInfo
+
+instance (MonadGetPolicies m) => MonadGetPolicies (TraceT m) where
+  runGetApiTimeLimit = lift runGetApiTimeLimit
+  runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
 
 --------------------------------------------------------------------------------
 -- Internal

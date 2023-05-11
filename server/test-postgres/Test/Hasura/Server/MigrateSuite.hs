@@ -17,7 +17,6 @@ import Hasura.EncJSON
 import Hasura.Logging
 import Hasura.Metadata.Class
 import Hasura.Prelude
-import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Metadata (ClearMetadata (..), runClearMetadata)
 import Hasura.RQL.DDL.Schema
@@ -55,7 +54,7 @@ newtype CacheRefT m a = CacheRefT {runCacheRefT :: (CacheDynamicConfig, MVar Reb
       MonadMetadataStorage,
       MonadResolveSource,
       ProvidesNetwork,
-      MonadGetApiTimeLimit
+      MonadGetPolicies
     )
     via (ReaderT (CacheDynamicConfig, MVar RebuildableSchemaCache) m)
 
@@ -114,7 +113,7 @@ suite ::
     MonadMetadataStorage m,
     MonadEventLogCleanup m,
     ProvidesNetwork m,
-    MonadGetApiTimeLimit m,
+    MonadGetPolicies m,
     HasCacheStaticConfig m
   ) =>
   PostgresConnConfiguration ->

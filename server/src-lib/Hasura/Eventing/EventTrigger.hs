@@ -84,7 +84,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Metrics (ServerMetrics (..))
-import Hasura.Server.Prometheus (EventTriggerMetrics (..))
+import Hasura.Server.Prometheus
 import Hasura.Server.Types
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -291,7 +291,8 @@ processEventQueue ::
     MonadBaseControl IO m,
     LA.Forall (LA.Pure m),
     MonadMask m,
-    Tracing.MonadTrace m
+    Tracing.MonadTrace m,
+    MonadGetPolicies m
   ) =>
   L.Logger L.Hasura ->
   FetchedEventsStatsLogger ->
@@ -455,11 +456,14 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
         Has (L.Logger L.Hasura) r,
         MonadMask io,
         BackendEventTrigger b,
-        Tracing.MonadTrace io
+        Tracing.MonadTrace io,
+        MonadGetPolicies io
       ) =>
       EventWithSource b ->
       io ()
     processEvent (EventWithSource e sourceConfig sourceName eventFetchedTime) = do
+      -- IO action for fetching the configured metrics granularity
+      getPrometheusMetricsGranularity <- runGetPrometheusMetricsGranularity
       -- Track Queue Time of Event (in seconds). See `smEventQueueTime`
       -- Queue Time = Time when the event was fetched from DB - Time when the event is being processed
       eventProcessTime <- liftIO getCurrentTime
@@ -558,11 +562,11 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                             -- The timestamps in the DB are supposed to be UTC time, so the timestamps (`eventExecutionFinishTime` and
                             -- `eventStartTime`) used here in calculation are all UTC time.
                             eventProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventStartTime
+                        observeHistogramWithLabel getPrometheusMetricsGranularity True (eventProcessingTime eventTriggerMetrics) (TriggerNameLabel (etiName eti)) eventProcessingTime'
                         liftIO $ do
                           EKG.Distribution.add (smEventWebhookProcessingTime serverMetrics) eventWebhookProcessingTime'
                           Prometheus.Histogram.observe (eventWebhookProcessingTime eventTriggerMetrics) eventWebhookProcessingTime'
                           EKG.Distribution.add (smEventProcessingTime serverMetrics) eventProcessingTime'
-                          Prometheus.Histogram.observe (eventProcessingTime eventTriggerMetrics) eventProcessingTime'
                           Prometheus.Counter.inc (eventProcessedTotalSuccess eventTriggerMetrics)
                           Prometheus.Counter.inc (eventInvocationTotalSuccess eventTriggerMetrics)
                       Left eventError -> do

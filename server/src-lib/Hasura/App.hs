@@ -118,7 +118,6 @@ import Hasura.Metadata.Class
 import Hasura.PingSources
 import Hasura.Prelude
 import Hasura.QueryTags
-import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit (..))
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -770,8 +769,9 @@ instance MonadEventLogCleanup AppM where
   generateCleanupSchedules _ _ _ = pure $ Right ()
   updateTriggerCleanupSchedules _ _ _ _ = pure $ Right ()
 
-instance MonadGetApiTimeLimit AppM where
+instance MonadGetPolicies AppM where
   runGetApiTimeLimit = pure $ Nothing
+  runGetPrometheusMetricsGranularity = pure (pure GranularMetricsOff)
 
 -- | Each of the function in the type class is executed in a totally separate transaction.
 instance MonadMetadataStorage AppM where
@@ -904,7 +904,7 @@ runHGEServer ::
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
     MonadTrace m,
-    MonadGetApiTimeLimit m
+    MonadGetPolicies m
   ) =>
   (AppStateRef impl -> Spock.SpockT m ()) ->
   AppStateRef impl ->
@@ -999,7 +999,7 @@ mkHGEServer ::
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
     MonadTrace m,
-    MonadGetApiTimeLimit m
+    MonadGetPolicies m
   ) =>
   (AppStateRef impl -> Spock.SpockT m ()) ->
   AppStateRef impl ->

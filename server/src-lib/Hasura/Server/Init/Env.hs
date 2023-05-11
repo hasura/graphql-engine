@@ -45,6 +45,7 @@ import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Config qualified as Config
 import Hasura.Server.Logging qualified as Server.Logging
+import Hasura.Server.Types (GranularPrometheusMetricsState (..))
 import Hasura.Server.Types qualified as Server.Types
 import Hasura.Server.Utils qualified as Utils
 import Network.Wai.Handler.Warp qualified as Warp
@@ -365,3 +366,6 @@ instance FromEnv ExtensionsSchema where
 
 instance FromEnv Server.Types.ApolloFederationStatus where
   fromEnv = fmap (bool Server.Types.ApolloFederationDisabled Server.Types.ApolloFederationEnabled) . fromEnv @Bool
+
+instance FromEnv GranularPrometheusMetricsState where
+  fromEnv = fmap (bool GranularMetricsOff GranularMetricsOn) . fromEnv @Bool

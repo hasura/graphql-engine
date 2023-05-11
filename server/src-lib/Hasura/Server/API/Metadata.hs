@@ -100,7 +100,7 @@ runMetadataQuery ::
     MonadResolveSource m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m,
+    MonadGetPolicies m,
     UserInfoM m
   ) =>
   AppContext ->
@@ -331,7 +331,7 @@ runMetadataQueryM ::
     MonadError QErr m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m,
+    MonadGetPolicies m,
     HasFeatureFlagChecker m
   ) =>
   Env.Environment ->
@@ -365,7 +365,7 @@ runMetadataQueryV1M ::
     MonadError QErr m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m,
+    MonadGetPolicies m,
     HasFeatureFlagChecker m
   ) =>
   Env.Environment ->
@@ -554,7 +554,7 @@ runMetadataQueryV2M ::
     Has (L.Logger L.Hasura) r,
     MonadError QErr m,
     MonadEventLogCleanup m,
-    MonadGetApiTimeLimit m
+    MonadGetPolicies m
   ) =>
   MetadataResourceVersion ->
   RQLMetadataV2 ->

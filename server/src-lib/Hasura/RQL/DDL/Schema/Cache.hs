@@ -54,7 +54,6 @@ import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..))
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.DDL.Action
-import Hasura.RQL.DDL.ApiLimit (MonadGetApiTimeLimit (..))
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..), buildEventTriggerInfo)
 import Hasura.RQL.DDL.InheritedRoles (resolveInheritedRole)
@@ -206,8 +205,9 @@ instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRWT m) where
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
   updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
-instance (MonadGetApiTimeLimit m) => MonadGetApiTimeLimit (CacheRWT m) where
+instance (MonadGetPolicies m) => MonadGetPolicies (CacheRWT m) where
   runGetApiTimeLimit = lift $ runGetApiTimeLimit
+  runGetPrometheusMetricsGranularity = lift $ runGetPrometheusMetricsGranularity
 
 runCacheRWT ::
   Monad m =>
