@@ -5,7 +5,7 @@ import { HasuraMetadataV3 } from '../../../metadata/types';
 import { reactQueryClient } from '../../../lib/reactQuery';
 import { programmaticallyTraceError } from '../../Analytics';
 import {
-  skippedOnboardingVariables,
+  skippedNeonOnboardingVariables,
   onboardingCompleteVariables,
   templateSummaryRunQueryClickVariables,
   templateSummaryRunQuerySkipVariables,
@@ -16,8 +16,7 @@ import {
   fetchAllOnboardingDataQueryVariables,
   oneClickDeploymentOnboardingShown,
   useCaseExperimentOnboarding,
-  skippedOnboardingWizardVariables,
-  skippedNeonOnboardingVariables,
+  skippedOnboardingThroughURLParamVariables,
 } from './constants';
 import { WizardState } from './hooks/useWizardState';
 import { OnboardingResponseData, UserOnboarding } from './types';
@@ -27,7 +26,7 @@ export function shouldShowOnboarding(onboardingData: UserOnboarding) {
   const userActivity = onboardingData?.activity;
 
   if (
-    userActivity?.[skippedOnboardingVariables.kind]?.value === 'true' ||
+    userActivity?.[skippedNeonOnboardingVariables.kind]?.value === 'true' ||
     userActivity?.[onboardingCompleteVariables.kind]?.value === 'true' ||
     userActivity?.[hasuraSourceCreationStartVariables.kind]?.value === 'true' ||
     userActivity?.[templateSummaryRunQuerySkipVariables.kind]?.value ===
@@ -41,7 +40,7 @@ export function shouldShowOnboarding(onboardingData: UserOnboarding) {
     return false;
   }
   if (getLSItem(LS_KEYS.skipOnboarding) === 'true') {
-    persistOnboardingType(skippedOnboardingWizardVariables);
+    emitOnboardingEvent(skippedOnboardingThroughURLParamVariables);
     return false;
   }
   return true;
@@ -103,36 +102,6 @@ type ResponseDataOnMutation = {
 
 const cloudHeaders = {
   'content-type': 'application/json',
-};
-
-// persist skipped onboarding in the database
-export const persistSkippedOnboarding = () => {
-  // mutate server data
-  cloudDataServiceApiClient<ResponseDataOnMutation, ResponseDataOnMutation>(
-    trackOnboardingActivityMutation,
-    skippedOnboardingVariables,
-    cloudHeaders
-  ).catch(error => {
-    programmaticallyTraceError(error);
-    throw error;
-  });
-};
-
-type OnboardingType =
-  | typeof skippedOnboardingWizardVariables
-  | typeof skippedOnboardingVariables
-  | typeof skippedNeonOnboardingVariables;
-
-export const persistOnboardingType = (variables: OnboardingType) => {
-  // mutate server data
-  cloudDataServiceApiClient<ResponseDataOnMutation, ResponseDataOnMutation>(
-    trackOnboardingActivityMutation,
-    variables,
-    cloudHeaders
-  ).catch(error => {
-    programmaticallyTraceError(error);
-    throw error;
-  });
 };
 
 export const emitOnboardingEvent = (variables: Record<string, unknown>) => {
