@@ -21,6 +21,7 @@ import Data.Aeson
 import Hasura.Base.Error
 import Hasura.Eventing.ScheduledTrigger.Types
 import Hasura.Prelude
+import Hasura.RQL.DDL.Schema.Cache.Common (StoredIntrospection)
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.EECredentials
 import Hasura.RQL.Types.EventTrigger
@@ -105,6 +106,13 @@ class Monad m => MonadMetadataStorage m where
   -- it is disabled when maintenance mode is on
   setCatalogState :: CatalogStateType -> Value -> m (Either QErr ())
 
+  -- methods for storing and retrieving source introspection which is stored in
+  -- "stored introspection" db. See 'StoredIntrospection'.
+  -- This returns a @Maybe StoredIntrospection@ as in some distributions
+  -- fetching of source introspection may not be available
+  fetchSourceIntrospection :: MetadataResourceVersion -> m (Either QErr (Maybe StoredIntrospection))
+  storeSourceIntrospection :: StoredIntrospection -> MetadataResourceVersion -> m (Either QErr ())
+
   -- get the @db_uuid@ that we store in the database.
   getMetadataDbUid :: m (Either QErr MetadataDbId)
   checkMetadataStorageHealth :: m (Either QErr ())
@@ -153,6 +161,9 @@ instance (MonadMetadataStorage m, MonadTrans t, Monad (t m)) => MonadMetadataSto
   notifySchemaCacheSync a b c = lift $ notifySchemaCacheSync a b c
   getCatalogState = lift getCatalogState
   setCatalogState a b = lift $ setCatalogState a b
+
+  fetchSourceIntrospection = lift . fetchSourceIntrospection
+  storeSourceIntrospection a b = lift $ storeSourceIntrospection a b
 
   getMetadataDbUid = lift getMetadataDbUid
   checkMetadataStorageHealth = lift checkMetadataStorageHealth

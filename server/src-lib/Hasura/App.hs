@@ -783,6 +783,10 @@ instance MonadMetadataStorage AppM where
   getCatalogState = runInSeparateTx getCatalogStateTx
   setCatalogState a b = runInSeparateTx $ setCatalogStateTx a b
 
+  -- stored source introspection is not available in this distribution
+  fetchSourceIntrospection _ = pure $ Right Nothing
+  storeSourceIntrospection _ _ = pure $ Right ()
+
   getMetadataDbUid = runInSeparateTx getDbId
   checkMetadataStorageHealth = runInSeparateTx $ checkDbConnection
 

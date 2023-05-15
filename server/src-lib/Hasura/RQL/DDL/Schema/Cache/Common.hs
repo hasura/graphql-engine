@@ -46,7 +46,7 @@ where
 
 import Control.Arrow.Extended
 import Control.Arrow.Interpret
-import Control.Lens
+import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Extended
 import Data.HashMap.Strict.Extended qualified as HashMap
@@ -178,6 +178,12 @@ instance FromJSON StoredIntrospection where
     backendIntrospection <- traverse parseJSONKeyValue =<< o .: "backend_introspection"
     remotes <- o .: "remotes"
     pure $ StoredIntrospection backendIntrospection remotes
+
+instance ToJSON StoredIntrospection where
+  toJSON _introspection =
+    object
+      [ "remotes" .= ("dummy" :: Text)
+      ]
 
 data TableBuildInput b = TableBuildInput
   { _tbiName :: TableName b,
