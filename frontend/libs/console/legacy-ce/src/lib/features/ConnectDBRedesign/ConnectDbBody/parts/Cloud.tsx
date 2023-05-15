@@ -4,7 +4,6 @@ import { useAppDispatch } from '../../../../storeHooks';
 import { DriverInfo } from '../../../DataSource';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { ConnectButton } from '../../components/ConnectButton';
-import { DEFAULT_DRIVER } from '../../constants';
 
 export const Cloud = ({
   selectedDriver,
@@ -18,8 +17,6 @@ export const Cloud = ({
   );
 
   const dispatch = useAppDispatch();
-
-  const selectedDriverName = selectedDriver?.name ?? DEFAULT_DRIVER.name;
 
   return (
     <>
@@ -45,7 +42,7 @@ export const Cloud = ({
           </IndicatorCard>
         </div>
       ) : (
-        <ConnectButton driverName={selectedDriverName} />
+        <ConnectButton selectedDriver={selectedDriver} />
       )}
     </>
   );

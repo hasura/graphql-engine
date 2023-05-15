@@ -12,7 +12,7 @@ export const Pro = ({
 }) => {
   const pushRoute = usePushRoute();
   return isDriverAvailable ? (
-    <ConnectButton driverName={selectedDriver?.name} />
+    <ConnectButton selectedDriver={selectedDriver} />
   ) : (
     <div className="mt-3" data-testid="setup-connector">
       <SetupConnector
