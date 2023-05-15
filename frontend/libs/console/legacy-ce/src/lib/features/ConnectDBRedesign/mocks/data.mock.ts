@@ -255,7 +255,7 @@ export const mockSourceKinds = {
       },
     ],
   },
-  agentsNotAdded: {
+  agentsAddedSuperConnectorNotAvailable: {
     sources: [
       {
         available: true,
@@ -288,10 +288,65 @@ export const mockSourceKinds = {
         kind: 'bigquery',
       },
       {
+        available: false,
+        builtin: false,
+        //display_name: 'Hasura SQLite',
+        kind: 'sqlite',
+      },
+      {
+        available: false,
+        builtin: false,
+        //display_name: 'Amazon Athena',
+        kind: 'athena',
+        release_name: 'Beta',
+      },
+      {
+        available: false,
+        builtin: false,
+        //display_name: 'Snowflake',
+        kind: 'snowflake',
+        release_name: 'Beta',
+      },
+      {
+        available: false,
+        builtin: false,
+        //display_name: 'MySQL',
+        kind: 'mysql8',
+        release_name: 'Alpha',
+      },
+    ],
+  },
+  agentsNotAdded: {
+    sources: [
+      {
         available: true,
         builtin: true,
-        display_name: 'MySQL',
-        kind: 'mysql8',
+        display_name: 'pg',
+        kind: 'pg',
+      },
+      {
+        available: true,
+        builtin: true,
+        display_name: 'citus',
+        kind: 'citus',
+      },
+      {
+        available: true,
+        builtin: true,
+        display_name: 'cockroach',
+        kind: 'cockroach',
+      },
+      {
+        available: true,
+        builtin: true,
+        display_name: 'mssql',
+        kind: 'mssql',
+      },
+      {
+        available: true,
+        builtin: true,
+        display_name: 'bigquery',
+        kind: 'bigquery',
       },
       {
         available: true,

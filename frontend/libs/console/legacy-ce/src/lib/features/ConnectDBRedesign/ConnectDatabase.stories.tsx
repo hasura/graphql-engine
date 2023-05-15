@@ -10,7 +10,7 @@ export default {
   component: ConnectDatabaseV2,
   decorators: [ReactQueryDecorator()],
   parameters: {
-    msw: handlers({ dcAgentsAdded: true }),
+    msw: handlers({ agentTestType: 'super_connector_agents_added' }),
   },
 } as ComponentMeta<typeof ConnectDatabaseV2>;
 
@@ -51,7 +51,7 @@ export const FromEnvironment: ComponentStory<typeof ConnectDatabaseV2> = () => {
     </div>
   );
 };
-FromEnvironment.storyName = '💠 Using Environment (DC Agents Available)';
+FromEnvironment.storyName = '💠 Using Environment (DC Agents Added)';
 
 /**
  *
@@ -65,9 +65,9 @@ FromEnvironment.storyName = '💠 Using Environment (DC Agents Available)';
  */
 
 export const FromEnvironment2 = FromEnvironment.bind({});
-FromEnvironment2.storyName = '💠 Using Environment (DC Agents NOT Available)';
+FromEnvironment2.storyName = '💠 Using Environment (DC Agents NOT Added)';
 FromEnvironment2.parameters = {
-  msw: handlers({ dcAgentsAdded: false }),
+  msw: handlers({ agentTestType: 'super_connector_agents_not_added' }),
 };
 /**
  *
@@ -77,9 +77,9 @@ FromEnvironment2.parameters = {
  *
  */
 export const Playground = Template.bind({});
-Playground.storyName = '💠 Playground (DC Agents NOT Available)';
+Playground.storyName = '💠 Playground (DC Agents NOT Added)';
 Playground.parameters = {
-  msw: handlers({ dcAgentsAdded: false }),
+  msw: handlers({ agentTestType: 'super_connector_agents_not_added' }),
 };
 Playground.args = Template.args;
 
@@ -94,8 +94,27 @@ Playground.args = Template.args;
  */
 
 export const Playground2 = Template.bind({});
-Playground2.storyName = '💠 Playground (DC Agents Available)';
+Playground2.storyName = '💠 Playground (DC Agents Added)';
 Playground2.args = Template.args;
+
+/**
+ *
+ * Playground 3
+ *
+ *
+ * Mock DC Agents are added in this version
+ *
+ *
+ */
+
+export const Playground3 = Template.bind({});
+Playground3.storyName = '💠 Playground (DC Agents Added but not available)';
+Playground3.parameters = {
+  msw: handlers({
+    agentTestType: 'super_connector_agents_added_but_unavailable',
+  }),
+};
+Playground3.args = Template.args;
 
 /**
  * TODO:

@@ -3,10 +3,20 @@ import { useAvailableDrivers } from '../../ConnectDB/hooks';
 import { DriverInfo } from '../../DataSource';
 import { DatabaseLogo } from '../components';
 import dbLogos from '../graphics/db-logos';
+import { SuperConnectorDrivers as SuperDrivers } from '../../hasura-metadata-types';
 
 type useDatabaseConnectDriversProps = {
   onFirstSuccess?: (data: DriverInfo[]) => void;
   showEnterpriseDrivers?: boolean;
+};
+
+export const kindNameMap: Record<SuperDrivers, string> = {
+  sqlite: 'Hasura SQLite',
+  athena: 'Amazon Athena',
+  snowflake: 'Snowflake',
+  mysql8: 'MySql',
+  mariadb: 'MariaDB',
+  oracle: 'Oracle',
 };
 
 // a GDC driver is only "available" once an agent is added for it
@@ -61,9 +71,14 @@ export const useDatabaseConnectDrivers = ({
   showEnterpriseDrivers = true,
   onFirstSuccess,
 }: useDatabaseConnectDriversProps = {}) => {
-  const { data: availableDrivers } = useAvailableDrivers({
+  const { data } = useAvailableDrivers({
     onFirstSuccess,
   });
+
+  const availableDrivers = data?.map(d => ({
+    ...d,
+    displayName: d.displayName || kindNameMap[d.name] || d.name,
+  }));
 
   const allDrivers = sortBy(
     uniqBy(
@@ -80,6 +95,7 @@ export const useDatabaseConnectDrivers = ({
       content: (
         <DatabaseLogo
           title={d.displayName}
+          noConnection={d.available === false}
           image={dbLogos[d.name] || dbLogos.default}
           releaseName={d.release}
         />
