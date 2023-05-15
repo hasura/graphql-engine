@@ -69,6 +69,7 @@ data GraphQLRequestMetrics = GraphQLRequestMetrics
 
 data EventTriggerMetrics = EventTriggerMetrics
   { eventTriggerHTTPWorkers :: Gauge,
+    eventsFetchedPerBatch :: Gauge,
     eventQueueTimeSeconds :: Histogram,
     eventsFetchTimePerBatch :: Histogram,
     eventWebhookProcessingTime :: Histogram,
@@ -134,6 +135,7 @@ makeDummyGraphQLRequestMetrics = do
 makeDummyEventTriggerMetrics :: IO EventTriggerMetrics
 makeDummyEventTriggerMetrics = do
   eventTriggerHTTPWorkers <- Gauge.new
+  eventsFetchedPerBatch <- Gauge.new
   eventQueueTimeSeconds <- Histogram.new []
   eventsFetchTimePerBatch <- Histogram.new []
   eventWebhookProcessingTime <- Histogram.new []

@@ -338,6 +338,8 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                 eventPollStartTime <- getCurrentTime
                 runExceptT (fetchUndeliveredEvents @b _siConfiguration sourceName triggerNames maintenanceMode (FetchBatchSize fetchBatchSize)) >>= \case
                   Right events -> do
+                    let eventFetchCount = fromIntegral $ length events
+                    Prometheus.Gauge.set (eventsFetchedPerBatch eventTriggerMetrics) eventFetchCount
                     if (null events)
                       then return []
                       else do

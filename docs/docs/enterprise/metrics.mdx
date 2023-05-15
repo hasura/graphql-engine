@@ -184,6 +184,18 @@ processing time indicates slow webhook, you should try to optimize the event web
 | Type   | Histogram<br /><br />Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10 |
 | Labels | none                                                         |
 
+### Hasura events fetched per batch
+
+Number of events fetched in a batch. This number should be equal to the
+[events fetch batch size](/deployment/graphql-engine-flags/reference.mdx/#events-fetch-batch-size) if there are any
+pending events, else this should be 0.
+
+|        |                                   |
+| ------ | --------------------------------- |
+| Name   | `hasura_events_fetched_per_batch` |
+| Type   | Gauge                             |
+| Labels | none                              |
+
 ### Hasura GraphQL execution time seconds
 
 Execution time of successful GraphQL requests (excluding subscriptions). If more requests are falling in the higher
