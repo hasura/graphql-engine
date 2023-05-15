@@ -169,13 +169,14 @@ data ResponseTransform = ResponseTransform
   }
 
 -- | A helper function for constructing the 'ResponseTransformCtx'
-buildRespTransformCtx :: Maybe RequestContext -> Maybe SessionVariables -> TemplatingEngine -> BL.ByteString -> ResponseTransformCtx
-buildRespTransformCtx requestContext sessionVars engine respBody =
+buildRespTransformCtx :: Maybe RequestContext -> Maybe SessionVariables -> TemplatingEngine -> BL.ByteString -> Int -> ResponseTransformCtx
+buildRespTransformCtx requestContext sessionVars engine respBody respStatusCode =
   ResponseTransformCtx
     { responseTransformBody = fromMaybe J.Null $ J.decode @J.Value respBody,
       responseTransformReqCtx = J.toJSON requestContext,
       responseSessionVariables = sessionVars,
-      responseTransformEngine = engine
+      responseTransformEngine = engine,
+      responseStatusCode = respStatusCode
     }
 
 -- | Construct a Template Transformation function for Responses

@@ -630,7 +630,7 @@ callWebhook
           Just metadataResponseTransform' ->
             let responseTransform = mkResponseTransform metadataResponseTransform'
                 engine = respTransformTemplateEngine responseTransform
-                responseTransformCtx = buildRespTransformCtx (reqTransformCtx <*> Just actualReq) sessionVars engine (HTTP.responseBody responseWreq)
+                responseTransformCtx = buildRespTransformCtx (reqTransformCtx <*> Just actualReq) sessionVars engine (HTTP.responseBody responseWreq) (HTTP.statusCode responseStatus)
              in applyResponseTransform responseTransform responseTransformCtx `onLeft` \err -> do
                   -- Log The Response Transformation Error
                   logger :: L.Logger L.Hasura <- asks getter

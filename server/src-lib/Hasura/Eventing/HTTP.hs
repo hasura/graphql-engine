@@ -353,7 +353,7 @@ invokeRequest reqDetails@RequestDetails {..} respTransform' sessionVars logger =
     Just respTransform -> do
       let respBody = SB.toLBS $ hrsBody resp
           engine = Transform.respTransformTemplateEngine respTransform
-          respTransformCtx = Transform.buildRespTransformCtx _rdReqTransformCtx sessionVars engine respBody
+          respTransformCtx = Transform.buildRespTransformCtx _rdReqTransformCtx sessionVars engine respBody (hrsStatus resp)
        in case Transform.applyResponseTransform respTransform respTransformCtx of
             Left err -> do
               -- Log The Response Transformation Error
