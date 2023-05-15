@@ -1,6 +1,9 @@
 import { SelectItem } from '../../../../../components/Common/SelectInputSplitField/SelectInputSplitField';
 import { CreateBooleanMap } from '../../../../../components/Common/utils/tsUtils';
-import { InputField, Select } from '../../../../../new-components/Form';
+import {
+  GraphQLSanitizedInputField,
+  Select,
+} from '../../../../../new-components/Form';
 import { AddLogicalModelFormData } from '../validationSchema';
 import { FieldsInput } from './FieldsInput';
 
@@ -21,12 +24,13 @@ export const LogicalModelFormInputs = (props: LogicalModelFormProps) => {
         placeholder="Pick a database..."
         disabled={props.disabled?.dataSourceName}
       />
-      <InputField
+      <GraphQLSanitizedInputField
         dataTestId="name"
         name="name"
         label="Logical Model Name"
         placeholder="Enter a name for your logical Model"
         disabled={props.disabled?.name}
+        hideTips
       />
       <FieldsInput
         name="fields"

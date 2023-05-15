@@ -2,14 +2,14 @@ import { transformErrorResponse } from '../../ConnectDBRedesign/utils';
 import { useMetadataMigration } from '../../MetadataAPI';
 import { MetadataMigrationOptions } from '../../MetadataAPI/hooks/useMetadataMigration';
 import { useInvalidateMetadata, useMetadata } from '../../hasura-metadata-api';
-import { NativeQuery } from '../../hasura-metadata-types';
+import { NativeQuery, Source } from '../../hasura-metadata-types';
 import { getSourceDriver } from './utils';
 
 export type TrackNativeQuery = {
   source: string;
 } & NativeQuery;
 
-export type UntrackNativeQuery = { source: string } & Pick<
+export type UntrackNativeQuery = { source: Source } & Pick<
   NativeQuery,
   'root_field_name'
 >;
@@ -64,8 +64,11 @@ export const useTrackNativeQuery = (
       {
         query: {
           resource_version,
-          type: `${getSourceDriver(sources, args.source)}_untrack_native_query`,
-          args,
+          type: `${args.source.kind}_untrack_native_query`,
+          args: {
+            source: args.source.name,
+            root_field_name: args.root_field_name,
+          },
         },
       },
       options

@@ -1,4 +1,4 @@
-import { IndexRedirect, Route } from 'react-router';
+import { IndexRedirect, IndexRoute, Route } from 'react-router';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 import globals from '../../../Globals';
@@ -36,6 +36,8 @@ import { TableBrowseRowsContainer } from './TableBrowseRows/TableBrowseRowsConta
 import { TableEditItemContainer } from './TableEditItem/TableEditItemContainer';
 import { TableInsertItemContainer } from './TableInsertItem/TableInsertItemContainer';
 import { ModifyTableContainer } from './TableModify/ModifyTableContainer';
+import { LandingPageRoute as NativeQueries } from '../../../features/Data/LogicalModels/LandingPage/LandingPage';
+import { AddNativeQueryRoute } from '../../../features/Data/LogicalModels/AddNativeQuery/AddNativeQueryRoute';
 
 const makeDataRouter = (
   connect,
@@ -71,6 +73,11 @@ const makeDataRouter = (
       <Route path="manage" component={ConnectedDatabaseManagePage} />
       <Route path="schema/manage" component={ConnectedDatabaseManagePage} />
       <Route path="sql" component={rawSQLConnector(connect)} />
+      <Route path="native-queries">
+        <IndexRoute component={NativeQueries} />
+        <Route path="create" component={AddNativeQueryRoute} />
+        <Route path="logical-models" component={NativeQueries} />
+      </Route>
       <Route path="manage/connect" component={ConnectDatabase} />
       <Route path="manage/create" component={ConnectedCreateDataSourcePage} />
       <Route path="schema/manage/connect" component={ConnectDatabase} />

@@ -18,7 +18,7 @@ export default {
 } as ComponentMeta<typeof AddNativeQuery>;
 
 export const Basic: ComponentStory<typeof AddNativeQuery> = args => {
-  return <AddNativeQuery />;
+  return <AddNativeQuery pathname="/data/native-queries/create" />;
 };
 
 const fillAndSubmitForm = async ({
@@ -83,6 +83,7 @@ const fillAndSubmitForm = async ({
 export const HappyPath: ComponentStory<typeof AddNativeQuery> = args => {
   return (
     <AddNativeQuery
+      pathname="/data/native-queries/create"
       defaultFormValues={{
         code: `SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t("one", "two")`,
       }}
@@ -111,6 +112,7 @@ HappyPath.play = async ({ canvasElement }) => {
 export const ErrorExists: ComponentStory<typeof AddNativeQuery> = args => {
   return (
     <AddNativeQuery
+      pathname="/data/native-queries/create"
       defaultFormValues={{
         code: `SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t("one", "two")`,
       }}
@@ -144,6 +146,7 @@ ErrorExists.play = async ({ canvasElement }) => {
 export const ErrorValidation: ComponentStory<typeof AddNativeQuery> = args => {
   return (
     <AddNativeQuery
+      pathname="/data/native-queries/create"
       defaultFormValues={{
         code: `select * from foo`,
       }}
@@ -177,6 +180,7 @@ ErrorValidation.play = async ({ canvasElement }) => {
 export const ErrorDisabled: ComponentStory<typeof AddNativeQuery> = args => {
   return (
     <AddNativeQuery
+      pathname="/data/native-queries/create"
       defaultFormValues={{
         code: `SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t("one", "two")`,
       }}

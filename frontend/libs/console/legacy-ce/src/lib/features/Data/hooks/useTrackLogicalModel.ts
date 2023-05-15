@@ -32,7 +32,7 @@ export const useTrackLogicalModel = (
   });
 
   const trackLogicalModel = async ({
-    data: { dataSourceName, name, cardinality, fields },
+    data: { dataSourceName, name, fields },
     ...options
   }: {
     data: TrackLogicalModel;
@@ -48,7 +48,6 @@ export const useTrackLogicalModel = (
           args: {
             source: dataSourceName,
             name,
-            cardinality,
             fields,
           },
         },
@@ -58,19 +57,16 @@ export const useTrackLogicalModel = (
   };
 
   const untrackLogicalModel = async ({
-    data: { dataSourceName, name },
+    data: { dataSourceName, name, dataSourceKind },
     ...options
   }: {
-    data: { dataSourceName: string; name: string };
+    data: { dataSourceName: string; name: string; dataSourceKind: string };
   } & MetadataMigrationOptions) => {
     mutate(
       {
         query: {
           resource_version,
-          type: `${getSourceDriver(
-            sources,
-            dataSourceName
-          )}_untrack_logical_model`,
+          type: `${dataSourceKind}_untrack_logical_model`,
           args: {
             source: dataSourceName,
             name,

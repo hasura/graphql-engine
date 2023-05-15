@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaSave } from 'react-icons/fa';
+import { FaPlusCircle, FaSave } from 'react-icons/fa';
 import { Button } from '../../../../new-components/Button';
 import {
   GraphQLSanitizedInputField,
@@ -7,22 +7,29 @@ import {
   Select,
   useConsoleForm,
 } from '../../../../new-components/Form';
-import { FormDebugWindow } from '../../../../new-components/Form/dev-components/FormDebugWindow';
+// import { FormDebugWindow } from '../../../../new-components/Form/dev-components/FormDebugWindow';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
-
 import { ArgumentsField } from './components/ArgumentsField';
 import { PageWrapper } from './components/PageWrapper';
 import { SqlEditorField } from './components/SqlEditorField';
 import { schema } from './schema';
 import { NativeQueryForm } from './types';
 import { transformFormOutputToMetadata } from './utils';
+import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
+import { Driver, drivers } from '../../../../dataSources';
 
 type AddNativeQueryProps = {
   defaultFormValues?: Partial<NativeQueryForm>;
+  pathname: string;
+  push?: (path: string) => void;
 };
-export const AddNativeQuery = ({ defaultFormValues }: AddNativeQueryProps) => {
+export const AddNativeQuery = ({
+  defaultFormValues,
+  pathname,
+  push,
+}: AddNativeQueryProps) => {
   const {
     Form,
     methods: { watch, setValue },
@@ -31,9 +38,9 @@ export const AddNativeQuery = ({ defaultFormValues }: AddNativeQueryProps) => {
     options: { defaultValues: defaultFormValues },
   });
 
-  const { data: sources, isLoading: isSourcesLoading } = useMetadata(s =>
-    s.metadata.sources.filter(s => ['postgres', 'mssql'].includes(s.name))
-  );
+  const { data: sources, isLoading: isSourcesLoading } = useMetadata(s => {
+    return s.metadata.sources.filter(s => drivers.includes(s.kind as Driver));
+  });
 
   const selectedSource = watch('source');
 
@@ -48,6 +55,9 @@ export const AddNativeQuery = ({ defaultFormValues }: AddNativeQueryProps) => {
 
   const { trackNativeQuery } = useTrackNativeQuery();
 
+  const [isLogicalModelsDialogOpen, setIsLogicalModelsDialogOpen] =
+    React.useState(false);
+
   const handleFormSubmit = (values: NativeQueryForm) => {
     const metadataNativeQuery = transformFormOutputToMetadata(values);
 
@@ -60,6 +70,8 @@ export const AddNativeQuery = ({ defaultFormValues }: AddNativeQueryProps) => {
           title: 'Track Native Query',
           toastOptions: { duration: 3000 },
         });
+        // Go to list
+        push?.('/data/native-queries');
       },
       onError: err => {
         hasuraToast({
@@ -72,10 +84,20 @@ export const AddNativeQuery = ({ defaultFormValues }: AddNativeQueryProps) => {
     });
   };
 
+  const logicalModelSelectPlaceholder = () => {
+    if (!selectedSource) {
+      return 'Select a database first...';
+    } else if (!!selectedSource && (logicalModels ?? []).length === 0) {
+      return `No logical models found for ${selectedSource}.`;
+    } else {
+      return `Select a logical model...`;
+    }
+  };
+
   return (
-    <PageWrapper>
+    <PageWrapper pathname={pathname} push={push}>
       <Form onSubmit={handleFormSubmit}>
-        <FormDebugWindow />
+        {/* <FormDebugWindow /> */}
         <div className="max-w-xl flex flex-col">
           <GraphQLSanitizedInputField
             name="root_field_name"
@@ -103,10 +125,11 @@ export const AddNativeQuery = ({ defaultFormValues }: AddNativeQueryProps) => {
         </div>
         <ArgumentsField />
         <SqlEditorField />
-        <div className="max-w-xl flex flex-col">
+        <div className="flex w-full">
           {/* Logical Model Dropdown */}
           <Select
             name="returns"
+            selectClassName="max-w-xl"
             // saving prop for future update
             // noOptionsMessage={
             //   !selectedSource ? 'Select a database first.' : 'No models found.'
@@ -114,18 +137,33 @@ export const AddNativeQuery = ({ defaultFormValues }: AddNativeQueryProps) => {
             // force component re-init on source change
             //key={selectedSource}
             label="Query Return Type"
-            placeholder={
-              !!selectedSource && (logicalModels ?? []).length === 0
-                ? 'No models found.'
-                : 'Select a logical model...'
-            }
+            placeholder={logicalModelSelectPlaceholder()}
             loading={isSourcesLoading}
             options={(logicalModels ?? []).map(m => ({
               label: m.name,
               value: m.name,
             }))}
           />
+          <Button
+            icon={<FaPlusCircle />}
+            onClick={() => {
+              setIsLogicalModelsDialogOpen(true);
+            }}
+          >
+            Add Logical Model
+          </Button>
         </div>
+        {isLogicalModelsDialogOpen ? (
+          <LogicalModelWidget
+            onCancel={() => {
+              setIsLogicalModelsDialogOpen(false);
+            }}
+            onSubmit={() => {
+              setIsLogicalModelsDialogOpen(false);
+            }}
+            asDialog
+          />
+        ) : null}
         <div className="flex flex-row justify-end gap-2">
           {/* 
               Validate Button will remain hidden until we have more information about how to handle standalone validation

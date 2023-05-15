@@ -31,7 +31,7 @@ export const ListLogicalModels = ({
       }),
       columnHelper.accessor('source', {
         id: 'database',
-        cell: info => <span>{info.getValue()}</span>,
+        cell: info => <span>{info.getValue().name}</span>,
         header: info => <span>Database</span>,
       }),
       columnHelper.display({
@@ -39,7 +39,8 @@ export const ListLogicalModels = ({
         header: 'Actions',
         cell: ({ cell, row }) => (
           <div className="flex flex-row gap-2">
-            <Button onClick={() => onEditClick(row.original)}>Edit</Button>
+            {/* Re add once we implement Edit functionality */}
+            {/* <Button onClick={() => onEditClick(row.original)}>Edit</Button> */}
             <Button
               mode="destructive"
               onClick={() => onRemoveClick(row.original)}

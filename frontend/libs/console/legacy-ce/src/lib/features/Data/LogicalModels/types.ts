@@ -1,4 +1,4 @@
-import { LogicalModel, NativeQuery } from '../../hasura-metadata-types';
+import { LogicalModel, NativeQuery, Source } from '../../hasura-metadata-types';
 
-export type NativeQueryWithSource = NativeQuery & { source: string };
-export type LogicalModelWithSource = LogicalModel & { source: string };
+export type NativeQueryWithSource = NativeQuery & { source: Source };
+export type LogicalModelWithSource = LogicalModel & { source: Source };

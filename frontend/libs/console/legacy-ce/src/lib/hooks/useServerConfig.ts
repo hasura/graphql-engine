@@ -10,6 +10,12 @@ type ExperimentalFeature =
   | 'naming_convention'
   | 'apollo_federation';
 
+type FeatureFlag = {
+  name: string;
+  description: string;
+  enabled: boolean;
+};
+
 export interface ServerConfig {
   version: string;
   is_function_permissions_inferred: boolean;
@@ -20,6 +26,7 @@ export interface ServerConfig {
   is_remote_schema_permissions_enabled: boolean;
   is_jwt_set: boolean;
   experimental_features: ExperimentalFeature[];
+  feature_flags: FeatureFlag[];
   jwt: {
     claims_namespace: string;
     claims_format: string;
