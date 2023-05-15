@@ -8,7 +8,6 @@ import Hasura.LogicalModel.IR
 import Hasura.NativeQuery.Metadata
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Column (ColumnValue)
 
 -- | The RQL IR representation of an invocation of a native query.
 data NativeQuery b field = NativeQuery
@@ -16,8 +15,6 @@ data NativeQuery b field = NativeQuery
     nqRootFieldName :: NativeQueryName,
     -- | The raw sql to use in the query
     nqInterpolatedQuery :: InterpolatedQuery field,
-    -- | The arguments passed to the query, if any.
-    nqArgs :: HashMap ArgumentName (ColumnValue b),
     -- | The return type of the native query
     nqLogicalModel :: LogicalModel b
   }

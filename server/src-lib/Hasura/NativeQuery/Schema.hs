@@ -88,7 +88,6 @@ defaultSelectNativeQueryObject NativeQueryInfo {..} fieldName description = runM
             ( IR.FromNativeQuery
                 NativeQuery
                   { nqRootFieldName = _nqiRootFieldName,
-                    nqArgs,
                     nqInterpolatedQuery = interpolatedQuery _nqiCode nqArgs,
                     nqLogicalModel = buildLogicalModelIR _nqiReturns
                   }
@@ -152,7 +151,6 @@ defaultSelectNativeQuery NativeQueryInfo {..} fieldName description = runMaybeT 
                 IR.FromNativeQuery
                   NativeQuery
                     { nqRootFieldName = _nqiRootFieldName,
-                      nqArgs,
                       nqInterpolatedQuery = interpolatedQuery _nqiCode nqArgs,
                       nqLogicalModel = buildLogicalModelIR _nqiReturns
                     },
