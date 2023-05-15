@@ -114,9 +114,9 @@ tests :: SpecWith TestEnvironment
 tests = do
   -- Test subscriptions with two websocket clients. The database state for the following tests are shared.
   -- Tests involving computed fields
-  withSubscriptions (withSubscriptions' snd multiplexedQueryComputedFieldsSpec)
+  withSubscriptions (withSubscriptions multiplexedQueryComputedFieldsSpec)
   -- Tests involving custom functions
-  withSubscriptions (withSubscriptions' snd multiplexedQueryCustomFunctionsSpec)
+  withSubscriptions (withSubscriptions multiplexedQueryCustomFunctionsSpec)
 
 multiplexedQueryComputedFieldsSpec ::
   SpecWith (Value -> [Pair] -> IO SubscriptionHandle, (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment))

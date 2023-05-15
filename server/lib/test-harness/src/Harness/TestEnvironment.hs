@@ -111,6 +111,10 @@ instance Has PassthroughEnvVars TestEnvironment where
   getter = getter . getter @GlobalTestEnvironment
   modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
 
+instance Has Services.HgeServerInstance TestEnvironment where
+  getter = getter . getter @GlobalTestEnvironment
+  modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
+
 instance Show TestEnvironment where
   show TestEnvironment {globalEnvironment} =
     "<TestEnvironment: " ++ urlPrefix (server globalEnvironment) ++ ":" ++ show (port (server globalEnvironment)) ++ " >"

@@ -11,7 +11,6 @@ module Harness.Services.GraphqlEngine
     hgePost,
     hgePostGraphql,
     PostGraphql (..),
-    adminSecret,
   )
 where
 
@@ -23,9 +22,8 @@ import Data.Attoparsec.ByteString as Atto
 import Data.ByteString qualified as BS
 import Data.Has
 import Data.IORef
-import Data.String (fromString)
 import Data.Text qualified as T
-import Data.Text.Encoding (decodeUtf8)
+import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Data.Time (NominalDiffTime, diffUTCTime, getCurrentTime)
 import Data.Vector (fromList)
 import Harness.Exceptions
@@ -44,9 +42,6 @@ import System.IO
 import System.Process
 import Test.Hspec
 
-adminSecret :: (IsString a) => a
-adminSecret = fromString "top-secret"
-
 -- | The path to the 'graphql-engine' executable.
 newtype HgeBinPath = HgeBinPath FilePath
 
@@ -56,7 +51,8 @@ data HgeConfig = HgeConfig
 
 data HgeServerInstance = HgeServerInstance
   { hgeServerHost :: Text,
-    hgeServerPort :: Int
+    hgeServerPort :: Int,
+    hgeAdminSecret :: Text
   }
 
 getHgeServerInstanceUrl :: HgeServerInstance -> Text
@@ -130,7 +126,7 @@ spawnServer testEnv (HgeConfig {hgeConfigEnvironmentVars}) = do
                     { env =
                         Just $
                           ("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "0")
-                            : ("HASURA_GRAPHQL_ADMIN_SECRET", adminSecret)
+                            : ("HASURA_GRAPHQL_ADMIN_SECRET", T.unpack adminSecret)
                             : allEnv,
                       std_out = CreatePipe,
                       std_err = CreatePipe,
@@ -158,13 +154,16 @@ spawnServer testEnv (HgeConfig {hgeConfigEnvironmentVars}) = do
   hgeLogRelayThread logger hgeStdOut
   hgeStdErrRelayThread logger hgeStdErr
   liftIO do
-    let server = HgeServerInstance "127.0.0.1" port
+    let server = HgeServerInstance "127.0.0.1" port adminSecret
     result <- Http.healthCheck' (T.unpack $ getHgeServerInstanceUrl server <> "/healthz")
     case result of
       Http.Healthy -> pure server
       Http.Unhealthy failures -> do
         runLogger logger $ HgeInstanceFailedHealthcheckMessage failures
         error "Graphql-Engine failed http healthcheck."
+  where
+    adminSecret :: Text
+    adminSecret = "top-secret"
 
 -- | Log message type used to indicate a HGE server instance has started.
 data HgeInstanceStartMessage = HgeInstanceStartMessage {hiStartPort :: Int}
@@ -311,10 +310,12 @@ hgePost ::
   J.Value ->
   IO J.Value
 hgePost env statusCode path headers requestBody = do
-  let hgeUrl = getHgeServerInstanceUrl $ getter env
+  let hgeInstance = getter @HgeServerInstance env
+  let hgeUrl = getHgeServerInstanceUrl hgeInstance
+  let adminSecret = hgeAdminSecret hgeInstance
   let fullUrl = T.unpack $ hgeUrl <> path
   testLogMessage env $ LogHGERequest path requestBody
-  let headersWithAdmin = ("x-hasura-admin-secret", adminSecret) : headers
+  let headersWithAdmin = ("x-hasura-admin-secret", encodeUtf8 adminSecret) : headers
   responseBody <- withFrozenCallStack $ Http.postValueWithStatus statusCode fullUrl headersWithAdmin requestBody
   testLogMessage env $ LogHGEResponse path responseBody
   return responseBody

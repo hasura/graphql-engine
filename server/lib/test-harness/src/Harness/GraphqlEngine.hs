@@ -134,7 +134,7 @@ postWithHeadersStatus statusCode testEnv@(getServer -> Server {urlPrefix, port})
         NonAdmin _ -> "test-role"
 
       headers' :: Http.RequestHeaders
-      headers' = ("X-Hasura-Admin-Secret", adminSecret) : ("X-Hasura-Role", role) : headers
+      headers' = ("X-Hasura-Admin-Secret", "top-secret") : ("X-Hasura-Role", role) : headers
 
   responseBody <- withFrozenCallStack case requestProtocol (globalEnvironment testEnv) of
     WebSocket connection -> postWithHeadersStatusViaWebSocket connection headers' requestBody
