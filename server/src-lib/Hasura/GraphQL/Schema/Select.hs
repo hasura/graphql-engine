@@ -1627,8 +1627,6 @@ logicalModelRelationshipField relationshipType ri =
     (ObjectReference, ObjRel) ->
       case riTarget ri of
         RelTargetNativeQuery nativeQueryName -> do
-          -- this should really be moved into Hasura.NativeQuery.Schema
-          --
           nativeQueryInfo <- lift $ askNativeQueryInfo nativeQueryName
           relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
 

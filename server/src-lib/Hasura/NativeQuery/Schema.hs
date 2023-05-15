@@ -67,10 +67,8 @@ defaultSelectNativeQueryObject NativeQueryInfo {..} fieldName description = runM
     MaybeT . fmap Just $
       buildLogicalModelPermissions @b @r @m @n _nqiReturns
 
-  -- we don't use the logical model args parser as we don't want to support
-  -- WHERE etc on a single item
-  (selectionSetParser, _) <-
-    MaybeT $ buildLogicalModelFields _nqiRelationships _nqiReturns
+  selectionSetParser <-
+    MaybeT $ logicalModelSelectionSet _nqiRelationships _nqiReturns
 
   let sourceObj =
         MO.MOSourceObjId
@@ -129,7 +127,7 @@ defaultSelectNativeQuery NativeQueryInfo {..} fieldName description = runMaybeT 
     MaybeT . fmap Just $
       buildLogicalModelPermissions @b @r @m @n _nqiReturns
 
-  (selectionSetParser, logicalModelsArgsParser) <-
+  (selectionListParser, logicalModelsArgsParser) <-
     MaybeT $ buildLogicalModelFields _nqiRelationships _nqiReturns
 
   let sourceObj =
@@ -146,7 +144,7 @@ defaultSelectNativeQuery NativeQueryInfo {..} fieldName description = runMaybeT 
             <$> logicalModelsArgsParser
             <*> nativeQueryArgsParser
         )
-        selectionSetParser
+        selectionListParser
         <&> \((lmArgs, nqArgs), fields) ->
           IR.AnnSelectG
             { IR._asnFields = fields,
