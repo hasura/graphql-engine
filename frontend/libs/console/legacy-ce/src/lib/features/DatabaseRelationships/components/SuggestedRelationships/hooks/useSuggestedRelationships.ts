@@ -17,6 +17,8 @@ import { generateQueryKeys } from '../../../utils/queryClientUtils';
 import { useMetadataMigration } from '../../../../MetadataAPI';
 import { useDriverRelationshipSupport } from '../../../../Data/hooks/useDriverRelationshipSupport';
 import { hasuraToast } from '../../../../../new-components/Toasts/hasuraToast';
+import adaptTrackRelationship from '../../../../Data/TrackResources/components/utils/adaptTrackRelationship';
+import { getLocalRelationshipPayload } from '../adapters/getLocalRelationshipPayload';
 
 type UseSuggestedRelationshipsArgs = {
   dataSourceName: string;
@@ -147,15 +149,6 @@ export const removeExistingRelationships = ({
     return false;
   });
 
-type AddSuggestedRelationship = {
-  name: string;
-  fromColumnNames: string[];
-  toColumnNames: string[];
-  relationshipType: 'object' | 'array';
-  toTable?: Table;
-  fromTable?: Table;
-};
-
 export const getSuggestedRelationshipsCacheQuery = (
   dataSourceName: string,
   table: Table
@@ -218,14 +211,11 @@ export const useSuggestedRelationships = ({
   const [isAddingSuggestedRelationship, setAddingSuggestedRelationship] =
     useState(false);
 
-  const onAddSuggestedRelationship = async ({
-    name,
-    fromColumnNames,
-    toColumnNames,
-    relationshipType,
-    toTable,
-    fromTable,
-  }: AddSuggestedRelationship) => {
+  const onAddSuggestedRelationship = async (
+    relationship: SuggestedRelationshipWithName
+  ) => {
+    const addRelationship = adaptTrackRelationship(relationship);
+
     setAddingSuggestedRelationship(true);
 
     if (!driverSupportsLocalRelationship && !driverSupportsRemoteRelationship) {
@@ -239,25 +229,21 @@ export const useSuggestedRelationships = ({
 
     if (driverSupportsLocalRelationship) {
       await metadataMutation.mutateAsync({
-        query: {
-          type: `${dataSourcePrefix}_create_${relationshipType}_relationship`,
-          args: {
-            table: fromTable || table,
-            name,
-            source: dataSourceName,
-            using: {
-              foreign_key_constraint_on:
-                relationshipType === 'object'
-                  ? fromColumnNames
-                  : {
-                      table: toTable,
-                      columns: toColumnNames,
-                    },
-            },
-          },
-        },
+        query: getLocalRelationshipPayload({
+          dataSourcePrefix: dataSourcePrefix || '',
+          dataSourceName,
+          relationship: addRelationship,
+        }),
       });
     } else if (driverSupportsRemoteRelationship) {
+      const {
+        fromTable,
+        name,
+        relationshipType,
+        fromColumnNames,
+        toColumnNames,
+      } = addRelationship;
+
       await metadataMutation.mutateAsync({
         query: {
           type: `${dataSourcePrefix}_create_remote_relationship`,

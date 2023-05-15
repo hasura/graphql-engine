@@ -8,8 +8,12 @@ import { useHttpClient } from '../../../../Network';
 import {
   addConstraintName,
   SuggestedRelationshipsResponse,
+  SuggestedRelationshipWithName,
 } from './useSuggestedRelationships';
-import { useMetadataMigration } from '../../../../MetadataAPI';
+import {
+  allowedMetadataTypes,
+  useMetadataMigration,
+} from '../../../../MetadataAPI';
 import {
   BulkKeepGoingResponse,
   NamingConvention,
@@ -18,23 +22,19 @@ import {
 import { getTrackedRelationshipsCacheKey } from '../../../../Data/TrackResources/components/hooks/useTrackedRelationships';
 import { hasuraToast } from '../../../../../new-components/Toasts';
 import { useDriverRelationshipSupport } from '../../../../Data/hooks/useDriverRelationshipSupport';
+import adaptTrackRelationship from '../../../../Data/TrackResources/components/utils/adaptTrackRelationship';
+import {
+  getLocalRelationshipPayload,
+  LocalRelationshipQuery,
+} from '../adapters/getLocalRelationshipPayload';
 
 type QueriesType =
   | {
-      type: string;
-      args: {
-        table: unknown;
-        name: string;
-        source: string;
-        using: {
-          foreign_key_constraint_on:
-            | string[]
-            | { table: unknown; columns: string[] };
-        };
-      };
+      type: allowedMetadataTypes;
+      args: LocalRelationshipQuery;
     }[]
   | {
-      type: string;
+      type: allowedMetadataTypes;
       args: {
         table: unknown;
         name: string;
@@ -57,6 +57,7 @@ export type AddSuggestedRelationship = {
   relationshipType: 'object' | 'array';
   toTable?: Table;
   fromTable?: Table;
+  constraintOn: 'fromTable' | 'toTable';
 };
 
 type UseSuggestedRelationshipsArgs = {
@@ -135,8 +136,9 @@ export const useAllSuggestedRelationships = ({
   const queryClient = useQueryClient();
 
   const onAddMultipleSuggestedRelationships = async (
-    relationships: AddSuggestedRelationship[]
+    suggestedRelationships: SuggestedRelationshipWithName[]
   ) => {
+    const relationships = suggestedRelationships.map(adaptTrackRelationship);
     let queries: QueriesType = [];
 
     if (!driverSupportsLocalRelationship && !driverSupportsRemoteRelationship) {
@@ -148,25 +150,13 @@ export const useAllSuggestedRelationships = ({
       return;
     }
     if (driverSupportsLocalRelationship) {
-      queries = relationships.map(relationship => {
-        return {
-          type: `${dataSourcePrefix}_create_${relationship.relationshipType}_relationship`,
-          args: {
-            table: relationship.fromTable,
-            name: relationship.name,
-            source: dataSourceName,
-            using: {
-              foreign_key_constraint_on:
-                relationship.relationshipType === 'object'
-                  ? relationship.fromColumnNames
-                  : {
-                      table: relationship.toTable,
-                      columns: relationship.toColumnNames,
-                    },
-            },
-          },
-        };
-      });
+      queries = relationships.map(relationship =>
+        getLocalRelationshipPayload({
+          dataSourcePrefix: dataSourcePrefix || '',
+          dataSourceName,
+          relationship,
+        })
+      );
     } else if (driverSupportsRemoteRelationship) {
       queries = relationships.map(relationship => {
         return {

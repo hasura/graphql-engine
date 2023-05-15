@@ -33,14 +33,9 @@ export const SuggestedRelationshipTrackModal: React.VFC<
 
   const onTrackRelationship = async (relationshipName: string) => {
     try {
-      const isObjectRelationship = !!relationship.from?.constraint_name;
-
       await onAddSuggestedRelationship({
-        name: relationshipName,
-        toColumnNames: relationship.to.columns,
-        fromColumnNames: relationship.from.columns,
-        relationshipType: isObjectRelationship ? 'object' : 'array',
-        toTable: isObjectRelationship ? undefined : relationship.to.table,
+        ...relationship,
+        constraintName: relationshipName,
       });
 
       refetchSuggestedRelationships();

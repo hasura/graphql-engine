@@ -13,30 +13,13 @@ import { SuggestedRelationshipWithName } from '../../../DatabaseRelationships/co
 import { RelationshipRow } from './RelationshipRow';
 import { SuggestedRelationshipTrackModal } from '../../../DatabaseRelationships/components/SuggestedRelationshipTrackModal/SuggestedRelationshipTrackModal';
 import Skeleton from 'react-loading-skeleton';
-import {
-  AddSuggestedRelationship,
-  useAllSuggestedRelationships,
-} from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
+import { useAllSuggestedRelationships } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
 import { useCheckRows } from '../../../DatabaseRelationships/hooks/useCheckRows';
 import { useTrackedRelationships } from './hooks/useTrackedRelationships';
 
 interface UntrackedRelationshipsProps {
   dataSourceName: string;
 }
-
-const adaptTrackRelationship = (
-  relationship: SuggestedRelationshipWithName
-): AddSuggestedRelationship => {
-  const isObjectRelationship = !!relationship.from?.constraint_name;
-  return {
-    name: relationship.constraintName,
-    fromColumnNames: relationship.from.columns,
-    toColumnNames: relationship.to.columns,
-    relationshipType: isObjectRelationship ? 'object' : 'array',
-    toTable: isObjectRelationship ? undefined : relationship.to.table,
-    fromTable: relationship.from.table,
-  };
-};
 
 export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
   dataSourceName,
@@ -98,9 +81,7 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
   const onTrackRelationship = async (
     relationship: SuggestedRelationshipWithName
   ) => {
-    await onAddMultipleSuggestedRelationships([
-      adaptTrackRelationship(relationship),
-    ]);
+    await onAddMultipleSuggestedRelationships([relationship]);
   };
 
   const [isTrackingSelectedRelationships, setTrackingSelectedRelationships] =
@@ -112,10 +93,7 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
         checkedIds.includes(rel.constraintName)
       );
 
-      const trackRelationships: AddSuggestedRelationship[] =
-        selectedRelationships.map(adaptTrackRelationship);
-
-      await onAddMultipleSuggestedRelationships(trackRelationships);
+      await onAddMultipleSuggestedRelationships(selectedRelationships);
     } catch (err) {
       setTrackingSelectedRelationships(false);
     }
