@@ -1,6 +1,6 @@
-This note is in [Hasura.Eventing.EventTrigger](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Eventing/EventTrigger.hs#L106).
+This note is in [Hasura.Eventing.EventTrigger](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Eventing/EventTrigger.hs#L103).
 It is referenced at:
-  - line 133 of [Hasura.Eventing.EventTrigger](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Eventing/EventTrigger.hs#L133)
+  - line 130 of [Hasura.Eventing.EventTrigger](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Eventing/EventTrigger.hs#L130)
 
 # Maintenance mode
 
