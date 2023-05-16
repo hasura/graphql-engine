@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | This module houses low-level functions and types to help access and work
@@ -42,6 +43,9 @@ import Test.Hspec
 
 newtype PostgresServerUrl = PostgresServerUrl {getPostgresServerUrl :: Text}
   deriving newtype (ToJSON)
+  deriving (Eq, Generic)
+
+instance Hashable PostgresServerUrl
 
 newtype FreshPostgresDb = FreshPostgresDb {freshDbName :: Text}
 

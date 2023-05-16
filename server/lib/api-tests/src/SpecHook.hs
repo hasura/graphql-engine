@@ -14,16 +14,15 @@ import Data.Char qualified as Char
 import Data.IORef
 import Data.List qualified as List
 import Database.PostgreSQL.Simple.Options qualified as Options
-import Harness.Constants qualified as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine (startServerThread)
 import Harness.Logging
 import Harness.Services.Composed (mkTestServicesConfig)
 import Harness.Test.BackendType (BackendType (..))
-import Harness.TestEnvironment (GlobalTestEnvironment (..), PassthroughEnvVars (..), Protocol (..), TestingMode (..), stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment (..), Protocol (..), TestingMode (..), stopServer)
 import Hasura.Prelude
 import System.Directory
-import System.Environment (getEnvironment, lookupEnv)
+import System.Environment (getEnvironment)
 import System.FilePath
 import System.IO.Unsafe (unsafePerformIO)
 import System.Log.FastLogger qualified as FL
@@ -76,8 +75,7 @@ parseBackendType backendType =
 setupTestEnvironment :: TestingMode -> Logger -> IO GlobalTestEnvironment
 setupTestEnvironment testingMode logger = do
   server <- startServerThread
-  servicesConfig <- mkTestServicesConfig
-  passthroughEnvVars <- mkPassthroughEnv
+  servicesConfig <- mkTestServicesConfig logger
   pure GlobalTestEnvironment {requestProtocol = HTTP, ..}
 
 -- | tear down the shared server
@@ -144,14 +142,3 @@ globalConfigRef = unsafePerformIO $ newIORef Nothing
 setupGlobalConfig :: TestingMode -> (Logger, IO ()) -> IO ()
 setupGlobalConfig testingMode loggerCleanup =
   writeIORef globalConfigRef $ Just (testingMode, loggerCleanup)
-
-envToPassthrough :: [String]
-envToPassthrough = [Constants.bigqueryServiceKeyVar]
-
--- | grab items from env to pass through to new HGE instances
-mkPassthroughEnv :: IO PassthroughEnvVars
-mkPassthroughEnv =
-  let lookup' env = do
-        value <- fromMaybe "" <$> lookupEnv env
-        pure (env, value)
-   in PassthroughEnvVars <$> traverse lookup' envToPassthrough

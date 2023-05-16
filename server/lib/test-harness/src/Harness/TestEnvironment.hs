@@ -5,7 +5,6 @@
 module Harness.TestEnvironment
   ( TestEnvironment (..),
     GlobalTestEnvironment (..),
-    PassthroughEnvVars (..),
     Protocol (..),
     Server (..),
     TestingMode (..),
@@ -107,7 +106,7 @@ instance Has Services.PostgresServerUrl TestEnvironment where
   getter = getter . getter @GlobalTestEnvironment
   modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
 
-instance Has PassthroughEnvVars TestEnvironment where
+instance Has Services.PassthroughEnvVars TestEnvironment where
   getter = getter . getter @GlobalTestEnvironment
   modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
 

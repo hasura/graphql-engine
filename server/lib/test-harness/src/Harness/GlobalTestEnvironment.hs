@@ -7,7 +7,6 @@ module Harness.GlobalTestEnvironment
     Protocol (..),
     Server (..),
     TestingMode (..),
-    PassthroughEnvVars (..),
     serverUrl,
   )
 where
@@ -18,7 +17,6 @@ import Data.Text qualified as T
 import Data.Word
 import Database.PostgreSQL.Simple.Options (Options)
 import Harness.Logging.Messages
-import Harness.PassthroughEnvVars
 import Harness.Services.Composed qualified as Services
 import Harness.Test.BackendType
 import Hasura.Prelude
@@ -35,9 +33,6 @@ data GlobalTestEnvironment = GlobalTestEnvironment
     server :: Server,
     -- | The protocol with which we make server requests.
     requestProtocol :: Protocol,
-    -- | Any environment variable names we wish to pass through to any new HGE
-    -- instance
-    passthroughEnvVars :: PassthroughEnvVars,
     servicesConfig :: Services.TestServicesConfig
   }
 
@@ -57,9 +52,13 @@ instance Has Services.PostgresServerUrl GlobalTestEnvironment where
   getter = getter . getter @Services.TestServicesConfig
   modifier f = modifier (modifier @_ @Services.TestServicesConfig f)
 
-instance Has PassthroughEnvVars GlobalTestEnvironment where
-  getter = passthroughEnvVars
-  modifier f x = x {passthroughEnvVars = f (passthroughEnvVars x)}
+instance Has Services.PassthroughEnvVars GlobalTestEnvironment where
+  getter = getter . getter @Services.TestServicesConfig
+  modifier f = modifier (modifier @_ @Services.TestServicesConfig f)
+
+instance Has Services.HgePool GlobalTestEnvironment where
+  getter = getter . getter @Services.TestServicesConfig
+  modifier f = modifier (modifier @_ @Services.TestServicesConfig f)
 
 instance Has Services.HgeServerInstance GlobalTestEnvironment where
   getter ge =

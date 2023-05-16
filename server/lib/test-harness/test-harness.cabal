@@ -51,6 +51,7 @@ library
     , pretty-simple
     , process
     , refined
+    , resource-pool
     , resourcet
     , safe
     , safe-exceptions
@@ -139,7 +140,6 @@ library
     Harness.Http
     Harness.Logging
     Harness.Logging.Messages
-    Harness.PassthroughEnvVars
     Harness.Permissions
     Harness.PytestPortedCompat
     Harness.Quoter.Graphql
@@ -154,8 +154,9 @@ library
     Harness.Schema.Table
     Harness.Services.Composed
     Harness.Services.Database.Postgres
+    Harness.Services.ExternalProcess.GraphqlEngine
     Harness.Services.GraphqlEngine
-    Harness.Services.Metadata
+    Harness.Services.GraphqlEngine.API
     Harness.Services.Schema
     Harness.Services.Source.Postgres
     Harness.Subscriptions
