@@ -35,6 +35,7 @@ import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.NativeQuery.Schema (defaultBuildNativeQueryRootFields)
+import Hasura.NativeQuery.Schema qualified as NativeQueries
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as IR
@@ -88,7 +89,8 @@ instance BackendTableSelectSchema 'BigQuery where
   selectTableAggregate = defaultSelectTableAggregate
   tableSelectionSet = defaultTableSelectionSet
 
-instance BackendNativeQuerySelectSchema 'BigQuery
+instance BackendNativeQuerySelectSchema 'BigQuery where
+  selectNativeQuery = NativeQueries.defaultSelectNativeQuery
 
 instance BackendLogicalModelSelectSchema 'BigQuery where
   logicalModelArguments = defaultLogicalModelArgs

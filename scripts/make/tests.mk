@@ -125,28 +125,28 @@ test-postgres-pro: build-pro start-backends remove-tix-file
 test-citus-pro: build-pro start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Citus \
-		cabal run $(API_TESTS_PRO) -- --match "Citus"
+		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-cockroach-pro
 ## test-cockroach-pro: run tests for HGE pro for Cockroach
 test-cockroach-pro: build-pro start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Cockroach \
-		cabal run $(API_TESTS_PRO) -- --match "Cockroach"
+		cabal run $(API_TESTS_PRO) 
 
 .PHONY: test-sqlserver-pro
 ## test-sqlserver-pro: run tests for HGE pro for SQLServer
 test-sqlserver-pro: build-pro start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=SQLServer \
-		cabal run $(API_TESTS_PRO) -- --match "SQLServer"
+		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-bigquery-pro
 ## test-bigquery-pro: run tests for HGE pro for BigQuery
 test-bigquery-pro: build-pro start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=BigQuery \
-		cabal run $(API_TESTS_PRO) -- --match "BigQuery"
+		cabal run $(API_TESTS_PRO) 
 
 .PHONY: test-unit
 ## test-unit: run unit tests from main suite
@@ -171,22 +171,9 @@ test-integration-postgres: remove-tix-file
 ## test-native-queries: run all tests for the Native Query feature
 test-native-queries:
 	cabal build exe:graphql-engine-pro
-	docker compose up --build --detach --wait postgres citus sqlserver-healthcheck
+	docker compose up --build --detach --wait postgres citus cockroach sqlserver-healthcheck
 	HSPEC_MATCH=NativeQueries make test-unit
-	HASURA_TEST_BACKEND_TYPE=Postgres \
-		HSPEC_MATCH=NativeQueries \
-		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
-		cabal run $(API_TESTS_PRO)
-	HASURA_TEST_BACKEND_TYPE=Citus \
-		HSPEC_MATCH=NativeQueries \
-		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
-		cabal run $(API_TESTS_PRO)
-	HASURA_TEST_BACKEND_TYPE=SQLServer \
-		HSPEC_MATCH=NativeQueries \
-		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
-		cabal run $(API_TESTS_PRO)
-	HASURA_TEST_BACKEND_TYPE=BigQuery \
-		HSPEC_MATCH=NativeQueries \
+	HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		cabal run $(API_TESTS_PRO)
 
