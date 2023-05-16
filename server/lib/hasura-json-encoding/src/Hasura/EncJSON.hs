@@ -81,6 +81,13 @@ removeSOH uncons bs =
 instance J.FromJSON EncJSON where
   parseJSON = pure . encJFromJValue
 
+instance J.ToJSON EncJSON where
+  toJSON j =
+    let parsed = J.decode' $ encJToLBS j
+     in case parsed of
+          Nothing -> error "EncJSON contained syntactically invalid JSON!"
+          Just x -> x
+
 -- No other instances for `EncJSON`. In particular, because:
 --
 -- - Having a `Semigroup` or `Monoid` instance allows constructing semantically

@@ -27,6 +27,7 @@ import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Retry qualified as Retry
 import Data.Aeson
+import Data.ByteString.Lazy qualified as LBS
 import Data.Either (isLeft)
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as HashMap
@@ -35,6 +36,7 @@ import Data.HashSet qualified as HS
 import Data.Proxy
 import Data.Sequence qualified as Seq
 import Data.Set qualified as S
+import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -551,7 +553,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
         BackendMetadata b
       ) =>
       ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey),
-        Maybe (BackendIntrospection b),
+        Maybe LBS.ByteString,
         BackendInfoAndSourceMetadata b
       )
         `arr` Maybe (SourceConfig b, DBObjectsIntrospection b)
@@ -563,18 +565,26 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       case maybeSourceConfig of
         Nothing -> returnA -< Nothing
         Just sourceConfig -> do
-          case biMetadata <$> sourceIntrospection of
-            Just rs -> returnA -< Just (sourceConfig, rs)
-            _ ->
-              (|
-                withRecordInconsistency
-                  ( bindErrorA
-                      -< ExceptT do
-                        resSource <- resolveDatabaseMetadata logger _bcasmSourceMetadata sourceConfig
-                        for_ resSource $ liftIO . unLogger logger
-                        pure $ (sourceConfig,) <$> resSource
-                  )
-              |) metadataObj
+          databaseResponse <- bindA -< resolveDatabaseMetadata logger _bcasmSourceMetadata sourceConfig
+          case databaseResponse of
+            Right databaseMetadata -> returnA -< Just (sourceConfig, databaseMetadata)
+            Left databaseError ->
+              -- If database exception occurs, try to lookup from stored introspection
+              case sourceIntrospection >>= decode' of
+                Nothing ->
+                  -- If no stored introspection exist, re-throw the database exception
+                  (| withRecordInconsistency (throwA -< databaseError) |) metadataObj
+                Just storedMetadata -> do
+                  let inconsistencyMessage =
+                        T.unwords
+                          [ "source " <>> sourceName,
+                            " is inconsistent because of stale database introspection is used.",
+                            "The source couldn't be reached for a fresh introspection",
+                            "because we got error: " <> qeError databaseError
+                          ]
+                  -- Still record inconsistency to notify the user obout the usage of stored stale data
+                  recordInconsistencies -< ((Just $ toJSON (qeInternal databaseError), [metadataObj]), inconsistencyMessage)
+                  returnA -< Just (sourceConfig, storedMetadata)
 
     -- impl notes (swann):
     --
@@ -1003,8 +1013,8 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                       let sourceMetadata = _bcasmSourceMetadata backendInfoAndSourceMetadata
                           sourceName = _smName sourceMetadata
                           sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
-                          sourceIntrospection = AB.unpackAnyBackend @b =<< HashMap.lookup sourceName =<< siBackendIntrospection <$> storedIntrospection
-                      maybeResolvedSource <- tryResolveSource -< (sourceInvalidationsKeys, sourceIntrospection, backendInfoAndSourceMetadata)
+                          sourceIntrospection = HashMap.lookup sourceName =<< siBackendIntrospection <$> storedIntrospection
+                      maybeResolvedSource <- tryResolveSource -< (sourceInvalidationsKeys, encJToLBS <$> sourceIntrospection, backendInfoAndSourceMetadata)
                       case maybeResolvedSource of
                         Nothing -> returnA -< Nothing
                         Just (sourceConfig, source) -> do
@@ -1020,7 +1030,6 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                                   _rsTables source,
                                   tableInputs,
                                   metadataInvalidationKey,
-                                  sourceIntrospection,
                                   namingConv
                                 )
 

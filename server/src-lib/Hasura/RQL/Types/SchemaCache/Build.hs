@@ -6,6 +6,7 @@
 -- stored in the @hdb_catalog@ schema in Postgres.
 module Hasura.RQL.Types.SchemaCache.Build
   ( MetadataDependency (..),
+    recordInconsistencies,
     recordInconsistencyM,
     recordInconsistenciesM,
     recordDependencies,
