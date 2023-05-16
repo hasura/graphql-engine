@@ -24,6 +24,40 @@ db.createCollection('mycollection', {
   },
 });
 
+db.createCollection('students', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      title: 'Student Object Validation',
+      required: ['address', 'gpa', 'name', 'year'],
+      properties: {
+        name: {
+          bsonType: 'string',
+          description: "'name' must be a string and is required",
+        },
+        year: {
+          bsonType: 'int',
+          minimum: 2017,
+          maximum: 3017,
+          description:
+            "'year' must be an integer in [ 2017, 3017 ] and is required",
+        },
+        gpa: {
+          bsonType: ['double'],
+          description: "'gpa' must be a double if the field exists",
+        },
+        address: {
+          bsonType: ['object'],
+          properties: {
+            city: { bsonType: 'string' },
+            street: { bsonType: 'string' },
+          },
+        },
+      },
+    },
+  },
+});
+
 db.mycollection.insertMany([
   {
     name: 'John',
@@ -34,5 +68,26 @@ db.mycollection.insertMany([
     name: 'Jane',
     age: 25,
     email: 'jane@example.com',
+  },
+]);
+
+db.students.insertMany([
+  {
+    name: 'Stu',
+    year: 2018,
+    gpa: 3.5,
+    address: {
+      city: 'Moon',
+      street: 'Asteroid 6',
+    },
+  },
+  {
+    name: 'Stan',
+    year: 2020,
+    gpa: 5.01,
+    address: {
+      city: 'Mars',
+      street: 'Volcano 10',
+    },
   },
 ]);

@@ -19,6 +19,7 @@ import {
   isTypedObject,
   TypedObjectValidator,
 } from '../../../components/Common/utils/jsUtils';
+import { EnabledTabs, useEnabledTabs } from '../hooks/useEnabledTabs';
 
 type AllowedTabs = 'modify' | 'browse' | 'relationship' | 'permissions';
 export interface ManageTableProps {
@@ -40,7 +41,8 @@ const availableTabs = (
   dataSourceName: string,
   table: Table,
   tableName: string,
-  areMutationsSupported: boolean
+  areMutationsSupported: boolean,
+  enabledTabs: EnabledTabs
 ): Tab[] =>
   [
     {
@@ -91,7 +93,11 @@ const availableTabs = (
       label: 'Permissions',
       content: <PermissionsTab dataSourceName={dataSourceName} table={table} />,
     },
-  ].filter((item): item is Tab => isTypedObject<Tab>(item, isTabValidator));
+  ].filter(
+    (item): item is Tab =>
+      isTypedObject<Tab>(item, isTabValidator) &&
+      enabledTabs[item.value as keyof EnabledTabs]
+  );
 
 export const ManageTable: React.VFC<ManageTableProps> = (
   props: ManageTableProps
@@ -126,6 +132,8 @@ export const ManageTable: React.VFC<ManageTableProps> = (
   const areInsertMutationsSupported =
     isObject(capabilities) && !!capabilities?.mutations?.insert;
 
+  const enabledTabs = useEnabledTabs(dataSourceName);
+
   const isLoading = isLoadingHierarchy || isLoadingCapabilities;
 
   if (isErrorHierarchy)
@@ -157,7 +165,8 @@ export const ManageTable: React.VFC<ManageTableProps> = (
             dataSourceName,
             table,
             tableName,
-            areInsertMutationsSupported
+            areInsertMutationsSupported,
+            enabledTabs
           )}
         />
       </div>

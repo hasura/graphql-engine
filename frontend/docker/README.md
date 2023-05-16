@@ -50,8 +50,10 @@ For the moment we don't have a docker image for the Mongo agent, but you can sta
 - `cabal build`
 - `cabal update`
 - `cabal run`
-- Add an agent. Set URL to `http://host.docker.internal:8888`
-- Add a Mongo database. Set URL to `host.docker.internal:27017`
+- Add an agent. Set URL to `http://host.docker.internal:8888`. Replace with `localhost` if your OS does not support `host.docker.internal`
+- Add a Mongo database
+  - Set URL to `host.docker.internal:27017`
+  - Set DB to `sample`
 
 ## Using Different HGE Images
 
