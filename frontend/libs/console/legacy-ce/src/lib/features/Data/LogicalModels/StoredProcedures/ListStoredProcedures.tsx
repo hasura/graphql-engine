@@ -1,0 +1,119 @@
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
+import { useMetadata } from '../../../hasura-metadata-api';
+import { CardedTableFromReactTable } from '../components/CardedTableFromReactTable';
+import { StoredProcedure } from '../../../hasura-metadata-types';
+import { useCallback, useState } from 'react';
+import { Button } from '../../../../new-components/Button';
+import { StoredProcedureDisplayName } from './components/StoredProcedureDisplayName';
+import { useTrackStoredProcedure } from '../../hooks/useTrackStoredProcedure';
+import { hasuraToast } from '../../../../new-components/Toasts';
+import {
+  STORED_PROCEDURE_UNTRACK_ERROR,
+  STORED_PROCEDURE_UNTRACK_SUCCESS,
+} from '../constants';
+import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
+
+// this is local type for the table row. Do not export
+type RowType = { dataSourceName: string } & StoredProcedure;
+
+const columnHelper = createColumnHelper<RowType>();
+
+export const ListStoredProcedures = () => {
+  const { untrackStoredProcedure, isLoading } = useTrackStoredProcedure();
+  const [activeRow, setActiveRow] = useState<number>();
+
+  /**
+   * Get the list of all stored procedures
+   */
+  const { data = [] } = useMetadata(m =>
+    m.metadata.sources
+      .map(({ name, stored_procedures }) =>
+        (stored_procedures ?? []).map(stored_procedure => ({
+          dataSourceName: name,
+          ...stored_procedure,
+        }))
+      )
+      .flat()
+  );
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const onRemoveClick = (data: RowType, index: number) => {
+    setActiveRow(index);
+    untrackStoredProcedure({
+      data: {
+        dataSourceName: data.dataSourceName,
+        stored_procedure: data.stored_procedure,
+      },
+      onSuccess: () => {
+        hasuraToast({
+          type: 'success',
+          title: STORED_PROCEDURE_UNTRACK_SUCCESS,
+        });
+      },
+      onError: err => {
+        hasuraToast({
+          type: 'error',
+          title: STORED_PROCEDURE_UNTRACK_ERROR,
+          children: <DisplayToastErrorMessage message={err.message} />,
+        });
+      },
+      onSettled: () => {
+        setActiveRow(undefined);
+      },
+    });
+  };
+
+  const columns = useCallback(
+    () => [
+      columnHelper.accessor('stored_procedure', {
+        id: 'name',
+        cell: info => (
+          <span>
+            <StoredProcedureDisplayName
+              qualifiedStoredProcedure={info.getValue()}
+            />
+          </span>
+        ),
+        header: info => <span>Name</span>,
+      }),
+      columnHelper.accessor('dataSourceName', {
+        id: 'database',
+        cell: info => <span>{info.getValue()}</span>,
+        header: info => <span>Database</span>,
+      }),
+      columnHelper.display({
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ cell, row }) => (
+          <div className="flex flex-row gap-2">
+            <Button
+              mode="destructive"
+              onClick={() => onRemoveClick(row.original, row.index)}
+              isLoading={activeRow === row.index && isLoading}
+            >
+              Remove
+            </Button>
+          </div>
+        ),
+      }),
+    ],
+    [activeRow, isLoading, onRemoveClick]
+  );
+
+  const table = useReactTable({
+    data,
+    columns: columns(),
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  return (
+    <CardedTableFromReactTable
+      table={table}
+      noRowsMessage="No Tracked Stored Procedures found in metadata."
+    />
+  );
+};

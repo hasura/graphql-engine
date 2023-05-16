@@ -198,3 +198,8 @@ export type GetIsTableViewProps = {
 export type DriverCapability = Capabilities & {
   functions?: Record<string, any>;
 };
+
+export type StoredProcedure = unknown;
+export type GetStoredProceduresProps = {
+  dataSourceName: string;
+} & NetworkArgs;

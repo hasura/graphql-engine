@@ -8,6 +8,7 @@ import {
 import { LogicalModel } from './logicalModel';
 import { NativeQuery } from './nativeQuery';
 import { MetadataTable } from './table';
+import { StoredProcedure } from './storedProcedure';
 
 export type NativeDrivers =
   | 'postgres'
@@ -57,6 +58,7 @@ export type Source = {
   functions?: MetadataFunction[];
   logical_models?: LogicalModel[];
   native_queries?: NativeQuery[];
+  stored_procedures?: StoredProcedure[];
 } & (
   | {
       kind: 'postgres';
@@ -89,6 +91,11 @@ export type Source = {
 export type QualifiedFunction = unknown;
 export type { LogicalModel, LogicalModelField } from './logicalModel';
 export type { NativeQuery, NativeQueryArgument } from './nativeQuery';
+export type {
+  StoredProcedure,
+  StoredProcedureArgument,
+  QualifiedStoredProcedure,
+} from './storedProcedure';
 
 export type BulkKeepGoingResponse = [
   | {

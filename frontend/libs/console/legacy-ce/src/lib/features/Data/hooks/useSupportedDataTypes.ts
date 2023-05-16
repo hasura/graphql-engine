@@ -2,6 +2,7 @@ import { UseQueryOptions, useQuery } from 'react-query';
 import { DataSource, Feature, TableColumn } from '../../DataSource';
 import { useHttpClient } from '../../Network';
 import { APIError } from '../../../hooks/error';
+import { getDefaultQueryOptions } from '../reactQueryUtils';
 
 export const useSupportedDataTypes = <
   FinalResult = Feature | Record<TableColumn['consoleDataType'], string[]>
@@ -27,7 +28,7 @@ export const useSupportedDataTypes = <
     APIError,
     FinalResult
   >(
-    [dataSourceName, 'untracked_tables'],
+    [dataSourceName, 'supported_data_types'],
     async () => {
       const result = await DataSource(httpClient).getSupportedDataTypes({
         dataSourceName,
@@ -36,6 +37,7 @@ export const useSupportedDataTypes = <
     },
     {
       select,
+      ...getDefaultQueryOptions(),
       ...options,
     }
   );

@@ -7,7 +7,10 @@ import {
 import { Table } from '../../hasura-metadata-types';
 import { runSQL } from '../api';
 import { postgresCapabilities } from '../common/capabilities';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
+import {
+  defaultDatabaseProps,
+  defaultIntrospectionProps,
+} from '../common/defaultDatabaseProps';
 import {
   getDatabaseConfiguration,
   getDatabaseSchemas,
@@ -33,6 +36,7 @@ const getCreateSchemaSql = (schemaName: string) =>
 export const postgres: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    ...defaultIntrospectionProps,
     getTrackableFunctions,
     getVersion: async ({ dataSourceName, httpClient }: GetVersionProps) => {
       const result = await runSQL({

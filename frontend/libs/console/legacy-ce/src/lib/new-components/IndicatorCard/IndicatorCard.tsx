@@ -12,6 +12,7 @@ export type IndicatorCardProps = {
   className?: string;
   contentFullWidth?: boolean;
   customIcon?: React.VFC<{ className: string }>;
+  id?: string;
 };
 
 const cardColors: Record<indicatorCardStatus, string> = {
@@ -43,6 +44,7 @@ export const IndicatorCard = ({
   className,
   contentFullWidth = false,
   customIcon,
+  id,
 }: IndicatorCardProps) => {
   const Icon = customIcon ?? IconPerStatus[status];
 
@@ -65,7 +67,11 @@ export const IndicatorCard = ({
         </div>
       ) : null}
       <div className={clsx(contentFullWidth && 'w-full')}>
-        {headline ? <p className="font-semibold">{headline}</p> : null}
+        {headline ? (
+          <p className="font-semibold" data-testid={headline}>
+            {headline}
+          </p>
+        ) : null}
         <div>{children}</div>
       </div>
     </div>

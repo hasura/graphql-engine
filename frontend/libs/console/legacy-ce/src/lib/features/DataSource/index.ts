@@ -36,6 +36,8 @@ import type {
   Version,
   WhereClause,
   DriverCapability,
+  StoredProcedure,
+  GetStoredProceduresProps,
 } from './types';
 
 import { transformSchemaToZodObject } from '../OpenApi3Form/utils';
@@ -148,6 +150,9 @@ export type Database = {
     getSupportedDataTypes: () => Promise<
       Record<TableColumn['consoleDataType'], string[]> | Feature.NotImplemented
     >;
+    getStoredProcedures: (
+      props: GetStoredProceduresProps
+    ) => Promise<StoredProcedure[] | Feature.NotImplemented>;
   };
   query?: {
     getTableRows: (
@@ -607,6 +612,19 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     const database = await getDatabaseMethods({ dataSourceName, httpClient });
     return (
       database.introspection?.getSupportedDataTypes() ?? Feature.NotImplemented
+    );
+  },
+  getStoredProcedures: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+    return (
+      database.introspection?.getStoredProcedures({
+        dataSourceName,
+        httpClient,
+      }) ?? Feature.NotImplemented
     );
   },
 });
