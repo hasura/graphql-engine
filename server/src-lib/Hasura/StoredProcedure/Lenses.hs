@@ -4,7 +4,6 @@ module Hasura.StoredProcedure.Lenses
   ( spiStoredProcedure,
     spiGraphqlName,
     spiConfig,
-    spiArrayRelationships,
     spiReturns,
     spiArguments,
     spiDescription,

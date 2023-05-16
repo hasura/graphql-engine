@@ -4,7 +4,6 @@
 module Hasura.StoredProcedure.Types
   ( NullableScalarType (..),
     nullableScalarTypeMapCodec,
-    arrayRelationshipsCodec,
     StoredProcedureConfig (..),
     StoredProcedureExposedAs (..),
   )
@@ -16,7 +15,6 @@ import Autodocodec.Extended (graphQLFieldNameCodec)
 import Data.Aeson
 import Data.Char (toLower)
 import Hasura.LogicalModel.NullableScalarType
-import Hasura.LogicalModelResolver.Codec (arrayRelationshipsCodec)
 import Hasura.Prelude hiding (first)
 import Language.GraphQL.Draft.Syntax qualified as G
 

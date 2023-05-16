@@ -10,7 +10,6 @@ module Hasura.RQL.DDL.Relationship
     SetRelComment,
     runSetRelComment,
     nativeQueryRelationshipSetup,
-    storedProcedureArrayRelationshipSetup,
   )
 where
 
@@ -106,7 +105,7 @@ defaultBuildObjectRelationshipInfo ::
   ObjRelDef b ->
   m (RelInfo b, Seq SchemaDependency)
 defaultBuildObjectRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case ru of
-  RUManual (RelManualTableConfig (RelManualTableConfigC {rmtTable = refqt, rmtCommon = common})) -> do
+  RUManual (RelManualTableConfig {rmtTable = refqt, rmtCommon = common}) -> do
     let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
         io = fromMaybe BeforeParent $ rmInsertOrder common
         mkDependency tableName reason col =
@@ -121,7 +120,6 @@ defaultBuildObjectRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case
           (mkDependency qt DRLeftColumn <$> Seq.fromList lCols)
             <> (mkDependency refqt DRRightColumn <$> Seq.fromList rCols)
     pure (RelInfo rn ObjRel (rmColumns common) (RelTargetTable refqt) True io, dependencies)
-  RUManual (RelManualNativeQueryConfig _) -> error "defaultBuildObjectRelationshipInfo to Native Query"
   RUFKeyOn (SameTable columns) -> do
     foreignTableForeignKeys <-
       HashMap.lookup qt foreignKeys
@@ -157,112 +155,38 @@ nativeQueryRelationshipSetup ::
   SourceName ->
   NativeQueryName ->
   RelType ->
-  RelDef (RelManualConfig b) ->
+  RelDef (RelManualNativeQueryConfig b) ->
   m (RelInfo b, Seq SchemaDependency)
-nativeQueryRelationshipSetup sourceName nativeQueryName relType (RelDef relName manualConfig _) = do
-  case manualConfig of
-    RelManualNativeQueryConfig (RelManualNativeQueryConfigC {rmnNativeQueryName = refqt, rmnCommon = common}) -> do
-      let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
-          io = case relType of
-            ObjRel -> fromMaybe BeforeParent $ rmInsertOrder common
-            ArrRel -> AfterParent
-          deps =
-            ( fmap
-                ( \c ->
-                    SchemaDependency
-                      ( SOSourceObj sourceName $
-                          AB.mkAnyBackend $
-                            SOINativeQueryObj @b nativeQueryName $
-                              NQOCol @b c
-                      )
-                      DRLeftColumn
-                )
-                (Seq.fromList lCols)
+nativeQueryRelationshipSetup sourceName nativeQueryName relType (RelDef relName (RelManualNativeQueryConfig {rmnNativeQueryName = refqt, rmnCommon = common}) _) = do
+  let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
+      io = case relType of
+        ObjRel -> fromMaybe BeforeParent $ rmInsertOrder common
+        ArrRel -> AfterParent
+      deps =
+        ( fmap
+            ( \c ->
+                SchemaDependency
+                  ( SOSourceObj sourceName $
+                      AB.mkAnyBackend $
+                        SOINativeQueryObj @b nativeQueryName $
+                          NQOCol @b c
+                  )
+                  DRLeftColumn
             )
-              <> fmap
-                ( \c ->
-                    SchemaDependency
-                      ( SOSourceObj sourceName $
-                          AB.mkAnyBackend $
-                            SOINativeQueryObj @b refqt $
-                              NQOCol @b c
-                      )
-                      DRRightColumn
-                )
-                (Seq.fromList rCols)
-      pure (RelInfo relName relType (rmColumns common) (RelTargetNativeQuery refqt) True io, deps)
-    RelManualTableConfig (RelManualTableConfigC {rmtTable = refqt, rmtCommon = common}) -> do
-      let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
-          io = case relType of
-            ObjRel -> fromMaybe BeforeParent $ rmInsertOrder common
-            ArrRel -> AfterParent
-          deps =
-            ( fmap
-                ( \c ->
-                    SchemaDependency
-                      ( SOSourceObj sourceName $
-                          AB.mkAnyBackend $
-                            SOINativeQueryObj @b nativeQueryName $
-                              NQOCol @b c
-                      )
-                      DRLeftColumn
-                )
-                (Seq.fromList lCols)
+            (Seq.fromList lCols)
+        )
+          <> fmap
+            ( \c ->
+                SchemaDependency
+                  ( SOSourceObj sourceName $
+                      AB.mkAnyBackend $
+                        SOINativeQueryObj @b refqt $
+                          NQOCol @b c
+                  )
+                  DRRightColumn
             )
-              <> fmap
-                ( \c ->
-                    SchemaDependency
-                      ( SOSourceObj sourceName $
-                          AB.mkAnyBackend $
-                            SOITableObj @b refqt $
-                              TOCol @b c
-                      )
-                      DRRightColumn
-                )
-                (Seq.fromList rCols)
-      pure (RelInfo relName relType (rmColumns common) (RelTargetTable refqt) True io, deps)
-
--- | set up an array relationship from a Stored Procedure onto another data source
--- currently we can only connect to other tables but this will expand in future
--- we only do RelManualConfig as we don't have any notion of ForeignKey from a
--- Stored Procedure.
-storedProcedureArrayRelationshipSetup ::
-  forall b m.
-  (QErrM m, Backend b) =>
-  SourceName ->
-  FunctionName b ->
-  RelDef (RelManualConfig b) ->
-  m (RelInfo b, Seq SchemaDependency)
-storedProcedureArrayRelationshipSetup sourceName storedProcedureName (RelDef relName manualConfig _) = do
-  case manualConfig of
-    RelManualNativeQueryConfig _ -> error "storedProcedureArrayRelationshipSetup to Native Query"
-    RelManualTableConfig (RelManualTableConfigC {rmtTable = refqt, rmtCommon = common}) -> do
-      let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
-          deps =
-            ( fmap
-                ( \c ->
-                    SchemaDependency
-                      ( SOSourceObj sourceName $
-                          AB.mkAnyBackend $
-                            SOIStoredProcedureObj @b storedProcedureName $
-                              SPOCol @b c
-                      )
-                      DRLeftColumn
-                )
-                (Seq.fromList lCols)
-            )
-              <> fmap
-                ( \c ->
-                    SchemaDependency
-                      ( SOSourceObj sourceName $
-                          AB.mkAnyBackend $
-                            SOITableObj @b refqt $
-                              TOCol @b c
-                      )
-                      DRRightColumn
-                )
-                (Seq.fromList rCols)
-      pure (RelInfo relName ArrRel (rmColumns common) (RelTargetTable refqt) True AfterParent, deps)
+            (Seq.fromList rCols)
+  pure (RelInfo relName relType (rmColumns common) (RelTargetNativeQuery refqt) True io, deps)
 
 defaultBuildArrayRelationshipInfo ::
   forall b m.
@@ -273,7 +197,7 @@ defaultBuildArrayRelationshipInfo ::
   ArrRelDef b ->
   m (RelInfo b, Seq SchemaDependency)
 defaultBuildArrayRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case ru of
-  RUManual (RelManualTableConfig (RelManualTableConfigC {rmtTable = refqt, rmtCommon = common})) -> do
+  RUManual (RelManualTableConfig {rmtTable = refqt, rmtCommon = common}) -> do
     let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
         deps =
           ( fmap
@@ -300,7 +224,6 @@ defaultBuildArrayRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case 
               )
               (Seq.fromList rCols)
     pure (RelInfo rn ArrRel (rmColumns common) (RelTargetTable refqt) True AfterParent, deps)
-  RUManual (RelManualNativeQueryConfig _) -> error "defaultBuildArrayRelationshipInfo to Native Query"
   RUFKeyOn (ArrRelUsingFKeyOn refqt refCols) ->
     mkFkeyRel ArrRel AfterParent source rn qt refqt refCols foreignKeys
 

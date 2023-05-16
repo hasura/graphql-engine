@@ -64,7 +64,7 @@ defaultBuildStoredProcedureRootFields StoredProcedureInfo {..} = runMaybeT $ do
       buildLogicalModelPermissions @b @r @m @n _spiReturns
 
   (selectionSetParser, logicalModelsArgsParser) <-
-    MaybeT $ buildLogicalModelFields _spiArrayRelationships _spiReturns
+    MaybeT $ buildLogicalModelFields mempty _spiReturns
 
   let arguments spArgs =
         HashMap.mapWithKey

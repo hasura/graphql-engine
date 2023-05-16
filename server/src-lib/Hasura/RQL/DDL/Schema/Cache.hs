@@ -914,17 +914,6 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                 recordDependenciesM metadataObject schemaObjId $
                   Seq.singleton dependency
 
-                arrayRelationships <-
-                  traverse
-                    (storedProcedureArrayRelationshipSetup sourceName _spmStoredProcedure)
-                    _spmArrayRelationships
-
-                let sourceObject =
-                      SOSourceObj sourceName $
-                        AB.mkAnyBackend $
-                          SOIStoredProcedure @b _spmStoredProcedure
-
-                recordDependenciesM metadataObject sourceObject (mconcat $ snd <$> InsOrdHashMap.elems arrayRelationships)
                 graphqlName <- getStoredProcedureGraphqlName @b _spmStoredProcedure _spmConfig
 
                 pure
@@ -934,7 +923,6 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                       _spiConfig = _spmConfig,
                       _spiReturns = logicalModel,
                       _spiArguments = _spmArguments,
-                      _spiArrayRelationships = fst <$> arrayRelationships,
                       _spiDescription = _spmDescription
                     }
 

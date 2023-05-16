@@ -39,7 +39,6 @@ import Hasura.RemoteSchema.SchemaCache (rscPermissions, rscRemoteRelationships)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.StoredProcedure.Cache (StoredProcedureInfo (_spiReturns))
-import Hasura.StoredProcedure.Lenses (spiArrayRelationships)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to
@@ -332,9 +331,6 @@ deleteMetadataObject = \case
         siNativeQueries . ix nativeQueryName %~ case nativeQueryObjId of
           NQMORel name _ -> nqiRelationships %~ InsOrdHashMap.delete name
       SMOStoredProcedure name -> siStoredProcedures %~ HashMap.delete name
-      SMOStoredProcedureObj storedProcedureName storedProcedureObjId ->
-        siStoredProcedures . ix storedProcedureName %~ case storedProcedureObjId of
-          SPMORel name _ -> spiArrayRelationships %~ InsOrdHashMap.delete name
       SMOLogicalModel name -> siLogicalModels %~ HashMap.delete name
       SMOLogicalModelObj logicalModelName logicalModelObjectId ->
         siLogicalModels . ix logicalModelName %~ case logicalModelObjectId of

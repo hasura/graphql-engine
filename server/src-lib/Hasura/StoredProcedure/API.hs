@@ -29,15 +29,13 @@ import Hasura.RQL.Types.Backend (Backend, FunctionName, SourceConnConfiguration)
 import Hasura.RQL.Types.BackendTag
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-  ( RelName,
-    SourceName,
+  ( SourceName,
     sourceNameToText,
     successMsg,
   )
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualConfig)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker (..))
@@ -51,7 +49,6 @@ data TrackStoredProcedure (b :: BackendType) = TrackStoredProcedure
     tspStoredProcedure :: FunctionName b,
     tspConfig :: StoredProcedureConfig,
     tspArguments :: HashMap ArgumentName (NullableScalarType b),
-    tspArrayRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
     tspDescription :: Maybe Text,
     tspReturns :: LogicalModelName
   }
@@ -70,14 +67,11 @@ instance (Backend b) => HasCodec (TrackStoredProcedure b) where
           AC..= tspConfig
         <*> AC.optionalFieldWithDefault "arguments" mempty argumentsDoc
           AC..= tspArguments
-        <*> AC.optionalFieldWithDefaultWith "array_relationships" arrayRelationshipsCodec mempty arrayRelationshipsDoc
-          AC..= tspArrayRelationships
         <*> AC.optionalField "description" descriptionDoc
           AC..= tspDescription
         <*> AC.requiredField "returns" returnsDoc
           AC..= tspReturns
     where
-      arrayRelationshipsDoc = "Any relationships between an output value and multiple values in another data source"
       sourceDoc = "The source in which this stored procedure should be tracked"
       configDoc = "The configuration for the SQL stored procedure"
       spDoc = "The name of the SQL stored procedure"
@@ -116,7 +110,6 @@ storedProcedureTrackToMetadata env sourceConnConfig TrackStoredProcedure {..} = 
             _spmConfig = tspConfig,
             _spmReturns = tspReturns,
             _spmArguments = tspArguments,
-            _spmArrayRelationships = tspArrayRelationships,
             _spmDescription = tspDescription
           }
 

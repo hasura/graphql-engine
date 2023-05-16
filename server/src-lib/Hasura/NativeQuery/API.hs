@@ -24,7 +24,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.LogicalModel.API (getCustomTypes)
 import Hasura.LogicalModel.Metadata (LogicalModelName)
-import Hasura.LogicalModelResolver.Codec (arrayRelationshipsCodec)
+import Hasura.LogicalModelResolver.Codec (nativeQueryRelationshipsCodec)
 import Hasura.NativeQuery.Metadata (ArgumentName, NativeQueryMetadata (..), parseInterpolatedQuery)
 import Hasura.NativeQuery.Types (NativeQueryName, NullableScalarType)
 import Hasura.Prelude
@@ -40,7 +40,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualConfig)
+import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualNativeQueryConfig)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker (..))
@@ -52,8 +52,8 @@ data TrackNativeQuery (b :: BackendType) = TrackNativeQuery
     tnqRootFieldName :: NativeQueryName,
     tnqCode :: Text,
     tnqArguments :: HashMap ArgumentName (NullableScalarType b),
-    tnqArrayRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
-    tnqObjectRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
+    tnqArrayRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualNativeQueryConfig b)),
+    tnqObjectRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualNativeQueryConfig b)),
     tnqDescription :: Maybe Text,
     tnqReturns :: LogicalModelName
   }
@@ -72,9 +72,9 @@ instance (Backend b) => HasCodec (TrackNativeQuery b) where
           AC..= tnqCode
         <*> AC.optionalFieldWithDefault "arguments" mempty argumentsDoc
           AC..= tnqArguments
-        <*> AC.optionalFieldWithDefaultWith "array_relationships" arrayRelationshipsCodec mempty arrayRelationshipsDoc
+        <*> AC.optionalFieldWithDefaultWith "array_relationships" nativeQueryRelationshipsCodec mempty arrayRelationshipsDoc
           AC..= tnqArrayRelationships
-        <*> AC.optionalFieldWithDefaultWith "object_relationships" arrayRelationshipsCodec mempty objectRelationshipsDoc
+        <*> AC.optionalFieldWithDefaultWith "object_relationships" nativeQueryRelationshipsCodec mempty objectRelationshipsDoc
           AC..= tnqObjectRelationships
         <*> AC.optionalField "description" descriptionDoc
           AC..= tnqDescription

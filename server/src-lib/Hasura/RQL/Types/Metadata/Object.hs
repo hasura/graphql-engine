@@ -9,7 +9,6 @@ module Hasura.RQL.Types.Metadata.Object
     TableMetadataObjId (..),
     LogicalModelMetadataObjId (..),
     NativeQueryMetadataObjId (..),
-    StoredProcedureMetadataObjId (..),
     droppableInconsistentMetadata,
     getInconsistentRemoteSchemas,
     groupInconsistentMetadataById,
@@ -88,13 +87,6 @@ data NativeQueryMetadataObjId
 
 instance Hashable NativeQueryMetadataObjId
 
--- | the stored procedure should probably also link to its logical model
-data StoredProcedureMetadataObjId
-  = SPMORel RelName RelType
-  deriving (Show, Eq, Ord, Generic)
-
-instance Hashable StoredProcedureMetadataObjId
-
 data SourceMetadataObjId b
   = SMOTable (TableName b)
   | SMOFunction (FunctionName b)
@@ -103,7 +95,6 @@ data SourceMetadataObjId b
   | SMONativeQuery NativeQueryName
   | SMONativeQueryObj NativeQueryName NativeQueryMetadataObjId
   | SMOStoredProcedure (FunctionName b)
-  | SMOStoredProcedureObj (FunctionName b) StoredProcedureMetadataObjId
   | SMOLogicalModel LogicalModelName
   | SMOLogicalModelObj LogicalModelName LogicalModelMetadataObjId
   deriving (Generic)
@@ -170,8 +161,6 @@ moiTypeName = \case
       SMONativeQueryObj _ nativeQueryObjId -> case nativeQueryObjId of
         NQMORel _ relType -> relTypeToTxt relType <> "_relation"
       SMOStoredProcedure _ -> "stored_procedure"
-      SMOStoredProcedureObj _ storedProcedureObjId -> case storedProcedureObjId of
-        SPMORel _ relType -> relTypeToTxt relType <> "_relation"
       SMOLogicalModel _ -> "custom_type"
       SMOLogicalModelObj _ logicalModelObjectId -> case logicalModelObjectId of
         LMMOPerm _ permType -> permTypeToCode permType <> "_permission"
@@ -231,9 +220,6 @@ moiName objectId =
         case nativeQueryObjId of
           NQMORel name _ -> toTxt name <> " in " <> toTxt nativeQueryName
       SMOStoredProcedure name -> toTxt name <> " in source " <> toTxt source
-      SMOStoredProcedureObj storedProcedureName storedProcedureObjId ->
-        case storedProcedureObjId of
-          SPMORel name _ -> toTxt name <> " in " <> toTxt storedProcedureName
       SMOLogicalModel name -> toTxt name <> " in source " <> toTxt source
       SMOLogicalModelObj logicalModelName logicalModelObjectId -> do
         let objectName :: Text
