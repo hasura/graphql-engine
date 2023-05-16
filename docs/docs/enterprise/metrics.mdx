@@ -84,6 +84,16 @@ Current number of active subscriptions, representing the subscription load on th
 | Type   | Gauge                         |
 | Labels | none                          |
 
+### Hasura Cache requests count
+
+Tracks cache hit and miss requests, which helps in monitoring and optimizing cache utilization.
+
+|        |                              |
+| ------ | ---------------------------- |
+| Name   | `hasura_cache_request_count` |
+| Type   | Counter                      |
+| Labels | `status`: hit \| miss        |
+
 ### Hasura cron events invocation total
 
 Total number of cron events invoked, representing the number of invocations made for cron events.

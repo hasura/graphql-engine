@@ -5,6 +5,7 @@ module Hasura.Server.Prometheus
   ( PrometheusMetrics (..),
     GraphQLRequestMetrics (..),
     EventTriggerMetrics (..),
+    CacheRequestMetrics (..),
     makeDummyPrometheusMetrics,
     ConnectionsGauge,
     Connections (..),
@@ -52,7 +53,8 @@ data PrometheusMetrics = PrometheusMetrics
     pmActionBytesSent :: Counter,
     pmScheduledTriggerMetrics :: ScheduledTriggerMetrics,
     pmSubscriptionMetrics :: SubscriptionMetrics,
-    pmWebsocketMsgQueueTimeSeconds :: Histogram
+    pmWebsocketMsgQueueTimeSeconds :: Histogram,
+    pmCacheRequestMetrics :: CacheRequestMetrics
   }
 
 data GraphQLRequestMetrics = GraphQLRequestMetrics
@@ -102,6 +104,11 @@ data SubscriptionMetrics = SubscriptionMetrics
     submActiveStreamingPollersInError :: Gauge
   }
 
+data CacheRequestMetrics = CacheRequestMetrics
+  { crmCacheHits :: Counter,
+    crmCacheMisses :: Counter
+  }
+
 -- | Create dummy mutable references without associating them to a metrics
 -- store.
 makeDummyPrometheusMetrics :: IO PrometheusMetrics
@@ -117,6 +124,7 @@ makeDummyPrometheusMetrics = do
   pmScheduledTriggerMetrics <- makeDummyScheduledTriggerMetrics
   pmSubscriptionMetrics <- makeDummySubscriptionMetrics
   pmWebsocketMsgQueueTimeSeconds <- Histogram.new []
+  pmCacheRequestMetrics <- makeDummyCacheRequestMetrics
   pure PrometheusMetrics {..}
 
 makeDummyGraphQLRequestMetrics :: IO GraphQLRequestMetrics
@@ -169,6 +177,12 @@ makeDummySubscriptionMetrics = do
   submActiveLiveQueryPollersInError <- Gauge.new
   submActiveStreamingPollersInError <- Gauge.new
   pure SubscriptionMetrics {..}
+
+makeDummyCacheRequestMetrics :: IO CacheRequestMetrics
+makeDummyCacheRequestMetrics = do
+  crmCacheHits <- Counter.new
+  crmCacheMisses <- Counter.new
+  pure CacheRequestMetrics {..}
 
 --------------------------------------------------------------------------------
 
