@@ -7,6 +7,7 @@
 module Harness.Backend.DataConnector.Sqlite
   ( backendTypeMetadata,
     setupTablesAction,
+    createUntrackedTablesAction,
     setupSqliteAgent,
     createEmptyDatasetCloneSourceConfig,
     deleteDatasetClone,
@@ -75,6 +76,12 @@ setupTablesAction ts env =
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
 
+createUntrackedTablesAction :: [Schema.Table] -> TestEnvironment -> Fixture.SetupAction
+createUntrackedTablesAction ts env =
+  Fixture.SetupAction
+    (createUntrackedTables ts (env, ()))
+    (const $ pure ())
+
 -- | Metadata source information for the default Sqlite instance.
 sourceMetadata :: API.Config -> J.Value
 sourceMetadata (API.Config config) =
@@ -134,6 +141,13 @@ setup tables (testEnvironment, _) = do
   for_ tables $ \table -> do
     Schema.trackObjectRelationships table testEnvironment
     Schema.trackArrayRelationships table testEnvironment
+
+createUntrackedTables :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+createUntrackedTables tables (testEnvironment, _) = do
+  let sourceName = Fixture.backendSourceName backendTypeMetadata
+  for_ tables $ \table -> do
+    createTable sourceName testEnvironment table
+    insertTable sourceName testEnvironment table
 
 -- | Post an http request to start tracking the table
 trackTable :: HasCallStack => String -> TestEnvironment -> Schema.Table -> IO ()

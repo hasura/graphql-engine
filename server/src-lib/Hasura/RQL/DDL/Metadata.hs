@@ -248,7 +248,7 @@ runReplaceMetadataV2 replaceMetadataArgs = do
   (inconsistentObjects, metadataWarnings) <- runMetadataWarnings $ (runReplaceMetadataV2' replaceMetadataArgs)
   case _rmv2AllowWarningss replaceMetadataArgs of
     AllowWarnings -> pure ()
-    NoAllowWarnings ->
+    DisallowWarnings ->
       unless (null metadataWarnings) $
         throw400WithDetail (CustomCode "metadata-warnings") "failed due to metadata warnings" (J.toJSON metadataWarnings)
   pure $ encJFromJValue $ formatInconsistentObjs inconsistentObjects metadataWarnings

@@ -103,6 +103,7 @@ library
     Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.TablesSpec
     Test.API.Metadata.TestConnectionTemplateSpec
+    Test.API.Metadata.TrackTablesSpec
     Test.API.Metadata.TransparentDefaultsSpec
     Test.API.Metadata.WarningsSpec
     Test.API.Schema.RunSQLSpec

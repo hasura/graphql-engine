@@ -19,6 +19,8 @@ module Harness.Schema
     StoredProcedureColumn (..),
     resolveTableSchema,
     trackTable,
+    trackTables,
+    trackTablesWithStatus,
     untrackTable,
     mkTableField,
     trackObjectRelationships,
@@ -68,6 +70,7 @@ import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.TestEnvironment (TestEnvironment (..), getBackendTypeConfig, getSchemaName)
 import Hasura.Prelude
+import Hasura.RQL.DDL.Warnings (AllowWarnings)
 
 -- | we assume we are using the default schema unless a table tells us
 -- otherwise
@@ -78,27 +81,30 @@ resolveTableSchema testEnv tbl =
     Nothing -> getSchemaName testEnv
     Just schemaName -> schemaName
 
--- | Native Backend track table
---
--- Data Connector backends expect an @[String]@ for the table name.
+-- | track_table API call
 trackTable :: HasCallStack => String -> Table -> TestEnvironment -> IO ()
-trackTable source tbl@(Table {tableName}) testEnvironment = do
+trackTable source tbl testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
-      schema = resolveTableSchema testEnvironment tbl
       requestType = backendType <> "_track_table"
-      column_config = columnsConfig (tableColumns tbl)
+      trackTableArgs = mkTrackTableV2ApiObject testEnvironment backendTypeMetadata source tbl
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
       type: *requestType
-      args:
-        source: *source
-        table:
-          schema: *schema
-          name: *tableName
-        configuration:
-          column_config: *column_config
+      args: *trackTableArgs
+    |]
+
+mkTrackTableV2ApiObject :: HasCallStack => TestEnvironment -> BackendTypeConfig -> String -> Table -> Value
+mkTrackTableV2ApiObject testEnvironment backendTypeConfig source tbl@(Table {tableName}) = do
+  let schema = resolveTableSchema testEnvironment tbl
+      tableField = mkTableField backendTypeConfig schema tableName
+      column_config = columnsConfig (tableColumns tbl)
+  [yaml|
+    source: *source
+    table: *tableField
+    configuration:
+      column_config: *column_config
     |]
   where
     columnsConfig :: [Column] -> Value
@@ -114,7 +120,39 @@ trackTable source tbl@(Table {tableName}) testEnvironment = do
         |]
         )
 
--- | Native Backend track table
+-- | track_tables API call
+trackTables :: HasCallStack => String -> [Table] -> TestEnvironment -> IO Value
+trackTables source tables testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      backendType = BackendType.backendTypeString backendTypeMetadata
+      requestType = backendType <> "_track_tables"
+      trackTablesArgs = mkTrackTableV2ApiObject testEnvironment backendTypeMetadata source <$> tables
+  GraphqlEngine.postMetadata
+    testEnvironment
+    [yaml|
+      type: *requestType
+      args:
+        tables: *trackTablesArgs
+    |]
+
+-- | track_tables API call, with the allow_warnings setting and expecting a specific http response status code
+trackTablesWithStatus :: HasCallStack => String -> [Table] -> AllowWarnings -> Int -> TestEnvironment -> IO Value
+trackTablesWithStatus source tables allowWarnings expectedHttpStatus testEnvironment = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      backendType = BackendType.backendTypeString backendTypeMetadata
+      requestType = backendType <> "_track_tables"
+      trackTablesArgs = mkTrackTableV2ApiObject testEnvironment backendTypeMetadata source <$> tables
+  GraphqlEngine.postMetadataWithStatus
+    expectedHttpStatus
+    testEnvironment
+    [yaml|
+      type: *requestType
+      args:
+        tables: *trackTablesArgs
+        allow_warnings: *allowWarnings
+    |]
+
+-- | Native Backend untrack table
 --
 -- Data Connector backends expect an @[String]@ for the table name.
 untrackTable :: HasCallStack => String -> Table -> TestEnvironment -> IO ()

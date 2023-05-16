@@ -7,6 +7,8 @@ module Hasura.RQL.DDL.Schema.Table
     runTrackTableQ,
     TrackTableV2 (..),
     runTrackTableV2Q,
+    TrackTables (..),
+    runTrackTablesQ,
     UntrackTable (..),
     runUntrackTableQ,
     dropTableInMetadata,
@@ -33,9 +35,11 @@ import Data.Align (align)
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as S
+import Data.List qualified as List
 import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended
 import Data.These (These (..))
+import Data.Vector (Vector)
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..), QualifiedTable)
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -49,6 +53,7 @@ import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Enum (resolveEnumReferences)
+import Hasura.RQL.DDL.Warnings
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
@@ -146,16 +151,9 @@ trackExistingTableOrViewP1 source tableName = do
     throw400 NotSupported $
       "function with name " <> tableName <<> " already exists"
 
--- | Check whether a given name would conflict with the current schema by doing
--- an internal introspection
-checkConflictingNode ::
-  forall m.
-  MonadError QErr m =>
-  SchemaCache ->
-  Text ->
-  m ()
-checkConflictingNode sc tnGQL = do
-  let GQLContext queryParser _ _ = scUnauthenticatedGQLContext sc
+queryForExistingFieldNames :: SchemaCache -> Vector Text
+queryForExistingFieldNames schemaCache = do
+  let GQLContext queryParser _ _ = scUnauthenticatedGQLContext schemaCache
       -- {
       --   __schema {
       --     queryType {
@@ -196,7 +194,7 @@ checkConflictingNode sc tnGQL = do
               ]
         ]
   case queryParser introspectionQuery of
-    Left _ -> pure ()
+    Left _ -> mempty
     Right results -> do
       case InsOrdHashMap.lookup (mkUnNamespacedRootFieldAlias GName.___schema) results of
         Just (RFRaw (JO.Object schema)) -> do
@@ -208,26 +206,47 @@ checkConflictingNode sc tnGQL = do
                     JO.String name <- JO.lookup "name" field
                     pure name
                   _ -> Nothing
-          case names of
-            Nothing -> pure ()
-            Just ns ->
-              when (tnGQL `elem` ns) $
-                throw400 RemoteSchemaConflicts $
-                  "node "
-                    <> tnGQL
-                    <> " already exists in current graphql schema"
-        _ -> pure ()
+          fromMaybe mempty $ names
+        _ -> mempty
+
+-- | Check whether a given name would conflict with the current schema by doing
+-- an internal introspection
+checkConflictingNode ::
+  forall m.
+  MonadError QErr m =>
+  SchemaCache ->
+  Text ->
+  m ()
+checkConflictingNode sc tnGQL = do
+  let fieldNames = queryForExistingFieldNames sc
+  when (tnGQL `elem` fieldNames) $
+    throw400 RemoteSchemaConflicts $
+      "node "
+        <> tnGQL
+        <> " already exists in current graphql schema"
+
+findConflictingNodes ::
+  SchemaCache ->
+  (a -> Text) ->
+  [a] ->
+  [(a, QErr)]
+findConflictingNodes sc extractName items = do
+  let fieldNames = queryForExistingFieldNames sc
+  flip foldMap items $ \item ->
+    let name = extractName item
+        err =
+          err400 RemoteSchemaConflicts $
+            "node "
+              <> name
+              <> " already exists in current graphql schema"
+     in [(item, err) | name `elem` fieldNames]
 
 trackExistingTableOrViewP2 ::
   forall b m.
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
-  SourceName ->
-  TableName b ->
-  Bool ->
-  TableConfig b ->
-  Maybe ApolloFederationConfig ->
+  TrackTableV2 b ->
   m EncJSON
-trackExistingTableOrViewP2 source tableName isEnum config apolloFedConfig = do
+trackExistingTableOrViewP2 trackTable@TrackTableV2 {ttv2Table = TrackTable {..}} = do
   sc <- askSchemaCache
   {-
   The next line does more than what it says on the tin.  Removing the following
@@ -237,25 +256,28 @@ trackExistingTableOrViewP2 source tableName isEnum config apolloFedConfig = do
   tables, and then clicking "track all" in the console.  Curiously, this high
   memory usage happens even when no substantial GraphQL schema is generated.
   -}
-  checkConflictingNode sc $ snakeCaseTableName @b tableName
-  let metadata = tmApolloFederationConfig .~ apolloFedConfig $ mkTableMeta tableName isEnum config
+  checkConflictingNode sc $ snakeCaseTableName @b tName
   buildSchemaCacheFor
-    ( MOSourceObjId source $
+    ( MOSourceObjId tSource $
         AB.mkAnyBackend $
-          SMOTable @b tableName
+          SMOTable @b tName
     )
-    $ MetadataModifier
-    $ metaSources . ix source . toSourceMetadata . smTables %~ InsOrdHashMap.insert tableName metadata
+    $ mkTrackTableMetadataModifier trackTable
   pure successMsg
+
+mkTrackTableMetadataModifier :: Backend b => TrackTableV2 b -> MetadataModifier
+mkTrackTableMetadataModifier (TrackTableV2 (TrackTable source tableName isEnum apolloFedConfig) config) =
+  let metadata = tmApolloFederationConfig .~ apolloFedConfig $ mkTableMeta tableName isEnum config
+   in MetadataModifier $ metaSources . ix source . toSourceMetadata . smTables %~ InsOrdHashMap.insert tableName metadata
 
 runTrackTableQ ::
   forall b m.
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   TrackTable b ->
   m EncJSON
-runTrackTableQ (TrackTable source qt isEnum apolloFedConfig) = do
-  trackExistingTableOrViewP1 @b source qt
-  trackExistingTableOrViewP2 @b source qt isEnum emptyTableConfig apolloFedConfig
+runTrackTableQ trackTable@TrackTable {..} = do
+  trackExistingTableOrViewP1 @b tSource tName
+  trackExistingTableOrViewP2 @b (TrackTableV2 trackTable emptyTableConfig)
 
 data TrackTableV2 b = TrackTableV2
   { ttv2Table :: TrackTable b,
@@ -274,9 +296,116 @@ runTrackTableV2Q ::
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   TrackTableV2 b ->
   m EncJSON
-runTrackTableV2Q (TrackTableV2 (TrackTable source qt isEnum apolloFedConfig) config) = do
-  trackExistingTableOrViewP1 @b source qt
-  trackExistingTableOrViewP2 @b source qt isEnum config apolloFedConfig
+runTrackTableV2Q trackTable@TrackTableV2 {ttv2Table = TrackTable {..}} = do
+  trackExistingTableOrViewP1 @b tSource tName
+  trackExistingTableOrViewP2 @b trackTable
+
+data TrackTables b = TrackTables
+  { _ttv2Tables :: [TrackTableV2 b],
+    _ttv2AllowWarnings :: AllowWarnings
+  }
+
+instance (Backend b) => FromJSON (TrackTables b) where
+  parseJSON = withObject "TrackTables" $ \o -> do
+    TrackTables
+      <$> o .: "tables"
+      <*> o .:? "allow_warnings" .!= AllowWarnings
+
+runTrackTablesQ ::
+  forall b m.
+  (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
+  TrackTables b ->
+  m EncJSON
+runTrackTablesQ TrackTables {..} = do
+  unless (null duplicatedTables) $
+    let tables = commaSeparated $ (\(source, tableName) -> toTxt source <> "." <> toTxt tableName) <$> duplicatedTables
+     in withPathK "tables" $ throw400 BadRequest ("The following tables occur more than once in the request: " <> tables)
+
+  (successfulTables, metadataWarnings) <- runMetadataWarnings $ do
+    phase1SuccessfulTables <- fmap mconcat . for _ttv2Tables $ \trackTable@TrackTableV2 {ttv2Table = TrackTable {..}} -> do
+      (trackExistingTableOrViewP1 @b tSource tName $> [trackTable])
+        `catchError` \qErr -> do
+          let tableObjId = mkTrackTableV2ObjectId trackTable
+          let message = qeError qErr
+          warn $ MetadataWarning WCTrackTableFailed tableObjId message
+          pure []
+
+    trackExistingTablesOrViewsP2 phase1SuccessfulTables
+
+  when (null successfulTables) $
+    throw400WithDetail InvalidConfiguration "all tables failed to track" (toJSON metadataWarnings)
+
+  case _ttv2AllowWarnings of
+    AllowWarnings -> pure ()
+    DisallowWarnings ->
+      unless (null metadataWarnings) $
+        throw400WithDetail (CustomCode "metadata-warnings") "failed due to metadata warnings" (toJSON metadataWarnings)
+
+  pure $ mkSuccessResponseWithWarnings metadataWarnings
+  where
+    duplicatedTables :: [(SourceName, TableName b)]
+    duplicatedTables =
+      _ttv2Tables
+        & fmap (\TrackTableV2 {ttv2Table = TrackTable {..}} -> (tSource, tName))
+        & sort
+        & group
+        & mapMaybe
+          ( \case
+              duplicate : _ : _ -> Just duplicate
+              _ -> Nothing
+          )
+
+mkTrackTableV2ObjectId :: forall b. Backend b => TrackTableV2 b -> MetadataObjId
+mkTrackTableV2ObjectId TrackTableV2 {ttv2Table = TrackTable {..}} =
+  MOSourceObjId tSource . AB.mkAnyBackend $ SMOTable @b tName
+
+trackExistingTablesOrViewsP2 ::
+  forall b m.
+  (MonadError QErr m, MonadWarnings m, CacheRWM m, MetadataM m, BackendMetadata b) =>
+  [TrackTableV2 b] ->
+  m [TrackTableV2 b]
+trackExistingTablesOrViewsP2 tablesToTrack = do
+  schemaCache <- askSchemaCache
+  -- Find and create warnings for tables with conflicting table names
+  let errorsFromConflictingTables = findConflictingNodes schemaCache (snakeCaseTableName @b . tName . ttv2Table) tablesToTrack
+  for_ errorsFromConflictingTables $ \(trackTable, qErr) -> do
+    let tableObjId = mkTrackTableV2ObjectId trackTable
+    let message = qeError qErr
+    warn $ MetadataWarning WCTrackTableFailed tableObjId message
+
+  let conflictingTables = fst <$> errorsFromConflictingTables
+  let nonConflictingTables = tablesToTrack & filter (`notElem` conflictingTables)
+
+  -- Try tracking all non-conflicting tables
+  let objectIds = HashMap.fromList $ (\t -> (mkTrackTableV2ObjectId t, t)) <$> nonConflictingTables
+  let trackTablesMetadataModifier = foldMap mkTrackTableMetadataModifier nonConflictingTables
+
+  metadataInconsistencies <- tryBuildSchemaCache trackTablesMetadataModifier
+
+  let inconsistentTables = HashMap.intersectionWith (,) metadataInconsistencies objectIds
+  let successfulTables = HashMap.elems $ HashMap.difference objectIds inconsistentTables
+
+  finalMetadataInconsistencies <-
+    if inconsistentTables /= mempty
+      then do
+        -- Raise warnings for tables that failed to track
+        for_ (HashMap.toList inconsistentTables) $ \(tableObjId, (inconsistencies, _trackTable)) -> do
+          let errorReasons = commaSeparated $ imReason <$> inconsistencies
+          warn $ MetadataWarning WCTrackTableFailed tableObjId errorReasons
+
+        -- Try again, this time only with tables that were previously successful
+        let removeFailedTablesMetadataModifier = foldMap mkTrackTableMetadataModifier successfulTables
+        tryBuildSchemaCache removeFailedTablesMetadataModifier
+      else -- Otherwise just look at the rest of the errors, if any
+        pure metadataInconsistencies
+
+  unless (null finalMetadataInconsistencies) $
+    throwError
+      (err400 Unexpected "cannot continue due to newly found inconsistent metadata")
+        { qeInternal = Just $ ExtraInternal $ toJSON (List.nub . concatMap toList $ HashMap.elems finalMetadataInconsistencies)
+        }
+
+  pure successfulTables
 
 runSetExistingTableIsEnumQ :: forall b m. (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) => SetTableIsEnum b -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do

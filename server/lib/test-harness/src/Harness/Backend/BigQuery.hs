@@ -16,6 +16,7 @@ module Harness.Backend.BigQuery
     dropTable,
     untrackTable,
     setupTablesAction,
+    createUntrackedTablesAction,
   )
 where
 
@@ -250,7 +251,7 @@ setup tables' (testEnvironment, _) = do
           kind: *backendType
           tables: []
           configuration:
-            service_account: 
+            service_account:
               from_env: *serviceAccountEnvVar
             project_id: *projectId
             datasets: [*schemaName]
@@ -279,6 +280,19 @@ setupTablesAction ts env =
   SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
+
+createUntrackedTables :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+createUntrackedTables tables (testEnvironment, _) = do
+  let schemaName = Schema.getSchemaName testEnvironment
+  -- Setup tables
+  for_ tables $ \table -> do
+    retryIfJobRateLimitExceeded $ createTable schemaName table
+
+createUntrackedTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
+createUntrackedTablesAction ts env =
+  SetupAction
+    (createUntrackedTables ts (env, ()))
+    (const $ pure ())
 
 -- | We get @jobRateLimitExceeded@ errors from BigQuery if we run too many DML operations in short intervals.
 --   This functions tries to fix that by retrying after a few seconds if there's an error.

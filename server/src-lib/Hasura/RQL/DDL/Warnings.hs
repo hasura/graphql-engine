@@ -61,30 +61,32 @@ Also, we can expand the scope of `MetadataAPIOutput` to include other types of r
 -- | Allow/Disallow metadata warnings
 data AllowWarnings
   = AllowWarnings
-  | NoAllowWarnings
+  | DisallowWarnings
   deriving (Show, Eq)
 
 instance FromJSON AllowWarnings where
   parseJSON =
     J.withBool "AllowWarnings" $
-      pure . bool NoAllowWarnings AllowWarnings
+      pure . bool DisallowWarnings AllowWarnings
 
 instance ToJSON AllowWarnings where
   toJSON = J.toJSON . toBool
     where
       toBool AllowWarnings = True
-      toBool NoAllowWarnings = False
+      toBool DisallowWarnings = False
 
 data WarningCode
   = WCSourceCleanupFailed
   | WCIllegalEventTriggerName
   | WCTimeLimitExceededSystemLimit
+  | WCTrackTableFailed
   deriving (Eq, Ord)
 
 instance ToJSON WarningCode where
   toJSON WCIllegalEventTriggerName = "illegal-event-trigger-name"
   toJSON WCTimeLimitExceededSystemLimit = "time-limit-exceeded-system-limit"
   toJSON WCSourceCleanupFailed = "source-cleanup-failed"
+  toJSON WCTrackTableFailed = "track-table-failed"
 
 data MetadataWarning = MetadataWarning
   { _mwCode :: WarningCode,
