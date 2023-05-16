@@ -223,7 +223,7 @@ function generateUrlSearchParams(
   searchParams.set('response_type', 'code');
   searchParams.set(
     'scope',
-    'openid offline urn:neoncloud:projects:create urn:neoncloud:projects:read urn:neoncloud:projects:update'
+    'openid offline urn:neoncloud:projects:create urn:neoncloud:projects:read urn:neoncloud:projects:update urn:neoncloud:projects:delete'
   );
   searchParams.set('state', oauth2State);
 
