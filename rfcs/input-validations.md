@@ -96,13 +96,15 @@ The request payload is of the format:
 ```json
 {
     "role": "<role-name>",
-    "data": [
-        {"column_1": "column_1_value", "column_2": "column_2_value", "relationship": [{"relationship_column_1": "column_value"}]},
-        {"column_1": "column_1_value", "column_2": "column_2_value", "relationship": [{"relationship_column_1": "column_value"}]}
-    ]
+    "data": {
+        "objects": [
+            {"column_1": "column_1_value", "column_2": "column_2_value", "relationship": [{"relationship_column_1": "column_value"}]},
+            {"column_1": "column_1_value", "column_2": "column_2_value", "relationship": [{"relationship_column_1": "column_value"}]}
+        ]
+    }
 }
 ```
-The `data` field contains the list of rows specified in the `objects` field of insert mutation. Also includes nested insert data of relationships.
+The `data.objects` field contains the list of rows specified in the `objects` input field of insert mutation. Also includes nested insert data of relationships.
 
 ### Response
 
