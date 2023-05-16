@@ -1641,8 +1641,19 @@ logicalModelRelationshipField relationshipType ri =
           throw500 "Object relationships from logical models to tables are not implemented"
     (ArrayReference, ArrRel) ->
       case riTarget ri of
-        RelTargetNativeQuery _ ->
-          throw500 "Array relationships from logical models to native queries are not implemented"
+        RelTargetNativeQuery nativeQueryName -> do
+          nativeQueryInfo <- lift $ askNativeQueryInfo nativeQueryName
+          relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
+
+          let objectRelDesc = Just $ G.Description "An array relationship"
+
+          nativeQueryParser <- MaybeT $ selectNativeQuery nativeQueryInfo relFieldName objectRelDesc
+
+          pure $
+            nativeQueryParser <&> \selectExp ->
+              IR.AFArrayRelation $
+                IR.ASSimple $
+                  IR.AnnRelationSelectG (riName ri) (riMapping ri) selectExp
         RelTargetTable otherTableName -> do
           otherTableInfo <- lift $ askTableInfo otherTableName
           relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
