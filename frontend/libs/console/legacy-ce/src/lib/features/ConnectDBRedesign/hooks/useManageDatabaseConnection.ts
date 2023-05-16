@@ -6,7 +6,12 @@ import { generateQueryKeys } from '../../DatabaseRelationships/utils/queryClient
 import { useMetadataMigration } from '../../MetadataAPI';
 import { DatabaseConnection } from '../types';
 import { usePushRoute } from './usePushRoute';
-import { transformErrorResponse } from '../utils';
+import {
+  sendConnectDatabaseTelemetryEvent,
+  transformErrorResponse,
+} from '../utils';
+import { useHttpClient } from '../../Network';
+import { Driver } from '../../../dataSources';
 
 export const useManageDatabaseConnection = ({
   onSuccess,
@@ -16,11 +21,12 @@ export const useManageDatabaseConnection = ({
   onError?: (err: Error) => void;
 }) => {
   const queryClient = useQueryClient();
-  const { mutate, ...rest } = useMetadataMigration({
+  const { mutateAsync, ...rest } = useMetadataMigration({
     errorTransform: transformErrorResponse,
   });
   const push = usePushRoute();
   const dispatch = useAppDispatch();
+  const httpClient = useHttpClient();
 
   const mutationOptions = useMemo(
     () => ({
@@ -42,7 +48,7 @@ export const useManageDatabaseConnection = ({
 
   const createConnection = useCallback(
     async (databaseConnection: DatabaseConnection) => {
-      mutate(
+      await mutateAsync(
         {
           query: {
             type: `${databaseConnection.driver}_add_source`,
@@ -55,13 +61,18 @@ export const useManageDatabaseConnection = ({
         },
         mutationOptions
       );
+      sendConnectDatabaseTelemetryEvent({
+        httpClient,
+        driver: databaseConnection.driver as Driver,
+        dataSourceName: databaseConnection.details.name,
+      });
     },
-    [mutate, mutationOptions]
+    [mutateAsync, mutationOptions]
   );
 
   const editConnection = useCallback(
     async (databaseConnection: DatabaseConnection) => {
-      mutate(
+      mutateAsync(
         {
           query: {
             type: `${databaseConnection.driver}_add_source`,
@@ -76,7 +87,7 @@ export const useManageDatabaseConnection = ({
         mutationOptions
       );
     },
-    [mutate, mutationOptions]
+    [mutateAsync, mutationOptions]
   );
 
   return { createConnection, editConnection, ...rest };
