@@ -555,6 +555,7 @@ data SpatialOp
 newtype ColumnName = ColumnName {columnNameText :: Text}
 
 newtype ConstraintName = ConstraintName {constraintNameText :: Text}
+  deriving newtype (J.FromJSONKey, J.ToJSONKey)
 
 data FunctionName = FunctionName
   { functionName :: Text,

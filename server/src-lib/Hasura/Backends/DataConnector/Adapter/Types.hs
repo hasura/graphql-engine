@@ -251,7 +251,7 @@ instance ToErrorValue TableName where
 
 newtype ConstraintName = ConstraintName {unConstraintName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving newtype (NFData, Hashable, FromJSON, ToJSON)
+  deriving newtype (NFData, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey)
 
 instance Witch.From API.ConstraintName ConstraintName where
   from (API.ConstraintName n) = ConstraintName n

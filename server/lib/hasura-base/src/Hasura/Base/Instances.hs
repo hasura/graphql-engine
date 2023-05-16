@@ -115,6 +115,8 @@ instance J.FromJSON C.CronSchedule where
 instance J.ToJSON C.CronSchedule where
   toJSON = J.String . C.serializeCronSchedule
 
+instance J.FromJSONKey Void
+
 instance J.ToJSONKey Void
 
 instance J.FromJSON ByteString where

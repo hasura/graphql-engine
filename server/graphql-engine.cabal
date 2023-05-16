@@ -825,6 +825,8 @@ library
                      , Hasura.RQL.Types.Schema.Options
                      , Hasura.RQL.Types.Session
                      , Hasura.RQL.Types.Source
+                     , Hasura.RQL.Types.Source.Column
+                     , Hasura.RQL.Types.Source.Table
                      , Hasura.RQL.Types.SourceConfiguration
                      , Hasura.RQL.Types.SourceCustomization
                      , Hasura.RQL.Types.Subscription

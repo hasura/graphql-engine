@@ -214,7 +214,8 @@ isView TTView = True
 isView _ = False
 
 newtype ConstraintName = ConstraintName {getConstraintTxt :: Text}
-  deriving (Show, Eq, ToTxt, FromJSON, ToJSON, PG.ToPrepArg, PG.FromCol, Hashable, NFData)
+  deriving (Eq, Hashable, NFData, Ord, ToTxt, PG.ToPrepArg, PG.FromCol, Show)
+  deriving (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 
 instance IsIdentifier ConstraintName where
   toIdentifier (ConstraintName t) = Identifier t

@@ -83,6 +83,7 @@ instance BackendMetadata 'DataConnector where
     error "buildComputedFieldBooleanExp: not implemented for the Data Connector backend."
   columnInfoToFieldInfo = columnInfoToFieldInfo'
   listAllTables = listAllTables'
+  getTableInfo _ _ = throw400 UnexpectedPayload "get_table_info not yet supported in GDCs!"
   supportsBeingRemoteRelationshipTarget = supportsBeingRemoteRelationshipTarget'
 
 resolveBackendInfo' ::

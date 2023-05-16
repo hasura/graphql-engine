@@ -30,6 +30,7 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.Source.Table (SourceTableInfo)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Version
@@ -216,6 +217,14 @@ class
     (CacheRM m, MonadBaseControl IO m, MetadataM m, MonadError QErr m, MonadIO m, MonadReader r m, Has (Logger Hasura) r, ProvidesNetwork m) =>
     SourceName ->
     m [TableName b]
+
+  -- | Get information about a given table on a given source, whether tracked
+  -- or not. Primarily useful for user interfaces.
+  getTableInfo ::
+    (MonadError QErr m) =>
+    SourceName ->
+    TableName b ->
+    m (Maybe (SourceTableInfo b))
 
   validateNativeQuery ::
     (MonadIO m, MonadError QErr m) =>

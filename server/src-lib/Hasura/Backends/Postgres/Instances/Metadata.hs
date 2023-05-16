@@ -275,6 +275,7 @@ instance
   buildComputedFieldBooleanExp = Postgres.buildComputedFieldBooleanExp
   validateNativeQuery = Postgres.validateNativeQuery (pgTypeOidMapping @pgKind)
   supportsBeingRemoteRelationshipTarget _ = True
+  getTableInfo _ _ = throw400 UnexpectedPayload "get_table_info not yet supported in Postgres!"
 
   listAllTables sourceName = do
     sourceConfig <- askSourceConfig @('Postgres pgKind) sourceName
