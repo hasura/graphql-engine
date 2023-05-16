@@ -1,6 +1,3 @@
-{-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE TemplateHaskell #-}
-
 -- |
 -- = Event Triggers
 --
@@ -56,7 +53,6 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as Key
 import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Aeson.Lens qualified as JL
-import Data.Aeson.TH
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.SerializableBlob qualified as SB
@@ -88,7 +84,8 @@ import Hasura.Server.Prometheus
 import Hasura.Server.Types
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
-import Refined (NonNegative, Positive, Refined, refineTH, unrefine)
+import Refined (NonNegative, Positive, Refined, unrefine)
+import Refined.Unsafe (unsafeRefine)
 import System.Metrics.Distribution qualified as EKG.Distribution
 import System.Metrics.Gauge qualified as EKG.Gauge
 import System.Metrics.Prometheus.Counter qualified as Prometheus.Counter
@@ -141,9 +138,11 @@ data DeliveryInfo = DeliveryInfo
   { diCurrentRetry :: Int,
     diMaxRetries :: Int
   }
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(deriveJSON hasuraJSON {omitNothingFields = True} ''DeliveryInfo)
+instance J.ToJSON DeliveryInfo where
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
 
 newtype QualifiedTableStrict = QualifiedTableStrict
   { getQualifiedTable :: QualifiedTable
@@ -172,10 +171,10 @@ deriving instance Backend b => Show (EventPayload b)
 deriving instance Backend b => Eq (EventPayload b)
 
 instance Backend b => J.ToJSON (EventPayload b) where
-  toJSON = J.genericToJSON hasuraJSON {omitNothingFields = True}
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
 
 defaultMaxEventThreads :: Refined Positive Int
-defaultMaxEventThreads = $$(refineTH 100)
+defaultMaxEventThreads = unsafeRefine 100
 
 defaultFetchInterval :: DiffTime
 defaultFetchInterval = seconds 1
@@ -228,9 +227,11 @@ data FetchedEventsStats = FetchedEventsStats
   { _fesNumEventsFetched :: NumEventsFetchedPerSource,
     _fesNumFetches :: Int
   }
-  deriving (Eq, Show)
+  deriving (Eq, Generic, Show)
 
-$(deriveToJSON hasuraJSON ''FetchedEventsStats)
+instance J.ToJSON FetchedEventsStats where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 instance L.ToEngineLog FetchedEventsStats L.Hasura where
   toEngineLog stats =
