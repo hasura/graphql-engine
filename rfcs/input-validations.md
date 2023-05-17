@@ -3,12 +3,12 @@
 ## Index
 
 - [Validation for `insert` mutations](#validation-for--insert--mutations)
-  * [Alternative approach](#alternative-approach)
 - [Behaviour](#behaviour)
 - [Webhook specification](#webhook-specification)
   * [Request](#request)
   * [Response](#response)
 - [Examples](#examples)
+- [Alternative approach](#alternative-approach)
 - [Updates and Deletes](#updates-and-deletes)
   * [Update mutation](#update-mutation)
   * [Delete mutation](#delete-mutation)
@@ -48,33 +48,6 @@ args:
 The `type` determines the interface for the input validation, which initially only supports `http` webhook handler.
 However, we may expand support for multiple interfaces such as a Postgres function or a remote schema field.
 The `definition` field provides necessary context for communicating and submitting the data for input validation.
-
-### Alternative approach
-
-The `validate_input` as a new expression in the `check` clause of `Insert` permission and can be clubbed with other check permissions.
-Find a sample configuration below.
-
-```yaml
-type: pg_create_insert_permission
-args:
-  table: article,
-  source: default,
-  role: user,
-  permission:
-    check:
-      author_id: "X-HASURA-USER-ID"
-      _validate_input:
-         type: http
-         definition:
-           handler: http://www.somedomain.com/validateArticle
-    set
-      id: "X-HASURA-USER-ID"
-    columns: ["name","author_id"]
-```
-The `check` expressions use boolean syntax and support both `AND` and `OR` operations. However, combining validation
-logic with the check expressions can make it difficult for users to understand and maintain. Users mental model may not
-be clear when working with input validation. It is easy to comprehend that validation always happens first when it is
-isolated from the `check`.
 
 ## Behaviour
 
@@ -180,6 +153,34 @@ The arguments used in `author` model i.e. `$name`, `$email` and `$articles_conte
 The arguments used in `article` model i.e. `$articles_content` is sent to the `validate_input` handler of `article` model.
 
 If both handlers return success, then the mutation proceeds else the error(s) from the handler(s) is forwarded.
+
+## Alternative approach
+
+The `validate_input` as a new expression in the `check` clause of `Insert` permission and can be clubbed with other check permissions.
+Find a sample configuration below.
+
+```yaml
+type: pg_create_insert_permission
+args:
+  table: article,
+  source: default,
+  role: user,
+  permission:
+    check:
+      author_id: "X-HASURA-USER-ID"
+      _validate_input:
+         type: http
+         definition:
+           handler: http://www.somedomain.com/validateArticle
+    set
+      id: "X-HASURA-USER-ID"
+    columns: ["name","author_id"]
+```
+The `check` expressions use boolean syntax and support both `AND` and `OR` operations. However, combining validation
+logic with the check expressions can make it difficult for users to understand and maintain. Users mental model may not
+be clear when working with input validation. It is easy to comprehend that validation always happens first when it is
+isolated from the `check`.
+
 
 ## Updates and Deletes
 
