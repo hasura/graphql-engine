@@ -8,17 +8,20 @@ import Control.Monad.Trans.Control
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
+import Data.Bifunctor (bimap)
 import Data.Environment (Environment)
 import Data.Has (Has (getter))
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HashSet
 import Data.Map.Strict qualified as Map
+import Data.Semigroup.Foldable (Foldable1 (..))
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended (toTxt, (<<>), (<>>))
 import Hasura.Backends.DataConnector.API (capabilitiesCase, errorResponseSummary, schemaCase)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
+import Hasura.Backends.DataConnector.API.V0.Table qualified as DC (TableType (..))
 import Hasura.Backends.DataConnector.Adapter.Backend (columnTypeToScalarType)
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformSourceConfig, validateConnSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
@@ -40,10 +43,12 @@ import Hasura.RQL.Types.Metadata (SourceMetadata (..))
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Local (ArrRelDef, ObjRelDef, RelInfo)
-import Hasura.RQL.Types.SchemaCache (CacheRM, askSourceConfig)
+import Hasura.RQL.Types.SchemaCache (CacheRM, askSourceConfig, askSourceInfo)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes (SchemaDependency)
-import Hasura.RQL.Types.Source (DBObjectsIntrospection (..))
+import Hasura.RQL.Types.Source (DBObjectsIntrospection (..), SourceInfo (..))
+import Hasura.RQL.Types.Source.Column (ColumnValueGenerationStrategy (..), SourceColumnInfo (..))
+import Hasura.RQL.Types.Source.Table (SourceConstraint (..), SourceForeignKeys (..), SourceTableInfo (..), SourceTableType (..))
 import Hasura.RQL.Types.Table (ForeignKey (_fkConstraint))
 import Hasura.RQL.Types.Table qualified as RQL.T.T
 import Hasura.SQL.Types (CollectableType (..))
@@ -83,7 +88,7 @@ instance BackendMetadata 'DataConnector where
     error "buildComputedFieldBooleanExp: not implemented for the Data Connector backend."
   columnInfoToFieldInfo = columnInfoToFieldInfo'
   listAllTables = listAllTables'
-  getTableInfo _ _ = throw400 UnexpectedPayload "get_table_info not yet supported in GDCs!"
+  getTableInfo = getTableInfo'
   supportsBeingRemoteRelationshipTarget = supportsBeingRemoteRelationshipTarget'
 
 resolveBackendInfo' ::
@@ -494,3 +499,65 @@ listAllTables' sourceName = do
   sourceConfig <- askSourceConfig @'DataConnector sourceName
   schemaResponse <- requestDatabaseSchema logger sourceName sourceConfig
   pure $ fmap (Witch.from . API._tiName) $ API._srTables schemaResponse
+
+getTableInfo' :: (CacheRM m, MetadataM m, MonadError QErr m) => SourceName -> DC.TableName -> m (Maybe (SourceTableInfo 'DataConnector))
+getTableInfo' sourceName tableName = do
+  SourceInfo {_siDbObjectsIntrospection} <- askSourceInfo @'DataConnector sourceName
+
+  let tables :: HashMap DC.TableName (RQL.T.T.DBTableMetadata 'DataConnector)
+      tables = _rsTables _siDbObjectsIntrospection
+
+  pure $ fmap (convertTableMetadataToTableInfo tableName) (HashMap.lookup tableName tables)
+
+convertTableMetadataToTableInfo :: DC.TableName -> RQL.T.T.DBTableMetadata 'DataConnector -> SourceTableInfo 'DataConnector
+convertTableMetadataToTableInfo tableName RQL.T.T.DBTableMetadata {..} =
+  SourceTableInfo
+    { _stiName = Witch.from tableName,
+      _stiType = case DC._etmTableType _ptmiExtraTableMetadata of
+        DC.Table -> Table
+        DC.View -> View,
+      _stiColumns = convertColumn <$> _ptmiColumns,
+      _stiPrimaryKey = fmap Witch.from . toNonEmpty . RQL.T.T._pkColumns <$> _ptmiPrimaryKey,
+      _stiForeignKeys = convertForeignKeys _ptmiForeignKeys,
+      _stiDescription = getPGDescription <$> _ptmiDescription,
+      _stiInsertable = all RQL.T.T.viIsInsertable _ptmiViewInfo,
+      _stiUpdatable = all RQL.T.T.viIsUpdatable _ptmiViewInfo,
+      _stiDeletable = all RQL.T.T.viIsDeletable _ptmiViewInfo
+    }
+  where
+    convertColumn :: RQL.T.C.RawColumnInfo 'DataConnector -> SourceColumnInfo 'DataConnector
+    convertColumn RQL.T.C.RawColumnInfo {..} =
+      SourceColumnInfo
+        { _sciName = Witch.from rciName,
+          _sciType = Witch.from rciType,
+          _sciNullable = rciIsNullable,
+          _sciDescription = G.unDescription <$> rciDescription,
+          _sciInsertable = RQL.T.C._cmIsInsertable rciMutability,
+          _sciUpdatable = RQL.T.C._cmIsUpdatable rciMutability,
+          _sciValueGenerated =
+            extraColumnMetadata
+              >>= DC._ecmValueGenerated
+              >>= pure . \case
+                API.AutoIncrement -> AutoIncrement
+                API.UniqueIdentifier -> UniqueIdentifier
+                API.DefaultValue -> DefaultValue
+        }
+      where
+        extraColumnMetadata = HashMap.lookup rciName . DC._etmExtraColumnMetadata $ _ptmiExtraTableMetadata
+
+    convertForeignKeys :: HashSet (RQL.T.T.ForeignKeyMetadata 'DataConnector) -> SourceForeignKeys 'DataConnector
+    convertForeignKeys foreignKeys =
+      foreignKeys
+        & HashSet.toList
+        & fmap
+          ( \(RQL.T.T.ForeignKeyMetadata RQL.T.T.ForeignKey {..}) ->
+              let constraintName = RQL.T.T._cName _fkConstraint
+                  constraint =
+                    SourceConstraint
+                      { _scForeignTable = Witch.from _fkForeignTable,
+                        _scColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> NEHashMap.toList _fkColumnMapping
+                      }
+               in (constraintName, constraint)
+          )
+        & HashMap.fromList
+        & SourceForeignKeys

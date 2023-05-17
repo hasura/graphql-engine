@@ -221,7 +221,7 @@ class
   -- | Get information about a given table on a given source, whether tracked
   -- or not. Primarily useful for user interfaces.
   getTableInfo ::
-    (MonadError QErr m) =>
+    (CacheRM m, MetadataM m, MonadError QErr m) =>
     SourceName ->
     TableName b ->
     m (Maybe (SourceTableInfo b))

@@ -383,7 +383,7 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMListSourceKinds q -> runListSourceKinds q
   RMGetSourceKindCapabilities q -> runGetSourceKindCapabilities q
   RMGetSourceTables q -> dispatchMetadata runGetSourceTables q
-  RMGetTableInfo q -> runGetTableInfo q
+  RMGetTableInfo q -> dispatchMetadata runGetTableInfo q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMTrackTables q -> dispatchMetadata runTrackTablesQ q
   RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q

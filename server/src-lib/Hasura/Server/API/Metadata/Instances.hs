@@ -69,7 +69,7 @@ instance FromJSON RQLMetadataV1 where
       "dc_delete_agent" -> RMDCDeleteAgent <$> args
       "list_source_kinds" -> RMListSourceKinds <$> args
       "get_source_kind_capabilities" -> RMGetSourceKindCapabilities <$> args
-      "get_table_info" -> RMGetTableInfo <$> args
+      "get_table_info" -> RMGetTableInfo . mkAnyBackend @'DataConnector <$> args
       "set_custom_types" -> RMSetCustomTypes <$> args
       "set_api_limits" -> RMSetApiLimits <$> args
       "remove_api_limits" -> pure RMRemoveApiLimits

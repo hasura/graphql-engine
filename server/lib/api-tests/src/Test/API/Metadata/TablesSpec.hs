@@ -2,7 +2,7 @@
 
 module Test.API.Metadata.TablesSpec where
 
-import Data.Aeson (Value)
+import Data.Aeson (Value (Null))
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
@@ -16,7 +16,7 @@ import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
-import Harness.Yaml (shouldReturnYaml)
+import Harness.Yaml (shouldAtLeastBe, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
 
@@ -146,3 +146,77 @@ tests = do
       b -> error ("Unknown backend: " <> b)
 
     shouldReturnYaml testEnvironment actual expected
+
+  it "Gets the table info" \testEnvironment -> do
+    let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+        backendType = BackendType.backendTypeString backendTypeMetadata
+        schemaName = Schema.getSchemaName testEnvironment
+
+        actual :: IO Value
+        actual =
+          GraphqlEngine.postMetadata
+            testEnvironment
+            [interpolateYaml|
+              type: get_table_info
+              args:
+                source: #{BackendType.backendSourceName backendTypeMetadata}
+                table:
+                  - #{schemaName}
+                  - articles
+            |]
+
+        expected :: Value
+        expected = case backendType of
+          "sqlite" ->
+            [interpolateYaml|
+              columns:
+              - insertable: true
+                name: id
+                nullable: false
+                type: number
+                updatable: true
+              - insertable: true
+                name: author
+                nullable: false
+                type: number
+                updatable: true
+              - insertable: true
+                name: title
+                nullable: false
+                type: string
+                updatable: true
+              deletable: true
+              insertable: true
+              name:
+              - main
+              - articles
+              primary_key:
+              - id
+              type: table
+              updatable: true
+            |]
+          _ -> error "Unimplemented"
+
+    when (backendType == "sqlite") $
+      actual >>= \result -> result `shouldAtLeastBe` expected
+
+  it "Returns null for an invalid table" \testEnvironment -> do
+    let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+        backendType = BackendType.backendTypeString backendTypeMetadata
+        schemaName = Schema.getSchemaName testEnvironment
+
+        actual :: IO Value
+        actual =
+          GraphqlEngine.postMetadata
+            testEnvironment
+            [interpolateYaml|
+              type: get_table_info
+              args:
+                source: #{BackendType.backendSourceName backendTypeMetadata}
+                table:
+                  - #{schemaName}
+                  - made_up_table
+            |]
+
+    when (backendType == "sqlite") $
+      shouldReturnYaml testEnvironment actual Null

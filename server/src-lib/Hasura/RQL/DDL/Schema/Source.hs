@@ -367,12 +367,12 @@ runGetSourceTables GetSourceTables {..} = do
 
 --------------------------------------------------------------------------------
 
-data GetTableInfo = GetTableInfo
+data GetTableInfo (b :: BackendType) = GetTableInfo
   { _gtiSourceName :: Common.SourceName,
     _gtiTableName :: API.TableName
   }
 
-instance FromJSON GetTableInfo where
+instance FromJSON (GetTableInfo b) where
   parseJSON = J.withObject "GetSourceTables" \o -> do
     _gtiSourceName <- o .: "source"
     _gtiTableName <- o .: "table"
@@ -385,7 +385,7 @@ runGetTableInfo ::
     MonadError Error.QErr m,
     Metadata.MetadataM m
   ) =>
-  GetTableInfo ->
+  GetTableInfo b ->
   m EncJSON
 runGetTableInfo GetTableInfo {..} = do
   metadata <- Metadata.getMetadata
