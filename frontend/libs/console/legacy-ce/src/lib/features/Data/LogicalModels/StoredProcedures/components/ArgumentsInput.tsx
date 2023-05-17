@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import { CardedTable } from '../../../../../new-components/CardedTable';
 import { InputField, Select } from '../../../../../new-components/Form';
 import { useFieldArray, useFormContext } from 'react-hook-form';
-import { BooleanInput } from '../../LogicalModelWidget/parts/BooleanInput';
+import { BooleanInput } from '../../components/BooleanInput';
 import { Button } from '../../../../../new-components/Button';
 import { FiTrash2 } from 'react-icons/fi';
 

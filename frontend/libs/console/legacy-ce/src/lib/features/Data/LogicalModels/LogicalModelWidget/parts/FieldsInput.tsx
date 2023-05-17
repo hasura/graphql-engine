@@ -1,11 +1,10 @@
-import { useFieldArray, useFormContext } from 'react-hook-form';
 import clsx from 'clsx';
-import { BooleanInput } from './BooleanInput';
-import { TypeInput } from './TypeInput';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 import { FiTrash2 } from 'react-icons/fi';
-import { CardedTable } from '../../../../../new-components/CardedTable';
-import { InputField } from '../../../../../new-components/Form';
 import { Button } from '../../../../../new-components/Button';
+import { CardedTable } from '../../../../../new-components/CardedTable';
+import { InputField, Select } from '../../../../../new-components/Form';
+import { BooleanInput } from '../../components/BooleanInput';
 
 export const FieldsInput = ({
   name,
@@ -52,7 +51,7 @@ export const FieldsInput = ({
                   />
                 </CardedTable.TableBodyCell>
                 <CardedTable.TableBodyCell>
-                  <TypeInput
+                  <Select
                     name={`${name}[${index}].type`}
                     label=""
                     options={types.map(t => ({ label: t, value: t }))}

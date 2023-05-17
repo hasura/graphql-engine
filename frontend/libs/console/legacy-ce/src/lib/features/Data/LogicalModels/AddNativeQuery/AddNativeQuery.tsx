@@ -8,17 +8,21 @@ import {
   useConsoleForm,
 } from '../../../../new-components/Form';
 // import { FormDebugWindow } from '../../../../new-components/Form/dev-components/FormDebugWindow';
+import Skeleton from 'react-loading-skeleton';
+import { Driver, drivers } from '../../../../dataSources';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { hasuraToast } from '../../../../new-components/Toasts';
+import { Feature } from '../../../DataSource';
 import { useMetadata } from '../../../hasura-metadata-api';
+import { useSupportedDataTypes } from '../../hooks/useSupportedDataTypes';
 import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
+import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
 import { ArgumentsField } from './components/ArgumentsField';
 import { PageWrapper } from './components/PageWrapper';
 import { SqlEditorField } from './components/SqlEditorField';
 import { schema } from './schema';
 import { NativeQueryForm } from './types';
 import { transformFormOutputToMetadata } from './utils';
-import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
-import { Driver, drivers } from '../../../../dataSources';
 
 type AddNativeQueryProps = {
   defaultFormValues?: Partial<NativeQueryForm>;
@@ -38,7 +42,11 @@ export const AddNativeQuery = ({
     options: { defaultValues: defaultFormValues },
   });
 
-  const { data: sources, isLoading: isSourcesLoading } = useMetadata(s => {
+  const {
+    data: sources,
+    isLoading: isSourcesLoading,
+    error: sourcesError,
+  } = useMetadata(s => {
     return s.metadata.sources.filter(s => drivers.includes(s.kind as Driver));
   });
 
@@ -94,6 +102,32 @@ export const AddNativeQuery = ({
     }
   };
 
+  /**
+   * Options for the data source types
+   */
+  const {
+    data: typeOptions = [],
+    error: typeOptionError,
+    isLoading: isIntrospectionLoading,
+  } = useSupportedDataTypes({
+    dataSourceName: selectedSource,
+    select: values => {
+      if (values === Feature.NotImplemented) return [];
+      return Object.values(values).flat();
+    },
+    options: {
+      enabled: !!selectedSource,
+    },
+  });
+
+  if (sourcesError || typeOptionError)
+    return (
+      <IndicatorCard status="negative" headline="Internal Error">
+        <div>{sourcesError}</div>
+        <div> {typeOptionError?.message}</div>
+      </IndicatorCard>
+    );
+
   return (
     <PageWrapper pathname={pathname} push={push}>
       <Form onSubmit={handleFormSubmit}>
@@ -123,7 +157,14 @@ export const AddNativeQuery = ({
             placeholder="Select a database..."
           />
         </div>
-        <ArgumentsField />
+        {isIntrospectionLoading ? (
+          <div>
+            <Skeleton />
+            <Skeleton />
+          </div>
+        ) : (
+          <ArgumentsField types={typeOptions} />
+        )}
         <SqlEditorField />
         <div className="flex w-full">
           {/* Logical Model Dropdown */}

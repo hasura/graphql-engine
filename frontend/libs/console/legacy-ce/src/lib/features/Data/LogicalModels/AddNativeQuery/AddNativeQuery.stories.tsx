@@ -34,8 +34,8 @@ const fillAndSubmitForm = async ({
    *
    */
 
-  userEvent.click(c.getByText('Add Parameter'));
-  userEvent.click(c.getByText('Save'));
+  await userEvent.click(c.getByText('Add Parameter'));
+  await userEvent.click(c.getByText('Save'));
 
   const errorMessages = [
     'Native Query Name is required',
@@ -49,35 +49,35 @@ const fillAndSubmitForm = async ({
   }
 
   // remove param added for error testing
-  userEvent.click(c.getByText('Remove'));
+  await userEvent.click(c.getByText('Remove'));
 
-  userEvent.type(
+  await userEvent.type(
     c.getByPlaceholderText('Name that exposes this model in GraphQL API'),
     'my_native_query'
   );
-  userEvent.type(
+  await userEvent.type(
     c.getByPlaceholderText('A description of this logical model'),
     'a description'
   );
 
   //select postgres from the database dropdown
-  userEvent.selectOptions(
+  await userEvent.selectOptions(
     await c.findByLabelText('Database', undefined, { timeout: 3000 }),
     await c.findByRole('option', { name: 'postgres' })
   );
 
-  userEvent.click(c.getByText('Add Parameter'));
+  await userEvent.click(await c.findByText('Add Parameter'));
 
-  userEvent.type(c.getByPlaceholderText('Parameter Name'), 'param1');
-  userEvent.type(c.getByPlaceholderText('Default Value'), 'default');
-  userEvent.click(c.getByTestId('required-switch'));
+  await userEvent.type(c.getByPlaceholderText('Parameter Name'), 'param1');
+  await userEvent.type(c.getByPlaceholderText('Default Value'), 'default');
+  await userEvent.click(c.getByTestId('required-switch'));
 
-  userEvent.selectOptions(
+  await userEvent.selectOptions(
     await c.findByLabelText('Query Return Type', undefined, { timeout: 3000 }),
     await c.findByRole('option', { name: 'hello_world' })
   );
 
-  userEvent.click(c.getByText('Save'));
+  await userEvent.click(c.getByText('Save'));
 };
 
 export const HappyPath: ComponentStory<typeof AddNativeQuery> = args => {

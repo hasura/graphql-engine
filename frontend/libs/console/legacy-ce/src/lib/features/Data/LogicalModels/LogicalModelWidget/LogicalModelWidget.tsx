@@ -47,6 +47,8 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
     },
   });
 
+  const selectedDataSource = watch('dataSourceName');
+
   /**
    * Options for the data sources
    */
@@ -71,13 +73,13 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
     error: typeOptionError,
     isLoading: isIntrospectionLoading,
   } = useSupportedDataTypes({
-    dataSourceName: watch('dataSourceName'),
+    dataSourceName: selectedDataSource,
     select: values => {
       if (values === Feature.NotImplemented) return [];
       return Object.values(values).flat();
     },
     options: {
-      enabled: !!watch('dataSourceName'),
+      enabled: !!selectedDataSource,
     },
   });
 

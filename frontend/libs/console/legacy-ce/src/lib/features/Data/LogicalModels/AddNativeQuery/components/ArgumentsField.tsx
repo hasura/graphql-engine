@@ -5,23 +5,22 @@ import {
 } from '@tanstack/react-table';
 import clsx from 'clsx';
 import React, { useRef } from 'react';
-import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 import { FaPlusCircle } from 'react-icons/fa';
 import { Button } from '../../../../../new-components/Button';
 import {
-  FieldWrapper,
   GraphQLSanitizedInputField,
   InputField,
   Select,
   fieldLabelStyles,
 } from '../../../../../new-components/Form';
-import { Switch } from '../../../../../new-components/Switch';
+import { BooleanInput } from '../../components/BooleanInput';
 import { useCardedTableFromReactTableWithRef } from '../../components/CardedTableFromReactTable';
 import { NativeQueryArgumentNormalized, NativeQueryForm } from '../types';
 
 const columnHelper = createColumnHelper<NativeQueryArgumentNormalized>();
 
-export const ArgumentsField = () => {
+export const ArgumentsField = ({ types }: { types: string[] }) => {
   const { control } = useFormContext<NativeQueryForm>();
 
   const { append, remove, fields } = useFieldArray({
@@ -53,10 +52,7 @@ export const ArgumentsField = () => {
             // saving prop for future upgrade
             //menuPortalTarget={tableRef.current}
             name={`arguments.${row.index}.type`}
-            options={[
-              { value: 'string', label: 'string' },
-              { value: 'int', label: 'int' },
-            ]}
+            options={types.map(t => ({ label: t, value: t }))}
           />
         ),
         header: 'Type',
@@ -75,22 +71,7 @@ export const ArgumentsField = () => {
       columnHelper.accessor('required', {
         id: 'required',
         cell: ({ row }) => (
-          <Controller
-            name={`arguments.${row.index}.required`}
-            render={({ field: { value, onChange }, fieldState }) => (
-              <FieldWrapper
-                id={`arguments.${row.index}.required`}
-                noErrorPlaceholder
-                error={fieldState.error}
-              >
-                <Switch
-                  data-testid="required-switch"
-                  checked={value}
-                  onCheckedChange={onChange}
-                />
-              </FieldWrapper>
-            )}
-          />
+          <BooleanInput name={`arguments.${row.index}.required`} />
         ),
         header: 'Required',
       }),
@@ -106,7 +87,7 @@ export const ArgumentsField = () => {
         ),
       }),
     ],
-    [control, remove]
+    [remove, types]
   );
 
   const argumentsTable = useReactTable({
