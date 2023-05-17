@@ -1,4 +1,5 @@
 GRAPHQL_ENGINE_PATH=$(shell cabal list-bin exe:graphql-engine)
+POSTGRES_AGENT_PATH=$(shell cabal list-bin exe:postgres-agent)
 GRAPHQL_ENGINE_PRO_PATH=$(shell cabal list-bin exe:graphql-engine-pro)
 
 API_TESTS=api-tests:exe:api-tests
@@ -11,6 +12,7 @@ test-bigquery: build remove-tix-file
 	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait postgres
 	HASURA_TEST_BACKEND_TYPE=BigQuery \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS)
 
 .PHONY: test-sqlserver
@@ -19,6 +21,7 @@ test-sqlserver: build remove-tix-file
 	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS)
 
 .PHONY: test-citus
@@ -27,6 +30,7 @@ test-citus: build remove-tix-file
 	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
 	HASURA_TEST_BACKEND_TYPE=Citus \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS)
 
 .PHONY: test-data-connectors
@@ -35,6 +39,7 @@ test-data-connectors: build remove-tix-file
 	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
 	HASURA_TEST_BACKEND_TYPE=DataConnector \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS)
 
 .PHONY: test-cockroach
@@ -43,16 +48,18 @@ test-cockroach: build remove-tix-file
 	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
 	HASURA_TEST_BACKEND_TYPE=Cockroach \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS)
 
 .PHONY: test-postgres
 ## test-postgres: run tests for Postgres backend
 # we have a few tests labeled with 'Postgres' which test their variants, too,
 # so this also starts containers for Postgres variants
-test-postgres: build remove-tix-file
+test-postgres: build build-postgres-agent remove-tix-file
 	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
 	HASURA_TEST_BACKEND_TYPE=Postgres \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS)
 
 .PHONY: test-no-backends
@@ -61,13 +68,15 @@ test-postgres: build remove-tix-file
 test-no-backends: build start-backends remove-tix-file
 	HASURA_TEST_BACKEND_TYPE=None \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS)
 
 .PHONY: test-backends
 ## test-backends: run tests for all backends
 # BigQuery tests will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/lib/api-tests#required-setup-for-bigquery-tests
-test-backends: build start-backends remove-tix-file
+test-backends: build build-postgres-agent start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS)
 
 .PHONY: test-matrix
@@ -75,6 +84,7 @@ test-backends: build start-backends remove-tix-file
 test-matrix: build remove-tix-file
 	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait postgres cockroach citus dc-sqlite-agent
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run api-tests:exe:produce-feature-matrix +RTS -N4 -RTS
 
 .PHONY: test-data-connectors-pro
@@ -82,6 +92,7 @@ test-matrix: build remove-tix-file
 test-data-connectors-pro: build-pro remove-tix-file
 	docker compose up --build --detach --wait postgres dc-sqlite-agent
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-data-connectors-snowflake-pro
@@ -89,6 +100,7 @@ test-data-connectors-pro: build-pro remove-tix-file
 test-data-connectors-snowflake-pro: build-pro remove-tix-file
 	docker compose up --build --detach --wait postgres dc-sqlite-agent
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO) -- --match "DataConnector \"snowflake\""
 
 .PHONY: test-data-connectors-athena-pro
@@ -97,6 +109,7 @@ test-data-connectors-athena-pro: build-pro remove-tix-file
 	docker compose up --build --detach --wait postgres dc-sqlite-agent
 	$(call stop_after, \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO) -- --match "DataConnector \"athena\"")
 
 .PHONY: test-data-connectors-mysql-pro
@@ -105,19 +118,22 @@ test-data-connectors-mysql-pro: build-pro remove-tix-file
 	cd pro/server/lib/api-tests && docker compose up --build --detach --wait postgres dc-sqlite-agent --wait mysql
 	$(call stop_after, \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO) -- --match "DataConnector \"mysql2\"")
 
 .PHONY: test-backends-pro
 ## test-backends-pro: run tests for HGE pro for all backends
 test-backends-pro: build-pro start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-postgres-pro
 ## test-postgres-pro: run tests for HGE pro for postgres
-test-postgres-pro: build-pro start-backends remove-tix-file
+test-postgres-pro: build-pro build-postgres-agent start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Postgres \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-citus-pro
@@ -125,6 +141,7 @@ test-postgres-pro: build-pro start-backends remove-tix-file
 test-citus-pro: build-pro start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Citus \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-cockroach-pro
@@ -132,6 +149,7 @@ test-citus-pro: build-pro start-backends remove-tix-file
 test-cockroach-pro: build-pro start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Cockroach \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO) 
 
 .PHONY: test-sqlserver-pro
@@ -139,6 +157,7 @@ test-cockroach-pro: build-pro start-backends remove-tix-file
 test-sqlserver-pro: build-pro start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=SQLServer \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-bigquery-pro
@@ -146,6 +165,7 @@ test-sqlserver-pro: build-pro start-backends remove-tix-file
 test-bigquery-pro: build-pro start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		HASURA_TEST_BACKEND_TYPE=BigQuery \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO) 
 
 .PHONY: test-unit
@@ -175,6 +195,7 @@ test-native-queries:
 	HSPEC_MATCH=NativeQueries make test-unit
 	HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-native-queries-postgres
@@ -186,6 +207,7 @@ test-native-queries-postgres:
 	HASURA_TEST_BACKEND_TYPE=Postgres \
 		HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-native-queries-sqlserver
@@ -196,6 +218,7 @@ test-native-queries-sqlserver: remove-tix-file
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
 		HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-native-queries-bigquery
@@ -206,6 +229,7 @@ test-native-queries-bigquery: remove-tix-file
 	HASURA_TEST_BACKEND_TYPE=BigQuery \
 		HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-stored-procedures-sqlserver
@@ -216,6 +240,7 @@ test-stored-procedures-sqlserver: remove-tix-file
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
 		HSPEC_MATCH=StoredProcedures \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: py-tests

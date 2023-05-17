@@ -15,7 +15,7 @@ module Harness.Services.ExternalProcess.GraphqlEngine
     spawnServer,
 
     -- * Pooled access
-    HgePool,
+    HgePool (hgePoolDestroy),
     mkHgeInstancePool,
     drawFromPool,
   )
@@ -103,39 +103,35 @@ data HgeServerHandle = HgeServerHandle
     hshDestroy :: IO ()
   }
 
-newtype HgePool = HgePool {getHgePool :: HgePoolArguments -> IO (Pool HgeServerHandle)}
+data HgePool = HgePool
+  { hgePoolGet :: HgePoolArguments -> IO (Pool HgeServerHandle),
+    hgePoolDestroy :: IO ()
+  }
 
 mkHgeInstancePool :: Logger -> IO HgePool
 mkHgeInstancePool logger = do
   poolsMVar <- newMVar (mempty :: HashMap.HashMap HgePoolArguments (Pool HgeServerHandle))
-  return $ HgePool \args -> do
-    pools <- takeMVar poolsMVar
-    case HashMap.lookup args pools of
-      Nothing -> do
-        pool <- createPool (serverHandle args) hshDestroy 1 60.0 5
-        putMVar poolsMVar (HashMap.insert args pool pools)
-        return pool
-      Just pool -> do
-        putMVar poolsMVar pools
-        return pool
+  let hgePoolGet = \args -> do
+        pools <- takeMVar poolsMVar
+        case HashMap.lookup args pools of
+          Nothing -> do
+            pool <- createPool (serverHandle args) hshDestroy 1 60.0 5
+            putMVar poolsMVar (HashMap.insert args pool pools)
+            return pool
+          Just pool -> do
+            putMVar poolsMVar pools
+            return pool
+
+      hgePoolDestroy = do
+        pools <- takeMVar poolsMVar
+        traverse_ destroyAllResources pools
+
+  return $ HgePool {..}
   where
     serverHandle :: HgePoolArguments -> IO HgeServerHandle
     serverHandle args = do
-      (hge, cleanup) <- unmanage (spawnServer (logger, args) (_hpaConfig args))
+      (hge, cleanup) <- spawnServer (logger, args) (_hpaConfig args)
       return $ HgeServerHandle hge cleanup
-
-unmanage :: Managed a -> IO (a, IO ())
-unmanage act = do
-  resMVar <- newEmptyMVar
-  cleanupMVar <- newEmptyMVar
-  _ <- forkIO $ runManaged $ do
-    res <- act
-    liftIO $ do
-      putMVar resMVar res
-      takeMVar cleanupMVar
-
-  res <- takeMVar resMVar
-  return (res, putMVar cleanupMVar ())
 
 withPool ::
   Has Logger testEnvironment =>
@@ -145,7 +141,7 @@ withPool ::
   (HgeServerInstance -> IO a) ->
   IO a
 withPool env mkPool args k = do
-  pool <- getHgePool mkPool args
+  pool <- hgePoolGet mkPool args
   withResource
     pool
     ( \h -> do
@@ -186,71 +182,75 @@ spawnServer ::
   ) =>
   testEnvironment ->
   HgeConfig ->
-  Managed HgeServerInstance
+  IO (HgeServerInstance, IO ())
 spawnServer testEnv (HgeConfig {hgeConfigEnvironmentVars}) = do
   let (HgeBinPath hgeBinPath) = getter testEnv
       pgUrl = getter testEnv
+      logger = getter @Logger testEnv
       (PassthroughEnvVars envVars) = getter testEnv
-  freshDb <- mkFreshPostgresDb testEnv
-  let allEnv = hgeConfigEnvironmentVars <> envVars
-      metadataDbUrl = mkFreshDbConnectionString pgUrl freshDb
-  ((_, Just hgeStdOut, Just hgeStdErr, _), port) <-
-    managed
-      ( bracket
-          ( do
-              port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
-              testLogMessage testEnv $ HgeInstanceStartMessage port
+      allEnv = hgeConfigEnvironmentVars <> envVars
+  (freshDb, cleanupDb) <- mkFreshPostgresDbIO testEnv
+  let metadataDbUrl = mkFreshDbConnectionString pgUrl freshDb
+  port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
+  testLogMessage testEnv $ HgeInstanceStartMessage port
 
-              process <-
-                createProcess
-                  ( proc
-                      hgeBinPath
-                      [ "serve",
-                        "--enable-console",
-                        "--server-port",
-                        show port,
-                        "--metadata-database-url",
-                        T.unpack (getPostgresServerUrl metadataDbUrl)
-                      ]
-                  )
-                    { env =
-                        Just $
-                          ("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "0")
-                            : ("HASURA_GRAPHQL_ADMIN_SECRET", T.unpack adminSecret)
-                            : allEnv,
-                      std_out = CreatePipe,
-                      std_err = CreatePipe,
-                      create_group = True
-                    }
-                  `catchAny` ( \exn ->
-                                 error $
-                                   unlines
-                                     [ "Failed to spawn Graphql-Engine process:",
-                                       show exn
-                                     ]
-                             )
-              return $ (process, port)
-          )
-          ( \(process@(_, _, _, ph), port) -> forkIO $ do
-              startTime <- getCurrentTime
-              interruptProcessGroupOf ph
-              exitCode <- waitForProcess ph
-              cleanupProcess process
-              endTime <- getCurrentTime
-              testLogMessage testEnv $ HgeInstanceShutdownMessage port exitCode (diffUTCTime endTime startTime)
-          )
+  process@(_, Just hgeStdOut, Just hgeStdErr, ph) <-
+    createProcess
+      ( proc
+          hgeBinPath
+          [ "serve",
+            "--enable-console",
+            "--server-port",
+            show port,
+            "--metadata-database-url",
+            T.unpack (getPostgresServerUrl metadataDbUrl)
+          ]
       )
-  let logger = getter @Logger testEnv
-  hgeLogRelayThread logger hgeStdOut
-  hgeStdErrRelayThread logger hgeStdErr
-  liftIO do
-    let server = HgeServerInstance "127.0.0.1" port adminSecret
-    result <- Http.healthCheck' (T.unpack $ getHgeServerInstanceUrl server <> "/healthz")
-    case result of
-      Http.Healthy -> pure server
-      Http.Unhealthy failures -> do
-        runLogger logger $ HgeInstanceFailedHealthcheckMessage failures
-        error "Graphql-Engine failed http healthcheck."
+        { env =
+            Just $
+              ("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "0")
+                : ("HASURA_GRAPHQL_ADMIN_SECRET", T.unpack adminSecret)
+                : allEnv,
+          std_out = CreatePipe,
+          std_err = CreatePipe,
+          create_group = True
+        }
+      `catchAny` ( \exn ->
+                     error $
+                       unlines
+                         [ "Failed to spawn Graphql-Engine process:",
+                           show exn
+                         ]
+                 )
+
+  cleanLogThread1 <- hgeLogRelayThread logger hgeStdOut
+  cleanLogThread2 <- hgeStdErrRelayThread logger hgeStdErr
+
+  -- We do cleanup asynchronously, because we have observed that waiting for the
+  -- spawned process to finish can take an inordinate amount of time.
+  --
+  -- This does risk leaking processes, especially when doing the final cleanup.
+  -- The only real solution to this is to have the process listen for heartbeats
+  -- which we send, and the process stopping when the heartbeats do.
+  let cleanup = void $ forkIO $ do
+        startTime <- getCurrentTime
+        cleanupDb
+        cleanLogThread1
+        cleanLogThread2
+        interruptProcessGroupOf ph
+        exitCode <- waitForProcess ph
+        cleanupProcess process
+        endTime <- getCurrentTime
+        testLogMessage testEnv $ HgeInstanceShutdownMessage port exitCode (diffUTCTime endTime startTime)
+
+  let server = HgeServerInstance "127.0.0.1" port adminSecret
+  result <- Http.healthCheck' (T.unpack $ getHgeServerInstanceUrl server <> "/healthz")
+  case result of
+    Http.Healthy -> pure (server, cleanup)
+    Http.Unhealthy failures -> do
+      runLogger logger $ HgeInstanceFailedHealthcheckMessage failures
+      cleanup
+      error "Graphql-Engine failed http healthcheck."
   where
     adminSecret :: Text
     adminSecret = "top-secret"
@@ -328,38 +328,27 @@ instance LoggableMessage HgeStdErrLogMessage where
 
 -- | A thread that reads from the engine's StdErr handle and makes one test-log
 -- message per line.
-hgeStdErrRelayThread :: Logger -> Handle -> Managed ()
+hgeStdErrRelayThread :: Logger -> Handle -> IO (IO ())
 hgeStdErrRelayThread logger hgeOutput = do
-  _ <-
-    managed
-      ( bracket
-          ( Async.async $ forever $ do
-              nextChunk <- BS.hGetLine hgeOutput
-              runLogger logger $ HgeStdErrLogMessage (decodeUtf8 nextChunk)
-          )
-          Async.cancel
-      )
-  return ()
+  async <- Async.async $ forever $ do
+    nextChunk <- BS.hGetLine hgeOutput
+    runLogger logger $ HgeStdErrLogMessage (decodeUtf8 nextChunk)
+  return $ Async.cancel async
 
 -- | A thread that reads from the engine's StdOut handle and makes one test-log
 -- message per json-J.object, on a best-effort basis.
-hgeLogRelayThread :: Logger -> Handle -> Managed ()
+hgeLogRelayThread :: Logger -> Handle -> IO (IO ())
 hgeLogRelayThread logger hgeOutput = do
-  resultRef <- liftIO $ newIORef (Atto.parse logParser "")
-  _ <-
-    managed
-      ( bracket
-          ( Async.async $ forever $ do
-              nextChunk <- (<> "\n") <$> BS.hGetLine hgeOutput
-              processChunk resultRef nextChunk
-          )
-          ( \threadHandle -> do
-              Async.cancel threadHandle
-              processChunk resultRef ""
-              processChunk resultRef ""
-          )
-      )
-  return ()
+  resultRef <- newIORef (Atto.parse logParser "")
+  threadHandle <- Async.async $ forever $ do
+    nextChunk <- (<> "\n") <$> BS.hGetLine hgeOutput
+    processChunk resultRef nextChunk
+  return
+    ( do
+        Async.cancel threadHandle
+        processChunk resultRef ""
+        processChunk resultRef ""
+    )
   where
     processChunk :: IORef (Atto.Result J.Value) -> BS.ByteString -> IO ()
     processChunk ref nextChunk = do

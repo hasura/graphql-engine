@@ -17,7 +17,7 @@ import Database.PostgreSQL.Simple.Options qualified as Options
 import Harness.Exceptions
 import Harness.GraphqlEngine (startServerThread)
 import Harness.Logging
-import Harness.Services.Composed (mkTestServicesConfig)
+import Harness.Services.Composed (mkTestServicesConfig, teardownServices)
 import Harness.Test.BackendType (BackendType (..))
 import Harness.TestEnvironment (GlobalTestEnvironment (..), Protocol (..), TestingMode (..), stopServer)
 import Hasura.Prelude
@@ -78,9 +78,11 @@ setupTestEnvironment testingMode logger = do
   servicesConfig <- mkTestServicesConfig logger
   pure GlobalTestEnvironment {requestProtocol = HTTP, ..}
 
--- | tear down the shared server
+-- | tear down the shared server and services.
 teardownTestEnvironment :: GlobalTestEnvironment -> IO ()
-teardownTestEnvironment (GlobalTestEnvironment {server}) = stopServer server
+teardownTestEnvironment (GlobalTestEnvironment {server, servicesConfig}) = do
+  stopServer server
+  teardownServices servicesConfig
 
 -- | allow setting log output type
 setupLogger :: IO (Logger, IO ())

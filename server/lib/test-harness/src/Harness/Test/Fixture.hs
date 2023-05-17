@@ -126,10 +126,10 @@ hgeWithEnv env = do
   let hgeConfig = emptyHgeConfig {hgeConfigEnvironmentVars = env}
 
   aroundAllWith
-    ( \specs globalTestEnvironment -> runManaged $ do
-        hgeServerInstance <-
-          spawnServer globalTestEnvironment hgeConfig
-        liftIO $ useHgeInTestEnvironment globalTestEnvironment hgeServerInstance >>= specs
+    ( \specs globalTestEnvironment -> do
+        (hgeServerInstance, cleanup) <- spawnServer globalTestEnvironment hgeConfig
+        useHgeInTestEnvironment globalTestEnvironment hgeServerInstance >>= specs
+        cleanup
     )
 
 {-# DEPRECATED runSingleSetup "runSingleSetup lets all specs in aFixture share a single database environment, which impedes parallelisation and out-of-order execution." #-}

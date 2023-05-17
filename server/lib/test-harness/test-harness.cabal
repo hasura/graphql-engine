@@ -155,9 +155,11 @@ library
     Harness.Services.Composed
     Harness.Services.Database.Postgres
     Harness.Services.ExternalProcess.GraphqlEngine
+    Harness.Services.ExternalProcess.DCPostgresAgent
     Harness.Services.GraphqlEngine
     Harness.Services.GraphqlEngine.API
     Harness.Services.Schema
+    Harness.Services.Source.DCPostgres
     Harness.Services.Source.Postgres
     Harness.Subscriptions
     Harness.Test.BackendType

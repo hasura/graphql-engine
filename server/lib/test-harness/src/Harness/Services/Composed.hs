@@ -1,9 +1,10 @@
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module Harness.Services.Composed
-  ( module I,
+  ( module E,
     TestServicesConfig (..),
     mkTestServicesConfig,
+    teardownServices,
   )
 where
 
@@ -11,12 +12,14 @@ import Data.Has
 import Data.Text qualified as T
 import Harness.Constants qualified as Constants
 import Harness.Logging
-import Harness.Services.Database.Postgres as I
-import Harness.Services.ExternalProcess.GraphqlEngine as I
-import Harness.Services.GraphqlEngine as I
-import Harness.Services.GraphqlEngine.API as I
-import Harness.Services.Schema as I
-import Harness.Services.Source.Postgres as I
+import Harness.Services.Database.Postgres as E
+import Harness.Services.ExternalProcess.DCPostgresAgent as E hiding (drawFromPool)
+import Harness.Services.ExternalProcess.GraphqlEngine as E hiding (drawFromPool)
+import Harness.Services.GraphqlEngine as E
+import Harness.Services.GraphqlEngine.API as E
+import Harness.Services.Schema as E
+import Harness.Services.Source.DCPostgres as E
+import Harness.Services.Source.Postgres as E
 import Hasura.Prelude
 import System.Directory
 import System.Environment
@@ -26,6 +29,8 @@ data TestServicesConfig = TestServicesConfig
   { tscHgeBinPath :: HgeBinPath,
     tscHgePool :: HgePool,
     tscPassthroughEnvVars :: PassthroughEnvVars,
+    tscDcPgBinPath :: DcPgBinPath,
+    tscDcPgPool :: DcPgPool,
     tscPostgresServerUrl :: PostgresServerUrl
     -- Cockroach/Citus/...
     -- Bigquery credentials?
@@ -47,25 +52,43 @@ instance Has PassthroughEnvVars TestServicesConfig where
   getter = tscPassthroughEnvVars
   modifier f x = x {tscPassthroughEnvVars = f (tscPassthroughEnvVars x)}
 
+instance Has DcPgPool TestServicesConfig where
+  getter = tscDcPgPool
+  modifier f x = x {tscDcPgPool = f (tscDcPgPool x)}
+
+instance Has DcPgBinPath TestServicesConfig where
+  getter = tscDcPgBinPath
+  modifier f x = x {tscDcPgBinPath = f (tscDcPgBinPath x)}
+
 mkTestServicesConfig :: Logger -> IO TestServicesConfig
 mkTestServicesConfig logger = do
-  let var = "GRAPHQL_ENGINE"
-  hgeBinPath <-
-    lookupEnv var
-      `onNothingM` error ("Environment variable '" ++ var ++ "' not specified.")
-  let tscHgeBinPath = HgeBinPath hgeBinPath
-
+  tscHgeBinPath <- HgeBinPath <$> getExeFromEnvVar "GRAPHQL_ENGINE"
   tscHgePool <- mkHgeInstancePool logger
-
-  exists <- doesFileExist hgeBinPath
-  unless exists $ error ("(" ++ var ++ ") The file '" ++ hgeBinPath ++ "' does not exist.")
-  permissions <- getPermissions hgeBinPath
-  unless (executable permissions) $ error ("(" ++ var ++ ") The file '" ++ hgeBinPath ++ "' is not executable.")
-
   tscPassthroughEnvVars <- mkPassthroughEnv
+
+  tscDcPgBinPath <- DcPgBinPath <$> getExeFromEnvVar "POSTGRES_AGENT"
+  tscDcPgPool <- mkDcPgInstancePool logger
 
   let tscPostgresServerUrl = PostgresServerUrl $ T.pack postgresqlInitialConnectionString
   pure TestServicesConfig {..}
+
+teardownServices :: TestServicesConfig -> IO ()
+teardownServices servicesConfig = do
+  hgePoolDestroy (tscHgePool servicesConfig)
+  dcPgPoolDestroy (tscDcPgPool servicesConfig)
+
+getExeFromEnvVar :: String -> IO String
+getExeFromEnvVar envVar = do
+  binPath <-
+    lookupEnv envVar
+      `onNothingM` error ("Environment variable '" ++ envVar ++ "' not specified.")
+
+  exists <- doesFileExist binPath
+  unless exists $ error ("(" ++ envVar ++ ") The file '" ++ binPath ++ "' does not exist.")
+  permissions <- getPermissions binPath
+  unless (executable permissions) $ error ("(" ++ envVar ++ ") The file '" ++ binPath ++ "' is not executable.")
+
+  return binPath
 
 postgresqlInitialConnectionString :: String
 postgresqlInitialConnectionString = "postgres://hasura:hasura@127.0.0.1:65002/hasura_metadata"

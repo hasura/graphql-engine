@@ -11,6 +11,7 @@ module Harness.Services.Database.Postgres
     createDatabase,
     dropDatabase,
     mkFreshPostgresDb,
+    mkFreshPostgresDbIO,
     mkFreshDbConnectionString,
     withFreshPostgresDb,
     createTable,
@@ -88,12 +89,18 @@ run testEnv query = do
 
 mkFreshPostgresDb :: (Has Logger testEnvironment, Has PostgresServerUrl testEnvironment) => testEnvironment -> Managed FreshPostgresDb
 mkFreshPostgresDb testEnv = do
-  freshDbName <- liftIO $ drawFreshDbName
-  managed $
-    bracket
-      (createDatabase testEnv freshDbName)
-      (\_ -> dropDatabase testEnv freshDbName)
-  return $ FreshPostgresDb freshDbName
+  (res, cleanup) <- liftIO $ mkFreshPostgresDbIO testEnv
+  managed_ (<* cleanup)
+  return res
+
+mkFreshPostgresDbIO :: (Has Logger testEnvironment, Has PostgresServerUrl testEnvironment) => testEnvironment -> IO (FreshPostgresDb, IO ())
+mkFreshPostgresDbIO testEnv = do
+  freshDbName <- drawFreshDbName
+  createDatabase testEnv freshDbName
+  return $
+    ( FreshPostgresDb freshDbName,
+      dropDatabase testEnv freshDbName
+    )
   where
     drawFreshDbName :: IO Text
     drawFreshDbName = do

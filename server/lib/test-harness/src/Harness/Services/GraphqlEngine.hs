@@ -60,10 +60,10 @@ withHgeSpawn ::
   SpecWith (PostGraphql, (ShouldReturnYamlF, (HgeServerInstance, testEnvironment))) ->
   SpecWith testEnvironment
 withHgeSpawn hgeConfig specs = do
-  flip aroundWith specs \action testEnvironment -> runManaged do
-    server <- spawnServer testEnvironment hgeConfig
-    liftIO $
-      action
-        ( PostGraphql (hgePostGraphql (server, testEnvironment)),
-          (ShouldReturnYamlF (shouldReturnYamlFInternal defaultOptions), (server, testEnvironment))
-        )
+  flip aroundWith specs \action testEnvironment -> do
+    (server, cleanup) <- spawnServer testEnvironment hgeConfig
+    action
+      ( PostGraphql (hgePostGraphql (server, testEnvironment)),
+        (ShouldReturnYamlF (shouldReturnYamlFInternal defaultOptions), (server, testEnvironment))
+      )
+    cleanup
