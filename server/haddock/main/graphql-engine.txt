@@ -26683,50 +26683,41 @@ instance GHC.Show.Show Hasura.GraphQL.Transport.WebSocket.Types.WSConnState
 
 -- | Execution of GraphQL queries over HTTP transport
 module Hasura.GraphQL.Transport.HTTP
-data QueryCacheKey
-QueryCacheKey :: !GQLReqParsed -> !RoleName -> !SessionVariables -> QueryCacheKey
-[qckQueryString] :: QueryCacheKey -> !GQLReqParsed
-[qckUserRole] :: QueryCacheKey -> !RoleName
-[qckSession] :: QueryCacheKey -> !SessionVariables
-type CacheStoreResponse = Either CacheStoreFailure CacheStoreSuccess
-data CacheStoreSuccess
-CacheStoreSkipped :: CacheStoreSuccess
-CacheStoreHit :: CacheStoreSuccess
-data CacheStoreFailure
-CacheStoreLimitReached :: CacheStoreFailure
-CacheStoreNotEnoughCapacity :: CacheStoreFailure
-CacheStoreBackendError :: String -> CacheStoreFailure
+
+-- | Encapsulates a function that stores a query response in the cache.
+--   <a>cacheLookup</a> decides when such an invitation to store is
+--   generated.
+newtype ResponseCacher
+ResponseCacher :: (forall m. (MonadTrace m, MonadIO m) => EncJSON -> m (Either QErr CacheStoreResponse)) -> ResponseCacher
+[runStoreResponse] :: ResponseCacher -> forall m. (MonadTrace m, MonadIO m) => EncJSON -> m (Either QErr CacheStoreResponse)
+data CacheStoreResponse
+
+-- | Cache storage is unconditional, just not always available.
+CacheStoreSuccess :: CacheStoreResponse
+CacheStoreLimitReached :: CacheStoreResponse
+CacheStoreNotEnoughCapacity :: CacheStoreResponse
+CacheStoreBackendError :: String -> CacheStoreResponse
+data CacheResult
+
+-- | We have a cached response for this query
+ResponseCached :: EncJSON -> CacheResult
+
+-- | We don't have a cached response. The <a>ResponseCacher</a> can be used
+--   to store the response in the cache after a fresh execution.
+ResponseUncached :: Maybe ResponseCacher -> CacheResult
 class Monad m => MonadExecuteQuery m
 
 -- | This method does two things: it looks up a query result in the
 --   server-side cache, if a cache is used, and it additionally returns
 --   HTTP headers that can instruct a client how long a response can be
 --   cached locally (i.e. client-side).
-cacheLookup :: MonadExecuteQuery m => [RemoteSchemaInfo] -> [ActionsInfo] -> QueryCacheKey -> Maybe CachedDirective -> m (Either QErr (ResponseHeaders, Maybe EncJSON))
-
--- | Store a json response for a query that we've executed in the cache.
---   Note that, as part of this, <a>cacheStore</a> has to decide whether
---   the response is cacheable. A very similar decision is also made in
---   <a>cacheLookup</a>, since it has to construct corresponding
---   cache-enabling headers that are sent to the client. But note that the
---   HTTP headers influence client-side caching, whereas <a>cacheStore</a>
---   changes the server-side cache.
-cacheStore :: MonadExecuteQuery m => QueryCacheKey -> Maybe CachedDirective -> EncJSON -> m (Either QErr CacheStoreResponse)
+cacheLookup :: MonadExecuteQuery m => ExecutionPlan -> [QueryRootField UnpreparedValue] -> Maybe CachedDirective -> GQLReqParsed -> UserInfo -> [Header] -> m (Either QErr (ResponseHeaders, CacheResult))
 
 -- | This method does two things: it looks up a query result in the
 --   server-side cache, if a cache is used, and it additionally returns
 --   HTTP headers that can instruct a client how long a response can be
 --   cached locally (i.e. client-side).
-cacheLookup :: (MonadExecuteQuery m, m ~ t n, MonadTrans t, MonadExecuteQuery n) => [RemoteSchemaInfo] -> [ActionsInfo] -> QueryCacheKey -> Maybe CachedDirective -> m (Either QErr (ResponseHeaders, Maybe EncJSON))
-
--- | Store a json response for a query that we've executed in the cache.
---   Note that, as part of this, <a>cacheStore</a> has to decide whether
---   the response is cacheable. A very similar decision is also made in
---   <a>cacheLookup</a>, since it has to construct corresponding
---   cache-enabling headers that are sent to the client. But note that the
---   HTTP headers influence client-side caching, whereas <a>cacheStore</a>
---   changes the server-side cache.
-cacheStore :: (MonadExecuteQuery m, m ~ t n, MonadTrans t, MonadExecuteQuery n) => QueryCacheKey -> Maybe CachedDirective -> EncJSON -> m (Either QErr CacheStoreResponse)
+cacheLookup :: (MonadExecuteQuery m, m ~ t n, MonadTrans t, MonadExecuteQuery n) => ExecutionPlan -> [QueryRootField UnpreparedValue] -> Maybe CachedDirective -> GQLReqParsed -> UserInfo -> [Header] -> m (Either QErr (ResponseHeaders, CacheResult))
 
 -- | A partial response, e.g. from a remote schema call or postgres
 --   postgres query, which we'll assemble into the final response for the
@@ -26760,16 +26751,10 @@ encodeEncJSONResults :: RootFieldMap EncJSON -> EncJSON
 
 -- | Run (execute) a batched GraphQL query (see <a>GQLBatchedReqs</a>).
 runGQBatched :: forall m. (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadGQLExecutionCheck m, MonadQueryLog m, MonadExecutionLog m, MonadTrace m, MonadExecuteQuery m, MonadMetadataStorage m, MonadQueryTags m, HasResourceLimits m, ProvidesNetwork m) => Environment -> SQLGenCtx -> SchemaCache -> SchemaCacheVer -> AllowListStatus -> ReadOnlyMode -> PrometheusMetrics -> Logger Hasura -> Maybe (CredentialCache AgentLicenseKey) -> RequestId -> ResponseInternalErrorsConfig -> UserInfo -> IpAddress -> [Header] -> GraphQLQueryType -> GQLBatchedReqs (GQLReq GQLQueryText) -> m (HttpLogGraphQLInfo, HttpResponse EncJSON)
-instance GHC.Show.Show Hasura.GraphQL.Transport.HTTP.CacheStoreSuccess
-instance GHC.Classes.Eq Hasura.GraphQL.Transport.HTTP.CacheStoreSuccess
-instance GHC.Show.Show Hasura.GraphQL.Transport.HTTP.CacheStoreFailure
-instance GHC.Classes.Eq Hasura.GraphQL.Transport.HTTP.CacheStoreFailure
 instance GHC.Base.Monoid Hasura.GraphQL.Transport.HTTP.SessVarPred
 instance GHC.Base.Semigroup Hasura.GraphQL.Transport.HTTP.SessVarPred
 instance Hasura.GraphQL.Transport.HTTP.MonadExecuteQuery m => Hasura.GraphQL.Transport.HTTP.MonadExecuteQuery (Control.Monad.Trans.Reader.ReaderT r m)
 instance Hasura.GraphQL.Transport.HTTP.MonadExecuteQuery m => Hasura.GraphQL.Transport.HTTP.MonadExecuteQuery (Control.Monad.Trans.Except.ExceptT e m)
-instance (Hasura.GraphQL.Transport.HTTP.MonadExecuteQuery m, Control.Monad.IO.Class.MonadIO m) => Hasura.GraphQL.Transport.HTTP.MonadExecuteQuery (Hasura.Tracing.Monad.TraceT m)
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Transport.HTTP.QueryCacheKey
 
 module Hasura.Server.Rest
 data RestRequest method
