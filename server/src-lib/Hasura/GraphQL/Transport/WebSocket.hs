@@ -470,11 +470,16 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
     E.QueryExecutionPlan queryPlan asts dirMap -> Tracing.trace "Query" $ do
       let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
           cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
+          collectRemoteJoins = maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins)
           remoteSchemas =
             OMap.elems queryPlan >>= \case
-              E.ExecStepDB _remoteHeaders _ remoteJoins ->
-                maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins) remoteJoins
+              E.ExecStepDB _headers _dbAST remoteJoins ->
+                collectRemoteJoins remoteJoins
+              E.ExecStepRemote remoteSchemaInfo _ _ remoteJoins ->
+                [remoteSchemaInfo] <> collectRemoteJoins remoteJoins
+              E.ExecStepAction _ _ remoteJoins -> collectRemoteJoins remoteJoins
               _ -> []
+
           actionsInfo =
             foldl getExecStepActionWithActionInfo [] $
               OMap.elems $
