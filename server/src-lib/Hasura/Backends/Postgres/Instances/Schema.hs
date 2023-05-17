@@ -48,7 +48,6 @@ import Hasura.GraphQL.Schema.BoolExp.AggregationPredicates as Agg
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation qualified as GSB
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( Definition,
     FieldParser,
@@ -79,6 +78,7 @@ import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.BackendType (BackendType (Postgres), PostgresKind (Citus, Cockroach, Vanilla))
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization

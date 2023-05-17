@@ -16,13 +16,13 @@ where
 
 import Control.Lens.TH (makeLenses)
 import Data.Kind (Type)
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.NamingCase (NamingCase)
 
 --------------------------------------------------------------------------------
 

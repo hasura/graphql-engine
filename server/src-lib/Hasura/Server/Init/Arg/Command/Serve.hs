@@ -75,10 +75,10 @@ import Database.PG.Query qualified as Query
 import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.Cache.Bounded qualified as Bounded
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
-import Hasura.GraphQL.Schema.NamingCase qualified as NC
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (MetadataDefaults, emptyMetadataDefaults)
+import Hasura.RQL.Types.NamingCase qualified as NC
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Roles qualified as Roles
 import Hasura.RQL.Types.Schema.Options qualified as Options
@@ -98,7 +98,7 @@ import Witch qualified
 --------------------------------------------------------------------------------
 -- Serve Command
 
-serveCommandParser :: Logging.EnabledLogTypes impl => Opt.Parser (Config.ServeOptionsRaw impl)
+serveCommandParser :: (Logging.EnabledLogTypes impl) => Opt.Parser (Config.ServeOptionsRaw impl)
 serveCommandParser =
   Config.ServeOptionsRaw
     <$> parseServerPort
@@ -737,7 +737,7 @@ enableAllowlistOption =
       Config._helpMessage = "Only accept allowed GraphQL queries"
     }
 
-parseEnabledLogs :: forall impl. Logging.EnabledLogTypes impl => Opt.Parser (Maybe (HashSet (Logging.EngineLogType impl)))
+parseEnabledLogs :: forall impl. (Logging.EnabledLogTypes impl) => Opt.Parser (Maybe (HashSet (Logging.EngineLogType impl)))
 parseEnabledLogs =
   Opt.optional $
     Opt.option
@@ -746,7 +746,7 @@ parseEnabledLogs =
           <> Opt.help (Config._helpMessage (enabledLogsOption @impl))
       )
 
-enabledLogsOption :: Logging.EnabledLogTypes impl => Config.Option (HashSet (Logging.EngineLogType impl))
+enabledLogsOption :: (Logging.EnabledLogTypes impl) => Config.Option (HashSet (Logging.EngineLogType impl))
 enabledLogsOption =
   Config.Option
     { Config._default = Logging.defaultEnabledLogTypes,

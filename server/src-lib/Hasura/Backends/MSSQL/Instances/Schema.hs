@@ -24,7 +24,6 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -42,6 +41,7 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend hiding (BackendInsert)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
@@ -120,7 +120,7 @@ instance BackendUpdateOperatorsSchema 'MSSQL where
 
 backendInsertParser ::
   forall m r n.
-  MonadBuildSchema 'MSSQL r m n =>
+  (MonadBuildSchema 'MSSQL r m n) =>
   TableInfo 'MSSQL ->
   SchemaT r m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
 backendInsertParser tableInfo = do
@@ -136,7 +136,7 @@ backendInsertParser tableInfo = do
 
 msTableArgs ::
   forall r m n.
-  MonadBuildSchema 'MSSQL r m n =>
+  (MonadBuildSchema 'MSSQL r m n) =>
   TableInfo 'MSSQL ->
   SchemaT r m (InputFieldsParser n (IR.SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
 msTableArgs tableInfo = do
@@ -162,7 +162,7 @@ msTableArgs tableInfo = do
 -- * Individual components
 
 msColumnParser ::
-  MonadBuildSchema 'MSSQL r m n =>
+  (MonadBuildSchema 'MSSQL r m n) =>
   ColumnType 'MSSQL ->
   G.Nullability ->
   SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
@@ -234,7 +234,7 @@ msColumnParser columnType nullability = case columnType of
         else ODBC.TextValue txt -- an ODBC.TextValue becomes an NVARCHAR
 
 msEnumParser ::
-  MonadBuildSchema 'MSSQL r m n =>
+  (MonadBuildSchema 'MSSQL r m n) =>
   TableName 'MSSQL ->
   NonEmpty (EnumValue, EnumValueInfo) ->
   Maybe G.Name ->
@@ -296,7 +296,7 @@ msOrderByOperators _tCase =
 
 msComparisonExps ::
   forall m n r.
-  MonadBuildSchema 'MSSQL r m n =>
+  (MonadBuildSchema 'MSSQL r m n) =>
   ColumnType 'MSSQL ->
   SchemaT r m (Parser 'Input n [ComparisonExp 'MSSQL])
 msComparisonExps = P.memoize 'comparisonExps \columnType -> do
@@ -385,7 +385,7 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
       UVLiteral . MSSQL.ListExpression . fmap (MSSQL.ValueExpression . cvValue)
 
 msCountTypeInput ::
-  MonadParse n =>
+  (MonadParse n) =>
   Maybe (Parser 'Both n (Column 'MSSQL)) ->
   InputFieldsParser n (IR.CountDistinct -> CountType 'MSSQL)
 msCountTypeInput = \case
@@ -401,7 +401,7 @@ msCountTypeInput = \case
 
 msParseUpdateOperators ::
   forall m n r.
-  MonadBuildSchema 'MSSQL r m n =>
+  (MonadBuildSchema 'MSSQL r m n) =>
   TableInfo 'MSSQL ->
   UpdPermInfo 'MSSQL ->
   SchemaT r m (InputFieldsParser n (HashMap (Column 'MSSQL) (UpdateOperators 'MSSQL (UnpreparedValue 'MSSQL))))

@@ -34,13 +34,13 @@ import Hasura.Eventing.Common (LockedEventsCtx)
 import Hasura.Eventing.EventTrigger
 import Hasura.GraphQL.Execute.Subscription.Options
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache (MetadataResourceVersion)
@@ -187,7 +187,7 @@ data InvalidationKeys = InvalidationKeys
 -- subset of the environment, exposed by small, local typeclasses. For instance,
 -- at time of writing, this can be used to implement 'HasServerConfigCtx', as a
 -- first step towards breaking it down.
-class Monad m => HasAppEnv m where
+class (Monad m) => HasAppEnv m where
   askAppEnv :: m AppEnv
 
 instance (HasAppEnv m) => HasAppEnv (ReaderT r m) where

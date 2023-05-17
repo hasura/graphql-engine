@@ -86,11 +86,11 @@ import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier (..))
 import Data.Text.Casing qualified as C
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
+import Hasura.RQL.Types.NamingCase (NamingCase (..))
 import Hasura.Table.Cache (CustomRootField (..), TableConfig (..), TableCoreInfoG (..), TableInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 

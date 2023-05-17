@@ -52,7 +52,6 @@ import Hasura.GraphQL.Parser.Internal.Parser qualified as IP
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.OrderBy
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
@@ -76,6 +75,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Permission qualified as Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote

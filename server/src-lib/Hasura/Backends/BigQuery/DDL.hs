@@ -15,7 +15,6 @@ import Hasura.Backends.BigQuery.DDL.Source as M
 import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
 import Hasura.Function.Cache
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -23,6 +22,7 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Types
 import Hasura.Server.Utils

@@ -10,7 +10,6 @@ import Data.Environment qualified as Env
 import Data.Has (Has)
 import Hasura.Base.Error
 import Hasura.Function.Cache
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata)
@@ -26,6 +25,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build

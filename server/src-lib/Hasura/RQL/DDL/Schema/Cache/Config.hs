@@ -8,10 +8,10 @@ module Hasura.RQL.DDL.Schema.Cache.Config
   )
 where
 
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (SQLGenCtx)
 import Hasura.RQL.Types.Metadata (MetadataDefaults)
+import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Types
 
@@ -39,16 +39,16 @@ data CacheStaticConfig = CacheStaticConfig
     _cscAreStoredProceduresEnabled :: Bool
   }
 
-class Monad m => HasCacheStaticConfig m where
+class (Monad m) => HasCacheStaticConfig m where
   askCacheStaticConfig :: m CacheStaticConfig
 
-instance HasCacheStaticConfig m => HasCacheStaticConfig (ReaderT r m) where
+instance (HasCacheStaticConfig m) => HasCacheStaticConfig (ReaderT r m) where
   askCacheStaticConfig = lift askCacheStaticConfig
 
-instance HasCacheStaticConfig m => HasCacheStaticConfig (ExceptT e m) where
+instance (HasCacheStaticConfig m) => HasCacheStaticConfig (ExceptT e m) where
   askCacheStaticConfig = lift askCacheStaticConfig
 
-instance HasCacheStaticConfig m => HasCacheStaticConfig (StateT s m) where
+instance (HasCacheStaticConfig m) => HasCacheStaticConfig (StateT s m) where
   askCacheStaticConfig = lift askCacheStaticConfig
 
 --------------------------------------------------------------------------------

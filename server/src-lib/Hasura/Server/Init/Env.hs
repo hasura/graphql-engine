@@ -34,11 +34,11 @@ import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema)
 import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.Cache.Bounded qualified as Cache
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
-import Hasura.GraphQL.Schema.NamingCase qualified as NamingCase
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults (..))
+import Hasura.RQL.Types.NamingCase (NamingCase)
+import Hasura.RQL.Types.NamingCase qualified as NamingCase
 import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth qualified as Auth
@@ -111,12 +111,12 @@ withOptionDefault parsed Config.Option {..} =
 --
 -- A 'Monoid' instance would be super valuable to cleanup arg/env
 -- parsing but this solution feels somewhat unsatisfying.
-withOptionSwitch :: Monad m => Bool -> Config.Option Bool -> WithEnvT m Bool
+withOptionSwitch :: (Monad m) => Bool -> Config.Option Bool -> WithEnvT m Bool
 withOptionSwitch parsed option = withOptionSwitch' parsed (id, id) option
 
 -- | Given an 'Iso a Bool' we can apply the same boolean env merging
 -- semantics as we do for 'Bool' in `withOptionsSwitch' to @a@.
-withOptionSwitch' :: Monad m => a -> (a -> Bool, Bool -> a) -> Config.Option a -> WithEnvT m a
+withOptionSwitch' :: (Monad m) => a -> (a -> Bool, Bool -> a) -> Config.Option a -> WithEnvT m a
 withOptionSwitch' parsed (fwd, bwd) option =
   if fwd parsed
     then pure (bwd True)
@@ -177,7 +177,7 @@ instance FromEnv Warp.HostPreference where
 instance FromEnv Text where
   fromEnv = Right . Text.pack
 
-instance FromEnv a => FromEnv (Maybe a) where
+instance (FromEnv a) => FromEnv (Maybe a) where
   fromEnv = fmap Just . fromEnv
 
 instance FromEnv Auth.AuthHookType where
@@ -332,7 +332,7 @@ instance FromEnv Auth.JWTConfig where
 instance FromEnv [Auth.JWTConfig] where
   fromEnv = readJson
 
-instance Logging.EnabledLogTypes impl => FromEnv (HashSet (Logging.EngineLogType impl)) where
+instance (Logging.EnabledLogTypes impl) => FromEnv (HashSet (Logging.EngineLogType impl)) where
   fromEnv = fmap HashSet.fromList . Logging.parseEnabledLogTypes
 
 instance FromEnv Logging.LogLevel where

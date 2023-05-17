@@ -12,8 +12,8 @@ where
 import Data.Aeson.TH
 import Data.HashSet qualified as Set
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Prelude
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth
 import Hasura.Server.Auth.JWT

@@ -810,6 +810,7 @@ library
                      , Hasura.RQL.Types.Metadata.Instances
                      , Hasura.RQL.Types.Metadata.Object
                      , Hasura.RQL.Types.Metadata.Serialization
+                     , Hasura.RQL.Types.NamingCase
                      , Hasura.RQL.Types.OpenTelemetry
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection

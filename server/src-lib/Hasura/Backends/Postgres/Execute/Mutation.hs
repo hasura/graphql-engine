@@ -33,7 +33,6 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (customSQLToTo
 import Hasura.Backends.Postgres.Translate.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR.BoolExp
@@ -46,6 +45,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Session
 
@@ -235,7 +235,7 @@ executeMutationOutputQuery ::
   m EncJSON
 executeMutationOutputQuery qt allCols preCalAffRows cte mutOutput strfyNum tCase prepArgs = do
   queryTags <- ask
-  let queryTx :: PG.FromRes a => m a
+  let queryTx :: (PG.FromRes a) => m a
       queryTx = do
         let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase
             query = toQuery selectWith
@@ -257,7 +257,7 @@ mutateAndFetchCols ::
   Maybe NamingCase ->
   PG.TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
 mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
-  let mutationTx :: PG.FromRes a => PG.TxE QErr a
+  let mutationTx :: (PG.FromRes a) => PG.TxE QErr a
       mutationTx =
         -- See Note [Prepared statements in Mutations]
         PG.rawQE dmlTxErrorHandler sqlText (toList p) False

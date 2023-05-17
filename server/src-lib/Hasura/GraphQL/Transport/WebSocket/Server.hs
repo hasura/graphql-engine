@@ -59,12 +59,13 @@ import Data.Word (Word16)
 import GHC.AssertNF.CPP
 import GHC.Int (Int64)
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
-import Hasura.GraphQL.Schema.NamingCase (NamingCase (..), hasNamingConventionChanged)
+import Hasura.GraphQL.Schema.NamingCase (hasNamingConventionChanged)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.WebSocket.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (MetricsConfig (..), SQLGenCtx (..))
+import Hasura.RQL.Types.NamingCase (NamingCase (..))
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Auth (AuthMode, compareAuthMode)
 import Hasura.Server.Cors (CorsPolicy)
@@ -157,15 +158,15 @@ $( J.deriveToJSON
      ''WSLog
  )
 
-class Monad m => MonadWSLog m where
+class (Monad m) => MonadWSLog m where
   -- | Takes WS server log data and logs it
   -- logWSServer
   logWSLog :: L.Logger L.Hasura -> WSLog -> m ()
 
-instance MonadWSLog m => MonadWSLog (ExceptT e m) where
+instance (MonadWSLog m) => MonadWSLog (ExceptT e m) where
   logWSLog l ws = lift $ logWSLog l ws
 
-instance MonadWSLog m => MonadWSLog (ReaderT r m) where
+instance (MonadWSLog m) => MonadWSLog (ReaderT r m) where
   logWSLog l ws = lift $ logWSLog l ws
 
 instance L.ToEngineLog WSLog L.Hasura where
@@ -213,7 +214,7 @@ closeConn wsConn = closeConnWithCode wsConn 1000 -- 1000 is "normal close"
 
 -- | Closes a connection with code 1012, which means "Server is restarting"
 -- good clients will implement a retry logic with a backoff of a few seconds
-forceConnReconnect :: MonadIO m => WSConn a -> BL.ByteString -> m ()
+forceConnReconnect :: (MonadIO m) => WSConn a -> BL.ByteString -> m ()
 forceConnReconnect wsConn bs = liftIO $ closeConnWithCode wsConn 1012 bs
 
 closeConnWithCode :: WSConn a -> Word16 -> BL.ByteString -> IO ()

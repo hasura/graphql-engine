@@ -21,10 +21,10 @@ import Hasura.Base.ErrorMessage
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.ErrorCode
 import Hasura.GraphQL.Schema.Common
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
 import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.Schema.Options (SchemaOptions (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
@@ -35,7 +35,7 @@ import Language.Haskell.TH.Syntax qualified as TH
 import Test.HUnit.Lang (assertFailure)
 
 -- | Placeholder value for test inputs that are not relevant yet.
-notImplementedYet :: HasCallStack => String -> a
+notImplementedYet :: (HasCallStack) => String -> a
 notImplementedYet thing =
   withFrozenCallStack $
     error $

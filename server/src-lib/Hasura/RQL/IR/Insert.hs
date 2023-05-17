@@ -43,7 +43,6 @@ where
 import Control.Lens ((^?))
 import Control.Lens.TH (makeLenses, makePrisms)
 import Data.Kind (Type)
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Conflict
@@ -51,6 +50,7 @@ import Hasura.RQL.IR.Returning
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Relationships.Local
 
 -- | Overall representation of an insert mutation, corresponding to one root

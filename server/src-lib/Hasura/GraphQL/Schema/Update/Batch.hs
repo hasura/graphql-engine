@@ -12,7 +12,6 @@ import Hasura.GraphQL.Schema.Backend (BackendTableSelectSchema (..), BackendUpda
 import Hasura.GraphQL.Schema.BoolExp (AggregationPredicatesSchema, tableBoolExp)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation (mutationSelectionSet, primaryKeysArguments)
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table (tableColumns)
 import Hasura.GraphQL.Schema.Typename
@@ -28,6 +27,7 @@ import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..))
 import Hasura.RQL.Types.Common (Comment (..))
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization

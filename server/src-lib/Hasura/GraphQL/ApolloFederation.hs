@@ -21,7 +21,6 @@ import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Schema.Common
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -31,6 +30,7 @@ import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Value (UnpreparedValue, ValueWithOrigin (ValueNoOrigin))
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Schema.Options (StringifyNumbers)
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB

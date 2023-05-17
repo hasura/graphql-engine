@@ -21,7 +21,6 @@ import Hasura.Backends.Postgres.Types.Update (PgUpdateVariant (..), UpdateOpExpr
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import Hasura.GraphQL.Parser.Schema (Definition (..))
 import Hasura.GraphQL.Parser.Variable (Variable (..))
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), GBoolExp (..), OpExpG (..))
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
@@ -32,6 +31,7 @@ import Hasura.RQL.IR.Value (UnpreparedValue)
 import Hasura.RQL.Types.BackendType (BackendSourceKind (PostgresVanillaKind), BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnInfo (..))
 import Hasura.RQL.Types.Common (SourceName (..))
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Source (DBObjectsIntrospection (..), SourceInfo (..))
 import Hasura.RQL.Types.SourceCustomization (ResolvedSourceCustomization (..))
 import Hasura.Table.Cache (TableInfo (..))
