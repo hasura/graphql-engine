@@ -95,7 +95,12 @@ the validation HTTP webhook using a `POST` request.
 The request payload is of the format:
 ```json
 {
+    "version": "<version-integer>"
     "role": "<role-name>",
+    "session_variables": {
+        "x-hasura-user-id": "<session-user-id>",
+        "x-hasura-user-name": "<session-user-name>"
+    },
     "data": {
         "objects": [
             {"column_1": "column_1_value", "column_2": "column_2_value", "relationship": [{"relationship_column_1": "column_value"}]},
@@ -104,7 +109,11 @@ The request payload is of the format:
     }
 }
 ```
-The `data.objects` field contains the list of rows specified in the `objects` input field of insert mutation. Also includes nested insert data of relationships.
+- `version`: An integer version serves to indicate the request format. Whenever a breaking update occurs in the request
+payload, the version will be incremented. The initial version is set to `1`.
+- `role`: Hasura session role on which permissions are enforced.
+- `session_variables`: Session variables that aid in enforcing permissions. Variable names always starts with `x-hasura-*`.
+- `data.objects`: List of rows to be inserted which are specified in the `objects` input field of insert mutation. Also includes nested data of relationships.
 
 ### Response
 
