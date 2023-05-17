@@ -196,7 +196,7 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
     });
 
     if (isEditMode) {
-      editConnection(payload);
+      editConnection({ originalName: dataSourceName, ...payload });
     } else {
       createConnection(payload);
     }

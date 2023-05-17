@@ -55,7 +55,7 @@ export const ConnectMssqlWidget = (props: ConnectMssqlWidgetProps) => {
     });
 
     if (isEditMode) {
-      editConnection(payload);
+      editConnection({ originalName: dataSourceName, ...payload });
     } else {
       createConnection(payload);
     }
