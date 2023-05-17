@@ -40,6 +40,16 @@ The metrics endpoint should be configured with a secret to prevent misuse and sh
 
 :::
 
+:::tip High-cardinality Labels
+
+Starting in `v2.26.0`, Hasura GraphQL Engine exposes metrics with high-cardinality labels by default.
+
+You can disable [the cardinality of labels for
+metrics](/deployment/graphql-engine-flags/reference.mdx#enable-high-cardinality-labels-for-metrics) if you are
+experiencing high memory usage, which can be due to a large number of labels in the metrics (typically more than 10000).
+
+:::
+
 ## Metrics exported
 
 The following metrics are exported by Hasura GraphQL Engine:

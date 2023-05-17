@@ -339,6 +339,20 @@ Enable the Hasura Console (served by the server on `/` and `/console`).
 | **Default**         | **CE**, **Enterprise Edition**: `false` <br />**Cloud**: Console is always enabled |
 | **Supported in**    | CE, Enterprise Edition                                                             |
 
+### Enable High-cardinality Labels for Metrics
+
+Enable high-cardinality labels for [Prometheus Metrics](/enterprise/metrics.mdx). Enabling this setting will add more labels to
+some of the metrics (e.g. `operationName` label for Graphql subscription metrics).
+
+|                     |                                                   |
+| ------------------- | ------------------------------------------------- |
+| **Flag**            | N/A                                               |
+| **Env var**         | `HASURA_GRAPHQL_METRICS_ENABLE_HIGH_CARDINALITY_LABELS`  |
+| **Accepted values** | Boolean                                           |
+| **Options**         | `true` or `false`                                 |
+| **Default**         | `true`                                            |
+| **Supported in**    | Enterprise Edition                                |
+
 ### Enable Log Compression
 
 Enable sending compressed logs to [metrics server](/enterprise/metrics.mdx).
