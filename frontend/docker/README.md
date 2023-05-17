@@ -1,8 +1,10 @@
 # Hasura Frontend Docker Setup
 
-The `docker-compose.yml` file in this directory is intended to create several local dbs, and relevant services for local Hasura frontend development. In addition, the aim for this will be to automatically populate db's with demo data as part of the initialization process.
+The `docker-compose.template.yml` file in this directory is a starter template `docker-compose.yml` file to create several local dbs, and relevant services for local Hasura frontend development. In addition, the aim for this will be to automatically populate db's with demo data as part of the initialization process.
 
-There are a few basic steps:
+### There are a few basic steps:
+
+Before beginning, create a `docker-compose.yml` file in this directory and copy and paste the contents of `docker-compose.template.yml` into this file. Since the `docker-compose.yml` is not part of source control, you may freely alter it to fit your needs.
 
 1. Run `docker compose up -d` from this directory.
 2. Enter the BigQuery service account private key for the BigQuery source. Property is, `configuration.service_account.private_key` in the `default_metadata.json` file. Alternatively, you can remove this section of the json file.
