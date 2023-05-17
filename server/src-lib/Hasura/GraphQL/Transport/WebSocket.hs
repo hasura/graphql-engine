@@ -498,42 +498,21 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
     E.QueryExecutionPlan queryPlan asts dirMap -> do
       -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
       Tracing.attachMetadata [("graphql.operation.type", "query")]
-      let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
-          cacheKey = QueryCacheKey reqParsed (_uiRole userInfo) filteredSessionVars
-          collectRemoteJoins = maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins)
-          remoteSchemas =
-            InsOrdHashMap.elems queryPlan >>= \case
-              E.ExecStepDB _headers _dbAST remoteJoins ->
-                collectRemoteJoins remoteJoins
-              E.ExecStepRemote remoteSchemaInfo _ _ remoteJoins ->
-                [remoteSchemaInfo] <> collectRemoteJoins remoteJoins
-              E.ExecStepAction _ _ remoteJoins -> collectRemoteJoins remoteJoins
-              _ -> []
-
-          actionsInfo =
-            foldl getExecStepActionWithActionInfo [] $
-              InsOrdHashMap.elems $
-                InsOrdHashMap.filter
-                  ( \case
-                      E.ExecStepAction _ _ _remoteJoins -> True
-                      _ -> False
-                  )
-                  queryPlan
-          cachedDirective = runIdentity <$> DM.lookup cached dirMap
+      let cachedDirective = runIdentity <$> DM.lookup cached dirMap
 
       -- We ignore the response headers (containing TTL information) because
       -- WebSockets don't support them.
       cachedValue <-
-        cacheLookup remoteSchemas actionsInfo cacheKey cachedDirective >>= \case
+        cacheLookup queryPlan asts cachedDirective reqParsed userInfo reqHdrs >>= \case
           Right (_responseHeaders, cachedValue) -> pure cachedValue
           Left _err -> throwError ()
       case cachedValue of
-        Just cachedResponseData -> do
+        ResponseCached cachedResponseData -> do
           logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindCached
           let reportedExecutionTime = 0
           liftIO $ recordGQLQuerySuccess reportedExecutionTime gqlOpType
           sendSuccResp cachedResponseData opName parameterizedQueryHash $ ES.SubscriptionMetadata reportedExecutionTime
-        Nothing -> do
+        ResponseUncached storeResponseM -> do
           conclusion <- runExceptT $
             runLimits $
               forWithKey queryPlan $ \fieldName ->
@@ -576,14 +555,14 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                         pure $ AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse allResponses)) []
                  in getResponse
           sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType
-          case conclusion of
-            Left _ -> pure ()
-            Right results ->
-              -- Note: The result of cacheStore is ignored here since we can't ensure that
+          case (storeResponseM, conclusion) of
+            (Just ResponseCacher {..}, Right results) ->
+              -- Note: The result of `runStoreResponse` is ignored here since we can't ensure that
               --       the WS client will respond correctly to multiple messages.
               void $
-                cacheStore cacheKey cachedDirective $
+                runStoreResponse $
                   encodeAnnotatedResponseParts results
+            _ -> pure ()
 
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.MutationExecutionPlan mutationPlan -> do
@@ -736,10 +715,6 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
     closeConnAction = WS._wsaConnectionCloseAction onMessageActions
     postExecErrAction = WS._wsaPostExecErrMessageAction onMessageActions
     fmtErrorMessage = WS._wsaErrorMsgFormat onMessageActions
-
-    getExecStepActionWithActionInfo acc execStep = case execStep of
-      E.ExecStepAction _ actionInfo _remoteJoins -> actionInfo : acc
-      _ -> acc
 
     doQErr ::
       Monad n =>
