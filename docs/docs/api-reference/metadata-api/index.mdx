@@ -12,13 +12,12 @@ slug: index
 
 ## Introduction
 
-The Metadata API is primarily intended to be used as an `admin` API to
-manage the Hasura Metadata.
+The Metadata API is primarily intended to be used as an `admin` API to manage the Hasura Metadata.
 
 :::tip Supported from
 
-The Metadata API is supported for versions `v2.0.0` and above and
-replaces the older [schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
+The Metadata API is supported for versions `v2.0.0` and above and replaces the older
+[schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
 
 :::
 
@@ -67,7 +66,7 @@ The structure of args depends on the type and version.
 The various types of queries are listed in the following table:
 
 | `type`                                                                                                                                             | `args`                                                                                                                                                         | `version` | Synopsis                                                                 |
-|----------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|--------------------------------------------------------------------------|
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------ |
 | **bulk**                                                                                                                                           | [Query](#metadata-query) array                                                                                                                                 | 1         | Execute multiple operations in a single query                            |
 | **concurrent_bulk**                                                                                                                                | [Query](#metadata-query) array                                                                                                                                 | 2         | Execute multiple **read only** operations in a single **transaction**    |
 | **bulk_keep_going**                                                                                                                                | [Query](#metadata-query) array                                                                                                                                 | 1         | Like `bulk`, but subcommands can fail without the whole batch failing    |
@@ -107,6 +106,12 @@ The various types of queries are listed in the following table:
 | [pg_invoke_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-invoke-event-trigger)                                         | [pg_invoke_event_trigger_args](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-invoke-event-trigger-syntax)                                         | 1         | Invoke a trigger with custom payload on a Postgres table                 |
 | [pg_set_apollo_federation_config](/api-reference/metadata-api/table-view.mdx#metadata-pg-set-apollo-federation-config)                             | [pg_set_apollo_federation_config_args](/api-reference/metadata-api/table-view.mdx#metadata-pg-set-apollo-federation-config-syntax)                             | 1         | Set Apollo Federation configuration of an already tracked postgres table |
 | [pg_test_connection_template](/api-reference/metadata-api/table-view.mdx#metadata-pg-test-connection-template)                                     | [pg_test_connection_template_args](/api-reference/metadata-api/table-view.mdx#metadata-pg-test-connection-template-syntax)                                     | 1         | Test connection template                                                 |
+| [pg_track_logical_model](/api-reference/metadata-api/logical-models.mdx#metadata-pg-track-logical-model)                                           | [pg_track_logical_model_args](/api-reference/metadata-api/logical-models.mdx#metadata-pg-track-logical-model-syntax)                                           | 1         | Add a Logical Model                                                      |
+| [pg_untrack_logical_model](/api-reference/metadata-api/logical-models.mdx#metadata-pg-untrack-logical-model)                                       | [pg_untrack_logical_model_args](/api-reference/metadata-api/logical-models.mdx#metadata-pg-untrack-logical-model-syntax)                                       | 1         | Remove a Logical Model                                                   |
+| [pg_create_logical_model_select_permission](/api-reference/metadata-api/logical-models.mdx#metadata-pg-create-logical-model-select-permission)     | [pg_create_logical_model_select_permission_args](/api-reference/metadata-api/logical-models.mdx#metadata-pg-create-logical-model-select-permission-syntax)     | 1         | Add select permissions for a Logical Model                               |
+| [pg_drop_logical_model_select_permission](/api-reference/metadata-api/logical-models.mdx#metadata-pg-drop-logical-model-select-permission)         | [pg_drop_logical_model_select_permission_args](/api-reference/metadata-api/logical-models.mdx#metadata-pg-drop-logical-model-select-permission-syntax)         | 1         | Remove select permissions for a Logical Model                            |
+| [pg_track_native_query](/api-reference/metadata-api/native-queries.mdx#metadata-pg-track-native-query)                                             | [pg_track_native_query_args](/api-reference/metadata-api/native-queries.mdx#metadata-pg-track-native-query-syntax)                                             | 1         | Add a Native Query                                                       |
+| [pg_untrack_native_query](/api-reference/metadata-api/native-queries.mdx#metadata-pg-untrack-native-query)                                         | [pg_untrack_native_query_args](/api-reference/metadata-api/native-queries.mdx#metadata-pg-untrack-native-query-syntax)                                         | 1         | Remove a Native Query                                                    |
 | [bigquery_track_table](/api-reference/metadata-api/table-view.mdx#metadata-bigquery-track-table)                                                   | [bigquery_track_table_args](/api-reference/metadata-api/table-view.mdx#metadata-bigquery-track-table-syntax)                                                   | 1         | Add a BigQuery table/view with configuration                             |
 | [bigquery_track_tables](/api-reference/metadata-api/table-view.mdx#metadata-bigquery-track-tables)                                                 | [bigquery_track_tables_args](/api-reference/metadata-api/table-view.mdx#metadata-bigquery-track-tables-syntax)                                                 | 1         | Add multiple BigQuery tables/views with configuration                    |
 | [bigquery_untrack_table](/api-reference/metadata-api/table-view.mdx#metadata-bigquery-untrack-table)                                               | [bigquery_untrack_table_args](/api-reference/metadata-api/table-view.mdx#metadata-bigquery-untrack-table-syntax)                                               | 1         | Remove a BigQuery table/view                                             |
@@ -241,13 +246,12 @@ TODO: MSSQL_UNSUPPORTED
 
 ## Disabling Metadata API
 
-Since this API can be used to make changes to the GraphQL schema, it can
-be disabled, especially in production deployments.
+Since this API can be used to make changes to the GraphQL schema, it can be disabled, especially in production
+deployments.
 
-The `enabled-apis` flag or the `HASURA_GRAPHQL_ENABLED_APIS` env var can
-be used to enable/disable this API. By default, the schema/Metadata API
-is enabled. To disable it, you need to explicitly state that this API is
-not enabled i.e. remove it from the list of enabled APIs.
+The `enabled-apis` flag or the `HASURA_GRAPHQL_ENABLED_APIS` env var can be used to enable/disable this API. By default,
+the schema/Metadata API is enabled. To disable it, you need to explicitly state that this API is not enabled i.e. remove
+it from the list of enabled APIs.
 
 ```bash
 # enable only graphql api, disable Metadata and pgdump
@@ -255,17 +259,15 @@ not enabled i.e. remove it from the list of enabled APIs.
 HASURA_GRAPHQL_ENABLED_APIS="graphql"
 ```
 
-See [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx) for info on setting the above flag/env var.
+See [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx) for info on setting the
+above flag/env var.
 
 ## Metadata Resource Versioning
 
-Metadata is versioned with an optional `resource_version` field in
-operations and responses.
+Metadata is versioned with an optional `resource_version` field in operations and responses.
 
-This is intended to allow for feedback when replacing Metadata with
-modifications to an out-of-date copy.
+This is intended to allow for feedback when replacing Metadata with modifications to an out-of-date copy.
 
-The `resource_version` supplied must match the version returned
-otherwise a 409 error response is returned.
+The `resource_version` supplied must match the version returned otherwise a 409 error response is returned.
 
 The version is incremented on any operation that modified Metadata as well as `reload_metadata`.
