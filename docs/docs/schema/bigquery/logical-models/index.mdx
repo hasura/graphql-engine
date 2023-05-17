@@ -4,7 +4,7 @@ description: Customize the Hasura GraphQL schema with Logical Models
 keywords:
   - hasura
   - docs
-  - postgres
+  - bigquery
   - schema
   - logical models
   - native queries
@@ -13,7 +13,7 @@ keywords:
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Postgres: Logical Models
+# BigQuery: Logical Models
 
 ## Introduction
 
@@ -26,11 +26,11 @@ Native queries are supported from `v2.26.0`.
 Logical Models are a GraphQL representation of database data. They provide an abstraction over the underlying database.
 
 Logical Models are a new approach from Hasura and are currently used by the
-[Native Queries](/schema/postgres/logical-models/native-queries.mdx) feature to automatically create a GraphQL API for a
+[Native Queries](/schema/bigquery/logical-models/native-queries.mdx) feature to automatically create a GraphQL API for a
 native database query.
 
 You can find examples of how to use logical models in the
-[Native Queries](/schema/postgres/logical-models/native-queries.mdx) documentation. For a more detailed explanation of
+[Native Queries](/schema/bigquery/logical-models/native-queries.mdx) documentation. For a more detailed explanation of
 Logical Models themselves, read on.
 
 ## Tracking a Logical Model
@@ -52,14 +52,14 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_track_logical_model",
+  "type": "bigquery_track_logical_model",
   "args": {
     "source": "default",
     "name": "<name>",
     "fields": [
       {
         "name": "<field name>",
-        "type": "<PostgreSQL field type>",
+        "type": "<BigQuery field type>",
         "nullable": false | true,
         "description": "<optional field description>"
       },
@@ -72,8 +72,8 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-The type of each field can be any valid [PostgreSQL data type](/schema/postgres/postgresql-types.mdx), and each field
-can be marked as nullable or not.
+The type of each field can be any valid [BigQuery data type](/schema/bigquery/bigquery-types.mdx), and each field can be
+marked as nullable or not.
 
 For example, we could track a representation of an article as follows:
 
@@ -86,7 +86,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_track_logical_model",
+  "type": "bigquery_track_logical_model",
   "args": {
     "source": "default",
     "name": "article",
@@ -133,7 +133,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_untrack_logical_model",
+  "type": "bigquery_untrack_logical_model",
   "args": {
     "source": "default",
     "name": "<name>"
@@ -162,7 +162,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_untrack_logical_model",
+  "type": "bigquery_untrack_logical_model",
   "args": {
     "source": "default",
     "name": "article"
@@ -188,7 +188,7 @@ can receive.
 
 Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
 
-The filter is the same boolean expression syntax as [query filters](/queries/postgres/query-filters.mdx). To allow all
+The filter is the same boolean expression syntax as [query filters](/queries/bigquery/query-filters.mdx). To allow all
 rows to be passed through to the response, you can specify an empty filter, `{}`.
 
 ```http
@@ -197,7 +197,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_create_logical_model_select_permission",
+  "type": "bigquery_create_logical_model_select_permission",
   "args": {
     "source": "default",
     "name": "<logical model name>",
@@ -230,7 +230,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_create_logical_model_select_permission",
+  "type": "bigquery_create_logical_model_select_permission",
   "args": {
     "source": "default",
     "name": "article",
@@ -264,7 +264,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_drop_logical_model_select_permission",
+  "type": "bigquery_drop_logical_model_select_permission",
   "args": {
     "source": "default",
     "name": "<logical model name>",

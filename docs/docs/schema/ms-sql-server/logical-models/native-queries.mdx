@@ -5,7 +5,7 @@ description: Customize the Hasura GraphQL schema with native queries
 keywords:
   - hasura
   - docs
-  - postgres
+  - ms sql server
   - schema
   - logical models
   - native queries
@@ -16,7 +16,7 @@ import ProductBadge from '@site/src/components/ProductBadge';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Postgres: Native Queries
+# MS SQL Server: Native Queries
 
 <div className="badge-container">
   <ProductBadge standard pro ee self />
@@ -50,8 +50,7 @@ You might find Native Queries useful for many reasons:
 - Write a compatibility layer around tables, making it easier to change your API without breaking existing clients.
 - Reduce duplication by moving common data manipulation into one place.
 
-Native Queries are a Cloud and Enterprise feature of Hasura. Users of Hasura Open-Source can achieve the same goals by
-[creating and tracking SQL functions](/schema/postgres/custom-functions.mdx).
+Native Queries are a Cloud and Enterprise feature of Hasura.
 
 :::info Supported features
 
@@ -65,7 +64,7 @@ Relationships will be supported in a future release.
 
 We’ll start with an example. Let’s use this new feature to add some custom functionality to our Hasura API, without
 needing to define a custom SQL function on the database. If you’d like some reference documentation, scroll down, and
-also take a look at the [Logical Models documentation](/schema/postgres/logical-models/index.mdx).
+also take a look at the [Logical Models documentation](/schema/ms-sql-server/logical-models/index.mdx).
 
 Imagine we have some articles in a table, with content kindly donated by [Loripsum.net](https://loripsum.net/):
 
@@ -103,7 +102,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_track_logical_model",
+  "type": "mssql_track_logical_model",
   "args": {
     "source": "default",
     "name": "article_excerpt",
@@ -147,7 +146,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_track_native_query",
+  "type": "mssql_track_native_query",
   "args": {
     "type": "query",
     "source": "default",
@@ -218,7 +217,8 @@ In order to represent the structure of the data returned by the query, we first 
 :::info Permissions and Logical Models
 
 Note that this Logical Model has no attached permissions and therefore will only be available to the admin account. See
-the [Logical Model documentation](/schema/postgres/logical-models/index.mdx) for information on attaching permissions.
+the [Logical Model documentation](/schema/ms-sql-server/logical-models/index.mdx) for information on attaching
+permissions.
 
 :::
 
@@ -231,14 +231,14 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_track_logical_model",
+  "type": "mssql_track_logical_model",
   "args": {
     "source": "default",
     "name": "<name>",
     "fields": [
       {
         "name": "<field name>",
-        "type": "<PostgreSQL field type>",
+        "type": "<SQL Server field type>",
         "nullable": false | true,
         "description": "<optional field description>"
       },
@@ -264,14 +264,14 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_track_native_query",
+  "type": "mssql_track_native_query",
   "args": {
     "source": "default",
     "root_field_name": "<name>",
     "type": "query",
     "arguments": {
       "<name>": {
-        "type": "<PostgreSQL field type>",
+        "type": "<SQL Server field type>",
         "nullable": false | true,
         "description": "<optional field description>"
       }
@@ -327,11 +327,10 @@ query {
 ## Query functionality
 
 Just like tables, native queries generate GraphQL types with the ability to further break down the data. You can find
-more information in the relevant documentation for [filtering](/queries/postgres/query-filters.mdx),
-[sorting](/queries/postgres/sorting.mdx), [distinct queries](/queries/postgres/distinct-queries.mdx), and
-[pagination](/queries/postgres/pagination.mdx).
+more information in the relevant documentation for [filtering](/queries/ms-sql-server/query-filters.mdx),
+[sorting](/queries/ms-sql-server/sorting.mdx), and [pagination](/queries/ms-sql-server/pagination.mdx).
 
-Subscriptions (live queries) are also supported as usual, but streaming subscriptions are not available.
+Subscriptions (live queries) are also supported as usual.
 
 ## Mutations
 
@@ -343,5 +342,5 @@ A future release will allow mutations to be specified using native queries.
 ## Permissions
 
 Native queries will inherit the permissions of the Logical Model that they return. See the
-[documentation on Logical Models](/schema/postgres/logical-models/index.mdx) for an explanation of how to add
+[documentation on Logical Models](/schema/ms-sql-server/logical-models/index.mdx) for an explanation of how to add
 permissions.
