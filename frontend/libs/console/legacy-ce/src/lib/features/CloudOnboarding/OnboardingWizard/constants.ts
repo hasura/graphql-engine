@@ -84,9 +84,23 @@ export const onboardingCompleteVariables = {
   kind: 'onboarding_complete',
 };
 
-export const skippedOnboardingVariables = {
+export const skippedOnboardingThroughURLParamVariables = {
+  ...mutationVariables,
+  kind: 'skipped_neon_onboarding_through_url_param',
+};
+export const skippedNeonOnboardingToConnectOtherDB = {
+  ...mutationVariables,
+  kind: 'skipped_neon_onboarding_to_connect_other_db',
+};
+
+export const skippedNeonOnboardingVariables = {
   ...mutationVariables,
   kind: 'skipped_onboarding',
+};
+
+export const skippedOnboardingWizardVariables = {
+  ...mutationVariables,
+  kind: 'skipped_onboarding_wizard',
 };
 
 export const neonOAuthStartVariables = {
@@ -147,6 +161,11 @@ export const oneClickDeploymentOnboardingShown = {
 export const useCaseExperimentOnboarding = {
   ...mutationVariables,
   kind: 'onboarded_through_use_case_experiment',
+};
+
+export const skippedUseCaseExperimentOnboarding = {
+  ...mutationVariables,
+  kind: 'skipped_use_case_experiment_onboarding',
 };
 
 export const getUseCaseExperimentOnboardingVariables = (useCase: UseCases) => ({

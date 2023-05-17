@@ -4,7 +4,7 @@ import { trackCustomEvent } from '../../../Analytics';
 import { useOnboardingData } from './useOnboardingData';
 import { getWizardState } from '../utils';
 import { AllowedSurveyNames } from '../../../Surveys/types';
-import { LS_KEYS, setLSItem } from '../../../../utils';
+import { getLSItem, LS_KEYS, removeLSItem, setLSItem } from '../../../../utils';
 
 export type WizardState =
   | 'familiarity-survey'
@@ -40,8 +40,12 @@ export function useWizardState() {
       setLSItem(LS_KEYS.showUseCaseOverviewPopup, 'true');
     }
     setState(wizardState);
-  }, [onboardingData, showSurvey]);
 
+    //removing skipOnboarding key from LocalStorage
+    if (getLSItem(LS_KEYS.skipOnboarding) === 'true') {
+      removeLSItem(LS_KEYS.skipOnboarding);
+    }
+  }, [onboardingData, showSurvey]);
   return {
     state,
     setState,

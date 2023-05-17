@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Button } from '../../../../../new-components/Button';
 import { LS_KEYS, removeLSItem } from '../../../../../utils/localStorage';
-import { emitOnboardingEvent, persistSkippedOnboarding } from '../../utils';
-import { getUseCaseExperimentOnboardingVariables } from '../../constants';
+import { emitOnboardingEvent } from '../../utils';
+import {
+  getUseCaseExperimentOnboardingVariables,
+  skippedUseCaseExperimentOnboarding,
+} from '../../constants';
 import { Analytics, trackCustomEvent } from '../../../../Analytics';
 import { Dispatch } from '../../../../../types';
 import _push from '../../../../../components/Services/Data/push';
@@ -153,7 +156,7 @@ export const UseCaseScreen = (props: UseCaseScreenProps) => {
             onClick={() => {
               props.dismiss();
               removeLSItem(LS_KEYS.useCaseExperimentOnboarding);
-              persistSkippedOnboarding();
+              emitOnboardingEvent(skippedUseCaseExperimentOnboarding);
             }}
           >
             Skip

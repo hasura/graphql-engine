@@ -6,8 +6,9 @@ import { HasuraLogoFull } from '../../../../../new-components/HasuraLogo';
 import { Analytics } from '../../../../Analytics';
 import { NeonIcon } from './NeonIcon';
 import _push from '../../../../../components/Services/Data/push';
-import { persistSkippedOnboarding } from '../../utils';
+import { emitOnboardingEvent } from '../../utils';
 import { Dispatch } from '../../../../../types';
+import { skippedNeonOnboardingToConnectOtherDB } from '../../constants';
 
 const iconMap = {
   refresh: <MdRefresh />,
@@ -52,7 +53,7 @@ export function NeonBanner(props: Props) {
    it registers that user skipped onboarding and take them directly to connect database page*/
   const onClickConnectOtherDB = () => {
     dispatch(_push('/data/manage/connect'));
-    persistSkippedOnboarding();
+    emitOnboardingEvent(skippedNeonOnboardingToConnectOtherDB);
     dismiss();
   };
 
