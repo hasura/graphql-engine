@@ -64,11 +64,10 @@
           arguments:
           - (Oid 114,Just ("{\"x-hasura-role\":\"admin\"}",Binary))
           error:
-            description: There exist a reference table in the outer part of the outer
-              join
+            description: null
             exec_status: FatalError
-            hint:
-            message: cannot pushdown the subquery
+            hint: null
+            message: cannot perform a lateral outer join when a distributed subquery references a reference table
             status_code: 0A000
           prepared: true
           statement: "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM\
