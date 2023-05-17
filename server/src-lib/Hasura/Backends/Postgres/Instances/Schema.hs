@@ -82,8 +82,8 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table (TableInfo (..), UpdPermInfo (..))
 import Hasura.SQL.Types
+import Hasura.Table.Cache (TableInfo (..), UpdPermInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 
@@ -102,7 +102,7 @@ import Language.GraphQL.Draft.Syntax.QQ qualified as G
 class PostgresSchema (pgKind :: PostgresKind) where
   pgkBuildTableRelayQueryFields ::
     forall r m n.
-    MonadBuildSchema ('Postgres pgKind) r m n =>
+    (MonadBuildSchema ('Postgres pgKind) r m n) =>
     MkRootFieldName ->
     TableName ('Postgres pgKind) ->
     TableInfo ('Postgres pgKind) ->
@@ -111,7 +111,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))]
   pgkBuildFunctionRelayQueryFields ::
     forall r m n.
-    MonadBuildSchema ('Postgres pgKind) r m n =>
+    (MonadBuildSchema ('Postgres pgKind) r m n) =>
     MkRootFieldName ->
     FunctionName ('Postgres pgKind) ->
     FunctionInfo ('Postgres pgKind) ->
@@ -343,14 +343,14 @@ instance
   aggregateOrderByCountType = Postgres.PGInteger
   computedField = computedFieldPG
 
-instance Backend ('Postgres pgKind) => BackendUpdateOperatorsSchema ('Postgres pgKind) where
+instance (Backend ('Postgres pgKind)) => BackendUpdateOperatorsSchema ('Postgres pgKind) where
   type UpdateOperators ('Postgres pgKind) = UpdateOpExpression
 
   parseUpdateOperators = pgkParseUpdateOperators
 
 backendInsertParser ::
   forall pgKind m r n.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   TableInfo ('Postgres pgKind) ->
   SchemaT r m (InputFieldsParser n (PGIR.BackendInsert pgKind (IR.UnpreparedValue ('Postgres pgKind))))
 backendInsertParser tableInfo =
@@ -414,7 +414,7 @@ pgkBuildTableUpdateMutationFields scenario tableInfo gqlName = do
 
 columnParser ::
   forall pgKind r m n.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   ColumnType ('Postgres pgKind) ->
   G.Nullability ->
   SchemaT r m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue ('Postgres pgKind))))
@@ -488,7 +488,7 @@ possiblyNullable scalarType (G.Nullability isNullable)
   | otherwise = id
 
 pgScalarSelectionArgumentsParser ::
-  MonadParse n =>
+  (MonadParse n) =>
   ColumnType ('Postgres pgKind) ->
   InputFieldsParser n (Maybe (ScalarSelectionArguments ('Postgres pgKind)))
 pgScalarSelectionArgumentsParser columnType
@@ -545,7 +545,7 @@ orderByOperators tCase =
 
 comparisonExps ::
   forall pgKind m n r.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   ColumnType ('Postgres pgKind) ->
   SchemaT r m (Parser 'Input n [ComparisonExp ('Postgres pgKind)])
 comparisonExps = memoize 'comparisonExps \columnType -> do
@@ -872,7 +872,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
 
 geographyWithinDistanceInput ::
   forall pgKind m n r.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   SchemaT r m (Parser 'Input n (DWithinGeogOp (IR.UnpreparedValue ('Postgres pgKind))))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar PGGeography) (G.Nullability False)
@@ -893,7 +893,7 @@ geographyWithinDistanceInput = do
 
 geometryWithinDistanceInput ::
   forall pgKind m n r.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   SchemaT r m (Parser 'Input n (DWithinGeomOp (IR.UnpreparedValue ('Postgres pgKind))))
 geometryWithinDistanceInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
@@ -906,7 +906,7 @@ geometryWithinDistanceInput = do
 
 intersectsNbandGeomInput ::
   forall pgKind m n r.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   SchemaT r m (Parser 'Input n (STIntersectsNbandGeommin (IR.UnpreparedValue ('Postgres pgKind))))
 intersectsNbandGeomInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
@@ -919,7 +919,7 @@ intersectsNbandGeomInput = do
 
 intersectsGeomNbandInput ::
   forall pgKind m n r.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   SchemaT r m (Parser 'Input n (STIntersectsGeomminNband (IR.UnpreparedValue ('Postgres pgKind))))
 intersectsGeomNbandInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
@@ -931,7 +931,7 @@ intersectsGeomNbandInput = do
         <*> (fmap IR.mkParameter <$> P.fieldOptional Name._nband Nothing integerParser)
 
 countTypeInput ::
-  MonadParse n =>
+  (MonadParse n) =>
   Maybe (Parser 'Both n (Column ('Postgres pgKind))) ->
   InputFieldsParser n (IR.CountDistinct -> CountType ('Postgres pgKind))
 countTypeInput = \case
@@ -951,7 +951,7 @@ countTypeInput = \case
 -- to other backends yet.
 prependOp ::
   forall pgKind m n r.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   SU.UpdateOperator ('Postgres pgKind) r m n (IR.UnpreparedValue ('Postgres pgKind))
 prependOp = SU.UpdateOperator {..}
   where
@@ -981,7 +981,7 @@ prependOp = SU.UpdateOperator {..}
 -- to other backends yet.
 appendOp ::
   forall pgKind m n r.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   SU.UpdateOperator ('Postgres pgKind) r m n (IR.UnpreparedValue ('Postgres pgKind))
 appendOp = SU.UpdateOperator {..}
   where
@@ -1011,7 +1011,7 @@ appendOp = SU.UpdateOperator {..}
 -- to other backends yet.
 deleteKeyOp ::
   forall pgKind m n r.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   SU.UpdateOperator ('Postgres pgKind) r m n (IR.UnpreparedValue ('Postgres pgKind))
 deleteKeyOp = SU.UpdateOperator {..}
   where
@@ -1037,7 +1037,7 @@ deleteKeyOp = SU.UpdateOperator {..}
 -- to other backends yet.
 deleteElemOp ::
   forall pgKind m n r.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   SU.UpdateOperator ('Postgres pgKind) r m n (IR.UnpreparedValue ('Postgres pgKind))
 deleteElemOp = SU.UpdateOperator {..}
   where
@@ -1065,7 +1065,7 @@ deleteElemOp = SU.UpdateOperator {..}
 -- to other backends yet.
 deleteAtPathOp ::
   forall pgKind m n r.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   SU.UpdateOperator ('Postgres pgKind) r m n [IR.UnpreparedValue ('Postgres pgKind)]
 deleteAtPathOp = SU.UpdateOperator {..}
   where
@@ -1087,7 +1087,7 @@ deleteAtPathOp = SU.UpdateOperator {..}
 -- | The update operators that we support on Postgres.
 pgkParseUpdateOperators ::
   forall pgKind m n r.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   TableInfo ('Postgres pgKind) ->
   UpdPermInfo ('Postgres pgKind) ->
   SchemaT r m (InputFieldsParser n (HashMap (Column ('Postgres pgKind)) (UpdateOpExpression (IR.UnpreparedValue ('Postgres pgKind)))))

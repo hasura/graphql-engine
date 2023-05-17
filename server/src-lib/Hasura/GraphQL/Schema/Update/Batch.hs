@@ -31,13 +31,13 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax (Description (..), Name (..))
 
 buildAnnotatedUpdateGField ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   Scenario ->
   TableInfo b ->
   -- | field display name
@@ -194,7 +194,7 @@ updateTableByPk mkSingleBatchUpdateVariant scenario tableInfo tableGqlName = run
     TableCustomRootFields {..} = _tcCustomRootFields . _tciCustomConfig $ _tiCoreInfo tableInfo
 
 mkAnnotatedUpdateG ::
-  Backend b =>
+  (Backend b) =>
   TableName b ->
   [ColumnInfo b] ->
   UpdPermInfo b ->

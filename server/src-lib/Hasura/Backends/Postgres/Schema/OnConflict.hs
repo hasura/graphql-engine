@@ -39,7 +39,7 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Parser for a field name @on_conflict@ of type @tablename_on_conflict@.
@@ -137,7 +137,7 @@ conflictObjectParser tableInfo maybeUpdatePerms constraints = do
 -- to a GraphQL name (see hasura/graphql-engine-mono#1748).
 conflictConstraint ::
   forall pgKind r m n.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   NonEmpty (UniqueConstraint ('Postgres pgKind)) ->
   TableInfo ('Postgres pgKind) ->
   SchemaT r m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))

@@ -53,7 +53,6 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as Any
 import Hasura.Server.AppStateRef qualified as HGE
 import Hasura.Server.Init.Config
@@ -62,6 +61,7 @@ import Hasura.Server.Telemetry.Types
 import Hasura.Server.Types
 import Hasura.Server.Version
 import Hasura.StoredProcedure.Cache (StoredProcedureInfo (_spiArguments))
+import Hasura.Table.Cache
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wreq qualified as Wreq

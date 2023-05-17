@@ -42,7 +42,7 @@ import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source (SourceInfo (..))
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | This function is meant to serve as the default schema for Aggregation
@@ -163,13 +163,13 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
     --   where
 
     -- Collect all the non-failed branches, failing if all branches failed.
-    succeedingBranchesNE :: forall f a. Applicative f => NonEmpty (MaybeT f a) -> MaybeT f (NonEmpty a)
+    succeedingBranchesNE :: forall f a. (Applicative f) => NonEmpty (MaybeT f a) -> MaybeT f (NonEmpty a)
     succeedingBranchesNE xs = MaybeT $ NE.nonEmpty . catMaybes . NE.toList <$> sequenceA (xs <&> runMaybeT)
 
     -- Collect a non-empty list of input field parsers into one input field
     -- parser parsing a non-empty list of the specified values.
     collectFieldsNE ::
-      Functor f =>
+      (Functor f) =>
       MaybeT f (NonEmpty (InputFieldsParser n c)) ->
       MaybeT f (InputFieldsParser n (NonEmpty c))
     collectFieldsNE = fmap sequenceA
@@ -177,7 +177,7 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
     -- Collect a non-empty list of optional input field parsers into one input field
     -- parser parsing a list of the specified values.
     collectOptionalFieldsNE ::
-      Functor f =>
+      (Functor f) =>
       MaybeT f (NonEmpty (InputFieldsParser n (Maybe a))) ->
       MaybeT f (InputFieldsParser n [a])
     collectOptionalFieldsNE = fmap $ fmap (catMaybes . NE.toList) . sequenceA

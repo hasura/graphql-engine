@@ -47,7 +47,7 @@ import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | User-defined function (AKA custom function)
@@ -284,7 +284,7 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
 -- | The custom SQL functions' input "args" field parser
 -- > function_name(args: function_args)
 customSQLFunctionArgs ::
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   FunctionInfo ('Postgres pgKind) ->
   G.Name ->
   G.Name ->
@@ -312,7 +312,7 @@ customSQLFunctionArgs FunctionInfo {..} functionName functionArgsName =
 --   be omitted.
 functionArgs ::
   forall r m n pgKind.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   FunctionTrackedAs ('Postgres pgKind) ->
   Seq.Seq (FunctionInputArgument ('Postgres pgKind)) ->
   SchemaT r m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))

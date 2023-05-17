@@ -43,7 +43,7 @@ import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source qualified as RQL
 import Hasura.RQL.Types.SourceCustomization qualified as RQL
-import Hasura.RQL.Types.Table qualified as RQL
+import Hasura.Table.Cache qualified as RQL
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
 --------------------------------------------------------------------------------
@@ -100,7 +100,7 @@ instance BackendUpdateOperatorsSchema 'DataConnector where
 --------------------------------------------------------------------------------
 
 buildTableInsertMutationFields' ::
-  MonadBuildSchema 'DataConnector r m n =>
+  (MonadBuildSchema 'DataConnector r m n) =>
   RQL.MkRootFieldName ->
   GS.C.Scenario ->
   RQL.TableName 'DataConnector ->
@@ -114,14 +114,14 @@ buildTableInsertMutationFields' mkRootFieldName scenario tableName tableInfo gql
     Nothing -> pure []
 
 mkBackendInsertParser ::
-  MonadBuildSchema 'DataConnector r m n =>
+  (MonadBuildSchema 'DataConnector r m n) =>
   RQL.TableInfo 'DataConnector ->
   GS.C.SchemaT r m (P.InputFieldsParser n (DC.BackendInsert (IR.UnpreparedValue 'DataConnector)))
 mkBackendInsertParser _tableInfo =
   pure $ pure DC.BackendInsert
 
 buildTableUpdateMutationFields' ::
-  MonadBuildSchema 'DataConnector r m n =>
+  (MonadBuildSchema 'DataConnector r m n) =>
   GS.C.Scenario ->
   RQL.TableInfo 'DataConnector ->
   GQLNameIdentifier ->
@@ -137,7 +137,7 @@ buildTableUpdateMutationFields' scenario tableInfo gqlName = do
 
 parseUpdateOperators' ::
   forall m n r.
-  MonadBuildSchema 'DataConnector r m n =>
+  (MonadBuildSchema 'DataConnector r m n) =>
   RQL.TableInfo 'DataConnector ->
   RQL.UpdPermInfo 'DataConnector ->
   GS.C.SchemaT r m (P.InputFieldsParser n (HashMap (RQL.Column 'DataConnector) (DC.UpdateOperator (IR.UnpreparedValue 'DataConnector))))
@@ -166,7 +166,7 @@ parseUpdateOperators' tableInfo updatePermissions = do
 
 updateCustomOp ::
   forall m n r.
-  MonadBuildSchema 'DataConnector r m n =>
+  (MonadBuildSchema 'DataConnector r m n) =>
   API.UpdateColumnOperatorName ->
   HashMap DC.ScalarType API.UpdateColumnOperatorDefinition ->
   GS.U.UpdateOperator 'DataConnector r m n (IR.UnpreparedValue 'DataConnector)
@@ -225,7 +225,7 @@ updateCustomOp (API.UpdateColumnOperatorName operatorName) operatorUsages = GS.U
         (GQL.Description $ "input type for applying the " <> toTxt operatorName <> " operator to columns in table " <> toTxt tableName)
 
 buildTableDeleteMutationFields' ::
-  MonadBuildSchema 'DataConnector r m n =>
+  (MonadBuildSchema 'DataConnector r m n) =>
   RQL.MkRootFieldName ->
   GS.C.Scenario ->
   RQL.TableName 'DataConnector ->
@@ -239,7 +239,7 @@ buildTableDeleteMutationFields' mkRootFieldName scenario tableName tableInfo gql
     Nothing -> pure []
 
 experimentalBuildTableRelayQueryFields ::
-  MonadBuildSchema 'DataConnector r m n =>
+  (MonadBuildSchema 'DataConnector r m n) =>
   RQL.MkRootFieldName ->
   RQL.TableName 'DataConnector ->
   RQL.TableInfo 'DataConnector ->
@@ -250,7 +250,7 @@ experimentalBuildTableRelayQueryFields _mkRootFieldName _tableName _tableInfo _g
   pure []
 
 columnParser' ::
-  MonadBuildSchema 'DataConnector r m n =>
+  (MonadBuildSchema 'DataConnector r m n) =>
   RQL.ColumnType 'DataConnector ->
   GQL.Nullability ->
   GS.C.SchemaT r m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
@@ -277,7 +277,7 @@ columnParser' columnType nullability = case columnType of
       Nothing -> throw400 ValidationFailed "empty enum values"
 
 enumParser' ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   RQL.TableName 'DataConnector ->
   NonEmpty (RQL.EnumValue, RQL.EnumValueInfo) ->
   Maybe GQL.Name ->
@@ -287,7 +287,7 @@ enumParser' _tableName _enumValues _customTableName _nullability =
   throw400 NotSupported "This column type is unsupported by the Data Connector backend"
 
 possiblyNullable' ::
-  MonadParse m =>
+  (MonadParse m) =>
   RQL.ScalarType 'DataConnector ->
   GQL.Nullability ->
   P.Parser 'P.Both m J.Value ->
@@ -315,7 +315,7 @@ orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
 
 comparisonExps' ::
   forall m n r.
-  MonadBuildSchema 'DataConnector r m n =>
+  (MonadBuildSchema 'DataConnector r m n) =>
   RQL.ColumnType 'DataConnector ->
   GS.C.SchemaT r m (P.Parser 'P.Input n [ComparisonExp 'DataConnector])
 comparisonExps' columnType = do
@@ -387,7 +387,7 @@ comparisonExps' columnType = do
 
 tableArgs' ::
   forall r m n.
-  MonadBuildSchema 'DataConnector r m n =>
+  (MonadBuildSchema 'DataConnector r m n) =>
   RQL.TableInfo 'DataConnector ->
   GS.C.SchemaT r m (P.InputFieldsParser n (IR.SelectArgsG 'DataConnector (IR.UnpreparedValue 'DataConnector)))
 tableArgs' tableInfo = do
@@ -409,7 +409,7 @@ tableArgs' tableInfo = do
       <*> GS.S.tableOffsetArg
 
 countTypeInput' ::
-  MonadParse n =>
+  (MonadParse n) =>
   Maybe (P.Parser 'P.Both n DC.ColumnName) ->
   P.InputFieldsParser n (IR.CountDistinct -> DC.CountAggregate)
 countTypeInput' = \case

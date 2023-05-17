@@ -68,7 +68,6 @@ import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.Cache.Dependencies
 import Hasura.RQL.DDL.Schema.Cache.Fields
 import Hasura.RQL.DDL.Schema.Cache.Permission
-import Hasura.RQL.DDL.Schema.Table
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
@@ -79,7 +78,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Metadata hiding (tmTable)
+import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.OpenTelemetry
@@ -93,7 +92,6 @@ import Hasura.RQL.Types.SchemaCache.Instances ()
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
@@ -106,6 +104,9 @@ import Hasura.Services
 import Hasura.Session
 import Hasura.StoredProcedure.Cache (StoredProcedureCache, StoredProcedureInfo (..))
 import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata (..))
+import Hasura.Table.API
+import Hasura.Table.Cache
+import Hasura.Table.Metadata (TableMetadata (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.Types.Extended
@@ -198,7 +199,7 @@ newtype CacheRWT m a
     )
   deriving anyclass (MonadQueryTags)
 
-instance MonadReader r m => MonadReader r (CacheRWT m) where
+instance (MonadReader r m) => MonadReader r (CacheRWT m) where
   ask = lift ask
   local f (CacheRWT m) = CacheRWT $ mapReaderT (local f) m
 
@@ -212,7 +213,7 @@ instance (MonadGetPolicies m) => MonadGetPolicies (CacheRWT m) where
   runGetPrometheusMetricsGranularity = lift $ runGetPrometheusMetricsGranularity
 
 runCacheRWT ::
-  Monad m =>
+  (Monad m) =>
   CacheDynamicConfig ->
   RebuildableSchemaCache ->
   CacheRWT m a ->
@@ -1135,7 +1136,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
             }
 
     buildOpenTelemetry ::
-      MonadWriter (Seq (Either InconsistentMetadata md)) m =>
+      (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
       OpenTelemetryConfig ->
       m OpenTelemetryInfo
     buildOpenTelemetry OpenTelemetryConfig {..} = do
@@ -1164,7 +1165,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
               )
 
     buildRESTEndpoints ::
-      MonadWriter (Seq (Either InconsistentMetadata md)) m =>
+      (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
       QueryCollections ->
       [CreateEndpoint] ->
       m (HashMap EndpointName (EndpointMetadata GQLQueryWithText))
@@ -1180,7 +1181,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
           withRecordInconsistencyM (mkEndpointMetadataObject createEndpoint) $ modifyErr addContext $ resolveEndpoint collections createEndpoint
 
     resolveEndpoint ::
-      QErrM m =>
+      (QErrM m) =>
       InsOrdHashMap CollectionName CreateCollection ->
       EndpointMetadata QueryReference ->
       m (EndpointMetadata GQLQueryWithText)
@@ -1215,7 +1216,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
 
     mkEventTriggerMetadataObject ::
       forall b a c.
-      Backend b =>
+      (Backend b) =>
       (CacheDynamicConfig, a, SourceName, c, TableName b, RecreateEventTriggers, EventTriggerConf b) ->
       MetadataObject
     mkEventTriggerMetadataObject (_, _, source, _, table, _, eventTriggerConf) =
@@ -1223,7 +1224,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
 
     mkEventTriggerMetadataObject' ::
       forall b.
-      Backend b =>
+      (Backend b) =>
       SourceName ->
       TableName b ->
       EventTriggerConf b ->
@@ -1388,7 +1389,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
                       primaryKey
 
     buildCronTriggers ::
-      MonadWriter (Seq (Either InconsistentMetadata md)) m =>
+      (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
       [CronTriggerMetadata] ->
       m (HashMap TriggerName CronTriggerInfo)
     buildCronTriggers = buildInfoMapM ctName mkCronTriggerMetadataObject buildCronTrigger
@@ -1401,7 +1402,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
               resolveCronTrigger env cronTrigger
 
     buildInheritedRoles ::
-      MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m =>
+      (MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m) =>
       HashSet RoleName ->
       [InheritedRole] ->
       m (HashMap RoleName Role)
@@ -1417,7 +1418,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
             pure resolvedInheritedRole
 
     buildActions ::
-      MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m =>
+      (MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m) =>
       AnnotatedCustomTypes ->
       BackendMap ScalarMap ->
       OrderedRoles ->
@@ -1437,7 +1438,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
             return $ ActionInfo name (outputType, outObject) resolvedDef permissionsMap forwardClientHeaders comment
 
 buildRemoteSchemaRemoteRelationship ::
-  MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m =>
+  (MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m) =>
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
   PartiallyResolvedRemoteSchemaMap ->
   RemoteSchemaName ->

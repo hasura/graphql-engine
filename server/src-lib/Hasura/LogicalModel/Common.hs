@@ -14,7 +14,7 @@ import Hasura.LogicalModel.Types (LogicalModelField (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..), fromCol)
-import Hasura.RQL.Types.Table (FieldInfo (..), FieldInfoMap)
+import Hasura.Table.Cache (FieldInfo (..), FieldInfoMap)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 columnsFromFields ::

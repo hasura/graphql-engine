@@ -38,8 +38,8 @@ import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Constructs the parser for the node interface.
@@ -88,7 +88,7 @@ nodeInterface sourceCache = NodeInterfaceParserBuilder $ \context options -> mem
       AB.composeAnyBackend @Backend fuseMaps m1 m2 $
         error "panic: two tables of a different backend type within the same source"
 
-    fuseMaps :: forall b. Backend b => TableMap b -> TableMap b -> AB.AnyBackend TableMap
+    fuseMaps :: forall b. (Backend b) => TableMap b -> TableMap b -> AB.AnyBackend TableMap
     fuseMaps (TableMap m1) (TableMap m2) = AB.mkAnyBackend @b $ TableMap $ HashMap.union m1 m2
 
 -- | Creates a field parser for the top-level "node" field in the QueryRoot.
@@ -156,7 +156,7 @@ nodeField sourceCache context options = do
     -- that all backends that support relay use the same IR for single row
     -- selection.
     createRootField ::
-      Backend b =>
+      (Backend b) =>
       Options.StringifyNumbers ->
       TableName b ->
       NodeInfo b ->
@@ -190,7 +190,7 @@ nodeField sourceCache context options = do
     -- each primary key. This might fail if the given node id doesn't exactly
     -- have a valid entry for each primary key.
     buildNodeIdBoolExp ::
-      Backend b =>
+      (Backend b) =>
       NESeq.NESeq J.Value ->
       NESeq.NESeq (ColumnInfo b) ->
       n (IR.AnnBoolExp b (IR.UnpreparedValue b))

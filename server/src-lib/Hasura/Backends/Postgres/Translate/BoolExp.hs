@@ -23,8 +23,8 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.RQL.Types.Table ()
 import Hasura.SQL.Types
+import Hasura.Table.Cache ()
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
@@ -54,7 +54,7 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
 -- to columns etc are relative to the given 'rootReference'.
 toSQLBoolExp ::
   forall pgKind.
-  Backend ('Postgres pgKind) =>
+  (Backend ('Postgres pgKind)) =>
   -- | The name of the tabular value in query scope that the boolean expression
   -- applies to
   S.Qual ->
@@ -177,7 +177,7 @@ withCurrentTable :: forall a. S.Qual -> BoolExpM a -> BoolExpM a
 withCurrentTable curr = local (\e -> e {currTableReference = curr})
 
 -- | Draw a fresh identifier intended to alias the given object.
-freshIdentifier :: forall a. ToTxt a => QualifiedObject a -> BoolExpM Identifier
+freshIdentifier :: forall a. (ToTxt a) => QualifiedObject a -> BoolExpM Identifier
 freshIdentifier obj = do
   curVarNum <- get
   put $ curVarNum + 1
@@ -189,7 +189,7 @@ freshIdentifier obj = do
             <> snakeCaseQualifiedObject obj
   return newIdentifier
 
-identifierWithSuffix :: ToTxt a => QualifiedObject a -> Text -> Identifier
+identifierWithSuffix :: (ToTxt a) => QualifiedObject a -> Text -> Identifier
 identifierWithSuffix relTableName name =
   Identifier (snakeCaseQualifiedObject relTableName <> "_" <> name)
 

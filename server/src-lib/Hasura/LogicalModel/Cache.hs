@@ -12,7 +12,7 @@ import Hasura.LogicalModel.Types (LogicalModelField, LogicalModelName)
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.BackendType (BackendType)
-import Hasura.RQL.Types.Table (RolePermInfoMap)
+import Hasura.Table.Cache (RolePermInfoMap)
 
 type LogicalModelCache b = HashMap LogicalModelName (LogicalModelInfo b)
 

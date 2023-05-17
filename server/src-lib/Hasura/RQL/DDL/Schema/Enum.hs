@@ -21,7 +21,7 @@ import Data.Sequence.NonEmpty qualified as NESeq
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache (ForeignKey (..), PrimaryKey (..), TableConfig (..))
 
 -- | Given a map of enum tables, computes all enum references implied by the given set of foreign
 -- keys. A foreign key constitutes an enum reference iff the following conditions hold:
@@ -31,7 +31,7 @@ import Hasura.RQL.Types.Table
 --   3. The referenced table is, in fact, an enum table.
 resolveEnumReferences ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues) ->
   HashSet (ForeignKey b) ->
   HashMap (Column b) (NonEmpty (EnumReference b))

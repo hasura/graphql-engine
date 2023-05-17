@@ -47,8 +47,8 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- insert
@@ -61,8 +61,8 @@ import Language.GraphQL.Draft.Syntax qualified as G
 --   - parser for backend-specific fields, e.g. upsert fields on_conflict or if_matched
 insertIntoTable ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
-  BackendTableSelectSchema b =>
+  (MonadBuildSchema b r m n) =>
+  (BackendTableSelectSchema b) =>
   (TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   Scenario ->
   -- | qualified name of the table
@@ -114,8 +114,8 @@ insertIntoTable backendInsertAction scenario tableInfo fieldName description = r
 -- different: it only allows selecting columns from the row being inserted.
 insertOneIntoTable ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
-  BackendTableSelectSchema b =>
+  (MonadBuildSchema b r m n) =>
+  (BackendTableSelectSchema b) =>
   (TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   Scenario ->
   -- | table info
@@ -176,7 +176,7 @@ insertOneIntoTable backendInsertAction scenario tableInfo fieldName description 
 -- > }
 tableFieldsInput ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   -- | qualified name of the table
   TableInfo b ->
   SchemaT r m (Parser 'Input n (IR.AnnotatedInsertRow b (IR.UnpreparedValue b)))
@@ -235,7 +235,7 @@ tableFieldsInput tableInfo = do
 
 mkDefaultRelationshipParser ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   (TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   XNestedInserts b ->
   RelInfo b ->
@@ -271,7 +271,7 @@ mkDefaultRelationshipParser backendInsertAction xNestedInserts relationshipInfo 
 -- 'tableFieldsInput'.
 objectRelationshipInput ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   (TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   TableInfo b ->
   SchemaT r m (Maybe (Parser 'Input n (IR.SingleObjectInsert b (IR.UnpreparedValue b))))
@@ -308,7 +308,7 @@ objectRelationshipInput backendInsertAction tableInfo = runMaybeT $ do
 -- 'tableFieldsInput'.
 arrayRelationshipInput ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   (TableInfo b -> SchemaT r m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   TableInfo b ->
   SchemaT r m (Maybe (Parser 'Input n (IR.MultiObjectInsert b (IR.UnpreparedValue b))))
@@ -339,7 +339,7 @@ arrayRelationshipInput backendInsertAction tableInfo = runMaybeT $ do
 -- | Helper function that creates an 'AnnIns' object.
 mkInsertObject ::
   forall b f.
-  BackendSchema b =>
+  (BackendSchema b) =>
   f (IR.AnnotatedInsertRow b (IR.UnpreparedValue b)) ->
   TableInfo b ->
   BackendInsert b (IR.UnpreparedValue b) ->
@@ -413,8 +413,8 @@ deleteFromTable scenario tableInfo fieldName description = runMaybeT $ do
 -- the user must be allowed to access all the primary keys of the table.
 deleteFromTableByPk ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
-  BackendTableSelectSchema b =>
+  (MonadBuildSchema b r m n) =>
+  (BackendTableSelectSchema b) =>
   Scenario ->
   -- | table info
   TableInfo b ->
@@ -445,7 +445,7 @@ deleteFromTableByPk scenario tableInfo fieldName description = runMaybeT $ do
         <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) . fmap IR.MOutSinglerowObject
 
 mkDeleteObject ::
-  Backend b =>
+  (Backend b) =>
   TableName b ->
   [ColumnInfo b] ->
   DelPermInfo b ->
@@ -469,8 +469,8 @@ mkDeleteObject table columns deletePerms tCase (whereExp, mutationOutput) =
 -- rows look like. This parser allows a query to specify what data to fetch.
 mutationSelectionSet ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
-  BackendTableSelectSchema b =>
+  (MonadBuildSchema b r m n) =>
+  (BackendTableSelectSchema b) =>
   TableInfo b ->
   SchemaT r m (Parser 'Output n (IR.MutFldsG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)))
 mutationSelectionSet tableInfo = do
@@ -511,7 +511,7 @@ mutationSelectionSet tableInfo = do
 -- columns that make up the key.
 primaryKeysArguments ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   TableInfo b ->
   SchemaT r m (Maybe (InputFieldsParser n (AnnBoolExp b (IR.UnpreparedValue b))))
 primaryKeysArguments tableInfo = runMaybeT $ do

@@ -77,21 +77,22 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Services
+import Hasura.Table.Metadata (TableMetadata (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 newtype BackendInvalidationKeysWrapper (b :: BackendType) = BackendInvalidationKeysWrapper
   { unBackendInvalidationKeysWrapper :: BackendInvalidationKeys b
   }
 
-deriving newtype instance Eq (BackendInvalidationKeys b) => Eq (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Eq (BackendInvalidationKeys b)) => Eq (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Ord (BackendInvalidationKeys b) => Ord (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Ord (BackendInvalidationKeys b)) => Ord (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Show (BackendInvalidationKeys b) => Show (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Show (BackendInvalidationKeys b)) => Show (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Semigroup (BackendInvalidationKeys b) => Semigroup (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Semigroup (BackendInvalidationKeys b)) => Semigroup (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Monoid (BackendInvalidationKeys b) => Monoid (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Monoid (BackendInvalidationKeys b)) => Monoid (BackendInvalidationKeysWrapper b)
 
 instance Inc.Select (BackendInvalidationKeysWrapper b)
 
@@ -121,7 +122,7 @@ invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
     }
   where
     invalidate ::
-      Hashable a =>
+      (Hashable a) =>
       a ->
       HashMap a Inc.InvalidationKey ->
       HashMap a Inc.InvalidationKey

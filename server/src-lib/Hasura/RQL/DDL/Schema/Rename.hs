@@ -33,9 +33,22 @@ import Hasura.RQL.Types.Relationships.ToSource
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
-import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
+import Hasura.Table.Metadata
+  ( Relationships,
+    TableMetadata (..),
+    tmArrayRelationships,
+    tmConfiguration,
+    tmDeletePermissions,
+    tmEventTriggers,
+    tmInsertPermissions,
+    tmObjectRelationships,
+    tmRemoteRelationships,
+    tmSelectPermissions,
+    tmUpdatePermissions,
+  )
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data RenameItem (b :: BackendType) a = RenameItem
@@ -56,7 +69,7 @@ data Rename b
   = RTable (RenameTable b)
   | RField (RenameField b)
 
-otherDeps :: QErrM m => Text -> SchemaObjId -> m ()
+otherDeps :: (QErrM m) => Text -> SchemaObjId -> m ()
 otherDeps errMsg d =
   throw500 $
     "unexpected dependency "
@@ -662,7 +675,7 @@ updateColInObjRel fromQT toQT rnCol = \case
     RUManual $ updateRelManualConfig fromQT toQT rnCol manConfig
 
 updateRelChoice ::
-  Backend b =>
+  (Backend b) =>
   TableName b ->
   TableName b ->
   RenameCol b ->
@@ -690,8 +703,8 @@ type ColMap b = HashMap (Column b) (Column b)
 
 getNewCol ::
   forall b f.
-  Backend b =>
-  Functor f =>
+  (Backend b) =>
+  (Functor f) =>
   RenameCol b ->
   TableName b ->
   f (Column b) ->

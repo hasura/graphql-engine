@@ -48,19 +48,16 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Metadata hiding
-  ( tmComputedFields,
-    tmTable,
-  )
+import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils (quoteRegex)
 import Hasura.Session
+import Hasura.Table.Cache
 import Hasura.Tracing qualified as Tracing
 import Text.Regex.TDFA qualified as TDFA
 
@@ -382,7 +379,7 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
         pure (txResult, metadataUpdater)
   where
     dontAllowFunctionOverloading ::
-      MonadError QErr n =>
+      (MonadError QErr n) =>
       [FunctionName ('Postgres pgKind)] ->
       n ()
     dontAllowFunctionOverloading overloadedFunctions =
@@ -392,7 +389,7 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
             <> commaSeparated overloadedFunctions
 
     dontAllowFunctionAlteredVolatile ::
-      MonadError QErr n =>
+      (MonadError QErr n) =>
       [(FunctionName ('Postgres pgKind), FunctionVolatility)] ->
       n ()
     dontAllowFunctionAlteredVolatile alteredFunctions =
@@ -402,7 +399,7 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
             "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
     purgeFunctionsFromMetadata ::
-      Monad n =>
+      (Monad n) =>
       [FunctionName ('Postgres pgKind)] ->
       WriterT MetadataModifier n ()
     purgeFunctionsFromMetadata functions =

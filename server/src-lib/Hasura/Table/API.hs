@@ -2,7 +2,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Description: Create/delete SQL tables to/from Hasura metadata.
-module Hasura.RQL.DDL.Schema.Table
+module Hasura.Table.API
   ( TrackTable (..),
     runTrackTableQ,
     TrackTableV2 (..),
@@ -67,9 +67,10 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseIdentifier)
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils
+import Hasura.Table.Cache
+import Hasura.Table.Metadata (mkTableMeta, tmApolloFederationConfig, tmConfiguration, tmIsEnum)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data TrackTable b = TrackTable
@@ -100,11 +101,11 @@ data SetTableIsEnum b = SetTableIsEnum
     stieIsEnum :: Bool
   }
 
-deriving instance Eq (TableName b) => Eq (SetTableIsEnum b)
+deriving instance (Eq (TableName b)) => Eq (SetTableIsEnum b)
 
-deriving instance Show (TableName b) => Show (SetTableIsEnum b)
+deriving instance (Show (TableName b)) => Show (SetTableIsEnum b)
 
-instance Backend b => FromJSON (SetTableIsEnum b) where
+instance (Backend b) => FromJSON (SetTableIsEnum b) where
   parseJSON = withObject "SetTableIsEnum" $ \o ->
     SetTableIsEnum
       <$> o .:? "source" .!= defaultSource
@@ -213,7 +214,7 @@ queryForExistingFieldNames schemaCache = do
 -- an internal introspection
 checkConflictingNode ::
   forall m.
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SchemaCache ->
   Text ->
   m ()
@@ -265,7 +266,7 @@ trackExistingTableOrViewP2 trackTable@TrackTableV2 {ttv2Table = TrackTable {..}}
     $ mkTrackTableMetadataModifier trackTable
   pure successMsg
 
-mkTrackTableMetadataModifier :: Backend b => TrackTableV2 b -> MetadataModifier
+mkTrackTableMetadataModifier :: (Backend b) => TrackTableV2 b -> MetadataModifier
 mkTrackTableMetadataModifier (TrackTableV2 (TrackTable source tableName isEnum apolloFedConfig) config) =
   let metadata = tmApolloFederationConfig .~ apolloFedConfig $ mkTableMeta tableName isEnum config
    in MetadataModifier $ metaSources . ix source . toSourceMetadata . smTables %~ InsOrdHashMap.insert tableName metadata
@@ -355,7 +356,7 @@ runTrackTablesQ TrackTables {..} = do
               _ -> Nothing
           )
 
-mkTrackTableV2ObjectId :: forall b. Backend b => TrackTableV2 b -> MetadataObjId
+mkTrackTableV2ObjectId :: forall b. (Backend b) => TrackTableV2 b -> MetadataObjId
 mkTrackTableV2ObjectId TrackTableV2 {ttv2Table = TrackTable {..}} =
   MOSourceObjId tSource . AB.mkAnyBackend $ SMOTable @b tName
 
@@ -648,7 +649,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
     -- types.
     processTableInfo ::
-      QErrM n =>
+      (QErrM n) =>
       HashMap.HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues) ->
       TableCoreInfoG b (RawColumnInfo b) (Column b) ->
       NamingCase ->
@@ -686,7 +687,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
         (align columns configByFieldName)
 
     pairColumnInfoAndConfig ::
-      QErrM n =>
+      (QErrM n) =>
       FieldName ->
       These (RawColumnInfo b) ColumnConfig ->
       n (RawColumnInfo b, ColumnConfig)
@@ -698,7 +699,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
           "configuration was given for the column " <> fieldName <<> ", but no such column exists"
 
     extractColumnConfiguration ::
-      QErrM n =>
+      (QErrM n) =>
       FieldName ->
       (RawColumnInfo b, ColumnConfig) ->
       n (RawColumnInfo b, GQLNameIdentifier, Maybe G.Description)

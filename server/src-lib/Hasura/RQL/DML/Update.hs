@@ -31,9 +31,9 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Table
 import Hasura.SQL.Types
 import Hasura.Session
+import Hasura.Table.Cache
 import Hasura.Tracing qualified as Tracing
 
 convInc ::

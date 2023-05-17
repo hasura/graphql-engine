@@ -30,7 +30,7 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache (askSourceConfig)
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 
 --------------------------------------------------------------------------------
 -- PostgresMetadata
@@ -41,7 +41,7 @@ import Hasura.RQL.Types.Table
 class PostgresMetadata (pgKind :: PostgresKind) where
   -- TODO: find a better name
   validateRel ::
-    MonadError QErr m =>
+    (MonadError QErr m) =>
     TableCache ('Postgres pgKind) ->
     QualifiedTable ->
     Either (ObjRelDef ('Postgres pgKind)) (ArrRelDef ('Postgres pgKind)) ->
@@ -126,7 +126,7 @@ instance PostgresMetadata 'Vanilla where
 instance PostgresMetadata 'Citus where
   validateRel ::
     forall m.
-    MonadError QErr m =>
+    (MonadError QErr m) =>
     TableCache ('Postgres 'Citus) ->
     QualifiedTable ->
     Either (ObjRelDef ('Postgres 'Citus)) (ArrRelDef ('Postgres 'Citus)) ->

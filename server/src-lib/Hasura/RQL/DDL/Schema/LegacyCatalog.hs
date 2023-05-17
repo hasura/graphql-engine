@@ -48,6 +48,19 @@ import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.Metadata
+import Hasura.Table.Metadata
+  ( TableMetadata (..),
+    mkTableMeta,
+    tmArrayRelationships,
+    tmComputedFields,
+    tmDeletePermissions,
+    tmEventTriggers,
+    tmInsertPermissions,
+    tmObjectRelationships,
+    tmRemoteRelationships,
+    tmSelectPermissions,
+    tmUpdatePermissions,
+  )
 
 saveMetadataToHdbTables ::
   (MonadTx m, MonadReader SystemDefined m) => MetadataNoSources -> m ()
@@ -208,7 +221,7 @@ addEventTriggerToCatalog qt etc = liftTx do
     (EventTriggerConf name _ _ _ _ _ _ _ _ _) = etc
 
 addComputedFieldToCatalog ::
-  MonadTx m =>
+  (MonadTx m) =>
   AddComputedField ('Postgres 'Vanilla) ->
   m ()
 addComputedFieldToCatalog q =
@@ -227,7 +240,7 @@ addComputedFieldToCatalog q =
     QualifiedObject schemaName tableName = table
     AddComputedField _ table computedField definition comment = q
 
-addRemoteRelationshipToCatalog :: MonadTx m => CreateFromSourceRelationship ('Postgres 'Vanilla) -> m ()
+addRemoteRelationshipToCatalog :: (MonadTx m) => CreateFromSourceRelationship ('Postgres 'Vanilla) -> m ()
 addRemoteRelationshipToCatalog CreateFromSourceRelationship {..} =
   liftTx $
     PG.unitQE
@@ -275,7 +288,7 @@ addRemoteSchemaToCatalog (RemoteSchemaMetadata name def comment _ _) =
     True
 
 addCollectionToCatalog ::
-  MonadTx m => CreateCollection -> SystemDefined -> m ()
+  (MonadTx m) => CreateCollection -> SystemDefined -> m ()
 addCollectionToCatalog (CreateCollection name defn mComment) systemDefined =
   liftTx $
     PG.unitQE
@@ -288,7 +301,7 @@ addCollectionToCatalog (CreateCollection name defn mComment) systemDefined =
       (name, PG.ViaJSON defn, mComment, systemDefined)
       True
 
-addCollectionToAllowlistCatalog :: MonadTx m => CollectionName -> m ()
+addCollectionToAllowlistCatalog :: (MonadTx m) => CollectionName -> m ()
 addCollectionToAllowlistCatalog collName =
   liftTx $
     PG.unitQE
@@ -301,7 +314,7 @@ addCollectionToAllowlistCatalog collName =
       (Identity collName)
       True
 
-setCustomTypesInCatalog :: MonadTx m => CustomTypes -> m ()
+setCustomTypesInCatalog :: (MonadTx m) => CustomTypes -> m ()
 setCustomTypesInCatalog customTypes = liftTx do
   clearCustomTypes
   PG.unitQE
@@ -398,7 +411,7 @@ parseLegacyRemoteRelationshipDefinition ::
 parseLegacyRemoteRelationshipDefinition =
   runAesonParser (parseRemoteRelationshipDefinition RRPLegacy)
 
-fetchMetadataFromHdbTables :: MonadTx m => m MetadataNoSources
+fetchMetadataFromHdbTables :: (MonadTx m) => m MetadataNoSources
 fetchMetadataFromHdbTables = liftTx do
   tables <- fetchTables
   let tableMetaMap = InsOrdHashMap.fromList . flip map tables $
@@ -712,7 +725,7 @@ fetchMetadataFromHdbTables = liftTx do
             definition
           )
 
-addCronTriggerForeignKeyConstraint :: MonadTx m => m ()
+addCronTriggerForeignKeyConstraint :: (MonadTx m) => m ()
 addCronTriggerForeignKeyConstraint =
   liftTx $
     PG.unitQE

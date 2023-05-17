@@ -16,8 +16,8 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.SchemaCache.Types
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | 'CheckPermission' is a type which can be used to combine multiple
@@ -235,7 +235,7 @@ instance (OnlyRelevantEq a) => OnlyRelevantEq (Maybe a) where
 instance OnlyRelevantEq G.Name where
   (==~) = (==)
 
-instance OnlyRelevantEq a => OnlyRelevantEq [a] where
+instance (OnlyRelevantEq a) => OnlyRelevantEq [a] where
   l ==~ r =
     (length r == length r)
       && (all (== True) (zipWith (==~) l r))

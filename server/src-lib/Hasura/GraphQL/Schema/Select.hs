@@ -85,9 +85,9 @@ import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils (executeJSONPath)
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------
@@ -491,7 +491,7 @@ logicalModelColumnsForRole role logicalModel =
 
 -- | this seems like it works on luck, ie that everything is really just Text
 -- underneath
-columnToRelName :: forall b. Backend b => Column b -> Maybe RelName
+columnToRelName :: forall b. (Backend b) => Column b -> Maybe RelName
 columnToRelName column =
   RelName <$> mkNonEmptyText (toTxt column)
 
@@ -826,7 +826,7 @@ tableWhereArg tableInfo = do
 -- > order_by: [table_order_by!]
 tableOrderByArg ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   TableInfo b ->
   SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)))))
 tableOrderByArg tableInfo = do
@@ -846,7 +846,7 @@ tableOrderByArg tableInfo = do
 -- > distinct_on: [table_select_column!]
 tableDistinctArg ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   TableInfo b ->
   SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
 tableDistinctArg tableInfo = do
@@ -866,7 +866,7 @@ tableDistinctArg tableInfo = do
 -- > limit: NonNegativeInt
 tableLimitArg ::
   forall n.
-  MonadParse n =>
+  (MonadParse n) =>
   InputFieldsParser n (Maybe Int)
 tableLimitArg =
   fmap (fmap fromIntegral . join) $
@@ -880,7 +880,7 @@ tableLimitArg =
 -- > offset: BigInt
 tableOffsetArg ::
   forall n.
-  MonadParse n =>
+  (MonadParse n) =>
   InputFieldsParser n (Maybe Int64)
 tableOffsetArg =
   fmap join $
@@ -1048,7 +1048,7 @@ tableConnectionArgs pkeyColumns tableInfo = do
 -- > }
 tableAggregationFields ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   TableInfo b ->
   SchemaT r m (Parser 'Output n (IR.AggregateFields b))
 tableAggregationFields tableInfo = do
@@ -1333,7 +1333,7 @@ fieldSelection table tableInfo = \case
 
 nestedObjectParser ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   XNestedObjects b ->
   HashMap G.Name (TableObjectType b) ->
   TableObjectType b ->
@@ -1605,7 +1605,7 @@ relationshipField table ri = runMaybeT do
             fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG (riName ri) (riMapping ri)) <$> remoteConnectionField
           ]
 
-tablePermissionsInfo :: Backend b => SelPermInfo b -> TablePerms b
+tablePermissionsInfo :: (Backend b) => SelPermInfo b -> TablePerms b
 tablePermissionsInfo selectPermissions =
   IR.TablePerm
     { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions,

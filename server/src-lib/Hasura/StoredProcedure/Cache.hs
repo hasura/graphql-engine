@@ -12,9 +12,9 @@ import Hasura.LogicalModel.Cache (LogicalModelInfo)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend, FunctionName)
 import Hasura.RQL.Types.BackendType (BackendType)
-import Hasura.RQL.Types.Table (RolePermInfoMap)
 import Hasura.StoredProcedure.Metadata (ArgumentName)
 import Hasura.StoredProcedure.Types (NullableScalarType, StoredProcedureConfig)
+import Hasura.Table.Cache (RolePermInfoMap)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 type StoredProcedureCache b = HashMap (FunctionName b) (StoredProcedureInfo b)

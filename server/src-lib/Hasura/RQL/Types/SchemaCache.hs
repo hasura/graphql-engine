@@ -155,13 +155,14 @@ import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Session (UserInfoM)
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.RQL.Types.Webhook.Transform
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
+import Hasura.Table.Cache
+import Hasura.Table.Metadata (TableMetadata (..))
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.Types.Extended (TlsAllow)
@@ -186,7 +187,7 @@ data MetadataWithResourceVersion = MetadataWithResourceVersion
 
 mkParentDep ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   SourceName ->
   TableName b ->
   SchemaDependency
@@ -198,7 +199,7 @@ mkParentDep s tn =
 -- in the dependency tree for a given logical model.
 mkLogicalModelParentDep ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   SourceName ->
   LogicalModelName ->
   SchemaDependency
@@ -383,7 +384,7 @@ askSourceConfigMaybe =
 -- find that source or if the kind of the source does not match the type
 -- annotation, and does not distinguish between the two cases.
 unsafeTableCache ::
-  forall b. Backend b => SourceName -> SourceCache -> Maybe (TableCache b)
+  forall b. (Backend b) => SourceName -> SourceCache -> Maybe (TableCache b)
 unsafeTableCache sourceName cache = do
   unsafeSourceTables @b =<< HashMap.lookup sourceName cache
 
@@ -411,7 +412,7 @@ askTableCache sourceName = do
 -- kind of the source does not match the type annotation, and does not
 -- distinguish between the two cases.
 unsafeTableInfo ::
-  forall b. Backend b => SourceName -> TableName b -> SourceCache -> Maybe (TableInfo b)
+  forall b. (Backend b) => SourceName -> TableName b -> SourceCache -> Maybe (TableInfo b)
 unsafeTableInfo sourceName tableName cache =
   HashMap.lookup tableName =<< unsafeTableCache @b sourceName cache
 
@@ -491,7 +492,7 @@ askTableMetadata sourceName tableName = do
 -- to find that source or if the kind of the source does not match the type
 -- annotation, and does not distinguish between the two cases.
 unsafeFunctionCache ::
-  forall b. Backend b => SourceName -> SourceCache -> Maybe (FunctionCache b)
+  forall b. (Backend b) => SourceName -> SourceCache -> Maybe (FunctionCache b)
 unsafeFunctionCache sourceName cache =
   unsafeSourceFunctions @b =<< HashMap.lookup sourceName cache
 
@@ -502,7 +503,7 @@ unsafeFunctionCache sourceName cache =
 -- kind of the source does not match the type annotation, and does not
 -- distinguish between the two cases.
 unsafeFunctionInfo ::
-  forall b. Backend b => SourceName -> FunctionName b -> SourceCache -> Maybe (FunctionInfo b)
+  forall b. (Backend b) => SourceName -> FunctionName b -> SourceCache -> Maybe (FunctionInfo b)
 unsafeFunctionInfo sourceName functionName cache =
   HashMap.lookup functionName =<< unsafeFunctionCache @b sourceName cache
 
@@ -604,7 +605,7 @@ getAllRemoteSchemas sc =
 
 -- | A more limited version of 'CacheRM' that is used when building the schema cache, since the
 -- entire schema cache has not been built yet.
-class Monad m => TableCoreInfoRM b m where
+class (Monad m) => TableCoreInfoRM b m where
   lookupTableCoreInfo :: TableName b -> m (Maybe (TableCoreInfo b))
 
 instance (TableCoreInfoRM b m) => TableCoreInfoRM b (ReaderT r m) where

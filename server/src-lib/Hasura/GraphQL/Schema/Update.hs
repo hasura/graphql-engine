@@ -30,7 +30,7 @@ import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), isNumCol)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax (Description (..), Nullability (..), litName)
 
 -- | @UpdateOperator b m n op@ represents one single update operator for a
@@ -65,7 +65,7 @@ data UpdateOperator b r m n op = UpdateOperator
 --   only used in one operator.
 buildUpdateOperators ::
   forall b r m n op.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   -- | Columns with @preset@ expressions
   (HashMap (Column b) op) ->
   -- | Update operators to include in the Schema
@@ -92,7 +92,7 @@ presetColumns = fmap partialSQLExpToUnpreparedValue . upiSet
 -- applies to the table (i.e., it admits a non-empty column set).
 runUpdateOperator ::
   forall b r m n op.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   TableInfo b ->
   UpdateOperator b r m n op ->
   SchemaT
@@ -151,7 +151,7 @@ mergeDisjoint parsedResults = do
 -- > HashMap.fromList [("col1", MkOp (fp "x")), ("col2", MkOp (fp "y"))]
 updateOperator ::
   forall n r m b a.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   GQLNameIdentifier ->
   GQLNameIdentifier ->
   GQLNameIdentifier ->
@@ -183,7 +183,7 @@ updateOperator tableGQLName opName opFieldName mkParser columns opDesc objDesc =
 
 setOp ::
   forall b n r m.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   UpdateOperator b r m n (UnpreparedValue b)
 setOp = UpdateOperator {..}
   where
@@ -207,7 +207,7 @@ setOp = UpdateOperator {..}
 
 incOp ::
   forall b m n r.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   UpdateOperator b r m n (UnpreparedValue b)
 incOp = UpdateOperator {..}
   where

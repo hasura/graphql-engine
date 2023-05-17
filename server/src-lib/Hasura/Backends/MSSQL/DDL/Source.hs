@@ -40,9 +40,9 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
 import Hasura.Server.Migrate.Version qualified as Version
+import Hasura.Table.Cache
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
 import Text.Shakespeare.Text qualified as ST
@@ -95,7 +95,7 @@ postDropSourceHook (MSSQLSourceConfig _ mssqlExecCtx _) tableTriggersMap = do
   -- Close the connection
   liftIO $ mssqlDestroyConn mssqlExecCtx
 
-doesSchemaExist :: MonadMSSQLTx m => SchemaName -> m Bool
+doesSchemaExist :: (MonadMSSQLTx m) => SchemaName -> m Bool
 doesSchemaExist (SchemaName schemaName) = do
   liftMSSQLTx $
     Tx.singleRowQueryE
@@ -110,7 +110,7 @@ doesSchemaExist (SchemaName schemaName) = do
       AS BIT)
     |]
 
-doesTableExist :: MonadMSSQLTx m => TableName -> m Bool
+doesTableExist :: (MonadMSSQLTx m) => TableName -> m Bool
 doesTableExist tableName = do
   liftMSSQLTx $
     Tx.singleRowQueryE
@@ -152,16 +152,16 @@ prepareCatalog sourceConfig = mssqlRunSerializableTx (_mscExecCtx sourceConfig) 
       unitQueryE HGE.defaultMSSQLTxErrorHandler $(makeRelativeToProject "src-rsr/mssql/init_mssql_source.sql" >>= ODBC.sqlFile)
       setSourceCatalogVersion latestSourceCatalogVersion
 
-dropSourceCatalog :: MonadMSSQLTx m => m ()
+dropSourceCatalog :: (MonadMSSQLTx m) => m ()
 dropSourceCatalog = do
   let sql = $(makeRelativeToProject "src-rsr/mssql/drop_mssql_source.sql" >>= ODBC.sqlFile)
   liftMSSQLTx $ unitQueryE HGE.defaultMSSQLTxErrorHandler sql
 
-migrateSourceCatalog :: MonadMSSQLTx m => m (RecreateEventTriggers, SourceCatalogMigrationState)
+migrateSourceCatalog :: (MonadMSSQLTx m) => m (RecreateEventTriggers, SourceCatalogMigrationState)
 migrateSourceCatalog =
   getSourceCatalogVersion >>= migrateSourceCatalogFrom
 
-migrateSourceCatalogFrom :: MonadMSSQLTx m => SourceCatalogVersion -> m (RecreateEventTriggers, SourceCatalogMigrationState)
+migrateSourceCatalogFrom :: (MonadMSSQLTx m) => SourceCatalogVersion -> m (RecreateEventTriggers, SourceCatalogMigrationState)
 migrateSourceCatalogFrom prevVersion
   | prevVersion == latestSourceCatalogVersion = pure (RETDoNothing, SCMSNothingToDo $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
   | [] <- neededMigrations =

@@ -83,6 +83,18 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata)
+import Hasura.Table.Metadata
+  ( TableMetadata (..),
+    tmArrayRelationships,
+    tmComputedFields,
+    tmDeletePermissions,
+    tmEventTriggers,
+    tmInsertPermissions,
+    tmObjectRelationships,
+    tmRemoteRelationships,
+    tmSelectPermissions,
+    tmUpdatePermissions,
+  )
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.Types.Extended

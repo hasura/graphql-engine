@@ -37,14 +37,14 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Subscription
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Argument to limit the maximum number of results returned in a single batch.
 cursorBatchSizeArg ::
   forall n.
-  MonadParse n =>
+  (MonadParse n) =>
   NamingCase ->
   InputFieldsParser n Int
 cursorBatchSizeArg tCase =
@@ -62,7 +62,7 @@ cursorBatchSizeArg tCase =
 -- > }
 cursorOrderingArgParser ::
   forall b r m n.
-  MonadBuildSourceSchema b r m n =>
+  (MonadBuildSourceSchema b r m n) =>
   SchemaT r m (Parser 'Both n CursorOrdering)
 cursorOrderingArgParser = do
   sourceInfo :: SourceInfo b <- asks getter
@@ -90,7 +90,7 @@ cursorOrderingArgParser = do
 -- > ordering: cursor_ordering
 cursorOrderingArg ::
   forall b r m n.
-  MonadBuildSourceSchema b r m n =>
+  (MonadBuildSourceSchema b r m n) =>
   SchemaT r m (InputFieldsParser n (Maybe CursorOrdering))
 cursorOrderingArg = do
   cursorOrderingParser' <- cursorOrderingArgParser @b
@@ -100,7 +100,7 @@ cursorOrderingArg = do
 -- > column_name: column_type
 streamColumnParserArg ::
   forall b n m r.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   ColumnInfo b ->
   SchemaT r m (InputFieldsParser n (Maybe (ColumnInfo b, ColumnValue b)))
 streamColumnParserArg colInfo = do
@@ -122,7 +122,7 @@ streamColumnParserArg colInfo = do
 -- > }
 streamColumnValueParser ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   GQLNameIdentifier ->
   [ColumnInfo b] ->
   SchemaT r m (Parser 'Input n [(ColumnInfo b, ColumnValue b)])
@@ -142,7 +142,7 @@ streamColumnValueParser tableGQLIdentifier colInfos = do
 -- > initial_value: table_stream_cursor_value_input!
 streamColumnValueParserArg ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   GQLNameIdentifier ->
   [ColumnInfo b] ->
   SchemaT r m (InputFieldsParser n [(ColumnInfo b, ColumnValue b)])
@@ -158,7 +158,7 @@ streamColumnValueParserArg tableGQLIdentifier colInfos = do
 -- >
 tableStreamColumnArg ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   GQLNameIdentifier ->
   [ColumnInfo b] ->
   SchemaT r m (InputFieldsParser n [IR.StreamCursorItem b])
@@ -178,7 +178,7 @@ tableStreamColumnArg tableGQLIdentifier colInfos = do
 -- > }
 tableStreamCursorExp ::
   forall m n r b.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   TableInfo b ->
   SchemaT r m (Parser 'Input n [(IR.StreamCursorItem b)])
 tableStreamCursorExp tableInfo = do
@@ -201,7 +201,7 @@ tableStreamCursorExp tableInfo = do
 -- > cursor: [table_stream_cursor_input]!
 tableStreamCursorArg ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   TableInfo b ->
   SchemaT r m (InputFieldsParser n [IR.StreamCursorItem b])
 tableStreamCursorArg tableInfo = do

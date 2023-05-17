@@ -59,10 +59,18 @@ import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types
 import Hasura.Session (UserInfoM)
+import Hasura.Table.Cache
+import Hasura.Table.Metadata
+  ( Permissions,
+    TableMetadata,
+    tmDeletePermissions,
+    tmInsertPermissions,
+    tmSelectPermissions,
+    tmUpdatePermissions,
+  )
 
 {- Note [Backend only permissions]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

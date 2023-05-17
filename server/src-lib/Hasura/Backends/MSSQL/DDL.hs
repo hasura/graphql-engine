@@ -33,11 +33,11 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Table
 import Hasura.SQL.Types
 import Hasura.Server.Utils
 import Hasura.Session
 import Hasura.StoredProcedure.Types
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 buildComputedFieldInfo ::

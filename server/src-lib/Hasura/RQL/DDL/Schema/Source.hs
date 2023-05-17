@@ -69,12 +69,12 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table (Constraint (..), DBTableMetadata (..), ForeignKey (..), ForeignKeyMetadata (..), PrimaryKey (..))
 import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.AnyBackend qualified as AnyBackend
 import Hasura.Server.Logging (MetadataLog (..))
 import Hasura.Services
+import Hasura.Table.Cache (Constraint (..), DBTableMetadata (..), ForeignKey (..), ForeignKeyMetadata (..), PrimaryKey (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Witch qualified
 

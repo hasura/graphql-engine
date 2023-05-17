@@ -49,13 +49,13 @@ import Hasura.RQL.Types.SchemaCacheTypes (SchemaDependency)
 import Hasura.RQL.Types.Source (DBObjectsIntrospection (..), SourceInfo (..))
 import Hasura.RQL.Types.Source.Column (ColumnValueGenerationStrategy (..), SourceColumnInfo (..))
 import Hasura.RQL.Types.Source.Table (SourceConstraint (..), SourceForeignKeys (..), SourceTableInfo (..), SourceTableType (..))
-import Hasura.RQL.Types.Table (ForeignKey (_fkConstraint))
-import Hasura.RQL.Types.Table qualified as RQL.T.T
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
 import Hasura.Server.Utils qualified as HSU
 import Hasura.Services.Network
 import Hasura.Session (SessionVariable, mkSessionVariable)
+import Hasura.Table.Cache (ForeignKey (_fkConstraint))
+import Hasura.Table.Cache qualified as RQL.T.T
 import Hasura.Tracing (ignoreTraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax qualified as GQL
@@ -404,7 +404,7 @@ parseBoolExpOperations' rhsParser rootFieldInfoMap fieldInfoMap columnRef value 
           pure rhsCol
 
 parseCollectableType' ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   CollectableType (RQL.T.C.ColumnType 'DataConnector) ->
   J.Value ->
   m (PartialSQLExp 'DataConnector)
@@ -425,7 +425,7 @@ mkTypedSessionVar ::
 mkTypedSessionVar columnType =
   PSESessVar (columnTypeToScalarType <$> columnType)
 
-errorAction :: MonadError QErr m => API.ErrorResponse -> m a
+errorAction :: (MonadError QErr m) => API.ErrorResponse -> m a
 errorAction e = throw400WithDetail DataConnectorError (errorResponseSummary e) (_crDetails e)
 
 -- | This function assumes that if a type name is present in the custom object types for the table then it
@@ -476,7 +476,7 @@ buildArrayRelationshipInfo' sourceConfig sourceName fks tableName arrRel =
   ifSupportsLocalRelationships sourceName sourceConfig $
     defaultBuildArrayRelationshipInfo sourceName fks tableName arrRel
 
-ifSupportsLocalRelationships :: MonadError QErr m => SourceName -> DC.SourceConfig -> m a -> m a
+ifSupportsLocalRelationships :: (MonadError QErr m) => SourceName -> DC.SourceConfig -> m a -> m a
 ifSupportsLocalRelationships sourceName DC.SourceConfig {..} action = do
   let supportsRelationships = isJust $ API._cRelationships _scCapabilities
   let supportsRemoteRelationships = isJust $ API._qcForeach =<< API._cQueries _scCapabilities

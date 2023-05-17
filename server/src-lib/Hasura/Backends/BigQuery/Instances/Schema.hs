@@ -48,7 +48,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 ----------------------------------------------------------------
@@ -100,7 +100,7 @@ instance BackendLogicalModelSelectSchema 'BigQuery where
 -- Individual components
 
 bqColumnParser ::
-  MonadBuildSchema 'BigQuery r m n =>
+  (MonadBuildSchema 'BigQuery r m n) =>
   ColumnType 'BigQuery ->
   G.Nullability ->
   SchemaT r m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue 'BigQuery)))
@@ -167,12 +167,12 @@ bqColumnParser columnType nullability = case columnType of
                 P.valueToJSON (P.toGraphQLType schemaType)
                   >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . runAesonParser J.parseJSON
             }
-    stringBased :: MonadParse m => G.Name -> Parser 'Both m Text
+    stringBased :: (MonadParse m) => G.Name -> Parser 'Both m Text
     stringBased scalarName =
       P.string {P.pType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing Nothing [] P.TIScalar}
 
 bqEnumParser ::
-  MonadBuildSchema 'BigQuery r m n =>
+  (MonadBuildSchema 'BigQuery r m n) =>
   TableName 'BigQuery ->
   NonEmpty (EnumValue, EnumValueInfo) ->
   Maybe G.Name ->
@@ -189,7 +189,7 @@ bqEnumParser tableName enumValues customTableName nullability = do
       )
 
 bqPossiblyNullable ::
-  MonadParse m =>
+  (MonadParse m) =>
   G.Nullability ->
   Parser 'Both m (ScalarValue 'BigQuery) ->
   Parser 'Both m (ScalarValue 'BigQuery)
@@ -345,7 +345,7 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
             ]
 
 bqCountTypeInput ::
-  MonadParse n =>
+  (MonadParse n) =>
   Maybe (Parser 'Both n (Column 'BigQuery)) ->
   InputFieldsParser n (IR.CountDistinct -> CountType 'BigQuery)
 bqCountTypeInput = \case
@@ -363,7 +363,7 @@ bqCountTypeInput = \case
 
 geographyWithinDistanceInput ::
   forall m n r.
-  MonadBuildSchema 'BigQuery r m n =>
+  (MonadBuildSchema 'BigQuery r m n) =>
   SchemaT r m (Parser 'Input n (DWithinGeogOp (IR.UnpreparedValue 'BigQuery)))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar BigQuery.GeographyScalarType) (G.Nullability False)
@@ -380,7 +380,7 @@ geographyWithinDistanceInput = do
 -- | Computed field parser.
 bqComputedField ::
   forall r m n.
-  MonadBuildSchema 'BigQuery r m n =>
+  (MonadBuildSchema 'BigQuery r m n) =>
   ComputedFieldInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->

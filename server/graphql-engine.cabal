@@ -742,6 +742,10 @@ library
                      , Hasura.StoredProcedure.Schema
                      , Hasura.StoredProcedure.Types
 
+                     , Hasura.Table.API
+                     , Hasura.Table.Cache
+                     , Hasura.Table.Metadata
+
                      , Hasura.Tracing
                      , Hasura.Tracing.Class
                      , Hasura.Tracing.Context
@@ -830,7 +834,6 @@ library
                      , Hasura.RQL.Types.SourceConfiguration
                      , Hasura.RQL.Types.SourceCustomization
                      , Hasura.RQL.Types.Subscription
-                     , Hasura.RQL.Types.Table
 
                      , Hasura.RQL.Types.Webhook.Transform
                      , Hasura.RQL.Types.Webhook.Transform.Body
@@ -889,7 +892,6 @@ library
                      , Hasura.RQL.DDL.Schema.LegacyCatalog
                      , Hasura.RQL.DDL.Schema.Enum
                      , Hasura.RQL.DDL.Schema.Rename
-                     , Hasura.RQL.DDL.Schema.Table
                      , Hasura.RQL.DDL.Schema.Source
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.ScheduledTrigger

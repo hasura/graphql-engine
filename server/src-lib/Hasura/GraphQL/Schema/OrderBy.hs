@@ -41,7 +41,7 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 import Type.Reflection
 
@@ -198,7 +198,7 @@ orderByExpInternal gqlName description tableFields memoizeKey = do
 -- > }
 tableOrderByExp ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   TableInfo b ->
   SchemaT r m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
 tableOrderByExp tableInfo = do
@@ -216,7 +216,7 @@ tableOrderByExp tableInfo = do
 
 orderByAggregation ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   SourceInfo b ->
   TableInfo b ->
   SchemaT r m (Parser 'Input n [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b)])

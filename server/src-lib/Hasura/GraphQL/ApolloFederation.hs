@@ -33,9 +33,9 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Schema.Options (StringifyNumbers)
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Printer qualified as Printer
 import Language.GraphQL.Draft.Syntax qualified as G
 import Text.Builder qualified as Builder

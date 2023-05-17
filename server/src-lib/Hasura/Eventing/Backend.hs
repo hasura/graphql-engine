@@ -19,15 +19,15 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Session (UserInfo)
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table (PrimaryKey)
 import Hasura.Server.Types (MaintenanceMode)
+import Hasura.Table.Cache (PrimaryKey)
 import Hasura.Tracing qualified as Tracing
 
 -- | The @BackendEventTrigger@ type class contains functions which interacts
 --   with the source database to perform event trigger related operations like
 --   fetching pending events from the database or inserting a new invocation log
 --   after processing an event.
-class Backend b => BackendEventTrigger (b :: BackendType) where
+class (Backend b) => BackendEventTrigger (b :: BackendType) where
   -- | insertManualEvent inserts the specified event in the event log table,
   --   note that this method should also set the trace context and session
   --   variables in the source database context (if available).
@@ -103,7 +103,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
   --   1. Insert the invocation in the invocation logs table
   --   2. Mark the event as 'delivered' in the event_log table
   recordSuccess ::
-    MonadIO m =>
+    (MonadIO m) =>
     SourceConfig b ->
     Event b ->
     Invocation 'EventType ->
@@ -118,7 +118,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
   --        - Set a retry for the given event
   --        - Mark the event as 'error'
   recordError ::
-    MonadIO m =>
+    (MonadIO m) =>
     SourceConfig b ->
     Event b ->
     Invocation 'EventType ->
@@ -134,7 +134,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
   --        - Set a retry for the given event
   --        - Mark the event as 'error'
   recordError' ::
-    MonadIO m =>
+    (MonadIO m) =>
     SourceConfig b ->
     Event b ->
     Maybe (Invocation 'EventType) ->
@@ -178,7 +178,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
   --   graphql-engine restarts these events can be fetched to process them
   --   immediately.
   unlockEventsInSource ::
-    MonadIO m =>
+    (MonadIO m) =>
     SourceConfig b ->
     NE.NESet EventId ->
     m (Either QErr Int)

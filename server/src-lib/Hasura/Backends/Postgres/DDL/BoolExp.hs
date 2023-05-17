@@ -28,8 +28,8 @@ import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Table
 import Hasura.SQL.Types
+import Hasura.Table.Cache
 
 parseBoolExpOperations ::
   forall pgKind m v.

@@ -50,11 +50,12 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
-import Hasura.RQL.Types.Metadata (SourceMetadata (..), TableMetadata (..), _cfmDefinition)
+import Hasura.RQL.Types.Metadata (SourceMetadata (..), _cfmDefinition)
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.Server.Migrate.Internal
 import Hasura.Server.Migrate.Version qualified as Version
+import Hasura.Table.Cache
+import Hasura.Table.Metadata (TableMetadata (..))
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
 
@@ -121,7 +122,7 @@ instance ToEngineLog PGSourceLockQueryError Hasura where
 --   migrated.
 --   NOTE: When there are no locking queries present in the database, nothing will be logged.
 logPGSourceCatalogMigrationLockedQueries ::
-  MonadIO m =>
+  (MonadIO m) =>
   Logger Hasura ->
   PGSourceConfig ->
   m Void
@@ -266,7 +267,7 @@ prepareCatalog sourceConfig = _pecRunTx (_pscExecCtx sourceConfig) (PGExecCtxInf
 --  downgrade pg sources themselves. Improve error message by referring the URL
 --  to the documentation.
 
-migrateSourceCatalog :: MonadTx m => m (RecreateEventTriggers, Version.SourceCatalogMigrationState)
+migrateSourceCatalog :: (MonadTx m) => m (RecreateEventTriggers, Version.SourceCatalogMigrationState)
 migrateSourceCatalog =
   getSourceCatalogVersion >>= migrateSourceCatalogFrom
 
@@ -435,7 +436,7 @@ pgFetchFunctionMetadata functions = do
         \(schema, table, PG.ViaJSON infos) -> (QualifiedObject schema table, infos)
 
 -- | Fetch all scalar types from Postgres
-fetchPgScalars :: MonadTx m => m (HashSet PGScalarType)
+fetchPgScalars :: (MonadTx m) => m (HashSet PGScalarType)
 fetchPgScalars =
   liftTx $
     PG.getViaJSON . runIdentity . PG.getRow

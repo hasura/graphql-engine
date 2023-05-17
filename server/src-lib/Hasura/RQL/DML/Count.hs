@@ -27,9 +27,9 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Table
 import Hasura.SQL.Types
 import Hasura.Session
+import Hasura.Table.Cache
 import Hasura.Tracing qualified as Tracing
 
 data CountQueryP1 = CountQueryP1

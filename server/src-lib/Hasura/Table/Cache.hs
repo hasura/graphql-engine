@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.RQL.Types.Table
+module Hasura.Table.Cache
   ( CombinedSelPermInfo (..),
     Constraint (..),
     ColumnConfig (..),
@@ -356,9 +356,9 @@ data FieldInfo (b :: BackendType)
   | FIRemoteRelationship (RemoteFieldInfo (DBJoinField b))
   deriving (Generic)
 
-deriving instance Backend b => Eq (FieldInfo b)
+deriving instance (Backend b) => Eq (FieldInfo b)
 
-instance Backend b => ToJSON (FieldInfo b) where
+instance (Backend b) => ToJSON (FieldInfo b) where
   toJSON =
     genericToJSON $
       defaultOptions
@@ -370,7 +370,7 @@ $(makePrisms ''FieldInfo)
 
 type FieldInfoMap = HashMap.HashMap FieldName
 
-fieldInfoName :: forall b. Backend b => FieldInfo b -> FieldName
+fieldInfoName :: forall b. (Backend b) => FieldInfo b -> FieldName
 fieldInfoName = \case
   FIColumn info -> fromCol @b $ ciColumn info
   FINestedObject info -> fromCol @b $ _noiColumn info
@@ -482,7 +482,7 @@ instance (Backend b) => Semigroup (CombinedSelPermInfo b) where
         (allowedSubsRFTypesL <> allowedSubsRFTypesR)
 
 combinedSelPermInfoToSelPermInfo ::
-  Backend b =>
+  (Backend b) =>
   Int ->
   CombinedSelPermInfo b ->
   SelPermInfo b
@@ -882,18 +882,18 @@ data Constraint (b :: BackendType) = Constraint
   }
   deriving (Generic)
 
-deriving instance Backend b => Eq (Constraint b)
+deriving instance (Backend b) => Eq (Constraint b)
 
-deriving instance Backend b => Show (Constraint b)
+deriving instance (Backend b) => Show (Constraint b)
 
-instance Backend b => NFData (Constraint b)
+instance (Backend b) => NFData (Constraint b)
 
-instance Backend b => Hashable (Constraint b)
+instance (Backend b) => Hashable (Constraint b)
 
-instance Backend b => ToJSON (Constraint b) where
+instance (Backend b) => ToJSON (Constraint b) where
   toJSON = genericToJSON hasuraJSON
 
-instance Backend b => FromJSON (Constraint b) where
+instance (Backend b) => FromJSON (Constraint b) where
   parseJSON = genericParseJSON hasuraJSON
 
 data PrimaryKey (b :: BackendType) a = PrimaryKey
@@ -932,18 +932,18 @@ data UniqueConstraint (b :: BackendType) = UniqueConstraint
   }
   deriving (Generic)
 
-deriving instance Backend b => Eq (UniqueConstraint b)
+deriving instance (Backend b) => Eq (UniqueConstraint b)
 
-deriving instance Backend b => Show (UniqueConstraint b)
+deriving instance (Backend b) => Show (UniqueConstraint b)
 
-instance Backend b => NFData (UniqueConstraint b)
+instance (Backend b) => NFData (UniqueConstraint b)
 
-instance Backend b => Hashable (UniqueConstraint b)
+instance (Backend b) => Hashable (UniqueConstraint b)
 
-instance Backend b => ToJSON (UniqueConstraint b) where
+instance (Backend b) => ToJSON (UniqueConstraint b) where
   toJSON = genericToJSON hasuraJSON
 
-instance Backend b => FromJSON (UniqueConstraint b) where
+instance (Backend b) => FromJSON (UniqueConstraint b) where
   parseJSON = genericParseJSON hasuraJSON
 
 data ForeignKey (b :: BackendType) = ForeignKey
@@ -953,18 +953,18 @@ data ForeignKey (b :: BackendType) = ForeignKey
   }
   deriving (Generic)
 
-deriving instance Backend b => Eq (ForeignKey b)
+deriving instance (Backend b) => Eq (ForeignKey b)
 
-deriving instance Backend b => Show (ForeignKey b)
+deriving instance (Backend b) => Show (ForeignKey b)
 
-instance Backend b => NFData (ForeignKey b)
+instance (Backend b) => NFData (ForeignKey b)
 
-instance Backend b => Hashable (ForeignKey b)
+instance (Backend b) => Hashable (ForeignKey b)
 
-instance Backend b => ToJSON (ForeignKey b) where
+instance (Backend b) => ToJSON (ForeignKey b) where
   toJSON = genericToJSON hasuraJSON
 
-instance Backend b => FromJSON (ForeignKey b) where
+instance (Backend b) => FromJSON (ForeignKey b) where
   parseJSON = genericParseJSON hasuraJSON
 
 data TableObjectType (b :: BackendType) = TableObjectType
@@ -974,16 +974,16 @@ data TableObjectType (b :: BackendType) = TableObjectType
   }
   deriving stock (Generic)
 
-deriving stock instance Backend b => Eq (TableObjectType b)
+deriving stock instance (Backend b) => Eq (TableObjectType b)
 
-deriving stock instance Backend b => Show (TableObjectType b)
+deriving stock instance (Backend b) => Show (TableObjectType b)
 
-instance Backend b => NFData (TableObjectType b)
+instance (Backend b) => NFData (TableObjectType b)
 
-instance Backend b => ToJSON (TableObjectType b) where
+instance (Backend b) => ToJSON (TableObjectType b) where
   toJSON = genericToJSON hasuraJSON
 
-instance Backend b => FromJSON (TableObjectType b) where
+instance (Backend b) => FromJSON (TableObjectType b) where
   parseJSON = genericParseJSON hasuraJSON
 
 data TableObjectFieldDefinition (b :: BackendType) = TableObjectFieldDefinition
@@ -995,16 +995,16 @@ data TableObjectFieldDefinition (b :: BackendType) = TableObjectFieldDefinition
   }
   deriving stock (Generic)
 
-deriving stock instance Backend b => Eq (TableObjectFieldDefinition b)
+deriving stock instance (Backend b) => Eq (TableObjectFieldDefinition b)
 
-deriving stock instance Backend b => Show (TableObjectFieldDefinition b)
+deriving stock instance (Backend b) => Show (TableObjectFieldDefinition b)
 
-instance Backend b => NFData (TableObjectFieldDefinition b)
+instance (Backend b) => NFData (TableObjectFieldDefinition b)
 
-instance Backend b => ToJSON (TableObjectFieldDefinition b) where
+instance (Backend b) => ToJSON (TableObjectFieldDefinition b) where
   toJSON = genericToJSON hasuraJSON
 
-instance Backend b => FromJSON (TableObjectFieldDefinition b) where
+instance (Backend b) => FromJSON (TableObjectFieldDefinition b) where
   parseJSON = genericParseJSON hasuraJSON
 
 data TableObjectFieldType (b :: BackendType)
@@ -1012,16 +1012,16 @@ data TableObjectFieldType (b :: BackendType)
   | TOFTObject G.Name
   deriving stock (Generic)
 
-deriving stock instance Backend b => Eq (TableObjectFieldType b)
+deriving stock instance (Backend b) => Eq (TableObjectFieldType b)
 
-deriving stock instance Backend b => Show (TableObjectFieldType b)
+deriving stock instance (Backend b) => Show (TableObjectFieldType b)
 
-instance Backend b => NFData (TableObjectFieldType b)
+instance (Backend b) => NFData (TableObjectFieldType b)
 
-instance Backend b => ToJSON (TableObjectFieldType b) where
+instance (Backend b) => ToJSON (TableObjectFieldType b) where
   toJSON = genericToJSON hasuraJSON
 
-instance Backend b => FromJSON (TableObjectFieldType b) where
+instance (Backend b) => FromJSON (TableObjectFieldType b) where
   parseJSON = genericParseJSON hasuraJSON
 
 -- | The @field@ and @primaryKeyColumn@ type parameters vary as the schema cache is built and more
@@ -1055,7 +1055,7 @@ type TableCoreInfo b = TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
 
 tciUniqueOrPrimaryKeyConstraints ::
   forall b f.
-  Hashable (Column b) =>
+  (Hashable (Column b)) =>
   TableCoreInfoG b f (ColumnInfo b) ->
   Maybe (NonEmpty (UniqueConstraint b))
 tciUniqueOrPrimaryKeyConstraints info =
@@ -1118,7 +1118,7 @@ newtype ForeignKeyMetadata (b :: BackendType) = ForeignKeyMetadata
   }
   deriving (Show, Eq, NFData, Hashable)
 
-instance Backend b => FromJSON (ForeignKeyMetadata b) where
+instance (Backend b) => FromJSON (ForeignKeyMetadata b) where
   parseJSON = withObject "ForeignKeyMetadata" \o -> do
     constraint <- o .: "constraint"
     foreignTable <- o .: "foreign_table"
@@ -1161,13 +1161,13 @@ data DBTableMetadata (b :: BackendType) = DBTableMetadata
   }
   deriving (Generic)
 
-deriving instance Backend b => Eq (DBTableMetadata b)
+deriving instance (Backend b) => Eq (DBTableMetadata b)
 
-deriving instance Backend b => Show (DBTableMetadata b)
+deriving instance (Backend b) => Show (DBTableMetadata b)
 
-instance Backend b => NFData (DBTableMetadata b)
+instance (Backend b) => NFData (DBTableMetadata b)
 
-instance Backend b => FromJSON (DBTableMetadata b) where
+instance (Backend b) => FromJSON (DBTableMetadata b) where
   parseJSON = genericParseJSON hasuraJSON
 
 type DBTablesMetadata b = HashMap (TableName b) (DBTableMetadata b)
@@ -1291,7 +1291,7 @@ askRemoteRel fieldInfoMap relName = do
     _ ->
       throw400 UnexpectedPayload "expecting a remote relationship"
 
-mkAdminRolePermInfo :: Backend b => TableCoreInfo b -> RolePermInfo b
+mkAdminRolePermInfo :: (Backend b) => TableCoreInfo b -> RolePermInfo b
 mkAdminRolePermInfo tableInfo =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where

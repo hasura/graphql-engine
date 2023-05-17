@@ -16,7 +16,7 @@ import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Common (RelName)
 import Hasura.RQL.Types.Relationships.Local (RelInfo)
-import Hasura.RQL.Types.Table (RolePermInfoMap)
+import Hasura.Table.Cache (RolePermInfoMap)
 
 type NativeQueryCache b = HashMap NativeQueryName (NativeQueryInfo b)
 

@@ -26,8 +26,8 @@ import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 addNonColumnFields ::
@@ -273,7 +273,7 @@ buildComputedField trackedTableNames tableColumns source pgFunctions table cf@Co
 
 mkRemoteRelationshipMetadataObject ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   SourceName ->
   TableName b ->
   RemoteRelationship ->

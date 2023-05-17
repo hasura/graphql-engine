@@ -91,7 +91,7 @@ import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache (CustomRootField (..), TableConfig (..), TableCoreInfoG (..), TableInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data RootFieldsCustomization = RootFieldsCustomization

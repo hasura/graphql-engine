@@ -31,7 +31,7 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 
 -- | The postgres common table expression (CTE) for mutation queries.
 -- This CTE expression is used to generate mutation field output expression,
@@ -59,7 +59,7 @@ checkPermissionRequired = \case
 
 pgColsToSelFlds ::
   forall pgKind.
-  Backend ('Postgres pgKind) =>
+  (Backend ('Postgres pgKind)) =>
   [ColumnInfo ('Postgres pgKind)] ->
   [(FieldName, AnnField ('Postgres pgKind))]
 pgColsToSelFlds cols =
@@ -72,7 +72,7 @@ pgColsToSelFlds cols =
       )
 
 mkDefaultMutFlds ::
-  Backend ('Postgres pgKind) =>
+  (Backend ('Postgres pgKind)) =>
   Maybe [ColumnInfo ('Postgres pgKind)] ->
   MutationOutput ('Postgres pgKind)
 mkDefaultMutFlds =

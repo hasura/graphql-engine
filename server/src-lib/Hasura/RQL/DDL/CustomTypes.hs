@@ -28,10 +28,10 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ clearCustomTypesInMetadata =
 -- Cache building functions
 
 resolveCustomTypes ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SourceCache ->
   CustomTypes ->
   BackendMap ScalarMap ->
@@ -111,7 +111,7 @@ having to disambiguate type names across backends.
 -- scalars).
 validateCustomTypeDefinitions ::
   forall m.
-  MonadValidate [CustomTypeValidationError] m =>
+  (MonadValidate [CustomTypeValidationError] m) =>
   SourceCache ->
   CustomTypes ->
   -- | A map that, to each backend, associates the set of all its scalars.

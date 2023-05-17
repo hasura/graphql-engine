@@ -70,7 +70,6 @@ import Hasura.RQL.Types.Metadata.Common
     RemoteSchemas,
     SourceMetadata (..),
     Sources,
-    TableMetadata (..),
     getSourceName,
   )
 import Hasura.RQL.Types.OpenTelemetry
@@ -95,7 +94,6 @@ import Hasura.RQL.Types.Relationships.Local (RelDef (..))
 import Hasura.RQL.Types.Roles (InheritedRole, Role (..))
 import Hasura.RQL.Types.ScheduledTrigger (CronTriggerMetadata (..), defaultSTRetryConf)
 import Hasura.RQL.Types.SourceCustomization (emptySourceCustomization)
-import Hasura.RQL.Types.Table (emptyTableConfig)
 import Hasura.RemoteSchema.Metadata
   ( RemoteSchemaDef (..),
     RemoteSchemaMetadataG (..),
@@ -105,6 +103,8 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata (..))
+import Hasura.Table.Cache (emptyTableConfig)
+import Hasura.Table.Metadata (TableMetadata (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.Types.Extended (Network, emptyNetwork)
 
@@ -267,7 +267,7 @@ sourcesToOrdJSONList sources =
                       [("check", AO.toOrdered check)]
                         <> catMaybes [maybeSetToMaybeOrdPair @b set, columnsPair, backendOnlyPair]
 
-          selPermDefToOrdJSON :: Backend b => SelPermDef b -> AO.Value
+          selPermDefToOrdJSON :: (Backend b) => SelPermDef b -> AO.Value
           selPermDefToOrdJSON = permDefToOrdJSON selPermToOrdJSON
             where
               selPermToOrdJSON (SelPerm columns fltr limit allowAgg computedFieldsPerm allowedQueryRootFieldTypes allowedSubscriptionRootFieldTypes) =
@@ -301,7 +301,7 @@ sourcesToOrdJSONList sources =
                       ARFAllowConfiguredRootFields configuredRootFields ->
                         Just ("subscription_root_fields", AO.toOrdered configuredRootFields)
 
-          updPermDefToOrdJSON :: forall b. Backend b => UpdPermDef b -> AO.Value
+          updPermDefToOrdJSON :: forall b. (Backend b) => UpdPermDef b -> AO.Value
           updPermDefToOrdJSON = permDefToOrdJSON updPermToOrdJSON
             where
               updPermToOrdJSON (UpdPerm columns set fltr check backendOnly) =
@@ -316,7 +316,7 @@ sourcesToOrdJSONList sources =
                       ]
                         <> catMaybes [maybeSetToMaybeOrdPair @b set, backendOnlyPair]
 
-          delPermDefToOrdJSON :: Backend b => DelPermDef b -> AO.Value
+          delPermDefToOrdJSON :: (Backend b) => DelPermDef b -> AO.Value
           delPermDefToOrdJSON = permDefToOrdJSON delPermToOrdJSON
             where
               delPermToOrdJSON (DelPerm filter' backendOnly) =
@@ -337,7 +337,7 @@ sourcesToOrdJSONList sources =
               ]
                 <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
-          eventTriggerConfToOrdJSON :: forall b. Backend b => EventTriggerConf b -> AO.Value
+          eventTriggerConfToOrdJSON :: forall b. (Backend b) => EventTriggerConf b -> AO.Value
           eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers reqTransform respTransform cleanupConfig triggerOnReplication) =
             let triggerOnReplicationMaybe =
                   case defaultTriggerOnReplication @b of
@@ -358,7 +358,7 @@ sourcesToOrdJSONList sources =
                         maybeAnyToMaybeOrdPair "trigger_on_replication" AO.toOrdered triggerOnReplicationMaybe
                       ]
 
-    functionMetadataToOrdJSON :: Backend b => FunctionMetadata b -> AO.Value
+    functionMetadataToOrdJSON :: (Backend b) => FunctionMetadata b -> AO.Value
     functionMetadataToOrdJSON FunctionMetadata {..} =
       let confKeyPair =
             if _fmConfiguration == emptyFunctionConfig

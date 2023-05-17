@@ -36,8 +36,8 @@ import Hasura.RQL.Types.Roles.Internal
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
 
 {- Note: [Inherited roles architecture for read queries]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -116,7 +116,7 @@ newtype OrderedRoles = OrderedRoles {_unOrderedRoles :: [Role]}
 --   the parent roles precede the inherited role R, assuming the parent roles
 --   themselves don't have any parents for the sake of this example.
 orderRoles ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   [Role] ->
   m OrderedRoles
 orderRoles allRoles = do

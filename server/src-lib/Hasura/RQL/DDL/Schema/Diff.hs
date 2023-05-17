@@ -25,18 +25,19 @@ import Hasura.Base.Error
 import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Rename
-import Hasura.RQL.DDL.Schema.Table
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Metadata hiding (tmComputedFields, tmTable)
+import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCacheTypes
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.API
+import Hasura.Table.Cache
+import Hasura.Table.Metadata (tmConfiguration)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data FunctionMeta b = FunctionMeta
@@ -99,7 +100,7 @@ data TableDiff (b :: BackendType) = TableDiff
   }
 
 getTableDiff ::
-  Backend b =>
+  (Backend b) =>
   TableMeta b ->
   TableMeta b ->
   TableDiff b

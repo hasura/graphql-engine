@@ -39,7 +39,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Field-parser for:
@@ -119,7 +119,7 @@ ifMatchedObjectParser tableInfo = runMaybeT do
 -- permissions for.
 tableInsertMatchColumnsEnum ::
   forall r m n.
-  MonadBuildSourceSchema 'MSSQL r m n =>
+  (MonadBuildSourceSchema 'MSSQL r m n) =>
   TableInfo 'MSSQL ->
   SchemaT r m (Maybe (Parser 'Both n (Column 'MSSQL)))
 tableInsertMatchColumnsEnum tableInfo = do

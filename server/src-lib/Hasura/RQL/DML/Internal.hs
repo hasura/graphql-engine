@@ -54,9 +54,9 @@ import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Table
 import Hasura.SQL.Types
 import Hasura.Session (SessionVariable, UserInfoM, askCurRole, askUserInfo, getSessionVariables, sessionVariableToText, _uiSession)
+import Hasura.Table.Cache
 
 newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq PG.PrepArg) m a}
   deriving
@@ -76,7 +76,7 @@ runDMLP1T :: DMLP1T m a -> m (a, DS.Seq PG.PrepArg)
 runDMLP1T = flip runStateT DS.empty . unDMLP1T
 
 askPermInfo ::
-  UserInfoM m =>
+  (UserInfoM m) =>
   Lens' (RolePermInfo ('Postgres 'Vanilla)) (Maybe c) ->
   TableInfo ('Postgres 'Vanilla) ->
   m (Maybe c)
@@ -385,7 +385,7 @@ validateHeaders depHeaders = do
         hdr <<> " header is expected but not found"
 
 -- validate limit and offset int values
-onlyPositiveInt :: MonadError QErr m => Int -> m ()
+onlyPositiveInt :: (MonadError QErr m) => Int -> m ()
 onlyPositiveInt i =
   when (i < 0) $
     throw400

@@ -33,7 +33,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache as M
 import Hasura.RQL.DDL.Schema.Catalog as M
 import Hasura.RQL.DDL.Schema.Rename as M
-import Hasura.RQL.DDL.Schema.Table as M
+import Hasura.Table.API as M
 
 data RunSQLRes = RunSQLRes
   { rrResultType :: Text,

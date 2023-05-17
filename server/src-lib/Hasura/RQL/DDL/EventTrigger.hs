@@ -80,9 +80,10 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
+import Hasura.Table.Cache
+import Hasura.Table.Metadata (TableMetadata (..), tmEventTriggers)
 import Hasura.Tracing (TraceT)
 import Hasura.Tracing qualified as Tracing
 
@@ -107,7 +108,7 @@ data CreateEventTriggerQuery (b :: BackendType) = CreateEventTriggerQuery
 
 $(makeLenses ''CreateEventTriggerQuery)
 
-instance Backend b => FromJSON (CreateEventTriggerQuery b) where
+instance (Backend b) => FromJSON (CreateEventTriggerQuery b) where
   parseJSON = withObject "CreateEventTriggerQuery" \o -> do
     sourceName <- o .:? "source" .!= defaultSource
     name <- o .: "name"
@@ -176,7 +177,7 @@ data InvokeEventTriggerQuery (b :: BackendType) = InvokeEventTriggerQuery
     _ietqPayload :: Value
   }
 
-instance Backend b => FromJSON (InvokeEventTriggerQuery b) where
+instance (Backend b) => FromJSON (InvokeEventTriggerQuery b) where
   parseJSON = withObject "InvokeEventTriggerQuery" $ \o ->
     InvokeEventTriggerQuery
       <$> o .: "name"
@@ -188,7 +189,7 @@ instance Backend b => FromJSON (InvokeEventTriggerQuery b) where
 -- TODO: this doesn't belong here in the DDL folder, but should be part of
 -- Hasura.Eventing. It could even be made a Service, since the whole point of it
 -- is to implement features differently between OSS and Pro.
-class Monad m => MonadEventLogCleanup m where
+class (Monad m) => MonadEventLogCleanup m where
   -- Deletes the logs of event triggers
   runLogCleaner ::
     SourceCache -> TriggerLogCleanupConfig -> m (Either QErr EncJSON)
@@ -430,7 +431,7 @@ askTabInfoFromTrigger sourceName triggerName = do
     errMsg = "event trigger " <> triggerName <<> " does not exist"
 
 getTabInfoFromSchemaCache ::
-  Backend b =>
+  (Backend b) =>
   SchemaCache ->
   SourceName ->
   TriggerName ->
@@ -482,13 +483,13 @@ instance ToTxt ResolveHeaderError where
   toTxt = commaSeparated . unResolveHeaderError
 
 getHeaderInfosFromConf ::
-  QErrM m =>
+  (QErrM m) =>
   Env.Environment ->
   [HeaderConf] ->
   m [EventHeaderInfo]
 getHeaderInfosFromConf env = mapM getHeader
   where
-    getHeader :: QErrM m => HeaderConf -> m EventHeaderInfo
+    getHeader :: (QErrM m) => HeaderConf -> m EventHeaderInfo
     getHeader hconf = case hconf of
       (HeaderConf _ (HVValue val)) -> return $ EventHeaderInfo hconf val
       (HeaderConf _ (HVEnv val)) -> do
@@ -514,7 +515,7 @@ getHeaderInfosFromConfEither env hConfList =
         (Right . EventHeaderInfo hconf) =<< getEnvEither env val
 
 getWebhookInfoFromConf ::
-  QErrM m =>
+  (QErrM m) =>
   Env.Environment ->
   WebhookConf ->
   m WebhookConfInfo
@@ -584,7 +585,7 @@ buildEventTriggerInfo
 
 getTrigDefDeps ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   SourceName ->
   TableName b ->
   TriggerOpsDef b ->
@@ -636,7 +637,7 @@ getTriggerNames = Set.fromList . InsOrdHashMap.keys . getTriggersMap
 
 getTableNameFromTrigger ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   SchemaCache ->
   SourceName ->
   TriggerName ->

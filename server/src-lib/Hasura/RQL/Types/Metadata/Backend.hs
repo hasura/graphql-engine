@@ -31,11 +31,11 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Source.Table (SourceTableInfo)
-import Hasura.RQL.Types.Table
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Version
 import Hasura.Services.Network
 import Hasura.StoredProcedure.Metadata (StoredProcedureConfig, StoredProcedureMetadata)
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
 
@@ -175,13 +175,13 @@ class
 
   -- TODO: rename?
   validateRelationship ::
-    MonadError QErr m =>
+    (MonadError QErr m) =>
     TableCache b ->
     TableName b ->
     Either (ObjRelDef b) (ArrRelDef b) ->
     m ()
   default validateRelationship ::
-    MonadError QErr m =>
+    (MonadError QErr m) =>
     TableCache b ->
     TableName b ->
     Either (ObjRelDef b) (ArrRelDef b) ->

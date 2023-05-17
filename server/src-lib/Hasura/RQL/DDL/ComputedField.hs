@@ -25,8 +25,9 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
+import Hasura.Table.Metadata (tmComputedFields)
 
 data AddComputedField b = AddComputedField
   { _afcSource :: SourceName,

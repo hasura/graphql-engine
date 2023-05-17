@@ -39,7 +39,7 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Relationships.Local (RelInfo (riMapping, riTarget), RelTarget (..))
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
-import Hasura.RQL.Types.Table (ForeignKey, UniqueConstraint, _cName, _fkColumnMapping, _fkConstraint, _fkForeignTable, _ucColumns)
+import Hasura.Table.Cache (ForeignKey, UniqueConstraint, _cName, _fkColumnMapping, _fkConstraint, _fkForeignTable, _ucColumns)
 
 -- | Datatype used by Metadata API to represent Request for Suggested Relationships
 data SuggestRels b = SuggestRels
@@ -50,7 +50,7 @@ data SuggestRels b = SuggestRels
   deriving (Generic)
   deriving (J.FromJSON, J.ToJSON, ToSchema) via Autodocodec (SuggestRels b)
 
-instance Backend b => HasCodec (SuggestRels b) where
+instance (Backend b) => HasCodec (SuggestRels b) where
   codec =
     object
       "SuggestRels"
@@ -70,7 +70,7 @@ newtype SuggestedRelationships b = Relationships
   deriving (Generic)
   deriving (J.FromJSON, J.ToJSON, ToSchema) via Autodocodec (SuggestedRelationships b)
 
-instance Backend b => HasCodec (SuggestedRelationships b) where
+instance (Backend b) => HasCodec (SuggestedRelationships b) where
   codec =
     object
       "SuggestedRelationships"
@@ -87,7 +87,7 @@ data Relationship b = Relationship
   deriving (Generic)
   deriving (J.FromJSON, J.ToJSON, ToSchema) via Autodocodec (Relationship b)
 
-instance Backend b => HasCodec (Relationship b) where
+instance (Backend b) => HasCodec (Relationship b) where
   codec =
     object
       "Relationship"
@@ -108,7 +108,7 @@ data Mapping b = Mapping
   deriving (Generic)
   deriving (J.FromJSON, J.ToJSON, ToSchema) via Autodocodec (Mapping b)
 
-instance Backend b => HasCodec (Mapping b) where
+instance (Backend b) => HasCodec (Mapping b) where
   codec =
     object
       "Mapping"
@@ -127,7 +127,7 @@ instance Backend b => HasCodec (Mapping b) where
 --    and only considers required tables.
 suggestRelsFK ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   -- | Omits currently tracked relationships from recommendations if True.
   Bool ->
   HashMap (TableName b) (TableCoreInfo b) ->
@@ -182,7 +182,7 @@ getRelationshipsInputs ri =
 
 suggestRelsTable ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   Bool ->
   HashMap (TableName b) (TableCoreInfo b) ->
   (TableName b -> Bool) ->
@@ -205,7 +205,7 @@ relationships f = (=<<) f . preview _FIRelationship
 -- NOTE: This could be grouped by table instead of a list, console stakeholders are happy with this being a list.
 suggestRelsResponse ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   Bool ->
   HashMap (TableName b) (TableCoreInfo b) ->
   (TableName b -> Bool) ->
@@ -214,7 +214,7 @@ suggestRelsResponse omitTracked tables predicate =
   Relationships $
     suggestRelsTable omitTracked tables predicate =<< HashMap.toList tables
 
-tablePredicate :: Hashable a => Maybe [a] -> a -> Bool
+tablePredicate :: (Hashable a) => Maybe [a] -> a -> Bool
 tablePredicate Nothing _ = True
 tablePredicate (Just ns) n = n `H.member` hash
   where

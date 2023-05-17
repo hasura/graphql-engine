@@ -30,8 +30,8 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Table
 import Hasura.Session
+import Hasura.Table.Cache
 import Hasura.Tracing qualified as Tracing
 
 type SelectQExt = SelectG (ExtCol ('Postgres 'Vanilla)) (BoolExp ('Postgres 'Vanilla)) Int

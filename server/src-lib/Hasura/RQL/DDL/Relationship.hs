@@ -36,8 +36,13 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
+import Hasura.Table.Metadata
+  ( TableMetadata,
+    tmArrayRelationships,
+    tmObjectRelationships,
+  )
 
 --------------------------------------------------------------------------------
 -- Create local relationship
@@ -229,8 +234,8 @@ defaultBuildArrayRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case 
 
 mkFkeyRel ::
   forall b m.
-  QErrM m =>
-  Backend b =>
+  (QErrM m) =>
+  (Backend b) =>
   RelType ->
   InsertOrder ->
   SourceName ->
@@ -267,7 +272,7 @@ mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys
              )
   pure (RelInfo rn relType (reverseMap (NEHashMap.toHashMap colMap)) (RelTargetTable remoteTable) False io, dependencies)
   where
-    reverseMap :: Hashable y => HashMap x y -> HashMap y x
+    reverseMap :: (Hashable y) => HashMap x y -> HashMap y x
     reverseMap = HashMap.fromList . fmap swap . HashMap.toList
 
 -- | Try to find a foreign key constraint, identifying a constraint by its set of columns
@@ -286,7 +291,7 @@ getRequiredFkey cols fkeys =
 
 drUsingColumnDep ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   SourceName ->
   TableName b ->
   Column b ->
@@ -350,8 +355,8 @@ runDropRel (DropRel source qt rn cascade) = do
 
 purgeRelDep ::
   forall b m.
-  QErrM m =>
-  Backend b =>
+  (QErrM m) =>
+  (Backend b) =>
   SchemaObjId ->
   m (TableMetadata b -> TableMetadata b)
 purgeRelDep (SOSourceObj _ exists)

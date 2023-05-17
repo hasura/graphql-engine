@@ -24,7 +24,6 @@ import Hasura.RQL.Types.Metadata.Object
     MetadataObject (..),
   )
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata (RemoteSchemaName (..))
 import Hasura.RemoteSchema.SchemaCache
   ( RemoteSchemaInputValueDefinition (..),
@@ -33,6 +32,7 @@ import Hasura.RemoteSchema.SchemaCache
   )
 import Hasura.Server.Utils qualified as Utils
 import Hasura.Session (SessionVariable, mkSessionVariable)
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as GraphQL
 import Network.HTTP.Types qualified as HTTP.Types
 import Test.QuickCheck.Extended
@@ -204,7 +204,7 @@ genObjectTypeDefinition inputTypes outputTypeNames interfaceTypeNames name =
     fields = distinct1 >>= traverse (genFieldDefinition inputTypes outputTypeNames)
 
 genInterfaceTypeDefinition ::
-  Arbitrary possibleType =>
+  (Arbitrary possibleType) =>
   Gen [inputType] ->
   [GraphQL.Name] ->
   GraphQL.Name ->
@@ -233,7 +233,7 @@ genInputObjectTypeDefinition values name =
 -------------------------------------------------------------------------------
 -- Instances for GraphQL Engine types
 
-instance Arbitrary a => Arbitrary (PathComponent a) where
+instance (Arbitrary a) => Arbitrary (PathComponent a) where
   arbitrary =
     oneof
       [ PathLiteral <$> arbitrary,
@@ -296,7 +296,7 @@ instance Arbitrary IntrospectionResult where
     irSubscriptionRoot <- maybeObjectTypeName
     pure $ IntrospectionResult {..}
 
-instance Arbitrary a => Arbitrary (NamespacedField a) where
+instance (Arbitrary a) => Arbitrary (NamespacedField a) where
   arbitrary = oneof [NotNamespaced <$> arbitrary, Namespaced <$> arbitrary]
   shrink = namespacedField (fmap NotNamespaced . shrink) (fmap Namespaced . shrink)
 

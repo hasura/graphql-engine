@@ -32,7 +32,7 @@ import Hasura.RQL.Types.Common (Comment (..), FieldName (..), OID (..))
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Permission (AllowedRootFields (..))
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..), fromRel)
-import Hasura.RQL.Types.Table (Constraint (..), CustomRootField (..), FieldInfo (..), PrimaryKey (..), RolePermInfo (..), SelPermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..))
+import Hasura.Table.Cache (Constraint (..), CustomRootField (..), FieldInfo (..), PrimaryKey (..), RolePermInfo (..), SelPermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..))
 import Language.GraphQL.Draft.Syntax (unsafeMkName)
 import Test.Parser.Monad
 

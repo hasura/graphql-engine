@@ -31,7 +31,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (OID (..))
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 
 --------------------------------------------------------------------------------
 

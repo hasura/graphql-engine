@@ -28,7 +28,7 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 
 defaultGlobalSelectLimit :: Int.Int64
 defaultGlobalSelectLimit = 1000
@@ -40,7 +40,7 @@ defaultRetryBaseDelay :: Microseconds
 defaultRetryBaseDelay = 500000
 
 resolveSourceConfig ::
-  MonadIO m =>
+  (MonadIO m) =>
   SourceName ->
   BigQueryConnSourceConfig ->
   BackendSourceKind 'BigQuery ->

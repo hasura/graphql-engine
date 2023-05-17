@@ -64,13 +64,13 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.ScheduledTrigger (formatTime')
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table (PrimaryKey)
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Internal
 import Hasura.Server.Migrate.LatestVersion
 import Hasura.Server.Migrate.Version
 import Hasura.Server.Types
 import Hasura.Session
+import Hasura.Table.Cache (PrimaryKey)
 import Hasura.Tracing qualified as Tracing
 import Text.Builder qualified as TB
 import Text.Shakespeare.Text qualified as ST
@@ -305,7 +305,7 @@ updateColumnInEventTrigger table oCol nCol refTable = rewriteEventTriggerConf
       if table == refTable && oCol == col then nCol else col
 
 unlockEventsInSource ::
-  MonadIO m =>
+  (MonadIO m) =>
   SourceConfig ('Postgres pgKind) ->
   NE.NESet EventId ->
   m (Either QErr Int)

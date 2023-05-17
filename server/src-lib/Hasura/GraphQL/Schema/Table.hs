@@ -38,7 +38,7 @@ import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Helper function to get the table GraphQL name. A table may have a
@@ -87,7 +87,7 @@ getTableIdentifierName tableInfo =
 -- permissions for.
 tableSelectColumnsEnum ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   TableInfo b ->
   SchemaT r m (Maybe (Parser 'Both n (Column b)))
 tableSelectColumnsEnum tableInfo = do
@@ -127,7 +127,7 @@ tableSelectColumnsEnum tableInfo = do
 -- permissions for.
 tableSelectColumnsPredEnum ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   (ColumnType b -> Bool) ->
   GQLNameIdentifier ->
   TableInfo b ->
@@ -163,7 +163,7 @@ tableSelectColumnsPredEnum columnPredicate predName tableInfo = do
 -- others. Maps to the table_update_column object.
 tableUpdateColumnsEnum ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   TableInfo b ->
   SchemaT r m (Maybe (Parser 'Both n (Column b)))
 tableUpdateColumnsEnum tableInfo = do
@@ -187,7 +187,7 @@ tableUpdateColumnsEnum tableInfo = do
 -- placeholder, so as to still allow this type to exist in the schema.
 updateColumnsPlaceholderParser ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   TableInfo b ->
   SchemaT r m (Parser 'Both n (Maybe (Column b)))
 updateColumnsPlaceholderParser tableInfo = do
@@ -277,7 +277,7 @@ tableSelectColumns tableInfo =
 -- permissions.
 tableUpdateColumns ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   RoleName ->
   TableInfo b ->
   [ColumnInfo b]

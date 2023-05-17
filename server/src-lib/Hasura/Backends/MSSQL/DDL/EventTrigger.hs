@@ -64,10 +64,10 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing (EventId (..), OpVar (..))
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table (PrimaryKey (..))
 import Hasura.SQL.Types
 import Hasura.Server.Types
 import Hasura.Session
+import Hasura.Table.Cache (PrimaryKey (..))
 import Hasura.Tracing qualified as Tracing
 import Text.Builder qualified as TB
 import Text.Shakespeare.Text qualified as ST
@@ -216,7 +216,7 @@ dropDanglingSQLTrigger sourceConfig triggerName table ops =
         traverse_ (dropTriggerOp triggerName (tableSchema table)) ops
 
 createTableEventTrigger ::
-  MonadIO m =>
+  (MonadIO m) =>
   SQLGenCtx ->
   MSSQLSourceConfig ->
   TableName ->
@@ -284,7 +284,7 @@ createMissingSQLTriggers
             MANUAL -> pure ()
 
 unlockEventsInSource ::
-  MonadIO m =>
+  (MonadIO m) =>
   MSSQLSourceConfig ->
   NE.NESet EventId ->
   m (Either QErr Int)
@@ -568,7 +568,7 @@ getMaintenanceModeVersionTx = do
               <> " but received "
               <> tshow catalogVersion
 
-convertUTCToDatetime2 :: MonadIO m => UTCTime -> m Datetime2
+convertUTCToDatetime2 :: (MonadIO m) => UTCTime -> m Datetime2
 convertUTCToDatetime2 utcTime = do
   let localTime = utcToLocalTime utc utcTime
   return $ Datetime2 localTime
@@ -635,7 +635,7 @@ qualifiedTriggerNameToText = TB.run . toSQL
 newtype SQLFragment = SQLFragment {unSQLFragment :: Text}
 
 mkAllTriggersQ ::
-  MonadMSSQLTx m =>
+  (MonadMSSQLTx m) =>
   TriggerName ->
   TableName ->
   TriggerOnReplication ->
@@ -657,7 +657,7 @@ getApplicableColumns allColumnInfos = \case
 -- We do this because, currently the graphQL API for these types is broken
 -- for MSSQL sources. Ref: https://github.com/hasura/graphql-engine-mono/issues/787
 checkSpatialDataTypeColumns ::
-  MonadMSSQLTx m =>
+  (MonadMSSQLTx m) =>
   [ColumnInfo 'MSSQL] ->
   SubscribeOpSpec 'MSSQL ->
   m ()
@@ -672,7 +672,7 @@ checkSpatialDataTypeColumns allCols (SubscribeOpSpec listenCols deliveryCols) = 
     isGeoType = (`elem` geoTypes)
 
 mkInsertTriggerQ ::
-  MonadMSSQLTx m =>
+  (MonadMSSQLTx m) =>
   TriggerName ->
   TableName ->
   [ColumnInfo 'MSSQL] ->
@@ -688,7 +688,7 @@ mkInsertTriggerQ triggerName table allCols triggerOnReplication subOpSpec@(Subsc
         mkInsertTriggerQuery table triggerName deliveryColumns triggerOnReplication
 
 mkDeleteTriggerQ ::
-  MonadMSSQLTx m =>
+  (MonadMSSQLTx m) =>
   TriggerName ->
   TableName ->
   [ColumnInfo 'MSSQL] ->
@@ -704,7 +704,7 @@ mkDeleteTriggerQ triggerName table allCols triggerOnReplication subOpSpec@(Subsc
         mkDeleteTriggerQuery table triggerName deliveryColumns triggerOnReplication
 
 mkUpdateTriggerQ ::
-  MonadMSSQLTx m =>
+  (MonadMSSQLTx m) =>
   TriggerName ->
   TableName ->
   [ColumnInfo 'MSSQL] ->
@@ -1394,7 +1394,7 @@ encodeJSON json err =
 -- We make sure that the parse will never fail, by ensuring that values present
 -- in the `created_at`, `locked` and `next_retry_at` columns are always in UTC
 -- Time.
-bsToUTCTime :: MonadError QErr m => B.ByteString -> String -> m UTCTime
+bsToUTCTime :: (MonadError QErr m) => B.ByteString -> String -> m UTCTime
 bsToUTCTime timeInByteString err =
   onLeft
     (readEither (T.unpack $ bsToTxt timeInByteString) :: Either String UTCTime)

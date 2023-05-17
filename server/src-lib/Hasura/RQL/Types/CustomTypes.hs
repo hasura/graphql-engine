@@ -64,8 +64,8 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend
+import Hasura.Table.Cache (GraphQLType (..), isListType, isNullableType)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------

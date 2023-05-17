@@ -48,10 +48,11 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
+import Hasura.Table.Metadata (tmRemoteRelationships)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------
@@ -73,7 +74,7 @@ deriving stock instance (Eq (TableName b)) => Eq (CreateFromSourceRelationship b
 
 deriving stock instance (Show (TableName b)) => Show (CreateFromSourceRelationship b)
 
-instance Backend b => FromJSON (CreateFromSourceRelationship b) where
+instance (Backend b) => FromJSON (CreateFromSourceRelationship b) where
   parseJSON = J.withObject "CreateFromSourceRelationship" $ \o -> do
     _crrSource <- o .:? "source" .!= defaultSource
     _crrTable <- o .: "table"
@@ -163,7 +164,7 @@ data DeleteFromSourceRelationship (b :: BackendType) = DeleteFromSourceRelations
     _drrName :: RelName
   }
 
-instance Backend b => FromJSON (DeleteFromSourceRelationship b) where
+instance (Backend b) => FromJSON (DeleteFromSourceRelationship b) where
   parseJSON = J.withObject "DeleteFromSourceRelationship" $ \o ->
     DeleteFromSourceRelationship
       <$> o .:? "source" .!= defaultSource
@@ -309,7 +310,7 @@ data PartiallyResolvedSource b = PartiallyResolvedSource
 -- TODO: this is not actually called by the remote relationship DDL API and is only used as part of
 -- the schema cache process. Should this be moved elsewhere?
 buildRemoteFieldInfo ::
-  QErrM m =>
+  (QErrM m) =>
   -- | The entity on which the remote relationship is defined
   LHSIdentifier ->
   -- | join fields provided by the LHS entity

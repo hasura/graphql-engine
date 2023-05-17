@@ -32,7 +32,7 @@ import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.Common (RelName)
 import Hasura.RQL.Types.Relationships.Local (RelInfo)
 import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
-import Hasura.RQL.Types.Table (SelPermInfo (..), _permSel)
+import Hasura.Table.Cache (SelPermInfo (..), _permSel)
 
 -- | find list of columns we're allowed to access for this role
 getSelPermInfoForLogicalModel ::

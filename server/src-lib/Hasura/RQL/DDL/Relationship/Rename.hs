@@ -18,7 +18,7 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 
 data RenameRel b = RenameRel
   { _rrSource :: SourceName,
