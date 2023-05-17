@@ -554,13 +554,17 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       )
     cacheAccess reqParsed queryPlans asts dirMap =
       let filteredSessionVars = runSessVarPred (filterVariablesFromQuery asts) (_uiSession userInfo)
+          collectRemoteJoins = maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins)
           remoteSchemas =
             OMap.elems queryPlans >>= \case
-              E.ExecStepDB _headers _dbAST remoteJoins -> do
-                maybe [] (map RJ._rsjRemoteSchema . RJ.getRemoteSchemaJoins) remoteJoins
+              E.ExecStepDB _headers _dbAST remoteJoins ->
+                collectRemoteJoins remoteJoins
+              E.ExecStepRemote remoteSchemaInfo _ _ remoteJoins ->
+                [remoteSchemaInfo] <> collectRemoteJoins remoteJoins
+              E.ExecStepAction _ _ remoteJoins -> collectRemoteJoins remoteJoins
               _ -> []
           getExecStepActionWithActionInfo acc execStep = case execStep of
-            EB.ExecStepAction _ actionInfo _remoteJoins -> (actionInfo : acc)
+            E.ExecStepAction _ actionInfo _remoteJoins -> (actionInfo : acc)
             _ -> acc
           actionsInfo =
             foldl getExecStepActionWithActionInfo [] $
