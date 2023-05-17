@@ -2,7 +2,7 @@
 
 ## Index
 
-- [Validation for `insert` mutations](#validation-for--insert--mutations)
+- [Validation for insert mutations](#validation-for-insert-mutations)
 - [Behaviour](#behaviour)
 - [Webhook specification](#webhook-specification)
   * [Request](#request)
@@ -19,7 +19,7 @@ We want to consider model-level validations during mutations i.e. what type of i
 For the first version, we will consider only `insert` mutations for tables.
 
 
-## Validation for `insert` mutations
+## Validation for insert mutations
 
 A new field called `validate_input` has been introduced in the insert permission definition to configure the validation.
 Find a sample configuration below.
@@ -43,11 +43,18 @@ args:
         headers:
         - name: X-Handler-API-Key
           value_from_env: VALIDATION_HOOK_API_KEY
+        forward_client_headers: true
+        timeout: 5
 ```
 
 The `type` determines the interface for the input validation, which initially only supports `http` webhook handler.
 However, we may expand support for multiple interfaces such as a Postgres function or a remote schema field.
-The `definition` field provides necessary context for communicating and submitting the data for input validation.
+The `definition` field provides necessary context for communicating and submitting the data for input validation. It
+is an object with the following fields.
+- `handler` - Requred, a [string value](https://hasura.io/docs/latest/api-reference/syntax-defs/#webhookurl) which supports templating environment variables.
+- `headers` - Optional, List of defined headers to be sent to the handler.
+- `forward_client_headers` - Optional and default is `false`, If set to `true` the client headers are forwarded to the handler.
+- `timeout` - Optional and default is `10`, number of seconds to wait for response before timing out.
 
 ## Behaviour
 
