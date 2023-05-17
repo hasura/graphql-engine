@@ -315,3 +315,15 @@ args:
 
 1. Consider `validate_input` at a column-level. The `definition` spec would differ for this.
 2. We can also consider `warning` semantics for `validate_input` handler where the validation is success but with warnings.
+3. Facilitate users to specify a list of fields that could be sent to handler for validation. Grants user control over
+determining which fields are sent for validation.
+```yaml
+validate_input:
+  type: http
+  defintion: <DEFINITION>
+  fields:
+  - column_1
+  - column_2
+  - relationship_1
+  - relationship_2
+```
