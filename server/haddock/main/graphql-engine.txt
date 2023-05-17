@@ -21217,7 +21217,7 @@ listAllTables :: (BackendMetadata b, CacheRM m, MonadBaseControl IO m, MetadataM
 
 -- | Get information about a given table on a given source, whether tracked
 --   or not. Primarily useful for user interfaces.
-getTableInfo :: (BackendMetadata b, MonadError QErr m) => SourceName -> TableName b -> m (Maybe (SourceTableInfo b))
+getTableInfo :: (BackendMetadata b, CacheRM m, MetadataM m, MonadError QErr m) => SourceName -> TableName b -> m (Maybe (SourceTableInfo b))
 validateNativeQuery :: (BackendMetadata b, MonadIO m, MonadError QErr m) => Environment -> SourceConnConfiguration b -> LogicalModelMetadata b -> NativeQueryMetadata b -> m ()
 validateStoredProcedure :: (BackendMetadata b, MonadIO m, MonadError QErr m) => Environment -> SourceConnConfiguration b -> LogicalModelMetadata b -> StoredProcedureMetadata b -> m ()
 getStoredProcedureGraphqlName :: (BackendMetadata b, MonadError QErr m) => FunctionName b -> StoredProcedureConfig -> m Name
@@ -23560,22 +23560,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) TriggerOnReplication
-cteqCleanupConfig :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) (Maybe Text)
-cetqWebhook :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) (Maybe InputWebhook)
-cetqUpdate :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) (Maybe (SubscribeOpSpec b_aEpBV))
-cetqTable :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) (TableName b_aEpBV)
-cetqSource :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) SourceName
-cetqRetryConf :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) (Maybe RequestTransform)
-cetqReplace :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) Bool
-cetqName :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) TriggerName
-cetqInsert :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) (Maybe (SubscribeOpSpec b_aEpBV))
-cetqHeaders :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) (Maybe Bool)
-cetqDelete :: forall b_aEpBV. Lens' (CreateEventTriggerQuery b_aEpBV) (Maybe (SubscribeOpSpec b_aEpBV))
+cteqTriggerOnReplication :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) TriggerOnReplication
+cteqCleanupConfig :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) (Maybe Text)
+cetqWebhook :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) (Maybe InputWebhook)
+cetqUpdate :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) (Maybe (SubscribeOpSpec b_aEpCt))
+cetqTable :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) (TableName b_aEpCt)
+cetqSource :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) SourceName
+cetqRetryConf :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) (Maybe RequestTransform)
+cetqReplace :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) Bool
+cetqName :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) TriggerName
+cetqInsert :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) (Maybe (SubscribeOpSpec b_aEpCt))
+cetqHeaders :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) (Maybe Bool)
+cetqDelete :: forall b_aEpCt. Lens' (CreateEventTriggerQuery b_aEpCt) (Maybe (SubscribeOpSpec b_aEpCt))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -23976,18 +23976,18 @@ GetSourceTables :: SourceName -> GetSourceTables (b :: BackendType)
 
 -- | Fetch a list of tables for the request data source.
 runGetSourceTables :: forall b m r. (BackendMetadata b, CacheRM m, MonadError QErr m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadReader r m, Has (Logger Hasura) r, ProvidesNetwork m) => GetSourceTables b -> m EncJSON
-data GetTableInfo
-GetTableInfo :: SourceName -> TableName -> GetTableInfo
-[_gtiSourceName] :: GetTableInfo -> SourceName
-[_gtiTableName] :: GetTableInfo -> TableName
+data GetTableInfo (b :: BackendType)
+GetTableInfo :: SourceName -> TableName -> GetTableInfo (b :: BackendType)
+[_gtiSourceName] :: GetTableInfo (b :: BackendType) -> SourceName
+[_gtiTableName] :: GetTableInfo (b :: BackendType) -> TableName
 
 -- | Fetch a schema information about a table for the requested data
 --   source. Currently this is only supported for Data Connectors.
-runGetTableInfo :: (CacheRM m, MonadError QErr m, MetadataM m) => GetTableInfo -> m EncJSON
+runGetTableInfo :: (CacheRM m, MonadError QErr m, MetadataM m) => GetTableInfo b -> m EncJSON
 instance GHC.Generics.Generic Hasura.RQL.DDL.Schema.Source.RenameSource
 instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.Source.DropSource
 instance GHC.Show.Show Hasura.RQL.DDL.Schema.Source.DropSource
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.GetTableInfo
+instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Schema.Source.GetTableInfo b)
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Schema.Source.GetSourceTables b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Extended.FromJSONWithContext (Hasura.RQL.Types.BackendType.BackendSourceKind b) (Hasura.RQL.DDL.Schema.Source.UpdateSource b)
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.DropSource
@@ -25919,7 +25919,7 @@ RMUpdateSource :: !AnyBackend UpdateSource -> RQLMetadataV1
 RMListSourceKinds :: !ListSourceKinds -> RQLMetadataV1
 RMGetSourceKindCapabilities :: !GetSourceKindCapabilities -> RQLMetadataV1
 RMGetSourceTables :: !AnyBackend GetSourceTables -> RQLMetadataV1
-RMGetTableInfo :: !GetTableInfo -> RQLMetadataV1
+RMGetTableInfo :: !AnyBackend GetTableInfo -> RQLMetadataV1
 RMTrackTable :: !AnyBackend TrackTableV2 -> RQLMetadataV1
 RMTrackTables :: !AnyBackend TrackTables -> RQLMetadataV1
 RMUntrackTable :: !AnyBackend UntrackTable -> RQLMetadataV1
