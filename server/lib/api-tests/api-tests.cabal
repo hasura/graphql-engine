@@ -105,6 +105,7 @@ library
     Test.API.Metadata.TestConnectionTemplateSpec
     Test.API.Metadata.TrackTablesSpec
     Test.API.Metadata.TransparentDefaultsSpec
+    Test.API.Metadata.UntrackTablesSpec
     Test.API.Metadata.WarningsSpec
     Test.API.Schema.RunSQLSpec
     Test.Auth.Authorization.DisableRootFields.Common

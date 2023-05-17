@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.API.Metadata.TrackTablesSpec (spec) where
+module Test.API.Metadata.UntrackTablesSpec (spec) where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Lens (key, _Array)
@@ -31,38 +31,32 @@ spec =
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Postgres.setupTablesAction trackedTables testEnvironment,
-                  Postgres.createUntrackedTablesAction untrackedTables testEnvironment
+                [ Postgres.setupTablesAction trackedTables testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Citus.setupTablesAction trackedTables testEnvironment,
-                  Citus.createUntrackedTablesAction untrackedTables testEnvironment
+                [ Citus.setupTablesAction trackedTables testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Cockroach.setupTablesAction trackedTables testEnvironment,
-                  Cockroach.createUntrackedTablesAction untrackedTables testEnvironment
+                [ Cockroach.setupTablesAction trackedTables testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Sqlserver.setupTablesAction trackedTables testEnvironment,
-                  Sqlserver.createUntrackedTablesAction untrackedTables testEnvironment
+                [ Sqlserver.setupTablesAction trackedTables testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ BigQuery.setupTablesAction trackedTables testEnvironment,
-                  BigQuery.createUntrackedTablesAction untrackedTables testEnvironment
+                [ BigQuery.setupTablesAction trackedTables testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Sqlite.setupTablesAction trackedTables testEnvironment,
-                  Sqlite.createUntrackedTablesAction untrackedTables testEnvironment
+                [ Sqlite.setupTablesAction trackedTables testEnvironment
                 ]
             }
         ]
@@ -71,16 +65,27 @@ spec =
 
 trackedTables :: [Schema.Table]
 trackedTables =
-  [ (Schema.table "articles")
-      { Schema.tableColumns =
-          [ Schema.column "id" Schema.TInt,
-            Schema.column "author" Schema.TInt,
-            Schema.column "publisher" Schema.TInt,
-            Schema.column "title" Schema.TStr
-          ],
-        Schema.tablePrimaryKey = ["id"]
-      }
+  [ publishersTable,
+    authorsTable,
+    articlesTable,
+    usersTable
   ]
+
+articlesTable :: Schema.Table
+articlesTable =
+  (Schema.table "articles")
+    { Schema.tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "author" Schema.TInt,
+          Schema.column "publisher" Schema.TInt,
+          Schema.column "title" Schema.TStr
+        ],
+      Schema.tablePrimaryKey = ["id"],
+      Schema.tableReferences =
+        [ Schema.reference "author" "authors" "id",
+          Schema.reference "publisher" "publishers" "id"
+        ]
+    }
 
 publishersTable :: Schema.Table
 publishersTable =
@@ -102,118 +107,154 @@ authorsTable =
       Schema.tablePrimaryKey = ["id"]
     }
 
-untrackedTables :: [Schema.Table]
-untrackedTables = [publishersTable, authorsTable]
+usersTable :: Schema.Table
+usersTable =
+  (Schema.table "users")
+    { Schema.tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "username" Schema.TStr
+        ],
+      Schema.tablePrimaryKey = ["id"]
+    }
 
 tests :: SpecWith TestEnvironment
 tests = do
   it "returns success with no warnings if all succeed" \testEnvironment -> do
     let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
         sourceName = BackendType.backendSourceName backendTypeMetadata
+        noCascade = False
 
-    actual <- Schema.trackTables sourceName untrackedTables testEnvironment
+    actual <- Schema.untrackTables sourceName (trackedTables <&> (,noCascade)) testEnvironment
     actual
       `shouldBeYaml` [yaml|
         message: success
       |]
 
-    -- Check if the tables actually tracked by introspecting the GraphQL schema
+    -- Check if the tables actually untracked by introspecting the GraphQL schema
     shouldReturnYaml
       testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           rootQueryFieldsIntrospectionQuery
       )
-      (expectedRootQueryFieldsIntrospectionQuery testEnvironment (trackedTables <> untrackedTables))
+      (expectedRootQueryFieldsIntrospectionQuery testEnvironment [])
 
-  it "returns success with warnings if some tables fail to track, and warnings are allowed" \testEnvironment -> do
+  it "returns success with no warnings if all succeed, when using cascade to remove dependents" \testEnvironment -> do
     let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
         sourceName = BackendType.backendSourceName backendTypeMetadata
         schemaName = Schema.getSchemaName testEnvironment
+        cascade = True
 
-    -- Include the already-tracked table so that that table fails to track
-    actual <- Schema.trackTables sourceName (trackedTables <> untrackedTables) testEnvironment
+    -- Untrack a table that is unrelated to anything (users) and one that is has relations pointing to it (authors)
+    let untrackTables = [authorsTable, usersTable]
+    actual <- Schema.untrackTables sourceName (untrackTables <&> (,cascade)) testEnvironment
+    actual
+      `shouldBeYaml` [interpolateYaml|
+        message: success
+      |]
+
+    -- Check if the tables actually untracked by introspecting the GraphQL schema
+    shouldReturnYaml
+      testEnvironment
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          rootQueryFieldsIntrospectionQuery
+      )
+      (expectedRootQueryFieldsIntrospectionQuery testEnvironment [publishersTable, articlesTable])
+
+    -- Check if the relationships pointing at author from articles have been removed
+    shouldReturnYaml
+      testEnvironment
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
+            query {
+              __type(name: "#{schemaName}_articles") {
+                fields {
+                  name
+                }
+              }
+            }
+          |]
+      )
+      [interpolateYaml|
+        data:
+          __type:
+            fields:
+              - name: author
+              - name: id
+              - name: publisher
+              - name: publishers_by_publisher_to_id
+              - name: title
+      |]
+
+  it "returns success with warnings if some tables fail to untrack, and warnings are allowed" \testEnvironment -> do
+    let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+        sourceName = BackendType.backendSourceName backendTypeMetadata
+        schemaName = Schema.getSchemaName testEnvironment
+        noCascade = False
+
+    -- Untrack a table that is unrelated to anything (users) and one that will fail to untrack (authors) because has relations pointing to it
+    let untrackTables = [authorsTable, usersTable]
+    actual <- Schema.untrackTables sourceName (untrackTables <&> (,noCascade)) testEnvironment
     actual
       `shouldBeYaml` [interpolateYaml|
         message: success
         warnings:
-          - code: track-table-failed
-            message: 'view/table already tracked: "#{schemaName}.articles"'
-            name: table #{schemaName}.articles in source #{sourceName}
+          - code: untrack-table-failed
+            message: 'cannot drop due to the following dependent objects: relationship #{schemaName}.articles.authors_by_author_to_id in source "#{sourceName}"'
+            name: table #{schemaName}.authors in source #{sourceName}
             type: table
       |]
 
-    -- Check if the tables actually tracked by introspecting the GraphQL schema
+    -- Check if the tables actually untracked by introspecting the GraphQL schema
     shouldReturnYaml
       testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           rootQueryFieldsIntrospectionQuery
       )
-      (expectedRootQueryFieldsIntrospectionQuery testEnvironment (trackedTables <> untrackedTables))
+      (expectedRootQueryFieldsIntrospectionQuery testEnvironment [authorsTable, publishersTable, articlesTable])
 
-  it "returns success with warnings if some tables fail to track due to metadata inconsistency errors, and warnings are allowed" \testEnvironment -> do
+  it "fails if some tables fail to untrack, and warnings are disallowed" \testEnvironment -> do
     let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
         sourceName = BackendType.backendSourceName backendTypeMetadata
         schemaName = Schema.getSchemaName testEnvironment
+        noCascade = False
 
-    let nonExistentTables = [Schema.table "nope"]
-    -- Include the non-existent table so that that table fails to track
-    actual <- Schema.trackTables sourceName (nonExistentTables <> untrackedTables) testEnvironment
-    actual
-      `shouldBeYaml` [interpolateYaml|
-        message: success
-        warnings:
-          - code: track-table-failed
-            message: 'Inconsistent object: no such table/view exists in source: "#{schemaName}.nope"'
-            name: table #{schemaName}.nope in source #{sourceName}
-            type: table
-      |]
-
-    -- Check if the tables actually tracked by introspecting the GraphQL schema
-    shouldReturnYaml
-      testEnvironment
-      ( GraphqlEngine.postGraphql
-          testEnvironment
-          rootQueryFieldsIntrospectionQuery
-      )
-      (expectedRootQueryFieldsIntrospectionQuery testEnvironment (trackedTables <> untrackedTables))
-
-  it "fails if some tables fail to track, and warnings are disallowed" \testEnvironment -> do
-    let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
-        sourceName = BackendType.backendSourceName backendTypeMetadata
-        schemaName = Schema.getSchemaName testEnvironment
-
-    -- Include the already-tracked table so that that table fails to track
-    actual <- Schema.trackTablesWithStatus sourceName (trackedTables <> untrackedTables) DisallowWarnings 400 testEnvironment
+    -- Untrack a table that is unrelated to anything (users) and one that will fail to untrack (authors) because has relations pointing to it
+    let untrackTables = [authorsTable, usersTable]
+    actual <- Schema.untrackTablesWithStatus sourceName (untrackTables <&> (,noCascade)) DisallowWarnings 400 testEnvironment
     actual
       `shouldBeYaml` [interpolateYaml|
         code: metadata-warnings
         error: failed due to metadata warnings
         internal:
-        - code: track-table-failed
-          message: 'view/table already tracked: "#{schemaName}.articles"'
-          name: table #{schemaName}.articles in source #{sourceName}
-          type: table
+          - code: untrack-table-failed
+            message: 'cannot drop due to the following dependent objects: relationship #{schemaName}.articles.authors_by_author_to_id in source "#{sourceName}"'
+            name: table #{schemaName}.authors in source #{sourceName}
+            type: table
         path: $.args
       |]
 
-    -- Check that none of the untracked tables actually tracked by introspecting the GraphQL schema
+    -- Check that none of the tracked tables actually untracked by introspecting the GraphQL schema
     shouldReturnYaml
       testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           rootQueryFieldsIntrospectionQuery
       )
-      (expectedRootQueryFieldsIntrospectionQuery testEnvironment trackedTables)
+      (expectedRootQueryFieldsIntrospectionQuery testEnvironment [authorsTable, publishersTable, articlesTable, usersTable])
 
-  it "fails if all tables fail to track, and warnings are allowed" \testEnvironment -> do
+  it "fails if all tables fail to untrack, and warnings are allowed" \testEnvironment -> do
     let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
         sourceName = BackendType.backendSourceName backendTypeMetadata
         schemaName = Schema.getSchemaName testEnvironment
+        noCascade = False
 
-    let nonExistentTables = [Schema.table "nope", Schema.table "nah"]
-    actual <- Schema.trackTablesWithStatus sourceName nonExistentTables AllowWarnings 400 testEnvironment
+    -- Untrack tables that have relations pointing to them so they will fail to untrack
+    let untrackTables = [authorsTable, publishersTable]
+    actual <- Schema.untrackTablesWithStatus sourceName (untrackTables <&> (,noCascade)) DisallowWarnings 400 testEnvironment
 
     let sortInternalErrors json =
           json & (key "internal" . _Array %~ (V.toList >>> sort >>> V.fromList))
@@ -221,18 +262,27 @@ tests = do
     sortInternalErrors actual
       `shouldBeYaml` [interpolateYaml|
         code: invalid-configuration
-        error: all tables failed to track
+        error: all tables failed to untrack
         internal:
-        - code: track-table-failed
-          message: 'Inconsistent object: no such table/view exists in source: "#{schemaName}.nah"'
-          name: table #{schemaName}.nah in source #{sourceName}
-          type: table
-        - code: track-table-failed
-          message: 'Inconsistent object: no such table/view exists in source: "#{schemaName}.nope"'
-          name: table #{schemaName}.nope in source #{sourceName}
-          type: table
+          - code: untrack-table-failed
+            message: 'cannot drop due to the following dependent objects: relationship #{schemaName}.articles.authors_by_author_to_id in source "#{sourceName}"'
+            name: table #{schemaName}.authors in source #{sourceName}
+            type: table
+          - code: untrack-table-failed
+            message: 'cannot drop due to the following dependent objects: relationship #{schemaName}.articles.publishers_by_publisher_to_id in source "#{sourceName}"'
+            name: table #{schemaName}.publishers in source #{sourceName}
+            type: table
         path: $.args
       |]
+
+    -- Check that none of the tracked tables actually untracked by introspecting the GraphQL schema
+    shouldReturnYaml
+      testEnvironment
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          rootQueryFieldsIntrospectionQuery
+      )
+      (expectedRootQueryFieldsIntrospectionQuery testEnvironment [authorsTable, publishersTable, articlesTable, usersTable])
 
 rootQueryFieldsIntrospectionQuery :: J.Value
 rootQueryFieldsIntrospectionQuery =
@@ -253,6 +303,7 @@ expectedRootQueryFieldsIntrospectionQuery testEnvironment tables =
   let schemaName = Schema.getSchemaName testEnvironment
       backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendType backendTypeMetadata
+      noQueriesAvailable = [yaml| name: no_queries_available |]
       rootFieldObjs =
         tables
           & sortOn Schema.tableName
@@ -267,6 +318,9 @@ expectedRootQueryFieldsIntrospectionQuery testEnvironment tables =
                     _ ->
                       [[interpolateYaml| name: #{schemaName}_#{tableName}_by_pk |]]
             )
+          & \case
+            [] -> [noQueriesAvailable]
+            objs -> objs
       fields = J.toJSON rootFieldObjs
    in [yaml|
         data:

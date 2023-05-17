@@ -80,6 +80,7 @@ data WarningCode
   | WCIllegalEventTriggerName
   | WCTimeLimitExceededSystemLimit
   | WCTrackTableFailed
+  | WCUntrackTableFailed
   deriving (Eq, Ord)
 
 instance ToJSON WarningCode where
@@ -87,6 +88,7 @@ instance ToJSON WarningCode where
   toJSON WCTimeLimitExceededSystemLimit = "time-limit-exceeded-system-limit"
   toJSON WCSourceCleanupFailed = "source-cleanup-failed"
   toJSON WCTrackTableFailed = "track-table-failed"
+  toJSON WCUntrackTableFailed = "untrack-table-failed"
 
 data MetadataWarning = MetadataWarning
   { _mwCode :: WarningCode,

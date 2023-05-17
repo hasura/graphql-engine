@@ -26,6 +26,7 @@ module Hasura.RQL.Types.SchemaCache.Build
     buildSchemaCacheWithInvalidations,
     buildSchemaCache,
     tryBuildSchemaCache,
+    tryBuildSchemaCacheAndWarnOnFailingObjects,
     buildSchemaCacheFor,
     throwOnInconsistencies,
     withNewInconsistentObjsCheck,
@@ -54,6 +55,7 @@ import Hasura.GraphQL.Analyse
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.RQL.DDL.Warnings
 import Hasura.RQL.Types.Allowlist (NormalizedQuery, unNormalizedQuery)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint
@@ -332,6 +334,51 @@ tryBuildSchemaCache MetadataModifier {..} = do
        in if newInconsistentObjects == mempty
             then (KeepNewSchemaCache, newInconsistentObjects)
             else (DiscardNewSchemaCache, newInconsistentObjects)
+
+-- | Tries to modify the metadata for all the specified metadata objects. If the modification fails,
+-- any objects that directly caused a new metadata inconsistency are removed and the modification
+-- is attempted again without those failing objects. The failing objects are raised as warnings
+-- in 'MonadWarnings' and the successful objects are returned. If there are metadata inconsistencies
+-- that are not directly related to the specified metadata objects, an error is thrown.
+tryBuildSchemaCacheAndWarnOnFailingObjects ::
+  forall m a.
+  (CacheRWM m, MonadWarnings m, QErrM m, MetadataM m) =>
+  -- | Function makes a metadata modifier for a metadata object
+  (a -> m MetadataModifier) ->
+  -- | Warning code to use for failed metadata objects
+  WarningCode ->
+  -- | Map of metadata objects to apply to metadata using the 'mkMetadataModifier' function
+  HashMap MetadataObjId a ->
+  -- | Successfully applied metadata objects
+  m (HashMap MetadataObjId a)
+tryBuildSchemaCacheAndWarnOnFailingObjects mkMetadataModifier warningCode metadataObjects = do
+  metadataModifier <- fmap mconcat . traverse mkMetadataModifier $ HashMap.elems metadataObjects
+  metadataInconsistencies <- tryBuildSchemaCache metadataModifier
+
+  let inconsistentObjects = HashMap.intersectionWith (,) metadataInconsistencies metadataObjects
+  let successfulObjects = HashMap.difference metadataObjects inconsistentObjects
+
+  finalMetadataInconsistencies <-
+    if not $ null inconsistentObjects
+      then do
+        -- Raise warnings for objects that failed to track
+        for_ (HashMap.toList inconsistentObjects) $ \(metadataObjId, (inconsistencies, _)) -> do
+          let errorReasons = commaSeparated $ imReason <$> inconsistencies
+          warn $ MetadataWarning warningCode metadataObjId errorReasons
+
+        -- Try again, this time only with objects that were previously successful
+        withoutFailedObjectsMetadataModifier <- fmap mconcat . traverse mkMetadataModifier $ HashMap.elems successfulObjects
+        tryBuildSchemaCache withoutFailedObjectsMetadataModifier
+      else -- Otherwise just look at the rest of the errors, if any
+        pure metadataInconsistencies
+
+  unless (null finalMetadataInconsistencies) $
+    throwError
+      (err400 Unexpected "cannot continue due to newly found inconsistent metadata")
+        { qeInternal = Just $ ExtraInternal $ toJSON (L.nub . concatMap toList $ HashMap.elems finalMetadataInconsistencies)
+        }
+
+  pure successfulObjects
 
 -- | Rebuilds the schema cache after modifying metadata. If an object with the given object id became newly inconsistent,
 -- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.

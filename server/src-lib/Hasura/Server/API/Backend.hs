@@ -107,7 +107,8 @@ tableCommands =
     commandParser "get_table_info" $ RMGetTableInfo . mkAnyBackend @b,
     commandParser "track_table" $ RMTrackTable . mkAnyBackend @b,
     commandParser "track_tables" $ RMTrackTables . mkAnyBackend @b,
-    commandParser "untrack_table" $ RMUntrackTable . mkAnyBackend @b
+    commandParser "untrack_table" $ RMUntrackTable . mkAnyBackend @b,
+    commandParser "untrack_tables" $ RMUntrackTables . mkAnyBackend @b
   ]
 
 tablePermissionsCommands :: forall (b :: BackendType). Backend b => [CommandParser b]

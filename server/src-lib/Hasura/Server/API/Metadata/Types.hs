@@ -58,6 +58,7 @@ data RQLMetadataV1
     RMTrackTable !(AnyBackend TrackTableV2)
   | RMTrackTables !(AnyBackend TrackTables)
   | RMUntrackTable !(AnyBackend UntrackTable)
+  | RMUntrackTables !(AnyBackend UntrackTables)
   | RMSetTableCustomization !(AnyBackend SetTableCustomization)
   | RMSetApolloFederationConfig (AnyBackend SetApolloFederationConfig)
   | RMPgSetTableIsEnum !(AnyBackend SetTableIsEnum)

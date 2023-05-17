@@ -42,7 +42,7 @@ backendTypeMetadata :: BackendType.BackendTypeConfig
 backendTypeMetadata =
   BackendType.BackendTypeConfig
     { backendType = BackendType.DataConnectorSqlite,
-      backendSourceName = "chinook_sqlite",
+      backendSourceName = "sqlite",
       backendCapabilities =
         Just
           [yaml|
@@ -166,43 +166,15 @@ trackTable sourceName testEnvironment Schema.Table {tableName} = do
           - *tableName
     |]
 
--- | Post an http request to stop tracking the table
-untrackTable :: String -> TestEnvironment -> Schema.Table -> IO ()
-untrackTable sourceName testEnvironment Schema.Table {tableName} = do
-  let backendType = BackendType.backendTypeString backendTypeMetadata
-      requestType = backendType <> "_untrack_table"
-      schemaName = Schema.getSchemaName testEnvironment
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-      type: *requestType
-      args:
-        source: *sourceName
-        table:
-          - *schemaName
-          - *tableName
-    |]
-
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown (reverse -> tables) (testEnvironment, _) = do
-  let sourceName = Fixture.backendSourceName backendTypeMetadata
+teardown _ (testEnvironment, _) = do
   finally
-    -- Teardown relationships first
-    ( forFinally_ tables $ \table ->
-        Schema.untrackRelationships table testEnvironment
-    )
-    ( finally
-        -- Then teardown tables
-        ( forFinally_ tables $ \table ->
-            finally
-              (untrackTable sourceName testEnvironment table)
-              (dropTable sourceName testEnvironment table)
-        )
-        -- Then delete the db clone
-        (deleteClone sqliteAgentUri testEnvironment)
-    )
+    -- Clear the metadata
+    (GraphqlEngine.setSources testEnvironment mempty Nothing)
+    -- Then, delete the clone
+    (deleteClone sqliteAgentUri testEnvironment)
 
 -- | Call the Metadata API and pass in a Raw SQL statement to the
 -- SQLite Agent.
@@ -335,19 +307,6 @@ mkRow row =
       Text.commaSeparated $ serialize <$> row,
       ")"
     ]
-
--- | Serialize Table into a PL-SQL DROP statement and execute it
-dropTable :: String -> TestEnvironment -> Schema.Table -> IO ()
-dropTable sourceName testEnv Schema.Table {tableName} = do
-  let schemaName = Schema.getSchemaName testEnv
-  runSql testEnv sourceName $
-    Text.unpack $
-      Text.unwords
-        [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
-          wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName,
-          -- "CASCADE",
-          ";"
-        ]
 
 wrapIdentifier :: Text -> Text
 wrapIdentifier identifier = "\"" <> identifier <> "\""

@@ -11,6 +11,8 @@ module Hasura.Table.API
     runTrackTablesQ,
     UntrackTable (..),
     runUntrackTableQ,
+    UntrackTables (..),
+    runUntrackTablesQ,
     dropTableInMetadata,
     SetTableIsEnum (..),
     runSetExistingTableIsEnumQ,
@@ -35,7 +37,6 @@ import Data.Align (align)
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as S
-import Data.List qualified as List
 import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended
 import Data.These (These (..))
@@ -58,6 +59,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.EventTrigger (TriggerName)
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
@@ -136,13 +138,13 @@ isTableTracked sourceInfo tableName =
 -- | Track table/view, Phase 1:
 -- Validate table tracking operation. Fails if table is already being tracked,
 -- or if a function with the same name is being tracked.
-trackExistingTableOrViewP1 ::
+trackExistingTableOrViewPhase1 ::
   forall b m.
   (QErrM m, CacheRWM m, Backend b, MetadataM m) =>
   SourceName ->
   TableName b ->
   m ()
-trackExistingTableOrViewP1 source tableName = do
+trackExistingTableOrViewPhase1 source tableName = do
   sourceInfo <- askSourceInfo source
   when (isTableTracked @b sourceInfo tableName) $
     throw400 AlreadyTracked $
@@ -242,12 +244,12 @@ findConflictingNodes sc extractName items = do
               <> " already exists in current graphql schema"
      in [(item, err) | name `elem` fieldNames]
 
-trackExistingTableOrViewP2 ::
+trackExistingTableOrViewPhase2 ::
   forall b m.
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   TrackTableV2 b ->
   m EncJSON
-trackExistingTableOrViewP2 trackTable@TrackTableV2 {ttv2Table = TrackTable {..}} = do
+trackExistingTableOrViewPhase2 trackTable@TrackTableV2 {ttv2Table = TrackTable {..}} = do
   sc <- askSchemaCache
   {-
   The next line does more than what it says on the tin.  Removing the following
@@ -277,8 +279,8 @@ runTrackTableQ ::
   TrackTable b ->
   m EncJSON
 runTrackTableQ trackTable@TrackTable {..} = do
-  trackExistingTableOrViewP1 @b tSource tName
-  trackExistingTableOrViewP2 @b (TrackTableV2 trackTable emptyTableConfig)
+  trackExistingTableOrViewPhase1 @b tSource tName
+  trackExistingTableOrViewPhase2 @b (TrackTableV2 trackTable emptyTableConfig)
 
 data TrackTableV2 b = TrackTableV2
   { ttv2Table :: TrackTable b,
@@ -298,8 +300,8 @@ runTrackTableV2Q ::
   TrackTableV2 b ->
   m EncJSON
 runTrackTableV2Q trackTable@TrackTableV2 {ttv2Table = TrackTable {..}} = do
-  trackExistingTableOrViewP1 @b tSource tName
-  trackExistingTableOrViewP2 @b trackTable
+  trackExistingTableOrViewPhase1 @b tSource tName
+  trackExistingTableOrViewPhase2 @b trackTable
 
 data TrackTables b = TrackTables
   { _ttv2Tables :: [TrackTableV2 b],
@@ -324,14 +326,14 @@ runTrackTablesQ TrackTables {..} = do
 
   (successfulTables, metadataWarnings) <- runMetadataWarnings $ do
     phase1SuccessfulTables <- fmap mconcat . for _ttv2Tables $ \trackTable@TrackTableV2 {ttv2Table = TrackTable {..}} -> do
-      (trackExistingTableOrViewP1 @b tSource tName $> [trackTable])
+      (trackExistingTableOrViewPhase1 @b tSource tName $> [trackTable])
         `catchError` \qErr -> do
           let tableObjId = mkTrackTableV2ObjectId trackTable
           let message = qeError qErr
           warn $ MetadataWarning WCTrackTableFailed tableObjId message
           pure []
 
-    trackExistingTablesOrViewsP2 phase1SuccessfulTables
+    trackExistingTablesOrViewsPhase2 phase1SuccessfulTables
 
   when (null successfulTables) $
     throw400WithDetail InvalidConfiguration "all tables failed to track" (toJSON metadataWarnings)
@@ -360,12 +362,12 @@ mkTrackTableV2ObjectId :: forall b. (Backend b) => TrackTableV2 b -> MetadataObj
 mkTrackTableV2ObjectId TrackTableV2 {ttv2Table = TrackTable {..}} =
   MOSourceObjId tSource . AB.mkAnyBackend $ SMOTable @b tName
 
-trackExistingTablesOrViewsP2 ::
+trackExistingTablesOrViewsPhase2 ::
   forall b m.
   (MonadError QErr m, MonadWarnings m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   [TrackTableV2 b] ->
   m [TrackTableV2 b]
-trackExistingTablesOrViewsP2 tablesToTrack = do
+trackExistingTablesOrViewsPhase2 tablesToTrack = do
   schemaCache <- askSchemaCache
   -- Find and create warnings for tables with conflicting table names
   let errorsFromConflictingTables = findConflictingNodes schemaCache (snakeCaseTableName @b . tName . ttv2Table) tablesToTrack
@@ -379,34 +381,117 @@ trackExistingTablesOrViewsP2 tablesToTrack = do
 
   -- Try tracking all non-conflicting tables
   let objectIds = HashMap.fromList $ (\t -> (mkTrackTableV2ObjectId t, t)) <$> nonConflictingTables
-  let trackTablesMetadataModifier = foldMap mkTrackTableMetadataModifier nonConflictingTables
+  successfulTables <- tryBuildSchemaCacheAndWarnOnFailingObjects (pure . mkTrackTableMetadataModifier) WCTrackTableFailed objectIds
+  pure $ HashMap.elems successfulTables
 
-  metadataInconsistencies <- tryBuildSchemaCache trackTablesMetadataModifier
+data UntrackTables b = UntrackTables
+  { _utTables :: [UntrackTable b],
+    _utAllowWarnings :: AllowWarnings
+  }
 
-  let inconsistentTables = HashMap.intersectionWith (,) metadataInconsistencies objectIds
-  let successfulTables = HashMap.elems $ HashMap.difference objectIds inconsistentTables
+instance (Backend b) => FromJSON (UntrackTables b) where
+  parseJSON = withObject "UntrackTables" $ \o -> do
+    UntrackTables
+      <$> o .: "tables"
+      <*> o .:? "allow_warnings" .!= AllowWarnings
 
-  finalMetadataInconsistencies <-
-    if inconsistentTables /= mempty
-      then do
-        -- Raise warnings for tables that failed to track
-        for_ (HashMap.toList inconsistentTables) $ \(tableObjId, (inconsistencies, _trackTable)) -> do
-          let errorReasons = commaSeparated $ imReason <$> inconsistencies
-          warn $ MetadataWarning WCTrackTableFailed tableObjId errorReasons
+runUntrackTablesQ ::
+  forall b m.
+  (CacheRWM m, QErrM m, MetadataM m, BackendMetadata b, BackendEventTrigger b, MonadIO m) =>
+  UntrackTables b ->
+  m EncJSON
+runUntrackTablesQ UntrackTables {..} = do
+  unless (null duplicatedTables) $
+    let tables = commaSeparated $ (\(source, tableName) -> toTxt source <> "." <> toTxt tableName) <$> duplicatedTables
+     in withPathK "tables" $ throw400 BadRequest ("The following tables occur more than once in the request: " <> tables)
 
-        -- Try again, this time only with tables that were previously successful
-        let removeFailedTablesMetadataModifier = foldMap mkTrackTableMetadataModifier successfulTables
-        tryBuildSchemaCache removeFailedTablesMetadataModifier
-      else -- Otherwise just look at the rest of the errors, if any
-        pure metadataInconsistencies
+  (successfulTables, metadataWarnings) <- runMetadataWarnings $ do
+    phase1SuccessfulTables <- fmap mconcat . for _utTables $ \untrackTable -> do
+      (untrackExistingTableOrViewPhase1 @b untrackTable $> [untrackTable])
+        `catchError` \qErr -> do
+          let tableObjId = mkUntrackTableObjectId untrackTable
+          let message = qeError qErr
+          warn $ MetadataWarning WCUntrackTableFailed tableObjId message
+          pure []
 
-  unless (null finalMetadataInconsistencies) $
-    throwError
-      (err400 Unexpected "cannot continue due to newly found inconsistent metadata")
-        { qeInternal = Just $ ExtraInternal $ toJSON (List.nub . concatMap toList $ HashMap.elems finalMetadataInconsistencies)
-        }
+    untrackExistingTablesOrViewsPhase2 phase1SuccessfulTables
 
-  pure successfulTables
+  when (null successfulTables) $
+    throw400WithDetail InvalidConfiguration "all tables failed to untrack" (toJSON metadataWarnings)
+
+  case _utAllowWarnings of
+    AllowWarnings -> pure ()
+    DisallowWarnings ->
+      unless (null metadataWarnings) $
+        throw400WithDetail (CustomCode "metadata-warnings") "failed due to metadata warnings" (toJSON metadataWarnings)
+
+  pure $ mkSuccessResponseWithWarnings metadataWarnings
+  where
+    duplicatedTables :: [(SourceName, TableName b)]
+    duplicatedTables =
+      _utTables
+        & fmap (\UntrackTable {..} -> (utSource, utTable))
+        & sort
+        & group
+        & mapMaybe
+          ( \case
+              duplicate : _ : _ -> Just duplicate
+              _ -> Nothing
+          )
+
+mkUntrackTableObjectId :: forall b. Backend b => UntrackTable b -> MetadataObjId
+mkUntrackTableObjectId UntrackTable {..} =
+  MOSourceObjId utSource . AB.mkAnyBackend $ SMOTable @b utTable
+
+untrackExistingTablesOrViewsPhase2 ::
+  forall b m.
+  (CacheRWM m, MonadWarnings m, MonadError QErr m, MetadataM m, BackendMetadata b, BackendEventTrigger b, MonadIO m) =>
+  [UntrackTable b] ->
+  m [UntrackTable b]
+untrackExistingTablesOrViewsPhase2 untrackTables = do
+  untrackableTables <- fmap (HashMap.fromList . catMaybes) . forM (HashMap.toList tablesToUntrack) $ \(tableObjId, untrackTable@UntrackTable {..}) -> do
+    (indirectDeps, triggers) <- getTableUntrackingInfo untrackTable
+    let indirectDepsNotAlreadyBeingUntracked = filter (not . isDepAlreadyGettingUntracked) indirectDeps
+    -- If there are indirect dependencies to the table to untrack and we're not
+    -- cascading the untrack, fail to untrack this table with a warning.
+    -- But if the indirect dependencies are from tables we're already going to untrack
+    -- then allow them, since they'll get untracked anyway.
+    if null indirectDepsNotAlreadyBeingUntracked || utCascade
+      then pure $ Just (tableObjId, (untrackTable, indirectDeps, triggers))
+      else do
+        let errorReasons = "cannot drop due to the following dependent objects: " <> reportSchemaObjs indirectDeps
+        warn $ MetadataWarning WCUntrackTableFailed tableObjId errorReasons
+        pure Nothing
+
+  -- Untrack the tables and all their indirect dependencies
+  let mkMetadataModifier (untrackTable, indirectDeps, _triggers) = mkUntrackTableMetadataModifier untrackTable indirectDeps
+  successfullyUntrackedTables <- tryBuildSchemaCacheAndWarnOnFailingObjects mkMetadataModifier WCUntrackTableFailed untrackableTables
+
+  -- drop all the hasura SQL triggers present on the untracked tables
+  for_ successfullyUntrackedTables $ \(UntrackTable {..}, _indirectDeps, triggers) -> do
+    sourceConfig <- askSourceConfig @b utSource
+    for_ triggers $ \triggerName -> dropTriggerAndArchiveEvents @b sourceConfig triggerName utTable
+
+  pure $ (\(untrackTable, _indirectDeps, _triggers) -> untrackTable) <$> HashMap.elems successfullyUntrackedTables
+  where
+    tablesToUntrack :: HashMap MetadataObjId (UntrackTable b)
+    tablesToUntrack = HashMap.fromList $ (\tbl -> (mkUntrackTableObjectId tbl, tbl)) <$> untrackTables
+
+    isDepAlreadyGettingUntracked :: SchemaObjId -> Bool
+    isDepAlreadyGettingUntracked schemaObjDependency =
+      case tryGetTableMetadataObjId schemaObjDependency of
+        Just tableObjId -> HashMap.member tableObjId tablesToUntrack
+        Nothing -> False
+
+    tryGetTableMetadataObjId :: SchemaObjId -> Maybe MetadataObjId
+    tryGetTableMetadataObjId = \case
+      SOSourceObj sourceName sourceObj ->
+        let tableObjMaybe = AB.traverseBackend @Backend sourceObj $ \case
+              SOITable tableName -> Just $ SMOTable tableName
+              SOITableObj tableName _tableObj -> Just $ SMOTable tableName
+              _ -> Nothing
+         in (MOSourceObjId sourceName) <$> tableObjMaybe
+      _ -> Nothing
 
 runSetExistingTableIsEnumQ :: forall b m. (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) => SetTableIsEnum b -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
@@ -472,47 +557,54 @@ runSetTableCustomization (SetTableCustomization source table config) = do
     $ tableMetadataSetter source table . tmConfiguration .~ config
   return successMsg
 
-unTrackExistingTableOrViewP1 ::
+untrackExistingTableOrViewPhase1 ::
   forall b m.
   (CacheRM m, QErrM m, Backend b) =>
   UntrackTable b ->
   m ()
-unTrackExistingTableOrViewP1 (UntrackTable source vn _) = do
+untrackExistingTableOrViewPhase1 (UntrackTable source vn _) = do
   schemaCache <- askSchemaCache
   void $
     unsafeTableInfo @b source vn (scSources schemaCache)
       `onNothing` throw400 AlreadyUntracked ("view/table already untracked: " <>> vn)
 
-unTrackExistingTableOrViewP2 ::
+untrackExistingTableOrViewPhase2 ::
   forall b m.
   (CacheRWM m, QErrM m, MetadataM m, BackendMetadata b, BackendEventTrigger b, MonadIO m) =>
   UntrackTable b ->
   m EncJSON
-unTrackExistingTableOrViewP2 (UntrackTable source tableName cascade) = do
-  sc <- askSchemaCache
+untrackExistingTableOrViewPhase2 untrackTable@(UntrackTable source tableName cascade) = do
+  (indirectDeps, triggers) <- getTableUntrackingInfo untrackTable
   sourceConfig <- askSourceConfig @b source
-  sourceInfo <- askTableInfo @b source tableName
-  let triggers = HashMap.keys $ _tiEventTriggerInfoMap sourceInfo
-  -- Get relational, query template and function dependants
-  let allDeps =
-        getDependentObjs
-          sc
-          (SOSourceObj source $ AB.mkAnyBackend $ SOITable @b tableName)
-      indirectDeps = mapMaybe getIndirectDep allDeps
 
-  -- Report bach with an error if cascade is not set
+  -- Report batch with an error if cascade is not set
   unless (null indirectDeps || cascade) $
     reportDependentObjectsExist indirectDeps
   -- Purge all the dependents from state
-  metadataModifier <- execWriterT do
-    traverse_ purgeSourceAndSchemaDependencies indirectDeps
-    tell $ dropTableInMetadata @b source tableName
+  metadataModifier <- mkUntrackTableMetadataModifier untrackTable indirectDeps
   -- delete the table and its direct dependencies
   withNewInconsistentObjsCheck $ buildSchemaCache metadataModifier
   -- drop all the hasura SQL triggers present on the table
   for_ triggers $ \triggerName -> do
     dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
   pure successMsg
+
+getTableUntrackingInfo ::
+  forall b m.
+  (Backend b, CacheRM m, MonadError QErr m) =>
+  UntrackTable b ->
+  m ([SchemaObjId], [TriggerName])
+getTableUntrackingInfo UntrackTable {..} = do
+  sc <- askSchemaCache
+  sourceInfo <- askTableInfo @b utSource utTable
+  let triggers = HashMap.keys $ _tiEventTriggerInfoMap sourceInfo
+  -- Get relational, query template and function dependants
+  let allDeps =
+        getDependentObjs
+          sc
+          (SOSourceObj utSource $ AB.mkAnyBackend $ SOITable @b utTable)
+  let indirectDeps = mapMaybe getIndirectDep allDeps
+  pure (indirectDeps, triggers)
   where
     getIndirectDep :: SchemaObjId -> Maybe SchemaObjId
     getIndirectDep = \case
@@ -522,7 +614,7 @@ unTrackExistingTableOrViewP2 (UntrackTable source tableName cascade) = do
         -- have these cross source dependencies yet
         AB.unpackAnyBackend @b exists >>= \case
           (SOITableObj dependentTableName _) ->
-            if not (s == source && tableName == dependentTableName) then Just sourceObj else Nothing
+            if not (s == utSource && utTable == dependentTableName) then Just sourceObj else Nothing
           _ -> Just sourceObj
       -- A remote schema can have a remote relationship with a table. So when a
       -- table is dropped, the remote relationship in remote schema also needs to
@@ -530,14 +622,25 @@ unTrackExistingTableOrViewP2 (UntrackTable source tableName cascade) = do
       sourceObj@(SORemoteSchemaRemoteRelationship {}) -> Just sourceObj
       _ -> Nothing
 
+-- | Creates a metadata modifier that untracks a table and the specified indirect dependencies
+mkUntrackTableMetadataModifier ::
+  forall b m.
+  (Backend b, MonadError QErr m) =>
+  UntrackTable b ->
+  [SchemaObjId] ->
+  m MetadataModifier
+mkUntrackTableMetadataModifier UntrackTable {..} indirectDeps = execWriterT $ do
+  traverse_ purgeSourceAndSchemaDependencies indirectDeps
+  tell $ dropTableInMetadata @b utSource utTable
+
 runUntrackTableQ ::
   forall b m.
   (CacheRWM m, QErrM m, MetadataM m, BackendMetadata b, BackendEventTrigger b, MonadIO m) =>
   UntrackTable b ->
   m EncJSON
 runUntrackTableQ q = do
-  unTrackExistingTableOrViewP1 @b q
-  unTrackExistingTableOrViewP2 @b q
+  untrackExistingTableOrViewPhase1 @b q
+  untrackExistingTableOrViewPhase2 @b q
 
 -- | Builds an initial table cache. Does not fill in permissions or event triggers, and the returned
 -- @FieldInfoMap@s only contain columns, not relationships; those pieces of information are filled

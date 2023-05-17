@@ -236,6 +236,7 @@ queryModifiesMetadata = \case
       RMTrackTable _ -> True
       RMTrackTables _ -> True
       RMUntrackTable _ -> True
+      RMUntrackTables _ -> True
       RMSetTableCustomization _ -> True
       RMSetApolloFederationConfig _ -> True
       RMPgSetTableIsEnum _ -> True
@@ -387,6 +388,7 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMTrackTables q -> dispatchMetadata runTrackTablesQ q
   RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q
+  RMUntrackTables q -> dispatchMetadataAndEventTrigger runUntrackTablesQ q
   RMSetFunctionCustomization q -> dispatchMetadata Functions.runSetFunctionCustomization q
   RMSetTableCustomization q -> dispatchMetadata runSetTableCustomization q
   RMSetApolloFederationConfig q -> dispatchMetadata runSetApolloFederationConfig q
