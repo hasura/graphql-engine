@@ -38,6 +38,7 @@ import { TableInsertItemContainer } from './TableInsertItem/TableInsertItemConta
 import { ModifyTableContainer } from './TableModify/ModifyTableContainer';
 import { LandingPageRoute as NativeQueries } from '../../../features/Data/LogicalModels/LandingPage/LandingPage';
 import { AddNativeQueryRoute } from '../../../features/Data/LogicalModels/AddNativeQuery/AddNativeQueryRoute';
+import { TrackStoredProcedureRoute } from '../../../features/Data/LogicalModels/StoredProcedures/StoredProcedureWidgetWrapper';
 
 const makeDataRouter = (
   connect,
@@ -77,6 +78,11 @@ const makeDataRouter = (
         <IndexRoute component={NativeQueries} />
         <Route path="create" component={AddNativeQueryRoute} />
         <Route path="logical-models" component={NativeQueries} />
+        <Route path="stored-procedures" component={NativeQueries} />
+        <Route
+          path="stored-procedures/track"
+          component={TrackStoredProcedureRoute}
+        />
       </Route>
       <Route path="manage/connect" component={ConnectDatabase} />
       <Route path="manage/create" component={ConnectedCreateDataSourcePage} />

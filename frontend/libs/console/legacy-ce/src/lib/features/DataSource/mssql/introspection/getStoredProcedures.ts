@@ -20,7 +20,6 @@ export const getStoredProcedures = async ({
   select routine_name, routine_schema
   from information_schema.routines 
  where routine_type = 'PROCEDURE'
- and routine_catalog = '${dataSourceName}'
   `;
 
   const result = await runSQL({

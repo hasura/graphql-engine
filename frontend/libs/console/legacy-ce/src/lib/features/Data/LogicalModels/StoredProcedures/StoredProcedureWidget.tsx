@@ -28,6 +28,8 @@ import {
   defaultEmptyValues,
   trackStoredProcedureValidationSchema,
 } from './schema';
+import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
+import { useState } from 'react';
 
 export const StoredProcedureWidget = () => {
   const {
@@ -41,6 +43,8 @@ export const StoredProcedureWidget = () => {
   });
 
   const { trackStoredProcedure, isLoading } = useTrackStoredProcedure();
+  const [isLogicalModelWidgetOpen, setIsLogicalModelWidgetOpen] =
+    useState(false);
 
   const dataSourceName = watch('dataSourceName');
 
@@ -168,19 +172,6 @@ export const StoredProcedureWidget = () => {
         />
       )}
 
-      {areTypeOptionsLoading ? (
-        <Skeleton count={4} height={25} className="mb-2" />
-      ) : (
-        <ArgumentsInput name="arguments" types={typeOptions} />
-      )}
-
-      <Select
-        name="returns"
-        label="Return Type"
-        placeholder="Select a return type"
-        options={logicalModelOptions}
-      />
-
       <Collapsible
         triggerChildren={
           <div className="font-semibold text-muted">Advanced</div>
@@ -198,6 +189,42 @@ export const StoredProcedureWidget = () => {
           placeholder="If omitted, will use the stored_procedure name"
         />
       </Collapsible>
+      <hr className="my-md" />
+
+      {areTypeOptionsLoading ? (
+        <Skeleton count={4} height={25} className="mb-2" />
+      ) : (
+        <ArgumentsInput name="arguments" types={typeOptions} />
+      )}
+
+      <Select
+        name="returns"
+        label="Return Type"
+        placeholder="Select a return type"
+        options={logicalModelOptions}
+      />
+      <div className="flex justify-end">
+        <Button
+          onClick={() => {
+            setIsLogicalModelWidgetOpen(true);
+          }}
+        >
+          Create Logical Model
+        </Button>
+      </div>
+      <hr className="my-md" />
+
+      {isLogicalModelWidgetOpen ? (
+        <LogicalModelWidget
+          asDialog
+          onSubmit={() => {
+            setIsLogicalModelWidgetOpen(false);
+          }}
+          onCancel={() => {
+            setIsLogicalModelWidgetOpen(false);
+          }}
+        />
+      ) : null}
 
       <div className="flex justify-end">
         <Button type="submit" mode="primary" isLoading={isLoading}>

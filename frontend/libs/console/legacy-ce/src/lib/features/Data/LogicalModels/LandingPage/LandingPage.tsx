@@ -20,6 +20,32 @@ import startCase from 'lodash/startCase';
 import { LimitedFeatureWrapper } from '../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
 import { useServerConfig } from '../../../../hooks';
 import Skeleton from 'react-loading-skeleton';
+import { ListStoredProcedures } from '../StoredProcedures/ListStoredProcedures';
+
+type AllowedTabs = 'logical-models' | 'native-queries' | 'stored-procedures';
+const getTitleAndSubtitle = (tabType: AllowedTabs) => {
+  if (tabType === 'logical-models')
+    return {
+      title: 'Logical Models',
+      subtitle:
+        'Creating Logical Models in advance can help generate Native Queries faster',
+    };
+  if (tabType === 'native-queries')
+    return {
+      title: 'Native Queries',
+      subtitle:
+        'Access more queries and operators through SQL on your database',
+    };
+  if (tabType === 'stored-procedures')
+    return {
+      title: 'Stored Procedures',
+      subtitle: 'Add support for stored procedures on SQL over a GraphQL API',
+    };
+  return {
+    title: 'Not a valid path',
+    subtitle: '',
+  };
+};
 
 export const LandingPage = ({
   pathname,
@@ -31,14 +57,22 @@ export const LandingPage = ({
   const { data, isLoading } = useMetadata(m =>
     extractModelsAndQueriesFromMetadata(m)
   );
+  const { data: storedProcedures = [] } = useMetadata(m =>
+    m.metadata.sources
+      .map(({ name, stored_procedures }) =>
+        (stored_procedures ?? []).map(stored_procedure => ({
+          dataSourceName: name,
+          ...stored_procedure,
+        }))
+      )
+      .flat()
+  );
   const nativeQueries = data?.queries ?? [];
   const logicalModels = data?.models ?? [];
   const paths = pathname?.split('/').filter(Boolean) ?? [];
-  const isLogicalModelsTab = paths[paths.length - 1] === 'logical-models';
-  const title = isLogicalModelsTab ? 'Logical Models' : 'Native Queries';
-  const subtitle = isLogicalModelsTab
-    ? 'Creating Logical Models in advance can help generate Native Queries faster'
-    : 'Access more queries and operators through SQL on your database.';
+  const tabType = paths[paths.length - 1] as AllowedTabs;
+  const { title, subtitle } = getTitleAndSubtitle(tabType);
+
   const [isLogicalModelsDialogOpen, setIsLogicalModelsDialogOpen] =
     useState(false);
 
@@ -124,21 +158,9 @@ export const LandingPage = ({
               })}
             />
             <div className="flex w-full justify-between">
-              <div>
+              <div className="mb-sm">
                 <div className="text-xl font-bold mt-2">{title}</div>
                 <div className="text-muted">{subtitle}</div>
-              </div>
-              <div className="items-end flex gap-2">
-                <Button
-                  onClick={() => {
-                    setIsLogicalModelsDialogOpen(true);
-                  }}
-                >
-                  Add Logical Model
-                </Button>
-                <Link to="/data/native-queries/create">
-                  <Button mode="primary">Create Native Query</Button>
-                </Link>
               </div>
             </div>
             {isLogicalModelsDialogOpen ? (
@@ -154,7 +176,6 @@ export const LandingPage = ({
             ) : null}
             <Tabs
               defaultValue={pathname}
-              className="px-md"
               onValueChange={value => {
                 push?.(value);
               }}
@@ -176,6 +197,11 @@ export const LandingPage = ({
                         }}
                         onRemoveClick={handleRemoveNativeQuery}
                       />
+                      <div className="flex justify-end mt-sm">
+                        <Link to="/data/native-queries/create">
+                          <Button mode="primary">Create Native Query</Button>
+                        </Link>
+                      </div>
                     </div>
                   ),
                 },
@@ -196,6 +222,30 @@ export const LandingPage = ({
                         }}
                         onRemoveClick={handleRemoveLogicalModel}
                       />
+                      <div className="flex justify-end mt-sm">
+                        <Button
+                          mode="primary"
+                          onClick={() => {
+                            setIsLogicalModelsDialogOpen(true);
+                          }}
+                        >
+                          Add Logical Model
+                        </Button>
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  value: '/data/native-queries/stored-procedures',
+                  label: `Stored Procedures (${storedProcedures.length})`,
+                  content: (
+                    <div className="mt-md">
+                      <ListStoredProcedures />
+                      <div className="flex justify-end mt-sm">
+                        <Link to="/data/native-queries/stored-procedures/track">
+                          <Button mode="primary">Track Stored Procedure</Button>
+                        </Link>
+                      </div>
                     </div>
                   ),
                 },
