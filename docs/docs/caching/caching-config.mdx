@@ -80,6 +80,15 @@ query MyCachedQuery @cached(refresh: true) {
 }
 ```
 
+:::info Use a literal boolean value for refresh
+
+`refresh` must be provided with literal boolean value and not as a variable to
+have the desired effect. If the value of this refresh argument is provided via a
+GraphQL variable, then there would be a cache miss, as it is considered a
+different query and will generate a new cache key.
+
+:::
+
 ## Rate Limiting
 
 Cache writes are rate limited, with a rate depending on your plan. The rate limit is based on the total number of bytes
