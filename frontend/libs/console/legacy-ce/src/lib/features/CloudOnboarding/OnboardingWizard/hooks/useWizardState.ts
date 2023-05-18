@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useSurveysData } from '../../../Surveys';
-import { trackCustomEvent } from '../../../Analytics';
 import { useOnboardingData } from './useOnboardingData';
 import { getWizardState } from '../utils';
 import { AllowedSurveyNames } from '../../../Surveys/types';
@@ -14,14 +13,6 @@ export type WizardState =
   | 'hidden';
 
 export function useWizardState() {
-  useEffect(() => {
-    trackCustomEvent({
-      location: 'Console',
-      action: 'Load',
-      object: 'Onboarding Wizard',
-    });
-  }, []);
-
   const {
     show: showSurvey,
     data: familiaritySurveyData,
