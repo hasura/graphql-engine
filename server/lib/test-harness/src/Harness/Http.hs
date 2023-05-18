@@ -110,7 +110,7 @@ healthCheck url = do
   case result of
     Healthy -> return ()
     Unhealthy failures ->
-      fail $
+      error $
         "Health check failed for URL: "
           ++ url
           ++ ", with failures: "

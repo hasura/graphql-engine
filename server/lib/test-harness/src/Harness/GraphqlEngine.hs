@@ -48,6 +48,7 @@ where
 
 -------------------------------------------------------------------------------
 
+import Control.Concurrent (myThreadId)
 import Control.Concurrent.Async qualified as Async
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
 import Data.Aeson (Value (String), encode, fromJSON, object, (.=))
@@ -62,7 +63,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
 import Data.Time (getCurrentTime)
 import Harness.Constants qualified as Constants
-import Harness.Exceptions (bracket, withFrozenCallStack)
+import Harness.Exceptions (SomeException (..), bracket, catch, throwTo, withFrozenCallStack)
 import Harness.Http qualified as Http
 import Harness.Logging
 import Harness.Quoter.Yaml (fromYaml, yaml)
@@ -368,6 +369,7 @@ deleteDataConnectorAgent testEnvironment name =
 -- The port availability is subject to races.
 startServerThread :: IO Server
 startServerThread = do
+  mainThreadId <- myThreadId
   port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
   let urlPrefix = "http://127.0.0.1"
       backendConfigs =
@@ -385,6 +387,7 @@ startServerThread = do
             { soPort = unsafePort port,
               soMetadataDefaults = backendConfigs
             }
+          `catch` \(SomeException e) -> throwTo mainThreadId e
       )
   let server = Server {port = fromIntegral port, urlPrefix, thread}
   Http.healthCheck (serverUrl server <> "/healthz")
