@@ -93,7 +93,7 @@ import Hasura.Server.Prometheus
     PrometheusMetrics (..),
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
-import Hasura.Server.Types (RequestId, getRequestId)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..), MonadGetPolicies (..), RequestId, getRequestId)
 import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -420,7 +420,8 @@ onStart ::
     MonadMetadataStorage m,
     MonadQueryTags m,
     HasResourceLimits m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetPolicies m
   ) =>
   HashSet (L.EngineLogType L.Hasura) ->
   Maybe (CredentialCache AgentLicenseKey) ->
@@ -679,9 +680,9 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
         E.SEOnSourceDB (E.SSLivequery actionIds liveQueryBuilder) -> do
           actionLogMapE <- fmap fst <$> runExceptT (EA.fetchActionLogResponses actionIds)
           actionLogMap <- onLeft actionLogMapE (withComplete . preExecErr requestId (Just gqlOpType))
-          opMetadataE <- liftIO $ startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
+          granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
+          opMetadataE <- liftIO $ startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState
           lqId <- onLeft opMetadataE (withComplete . preExecErr requestId (Just gqlOpType))
-
           -- Update async action query subscription state
           case NE.nonEmpty (toList actionIds) of
             Nothing -> do
@@ -694,11 +695,11 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                 let asyncActionQueryLive =
                       ES.LAAQOnSourceDB $
                         ES.LiveAsyncActionQueryOnSource lqId actionLogMap $
-                          restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder
+                          restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState (_grOperationName reqParsed)
 
                     onUnexpectedException err = do
                       sendError requestId err
-                      stopOperation serverEnv wsConn opId (pure ()) -- Don't log in case opId don't exist
+                      stopOperation serverEnv wsConn opId granularPrometheusMetricsState (pure ()) -- Don't log in case opId don't exist
                 ES.addAsyncActionLiveQuery
                   (ES._ssAsyncActions subscriptionsState)
                   opId
@@ -706,7 +707,8 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                   onUnexpectedException
                   asyncActionQueryLive
         E.SEOnSourceDB (E.SSStreaming rootFieldName streamQueryBuilder) -> do
-          liftIO $ startStreamingQuery rootFieldName streamQueryBuilder parameterizedQueryHash requestId
+          granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
+          liftIO $ startStreamingQuery rootFieldName streamQueryBuilder parameterizedQueryHash requestId granularPrometheusMetricsState
 
       liftIO $ Prometheus.Counter.inc (gqlRequestsSubscriptionSuccess gqlMetrics)
       liftIO $ logOpEv ODStarted (Just requestId) (Just parameterizedQueryHash)
@@ -894,12 +896,13 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       liftIO $ sendCompleted Nothing Nothing
       throwError ()
 
-    restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder lqId actionLogMap = do
-      ES.removeLiveQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionsState lqId
-      either (const Nothing) Just <$> startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
+    restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState maybeOperationName lqId actionLogMap = do
+      ES.removeLiveQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionsState lqId granularPrometheusMetricsState maybeOperationName
+      either (const Nothing) Just <$> startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState
 
-    startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap = do
+    startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState = do
       liveQueryE <- runExceptT $ liveQueryBuilder actionLogMap
+
       for liveQueryE $ \(sourceName, E.SubscriptionQueryPlan exists) -> do
         let !opName = _grOperationName q
             subscriberMetadata = ES.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
@@ -920,14 +923,16 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
               opName
               requestId
               liveQueryPlan
+              granularPrometheusMetricsState
               (onChange opName parameterizedQueryHash $ ES._sqpNamespace liveQueryPlan)
+
         liftIO $ $assertNFHere (lqId, opName) -- so we don't write thunks to mutable vars
         STM.atomically $
           -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
           STMMap.insert (LiveQuerySubscriber lqId, opName) opId opMap
         pure lqId
 
-    startStreamingQuery rootFieldName (sourceName, E.SubscriptionQueryPlan exists) parameterizedQueryHash requestId = do
+    startStreamingQuery rootFieldName (sourceName, E.SubscriptionQueryPlan exists) parameterizedQueryHash requestId granularPrometheusMetricsState = do
       let !opName = _grOperationName q
           subscriberMetadata = ES.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
       -- NOTE!: we mask async exceptions higher in the call stack, but it's
@@ -948,6 +953,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
             requestId
             (_rfaAlias rootFieldName)
             streamQueryPlan
+            granularPrometheusMetricsState
             (onChange opName parameterizedQueryHash $ ES._sqpNamespace streamQueryPlan)
       liftIO $ $assertNFHere (streamSubscriberId, opName) -- so we don't write thunks to mutable vars
       STM.atomically $
@@ -1017,7 +1023,8 @@ onMessage ::
     MonadQueryTags m,
     HasResourceLimits m,
     ProvidesNetwork m,
-    Tracing.MonadTrace m
+    Tracing.MonadTrace m,
+    MonadGetPolicies m
   ) =>
   HashSet (L.EngineLogType L.Hasura) ->
   IO AuthMode ->
@@ -1052,7 +1059,9 @@ onMessage enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions agen
                   then CaptureQueryVariables
                   else DoNotCaptureQueryVariables
           onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables startMsg onMessageActions
-        CMStop stopMsg -> onStop serverEnv wsConn stopMsg
+        CMStop stopMsg -> do
+          granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
+          onStop serverEnv wsConn stopMsg granularPrometheusMetricsState
         -- specfic to graphql-ws
         CMPing mPayload -> onPing wsConn mPayload
         CMPong _mPayload -> pure ()
@@ -1067,15 +1076,15 @@ onPing :: (MonadIO m) => WSConn -> Maybe PingPongPayload -> m ()
 onPing wsConn mPayload =
   liftIO $ sendMsg wsConn (SMPong mPayload)
 
-onStop :: (MonadIO m) => WSServerEnv impl -> WSConn -> StopMsg -> m ()
-onStop serverEnv wsConn (StopMsg opId) = liftIO $ do
+onStop :: (MonadIO m) => WSServerEnv impl -> WSConn -> StopMsg -> IO GranularPrometheusMetricsState -> m ()
+onStop serverEnv wsConn (StopMsg opId) granularPrometheusMetricsState = liftIO $ do
   -- When a stop message is received for an operation, it may not be present in OpMap
   -- in these cases:
   -- 1. If the operation is a query/mutation - as we remove the operation from the
   -- OpMap as soon as it is executed
   -- 2. A misbehaving client
   -- 3. A bug on our end
-  stopOperation serverEnv wsConn opId $
+  stopOperation serverEnv wsConn opId granularPrometheusMetricsState $
     L.unLogger logger $
       L.UnstructuredLog L.LevelDebug $
         fromString $
@@ -1085,17 +1094,17 @@ onStop serverEnv wsConn (StopMsg opId) = liftIO $ do
   where
     logger = _wseLogger serverEnv
 
-stopOperation :: WSServerEnv impl -> WSConn -> OperationId -> IO () -> IO ()
-stopOperation serverEnv wsConn opId logWhenOpNotExist = do
+stopOperation :: WSServerEnv impl -> WSConn -> OperationId -> IO GranularPrometheusMetricsState -> IO () -> IO ()
+stopOperation serverEnv wsConn opId granularPrometheusMetricsState logWhenOpNotExist = do
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   case opM of
-    Just (subscriberDetails, opNameM) -> do
-      logWSEvent logger wsConn $ EOperation $ opDet opNameM
+    Just (subscriberDetails, operationName) -> do
+      logWSEvent logger wsConn $ EOperation $ opDet operationName
       case subscriberDetails of
         LiveQuerySubscriber lqId ->
-          ES.removeLiveQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionState lqId
+          ES.removeLiveQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionState lqId granularPrometheusMetricsState operationName
         StreamingQuerySubscriber streamSubscriberId ->
-          ES.removeStreamingQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionState streamSubscriberId
+          ES.removeStreamingQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionState streamSubscriberId granularPrometheusMetricsState operationName
     Nothing -> logWhenOpNotExist
   STM.atomically $ STMMap.delete opId opMap
   where
@@ -1182,14 +1191,15 @@ onClose ::
   PrometheusMetrics ->
   ES.SubscriptionsState ->
   WSConn ->
+  IO GranularPrometheusMetricsState ->
   m ()
-onClose logger serverMetrics prometheusMetrics subscriptionsState wsConn = do
+onClose logger serverMetrics prometheusMetrics subscriptionsState wsConn granularPrometheusMetricsState = do
   logWSEvent logger wsConn EClosed
   operations <- liftIO $ STM.atomically $ ListT.toList $ STMMap.listT opMap
   liftIO $
-    for_ operations $ \(_, (subscriber, _)) ->
+    for_ operations $ \(_, (subscriber, operationName)) ->
       case subscriber of
-        LiveQuerySubscriber lqId -> ES.removeLiveQuery logger serverMetrics prometheusMetrics subscriptionsState lqId
-        StreamingQuerySubscriber streamSubscriberId -> ES.removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionsState streamSubscriberId
+        LiveQuerySubscriber lqId -> ES.removeLiveQuery logger serverMetrics prometheusMetrics subscriptionsState lqId granularPrometheusMetricsState operationName
+        StreamingQuerySubscriber streamSubscriberId -> ES.removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionsState streamSubscriberId granularPrometheusMetricsState operationName
   where
     opMap = _wscOpMap $ WS.getData wsConn

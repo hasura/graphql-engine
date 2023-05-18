@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveAnyClass #-}
+
 -- | Mutable references for Prometheus metrics.
 --
 -- These metrics are independent from the metrics in "Hasura.Server.Metrics".
@@ -20,20 +22,32 @@ module Hasura.Server.Prometheus
     TriggerNameLabel (..),
     GranularPrometheusMetricsState (..),
     observeHistogramWithLabel,
+    SubscriptionKindLabel (..),
+    SubscriptionLabel (..),
+    DynamicSubscriptionLabel (..),
+    streamingSubscriptionLabel,
+    liveQuerySubscriptionLabel,
+    recordMetricWithLabel,
+    recordSubcriptionMetric,
   )
 where
 
 import Data.HashMap.Internal.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.IORef (IORef, atomicModifyIORef', newIORef, readIORef)
 import Data.Int (Int64)
+import Hasura.GraphQL.ParameterizedQueryHash
+import Hasura.GraphQL.Transport.HTTP.Protocol (OperationName (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.EventTrigger (TriggerName, triggerNameToTxt)
 import Hasura.Server.Types (GranularPrometheusMetricsState (..))
+import Language.GraphQL.Draft.Syntax qualified as G
 import System.Metrics.Prometheus (ToLabels (..))
 import System.Metrics.Prometheus.Counter (Counter)
 import System.Metrics.Prometheus.Counter qualified as Counter
 import System.Metrics.Prometheus.Gauge (Gauge)
 import System.Metrics.Prometheus.Gauge qualified as Gauge
+import System.Metrics.Prometheus.GaugeVector qualified as GaugeVector
 import System.Metrics.Prometheus.Histogram (Histogram)
 import System.Metrics.Prometheus.Histogram qualified as Histogram
 import System.Metrics.Prometheus.HistogramVector (HistogramVector)
@@ -44,7 +58,6 @@ import System.Metrics.Prometheus.HistogramVector qualified as HistogramVector
 -- | Mutable references for Prometheus metrics.
 data PrometheusMetrics = PrometheusMetrics
   { pmConnections :: ConnectionsGauge,
-    pmActiveSubscriptions :: Gauge,
     pmGraphQLRequestMetrics :: GraphQLRequestMetrics,
     pmEventTriggerMetrics :: EventTriggerMetrics,
     pmWebSocketBytesReceived :: Counter,
@@ -101,7 +114,10 @@ data SubscriptionMetrics = SubscriptionMetrics
   { submActiveLiveQueryPollers :: Gauge,
     submActiveStreamingPollers :: Gauge,
     submActiveLiveQueryPollersInError :: Gauge,
-    submActiveStreamingPollersInError :: Gauge
+    submActiveStreamingPollersInError :: Gauge,
+    submTotalTime :: HistogramVector.HistogramVector SubscriptionLabel,
+    submDBExecTotalTime :: HistogramVector.HistogramVector SubscriptionLabel,
+    submActiveSubscriptions :: GaugeVector.GaugeVector SubscriptionLabel
   }
 
 data CacheRequestMetrics = CacheRequestMetrics
@@ -114,7 +130,6 @@ data CacheRequestMetrics = CacheRequestMetrics
 makeDummyPrometheusMetrics :: IO PrometheusMetrics
 makeDummyPrometheusMetrics = do
   pmConnections <- newConnectionsGauge
-  pmActiveSubscriptions <- Gauge.new
   pmGraphQLRequestMetrics <- makeDummyGraphQLRequestMetrics
   pmEventTriggerMetrics <- makeDummyEventTriggerMetrics
   pmWebSocketBytesReceived <- Counter.new
@@ -176,6 +191,9 @@ makeDummySubscriptionMetrics = do
   submActiveStreamingPollers <- Gauge.new
   submActiveLiveQueryPollersInError <- Gauge.new
   submActiveStreamingPollersInError <- Gauge.new
+  submTotalTime <- HistogramVector.new []
+  submDBExecTotalTime <- HistogramVector.new []
+  submActiveSubscriptions <- GaugeVector.new
   pure SubscriptionMetrics {..}
 
 makeDummyCacheRequestMetrics :: IO CacheRequestMetrics
@@ -239,6 +257,40 @@ instance ToLabels (Maybe TriggerNameLabel) where
   toLabels Nothing = Map.empty
   toLabels (Just (TriggerNameLabel triggerName)) = Map.singleton "trigger_name" (triggerNameToTxt triggerName)
 
+data SubscriptionKindLabel = SubscriptionKindLabel
+  { subscription_kind :: Text
+  }
+  deriving stock (Generic, Ord, Eq)
+  deriving anyclass (ToLabels)
+
+streamingSubscriptionLabel :: SubscriptionKindLabel
+streamingSubscriptionLabel = SubscriptionKindLabel "streaming"
+
+liveQuerySubscriptionLabel :: SubscriptionKindLabel
+liveQuerySubscriptionLabel = SubscriptionKindLabel "live-query"
+
+data DynamicSubscriptionLabel = DynamicSubscriptionLabel
+  { _dslParamQueryHash :: ParameterizedQueryHash,
+    _dslOperationName :: Maybe OperationName
+  }
+  deriving stock (Generic, Ord, Eq)
+
+instance ToLabels DynamicSubscriptionLabel where
+  toLabels (DynamicSubscriptionLabel hash opName) =
+    Map.fromList $
+      [("parameterized_query_hash", bsToTxt $ unParamQueryHash hash)]
+        <> maybe [] (\op -> [("operation_name", G.unName $ _unOperationName op)]) opName
+
+data SubscriptionLabel = SubscriptionLabel
+  { _slKind :: SubscriptionKindLabel,
+    _slDynamicLabels :: Maybe DynamicSubscriptionLabel
+  }
+  deriving stock (Generic, Ord, Eq)
+
+instance ToLabels SubscriptionLabel where
+  toLabels (SubscriptionLabel kind Nothing) = Map.fromList $ [("subscription_kind", subscription_kind kind)]
+  toLabels (SubscriptionLabel kind (Just dl)) = (Map.fromList $ [("subscription_kind", subscription_kind kind)]) <> toLabels dl
+
 -- | Record metrics with dynamic label
 recordMetricWithLabel ::
   (MonadIO m) =>
@@ -280,3 +332,39 @@ observeHistogramWithLabel getMetricState alwaysObserve histogramVector label val
     alwaysObserve
     (liftIO $ HistogramVector.observe histogramVector (Just label) value)
     (liftIO $ HistogramVector.observe histogramVector Nothing value)
+
+-- | Record a subscription metric for all the operation names present in the subscription.
+-- Use this when you want to update the same value of the metric for all the operation names.
+recordSubcriptionMetric ::
+  (MonadIO m) =>
+  (IO GranularPrometheusMetricsState) ->
+  -- should the metric be observed without a label when granularMetricsState is OFF
+  Bool ->
+  HashMap (Maybe OperationName) Int ->
+  ParameterizedQueryHash ->
+  SubscriptionKindLabel ->
+  -- the mertic action to perform
+  (SubscriptionLabel -> IO ()) ->
+  m ()
+recordSubcriptionMetric getMetricState alwaysObserve operationNamesMap parameterizedQueryHash subscriptionKind metricAction = do
+  -- if no operation names are present, then emit metric with only param query hash as dynamic label
+  if (null operationNamesMap)
+    then do
+      let promMetricGranularLabel = SubscriptionLabel subscriptionKind (Just $ DynamicSubscriptionLabel parameterizedQueryHash Nothing)
+          promMetricLabel = SubscriptionLabel subscriptionKind Nothing
+      recordMetricWithLabel
+        getMetricState
+        alwaysObserve
+        (metricAction promMetricGranularLabel)
+        (metricAction promMetricLabel)
+    else -- if operationNames are present, then emit the same metric for all the operation names
+    do
+      let operationNames = HashMap.keys operationNamesMap
+      for_ operationNames $ \opName -> do
+        let promMetricGranularLabel = SubscriptionLabel subscriptionKind (Just $ DynamicSubscriptionLabel parameterizedQueryHash opName)
+            promMetricLabel = SubscriptionLabel subscriptionKind Nothing
+        recordMetricWithLabel
+          getMetricState
+          alwaysObserve
+          (metricAction promMetricGranularLabel)
+          (metricAction promMetricLabel)

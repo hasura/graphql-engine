@@ -11,6 +11,7 @@ module Hasura.GraphQL.Execute.Subscription.TMap
     union,
     filterWithKey,
     getMap,
+    adjust,
   )
 where
 
@@ -58,3 +59,6 @@ union mapA mapB = do
 
 getMap :: TMap k v -> STM (HashMap.HashMap k v)
 getMap = readTVar . unTMap
+
+adjust :: (Hashable k) => (v -> v) -> k -> TMap k v -> STM ()
+adjust f k mapTV = modifyTVar' (unTMap mapTV) $ HashMap.adjust f k

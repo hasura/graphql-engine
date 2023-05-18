@@ -40,6 +40,7 @@ import Hasura.Server.Prometheus
     decWebsocketConnections,
     incWebsocketConnections,
   )
+import Hasura.Server.Types (MonadGetPolicies (..))
 import Hasura.Services.Network
 import Hasura.Tracing qualified as Tracing
 import Network.WebSockets qualified as WS
@@ -59,7 +60,8 @@ createWSServerApp ::
     MonadQueryTags m,
     HasResourceLimits m,
     ProvidesNetwork m,
-    Tracing.MonadTrace m
+    Tracing.MonadTrace m,
+    MonadGetPolicies m
   ) =>
   HashSet (L.EngineLogType L.Hasura) ->
   WSServerEnv impl ->
@@ -96,9 +98,10 @@ createWSServerApp enabledLogTypes serverEnv connInitTimeout licenseKeyCache = \ 
         onMessage enabledLogTypes getAuthMode serverEnv conn bs (wsActions sp) licenseKeyCache
 
     onCloseHandler conn = mask_ do
+      granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
       liftIO $ EKG.Gauge.dec $ smWebsocketConnections serverMetrics
       liftIO $ decWebsocketConnections $ pmConnections prometheusMetrics
-      onClose logger serverMetrics prometheusMetrics (_wseSubscriptionState serverEnv) conn
+      onClose logger serverMetrics prometheusMetrics (_wseSubscriptionState serverEnv) conn granularPrometheusMetricsState
 
 stopWSServerApp :: WSServerEnv impl -> IO ()
 stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)

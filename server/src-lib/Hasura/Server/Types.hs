@@ -159,11 +159,11 @@ instance ToJSON ApolloFederationStatus where
 
 -- | Whether or not to enable granular metrics for Prometheus.
 --
--- `GranularMetricsOn` will enable the dynamic labels for the metrics. `GranularMetricsOff` will disable the dynamic
--- labels for the metrics.
+-- `GranularMetricsOn` will enable the dynamic labels for the metrics.
+-- `GranularMetricsOff` will disable the dynamic labels for the metrics.
 --
--- **Warning**: Enabling dynamic labels for Prometheus metrics can cause cardinality issues and can cause memory usage
--- to increase.
+-- **Warning**: Enabling dynamic labels for Prometheus metrics can cause cardinality
+-- issues and can cause memory usage to increase.
 data GranularPrometheusMetricsState
   = GranularMetricsOff
   | GranularMetricsOn
@@ -182,6 +182,11 @@ instance ToJSON GranularPrometheusMetricsState where
 class Monad m => MonadGetPolicies m where
   runGetApiTimeLimit ::
     m (Maybe MaxTime)
+
+  -- 'GranularPrometheusMetricsState' is used to decide if dynamic labels needs to be
+  -- added when emitting the prometheus metric. The state of this can be dynamically
+  -- changed via policies. Hence we need to fetch the value from the policy everytime
+  -- before emitting the metric. Thus we create an IO action which fetches the value.
   runGetPrometheusMetricsGranularity ::
     m (IO GranularPrometheusMetricsState)
 

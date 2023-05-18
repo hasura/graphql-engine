@@ -42,7 +42,7 @@ import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
 import Hasura.Server.Init (considerEnv, databaseUrlOption, runWithEnv, _envVar)
 import Hasura.Server.Metrics (createServerMetrics)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
-import Hasura.Server.Types (RequestId (..))
+import Hasura.Server.Types (GranularPrometheusMetricsState (..), RequestId (..))
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import ListT qualified
 import StmContainers.Map qualified as STMMap
@@ -95,6 +95,9 @@ getStaticCohortSnapshot (Cohort cohortId _respRef existingSubsTV newSubsTV _) = 
 
 streamingSubscriptionPollingSpec :: SourceConfig ('Postgres 'Vanilla) -> Spec
 streamingSubscriptionPollingSpec srcConfig = do
+  dummyServerStore <- runIO newStore
+  dummyServerMetrics <- runIO $ createServerMetrics dummyServerStore
+  dummyPromMetrics <- runIO makeDummyPrometheusMetrics
   let setupDDLTx =
         PG.unitQE
           defaultTxErrorHandler
@@ -133,6 +136,7 @@ streamingSubscriptionPollingSpec srcConfig = do
 
   pollerId <- runIO $ PollerId <$> UUID.nextRandom
   pollerResponseState <- runIO $ STM.newTVarIO PRSSuccess
+  emptyOperationNamesMap <- runIO $ STM.atomically $ TMap.new
   let defaultSubscriptionOptions = mkSubscriptionsOptions Nothing Nothing -- use default values
       paramQueryHash = mkUnsafeParameterizedQueryHash "random"
       -- hardcoded multiplexed query which is generated for the following GraphQL query:
@@ -151,7 +155,6 @@ streamingSubscriptionPollingSpec srcConfig = do
               ORDER BY "root.pg.id" ASC   ) AS "_2_root"      ) AS "numbers_stream"      )
               AS "_fld_resp" ON ('true')
         |]
-  dummyPrometheusMetrics <- runIO makeDummyPrometheusMetrics
   let pollingAction cohortMap testSyncAction =
         pollStreamingQuery
           @('Postgres 'Vanilla)
@@ -166,7 +169,10 @@ streamingSubscriptionPollingSpec srcConfig = do
           [G.name|randomRootField|]
           (const $ pure ())
           testSyncAction
-          dummyPrometheusMetrics
+          dummyPromMetrics
+          (pure GranularMetricsOff)
+          emptyOperationNamesMap
+          Nothing
 
       mkSubscriber sId =
         let wsId = maybe (error "Invalid UUID") WS.mkUnsafeWSId $ UUID.fromString "ec981f92-8d5a-47ab-a306-80af7cfb1113"
@@ -218,7 +224,7 @@ streamingSubscriptionPollingSpec srcConfig = do
           TMap.reset cohortMap
           TMap.insert cohort1 cohortKey1 cohortMap
 
-      runIO $ pollingAction cohortMap Nothing Nothing
+      runIO $ pollingAction cohortMap Nothing
       currentCohortMap <- runIO $ STM.atomically $ TMap.getMap cohortMap
 
       it "the key of the cohort1 should have been moved from the cohortKey1 to cohortKey2, so it should not be found anymore at cohortKey1" $ do
@@ -241,7 +247,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               MVar.readMVar syncMVar
               STM.atomically $ TMap.insert cohort2 cohortKey3 cohortMap
         Async.withAsync
-          (pollingAction cohortMap (Just syncAction) Nothing)
+          (pollingAction cohortMap (Just syncAction))
           ( \pollAsync -> do
               MVar.putMVar syncMVar ()
               Async.wait pollAsync
@@ -264,7 +270,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               MVar.readMVar syncMVar
               STM.atomically $ TMap.delete cohortKey1 cohortMap
         Async.withAsync
-          (pollingAction cohortMap (Just syncAction) Nothing)
+          (pollingAction cohortMap (Just syncAction))
           ( \pollAsync -> do
               MVar.putMVar syncMVar ()
               Async.wait pollAsync
@@ -283,7 +289,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               MVar.readMVar syncMVar
               STM.atomically $ addSubscriberToCohort newTemporarySubscriber cohort1
         Async.withAsync
-          (pollingAction cohortMap (Just syncAction) Nothing)
+          (pollingAction cohortMap (Just syncAction))
           ( \pollAsync -> do
               -- concurrently inserting a new cohort to a key (cohortKey2) to which
               -- cohort1 is expected to be associated after the current poll
@@ -315,7 +321,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               MVar.readMVar syncMVar
               STM.atomically $ TMap.delete temporarySubscriberId (_cNewSubscribers cohort1)
         Async.withAsync
-          (pollingAction cohortMap (Just syncAction) Nothing)
+          (pollingAction cohortMap (Just syncAction))
           ( \pollAsync -> do
               MVar.putMVar syncMVar ()
               Async.wait pollAsync
@@ -339,10 +345,6 @@ streamingSubscriptionPollingSpec srcConfig = do
           TMap.delete temporarySubscriberId (_cNewSubscribers cohort1)
 
     describe "Adding two subscribers concurrently" $ do
-      dummyServerStore <- runIO newStore
-      dummyServerMetrics <- runIO $ createServerMetrics dummyServerStore
-      dummyPromMetrics <- runIO makeDummyPrometheusMetrics
-
       subscriptionState <- do
         runIO $ initSubscriptionsState (const (pure ()))
 
@@ -389,6 +391,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               reqId
               [G.name|numbers_stream|]
               subscriptionQueryPlan
+              (pure GranularMetricsOff)
               (const (pure ()))
 
       it "concurrently adding two subscribers should retain both of them in the poller map" $ do
@@ -403,7 +406,7 @@ streamingSubscriptionPollingSpec srcConfig = do
 
         streamQueryMapEntries <- STM.atomically $ ListT.toList $ STMMap.listT streamQueryMap
         length streamQueryMapEntries `shouldBe` 1
-        let (pollerKey, (Poller currentCohortMap _ ioState)) = head streamQueryMapEntries
+        let (pollerKey, (Poller currentCohortMap _ ioState _ _)) = head streamQueryMapEntries
         cohorts <- STM.atomically $ TMap.toList currentCohortMap
         length cohorts `shouldBe` 1
         let (_cohortKey, Cohort _ _ curSubsTV newSubsTV _) = head cohorts

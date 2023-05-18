@@ -121,7 +121,7 @@ parameterizedQueryHashListToObject =
       [("parameterized_query_hash", J.toJSON queryHashes)]
 
 newtype ParameterizedQueryHash = ParameterizedQueryHash {unParamQueryHash :: B.ByteString}
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 instance J.ToJSON ParameterizedQueryHash where
   toJSON = J.String . bsToTxt . unParamQueryHash
