@@ -30,6 +30,7 @@ import {
 } from './schema';
 import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
 import { useState } from 'react';
+import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
 
 export const StoredProcedureWidget = () => {
   const {
@@ -105,6 +106,8 @@ export const StoredProcedureWidget = () => {
     },
   });
 
+  const pushRoute = usePushRoute();
+
   if (isMetadataLoading)
     return <Skeleton count={8} height={25} className="mb-2" />;
 
@@ -141,6 +144,7 @@ export const StoredProcedureWidget = () => {
           type: 'success',
           title: STORED_PROCEDURE_TRACK_SUCCESS,
         });
+        pushRoute('/data/native-queries/stored-procedures');
       },
       onError: err => {
         hasuraToast({

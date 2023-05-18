@@ -38,9 +38,14 @@ export function CardedTableFromReactTable<T>({
           </CardedTable.TableBodyRow>
         ))}
         {table.getRowModel().rows.length === 0 && (
-          <td className="p-3 text-muted" colSpan={table.getAllColumns().length}>
-            {noRowsMessage || 'No data to display'}
-          </td>
+          <tr>
+            <td
+              className="p-3 text-muted"
+              colSpan={table.getAllColumns().length}
+            >
+              {noRowsMessage || 'No data to display'}
+            </td>
+          </tr>
         )}
       </CardedTable.TableBody>
     </CardedTable.Table>
