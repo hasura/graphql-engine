@@ -1,4 +1,4 @@
-This note is in [Hasura.GraphQL.Execute.Subscription.Poll.StreamingQuery](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/Subscription/Poll/StreamingQuery.hs#L145).
+This note is in [Hasura.GraphQL.Execute.Subscription.Poll.StreamingQuery](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/Subscription/Poll/StreamingQuery.hs#L147).
 
 # Lifecycle of a streaming subscription poller
 
