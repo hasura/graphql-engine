@@ -1,22 +1,25 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 import { useFormContext } from 'react-hook-form';
-import { MetadataTable, Table } from '../../../hasura-metadata-types';
-import { useHttpClient } from '../../../Network';
 import { useQuery } from 'react-query';
-import { DataSource, exportMetadata, Operator } from '../../../DataSource';
-import { areTablesEqual } from '../../../hasura-metadata-api';
-import { getTypeName } from '../../../GraphQLUtils';
+import { getIngForm } from '../../../../components/Services/Data/utils';
 import { InputField } from '../../../../new-components/Form';
 import { IconTooltip } from '../../../../new-components/Tooltip';
 import { Collapse } from '../../../../new-components/deprecated';
-import { getIngForm } from '../../../../components/Services/Data/utils';
-import { RowPermissionBuilder } from './RowPermissionsBuilder';
+import { DataSource, Operator, exportMetadata } from '../../../DataSource';
+import { getTypeName } from '../../../GraphQLUtils';
+import { useHttpClient } from '../../../Network';
+import {
+  MetadataSelectors,
+  areTablesEqual,
+  useMetadata,
+} from '../../../hasura-metadata-api';
+import { Table } from '../../../hasura-metadata-types';
 import { QueryType } from '../../types';
 import { ReturnValue } from '../hooks';
-import { useMetadataTable } from '../../../hasura-metadata-api/metadataHooks';
-import { getNonSelectedQueryTypePermissions } from '../utils/getMapQueryTypePermissions';
 import { copyQueryTypePermissions } from '../utils/copyQueryTypePermissions';
+import { getNonSelectedQueryTypePermissions } from '../utils/getMapQueryTypePermissions';
+import { RowPermissionBuilder } from './RowPermissionsBuilder';
 
 const NoChecksLabel = () => (
   <span data-test="without-checks">Without any checks&nbsp;</span>
@@ -139,10 +142,13 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
   roleName,
 }) => {
   const { data: tableName, isLoading } = useTypeName({ table, dataSourceName });
-  const metadataTable = useMetadataTable(dataSourceName, table);
+
+  const { data: metadataTable } = useMetadata(
+    MetadataSelectors.findTable(dataSourceName, table)
+  );
 
   const nonSelectedQueryTypePermissions = getNonSelectedQueryTypePermissions(
-    metadataTable?.data as MetadataTable,
+    metadataTable,
     queryType,
     roleName
   );

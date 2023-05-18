@@ -53,7 +53,7 @@ const getPermissionsMappedByRole = ({
 };
 
 export const getNonSelectedQueryTypePermissions = (
-  tableData: MetadataTable,
+  tableData: MetadataTable | undefined,
   currentQueryType: string,
   currentRole: string
 ) => {
