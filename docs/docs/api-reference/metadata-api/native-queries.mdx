@@ -60,7 +60,7 @@ X-Hasura-Role: admin
 | source          | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                          | Name of the source database (default: `default`)            |
 | root_field_name | true     | [QueryName](/api-reference/syntax-defs.mdx#queryname)                                            | Name of the Native Query                                    |
 | type            | false    | `"query"`                                                                                        | The type of the GraphQL query (currently must be `"query"`) |
-| arguments       | true     | Mapping from String to [NativeQueryArgument](/api-reference/syntax-defs.mdx#nativequeryargument) | Configuration for each argument                             |
+| arguments       | false    | Mapping from String to [NativeQueryArgument](/api-reference/syntax-defs.mdx#nativequeryargument) | Configuration for each argument                             |
 | code            | true     | String                                                                                           | The SQL to run on request                                   |
 | returns         | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)                              | Name of the logical model representing the resulting schema |
 
@@ -126,7 +126,7 @@ X-Hasura-Role: admin
 | source          | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                          | Name of the source database (default: `default`)            |
 | root_field_name | true     | [QueryName](/api-reference/syntax-defs.mdx#queryname)                                            | Name of the Native Query                                    |
 | type            | false    | `"query"`                                                                                        | The type of the GraphQL query (currently must be `"query"`) |
-| arguments       | true     | Mapping from String to [NativeQueryArgument](/api-reference/syntax-defs.mdx#nativequeryargument) | Configuration for each argument                             |
+| arguments       | false    | Mapping from String to [NativeQueryArgument](/api-reference/syntax-defs.mdx#nativequeryargument) | Configuration for each argument                             |
 | code            | true     | String                                                                                           | The SQL to run on request                                   |
 | returns         | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)                              | Name of the logical model representing the resulting schema |
 
@@ -192,7 +192,7 @@ X-Hasura-Role: admin
 | source          | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                          | Name of the source database (default: `default`)            |
 | root_field_name | true     | [QueryName](/api-reference/syntax-defs.mdx#queryname)                                            | Name of the Native Query                                    |
 | type            | false    | `"query"`                                                                                        | The type of the GraphQL query (currently must be `"query"`) |
-| arguments       | true     | Mapping from String to [NativeQueryArgument](/api-reference/syntax-defs.mdx#nativequeryargument) | Configuration for each argument                             |
+| arguments       | false    | Mapping from String to [NativeQueryArgument](/api-reference/syntax-defs.mdx#nativequeryargument) | Configuration for each argument                             |
 | code            | true     | String                                                                                           | The SQL to run on request                                   |
 | returns         | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)                              | Name of the logical model representing the resulting schema |
 

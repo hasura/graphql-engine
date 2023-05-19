@@ -1266,6 +1266,21 @@ via [Custom Types](/api-reference/metadata-api/custom-types.mdx)
 | nullable    | false    | `Boolean` | True if the underlying column is nullable (default: `false`)    |
 | description | false    | `String`  | An extended description of the argument                         |
 
+## Stored Procedure Argument {#stored-procedure-argument}
+
+| Key         | Required | Schema    | Description                                                     |
+| ----------- | -------- | --------- | --------------------------------------------------------------- |
+| type        | true     | `String`  | The type of the column, according to the underlying data source |
+| nullable    | false    | `Boolean` | True if the underlying column is nullable (default: `false`)    |
+| description | false    | `String`  | An extended description of the argument                         |
+
+## Stored Procedure Configuration {#stored-procedure-configuration}
+
+| Key         | Required | Schema   | Description                                                                                                                                                             |
+| ----------- | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| custom_name | false    | `String` | Customize the `<stored-procedure-name>` with the provided custom name value. The GraphQL nodes for the stored procedure will be generated according to the custom name. |
+| exposed_as  | true     | `String` | In which part of the schema should we expose this stored procedure? Currently only "query" is supported.                                                                |
+
 ## Function Configuration {#function-configuration}
 
 | Key                | Required | Schema                                                      | Description                                                                                                                                             |
@@ -1725,4 +1740,3 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 | Key                   | required | Schema                           | Description                                                               |
 |-----------------------|----------|----------------------------------|---------------------------------------------------------------------------|
 | max_export_batch_size | false    |  `Integer`                       | Maximum number of spans allowed per export request. Default value is 512  |
-
