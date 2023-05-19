@@ -1,4 +1,7 @@
 {
   "label": "Hasura Use Cases",
-  "position": 1
+  "position": 1,
+  "customProps": {
+    "sidebar_pathname": "resources/use-case"
+  }
 }
