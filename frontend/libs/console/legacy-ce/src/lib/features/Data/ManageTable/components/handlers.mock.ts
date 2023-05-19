@@ -75,19 +75,22 @@ export const resetMetadata = () => {
   metadata = initialMetadata();
 };
 
-function isTrackOrUntrackTable(body: any) {
-  return body.type === 'bulk_keep_going';
+// function isTrackOrUntrackTable(body: any) {
+//   return (
+//     body.type === 'postgres_track_tables' ||
+//     body.type === 'postgres_track_tables'
+//   );
+// }
+
+function isTrackTable(type: string) {
+  return type === 'postgres_track_tables';
 }
 
-function isTrackTable(arg: any) {
-  return arg.type === 'postgres_track_table';
+function isUntrackTable(type: any) {
+  return type === 'postgres_untrack_tables';
 }
 
-function isUntrackTable(arg: any) {
-  return arg.type === 'postgres_untrack_table';
-}
-
-const runSQLResponse = (size = 1700): RunSQLResponse => ({
+const runSQLResponse = (size = 100): RunSQLResponse => ({
   result_type: 'TuplesOk',
   result: [
     ['table_name', 'table_schema', 'table_type'],
@@ -124,16 +127,12 @@ function createTables(count: number) {
 export const handlers = (amountOfTables = 1700) => [
   rest.post(`http://localhost:8080/v1/metadata`, async (req, res, ctx) => {
     const body = (await req.json()) as TMigration['query'];
-    if (isTrackOrUntrackTable(body)) {
-      body.args.forEach((arg: any) => {
-        if (isTrackTable(arg)) {
-          trackTable(arg.args.table);
-        }
-        if (isUntrackTable(arg)) {
-          untrackTable(arg.args.table);
-        }
-      });
+    if (isTrackTable(body.type)) {
+      body.args.tables.forEach((table: any) => trackTable(table.table));
+    } else if (isUntrackTable(body.type)) {
+      body.args.tables.forEach((table: any) => untrackTable(table.table));
     }
+
     return res(ctx.json({ ...metadata }));
   }),
   rest.post(`http://localhost:8080/v2/query`, async (req, res, ctx) => {

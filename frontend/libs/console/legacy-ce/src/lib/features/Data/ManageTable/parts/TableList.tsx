@@ -17,9 +17,7 @@ import { TableRow } from './TableRow';
 import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
 import { useTrackTables } from '../../hooks/useTrackTables';
 import { hasuraToast } from '../../../../new-components/Toasts';
-import { APIError } from '../../../../hooks/error';
-import { useInvalidateMetadata } from '../../../hasura-metadata-api';
-import { TableDisplayName } from '../components/TableDisplayName';
+import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
 
 interface TableListProps {
   dataSourceName: string;
@@ -46,128 +44,52 @@ export const TableList = (props: TableListProps) => {
     checkboxRef.current.indeterminate = inputStatus === 'indeterminate';
   }, [inputStatus]);
 
-  const { untrackTablesInBatches, isLoading, trackTablesInBatches } =
-    useTrackTables({
-      dataSourceName,
-    });
-
-  const [progress, setProgress] = useState<undefined | number>();
-  const invalidateMetadata = useInvalidateMetadata();
+  const { trackTables, isLoading, untrackTables } = useTrackTables({
+    dataSourceName,
+  });
 
   const onClick = async () => {
     const tables = filteredTables.filter(({ name }) =>
       checkedIds.includes(name)
     );
 
-    if (mode === 'track') {
-      untrackTablesInBatches({
-        tablesToBeUntracked: tables,
-        onSuccess: (data, variables, ctx, batchInfo) => {
-          const { batchNumber, totalBatchSize, aggregatedResults } = batchInfo;
-
-          setProgress((batchNumber / totalBatchSize) * 100);
-
-          if (batchNumber === totalBatchSize) {
-            const failedResults = aggregatedResults.reduce<TrackableTable[]>(
-              (acc, result, index) => {
-                if ('error' in result)
-                  return [...acc, { ...tables[index], status: result.error }];
-
-                return acc;
-              },
-              []
-            );
-
-            if (failedResults.length) {
-              hasuraToast({
-                type: 'info',
-                title: `Complete (${
-                  tables.length - failedResults.length
-                } untracked, ${failedResults.length} failed)`,
-                children: (
-                  <div>
-                    Some tables in the list could not be untracked due to
-                    conflicts -
-                    <div>
-                      {failedResults.map(table => (
-                        <TableDisplayName table={table.table} />
-                      ))}
-                    </div>
-                  </div>
-                ),
-              });
-            } else {
-              hasuraToast({
-                type: 'success',
-                title: 'Successfully untracked',
-                message: `${tables.length} objects untracked`,
-              });
-            }
-            invalidateMetadata();
-            setProgress(undefined);
-          }
+    if (mode === 'untrack') {
+      trackTables({
+        tablesToBeTracked: tables,
+        onSuccess: () => {
+          hasuraToast({
+            type: 'success',
+            title: 'Successfully tracked',
+            message: `${tables.length} ${
+              tables.length <= 1 ? 'table' : 'tables'
+            } tracked!`,
+          });
         },
         onError: err => {
           hasuraToast({
             type: 'error',
-            title: 'Unable to perform operation',
-            message: (err as APIError).message,
+            title: err.name,
+            children: <DisplayToastErrorMessage message={err.message} />,
           });
         },
       });
     } else {
-      trackTablesInBatches({
-        tablesToBeTracked: tables,
-        onSuccess: (data, variables, ctx, batchInfo) => {
-          const { batchNumber, totalBatchSize, aggregatedResults } = batchInfo;
-
-          setProgress((batchNumber / totalBatchSize) * 100);
-
-          if (batchNumber === totalBatchSize) {
-            const failedResults = aggregatedResults.reduce<TrackableTable[]>(
-              (acc, result, index) => {
-                if ('error' in result)
-                  return [...acc, { ...tables[index], status: result.error }];
-
-                return acc;
-              },
-              []
-            );
-
-            if (failedResults.length) {
-              hasuraToast({
-                type: 'info',
-                title: `Complete (${
-                  tables.length - failedResults.length
-                } tracked, ${failedResults.length} failed)`,
-                children: (
-                  <div>
-                    Some tables in the list could not be tracked due to
-                    conflicts -
-                    <div>
-                      {failedResults.map(table => (
-                        <TableDisplayName table={table.table} />
-                      ))}
-                    </div>
-                  </div>
-                ),
-              });
-            } else {
-              hasuraToast({
-                type: 'success',
-                title: 'Successfully tracked',
-                message: `${tables.length} objects tracked`,
-              });
-            }
-            invalidateMetadata();
-            setProgress(undefined);
-          }
+      untrackTables({
+        tablesToBeUntracked: tables,
+        onSuccess: () => {
+          hasuraToast({
+            type: 'success',
+            title: 'Successfully untracked',
+            message: `${tables.length} ${
+              tables.length <= 1 ? 'table' : 'tables'
+            } untracked`,
+          });
         },
         onError: err => {
           hasuraToast({
             type: 'error',
-            title: 'Unable to perform operation',
-            message: (err as APIError).message,
+            title: err.name,
+            children: <DisplayToastErrorMessage message={err.message} />,
           });
         },
       });
@@ -197,11 +119,7 @@ export const TableList = (props: TableListProps) => {
             disabled={!checkedIds.length}
             onClick={onClick}
             isLoading={isLoading}
-            loadingText={
-              progress
-                ? `Please Wait (${Math.floor(progress)}%)`
-                : 'Please Wait'
-            }
+            loadingText={'Please Wait'}
           >
             {`${mode === 'track' ? 'Untrack' : 'Track'} Selected (${
               checkedIds.length
