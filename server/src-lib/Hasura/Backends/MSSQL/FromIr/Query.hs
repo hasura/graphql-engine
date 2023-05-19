@@ -154,7 +154,7 @@ fromSourceRelationship lhs lhsSchema argumentId relationshipField = do
 -- | Build the 'FieldSource' for the relation field, depending on whether it's
 -- an object, array, or aggregate relationship.
 fromRemoteRelationFieldsG ::
-  Map TableName EntityAlias ->
+  Map (Either NativeQueryName TableName) EntityAlias ->
   HashMap.HashMap ColumnName ColumnName ->
   (IR.FieldName, IR.SourceRelationshipSelection 'MSSQL Void (Const Expression)) ->
   ReaderT EntityAlias FromIr FieldSource
@@ -465,7 +465,7 @@ data Args = Args
     argsTop :: Top,
     argsOffset :: Maybe Expression,
     argsDistinct :: Proxy (Maybe (NonEmpty FieldName)),
-    argsExistingJoins :: Map TableName EntityAlias
+    argsExistingJoins :: Map (Either NativeQueryName TableName) EntityAlias
   }
   deriving (Show)
 
@@ -562,7 +562,7 @@ fromTableAggFieldG = \case
   _ -> Nothing
 
 fromTableNodesFieldG ::
-  Map TableName EntityAlias ->
+  Map (Either NativeQueryName TableName) EntityAlias ->
   (Int, (IR.FieldName, IR.TableAggregateFieldG 'MSSQL Void Expression)) ->
   Maybe (ReaderT EntityAlias FromIr (Int, (IR.FieldName, [FieldSource])))
 fromTableNodesFieldG argsExistingJoins = \case
@@ -601,7 +601,7 @@ fromAggregateField alias aggregateField =
 
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::
-  Map TableName EntityAlias ->
+  Map (Either NativeQueryName TableName) EntityAlias ->
   (IR.FieldName, IR.AnnFieldG 'MSSQL Void Expression) ->
   ReaderT EntityAlias FromIr FieldSource
 fromAnnFieldsG existingJoins (IR.FieldName name, field) =
@@ -715,14 +715,15 @@ fieldSourceJoin =
 -- Joins
 
 fromObjectRelationSelectG ::
-  Map TableName EntityAlias ->
+  Map (Either NativeQueryName TableName) EntityAlias ->
   IR.ObjectRelationSelectG 'MSSQL Void Expression ->
   ReaderT EntityAlias FromIr Join
 fromObjectRelationSelectG existingJoins annRelationSelectG = do
-  let tableFrom = case target of
-        IR.FromTable t -> t
-        other -> error $ "fromObjectRelationSelectG: " <> show other
-  eitherAliasOrFrom <- lift (lookupTableFrom existingJoins tableFrom)
+  eitherAliasOrFrom <-
+    case target of
+      IR.FromTable t -> lift (lookupTableFrom existingJoins t)
+      IR.FromNativeQuery q -> lift (lookupNativeQueryFrom existingJoins q)
+      other -> error $ "fromObjectRelationSelectG: " <> show other
   let entityAlias :: EntityAlias = either id fromAlias eitherAliasOrFrom
   fieldSources <-
     local
@@ -786,13 +787,22 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
       } = annRelationSelectG
 
 lookupTableFrom ::
-  Map TableName EntityAlias ->
+  Map (Either NativeQueryName TableName) EntityAlias ->
   TableName ->
   FromIr (Either EntityAlias From)
 lookupTableFrom existingJoins tableFrom = do
-  case M.lookup tableFrom existingJoins of
+  case M.lookup (Right tableFrom) existingJoins of
     Just entityAlias -> pure (Left entityAlias)
     Nothing -> fmap Right (fromQualifiedTable tableFrom)
+
+lookupNativeQueryFrom ::
+  Map (Either NativeQueryName TableName) EntityAlias ->
+  IR.NativeQuery 'MSSQL Expression ->
+  FromIr (Either EntityAlias From)
+lookupNativeQueryFrom existingJoins nativeQueryFrom = do
+  case M.lookup (Left (IR.nqRootFieldName nativeQueryFrom)) existingJoins of
+    Just entityAlias -> pure (Left entityAlias)
+    Nothing -> fmap Right (fromNativeQuery nativeQueryFrom)
 
 fromArraySelectG :: IR.ArraySelectG 'MSSQL Void Expression -> ReaderT EntityAlias FromIr Join
 fromArraySelectG =
@@ -910,7 +920,7 @@ safeJsonQueryExpression expectedType jsonQuery =
 data UnfurledJoin = UnfurledJoin
   { unfurledJoin :: Join,
     -- | Recorded if we joined onto an object relation.
-    unfurledObjectTableAlias :: Maybe (TableName, EntityAlias)
+    unfurledObjectTableAlias :: Maybe (Either NativeQueryName TableName, EntityAlias)
   }
   deriving (Show)
 
@@ -941,50 +951,17 @@ unfurlAnnotatedOrderByElement =
             -- text/ntext/image. See ToQuery for more explanation.
             _ -> Nothing
         )
-    IR.AOCObjectRelation IR.RelInfo {riTarget = IR.RelTargetNativeQuery _} _annBoolExp _annOrderByElementG ->
-      error "unfurlAnnotatedOrderByElement RelTargetNativeQuery"
+    IR.AOCObjectRelation IR.RelInfo {riMapping = mapping, riTarget = IR.RelTargetNativeQuery nativeQueryName} annBoolExp annOrderByElementG -> do
+      let name = T.toTxt (getNativeQueryName nativeQueryName)
+          selectFrom = TSQL.FromIdentifier name
+      joinAliasEntity <-
+        lift (lift (generateAlias (ForOrderAlias name)))
+      genObjectRelation mapping annBoolExp annOrderByElementG joinAliasEntity selectFrom (Left nativeQueryName)
     IR.AOCObjectRelation IR.RelInfo {riMapping = mapping, riTarget = IR.RelTargetTable table} annBoolExp annOrderByElementG -> do
       selectFrom <- lift (lift (fromQualifiedTable table))
       joinAliasEntity <-
         lift (lift (generateAlias (ForOrderAlias (tableNameText table))))
-      foreignKeyConditions <- lift (fromMapping selectFrom mapping)
-      -- TODO: Because these object relations are re-used by regular
-      -- object mapping queries, this WHERE may be unnecessarily
-      -- restrictive. But I actually don't know from where such an
-      -- expression arises in the source GraphQL syntax.
-      --
-      -- Worst case scenario, we could put the WHERE in the key of the
-      -- Map in 'argsExistingJoins'. That would guarantee only equal
-      -- selects are re-used.
-      whereExpression <-
-        lift (local (const (fromAlias selectFrom)) (fromGBoolExp annBoolExp))
-      tell
-        ( pure
-            UnfurledJoin
-              { unfurledJoin =
-                  Join
-                    { joinSource =
-                        JoinSelect
-                          emptySelect
-                            { selectTop = NoTop,
-                              selectProjections = [StarProjection],
-                              selectFrom = Just selectFrom,
-                              selectJoins = [],
-                              selectWhere =
-                                Where (foreignKeyConditions <> [whereExpression]),
-                              selectFor = NoFor,
-                              selectOrderBy = Nothing,
-                              selectOffset = Nothing
-                            },
-                      joinJoinAlias =
-                        JoinAlias {joinAliasEntity, joinAliasField = Nothing}
-                    },
-                unfurledObjectTableAlias = Just (table, EntityAlias joinAliasEntity)
-              }
-        )
-      local
-        (const (EntityAlias joinAliasEntity))
-        (unfurlAnnotatedOrderByElement annOrderByElementG)
+      genObjectRelation mapping annBoolExp annOrderByElementG joinAliasEntity selectFrom (Right table)
     IR.AOCArrayAggregation IR.RelInfo {riTarget = IR.RelTargetNativeQuery _} _annBoolExp _annAggregateOrderBy ->
       error "unfurlAnnotatedOrderByElement RelTargetNativeQuery"
     IR.AOCArrayAggregation IR.RelInfo {riMapping = mapping, riTarget = IR.RelTargetTable tableName} annBoolExp annAggregateOrderBy -> do
@@ -1042,6 +1019,46 @@ unfurlAnnotatedOrderByElement =
         ( FieldName {fieldNameEntity = joinAliasEntity, fieldName = alias},
           Nothing
         )
+  where
+    genObjectRelation mapping annBoolExp annOrderByElementG joinAliasEntity selectFrom table = do
+      foreignKeyConditions <- lift (fromMapping selectFrom mapping)
+      -- TODO: Because these object relations are re-used by regular
+      -- object mapping queries, this WHERE may be unnecessarily
+      -- restrictive. But I actually don't know from where such an
+      -- expression arises in the source GraphQL syntax.
+      --
+      -- Worst case scenario, we could put the WHERE in the key of the
+      -- Map in 'argsExistingJoins'. That would guarantee only equal
+      -- selects are re-used.
+      whereExpression <-
+        lift (local (const (fromAlias selectFrom)) (fromGBoolExp annBoolExp))
+      tell
+        ( pure
+            UnfurledJoin
+              { unfurledJoin =
+                  Join
+                    { joinSource =
+                        JoinSelect
+                          emptySelect
+                            { selectTop = NoTop,
+                              selectProjections = [StarProjection],
+                              selectFrom = Just selectFrom,
+                              selectJoins = [],
+                              selectWhere =
+                                Where (foreignKeyConditions <> [whereExpression]),
+                              selectFor = NoFor,
+                              selectOrderBy = Nothing,
+                              selectOffset = Nothing
+                            },
+                      joinJoinAlias =
+                        JoinAlias {joinAliasEntity, joinAliasField = Nothing}
+                    },
+                unfurledObjectTableAlias = Just (table, EntityAlias joinAliasEntity)
+              }
+        )
+      local
+        (const (EntityAlias joinAliasEntity))
+        (unfurlAnnotatedOrderByElement annOrderByElementG)
 
 tableNameText :: TableName -> Text
 tableNameText (TableName {tableName}) = tableName
