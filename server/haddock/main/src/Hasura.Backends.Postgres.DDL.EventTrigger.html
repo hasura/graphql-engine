@@ -3151,7 +3151,7 @@ _gelName :: TriggerName
 </span><span id="line-1192"></span><span>          </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span>
 </span><span id="line-1193"></span><span>          </span><span class="annot"><span class="">[PG.sql|
-            SELECT *
+            SELECT id, schema_name, table_name, trigger_name, payload, delivered, error, tries, created_at, locked, next_retry_at, archived
               FROM hdb_catalog.event_log
               WHERE trigger_name = $1 
               AND delivered=false AND error=false AND archived=false ORDER BY created_at DESC LIMIT $2 OFFSET $3;
@@ -3177,7 +3177,7 @@ _gelName :: TriggerName
 </span><span id="line-1204"></span><span>          </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span>
 </span><span id="line-1205"></span><span>          </span><span class="annot"><span class="">[PG.sql|
-            SELECT *
+            SELECT id, schema_name, table_name, trigger_name, payload, delivered, error, tries, created_at, locked, next_retry_at, archived
               FROM hdb_catalog.event_log
               WHERE trigger_name = $1 
               AND (delivered=true OR error=true) AND archived=false ORDER BY created_at DESC LIMIT $2 OFFSET $3;
@@ -3203,7 +3203,7 @@ _gelName :: TriggerName
 </span><span id="line-1216"></span><span>          </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span>
 </span><span id="line-1217"></span><span>          </span><span class="annot"><span class="">[PG.sql|
-            SELECT *
+            SELECT id, schema_name, table_name, trigger_name, payload, delivered, error, tries, created_at, locked, next_retry_at, archived
               FROM hdb_catalog.event_log
               WHERE trigger_name = $1 
               ORDER BY created_at DESC LIMIT $2 OFFSET $3;
@@ -3291,7 +3291,7 @@ _geiName :: TriggerName
 </span><span id="line-1244"></span><span>      </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span>
 </span><span id="line-1245"></span><span>      </span><span class="annot"><span class="">[PG.sql|
-        SELECT *
+        SELECT id, trigger_name, event_id, status, request, response, created_at
           FROM hdb_catalog.event_invocation_logs
           WHERE trigger_name = $1 
           ORDER BY created_at DESC LIMIT $2 OFFSET $3;
@@ -3414,7 +3414,7 @@ _gebiEventId :: forall (b :: BackendType). GetEventById b -&gt; EventId
 </span><span id="line-1282"></span><span>        </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span>
 </span><span id="line-1283"></span><span>        </span><span class="annot"><span class="">[PG.sql|
-          SELECT *
+          SELECT id, schema_name, table_name, trigger_name, payload, delivered, error, tries, created_at, locked, next_retry_at, archived
             FROM hdb_catalog.event_log
             WHERE id = $1;
           |]</span></span><span>
@@ -3447,7 +3447,7 @@ _gebiEventId :: forall (b :: BackendType). GetEventById b -&gt; EventId
 </span><span id="line-1296"></span><span>            </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span>
 </span><span id="line-1297"></span><span>            </span><span class="annot"><span class="">[PG.sql|
-              SELECT *
+              SELECT id, trigger_name, event_id, status, request, response, created_at
                 FROM hdb_catalog.event_invocation_logs
                 WHERE event_id = $1
                 ORDER BY created_at DESC LIMIT $2 OFFSET $3;
