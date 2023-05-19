@@ -20,6 +20,10 @@ module Hasura.RQL.DDL.Schema.Source
     GetSourceTables (..),
     runGetSourceTables,
 
+    -- * Get Source Functions
+    GetSourceTrackables (..),
+    runGetSourceTrackables,
+
     -- * Get Table Name
     GetTableInfo (..),
     runGetTableInfo,
@@ -346,6 +350,31 @@ instance FromJSON (GetSourceTables b) where
   parseJSON = J.withObject "GetSourceTables" \o -> do
     _gstSourceName <- o .: "source"
     pure $ GetSourceTables {..}
+
+-- | Fetch a list of tables for the request data source.
+runGetSourceTrackables ::
+  forall b m r.
+  ( BackendMetadata b,
+    CacheRM m,
+    MonadError Error.QErr m,
+    Metadata.MetadataM m,
+    MonadIO m,
+    MonadBaseControl IO m,
+    MonadReader r m,
+    Has (L.Logger L.Hasura) r,
+    ProvidesNetwork m
+  ) =>
+  GetSourceTrackables b ->
+  m EncJSON
+runGetSourceTrackables GetSourceTrackables {..} = do
+  fmap EncJSON.encJFromJValue (listAllTrackables @b _gstrSourceName)
+
+newtype GetSourceTrackables (b :: BackendType) = GetSourceTrackables {_gstrSourceName :: SourceName}
+
+instance FromJSON (GetSourceTrackables b) where
+  parseJSON = J.withObject "GetSourceFunctions" \o -> do
+    _gstrSourceName <- o .: "source"
+    pure $ GetSourceTrackables {..}
 
 -- | Fetch a list of tables for the request data source.
 runGetSourceTables ::

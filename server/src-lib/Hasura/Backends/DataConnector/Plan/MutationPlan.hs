@@ -92,21 +92,22 @@ translateMutationDB ::
 translateMutationDB sessionVariables = \case
   MDBInsert insert -> do
     (insertOperation, (tableRelationships, tableInsertSchemas)) <- CPS.runWriterT $ translateInsert sessionVariables insert
-    let apiTableRelationships = Set.fromList $ uncurry API.TableRelationships <$> HashMap.toList (unTableRelationships tableRelationships)
     let apiTableInsertSchema =
           unTableInsertSchemas tableInsertSchemas
             & HashMap.toList
             & fmap (\(tableName, TableInsertSchema {..}) -> API.TableInsertSchema tableName _tisPrimaryKey _tisFields)
-            & Set.fromList
+    let apiTableRelationships = Set.fromList $ uncurry API.TableRelationships <$> rights (map eitherKey (HashMap.toList (unTableRelationships tableRelationships)))
     pure $
       API.MutationRequest
         { _mrTableRelationships = apiTableRelationships,
-          _mrInsertSchema = apiTableInsertSchema,
+          _mrInsertSchema = Set.fromList apiTableInsertSchema,
           _mrOperations = [API.InsertOperation insertOperation]
         }
   MDBUpdate update -> do
     (updateOperations, tableRelationships) <- CPS.runWriterT $ translateUpdate sessionVariables update
-    let apiTableRelationships = Set.fromList $ uncurry API.TableRelationships <$> HashMap.toList (unTableRelationships tableRelationships)
+    let apiTableRelationships =
+          Set.fromList $
+            uncurry API.TableRelationships <$> rights (map eitherKey (HashMap.toList (unTableRelationships tableRelationships)))
     pure $
       API.MutationRequest
         { _mrTableRelationships = apiTableRelationships,
@@ -115,7 +116,9 @@ translateMutationDB sessionVariables = \case
         }
   MDBDelete delete -> do
     (deleteOperation, tableRelationships) <- CPS.runWriterT $ translateDelete sessionVariables delete
-    let apiTableRelationships = Set.fromList $ uncurry API.TableRelationships <$> HashMap.toList (unTableRelationships tableRelationships)
+    let apiTableRelationships =
+          Set.fromList $
+            uncurry API.TableRelationships <$> rights (map eitherKey (HashMap.toList (unTableRelationships tableRelationships)))
     pure $
       API.MutationRequest
         { _mrTableRelationships = apiTableRelationships,
@@ -125,6 +128,10 @@ translateMutationDB sessionVariables = \case
   MDBFunction _returnsSet _select ->
     throw400 NotSupported "translateMutationDB: function mutations not implemented for the Data Connector backend."
 
+eitherKey :: (TableRelationshipsKey, c) -> Either (API.FunctionName, c) (API.TableName, c)
+eitherKey (FunctionNameKey f, x) = Left (f, x)
+eitherKey (TableNameKey t, x) = Right (t, x)
+
 translateInsert ::
   MonadError QErr m =>
   SessionVariables ->
@@ -133,7 +140,7 @@ translateInsert ::
 translateInsert sessionVariables AnnotatedInsert {_aiData = AnnotatedInsertData {..}, ..} = do
   captureTableInsertSchema tableName _aiTableColumns _aiPrimaryKey _aiExtraTableMetadata
   rows <- lift $ traverse (translateInsertRow sessionVariables tableName _aiTableColumns _aiPresetValues) _aiInsertObject
-  postInsertCheck <- translateBoolExpToExpression sessionVariables tableName insertCheckCondition
+  postInsertCheck <- translateBoolExpToExpression sessionVariables (TableNameKey tableName) insertCheckCondition
   returningFields <- translateMutationOutputToReturningFields sessionVariables tableName _aiOutput
   pure $
     API.InsertMutationOperation
@@ -231,8 +238,8 @@ translateUpdateBatch ::
   CPS.WriterT TableRelationships m API.UpdateMutationOperation
 translateUpdateBatch sessionVariables AnnotatedUpdateG {..} UpdateBatch {..} = do
   updates <- lift $ translateUpdateOperations sessionVariables _ubOperations
-  whereExp <- translateBoolExpToExpression sessionVariables tableName (BoolAnd [_auUpdatePermissions, _ubWhere])
-  postUpdateCheck <- translateBoolExpToExpression sessionVariables tableName _auCheck
+  whereExp <- translateBoolExpToExpression sessionVariables (TableNameKey tableName) (BoolAnd [_auUpdatePermissions, _ubWhere])
+  postUpdateCheck <- translateBoolExpToExpression sessionVariables (TableNameKey tableName) _auCheck
   returningFields <- translateMutationOutputToReturningFields sessionVariables tableName _auOutput
 
   pure $
@@ -244,7 +251,7 @@ translateUpdateBatch sessionVariables AnnotatedUpdateG {..} UpdateBatch {..} = d
         API._umoReturningFields = HashMap.mapKeys (API.FieldName . getFieldNameTxt) returningFields
       }
   where
-    tableName = Witch.from _auTable
+    tableName :: API.TableName = Witch.from _auTable
 
 translateUpdateOperations ::
   forall m.
@@ -275,7 +282,7 @@ translateDelete ::
   AnnDelG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   CPS.WriterT TableRelationships m API.DeleteMutationOperation
 translateDelete sessionVariables AnnDel {..} = do
-  whereExp <- translateBoolExpToExpression sessionVariables tableName (BoolAnd [permissionFilter, whereClause])
+  whereExp <- translateBoolExpToExpression sessionVariables (TableNameKey tableName) (BoolAnd [permissionFilter, whereClause])
   returningFields <- translateMutationOutputToReturningFields sessionVariables tableName _adOutput
   pure $
     API.DeleteMutationOperation
@@ -284,7 +291,7 @@ translateDelete sessionVariables AnnDel {..} = do
         API._dmoReturningFields = HashMap.mapKeys (API.FieldName . getFieldNameTxt) returningFields
       }
   where
-    tableName = Witch.from _adTable
+    tableName :: API.TableName = Witch.from _adTable
     (permissionFilter, whereClause) = _adWhere
 
 translateMutationOutputToReturningFields ::
@@ -298,7 +305,7 @@ translateMutationOutputToReturningFields ::
   CPS.WriterT writerOutput m (HashMap FieldName API.Field)
 translateMutationOutputToReturningFields sessionVariables tableName = \case
   MOutSinglerowObject annFields ->
-    translateAnnFields sessionVariables noPrefix tableName annFields
+    translateAnnFields sessionVariables noPrefix (TableNameKey tableName) annFields
   MOutMultirowFields mutFields ->
     HashMap.unions <$> traverse (uncurry $ translateMutField sessionVariables tableName) mutFields
 
@@ -323,7 +330,7 @@ translateMutField sessionVariables tableName fieldName = \case
     -- to us
     pure mempty
   MRet annFields ->
-    translateAnnFields sessionVariables (prefixWith fieldName) tableName annFields
+    translateAnnFields sessionVariables (prefixWith fieldName) (TableNameKey tableName) annFields
 
 --------------------------------------------------------------------------------
 

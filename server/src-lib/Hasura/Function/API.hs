@@ -77,7 +77,7 @@ trackFunctionP2 ::
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   SourceName ->
   FunctionName b ->
-  FunctionConfig ->
+  FunctionConfig b ->
   Maybe Text ->
   m EncJSON
 trackFunctionP2 sourceName qf config comment = do
@@ -114,7 +114,7 @@ runTrackFunc (TrackFunction qf) = do
 data TrackFunctionV2 (b :: BackendType) = TrackFunctionV2
   { _tfv2Source :: SourceName,
     _tfv2Function :: FunctionName b,
-    _tfv2Configuration :: FunctionConfig,
+    _tfv2Configuration :: FunctionConfig b,
     _tfv2Comment :: Maybe Text
   }
 
@@ -239,13 +239,15 @@ runCreateFunctionPermission (FunctionPermissionArgument functionName source role
       "permission of role "
         <> role <<> " already exists for function "
         <> functionName <<> " in source: " <>> source
-  functionTableInfo <-
-    unsafeTableInfo @b source (_fiReturnType functionInfo) sourceCache
-      `onNothing` throw400 NotExists ("function's return table " <> _fiReturnType functionInfo <<> " not found in the cache")
+  (functionTableName, functionTableInfo) <- do
+    let tn = _fiReturnType functionInfo
+    case unsafeTableInfo @b source tn sourceCache of
+      Nothing -> throw400 NotExists ("function's return table " <> tn <<> " not found in the cache")
+      Just info -> pure (tn, info)
   unless (role `HashMap.member` _tiRolePermInfoMap functionTableInfo) $
     throw400 NotSupported $
       "function permission can only be added when the function's return table "
-        <> _fiReturnType functionInfo <<> " has select permission configured for role: " <>> role
+        <> functionTableName <<> " has select permission configured for role: " <>> role
   buildSchemaCacheFor
     ( MOSourceObjId source $
         AB.mkAnyBackend (SMOFunctionPermission @b functionName role)
@@ -306,7 +308,7 @@ runDropFunctionPermission (FunctionPermissionArgument functionName source role) 
 data SetFunctionCustomization b = SetFunctionCustomization
   { _sfcSource :: SourceName,
     _sfcFunction :: FunctionName b,
-    _sfcConfiguration :: FunctionConfig
+    _sfcConfiguration :: FunctionConfig b
   }
 
 deriving instance Backend b => Show (SetFunctionCustomization b)

@@ -265,7 +265,7 @@ tests = do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Album")
               ( emptyQuery
                   & API.qFields
@@ -274,7 +274,8 @@ tests = do
                         ("Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
                       ]
               )
-              & API.qrForeach
+              & API._QRTable
+                . API.trForeach
                 ?~ NonEmpty.fromList
                   [ HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (J.Number 1) (API.ScalarType "number"))],
                     HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (J.Number 2) (API.ScalarType "number"))]
@@ -355,7 +356,7 @@ tests = do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Album")
               ( emptyQuery
                   & API.qFields
@@ -364,7 +365,8 @@ tests = do
                         ("Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
                       ]
               )
-              & API.qrForeach
+              & API._QRTable
+                . API.trForeach
                 ?~ NonEmpty.fromList
                   [ HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (J.Number 3) (API.ScalarType "number"))],
                     HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (J.Number 1) (API.ScalarType "number"))],
@@ -457,7 +459,7 @@ tests = do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Album")
               ( emptyQuery
                   & API.qFields
@@ -467,7 +469,8 @@ tests = do
                       ]
                   & API.qAggregates ?~ mkFieldsMap [("aggregate_count", API.StarCount)]
               )
-              & API.qrForeach
+              & API._QRTable
+                . API.trForeach
                 ?~ NonEmpty.fromList
                   [ HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (J.Number 1) (API.ScalarType "number"))],
                     HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (J.Number 2) (API.ScalarType "number"))]

@@ -31,6 +31,8 @@ instance BackendMetadata 'MSSQL where
     throw500 "Computed fields are not yet defined for MSSQL backends"
   supportsBeingRemoteRelationshipTarget _ = True
   listAllTables = MSSQL.listAllTables
+  listAllTrackables _ =
+    throw500 "Computed fields are not yet defined for MSSQL backends"
   getTableInfo _ _ = throw400 UnexpectedPayload "get_table_info not yet supported in MSSQL!"
   validateNativeQuery _ _ _ _ = pure () -- for now, all queries are valid
   validateStoredProcedure _ _ _ _ = pure () -- for now, all stored procedures are valid

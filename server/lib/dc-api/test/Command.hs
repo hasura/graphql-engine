@@ -47,6 +47,8 @@ newtype SandwichArguments = SandwichArguments [String]
 data TestConfig = TestConfig
   { _tcTableNamePrefix :: [Text],
     _tcTableNameCasing :: NameCasing,
+    _tcFunctionNamePrefix :: [Text],
+    _tcFunctionNameCasing :: NameCasing,
     _tcColumnNameCasing :: NameCasing
   }
 
@@ -165,6 +167,21 @@ testConfigParser =
       ( long "table-name-casing"
           <> metavar "CASING"
           <> help ("The casing style to use for table names (" <> casingOptions <> "). Default: PascalCase")
+          <> value PascalCase
+      )
+    <*> option
+      jsonValue
+      ( long "function-name-prefix"
+          <> short 'f'
+          <> metavar "FUNCTION_PREFIX"
+          <> help "The prefix to use for all function names, as a JSON array of strings"
+          <> value []
+      )
+    <*> option
+      auto
+      ( long "function-name-casing"
+          <> metavar "FUNCTION_CASING"
+          <> help ("The casing style to use for function names (" <> casingOptions <> "). Default: PascalCase")
           <> value PascalCase
       )
     <*> option

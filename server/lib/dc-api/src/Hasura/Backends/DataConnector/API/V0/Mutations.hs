@@ -78,6 +78,8 @@ import Prelude
 --
 -- The table relationships and insert schema represent metadata that will be
 -- used by agents interpreting the operations, and are shared across all operations.
+--
+-- TODO: Does this need to be enhanced ala. QueryRequest to support FunctionRequests?
 data MutationRequest = MutationRequest
   { _mrTableRelationships :: Set API.V0.TableRelationships,
     _mrInsertSchema :: Set TableInsertSchema,

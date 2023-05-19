@@ -22,7 +22,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 getFunctionArgsGQLName ::
   -- | The GQL version of the DB name of the function
   G.Name ->
-  FunctionConfig ->
+  FunctionConfig b ->
   -- | Custom function for setting naming case
   (G.Name -> G.Name) ->
   G.Name
@@ -36,7 +36,7 @@ getFunctionArgsGQLName
 -- detailed in 'rfcs/function-root-field-customisation.md'.
 getFunctionGQLName ::
   G.Name ->
-  FunctionConfig ->
+  FunctionConfig b ->
   -- | Custom function for setting naming case
   (G.Name -> G.Name) ->
   G.Name
@@ -57,7 +57,7 @@ getFunctionGQLName
 -- detailed in 'rfcs/function-root-field-customisation.md'.
 getFunctionAggregateGQLName ::
   G.Name ->
-  FunctionConfig ->
+  FunctionConfig b ->
   -- | Custom function for setting naming case
   (G.Name -> G.Name) ->
   G.Name

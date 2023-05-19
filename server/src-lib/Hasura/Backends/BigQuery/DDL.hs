@@ -45,7 +45,7 @@ buildFunctionInfo ::
   SourceName ->
   FunctionName 'BigQuery ->
   SystemDefined ->
-  FunctionConfig ->
+  FunctionConfig 'BigQuery ->
   FunctionPermissionsMap ->
   RawFunctionInfo 'BigQuery ->
   Maybe Text ->

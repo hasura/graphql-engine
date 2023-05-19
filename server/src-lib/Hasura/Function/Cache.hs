@@ -19,6 +19,9 @@ module Hasura.Function.Cache
     InputArgument (..),
     FunctionArgsExpG (..),
     FunctionArgsExp,
+    TrackableFunctionInfo (..),
+    TrackableTableInfo (..),
+    TrackableInfo (..),
     emptyFunctionConfig,
     emptyFunctionCustomRootFields,
     funcTypToTxt,
@@ -26,16 +29,7 @@ module Hasura.Function.Cache
   )
 where
 
-import Autodocodec
-  ( HasCodec (codec),
-    bimapCodec,
-    dimapCodec,
-    optionalField',
-    optionalFieldWith',
-    optionalFieldWithDefault',
-    requiredField',
-    stringConstCodec,
-  )
+import Autodocodec (HasCodec (codec))
 import Autodocodec qualified as AC
 import Autodocodec.Extended (graphQLFieldNameCodec)
 import Control.Lens
@@ -82,8 +76,8 @@ instance Show FunctionVolatility where
 newtype FunctionArgName = FunctionArgName {getFuncArgNameTxt :: Text}
   deriving (Show, Eq, Ord, NFData, ToJSON, ToJSONKey, FromJSON, FromJSONKey, ToTxt, IsString, Generic, Hashable, Lift, Data)
 
-instance HasCodec FunctionArgName where
-  codec = dimapCodec FunctionArgName getFuncArgNameTxt codec
+instance AC.HasCodec FunctionArgName where
+  codec = AC.dimapCodec FunctionArgName getFuncArgNameTxt codec
 
 data InputArgument a
   = IAUserProvided a
@@ -104,7 +98,7 @@ data FunctionExposedAs = FEAQuery | FEAMutation
 instance NFData FunctionExposedAs
 
 instance HasCodec FunctionExposedAs where
-  codec = stringConstCodec [(FEAQuery, "query"), (FEAMutation, "mutation")]
+  codec = AC.stringConstCodec [(FEAQuery, "query"), (FEAMutation, "mutation")]
 
 instance FromJSON FunctionExposedAs where
   parseJSON = genericParseJSON defaultOptions {sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3}
@@ -121,7 +115,7 @@ newtype FunctionPermissionInfo = FunctionPermissionInfo
 instance HasCodec FunctionPermissionInfo where
   codec =
     AC.object "FunctionPermissionInfo" $
-      FunctionPermissionInfo <$> requiredField' "role" AC..= _fpmRole
+      FunctionPermissionInfo <$> AC.requiredField' "role" AC..= _fpmRole
 
 instance FromJSON FunctionPermissionInfo where
   parseJSON = genericParseJSON hasuraJSON
@@ -146,11 +140,11 @@ instance NFData FunctionCustomRootFields
 
 instance HasCodec FunctionCustomRootFields where
   codec =
-    bimapCodec checkForDup id $
+    AC.bimapCodec checkForDup id $
       AC.object "FunctionCustomRootFields" $
         FunctionCustomRootFields
-          <$> optionalFieldWith' "function" graphQLFieldNameCodec AC..= _fcrfFunction
-          <*> optionalFieldWith' "function_aggregate" graphQLFieldNameCodec AC..= _fcrfFunctionAggregate
+          <$> AC.optionalFieldWith' "function" graphQLFieldNameCodec AC..= _fcrfFunction
+          <*> AC.optionalFieldWith' "function_aggregate" graphQLFieldNameCodec AC..= _fcrfFunctionAggregate
     where
       checkForDup (FunctionCustomRootFields (Just f) (Just fa))
         | f == fa =
@@ -204,7 +198,8 @@ data FunctionInfo (b :: BackendType) = FunctionInfo
     -- | NOTE: when a table is created, a new composite type of the same name is
     -- automatically created; so strictly speaking this field means "the function
     -- returns the composite type corresponding to this table".
-    _fiReturnType :: TableName b,
+    _fiReturnType :: TableName b, -- NOTE: We will extend this in future, but for now always resolves to a (TableName b)
+
     -- | this field represents the description of the function as present on the database
     _fiDescription :: Maybe Text,
     -- | Roles to which the function is accessible
@@ -223,11 +218,56 @@ instance (Backend b) => ToJSON (FunctionInfo b) where
 
 type FunctionCache b = HashMap (FunctionName b) (FunctionInfo b) -- info of all functions
 
+data TrackableFunctionInfo b = TrackableFunctionInfo
+  { tfiFunctionName :: FunctionName b,
+    tfiFunctionVolitility :: FunctionVolatility
+  }
+  deriving (Generic)
+
+deriving instance Backend b => Show (TrackableFunctionInfo b)
+
+deriving instance Backend b => Eq (TrackableFunctionInfo b)
+
+instance (Backend b) => ToJSON (TrackableFunctionInfo b) where
+  toJSON (TrackableFunctionInfo name volitility) =
+    object
+      [ "name" Data.Aeson..= name,
+        "volitility" Data.Aeson..= volitility
+      ]
+
+newtype TrackableTableInfo b = TrackableTableInfo
+  {tfTableiName :: TableName b}
+  deriving (Generic)
+
+deriving instance Backend b => Show (TrackableTableInfo b)
+
+deriving instance Backend b => Eq (TrackableTableInfo b)
+
+instance (Backend b) => ToJSON (TrackableTableInfo b) where
+  toJSON (TrackableTableInfo ti) = object ["name" Data.Aeson..= ti]
+
+data TrackableInfo b = TrackableInfo
+  { trackableFunctions :: [TrackableFunctionInfo b],
+    trackableTables :: [TrackableTableInfo b]
+  }
+  deriving (Generic)
+
+deriving instance Backend b => Show (TrackableInfo b)
+
+deriving instance Backend b => Eq (TrackableInfo b)
+
+instance (Backend b) => ToJSON (TrackableInfo b) where
+  toJSON (TrackableInfo functions tables) =
+    object
+      [ "tables" Data.Aeson..= tables,
+        "functions" Data.Aeson..= functions
+      ]
+
 -- Metadata requests related types
 
 -- | Tracked function configuration, and payload of the 'pg_track_function' and
 -- 'pg_set_function_customization' API calls.
-data FunctionConfig = FunctionConfig
+data FunctionConfig b = FunctionConfig
   { _fcSessionArgument :: Maybe FunctionArgName,
     -- | In which top-level field should we expose this function?
     --
@@ -236,42 +276,51 @@ data FunctionConfig = FunctionConfig
     -- docs for details of validation, etc.
     _fcExposedAs :: Maybe FunctionExposedAs,
     _fcCustomRootFields :: FunctionCustomRootFields,
-    _fcCustomName :: Maybe G.Name
+    _fcCustomName :: Maybe G.Name,
+    _fcResponse :: Maybe (FunctionReturnType b)
   }
-  deriving (Show, Eq, Generic)
+  deriving (Generic)
 
-instance NFData FunctionConfig
+deriving stock instance Backend b => Show (FunctionConfig b)
 
-instance HasCodec FunctionConfig where
+deriving stock instance Backend b => Eq (FunctionConfig b)
+
+instance Backend b => NFData (FunctionConfig b)
+
+instance Backend b => HasCodec (FunctionConfig b) where
   codec =
     AC.object "FunctionConfig" $
       FunctionConfig
-        <$> optionalField' "session_argument" AC..= _fcSessionArgument
-        <*> optionalField' "exposed_as" AC..= _fcExposedAs
-        <*> optionalFieldWithDefault' "custom_root_fields" emptyFunctionCustomRootFields AC..= _fcCustomRootFields
-        <*> optionalFieldWith' "custom_name" graphQLFieldNameCodec AC..= _fcCustomName
+        <$> AC.optionalField' "session_argument" AC..= _fcSessionArgument
+        <*> AC.optionalField' "exposed_as" AC..= _fcExposedAs
+        <*> AC.optionalFieldWithDefault' "custom_root_fields" emptyFunctionCustomRootFields AC..= _fcCustomRootFields
+        <*> AC.optionalFieldWith' "custom_name" graphQLFieldNameCodec AC..= _fcCustomName
+        <*> AC.optionalFieldWith' "response" codec AC..= _fcResponse
 
-instance FromJSON FunctionConfig where
+instance Backend b => FromJSON (FunctionConfig b) where
   parseJSON = withObject "FunctionConfig" $ \obj ->
     FunctionConfig
       <$> obj .:? "session_argument"
       <*> obj .:? "exposed_as"
       <*> obj .:? "custom_root_fields" .!= emptyFunctionCustomRootFields
       <*> obj .:? "custom_name"
+      <*> obj .:? "response"
 
-instance ToJSON FunctionConfig where
+instance Backend b => ToJSON (FunctionConfig b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
   toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 -- | The default function config; v1 of the API implies this.
-emptyFunctionConfig :: FunctionConfig
-emptyFunctionConfig = FunctionConfig Nothing Nothing emptyFunctionCustomRootFields Nothing
+emptyFunctionConfig :: FunctionConfig b
+emptyFunctionConfig = FunctionConfig Nothing Nothing emptyFunctionCustomRootFields Nothing Nothing
 
 type DBFunctionsMetadata b = HashMap (FunctionName b) (FunctionOverloads b)
 
 newtype FunctionOverloads b = FunctionOverloads {getFunctionOverloads :: NonEmpty (RawFunctionInfo b)}
 
 deriving newtype instance Backend b => Eq (FunctionOverloads b)
+
+deriving newtype instance Backend b => Show (FunctionOverloads b)
 
 deriving newtype instance FromJSON (RawFunctionInfo b) => FromJSON (FunctionOverloads b)
 

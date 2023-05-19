@@ -53,6 +53,7 @@ data RQLMetadataV1
   | RMListSourceKinds !ListSourceKinds
   | RMGetSourceKindCapabilities !GetSourceKindCapabilities
   | RMGetSourceTables !(AnyBackend GetSourceTables)
+  | RMGetSourceTrackables !(AnyBackend GetSourceTrackables)
   | RMGetTableInfo !(AnyBackend GetTableInfo)
   | -- Tables
     RMTrackTable !(AnyBackend TrackTableV2)

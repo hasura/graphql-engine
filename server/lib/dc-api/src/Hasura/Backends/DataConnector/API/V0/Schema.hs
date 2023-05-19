@@ -15,6 +15,7 @@ import Data.OpenApi (ToSchema)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.Function qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Table qualified as API.V0
 import Language.GraphQL.Draft.Syntax qualified as G
 import Servant.API qualified as Servant
@@ -27,6 +28,7 @@ import Prelude
 -- 'Capabilities' supported by the service.
 data SchemaResponse = SchemaResponse
   { _srTables :: [API.V0.TableInfo],
+    _srFunctions :: [API.V0.FunctionInfo],
     _srObjectTypes :: Maybe (NonEmpty ObjectTypeDefinition)
   }
   deriving stock (Eq, Show, Generic)
@@ -38,6 +40,7 @@ instance HasCodec SchemaResponse where
     object "SchemaResponse" $
       SchemaResponse
         <$> requiredField "tables" "Available tables" .= _srTables
+        <*> optionalFieldWithOmittedDefault "functions" [] "Available functions" .= _srFunctions
         <*> optionalField "objectTypes" "Object type definitions referenced in this schema" .= _srObjectTypes
 
 instance Servant.HasStatus SchemaResponse where

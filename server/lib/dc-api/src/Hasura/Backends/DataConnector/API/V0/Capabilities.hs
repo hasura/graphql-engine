@@ -21,6 +21,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     cExplain,
     cRaw,
     cDatasets,
+    cUserDefinedFunctions,
     defaultCapabilities,
     DataSchemaCapabilities (..),
     dscSupportsPrimaryKeys,
@@ -34,6 +35,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     MutationCapabilities (..),
     InsertCapabilities (..),
     UpdateCapabilities (..),
+    UserDefinedFunctionCapabilities (..),
     DeleteCapabilities (..),
     AtomicitySupportLevel (..),
     ReturningCapabilities (..),
@@ -101,6 +103,7 @@ data Capabilities = Capabilities
     _cExplain :: Maybe ExplainCapabilities,
     _cRaw :: Maybe RawCapabilities,
     _cDatasets :: Maybe DatasetCapabilities,
+    _cUserDefinedFunctions :: Maybe UserDefinedFunctionCapabilities,
     _cLicensing :: Maybe Licensing
   }
   deriving stock (Eq, Show, Generic)
@@ -108,7 +111,7 @@ data Capabilities = Capabilities
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Capabilities
 
 defaultCapabilities :: Capabilities
-defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 instance HasCodec Capabilities where
   codec =
@@ -125,6 +128,7 @@ instance HasCodec Capabilities where
         <*> optionalField "explain" "The agent's explain capabilities" .= _cExplain
         <*> optionalField "raw" "The agent's raw query capabilities" .= _cRaw
         <*> optionalField "datasets" "The agent's dataset capabilities" .= _cDatasets
+        <*> optionalField "user_defined_functions" "The agent's UDF capabilities" .= _cUserDefinedFunctions
         <*> optionalField "licensing" "The agent's licensing requirements" .= _cLicensing
 
 --------------------------------------------------------------------------------
@@ -509,6 +513,15 @@ data DatasetCapabilities = DatasetCapabilities {}
 instance HasCodec DatasetCapabilities where
   codec =
     object "DatasetCapabilities" $ pure DatasetCapabilities
+
+data UserDefinedFunctionCapabilities = UserDefinedFunctionCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec UserDefinedFunctionCapabilities
+
+instance HasCodec UserDefinedFunctionCapabilities where
+  codec =
+    object "UserDefinedFunctionCapabilities" $ pure UserDefinedFunctionCapabilities
 
 data CapabilitiesResponse = CapabilitiesResponse
   { _crCapabilities :: Capabilities,

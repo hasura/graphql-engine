@@ -139,7 +139,8 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
     "relationships": {},
     "scalar_types": {
       "DateTime": {"comparison_operators": {"DateTime": {"in_year": "Number"}}}
-    }
+    },
+    "user_defined_functions": {}
   },
   "config_schemas": {
     "config_schema": {
@@ -2424,6 +2425,181 @@ Breaking down the properties in the `delete`-typed mutation operation:
 * `returning_fields`: This specifies a list of fields to return in the response. The property takes the same format as the `fields` property on Queries. It is expected that the specified fields will be returned for all rows affected by the deletion (ie. all deleted rows).
 
 Delete operations return responses that are the same as insert and update operations, except the affected rows in `returning` are the deleted rows instead.
+
+### User Defined Functions (UDFs)
+
+Agents can implement user-defined-functions for root-field queries by:
+
+* Including the `user_defined_functions: {}` capability
+* Handling `"type": "function"` QueryRequests
+
+The format of function query requests very closely matches table query requests (which was the only type of query request prior to UDF implementation).
+
+Differences include:
+
+* The `type` field is set to `function`
+    * This field was previously omitted, but is now either `table` or `function`.
+    * The change should not break older agents
+        * Since they will ignore the type field but also not expose a function capability
+        * So their assumption that the query is a table query will be correct
+* The name of the function is specified in the `function` field of the query
+* Arguments are provided in the `function_arguments` field
+    * This can include a session JSON argument as configured in metadata
+* The relationships items can now contain a `source_function` field
+    * Instead of a `source_table` field
+
+#### Example
+
+Schema:
+
+```json
+{
+  "tables": [ 
+    {
+      "name": [
+        "Artist"
+      ],
+      "type": "table",
+      "primary_key": [
+        "ArtistId"
+      ],
+      "description": "Collection of artists of music",
+      "columns": [
+        {
+          "name": "ArtistId",
+          "type": "number",
+          "nullable": false,
+          "description": "Artist primary key identifier",
+          "insertable": false,
+          "updatable": false
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "nullable": true,
+          "description": "The name of the artist",
+          "insertable": false,
+          "updatable": false
+        }
+      ],
+      "insertable": false,
+      "updatable": false,
+      "deletable": false
+    }
+  ],
+  "functions": [
+    {
+      "name": ["fibonacci"],
+      "type": "read",
+      "returns": {
+        "type": "table",
+        "table": ["Artist"]
+      },
+      "arity": "many",
+      "args": [
+        { "name": "take", "type": "Integer" },
+        { "name": "__hasura_session", "type": "JSON" }
+      ],
+      "description": "Fibonacci function - Take N Fibonacci numbers!"
+    }
+  ]
+}
+```
+
+GraphQL:
+
+```graphql
+{
+  fibonacci(args: {upto: 9}) {
+    ArtistId
+    Name
+    myself {
+      Name
+    }
+  }
+}
+```
+
+Query Sent to Agent:
+
+```json
+{
+  "type": "function",
+  "function": [
+    "fibonacci"
+  ],
+  "function_arguments": {
+    "upto": 9,
+    "__hasura_session": {
+      "x-hasura-artist-name": "patricia",
+      "x-hasura-role": "admin"
+    }
+  },
+  "relationships": [
+    {
+      "type": "function",
+      "source_function": [
+        "fibonacci"
+      ],
+      "relationships": {
+        "myself": {
+          "target_table": [
+            "Artist"
+          ],
+          "relationship_type": "object",
+          "column_mapping": {
+            "ArtistId": "ArtistId"
+          }
+        }
+      }
+    },
+    {
+      "type": "table",
+      "source_table": [
+        "Artist"
+      ],
+      "relationships": {
+        "myself": {
+          "target_table": [
+            "Artist"
+          ],
+          "relationship_type": "object",
+          "column_mapping": {
+            "ArtistId": "ArtistId"
+          }
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Name": {
+        "type": "column",
+        "column": "Name",
+        "column_type": "string"
+      },
+      "myself": {
+        "type": "relationship",
+        "relationship": "myself",
+        "query": {
+          "fields": {
+            "Name": {
+              "type": "column",
+              "column": "Name",
+              "column_type": "string"
+            }
+          }
+        }
+      },
+      "ArtistId": {
+        "type": "column",
+        "column": "ArtistId",
+        "column_type": "number"
+      }
+    }
+  }
+}
+```
 
 ### Datasets
 

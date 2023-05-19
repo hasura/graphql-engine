@@ -10,6 +10,7 @@ import Data.List (sortOn)
 import Data.Maybe (isJust, mapMaybe)
 import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
+import Hasura.Backends.DataConnector.API.V0.Relationships as API
 import Test.AgentAPI (queryGuarded)
 import Test.Data (TestData (..))
 import Test.Data qualified as Data
@@ -228,7 +229,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
                 ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (String "AC/DC") artistNameScalarType)
         let query =
               albumsQueryRequest
-                & qrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+                & qrRelationships .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
                 & qrQuery . qWhere ?~ where'
         receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -251,11 +252,11 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
                 ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" genreNameScalarType) (Data.scalarValueComparison (String "Metal") genreNameScalarType)
         let query =
               artistsQueryRequest
-                & qrTableRelationships
+                & qrRelationships
                   .~ Set.fromList
-                    [ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships,
-                      Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships,
-                      Data.onlyKeepRelationships [_tdGenreRelationshipName] _tdTracksTableRelationships
+                    [ API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships,
+                      API.RTable $ Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships,
+                      API.RTable $ Data.onlyKeepRelationships [_tdGenreRelationshipName] _tdTracksTableRelationships
                     ]
                 & qrQuery . qWhere ?~ where'
         receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
@@ -292,7 +293,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
                   ]
         let query =
               artistsQueryRequest
-                & qrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
+                & qrRelationships .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
                 & qrQuery . qWhere ?~ where'
         receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
 
@@ -312,13 +313,13 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
     artistsQueryRequest =
       let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdArtistsTableName mempty query Nothing
+       in TableQueryRequest _tdArtistsTableName mempty query Nothing
 
     albumsQueryRequest :: QueryRequest
     albumsQueryRequest =
       let fields = Data.mkFieldsMap [("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"), ("ArtistId", _tdColumnField _tdAlbumsTableName "ArtistId"), ("Title", _tdColumnField _tdAlbumsTableName "Title")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdAlbumsTableName mempty query Nothing
+       in TableQueryRequest _tdAlbumsTableName mempty query Nothing
 
     albumIdScalarType = _tdFindColumnScalarType _tdAlbumsTableName "AlbumId"
     albumTitleScalarType = _tdFindColumnScalarType _tdAlbumsTableName "Title"

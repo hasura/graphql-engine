@@ -1,6 +1,6 @@
 module Test.DataConnector.MockAgent.TestHelpers
   ( mkTableName,
-    mkQueryRequest,
+    mkTableRequest,
     emptyQuery,
     emptyMutationRequest,
     mkRowsQueryResponse,
@@ -18,8 +18,8 @@ import Hasura.Prelude
 mkTableName :: Text -> API.TableName
 mkTableName name = API.TableName (name :| [])
 
-mkQueryRequest :: API.TableName -> API.Query -> API.QueryRequest
-mkQueryRequest tableName query = API.QueryRequest tableName mempty query Nothing
+mkTableRequest :: API.TableName -> API.Query -> API.QueryRequest
+mkTableRequest tableName query = API.QRTable $ API.TableRequest tableName mempty query Nothing
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing Nothing

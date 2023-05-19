@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Test.Specs.QuerySpec.OrderBySpec (spec) where
@@ -15,6 +16,7 @@ import Data.Maybe (fromMaybe, isJust)
 import Data.Ord (Down (..))
 import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
+import Hasura.Backends.DataConnector.API.V0.Relationships as API
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.AgentAPI (queryGuarded)
 import Test.Data (TestData (..))
@@ -103,7 +105,7 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
       let query =
             albumsQueryRequest
               & qrQuery . qOrderBy ?~ orderBy
-              & qrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+              & qrRelationships .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
       receivedAlbums <- queryGuarded query
 
       let getRelatedArtist (album :: HashMap FieldName FieldValue) =
@@ -130,7 +132,7 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
       let query =
             albumsQueryRequest
               & qrQuery . qOrderBy ?~ orderBy
-              & qrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+              & qrRelationships .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
       receivedAlbums <- queryGuarded query
 
       let getRelatedArtist (album :: HashMap FieldName FieldValue) = do
@@ -174,10 +176,10 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
       let query =
             tracksQueryRequest
               & qrQuery . qOrderBy ?~ orderBy
-              & qrTableRelationships
+              & qrRelationships
                 .~ Set.fromList
-                  [ Data.onlyKeepRelationships [_tdAlbumRelationshipName] _tdTracksTableRelationships,
-                    Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships
+                  [ API.RTable $ Data.onlyKeepRelationships [_tdAlbumRelationshipName] _tdTracksTableRelationships,
+                    API.RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships
                   ]
       receivedTracks <- queryGuarded query
 
@@ -189,7 +191,7 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
 
       let expectedTracks =
             _tdTracksRows
-              & fmap (\track -> (Data.filterColumnsByQueryFields (_qrQuery tracksQueryRequest) track, getRelatedArtist track, track))
+              & fmap (\track -> (Data.filterColumnsByQueryFields (tracksQueryRequest ^. qrQuery) track, getRelatedArtist track, track))
               & sortOn (\row -> (Down (row ^? _2 . _Just . Data.field "Name"), row ^? _3 . Data.field "Name", row ^? _3 . Data.field "TrackId"))
               & fmap (^. _1)
 
@@ -225,10 +227,10 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
                        >>> qOffset ?~ artistsOffset
                        >>> qLimit ?~ artistsLimit
                    )
-              & qrTableRelationships
+              & qrRelationships
                 .~ Set.fromList
-                  [ Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships,
-                    Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
+                  [ API.RTable $ Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships,
+                    API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
                   ]
       receivedArtists <- queryGuarded query
 
@@ -273,7 +275,7 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
       let query =
             artistsQueryRequest
               & qrQuery . qOrderBy ?~ orderBy
-              & qrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
+              & qrRelationships .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
       receivedArtists <- queryGuarded query
 
       let getAlbumsCount (artist :: HashMap FieldName FieldValue) = do
@@ -302,7 +304,7 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
       let query =
             artistsQueryRequest
               & qrQuery . qOrderBy ?~ orderBy
-              & qrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
+              & qrRelationships .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
       receivedArtists <- queryGuarded query
 
       let getAlbumsCount (artist :: HashMap FieldName FieldValue) = do
@@ -344,10 +346,10 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
       let query =
             albumsQueryRequest
               & qrQuery . qOrderBy ?~ orderBy
-              & qrTableRelationships
+              & qrRelationships
                 .~ Set.fromList
-                  [ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships,
-                    Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
+                  [ API.RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships,
+                    API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
                   ]
       receivedAlbums <- queryGuarded query
 
@@ -388,8 +390,8 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
             artistsQueryRequest
               & qrQuery . qOrderBy ?~ orderBy
               & qrQuery . qWhere ?~ whereExp
-              & qrTableRelationships
-                .~ Set.fromList [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
+              & qrRelationships
+                .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
       receivedArtists <- queryGuarded query
 
       let findRelatedAlbums (artist :: HashMap FieldName FieldValue) = fromMaybe [] do
@@ -414,13 +416,13 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
 
     albumsQueryRequest :: QueryRequest
     albumsQueryRequest =
-      QueryRequest _tdAlbumsTableName mempty albumsQuery Nothing
+      TableQueryRequest _tdAlbumsTableName mempty albumsQuery Nothing
 
     artistsQueryRequest :: QueryRequest
     artistsQueryRequest =
       let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdArtistsTableName mempty query Nothing
+       in TableQueryRequest _tdArtistsTableName mempty query Nothing
 
     tracksQuery :: Query
     tracksQuery =
@@ -429,13 +431,13 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
 
     tracksQueryRequest :: QueryRequest
     tracksQueryRequest =
-      QueryRequest _tdTracksTableName mempty tracksQuery Nothing
+      TableQueryRequest _tdTracksTableName mempty tracksQuery Nothing
 
     invoicesQueryRequest :: QueryRequest
     invoicesQueryRequest =
       let fields = Data.mkFieldsMap [("InvoiceId", _tdColumnField _tdInvoicesTableName "InvoiceId"), ("BillingState", _tdColumnField _tdInvoicesTableName "BillingState")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdInvoicesTableName mempty query Nothing
+       in TableQueryRequest _tdInvoicesTableName mempty query Nothing
 
     orderBySingleColumnAggregateMax :: ColumnName -> ScalarType -> OrderByTarget
     orderBySingleColumnAggregateMax columnName resultType = OrderBySingleColumnAggregate $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|max|]) columnName resultType

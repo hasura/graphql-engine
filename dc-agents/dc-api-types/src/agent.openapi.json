@@ -530,6 +530,9 @@
           },
           "subscriptions": {
             "$ref": "#/components/schemas/SubscriptionCapabilities"
+          },
+          "user_defined_functions": {
+            "$ref": "#/components/schemas/UserDefinedFunctionCapabilities"
           }
         },
         "type": "object"
@@ -706,6 +709,7 @@
       "ExplainCapabilities": {},
       "RawCapabilities": {},
       "DatasetCapabilities": {},
+      "UserDefinedFunctionCapabilities": {},
       "Licensing": {},
       "ConfigSchemaResponse": {
         "nullable": false,
@@ -1035,6 +1039,14 @@
       },
       "SchemaResponse": {
         "properties": {
+          "functions": {
+            "default": [],
+            "description": "Available functions",
+            "items": {
+              "$ref": "#/components/schemas/FunctionInfo"
+            },
+            "type": "array"
+          },
           "objectTypes": {
             "description": "Object type definitions referenced in this schema",
             "items": {
@@ -1248,6 +1260,131 @@
         ],
         "type": "object"
       },
+      "FunctionName": {
+        "description": "The fully qualified name of a function, where the last item in the array is the function name and any earlier items represent the namespacing of the function name",
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "FunctionType": {
+        "enum": [
+          "read",
+          "write"
+        ],
+        "type": "string"
+      },
+      "FunctionReturnsTable": {
+        "properties": {
+          "table": {
+            "$ref": "#/components/schemas/TableName"
+          },
+          "type": {
+            "enum": [
+              "table"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "table",
+          "type"
+        ],
+        "type": "object"
+      },
+      "FunctionReturnsUnknown": {
+        "properties": {
+          "type": {
+            "enum": [
+              "unknown"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "FunctionReturnType": {
+        "discriminator": {
+          "mapping": {
+            "table": "FunctionReturnsTable",
+            "unknown": "FunctionReturnsUnknown"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/FunctionReturnsTable"
+          },
+          {
+            "$ref": "#/components/schemas/FunctionReturnsUnknown"
+          }
+        ]
+      },
+      "FunctionInformationArgument": {
+        "properties": {
+          "name": {
+            "description": "The name of the argument",
+            "type": "string"
+          },
+          "optional": {
+            "default": false,
+            "description": "If the argument can be omitted",
+            "type": "boolean"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ScalarType"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "type": "object"
+      },
+      "FunctionInfo": {
+        "properties": {
+          "args": {
+            "description": "argument info - name/types",
+            "items": {
+              "$ref": "#/components/schemas/FunctionInformationArgument"
+            },
+            "type": "array"
+          },
+          "description": {
+            "description": "Description of the table",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/FunctionName"
+          },
+          "response_cardinality": {
+            "description": "object response if false, rows if true",
+            "enum": [
+              "one",
+              "many"
+            ],
+            "type": "string"
+          },
+          "returns": {
+            "$ref": "#/components/schemas/FunctionReturnType"
+          },
+          "type": {
+            "$ref": "#/components/schemas/FunctionType"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "returns",
+          "response_cardinality",
+          "args"
+        ],
+        "type": "object"
+      },
       "ObjectTypeDefinition": {
         "properties": {
           "columns": {
@@ -1314,38 +1451,92 @@
         "type": "null"
       },
       "QueryRequest": {
+        "discriminator": {
+          "mapping": {
+            "function": "FunctionRequest",
+            "table": "TableRequest"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/FunctionRequest"
+          },
+          {
+            "$ref": "#/components/schemas/TableRequest"
+          }
+        ]
+      },
+      "ScalarArgumentValue": {
         "properties": {
-          "foreach": {
-            "description": "If present, a list of columns and values for the columns that the query must be repeated for, applying the column values as a filter for each query.",
-            "items": {
-              "additionalProperties": {
-                "$ref": "#/components/schemas/ScalarValue"
-              },
-              "type": "object"
-            },
-            "nullable": true,
-            "type": "array"
+          "type": {
+            "enum": [
+              "scalar"
+            ],
+            "type": "string"
           },
-          "query": {
-            "$ref": "#/components/schemas/Query"
+          "value": {
+            "additionalProperties": true
           },
-          "table": {
-            "$ref": "#/components/schemas/TableName"
-          },
-          "table_relationships": {
-            "description": "The relationships between tables involved in the entire query request",
-            "items": {
-              "$ref": "#/components/schemas/TableRelationships"
-            },
-            "type": "array"
+          "value_type": {
+            "$ref": "#/components/schemas/ScalarType"
           }
         },
         "required": [
-          "table",
-          "table_relationships",
-          "query"
+          "value",
+          "value_type",
+          "type"
         ],
         "type": "object"
+      },
+      "ArgumentValue": {
+        "discriminator": {
+          "mapping": {
+            "scalar": "ScalarArgumentValue"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ScalarArgumentValue"
+          }
+        ]
+      },
+      "NamedArgument": {
+        "properties": {
+          "name": {
+            "description": "The name of the named argument",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "named"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/ArgumentValue"
+          }
+        },
+        "required": [
+          "name",
+          "value",
+          "type"
+        ],
+        "type": "object"
+      },
+      "FunctionRequestArgument": {
+        "discriminator": {
+          "mapping": {
+            "named": "NamedArgument"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/NamedArgument"
+          }
+        ]
       },
       "RelationshipType": {
         "enum": [
@@ -1377,6 +1568,32 @@
         ],
         "type": "object"
       },
+      "FunctionRelationships": {
+        "properties": {
+          "relationships": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Relationship"
+            },
+            "description": "A map of relationships from the source table to target tables. The key of the map is the relationship name",
+            "type": "object"
+          },
+          "source_function": {
+            "$ref": "#/components/schemas/FunctionName"
+          },
+          "type": {
+            "enum": [
+              "function"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_function",
+          "relationships",
+          "type"
+        ],
+        "type": "object"
+      },
       "TableRelationships": {
         "properties": {
           "relationships": {
@@ -1388,13 +1605,37 @@
           },
           "source_table": {
             "$ref": "#/components/schemas/TableName"
+          },
+          "type": {
+            "enum": [
+              "table"
+            ],
+            "type": "string"
           }
         },
         "required": [
+          "type",
           "source_table",
           "relationships"
         ],
         "type": "object"
+      },
+      "Relationships": {
+        "discriminator": {
+          "mapping": {
+            "function": "FunctionRelationships",
+            "table": "TableRelationships"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/FunctionRelationships"
+          },
+          {
+            "$ref": "#/components/schemas/TableRelationships"
+          }
+        ]
       },
       "Query": {
         "properties": {
@@ -2154,6 +2395,44 @@
         ],
         "type": "object"
       },
+      "FunctionRequest": {
+        "properties": {
+          "function": {
+            "$ref": "#/components/schemas/FunctionName"
+          },
+          "function_arguments": {
+            "default": [],
+            "description": "Function Arguments. TODO. Improve this.",
+            "items": {
+              "$ref": "#/components/schemas/FunctionRequestArgument"
+            },
+            "type": "array"
+          },
+          "query": {
+            "$ref": "#/components/schemas/Query"
+          },
+          "relationships": {
+            "description": "The relationships between entities involved in the entire query request",
+            "items": {
+              "$ref": "#/components/schemas/Relationships"
+            },
+            "type": "array"
+          },
+          "type": {
+            "enum": [
+              "function"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "function",
+          "relationships",
+          "query",
+          "type"
+        ],
+        "type": "object"
+      },
       "ScalarValue": {
         "properties": {
           "value": {
@@ -2166,6 +2445,47 @@
         "required": [
           "value",
           "value_type"
+        ],
+        "type": "object"
+      },
+      "TableRequest": {
+        "properties": {
+          "foreach": {
+            "description": "If present, a list of columns and values for the columns that the query must be repeated for, applying the column values as a filter for each query.",
+            "items": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/ScalarValue"
+              },
+              "type": "object"
+            },
+            "nullable": true,
+            "type": "array"
+          },
+          "query": {
+            "$ref": "#/components/schemas/Query"
+          },
+          "table": {
+            "$ref": "#/components/schemas/TableName"
+          },
+          "table_relationships": {
+            "description": "The relationships between tables involved in the entire query request",
+            "items": {
+              "$ref": "#/components/schemas/Relationships"
+            },
+            "type": "array"
+          },
+          "type": {
+            "enum": [
+              "table"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "table",
+          "table_relationships",
+          "query",
+          "type"
         ],
         "type": "object"
       },

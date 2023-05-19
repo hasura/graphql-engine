@@ -65,7 +65,8 @@ const capabilities: Capabilities = {
     }
   },
   scalar_types: scalarTypes,
-  datasets: {}
+  datasets: {},
+  user_defined_functions: {}
 }
 
 export const capabilitiesResponse: CapabilitiesResponse = {

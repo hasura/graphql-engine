@@ -193,7 +193,7 @@ tests = describe "Object Relationships Tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Track")
               ( emptyQuery
                   & API.qFields
@@ -216,30 +216,31 @@ tests = describe "Object Relationships Tests" $ do
                       ]
                   & API.qLimit ?~ 1
               )
-              & API.qrTableRelationships
+              & API.qrRelationships
                 .~ Set.fromList
-                  [ API.TableRelationships
-                      { _trSourceTable = mkTableName "Track",
-                        _trRelationships =
-                          HashMap.fromList
-                            [ ( API.RelationshipName "Genre",
-                                API.Relationship
-                                  { _rTargetTable = mkTableName "Genre",
-                                    _rRelationshipType = API.ObjectRelationship,
-                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
-                                  }
-                              ),
-                              ( API.RelationshipName "MediaType",
-                                API.Relationship
-                                  { _rTargetTable = mkTableName "MediaType",
-                                    _rRelationshipType = API.ObjectRelationship,
-                                    _rColumnMapping =
-                                      HashMap.fromList
-                                        [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
-                                  }
-                              )
-                            ]
-                      }
+                  [ API.RTable
+                      API.TableRelationships
+                        { _trelSourceTable = mkTableName "Track",
+                          _trelRelationships =
+                            HashMap.fromList
+                              [ ( API.RelationshipName "Genre",
+                                  API.Relationship
+                                    { _rTargetTable = mkTableName "Genre",
+                                      _rRelationshipType = API.ObjectRelationship,
+                                      _rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+                                    }
+                                ),
+                                ( API.RelationshipName "MediaType",
+                                  API.Relationship
+                                    { _rTargetTable = mkTableName "MediaType",
+                                      _rRelationshipType = API.ObjectRelationship,
+                                      _rColumnMapping =
+                                        HashMap.fromList
+                                          [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
+                                    }
+                                )
+                              ]
+                        }
                   ]
         )
 
@@ -291,7 +292,7 @@ tests = describe "Object Relationships Tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Track")
               ( emptyQuery
                   & API.qFields
@@ -340,34 +341,36 @@ tests = describe "Object Relationships Tests" $ do
                           ]
                       )
               )
-              & API.qrTableRelationships
+              & API.qrRelationships
                 .~ Set.fromList
-                  [ API.TableRelationships
-                      { _trSourceTable = mkTableName "Track",
-                        _trRelationships =
-                          HashMap.fromList
-                            [ ( API.RelationshipName "Album",
-                                API.Relationship
-                                  { _rTargetTable = mkTableName "Album",
-                                    _rRelationshipType = API.ObjectRelationship,
-                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
-                                  }
-                              )
-                            ]
-                      },
-                    API.TableRelationships
-                      { _trSourceTable = mkTableName "Album",
-                        _trRelationships =
-                          HashMap.fromList
-                            [ ( API.RelationshipName "Artist",
-                                API.Relationship
-                                  { _rTargetTable = mkTableName "Artist",
-                                    _rRelationshipType = API.ObjectRelationship,
-                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                  }
-                              )
-                            ]
-                      }
+                  [ API.RTable
+                      API.TableRelationships
+                        { _trelSourceTable = mkTableName "Track",
+                          _trelRelationships =
+                            HashMap.fromList
+                              [ ( API.RelationshipName "Album",
+                                  API.Relationship
+                                    { _rTargetTable = mkTableName "Album",
+                                      _rRelationshipType = API.ObjectRelationship,
+                                      _rColumnMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
+                                    }
+                                )
+                              ]
+                        },
+                    API.RTable
+                      API.TableRelationships
+                        { _trelSourceTable = mkTableName "Album",
+                          _trelRelationships =
+                            HashMap.fromList
+                              [ ( API.RelationshipName "Artist",
+                                  API.Relationship
+                                    { _rTargetTable = mkTableName "Artist",
+                                      _rRelationshipType = API.ObjectRelationship,
+                                      _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                    }
+                                )
+                              ]
+                        }
                   ]
         )
 
@@ -400,7 +403,7 @@ tests = describe "Object Relationships Tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Employee")
               ( emptyQuery
                   & API.qFields ?~ mkFieldsMap [("EmployeeId", API.ColumnField (API.ColumnName "EmployeeId") $ API.ScalarType "number")]
@@ -431,34 +434,36 @@ tests = describe "Object Relationships Tests" $ do
                       )
                       (API.OrderByElement [API.RelationshipName "SupportRepForCustomers"] API.OrderByStarCountAggregate API.Descending :| [])
               )
-              & API.qrTableRelationships
+              & API.qrRelationships
                 .~ Set.fromList
-                  [ API.TableRelationships
-                      { _trSourceTable = mkTableName "Customer",
-                        _trRelationships =
-                          HashMap.fromList
-                            [ ( API.RelationshipName "SupportRep",
-                                API.Relationship
-                                  { _rTargetTable = mkTableName "Employee",
-                                    _rRelationshipType = API.ObjectRelationship,
-                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
-                                  }
-                              )
-                            ]
-                      },
-                    API.TableRelationships
-                      { _trSourceTable = mkTableName "Employee",
-                        _trRelationships =
-                          HashMap.fromList
-                            [ ( API.RelationshipName "SupportRepForCustomers",
-                                API.Relationship
-                                  { _rTargetTable = mkTableName "Customer",
-                                    _rRelationshipType = API.ArrayRelationship,
-                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
-                                  }
-                              )
-                            ]
-                      }
+                  [ API.RTable
+                      API.TableRelationships
+                        { _trelSourceTable = mkTableName "Customer",
+                          _trelRelationships =
+                            HashMap.fromList
+                              [ ( API.RelationshipName "SupportRep",
+                                  API.Relationship
+                                    { _rTargetTable = mkTableName "Employee",
+                                      _rRelationshipType = API.ObjectRelationship,
+                                      _rColumnMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
+                                    }
+                                )
+                              ]
+                        },
+                    API.RTable
+                      API.TableRelationships
+                        { _trelSourceTable = mkTableName "Employee",
+                          _trelRelationships =
+                            HashMap.fromList
+                              [ ( API.RelationshipName "SupportRepForCustomers",
+                                  API.Relationship
+                                    { _rTargetTable = mkTableName "Customer",
+                                      _rRelationshipType = API.ArrayRelationship,
+                                      _rColumnMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
+                                    }
+                                )
+                              ]
+                        }
                   ]
         )
 

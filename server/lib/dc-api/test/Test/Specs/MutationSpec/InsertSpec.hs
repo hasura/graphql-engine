@@ -717,7 +717,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             Data.emptyQuery
               & qFields ?~ mkFieldsFromExpectedData _tdArtistsTableName (expectedInsertedArtists artistsStartingId)
               & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (J.Number . fromInteger <$> artistIds) artistIdScalarType
-       in QueryRequest _tdArtistsTableName mempty query Nothing
+       in TableQueryRequest _tdArtistsTableName mempty query Nothing
 
     albumsQueryRequest :: [Integer] -> QueryRequest
     albumsQueryRequest albumIds =
@@ -725,7 +725,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             Data.emptyQuery
               & qFields ?~ mkFieldsFromExpectedData _tdAlbumsTableName (expectedInsertedAcdcAlbums albumsStartingId)
               & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (J.Number . fromInteger <$> albumIds) albumIdScalarType
-       in QueryRequest _tdAlbumsTableName mempty query Nothing
+       in TableQueryRequest _tdAlbumsTableName mempty query Nothing
 
     employeesQueryRequest :: [Integer] -> QueryRequest
     employeesQueryRequest employeeIds =
@@ -733,7 +733,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             Data.emptyQuery
               & qFields ?~ mkFieldsFromExpectedData _tdEmployeesTableName (expectedInsertedEmployees employeesStartingId)
               & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "EmployeeId" albumIdScalarType) (J.Number . fromInteger <$> employeeIds) employeeIdScalarType
-       in QueryRequest _tdEmployeesTableName mempty query Nothing
+       in TableQueryRequest _tdEmployeesTableName mempty query Nothing
 
     artistsInsertSchema :: TableInsertSchema
     artistsInsertSchema = _tdMkDefaultTableInsertSchema _tdArtistsTableName

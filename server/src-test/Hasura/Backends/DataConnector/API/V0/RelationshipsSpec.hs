@@ -4,6 +4,7 @@
 module Hasura.Backends.DataConnector.API.V0.RelationshipsSpec
   ( spec,
     genRelationshipName,
+    genRelationships,
     genTableRelationships,
   )
 where
@@ -17,6 +18,7 @@ import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
+import Hedgehog.Range
 import Test.Aeson.Utils
 import Test.Hspec
 
@@ -64,8 +66,8 @@ spec = do
             }
     let tableRelationships =
           TableRelationships
-            { _trSourceTable = TableName ["source_table_name"],
-              _trRelationships =
+            { _trelSourceTable = TableName ["source_table_name"],
+              _trelRelationships =
                 [ (RelationshipName "relationship_a", relationshipA),
                   (RelationshipName "relationship_b", relationshipB)
                 ]
@@ -74,6 +76,7 @@ spec = do
       tableRelationships
       [aesonQQ|
         { "source_table": ["source_table_name"],
+          "type": "table",
           "relationships": {
             "relationship_a": {
               "target_table": ["target_table_name_a"],
@@ -108,8 +111,20 @@ genRelationship =
     <*> genRelationshipType
     <*> (HashMap.fromList <$> Gen.list defaultRange ((,) <$> genColumnName <*> genColumnName))
 
+genRelationships :: Gen Relationships
+genRelationships = (RTable <$> genTableRelationships) <|> (RFunction <$> genFunctionRelationships)
+
 genTableRelationships :: MonadGen m => m TableRelationships
 genTableRelationships =
   TableRelationships
     <$> genTableName
     <*> fmap HashMap.fromList (Gen.list defaultRange ((,) <$> genRelationshipName <*> genRelationship))
+
+genFunctionRelationships :: MonadGen m => m FunctionRelationships
+genFunctionRelationships =
+  FunctionRelationships
+    <$> genFunctionName
+    <*> fmap HashMap.fromList (Gen.list defaultRange ((,) <$> genRelationshipName <*> genRelationship))
+
+genFunctionName :: MonadGen m => m FunctionName
+genFunctionName = FunctionName <$> Gen.nonEmpty (linear 1 3) (genArbitraryAlphaNumText defaultRange)

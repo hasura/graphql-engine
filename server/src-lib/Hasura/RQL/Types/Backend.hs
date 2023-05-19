@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.RQL.Types.Backend
@@ -13,7 +14,9 @@ module Hasura.RQL.Types.Backend
   )
 where
 
-import Autodocodec (HasCodec)
+import Autodocodec (HasCodec (..))
+import Autodocodec.DerivingVia ()
+import Autodocodec.OpenAPI ()
 import Control.Lens.TH (makePrisms)
 import Data.Aeson.Extended
 import Data.Environment qualified as Env
@@ -82,6 +85,7 @@ class
     Representable (ExtraTableMetadata b),
     Representable (FunctionArgument b),
     Representable (FunctionName b),
+    Representable (FunctionReturnType b),
     Representable (HealthCheckTest b),
     Representable (NullsOrderType b),
     Representable (SQLExpression b),
@@ -90,6 +94,7 @@ class
     Representable (XComputedField b),
     Representable (TableName b),
     Eq (RawFunctionInfo b),
+    Show (RawFunctionInfo b),
     Representable (ResolvedConnectionTemplate b),
     Ord (TableName b),
     Ord (FunctionName b),
@@ -104,6 +109,7 @@ class
     FromJSON (ConstraintName b),
     FromJSON (ExtraTableMetadata b),
     FromJSON (FunctionName b),
+    FromJSON (FunctionReturnType b),
     FromJSON (HealthCheckTest b),
     FromJSON (RawFunctionInfo b),
     FromJSON (ScalarType b),
@@ -115,6 +121,7 @@ class
     HasCodec (Column b),
     HasCodec (ComputedFieldDefinition b),
     HasCodec (FunctionName b),
+    HasCodec (FunctionReturnType b),
     HasCodec (ScalarType b),
     HasCodec (TableName b),
     ToJSON (BackendConfig b),
@@ -123,6 +130,7 @@ class
     ToJSON (ExecutionStatistics b),
     ToJSON (FunctionArgument b),
     ToJSON (FunctionName b),
+    ToJSON (FunctionReturnType b),
     ToJSON (ScalarType b),
     ToJSON (TableName b),
     ToJSON (ExtraTableMetadata b),
@@ -192,6 +200,9 @@ class
 
   -- Fully qualified name of a function
   type FunctionName b :: Type
+
+  type FunctionReturnType b :: Type
+  type FunctionReturnType b = XDisable
 
   -- Information about a function obtained by introspecting the underlying
   -- database

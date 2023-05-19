@@ -28,7 +28,7 @@ server.get<{ Reply: CapabilitiesResponse }>("/capabilities", async (request, _re
 server.get<{ Reply: SchemaResponse }>("/schema", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "schema.request");
   const config = getConfig(request);
-  return getSchema(config);
+  return getSchema(staticData, config);
 });
 
 server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (request, _response) => {
@@ -84,7 +84,7 @@ process.on('SIGINT', () => {
 
 const start = async () => {
   try {
-    staticData = {[defaultDbStoreName]: await loadStaticData("Chinook.xml.gz")};
+    staticData = {[defaultDbStoreName]: await loadStaticData("Chinook")};
     await server.listen({port: port, host: "0.0.0.0"});
   }
   catch (err) {

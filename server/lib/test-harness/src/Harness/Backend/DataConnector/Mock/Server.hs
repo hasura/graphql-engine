@@ -80,6 +80,7 @@ capabilities =
             API._cExplain = Just API.ExplainCapabilities {},
             API._cRaw = Just API.RawCapabilities {},
             API._cDatasets = Just API.DatasetCapabilities {},
+            API._cUserDefinedFunctions = Just API.UserDefinedFunctionCapabilities {},
             API._cLicensing = Nothing
           },
       _crConfigSchemaResponse =
@@ -145,7 +146,8 @@ capabilities =
 schema :: API.SchemaResponse
 schema =
   API.SchemaResponse
-    { API._srTables =
+    { API._srFunctions = [],
+      API._srTables =
         [ API.TableInfo
             { API._tiName = mkTableName "Artist",
               API._tiType = API.Table,

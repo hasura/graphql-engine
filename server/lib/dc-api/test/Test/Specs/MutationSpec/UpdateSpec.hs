@@ -13,6 +13,7 @@ import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (catMaybes, mapMaybe, maybeToList)
 import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
+import Hasura.Backends.DataConnector.API.V0.Relationships as API
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.AgentAPI (mutationExpectError, mutationGuarded, queryGuarded)
 import Test.AgentDatasets (chinookTemplate, usesDataset)
@@ -124,7 +125,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
                 )
               & fmap (\artist -> artist & Data.field "Name" . Data._ColumnFieldString .~ "Metalika")
 
-      receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest whereExp & qrTableRelationships .~ tableRelationships)
+      receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded (artistsQueryRequest whereExp & qrRelationships .~ Set.map API.RTable tableRelationships)
       Data.responseRows receivedArtists `rowsShouldBe` expectedModifiedRows
 
   usesDataset chinookTemplate $ it "can set the value of a column differently using multiple operations" $ do
@@ -385,7 +386,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
         let invoiceLineIds = expectedModifiedRows & mapMaybe (^? Data.field "InvoiceLineId" . Data._ColumnFieldNumber) & fmap J.Number
         let alternateWhereExp = ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) invoiceLineIds invoiceLineIdScalarType
 
-        receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest alternateWhereExp & qrTableRelationships .~ tableRelationships)
+        receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest alternateWhereExp & qrRelationships .~ Set.map API.RTable tableRelationships)
         Data.responseRows receivedInvoiceLines `rowsShouldBe` expectedModifiedRows
 
       usesDataset chinookTemplate $ it "fails to update when post update check against related table fails" $ do
@@ -718,7 +719,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
     artistsQueryRequest :: Expression -> QueryRequest
     artistsQueryRequest whereExp =
       let query = Data.emptyQuery & qFields ?~ artistsFields & qWhere ?~ whereExp
-       in QueryRequest _tdArtistsTableName mempty query Nothing
+       in TableQueryRequest _tdArtistsTableName mempty query Nothing
 
     invoiceLinesFields :: HashMap FieldName Field
     invoiceLinesFields =
@@ -733,7 +734,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
     invoiceLinesQueryRequest :: Expression -> QueryRequest
     invoiceLinesQueryRequest whereExp =
       let query = Data.emptyQuery & qFields ?~ invoiceLinesFields & qWhere ?~ whereExp
-       in QueryRequest _tdInvoiceLinesTableName mempty query Nothing
+       in TableQueryRequest _tdInvoiceLinesTableName mempty query Nothing
 
     incOperator :: UpdateColumnOperatorName
     incOperator = UpdateColumnOperatorName $ [G.name|inc|]

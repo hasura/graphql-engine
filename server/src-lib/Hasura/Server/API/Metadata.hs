@@ -211,6 +211,7 @@ queryModifiesMetadata = \case
       RMGetSourceKindCapabilities _ -> False
       RMListSourceKinds _ -> False
       RMGetSourceTables _ -> False
+      RMGetSourceTrackables _ -> False
       RMGetTableInfo _ -> False
       RMTestConnectionTemplate _ -> False
       RMSuggestRelationships _ -> False
@@ -384,6 +385,7 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMListSourceKinds q -> runListSourceKinds q
   RMGetSourceKindCapabilities q -> runGetSourceKindCapabilities q
   RMGetSourceTables q -> dispatchMetadata runGetSourceTables q
+  RMGetSourceTrackables q -> dispatchMetadata runGetSourceTrackables q
   RMGetTableInfo q -> dispatchMetadata runGetTableInfo q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMTrackTables q -> dispatchMetadata runTrackTablesQ q

@@ -173,8 +173,8 @@ tests = do
             & API.mrTableRelationships
               .~ Set.fromList
                 [ API.TableRelationships
-                    { API._trSourceTable = mkTableName "Album",
-                      API._trRelationships =
+                    { API._trelSourceTable = mkTableName "Album",
+                      API._trelRelationships =
                         HashMap.fromList
                           [ ( API.RelationshipName "Artist",
                               API.Relationship
