@@ -97,9 +97,10 @@ testImplementation = do
             description: hello
             fields:
                 - name: divided
-                  type: #{scalarTypeToText testEnvironment Schema.TInt}
-                  nullable: false
                   description: "a divided thing"
+                  type:
+                    scalar: #{scalarTypeToText testEnvironment Schema.TInt}
+                    nullable: false
         |]
 
     it "Checks the logical model is deleted again" $ \testEnvironment -> do
@@ -188,8 +189,9 @@ testPermissions = do
             fields:
             - description: a divided thing
               name: divided
-              nullable: false
-              type: integer
+              type:
+                nullable: false
+                scalar: integer
             select_permissions:
               - role: "test"
                 permission:

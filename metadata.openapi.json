@@ -771,6 +771,28 @@
                 ],
                 "type": "object"
             },
+            "BigqueryLogicalModelField": {
+                "description": "A field of a logical model",
+                "properties": {
+                    "description": {
+                        "description": "Optional description of this field",
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Name of the field",
+                        "type": "string"
+                    },
+                    "type": {
+                        "additionalProperties": true,
+                        "description": "Type of the field\nA type used in a Logical Model field\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
             "BigqueryLogicalModelMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -782,7 +804,14 @@
                         "description": "Return types for the logical model",
                         "items": {
                             "additionalProperties": true,
-                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/BigqueryLogicalModelField"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/BigqueryLogicalModelField"
+                                }
+                            ]
                         },
                         "type": "array"
                     },
@@ -1685,6 +1714,28 @@
                 ],
                 "type": "object"
             },
+            "CitusLogicalModelField": {
+                "description": "A field of a logical model",
+                "properties": {
+                    "description": {
+                        "description": "Optional description of this field",
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Name of the field",
+                        "type": "string"
+                    },
+                    "type": {
+                        "additionalProperties": true,
+                        "description": "Type of the field\nA type used in a Logical Model field\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
             "CitusLogicalModelMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -1696,7 +1747,14 @@
                         "description": "Return types for the logical model",
                         "items": {
                             "additionalProperties": true,
-                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/CitusLogicalModelField"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/CitusLogicalModelField"
+                                }
+                            ]
                         },
                         "type": "array"
                     },
@@ -2643,6 +2701,28 @@
                 ],
                 "type": "object"
             },
+            "CockroachLogicalModelField": {
+                "description": "A field of a logical model",
+                "properties": {
+                    "description": {
+                        "description": "Optional description of this field",
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Name of the field",
+                        "type": "string"
+                    },
+                    "type": {
+                        "additionalProperties": true,
+                        "description": "Type of the field\nA type used in a Logical Model field\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
             "CockroachLogicalModelMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -2654,7 +2734,14 @@
                         "description": "Return types for the logical model",
                         "items": {
                             "additionalProperties": true,
-                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/CockroachLogicalModelField"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/CockroachLogicalModelField"
+                                }
+                            ]
                         },
                         "type": "array"
                     },
@@ -3756,6 +3843,28 @@
                 ],
                 "type": "object"
             },
+            "DataconnectorLogicalModelField": {
+                "description": "A field of a logical model",
+                "properties": {
+                    "description": {
+                        "description": "Optional description of this field",
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Name of the field",
+                        "type": "string"
+                    },
+                    "type": {
+                        "additionalProperties": true,
+                        "description": "Type of the field\nA type used in a Logical Model field\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
             "DataconnectorLogicalModelMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -3767,7 +3876,14 @@
                         "description": "Return types for the logical model",
                         "items": {
                             "additionalProperties": true,
-                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/DataconnectorLogicalModelField"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/DataconnectorLogicalModelField"
+                                }
+                            ]
                         },
                         "type": "array"
                     },
@@ -5391,6 +5507,28 @@
                 ],
                 "type": "object"
             },
+            "MssqlLogicalModelField": {
+                "description": "A field of a logical model",
+                "properties": {
+                    "description": {
+                        "description": "Optional description of this field",
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Name of the field",
+                        "type": "string"
+                    },
+                    "type": {
+                        "additionalProperties": true,
+                        "description": "Type of the field\nA type used in a Logical Model field\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
             "MssqlLogicalModelMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -5402,7 +5540,14 @@
                         "description": "Return types for the logical model",
                         "items": {
                             "additionalProperties": true,
-                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/MssqlLogicalModelField"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/MssqlLogicalModelField"
+                                }
+                            ]
                         },
                         "type": "array"
                     },
@@ -6623,6 +6768,28 @@
                 ],
                 "type": "object"
             },
+            "PostgresLogicalModelField": {
+                "description": "A field of a logical model",
+                "properties": {
+                    "description": {
+                        "description": "Optional description of this field",
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Name of the field",
+                        "type": "string"
+                    },
+                    "type": {
+                        "additionalProperties": true,
+                        "description": "Type of the field\nA type used in a Logical Model field\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
             "PostgresLogicalModelMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -6634,7 +6801,14 @@
                         "description": "Return types for the logical model",
                         "items": {
                             "additionalProperties": true,
-                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/PostgresLogicalModelField"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/PostgresLogicalModelField"
+                                }
+                            ]
                         },
                         "type": "array"
                     },

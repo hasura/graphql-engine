@@ -10,7 +10,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended (ToTxt (toTxt))
 import Hasura.LogicalModel.NullableScalarType (NullableScalarType (..))
-import Hasura.LogicalModel.Types (LogicalModelField (..))
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelType (..), LogicalModelTypeScalar (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..), fromCol)
@@ -23,9 +23,14 @@ columnsFromFields ::
 columnsFromFields =
   InsOrdHashMap.mapMaybe
     ( \case
-        LogicalModelScalarField
-          { lmfType = nstType,
-            lmfNullable = nstNullable,
+        LogicalModelField
+          { lmfType =
+              LogicalModelTypeScalar
+                ( LogicalModelTypeScalarC
+                    { lmtsScalar = nstType,
+                      lmtsNullable = nstNullable
+                    }
+                  ),
             lmfDescription = nstDescription
           } ->
             Just (NullableScalarType {..})

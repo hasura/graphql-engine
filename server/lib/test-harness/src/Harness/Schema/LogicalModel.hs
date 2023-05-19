@@ -35,6 +35,10 @@ instance J.ToJSON ReferenceType where
   toJSON ArrayReference = "array"
   toJSON ObjectReference = "object"
 
+-- | this no longer matches the internal shape of logical models, where arrays
+-- can nest objects OR scalars
+-- however, we can defer changing this abstraction until we need to express
+-- that in our tests
 data LogicalModelColumn
   = LogicalModelScalar
       { logicalModelColumnName :: Text,
@@ -91,23 +95,49 @@ logicalModel logicalModelName =
 
 trackLogicalModelCommand :: String -> BackendTypeConfig -> LogicalModel -> Value
 trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalModelDescription, logicalModelName, logicalModelColumns}) =
-  -- return type is an array of items
   let returnTypeToJson =
         J.Array
           . V.fromList
           . fmap
             ( \case
-                LogicalModelReference {..} ->
-                  J.object $
-                    [ ("logical_model" .= logicalModelColumnReference),
-                      ("link_type" .= logicalModelColumnReferenceType),
-                      ("name" .= logicalModelColumnName)
-                    ]
+                LogicalModelReference
+                  { logicalModelColumnReferenceType = ObjectReference,
+                    logicalModelColumnReference,
+                    logicalModelColumnName
+                  } ->
+                    J.object $
+                      [ ("name" .= logicalModelColumnName),
+                        ( "type",
+                          J.object
+                            [ ("logical_model" .= logicalModelColumnReference)
+                            ]
+                        )
+                      ]
+                LogicalModelReference
+                  { logicalModelColumnReferenceType = ArrayReference,
+                    logicalModelColumnReference,
+                    logicalModelColumnName
+                  } ->
+                    J.object $
+                      [ ("name" .= logicalModelColumnName),
+                        ( "type",
+                          J.object $
+                            [ ( "array",
+                                J.object $
+                                  [ ("logical_model" .= logicalModelColumnReference)
+                                  ]
+                              )
+                            ]
+                        )
+                      ]
                 LogicalModelScalar {..} ->
                   let descriptionPair = case logicalModelColumnDescription of
                         Just desc -> [("description" .= desc)]
                         Nothing -> []
-                   in J.object $
+                   in -- this is the old way to encode these, but we'll keep using
+                      -- in the tests for now to ensure we remain backwards
+                      -- compatible
+                      J.object $
                         [ ("name" .= logicalModelColumnName),
                           ("type" .= (BackendType.backendScalarType backendTypeConfig) logicalModelColumnType),
                           ("nullable" .= logicalModelColumnNullable)
