@@ -34,7 +34,7 @@ const HasuraConBanner = props => {
           <div className={styles['content-div']}>
             <h3>Ship faster with low-code APIs on MySQL, MariaDB, and Oracle</h3>
             <div className={styles['hasura-con-register'] + ' ' + styles['hasura-con-register-mobile-hide']}>
-              Register
+              View Recording
               <ArrowRight />
             </div>
           </div>
