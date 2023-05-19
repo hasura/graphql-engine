@@ -106,6 +106,8 @@ export const useHandleSubmit = ({
       if (
         driverSupportsRemoteRelationship &&
         toSource.type === 'table' &&
+        (!driverSupportsLocalRelationship || // if local relationship is not supported, we can create a remote relationship
+          toSource.dataSourceName !== dataSourceName) && // if local relationship is supported, we can create a remote relationship only if the table is from a different data source
         'columnMap' in details
       ) {
         const remoteDatabaseRelationship: RemoteDatabaseRelationship = {
