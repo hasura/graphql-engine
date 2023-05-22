@@ -27,6 +27,8 @@ export function shouldShowOnboarding(onboardingData: UserOnboarding) {
 
   if (
     userActivity?.[skippedNeonOnboardingVariables.kind]?.value === 'true' ||
+    userActivity?.[skippedOnboardingThroughURLParamVariables.kind]?.value ===
+      'true' ||
     userActivity?.[onboardingCompleteVariables.kind]?.value === 'true' ||
     userActivity?.[hasuraSourceCreationStartVariables.kind]?.value === 'true' ||
     userActivity?.[templateSummaryRunQuerySkipVariables.kind]?.value ===
