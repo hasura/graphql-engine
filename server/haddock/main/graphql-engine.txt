@@ -17757,6 +17757,9 @@ SourceMetadata :: SourceName -> BackendSourceKind b -> Tables b -> Functions b -
 [_smConfiguration] :: SourceMetadata b -> SourceConnConfiguration b
 [_smQueryTags] :: SourceMetadata b -> Maybe QueryTagsConfig
 [_smCustomization] :: SourceMetadata b -> SourceCustomization
+
+-- | 
+--   <a>https://hasura.io/docs/latest/deployment/health-checks/source-health-check/</a>
 [_smHealthCheckConfig] :: SourceMetadata b -> Maybe (HealthCheckConfig b)
 smTables :: forall b_atFdy. Lens' (SourceMetadata b_atFdy) (Tables b_atFdy)
 smStoredProcedures :: forall b_atFdy. Lens' (SourceMetadata b_atFdy) (StoredProcedures b_atFdy)
