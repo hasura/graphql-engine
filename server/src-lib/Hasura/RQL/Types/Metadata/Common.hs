@@ -142,6 +142,7 @@ data SourceMetadata b = SourceMetadata
     _smConfiguration :: SourceConnConfiguration b,
     _smQueryTags :: Maybe QueryTagsConfig,
     _smCustomization :: SourceCustomization,
+    -- | https://hasura.io/docs/latest/deployment/health-checks/source-health-check/
     _smHealthCheckConfig :: Maybe (HealthCheckConfig b)
   }
   deriving (Generic)

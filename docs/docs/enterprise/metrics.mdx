@@ -284,6 +284,19 @@ Current number of active PostgreSQL connections. Compare this to
 | Type   | Gauge                                                                                                                                                                             |
 | Labels | `source_name`: name of the database<br />`conn_info`: connection url string (password omitted) or name of the connection url environment variable<br />`role`: primary \| replica |
 
+### Hasura source health
+
+Health check status of a particular data source, corresponding to the output of
+`/healthz/sources`, with possible values 0 through 3 indicating, respectively:
+OK, TIMEOUT, FAILED, ERROR. See the [Source Health Check API Reference](/api-reference/source-health.mdx)
+for details.
+
+|        |                                                                                                                                                                                   |
+| ------ | -------------------------------------- |
+| Name   | `hasura_source_health`                 |
+| Type   | Gauge                                  |
+| Labels | `source_name`: name of the database    |
+
 ### Hasura subscription database execution time
 
 The time taken to run the subscription's multiplexed query in the database for a single batch.

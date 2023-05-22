@@ -282,6 +282,10 @@ buildHealthCheckCache sources =
     mkSourceHealthCheck (BackendSourceMetadata sourceMetadata) =
       AB.traverseBackend @Backend sourceMetadata mkSourceHealthCheckBackend
 
+    -- 'Nothing' when no health check is defined. See:
+    -- https://hasura.io/docs/latest/deployment/health-checks/source-health-check/
+    -- We likely choose not to install a default `SELECT 1` health check here,
+    -- since we don't want to spam serverless databases.
     mkSourceHealthCheckBackend :: SourceMetadata b -> Maybe (SourceHealthCheckInfo b)
     mkSourceHealthCheckBackend sourceMetadata =
       let sourceName = _smName sourceMetadata
