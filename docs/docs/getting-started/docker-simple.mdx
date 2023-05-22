@@ -45,6 +45,16 @@ docker compose up -d
 
 ## Step 2: Connect a database
 
+:::info Hasura ships with a Postgres database
+
+The docker-compose file we used in the previous step starts a Postgres database in a Docker container. **Hasura relies
+on this database to store its metadata**, but this can also be used to store your application data.
+
+If you'd like to connect another type of database for storing application data, check out our list of
+[supported databases](/databases/overview.mdx).
+
+:::
+
 Open the Hasura Console by navigating to `http://localhost:8080/console`. From the Console, click the `Data` tab:
 
 <Thumbnail src="/img/getting-started/connect-db-console.png" alt="Connect database" width="1000px" />
@@ -90,7 +100,8 @@ You'll see that you get all the inserted data!
 
 <Thumbnail src="/img/getting-started/profile-query.png" alt="Try out a query" width="1200px" />
 
-> Note: The Hasura GraphQL Engine collects anonymous telemetry to understand usage and provide the best experience. Read more [here](https://hasura.io/docs/latest/policies/telemetry/) on what data is collected and the procedure to opt out.
+> Note: The Hasura GraphQL Engine collects anonymous telemetry to understand usage and provide the best experience. Read
+> more [here](https://hasura.io/docs/latest/policies/telemetry/) on what data is collected and the procedure to opt out.
 
 ## Recap
 
