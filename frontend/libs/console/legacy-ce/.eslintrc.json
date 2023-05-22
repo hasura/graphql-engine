@@ -15,6 +15,11 @@
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "rules": {
+        "react/jsx-no-useless-fragment": ["warn", { "allowExpressions": true }],
+        "@typescript-eslint/no-unused-vars": [
+          "warn",
+          { "ignoreRestSiblings": true }
+        ],
         "react/forbid-dom-props": [
           "error",
           {

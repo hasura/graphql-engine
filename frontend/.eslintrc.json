@@ -8,6 +8,11 @@
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
       "extends": ["plugin:storybook/recommended"],
       "rules": {
+        "react/jsx-no-useless-fragment": ["warn", { "allowExpressions": true }],
+        "@typescript-eslint/no-unused-vars": [
+          "warn",
+          { "ignoreRestSiblings": true }
+        ],
         "@nrwl/nx/workspace/additional-dep-constraints": "error",
         "@nrwl/nx/enforce-module-boundaries": [
           "error",
