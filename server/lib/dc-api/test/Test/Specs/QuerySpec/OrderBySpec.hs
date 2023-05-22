@@ -368,10 +368,10 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
       _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can order results by an aggregate function applied to a column of a related table" $ do
-      -- Order artists by their highest album id descending, but only artists that have any albums
+      -- Order albums by their highest track id descending
       let orderByRelations =
             HashMap.fromList
-              [ ( _tdAlbumsRelationshipName,
+              [ ( _tdTracksRelationshipName,
                   OrderByRelation
                     Nothing
                     mempty
@@ -380,34 +380,27 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
       let orderBy =
             OrderBy orderByRelations $
               NonEmpty.fromList
-                [ OrderByElement [_tdAlbumsRelationshipName] (orderBySingleColumnAggregateMax (_tdColumnName "AlbumId") albumIdNameScalarType) Descending
+                [ OrderByElement [_tdTracksRelationshipName] (orderBySingleColumnAggregateMax (_tdColumnName "TrackId") trackIdNameScalarType) Descending
                 ]
-      let whereExp =
-            Exists
-              (RelatedTable _tdAlbumsRelationshipName)
-              (Not $ ApplyUnaryComparisonOperator IsNull (_tdCurrentComparisonColumn "AlbumId" albumIdNameScalarType))
       let query =
-            artistsQueryRequest
+            albumsQueryRequest
               & qrQuery . qOrderBy ?~ orderBy
-              & qrQuery . qWhere ?~ whereExp
               & qrRelationships
-                .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
-      receivedArtists <- queryGuarded query
+                .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships]
+      receivedAlbums <- queryGuarded query
 
-      let findRelatedAlbums (artist :: HashMap FieldName FieldValue) = fromMaybe [] do
-            artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
-            pure $ filter (\album -> album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId) _tdAlbumsRows
+      let findRelatedTracks (album :: HashMap FieldName FieldValue) = fromMaybe [] do
+            albumId <- album ^? Data.field "AlbumId" . Data._ColumnFieldNumber
+            pure $ filter (\track -> track ^? Data.field "AlbumId" . Data._ColumnFieldNumber == Just albumId) _tdTracksRows
 
-      let expectedArtists =
-            _tdArtistsRows
-              & fmap (\artist -> (artist, findRelatedAlbums artist))
-              & filter (\(_artist, albums) -> any (\album -> album ^? Data.field "AlbumId" . Data._ColumnFieldNull /= Just ()) albums)
-              & fmap (\(artist, albums) -> (artist, maximum $ (albums & fmap (\album -> album ^? Data.field "AlbumId" . Data._ColumnFieldNumber))))
+      let expectedAlbums =
+            _tdAlbumsRows
+              & fmap (\album -> (album, maximum $ (findRelatedTracks album & fmap (\track -> track ^? Data.field "TrackId" . Data._ColumnFieldNumber))))
               & sortOn (\row -> (Down (row ^. _2)))
               & fmap (^. _1)
 
-      Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
-      _qrAggregates receivedArtists `jsonShouldBe` Nothing
+      Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+      _qrAggregates receivedAlbums `jsonShouldBe` Nothing
   where
     albumsQuery :: Query
     albumsQuery =
@@ -443,8 +436,8 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
     orderBySingleColumnAggregateMax columnName resultType = OrderBySingleColumnAggregate $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|max|]) columnName resultType
 
     albumTitleScalarType = _tdFindColumnScalarType _tdAlbumsTableName "Title"
-    albumIdNameScalarType = _tdFindColumnScalarType _tdAlbumsTableName "AlbumId"
     artistNameScalarType = _tdFindColumnScalarType _tdArtistsTableName "Name"
+    trackIdNameScalarType = _tdFindColumnScalarType _tdTracksTableName "TrackId"
 
 data NullableOrdered a
   = NullFirst
