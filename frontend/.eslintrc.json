@@ -93,12 +93,14 @@
       "files": ["*.ts", "*.tsx"],
       "extends": ["plugin:@nrwl/nx/typescript"],
       "rules": {
+        "react/jsx-no-useless-fragment": ["warn", { "allowExpressions": true }],
         "no-unused-vars": "off",
         "@typescript-eslint/no-unused-vars": [
           "error",
           {
             "args": "none",
-            "varsIgnorePattern": "React"
+            "varsIgnorePattern": "React",
+            "ignoreRestSiblings": true
           }
         ],
         "@typescript-eslint/no-restricted-imports": [

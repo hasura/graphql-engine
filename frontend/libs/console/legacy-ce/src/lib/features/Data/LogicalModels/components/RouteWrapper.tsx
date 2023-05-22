@@ -28,7 +28,7 @@ function NativeQueriesFeatureFlag({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  // eslint-disable-next-line react/jsx-no-useless-fragment
+
   return <>{children}</>;
 }
 
