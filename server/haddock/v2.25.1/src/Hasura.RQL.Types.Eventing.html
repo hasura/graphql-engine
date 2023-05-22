@@ -1,0 +1,352 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | This module contains types which are common to event triggers and scheduled triggers.</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.Eventing</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ClientError"><span class="hs-identifier">ClientError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier">EventId</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Invocation"><span class="hs-identifier">Invocation</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#InvocationVersion"><span class="hs-identifier">InvocationVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#PGTextArray"><span class="hs-identifier">PGTextArray</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Response"><span class="hs-identifier">Response</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#TriggerTypes"><span class="hs-identifier">TriggerTypes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookRequest"><span class="hs-identifier">WebhookRequest</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookResponse"><span class="hs-identifier">WebhookResponse</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#OpVar"><span class="hs-identifier">OpVar</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#invocationVersionET"><span class="hs-identifier">invocationVersionET</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#invocationVersionST"><span class="hs-identifier">invocationVersionST</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.SerializableBlob</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">SB</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier">Database.PG.Query.PTI</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PTI</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html"><span class="hs-identifier">Hasura.RQL.Types.Headers</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier">HeaderConf</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">PostgreSQL.Binary.Encoding</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PE</span></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span id="local-6989586621690837656"><span id="local-6989586621690837657"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="EventId"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-var">EventId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EventId"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-var">EventId</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unEventId"><span class="annot"><span class="annottext">EventId -&gt; InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#unEventId"><span class="hs-identifier hs-var hs-var">unEventId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690837643"><span id="local-6989586621690837645"><span id="local-6989586621690837651"><span class="annot"><span class="annottext">Int -&gt; EventId -&gt; ShowS
+[EventId] -&gt; ShowS
+EventId -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [EventId] -&gt; ShowS
+$cshowList :: [EventId] -&gt; ShowS
+show :: EventId -&gt; String
+$cshow :: EventId -&gt; String
+showsPrec :: Int -&gt; EventId -&gt; ShowS
+$cshowsPrec :: Int -&gt; EventId -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690837635"><span id="local-6989586621690837640"><span class="annot"><span class="annottext">EventId -&gt; EventId -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: EventId -&gt; EventId -&gt; Bool
+$c/= :: EventId -&gt; EventId -&gt; Bool
+== :: EventId -&gt; EventId -&gt; Bool
+$c== :: EventId -&gt; EventId -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690837602"><span id="local-6989586621690837606"><span id="local-6989586621690837610"><span id="local-6989586621690837614"><span id="local-6989586621690837618"><span id="local-6989586621690837622"><span id="local-6989586621690837627"><span class="annot"><span class="annottext">Eq EventId
+EventId -&gt; EventId -&gt; Bool
+EventId -&gt; EventId -&gt; Ordering
+EventId -&gt; EventId -&gt; EventId
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: EventId -&gt; EventId -&gt; EventId
+$cmin :: EventId -&gt; EventId -&gt; EventId
+max :: EventId -&gt; EventId -&gt; EventId
+$cmax :: EventId -&gt; EventId -&gt; EventId
+&gt;= :: EventId -&gt; EventId -&gt; Bool
+$c&gt;= :: EventId -&gt; EventId -&gt; Bool
+&gt; :: EventId -&gt; EventId -&gt; Bool
+$c&gt; :: EventId -&gt; EventId -&gt; Bool
+&lt;= :: EventId -&gt; EventId -&gt; Bool
+$c&lt;= :: EventId -&gt; EventId -&gt; Bool
+&lt; :: EventId -&gt; EventId -&gt; Bool
+$c&lt; :: EventId -&gt; EventId -&gt; Bool
+compare :: EventId -&gt; EventId -&gt; Ordering
+$ccompare :: EventId -&gt; EventId -&gt; Ordering
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690837589"><span id="local-6989586621690837594"><span class="annot"><span class="annottext">Eq EventId
+Int -&gt; EventId -&gt; Int
+EventId -&gt; Int
+forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: EventId -&gt; Int
+$chash :: EventId -&gt; Int
+hashWithSalt :: Int -&gt; EventId -&gt; Int
+$chashWithSalt :: Int -&gt; EventId -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690837583"><span class="annot"><span class="annottext">EventId -&gt; InvocationVersion
+forall a. (a -&gt; InvocationVersion) -&gt; ToTxt a
+toTxt :: EventId -&gt; InvocationVersion
+$ctoTxt :: EventId -&gt; InvocationVersion
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690837571"><span id="local-6989586621690837576"><span class="annot"><span class="annottext">Value -&gt; Parser [EventId]
+Value -&gt; Parser EventId
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [EventId]
+$cparseJSONList :: Value -&gt; Parser [EventId]
+parseJSON :: Value -&gt; Parser EventId
+$cparseJSON :: Value -&gt; Parser EventId
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690837552"><span id="local-6989586621690837556"><span id="local-6989586621690837560"><span id="local-6989586621690837565"><span class="annot"><span class="annottext">[EventId] -&gt; Value
+[EventId] -&gt; Encoding
+EventId -&gt; Value
+EventId -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [EventId] -&gt; Encoding
+$ctoEncodingList :: [EventId] -&gt; Encoding
+toJSONList :: [EventId] -&gt; Value
+$ctoJSONList :: [EventId] -&gt; Value
+toEncoding :: EventId -&gt; Encoding
+$ctoEncoding :: EventId -&gt; Encoding
+toJSON :: EventId -&gt; Value
+$ctoJSON :: EventId -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690837541"><span id="local-6989586621690837546"><span class="annot"><span class="annottext">ToJSONKeyFunction [EventId]
+ToJSONKeyFunction EventId
+forall a.
+ToJSONKeyFunction a -&gt; ToJSONKeyFunction [a] -&gt; ToJSONKey a
+toJSONKeyList :: ToJSONKeyFunction [EventId]
+$ctoJSONKeyList :: ToJSONKeyFunction [EventId]
+toJSONKey :: ToJSONKeyFunction EventId
+$ctoJSONKey :: ToJSONKeyFunction EventId
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690837535"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either InvocationVersion EventId
+forall a.
+(Maybe ByteString -&gt; Either InvocationVersion a) -&gt; FromCol a
+fromCol :: Maybe ByteString -&gt; Either InvocationVersion EventId
+$cfromCol :: Maybe ByteString -&gt; Either InvocationVersion EventId
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.FromCol</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690837528"><span class="annot"><span class="annottext">EventId -&gt; PrepArg
+forall a. (a -&gt; PrepArg) -&gt; ToPrepArg a
+toPrepVal :: EventId -&gt; PrepArg
+$ctoPrepVal :: EventId -&gt; PrepArg
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.ToPrepArg</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep EventId x -&gt; EventId
+forall x. EventId -&gt; Rep EventId x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep EventId x -&gt; EventId
+$cfrom :: forall x. EventId -&gt; Rep EventId x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690837517"><span class="annot"><span class="annottext">EventId -&gt; ()
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: EventId -&gt; ()
+$crnf :: EventId -&gt; ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- | There are two types of events: EventType (for event triggers) and ScheduledType (for scheduled triggers)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">data</span><span> </span><span id="TriggerTypes"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#TriggerTypes"><span class="hs-identifier hs-var">TriggerTypes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EventType"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventType"><span class="hs-identifier hs-var">EventType</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="ScheduledType"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ScheduledType"><span class="hs-identifier hs-var">ScheduledType</span></a></span></span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">data</span><span> </span><span id="WebhookRequest"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookRequest"><span class="hs-identifier hs-var">WebhookRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WebhookRequest"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookRequest"><span class="hs-identifier hs-var">WebhookRequest</span></a></span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rqPayload"><span class="annot"><span class="annottext">WebhookRequest -&gt; Value
+</span><a href="Hasura.RQL.Types.Eventing.html#_rqPayload"><span class="hs-identifier hs-var hs-var">_rqPayload</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>    </span><span id="_rqHeaders"><span class="annot"><span class="annottext">WebhookRequest -&gt; [HeaderConf]
+</span><a href="Hasura.RQL.Types.Eventing.html#_rqHeaders"><span class="hs-identifier hs-var hs-var">_rqHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>    </span><span id="_rqVersion"><span class="annot"><span class="annottext">WebhookRequest -&gt; InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#_rqVersion"><span class="hs-identifier hs-var hs-var">_rqVersion</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="hs-special">$</span><span id="local-6989586621690837468"><span id="local-6989586621690837470"><span id="local-6989586621690837485"><span id="local-6989586621690837506"><span class="hs-special">(</span><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">WebhookRequest</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">data</span><span> </span><span id="WebhookResponse"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookResponse"><span class="hs-identifier hs-var">WebhookResponse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WebhookResponse"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookResponse"><span class="hs-identifier hs-var">WebhookResponse</span></a></span></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_wrsBody"><span class="annot"><span class="annottext">WebhookResponse -&gt; SerializableBlob
+</span><a href="Hasura.RQL.Types.Eventing.html#_wrsBody"><span class="hs-identifier hs-var hs-var">_wrsBody</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SB.SerializableBlob</span></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>    </span><span id="_wrsHeaders"><span class="annot"><span class="annottext">WebhookResponse -&gt; [HeaderConf]
+</span><a href="Hasura.RQL.Types.Eventing.html#_wrsHeaders"><span class="hs-identifier hs-var hs-var">_wrsHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span id="_wrsStatus"><span class="annot"><span class="annottext">WebhookResponse -&gt; Int
+</span><a href="Hasura.RQL.Types.Eventing.html#_wrsStatus"><span class="hs-identifier hs-var hs-var">_wrsStatus</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-special">$</span><span id="local-6989586621690837412"><span id="local-6989586621690837414"><span id="local-6989586621690837426"><span id="local-6989586621690837443"><span class="hs-special">(</span><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">WebhookResponse</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">newtype</span><span> </span><span id="ClientError"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ClientError"><span class="hs-identifier hs-var">ClientError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ClientError"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ClientError"><span class="hs-identifier hs-var">ClientError</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_ceMessage"><span class="annot"><span class="annottext">ClientError -&gt; SerializableBlob
+</span><a href="Hasura.RQL.Types.Eventing.html#_ceMessage"><span class="hs-identifier hs-var hs-var">_ceMessage</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">SB.SerializableBlob</span></span><span class="hs-special">}</span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-special">$</span><span id="local-6989586621690837380"><span id="local-6989586621690837382"><span id="local-6989586621690837389"><span id="local-6989586621690837397"><span class="hs-special">(</span><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ClientError</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">data</span><span> </span><span id="Response"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Response"><span class="hs-identifier hs-var">Response</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690837374"><span class="annot"><a href="#local-6989586621690837374"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#TriggerTypes"><span class="hs-identifier hs-type">TriggerTypes</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ResponseHTTP"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ResponseHTTP"><span class="hs-identifier hs-var">ResponseHTTP</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookResponse"><span class="hs-identifier hs-type">WebhookResponse</span></a></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ResponseError"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ResponseError"><span class="hs-identifier hs-var">ResponseError</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ClientError"><span class="hs-identifier hs-type">ClientError</span></a></span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span class="hs-keyword">type</span><span> </span><span id="InvocationVersion"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#InvocationVersion"><span class="hs-identifier hs-var">InvocationVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#invocationVersionET"><span class="hs-identifier hs-type">invocationVersionET</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#InvocationVersion"><span class="hs-identifier hs-type">InvocationVersion</span></a></span><span>
+</span><span id="line-63"></span><span id="invocationVersionET"><span class="annot"><span class="annottext">invocationVersionET :: InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#invocationVersionET"><span class="hs-identifier hs-var hs-var">invocationVersionET</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><span class="hs-string">&quot;2&quot;</span></span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#invocationVersionST"><span class="hs-identifier hs-type">invocationVersionST</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#InvocationVersion"><span class="hs-identifier hs-type">InvocationVersion</span></a></span><span>
+</span><span id="line-66"></span><span id="invocationVersionST"><span class="annot"><span class="annottext">invocationVersionST :: InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#invocationVersionST"><span class="hs-identifier hs-var hs-var">invocationVersionST</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><span class="hs-string">&quot;1&quot;</span></span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690837365"><span id="local-6989586621690837367"><span id="local-6989586621690837369"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Response"><span class="hs-identifier hs-type">Response</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventType"><span class="hs-identifier hs-type">EventType</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-69"></span><span>  </span><span id="local-6989586621690837338"><span class="annot"><span class="annottext">toJSON :: Response 'EventType -&gt; Value
+</span><a href="#local-6989586621690837338"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ResponseHTTP"><span class="hs-identifier hs-type">ResponseHTTP</span></a></span><span> </span><span id="local-6989586621690837337"><span class="annot"><span class="annottext">WebhookResponse
+</span><a href="#local-6989586621690837337"><span class="hs-identifier hs-var">resp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span>
+</span><span id="line-71"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">InvocationVersion -&gt; Value
+</span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><span class="hs-string">&quot;webhook_response&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-72"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;data&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">WebhookResponse
+</span><a href="#local-6989586621690837337"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;version&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#invocationVersionET"><span class="hs-identifier hs-var">invocationVersionET</span></a></span><span>
+</span><span id="line-74"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-75"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ResponseError"><span class="hs-identifier hs-type">ResponseError</span></a></span><span> </span><span id="local-6989586621690837333"><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621690837333"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span>
+</span><span id="line-77"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">InvocationVersion -&gt; Value
+</span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><span class="hs-string">&quot;client_error&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;data&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621690837333"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;version&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#invocationVersionET"><span class="hs-identifier hs-var">invocationVersionET</span></a></span><span>
+</span><span id="line-80"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690837326"><span id="local-6989586621690837328"><span id="local-6989586621690837330"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Response"><span class="hs-identifier hs-type">Response</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ScheduledType"><span class="hs-identifier hs-type">ScheduledType</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621690837301"><span class="annot"><span class="annottext">toJSON :: Response 'ScheduledType -&gt; Value
+</span><a href="#local-6989586621690837301"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ResponseHTTP"><span class="hs-identifier hs-type">ResponseHTTP</span></a></span><span> </span><span id="local-6989586621690837300"><span class="annot"><span class="annottext">WebhookResponse
+</span><a href="#local-6989586621690837300"><span class="hs-identifier hs-var">resp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span>
+</span><span id="line-85"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">InvocationVersion -&gt; Value
+</span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><span class="hs-string">&quot;webhook_response&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-86"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;data&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">WebhookResponse
+</span><a href="#local-6989586621690837300"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-87"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;version&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#invocationVersionST"><span class="hs-identifier hs-var">invocationVersionST</span></a></span><span>
+</span><span id="line-88"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-89"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#ResponseError"><span class="hs-identifier hs-type">ResponseError</span></a></span><span> </span><span id="local-6989586621690837299"><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621690837299"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span>
+</span><span id="line-91"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">InvocationVersion -&gt; Value
+</span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><span class="hs-string">&quot;client_error&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-92"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;data&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621690837299"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-93"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;version&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">InvocationVersion
+</span><a href="Hasura.RQL.Types.Eventing.html#invocationVersionST"><span class="hs-identifier hs-var">invocationVersionST</span></a></span><span>
+</span><span id="line-94"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="hs-keyword">data</span><span> </span><span id="Invocation"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Invocation"><span class="hs-identifier hs-var">Invocation</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690837709"><span class="annot"><a href="#local-6989586621690837709"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#TriggerTypes"><span class="hs-identifier hs-type">TriggerTypes</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Invocation"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Invocation"><span class="hs-identifier hs-var">Invocation</span></a></span></span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="iEventId"><span class="annot"><span class="annottext">forall (a :: TriggerTypes). Invocation a -&gt; EventId
+</span><a href="Hasura.RQL.Types.Eventing.html#iEventId"><span class="hs-identifier hs-var hs-var">iEventId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>    </span><span id="iStatus"><span class="annot"><span class="annottext">forall (a :: TriggerTypes). Invocation a -&gt; Maybe Int
+</span><a href="Hasura.RQL.Types.Eventing.html#iStatus"><span class="hs-identifier hs-var hs-var">iStatus</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>    </span><span id="iRequest"><span class="annot"><span class="annottext">forall (a :: TriggerTypes). Invocation a -&gt; WebhookRequest
+</span><a href="Hasura.RQL.Types.Eventing.html#iRequest"><span class="hs-identifier hs-var hs-var">iRequest</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#WebhookRequest"><span class="hs-identifier hs-type">WebhookRequest</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-100"></span><span>    </span><span id="iResponse"><span class="annot"><span class="annottext">forall (a :: TriggerTypes). Invocation a -&gt; Response a
+</span><a href="Hasura.RQL.Types.Eventing.html#iResponse"><span class="hs-identifier hs-var hs-var">iResponse</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#Response"><span class="hs-identifier hs-type">Response</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690837709"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span class="hs-comment">-- | PGTextArray is only used for PG array encoding</span><span>
+</span><span id="line-104"></span><span class="hs-keyword">newtype</span><span> </span><span id="PGTextArray"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#PGTextArray"><span class="hs-identifier hs-var">PGTextArray</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PGTextArray"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#PGTextArray"><span class="hs-identifier hs-var">PGTextArray</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unPGTextArray"><span class="annot"><span class="annottext">PGTextArray -&gt; [InvocationVersion]
+</span><a href="Hasura.RQL.Types.Eventing.html#unPGTextArray"><span class="hs-identifier hs-var hs-var">unPGTextArray</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690837282"><span id="local-6989586621690837284"><span id="local-6989586621690837290"><span class="annot"><span class="annottext">Int -&gt; PGTextArray -&gt; ShowS
+[PGTextArray] -&gt; ShowS
+PGTextArray -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PGTextArray] -&gt; ShowS
+$cshowList :: [PGTextArray] -&gt; ShowS
+show :: PGTextArray -&gt; String
+$cshow :: PGTextArray -&gt; String
+showsPrec :: Int -&gt; PGTextArray -&gt; ShowS
+$cshowsPrec :: Int -&gt; PGTextArray -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690837274"><span id="local-6989586621690837280"><span class="annot"><span class="annottext">PGTextArray -&gt; PGTextArray -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: PGTextArray -&gt; PGTextArray -&gt; Bool
+$c/= :: PGTextArray -&gt; PGTextArray -&gt; Bool
+== :: PGTextArray -&gt; PGTextArray -&gt; Bool
+$c== :: PGTextArray -&gt; PGTextArray -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ToPrepArg</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#PGTextArray"><span class="hs-identifier hs-type">PGTextArray</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-108"></span><span>  </span><span id="local-6989586621690837267"><span class="annot"><span class="annottext">toPrepVal :: PGTextArray -&gt; PrepArg
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">toPrepVal</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#PGTextArray"><span class="hs-identifier hs-type">PGTextArray</span></a></span><span> </span><span id="local-6989586621690837265"><span class="annot"><span class="annottext">[InvocationVersion]
+</span><a href="#local-6989586621690837265"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-109"></span><span>    </span><span class="annot"><span class="annottext">forall a. Oid -&gt; (a -&gt; Encoding) -&gt; a -&gt; PrepArg
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.toPrepValHelper</span></a></span><span> </span><span class="annot"><span class="annottext">Oid
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PTI.unknown</span></a></span><span> </span><span class="annot"><span class="annottext">[InvocationVersion] -&gt; Encoding
+</span><a href="#local-6989586621690837262"><span class="hs-identifier hs-var">encoder</span></a></span><span> </span><span class="annot"><span class="annottext">[InvocationVersion]
+</span><a href="#local-6989586621690837265"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-110"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-111"></span><span>      </span><span class="hs-comment">-- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html</span><span>
+</span><span id="line-112"></span><span>      </span><span id="local-6989586621690837262"><span class="annot"><span class="annottext">encoder :: [InvocationVersion] -&gt; Encoding
+</span><a href="#local-6989586621690837262"><span class="hs-identifier hs-var hs-var">encoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Array -&gt; Encoding
+</span><span class="hs-identifier hs-var">PE.array</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><span class="hs-number">25</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a c.
+(forall b. (b -&gt; a -&gt; b) -&gt; b -&gt; c -&gt; b)
+-&gt; (a -&gt; Array) -&gt; c -&gt; Array
+</span><span class="hs-identifier hs-var">PE.dimensionArray</span></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldl'</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Encoding -&gt; Array
+</span><span class="hs-identifier hs-var">PE.encodingArray</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">InvocationVersion -&gt; Encoding
+</span><span class="hs-identifier hs-var">PE.text_strict</span></span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span class="hs-comment">-- | Used to construct the payload of Event Trigger</span><span>
+</span><span id="line-115"></span><span class="hs-comment">--</span><span>
+</span><span id="line-116"></span><span class="hs-comment">-- OLD: Depicts the old database row value for UPDATE/DELETE trigger operations.</span><span>
+</span><span id="line-117"></span><span class="hs-comment">--      This is used to construct the 'data.old' field of the event trigger</span><span>
+</span><span id="line-118"></span><span class="hs-comment">--      payload. The value of 'data.old' is null in INSERT trigger operation.</span><span>
+</span><span id="line-119"></span><span class="hs-comment">--</span><span>
+</span><span id="line-120"></span><span class="hs-comment">-- NEW: Depicts the new database row value for INSERT/UPDATE trigger operations.</span><span>
+</span><span id="line-121"></span><span class="hs-comment">--      This is used to construct the 'data.new' field of the event trigger</span><span>
+</span><span id="line-122"></span><span class="hs-comment">--      payload. The value of 'data.new' is null in DELETE trigger operation.</span><span>
+</span><span id="line-123"></span><span class="hs-keyword">data</span><span> </span><span id="OpVar"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#OpVar"><span class="hs-identifier hs-var">OpVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OLD"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#OLD"><span class="hs-identifier hs-var">OLD</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="NEW"><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#NEW"><span class="hs-identifier hs-var">NEW</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690837244"><span id="local-6989586621690837246"><span id="local-6989586621690837248"><span class="annot"><span class="annottext">Int -&gt; OpVar -&gt; ShowS
+[OpVar] -&gt; ShowS
+OpVar -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [OpVar] -&gt; ShowS
+$cshowList :: [OpVar] -&gt; ShowS
+show :: OpVar -&gt; String
+$cshow :: OpVar -&gt; String
+showsPrec :: Int -&gt; OpVar -&gt; ShowS
+$cshowsPrec :: Int -&gt; OpVar -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-124"></span></pre></body></html>

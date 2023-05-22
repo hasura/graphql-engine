@@ -1,0 +1,436 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Eventing.ScheduledTrigger.Types</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronTriggerStats"><span class="hs-identifier">CronTriggerStats</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronTriggerStats"><span class="hs-identifier">CronTriggerStats</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_ctsMaxScheduledTime"><span class="hs-identifier">_ctsMaxScheduledTime</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_ctsName"><span class="hs-identifier">_ctsName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier">FetchedCronTriggerStats</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStatsLogger"><span class="hs-identifier">FetchedCronTriggerStatsLogger</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#RetryContext"><span class="hs-identifier">RetryContext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#RetryContext"><span class="hs-identifier">RetryContext</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_rctxConf"><span class="hs-identifier">_rctxConf</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventOp"><span class="hs-identifier">ScheduledEventOp</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventWebhookPayload"><span class="hs-identifier">ScheduledEventWebhookPayload</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventWebhookPayload"><span class="hs-identifier">ScheduledEventWebhookPayload</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpName"><span class="hs-identifier">sewpName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpScheduledTime"><span class="hs-identifier">sewpScheduledTime</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpRequestTransform"><span class="hs-identifier">sewpRequestTransform</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpResponseTransform"><span class="hs-identifier">sewpResponseTransform</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier">ScheduledTriggerInternalErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier">ScheduledTriggerInternalErr</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronEventsCount"><span class="hs-identifier">CronEventsCount</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#OneOffScheduledEventsCount"><span class="hs-identifier">OneOffScheduledEventsCount</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier">FetchedScheduledEventsStats</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStatsLogger"><span class="hs-identifier">FetchedScheduledEventsStatsLogger</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.FoldDebounce</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">FDebounce</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier">Data.Time.Clock</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Hasura.Base.Error</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Eventing.HTTP.html"><span class="hs-identifier">Hasura.Eventing.HTTP</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html"><span class="hs-identifier">Hasura.RQL.DDL.Webhook.Transform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier">MetadataResponseTransform</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.html#RequestTransform"><span class="hs-identifier">RequestTransform</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html"><span class="hs-identifier">Hasura.RQL.Types.EventTrigger</span></a></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html"><span class="hs-identifier">Hasura.RQL.Types.ScheduledTrigger</span></a></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">newtype</span><span> </span><span id="ScheduledTriggerInternalErr"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier hs-var">ScheduledTriggerInternalErr</span></a></span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ScheduledTriggerInternalErr"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier hs-var">ScheduledTriggerInternalErr</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690993398"><span id="local-6989586621690993403"><span class="annot"><span class="annottext">ScheduledTriggerInternalErr -&gt; ScheduledTriggerInternalErr -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ScheduledTriggerInternalErr -&gt; ScheduledTriggerInternalErr -&gt; Bool
+$c/= :: ScheduledTriggerInternalErr -&gt; ScheduledTriggerInternalErr -&gt; Bool
+== :: ScheduledTriggerInternalErr -&gt; ScheduledTriggerInternalErr -&gt; Bool
+$c== :: ScheduledTriggerInternalErr -&gt; ScheduledTriggerInternalErr -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">L.ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier hs-type">ScheduledTriggerInternalErr</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-35"></span><span>  </span><span id="local-6989586621690993385"><span class="annot"><span class="annottext">toEngineLog :: ScheduledTriggerInternalErr
+-&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier hs-type">ScheduledTriggerInternalErr</span></a></span><span> </span><span id="local-6989586621690993383"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621690993383"><span class="hs-identifier hs-var">qerr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">L.LevelError</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
+</span><a href="Hasura.Logging.html#scheduledTriggerLogType"><span class="hs-identifier hs-var">L.scheduledTriggerLogType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621690993383"><span class="hs-identifier hs-var">qerr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">data</span><span> </span><span id="CronTriggerStats"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronTriggerStats"><span class="hs-identifier hs-var">CronTriggerStats</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CronTriggerStats"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronTriggerStats"><span class="hs-identifier hs-var">CronTriggerStats</span></a></span></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ctsName"><span class="annot"><span class="annottext">CronTriggerStats -&gt; TriggerName
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_ctsName"><span class="hs-identifier hs-var hs-var">_ctsName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>    </span><span id="_ctsUpcomingEventsCount"><span class="annot"><span class="annottext">CronTriggerStats -&gt; Int
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_ctsUpcomingEventsCount"><span class="hs-identifier hs-var hs-var">_ctsUpcomingEventsCount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>    </span><span id="_ctsMaxScheduledTime"><span class="annot"><span class="annottext">CronTriggerStats -&gt; UTCTime
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_ctsMaxScheduledTime"><span class="hs-identifier hs-var hs-var">_ctsMaxScheduledTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">UTCTime</span></a></span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690993369"><span id="local-6989586621690993377"><span class="annot"><span class="annottext">CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
+$c/= :: CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
+== :: CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
+$c== :: CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-special">$</span><span id="local-6989586621690993336"><span id="local-6989586621690993338"><span id="local-6989586621690993349"><span id="local-6989586621690993367"><span class="hs-special">(</span><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CronTriggerStats</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">data</span><span> </span><span id="FetchedCronTriggerStats"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-var">FetchedCronTriggerStats</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FetchedCronTriggerStats"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-var">FetchedCronTriggerStats</span></a></span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_fctsCronTriggers"><span class="annot"><span class="annottext">FetchedCronTriggerStats -&gt; [CronTriggerStats]
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_fctsCronTriggers"><span class="hs-identifier hs-var hs-var">_fctsCronTriggers</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronTriggerStats"><span class="hs-identifier hs-type">CronTriggerStats</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span id="_fctsNumFetches"><span class="annot"><span class="annottext">FetchedCronTriggerStats -&gt; Int
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_fctsNumFetches"><span class="hs-identifier hs-var hs-var">_fctsNumFetches</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690993307"><span id="local-6989586621690993313"><span class="annot"><span class="annottext">FetchedCronTriggerStats -&gt; FetchedCronTriggerStats -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: FetchedCronTriggerStats -&gt; FetchedCronTriggerStats -&gt; Bool
+$c/= :: FetchedCronTriggerStats -&gt; FetchedCronTriggerStats -&gt; Bool
+== :: FetchedCronTriggerStats -&gt; FetchedCronTriggerStats -&gt; Bool
+$c== :: FetchedCronTriggerStats -&gt; FetchedCronTriggerStats -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="hs-special">$</span><span id="local-6989586621690993284"><span id="local-6989586621690993286"><span id="local-6989586621690993294"><span id="local-6989586621690993305"><span class="hs-special">(</span><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">FetchedCronTriggerStats</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">L.ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621690993270"><span class="annot"><span class="annottext">toEngineLog :: FetchedCronTriggerStats -&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="#local-6989586621690993270"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621690993269"><span class="annot"><span class="annottext">FetchedCronTriggerStats
+</span><a href="#local-6989586621690993269"><span class="hs-identifier hs-var">stats</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-57"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">L.LevelInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
+</span><a href="Hasura.Logging.html#cronEventGeneratorProcessType"><span class="hs-identifier hs-var">L.cronEventGeneratorProcessType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">FetchedCronTriggerStats
+</span><a href="#local-6989586621690993269"><span class="hs-identifier hs-var">stats</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690993262"><span id="local-6989586621690993264"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Semigroup</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span><span> </span><span id="local-6989586621690993256"><span class="annot"><span class="annottext">[CronTriggerStats]
+</span><a href="#local-6989586621690993256"><span class="hs-identifier hs-var">lTriggers</span></a></span></span><span> </span><span id="local-6989586621690993255"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690993255"><span class="hs-identifier hs-var">lFetches</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621690993254"><span class="annot"><span class="annottext">&lt;&gt; :: FetchedCronTriggerStats
+-&gt; FetchedCronTriggerStats -&gt; FetchedCronTriggerStats
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span><span> </span><span id="local-6989586621690993253"><span class="annot"><span class="annottext">[CronTriggerStats]
+</span><a href="#local-6989586621690993253"><span class="hs-identifier hs-var">rTriggers</span></a></span></span><span> </span><span id="local-6989586621690993252"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690993252"><span class="hs-identifier hs-var">rFetches</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-61"></span><span>    </span><span class="annot"><span class="annottext">[CronTriggerStats] -&gt; Int -&gt; FetchedCronTriggerStats
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-var">FetchedCronTriggerStats</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[CronTriggerStats]
+</span><a href="#local-6989586621690993256"><span class="hs-identifier hs-var">lTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[CronTriggerStats]
+</span><a href="#local-6989586621690993253"><span class="hs-identifier hs-var">rTriggers</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690993255"><span class="hs-identifier hs-var">lFetches</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690993252"><span class="hs-identifier hs-var">rFetches</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690993244"><span id="local-6989586621690993246"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Monoid</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621690993240"><span class="annot"><span class="annottext">mempty :: FetchedCronTriggerStats
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[CronTriggerStats] -&gt; Int -&gt; FetchedCronTriggerStats
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-var">FetchedCronTriggerStats</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-keyword">type</span><span> </span><span id="FetchedCronTriggerStatsLogger"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStatsLogger"><span class="hs-identifier hs-var">FetchedCronTriggerStatsLogger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FDebounce.Trigger</span></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span class="hs-keyword">data</span><span> </span><span id="RetryContext"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#RetryContext"><span class="hs-identifier hs-var">RetryContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RetryContext"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#RetryContext"><span class="hs-identifier hs-var">RetryContext</span></a></span></span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rctxTries"><span class="annot"><span class="annottext">RetryContext -&gt; Int
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_rctxTries"><span class="hs-identifier hs-var hs-var">_rctxTries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>    </span><span id="_rctxConf"><span class="annot"><span class="annottext">RetryContext -&gt; STRetryConf
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_rctxConf"><span class="hs-identifier hs-var hs-var">_rctxConf</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#STRetryConf"><span class="hs-identifier hs-type">STRetryConf</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690993231"><span id="local-6989586621690993236"><span class="annot"><span class="annottext">RetryContext -&gt; RetryContext -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: RetryContext -&gt; RetryContext -&gt; Bool
+$c/= :: RetryContext -&gt; RetryContext -&gt; Bool
+== :: RetryContext -&gt; RetryContext -&gt; Bool
+$c== :: RetryContext -&gt; RetryContext -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-keyword">data</span><span> </span><span id="ScheduledEventWebhookPayload"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventWebhookPayload"><span class="hs-identifier hs-var">ScheduledEventWebhookPayload</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ScheduledEventWebhookPayload"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventWebhookPayload"><span class="hs-identifier hs-var">ScheduledEventWebhookPayload</span></a></span></span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="sewpId"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; EventId
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpId"><span class="hs-identifier hs-var hs-var">sewpId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>    </span><span id="sewpName"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; Maybe TriggerName
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpName"><span class="hs-identifier hs-var hs-var">sewpName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>    </span><span id="sewpScheduledTime"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; UTCTime
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpScheduledTime"><span class="hs-identifier hs-var hs-var">sewpScheduledTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">UTCTime</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>    </span><span id="sewpPayload"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; Value
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpPayload"><span class="hs-identifier hs-var hs-var">sewpPayload</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>    </span><span id="sewpComment"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; Maybe Text
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpComment"><span class="hs-identifier hs-var hs-var">sewpComment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-80"></span><span>    </span><span class="hs-comment">-- | sewpCreatedAt is the time at which the event was created,</span><span>
+</span><span id="line-81"></span><span>    </span><span class="hs-comment">-- In case of one-off scheduled events, it's the time at which</span><span>
+</span><span id="line-82"></span><span>    </span><span class="hs-comment">-- the user created the event and in case of cron triggers, the</span><span>
+</span><span id="line-83"></span><span>    </span><span class="hs-comment">-- graphql-engine generator, generates the cron events, the</span><span>
+</span><span id="line-84"></span><span>    </span><span class="hs-comment">-- `created_at` is just an implementation detail, so we</span><span>
+</span><span id="line-85"></span><span>    </span><span class="hs-comment">-- don't send it</span><span>
+</span><span id="line-86"></span><span>    </span><span id="sewpCreatedAt"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; Maybe UTCTime
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpCreatedAt"><span class="hs-identifier hs-var hs-var">sewpCreatedAt</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">UTCTime</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-87"></span><span>    </span><span id="sewpRequestTransform"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; Maybe RequestTransform
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpRequestTransform"><span class="hs-identifier hs-var hs-var">sewpRequestTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-88"></span><span>    </span><span id="sewpResponseTransform"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; Maybe MetadataResponseTransform
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpResponseTransform"><span class="hs-identifier hs-var hs-var">sewpResponseTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690993203"><span id="local-6989586621690993205"><span id="local-6989586621690993225"><span class="annot"><span class="annottext">Int -&gt; ScheduledEventWebhookPayload -&gt; ShowS
+[ScheduledEventWebhookPayload] -&gt; ShowS
+ScheduledEventWebhookPayload -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ScheduledEventWebhookPayload] -&gt; ShowS
+$cshowList :: [ScheduledEventWebhookPayload] -&gt; ShowS
+show :: ScheduledEventWebhookPayload -&gt; String
+$cshow :: ScheduledEventWebhookPayload -&gt; String
+showsPrec :: Int -&gt; ScheduledEventWebhookPayload -&gt; ShowS
+$cshowsPrec :: Int -&gt; ScheduledEventWebhookPayload -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690993179"><span id="local-6989586621690993196"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload
+-&gt; ScheduledEventWebhookPayload -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ScheduledEventWebhookPayload
+-&gt; ScheduledEventWebhookPayload -&gt; Bool
+$c/= :: ScheduledEventWebhookPayload
+-&gt; ScheduledEventWebhookPayload -&gt; Bool
+== :: ScheduledEventWebhookPayload
+-&gt; ScheduledEventWebhookPayload -&gt; Bool
+$c== :: ScheduledEventWebhookPayload
+-&gt; ScheduledEventWebhookPayload -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="hs-special">$</span><span id="local-6989586621690993109"><span id="local-6989586621690993111"><span id="local-6989586621690993136"><span id="local-6989586621690993174"><span class="hs-special">(</span><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ScheduledEventWebhookPayload</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span class="hs-keyword">data</span><span> </span><span id="ScheduledEventOp"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventOp"><span class="hs-identifier hs-var">ScheduledEventOp</span></a></span></span><span>
+</span><span id="line-95"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SEOpRetry"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#SEOpRetry"><span class="hs-identifier hs-var">SEOpRetry</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">UTCTime</span></a></span><span>
+</span><span id="line-96"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SEOpStatus"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#SEOpStatus"><span class="hs-identifier hs-var">SEOpStatus</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledEventStatus"><span class="hs-identifier hs-type">ScheduledEventStatus</span></a></span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690993059"><span id="local-6989586621690993061"><span id="local-6989586621690993068"><span class="annot"><span class="annottext">Int -&gt; ScheduledEventOp -&gt; ShowS
+[ScheduledEventOp] -&gt; ShowS
+ScheduledEventOp -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ScheduledEventOp] -&gt; ShowS
+$cshowList :: [ScheduledEventOp] -&gt; ShowS
+show :: ScheduledEventOp -&gt; String
+$cshow :: ScheduledEventOp -&gt; String
+showsPrec :: Int -&gt; ScheduledEventOp -&gt; ShowS
+$cshowsPrec :: Int -&gt; ScheduledEventOp -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690993052"><span id="local-6989586621690993057"><span class="annot"><span class="annottext">ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool
+$c/= :: ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool
+== :: ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool
+$c== :: ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span class="hs-keyword">newtype</span><span> </span><span id="CronEventsCount"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronEventsCount"><span class="hs-identifier hs-var">CronEventsCount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CronEventsCount"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronEventsCount"><span class="hs-identifier hs-var">CronEventsCount</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unCronEventsCount"><span class="annot"><span class="annottext">CronEventsCount -&gt; Int
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#unCronEventsCount"><span class="hs-identifier hs-var hs-var">unCronEventsCount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690993044"><span id="local-6989586621690993048"><span class="annot"><span class="annottext">CronEventsCount -&gt; CronEventsCount -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: CronEventsCount -&gt; CronEventsCount -&gt; Bool
+$c/= :: CronEventsCount -&gt; CronEventsCount -&gt; Bool
+== :: CronEventsCount -&gt; CronEventsCount -&gt; Bool
+$c== :: CronEventsCount -&gt; CronEventsCount -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690993032"><span id="local-6989586621690993034"><span id="local-6989586621690993039"><span class="annot"><span class="annottext">Int -&gt; CronEventsCount -&gt; ShowS
+[CronEventsCount] -&gt; ShowS
+CronEventsCount -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [CronEventsCount] -&gt; ShowS
+$cshowList :: [CronEventsCount] -&gt; ShowS
+show :: CronEventsCount -&gt; String
+$cshow :: CronEventsCount -&gt; String
+showsPrec :: Int -&gt; CronEventsCount -&gt; ShowS
+$cshowsPrec :: Int -&gt; CronEventsCount -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690993018"><span id="local-6989586621690993022"><span id="local-6989586621690993026"><span id="local-6989586621690993030"><span class="annot"><span class="annottext">[CronEventsCount] -&gt; Value
+[CronEventsCount] -&gt; Encoding
+CronEventsCount -&gt; Value
+CronEventsCount -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [CronEventsCount] -&gt; Encoding
+$ctoEncodingList :: [CronEventsCount] -&gt; Encoding
+toJSONList :: [CronEventsCount] -&gt; Value
+$ctoJSONList :: [CronEventsCount] -&gt; Value
+toEncoding :: CronEventsCount -&gt; Encoding
+$ctoEncoding :: CronEventsCount -&gt; Encoding
+toJSON :: CronEventsCount -&gt; Value
+$ctoJSON :: CronEventsCount -&gt; Value
+</span><a href="#local-6989586621690993018"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690993008"><span id="local-6989586621690993013"><span class="annot"><span class="annottext">Value -&gt; Parser [CronEventsCount]
+Value -&gt; Parser CronEventsCount
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [CronEventsCount]
+$cparseJSONList :: Value -&gt; Parser [CronEventsCount]
+parseJSON :: Value -&gt; Parser CronEventsCount
+$cparseJSON :: Value -&gt; Parser CronEventsCount
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690992978"><span id="local-6989586621690992982"><span id="local-6989586621690992986"><span id="local-6989586621690992990"><span id="local-6989586621690992994"><span id="local-6989586621690992998"><span id="local-6989586621690993002"><span class="annot"><span class="annottext">Integer -&gt; CronEventsCount
+CronEventsCount -&gt; CronEventsCount
+CronEventsCount -&gt; CronEventsCount -&gt; CronEventsCount
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+fromInteger :: Integer -&gt; CronEventsCount
+$cfromInteger :: Integer -&gt; CronEventsCount
+signum :: CronEventsCount -&gt; CronEventsCount
+$csignum :: CronEventsCount -&gt; CronEventsCount
+abs :: CronEventsCount -&gt; CronEventsCount
+$cabs :: CronEventsCount -&gt; CronEventsCount
+negate :: CronEventsCount -&gt; CronEventsCount
+$cnegate :: CronEventsCount -&gt; CronEventsCount
+* :: CronEventsCount -&gt; CronEventsCount -&gt; CronEventsCount
+$c* :: CronEventsCount -&gt; CronEventsCount -&gt; CronEventsCount
+- :: CronEventsCount -&gt; CronEventsCount -&gt; CronEventsCount
+$c- :: CronEventsCount -&gt; CronEventsCount -&gt; CronEventsCount
++ :: CronEventsCount -&gt; CronEventsCount -&gt; CronEventsCount
+$c+ :: CronEventsCount -&gt; CronEventsCount -&gt; CronEventsCount
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></a></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span class="hs-keyword">newtype</span><span> </span><span id="OneOffScheduledEventsCount"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#OneOffScheduledEventsCount"><span class="hs-identifier hs-var">OneOffScheduledEventsCount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OneOffScheduledEventsCount"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#OneOffScheduledEventsCount"><span class="hs-identifier hs-var">OneOffScheduledEventsCount</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unOneOffScheduledEventsCount"><span class="annot"><span class="annottext">OneOffScheduledEventsCount -&gt; Int
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#unOneOffScheduledEventsCount"><span class="hs-identifier hs-var hs-var">unOneOffScheduledEventsCount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-103"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690992966"><span id="local-6989586621690992970"><span class="annot"><span class="annottext">OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount -&gt; Bool
+$c/= :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount -&gt; Bool
+== :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount -&gt; Bool
+$c== :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690992955"><span id="local-6989586621690992957"><span id="local-6989586621690992961"><span class="annot"><span class="annottext">Int -&gt; OneOffScheduledEventsCount -&gt; ShowS
+[OneOffScheduledEventsCount] -&gt; ShowS
+OneOffScheduledEventsCount -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [OneOffScheduledEventsCount] -&gt; ShowS
+$cshowList :: [OneOffScheduledEventsCount] -&gt; ShowS
+show :: OneOffScheduledEventsCount -&gt; String
+$cshow :: OneOffScheduledEventsCount -&gt; String
+showsPrec :: Int -&gt; OneOffScheduledEventsCount -&gt; ShowS
+$cshowsPrec :: Int -&gt; OneOffScheduledEventsCount -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690992941"><span id="local-6989586621690992945"><span id="local-6989586621690992949"><span id="local-6989586621690992953"><span class="annot"><span class="annottext">[OneOffScheduledEventsCount] -&gt; Value
+[OneOffScheduledEventsCount] -&gt; Encoding
+OneOffScheduledEventsCount -&gt; Value
+OneOffScheduledEventsCount -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [OneOffScheduledEventsCount] -&gt; Encoding
+$ctoEncodingList :: [OneOffScheduledEventsCount] -&gt; Encoding
+toJSONList :: [OneOffScheduledEventsCount] -&gt; Value
+$ctoJSONList :: [OneOffScheduledEventsCount] -&gt; Value
+toEncoding :: OneOffScheduledEventsCount -&gt; Encoding
+$ctoEncoding :: OneOffScheduledEventsCount -&gt; Encoding
+toJSON :: OneOffScheduledEventsCount -&gt; Value
+$ctoJSON :: OneOffScheduledEventsCount -&gt; Value
+</span><a href="#local-6989586621690992941"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690992932"><span id="local-6989586621690992936"><span class="annot"><span class="annottext">Value -&gt; Parser [OneOffScheduledEventsCount]
+Value -&gt; Parser OneOffScheduledEventsCount
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [OneOffScheduledEventsCount]
+$cparseJSONList :: Value -&gt; Parser [OneOffScheduledEventsCount]
+parseJSON :: Value -&gt; Parser OneOffScheduledEventsCount
+$cparseJSON :: Value -&gt; Parser OneOffScheduledEventsCount
+</span><a href="#local-6989586621690992932"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690992903"><span id="local-6989586621690992907"><span id="local-6989586621690992911"><span id="local-6989586621690992915"><span id="local-6989586621690992919"><span id="local-6989586621690992923"><span id="local-6989586621690992927"><span class="annot"><span class="annottext">Integer -&gt; OneOffScheduledEventsCount
+OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
+OneOffScheduledEventsCount
+-&gt; OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+fromInteger :: Integer -&gt; OneOffScheduledEventsCount
+$cfromInteger :: Integer -&gt; OneOffScheduledEventsCount
+signum :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
+$csignum :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
+abs :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
+$cabs :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
+negate :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
+$cnegate :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
+* :: OneOffScheduledEventsCount
+-&gt; OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
+$c* :: OneOffScheduledEventsCount
+-&gt; OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
+- :: OneOffScheduledEventsCount
+-&gt; OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
+$c- :: OneOffScheduledEventsCount
+-&gt; OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
++ :: OneOffScheduledEventsCount
+-&gt; OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
+$c+ :: OneOffScheduledEventsCount
+-&gt; OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></a></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span class="hs-comment">-- | Statistics of scheduled events fetched within a timeframe</span><span>
+</span><span id="line-106"></span><span class="hs-keyword">data</span><span> </span><span id="FetchedScheduledEventsStats"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-var">FetchedScheduledEventsStats</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FetchedScheduledEventsStats"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-var">FetchedScheduledEventsStats</span></a></span></span><span>
+</span><span id="line-107"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_fsesNumCronEventsFetched"><span class="annot"><span class="annottext">FetchedScheduledEventsStats -&gt; CronEventsCount
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_fsesNumCronEventsFetched"><span class="hs-identifier hs-var hs-var">_fsesNumCronEventsFetched</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronEventsCount"><span class="hs-identifier hs-type">CronEventsCount</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>    </span><span id="_fsesNumOneOffScheduledEventsFetched"><span class="annot"><span class="annottext">FetchedScheduledEventsStats -&gt; OneOffScheduledEventsCount
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_fsesNumOneOffScheduledEventsFetched"><span class="hs-identifier hs-var hs-var">_fsesNumOneOffScheduledEventsFetched</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#OneOffScheduledEventsCount"><span class="hs-identifier hs-type">OneOffScheduledEventsCount</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-109"></span><span>    </span><span id="_fsesNumFetches"><span class="annot"><span class="annottext">FetchedScheduledEventsStats -&gt; Int
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_fsesNumFetches"><span class="hs-identifier hs-var hs-var">_fsesNumFetches</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690992889"><span id="local-6989586621690992894"><span class="annot"><span class="annottext">FetchedScheduledEventsStats -&gt; FetchedScheduledEventsStats -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: FetchedScheduledEventsStats -&gt; FetchedScheduledEventsStats -&gt; Bool
+$c/= :: FetchedScheduledEventsStats -&gt; FetchedScheduledEventsStats -&gt; Bool
+== :: FetchedScheduledEventsStats -&gt; FetchedScheduledEventsStats -&gt; Bool
+$c== :: FetchedScheduledEventsStats -&gt; FetchedScheduledEventsStats -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690992879"><span id="local-6989586621690992881"><span id="local-6989586621690992887"><span class="annot"><span class="annottext">Int -&gt; FetchedScheduledEventsStats -&gt; ShowS
+[FetchedScheduledEventsStats] -&gt; ShowS
+FetchedScheduledEventsStats -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [FetchedScheduledEventsStats] -&gt; ShowS
+$cshowList :: [FetchedScheduledEventsStats] -&gt; ShowS
+show :: FetchedScheduledEventsStats -&gt; String
+$cshow :: FetchedScheduledEventsStats -&gt; String
+showsPrec :: Int -&gt; FetchedScheduledEventsStats -&gt; ShowS
+$cshowsPrec :: Int -&gt; FetchedScheduledEventsStats -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span class="hs-special">$</span><span id="local-6989586621690992854"><span id="local-6989586621690992856"><span id="local-6989586621690992865"><span id="local-6989586621690992877"><span class="hs-special">(</span><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">FetchedScheduledEventsStats</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-114"></span><span>
+</span><span id="line-115"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">L.ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-116"></span><span>  </span><span id="local-6989586621690992837"><span class="annot"><span class="annottext">toEngineLog :: FetchedScheduledEventsStats
+-&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="#local-6989586621690992837"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621690992836"><span class="annot"><span class="annottext">FetchedScheduledEventsStats
+</span><a href="#local-6989586621690992836"><span class="hs-identifier hs-var">stats</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-117"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">L.LevelInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
+</span><a href="Hasura.Logging.html#scheduledTriggerProcessLogType"><span class="hs-identifier hs-var">L.scheduledTriggerProcessLogType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">FetchedScheduledEventsStats
+</span><a href="#local-6989586621690992836"><span class="hs-identifier hs-var">stats</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690992830"><span id="local-6989586621690992832"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Semigroup</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span><span> </span><span id="local-6989586621690992826"><span class="annot"><span class="annottext">CronEventsCount
+</span><a href="#local-6989586621690992826"><span class="hs-identifier hs-var">lCron</span></a></span></span><span> </span><span id="local-6989586621690992825"><span class="annot"><span class="annottext">OneOffScheduledEventsCount
+</span><a href="#local-6989586621690992825"><span class="hs-identifier hs-var">lOneOff</span></a></span></span><span> </span><span id="local-6989586621690992824"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690992824"><span class="hs-identifier hs-var">lFetches</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621690992823"><span class="annot"><span class="annottext">&lt;&gt; :: FetchedScheduledEventsStats
+-&gt; FetchedScheduledEventsStats -&gt; FetchedScheduledEventsStats
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span><span> </span><span id="local-6989586621690992822"><span class="annot"><span class="annottext">CronEventsCount
+</span><a href="#local-6989586621690992822"><span class="hs-identifier hs-var">rCron</span></a></span></span><span> </span><span id="local-6989586621690992821"><span class="annot"><span class="annottext">OneOffScheduledEventsCount
+</span><a href="#local-6989586621690992821"><span class="hs-identifier hs-var">rOneOff</span></a></span></span><span> </span><span id="local-6989586621690992820"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690992820"><span class="hs-identifier hs-var">rFetches</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-121"></span><span>    </span><span class="annot"><span class="annottext">CronEventsCount
+-&gt; OneOffScheduledEventsCount -&gt; Int -&gt; FetchedScheduledEventsStats
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-var">FetchedScheduledEventsStats</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CronEventsCount
+</span><a href="#local-6989586621690992826"><span class="hs-identifier hs-var">lCron</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">CronEventsCount
+</span><a href="#local-6989586621690992822"><span class="hs-identifier hs-var">rCron</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OneOffScheduledEventsCount
+</span><a href="#local-6989586621690992825"><span class="hs-identifier hs-var">lOneOff</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">OneOffScheduledEventsCount
+</span><a href="#local-6989586621690992821"><span class="hs-identifier hs-var">rOneOff</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690992824"><span class="hs-identifier hs-var">lFetches</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690992820"><span class="hs-identifier hs-var">rFetches</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>
+</span><span id="line-123"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690992813"><span id="local-6989586621690992815"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Monoid</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-124"></span><span>  </span><span id="local-6989586621690992812"><span class="annot"><span class="annottext">mempty :: FetchedScheduledEventsStats
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CronEventsCount
+-&gt; OneOffScheduledEventsCount -&gt; Int -&gt; FetchedScheduledEventsStats
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-var">FetchedScheduledEventsStats</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; CronEventsCount
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronEventsCount"><span class="hs-identifier hs-var">CronEventsCount</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; OneOffScheduledEventsCount
+</span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#OneOffScheduledEventsCount"><span class="hs-identifier hs-var">OneOffScheduledEventsCount</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-125"></span><span>
+</span><span id="line-126"></span><span class="hs-keyword">type</span><span> </span><span id="FetchedScheduledEventsStatsLogger"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStatsLogger"><span class="hs-identifier hs-var">FetchedScheduledEventsStatsLogger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FDebounce.Trigger</span></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span><span>
+</span><span id="line-127"></span></pre></body></html>
