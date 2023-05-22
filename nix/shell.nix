@@ -1,6 +1,13 @@
-{ pkgs }:
+{ pkgs, system }:
 let
   versions = import ./versions.nix { inherit pkgs; };
+
+  # empty package, for shenanigans
+  empty = builtins.derivation {
+    inherit system;
+    name = "empty";
+    builder = pkgs.writeShellScript "null.sh" "${pkgs.coreutils}/bin/mkdir $out";
+  };
 
   # Unix ODBC Support
   freetdsWithODBC = pkgs.freetds.override {
@@ -27,6 +34,40 @@ let
   unixODBC = pkgs.unixODBC.overrideAttrs (oldAttrs: {
     configureFlags = [ "--disable-gui" "--sysconfdir=${odbcConfiguration}" ];
   });
+
+  # Ensure that GHC and HLS have access to all the dynamic libraries we have kicking around.
+  ghc =
+    let original = pkgs.haskell.compiler.${pkgs.ghcName};
+    in pkgs.stdenv.mkDerivation
+      {
+        name = original.name;
+        src = empty;
+        buildInputs = [ original pkgs.makeWrapper ];
+        installPhase = ''
+          mkdir -p "$out/bin"
+          makeWrapper ${original}/bin/ghc "$out/bin/ghc" \
+            --set LD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries} \
+            --set DYLD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries}
+        '';
+      };
+
+  hls =
+    let original = pkgs.haskell.packages.${pkgs.ghcName}.haskell-language-server;
+    in pkgs.stdenv.mkDerivation
+      {
+        name = original.name;
+        src = empty;
+        buildInputs = [ original pkgs.makeWrapper ];
+        installPhase = ''
+          mkdir -p "$out/bin"
+          makeWrapper ${original}/bin/haskell-language-server "$out/bin/haskell-language-server" \
+            --set LD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries} \
+            --set DYLD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries}
+          makeWrapper ${original}/bin/haskell-language-server-wrapper "$out/bin/haskell-language-server-wrapper" \
+            --set LD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries} \
+            --set DYLD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries}
+        '';
+      };
 
   baseInputs = [
     pkgs.stdenv
@@ -56,15 +97,14 @@ let
   haskellInputs = [
     pkgs.cabal2nix
 
-    # The correct version of GHC.
-    pkgs.haskell.compiler.${pkgs.ghcName}
+    ghc
+    hls
 
     pkgs.haskell.packages.${pkgs.ghcName}.alex
     pkgs.haskell.packages.${pkgs.ghcName}.apply-refact
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.cabal-install)
     pkgs.haskell.packages.${pkgs.ghcName}.ghcid
     pkgs.haskell.packages.${pkgs.ghcName}.happy
-    pkgs.haskell.packages.${pkgs.ghcName}.haskell-language-server
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hlint)
     pkgs.haskell.packages.${pkgs.ghcName}.hoogle
     pkgs.haskell.packages.${pkgs.ghcName}.hspec-discover
