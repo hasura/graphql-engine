@@ -1191,7 +1191,7 @@ fetchEventLogsTxE GetEventLogs {..} = do
         <$> PG.withQE
           defaultTxErrorHandler
           [PG.sql|
-            SELECT *
+            SELECT id, schema_name, table_name, trigger_name, payload, delivered, error, tries, created_at, locked, next_retry_at, archived
               FROM hdb_catalog.event_log
               WHERE trigger_name = $1 
               AND delivered=false AND error=false AND archived=false ORDER BY created_at DESC LIMIT $2 OFFSET $3;
@@ -1203,7 +1203,7 @@ fetchEventLogsTxE GetEventLogs {..} = do
         <$> PG.withQE
           defaultTxErrorHandler
           [PG.sql|
-            SELECT *
+            SELECT id, schema_name, table_name, trigger_name, payload, delivered, error, tries, created_at, locked, next_retry_at, archived
               FROM hdb_catalog.event_log
               WHERE trigger_name = $1 
               AND (delivered=true OR error=true) AND archived=false ORDER BY created_at DESC LIMIT $2 OFFSET $3;
@@ -1215,7 +1215,7 @@ fetchEventLogsTxE GetEventLogs {..} = do
         <$> PG.withQE
           defaultTxErrorHandler
           [PG.sql|
-            SELECT *
+            SELECT id, schema_name, table_name, trigger_name, payload, delivered, error, tries, created_at, locked, next_retry_at, archived
               FROM hdb_catalog.event_log
               WHERE trigger_name = $1 
               ORDER BY created_at DESC LIMIT $2 OFFSET $3;
@@ -1243,7 +1243,7 @@ fetchEventInvocationLogsTxE GetEventInvocations {..} = do
     <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|
-        SELECT *
+        SELECT id, trigger_name, event_id, status, request, response, created_at
           FROM hdb_catalog.event_invocation_logs
           WHERE trigger_name = $1 
           ORDER BY created_at DESC LIMIT $2 OFFSET $3;
@@ -1281,7 +1281,7 @@ fetchEventByIdTxE GetEventById {..} = do
       <$> PG.withQE
         defaultTxErrorHandler
         [PG.sql|
-          SELECT *
+          SELECT id, schema_name, table_name, trigger_name, payload, delivered, error, tries, created_at, locked, next_retry_at, archived
             FROM hdb_catalog.event_log
             WHERE id = $1;
           |]
@@ -1295,7 +1295,7 @@ fetchEventByIdTxE GetEventById {..} = do
           <$> PG.withQE
             defaultTxErrorHandler
             [PG.sql|
-              SELECT *
+              SELECT id, trigger_name, event_id, status, request, response, created_at
                 FROM hdb_catalog.event_invocation_logs
                 WHERE event_id = $1
                 ORDER BY created_at DESC LIMIT $2 OFFSET $3;
