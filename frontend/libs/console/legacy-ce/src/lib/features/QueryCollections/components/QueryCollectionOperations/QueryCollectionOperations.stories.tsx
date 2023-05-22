@@ -3,7 +3,7 @@ import { handlers } from '../../../../mocks/metadata.mock';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
 import { ComponentMeta, Story } from '@storybook/react';
-import { within, userEvent, screen } from '@storybook/testing-library';
+import { within, userEvent, screen, waitFor } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { waitForElementToBeRemoved } from '@storybook/testing-library';
 
@@ -29,9 +29,11 @@ Primary.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
   // wait for the query collection to load
-  expect(
-    canvas.queryByTestId('query-collection-operations-loading')
-  ).toBeInTheDocument();
+  await waitFor(() =>
+    expect(
+      canvas.queryByTestId('query-collection-operations-loading')
+    ).toBeInTheDocument()
+  );
 
   await waitForElementToBeRemoved(
     () => screen.queryByTestId('query-collection-operations-loading'),
