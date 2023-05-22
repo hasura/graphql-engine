@@ -89,7 +89,7 @@ test-matrix: build remove-tix-file
 
 .PHONY: test-data-connectors-pro
 ## test-data-connectors-pro: run tests for HGE pro for all backends
-test-data-connectors-pro: build-pro remove-tix-file
+test-data-connectors-pro: build-pro build-postgres-agent remove-tix-file
 	docker compose up --build --detach --wait postgres dc-sqlite-agent
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -97,7 +97,7 @@ test-data-connectors-pro: build-pro remove-tix-file
 
 .PHONY: test-data-connectors-snowflake-pro
 ## test-data-connectors-snowflake-pro: run tests for HGE pro for all backends
-test-data-connectors-snowflake-pro: build-pro remove-tix-file
+test-data-connectors-snowflake-pro: build-pro build-postgres-agent remove-tix-file
 	docker compose up --build --detach --wait postgres dc-sqlite-agent
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -105,7 +105,7 @@ test-data-connectors-snowflake-pro: build-pro remove-tix-file
 
 .PHONY: test-data-connectors-athena-pro
 ## test-data-connectors-athena-pro: run tests for HGE pro for all backends
-test-data-connectors-athena-pro: build-pro remove-tix-file
+test-data-connectors-athena-pro: build-pro build-postgres-agent remove-tix-file
 	docker compose up --build --detach --wait postgres dc-sqlite-agent
 	$(call stop_after, \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
@@ -114,7 +114,7 @@ test-data-connectors-athena-pro: build-pro remove-tix-file
 
 .PHONY: test-data-connectors-mysql-pro
 ## test-data-connectors-mysql-pro: run tests for HGE pro for all backends
-test-data-connectors-mysql-pro: build-pro remove-tix-file
+test-data-connectors-mysql-pro: build-pro build-postgres-agent remove-tix-file
 	cd pro/server/lib/api-tests && docker compose up --build --detach --wait postgres dc-sqlite-agent --wait mysql
 	$(call stop_after, \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
@@ -123,47 +123,52 @@ test-data-connectors-mysql-pro: build-pro remove-tix-file
 
 .PHONY: test-backends-pro
 ## test-backends-pro: run tests for HGE pro for all backends
-test-backends-pro: build-pro start-backends remove-tix-file
+test-backends-pro: build-pro build-postgres-agent start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-postgres-pro
 ## test-postgres-pro: run tests for HGE pro for postgres
-test-postgres-pro: build-pro build-postgres-agent start-backends remove-tix-file
+test-postgres-pro: build-pro build-postgres-agent build-postgres-agent start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Postgres \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-citus-pro
 ## test-citus-pro: run tests for HGE pro for citus
-test-citus-pro: build-pro start-backends remove-tix-file
+test-citus-pro: build-pro build-postgres-agent start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Citus \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-cockroach-pro
 ## test-cockroach-pro: run tests for HGE pro for Cockroach
-test-cockroach-pro: build-pro start-backends remove-tix-file
+test-cockroach-pro: build-pro build-postgres-agent start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Cockroach \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO) 
 
 .PHONY: test-sqlserver-pro
 ## test-sqlserver-pro: run tests for HGE pro for SQLServer
-test-sqlserver-pro: build-pro start-backends remove-tix-file
+test-sqlserver-pro: build-pro build-postgres-agent start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=SQLServer \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-bigquery-pro
 ## test-bigquery-pro: run tests for HGE pro for BigQuery
-test-bigquery-pro: build-pro start-backends remove-tix-file
+test-bigquery-pro: build-pro build-postgres-agent start-backends remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
+		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=BigQuery \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO) 
@@ -189,7 +194,7 @@ test-integration-postgres: remove-tix-file
 
 .PHONY: test-native-queries
 ## test-native-queries: run all tests for the Native Query feature
-test-native-queries:
+test-native-queries: build-postgres-agent
 	cabal build exe:graphql-engine-pro
 	docker compose up --build --detach --wait postgres citus cockroach sqlserver-healthcheck
 	HSPEC_MATCH=NativeQueries make test-unit
@@ -200,7 +205,7 @@ test-native-queries:
 
 .PHONY: test-native-queries-postgres
 ## test-native-queries-postgres: run all postgres tests for the Native Query feature
-test-native-queries-postgres:
+test-native-queries-postgres: build-postgres-agent
 	cabal build exe:graphql-engine-pro
 	docker compose up --build --detach --wait postgres
 	HSPEC_MATCH=NativeQueries make test-unit
@@ -212,7 +217,7 @@ test-native-queries-postgres:
 
 .PHONY: test-native-queries-sqlserver
 ## test-native-queries-sqlserver: run all sqlserver tests for the Native Query feature
-test-native-queries-sqlserver: remove-tix-file
+test-native-queries-sqlserver: remove-tix-file build-postgres-agent
 	cabal build exe:graphql-engine-pro
 	docker compose up --build --detach --wait postgres sqlserver-healthcheck
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
@@ -223,7 +228,7 @@ test-native-queries-sqlserver: remove-tix-file
 
 .PHONY: test-native-queries-bigquery
 ## test-native-queries-bigquery: run all bigquery tests for the Native Query feature
-test-native-queries-bigquery: remove-tix-file
+test-native-queries-bigquery: remove-tix-file build-postgres-agent
 	cabal build exe:graphql-engine-pro
 	docker compose up --build --detach --wait postgres
 	HASURA_TEST_BACKEND_TYPE=BigQuery \
@@ -234,7 +239,7 @@ test-native-queries-bigquery: remove-tix-file
 
 .PHONY: test-stored-procedures-sqlserver
 ## test-stored-procedures-sqlserver: run all sqlserver tests for the Stored Procedure feature
-test-stored-procedures-sqlserver: remove-tix-file
+test-stored-procedures-sqlserver: remove-tix-file build-postgres-agent
 	cabal build exe:graphql-engine-pro
 	docker compose up --build --detach --wait postgres sqlserver-healthcheck
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
@@ -262,8 +267,7 @@ upgrade-tests:
 #   4. Ensure we clean up after ourselves.
 #   5. Get the port of the PostgreSQL container.
 #   6. Run the tests, pointing to the correct port for the DB.
-test-dc-postgres-agent:
-	cabal build postgres-agent:exe:postgres-agent
+test-dc-postgres-agent: build-postgres-agent
 	$(DC_POSTGRES_DOCKER_COMPOSE) up --wait
 	@ echo 'cabal run postgres-agent:exe:postgres-agent'; \
 		cabal run postgres-agent:exe:postgres-agent -- --port 8889 & trap "kill $$!" EXIT; \

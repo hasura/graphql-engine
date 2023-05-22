@@ -35,7 +35,6 @@ import Data.IORef
 import Data.Pool
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
-import Data.Time (NominalDiffTime, diffUTCTime, getCurrentTime)
 import Data.Vector (fromList)
 import Harness.Exceptions
 import Harness.Http qualified as Http
@@ -46,8 +45,8 @@ import Hasura.Prelude
 import Network.HTTP.Simple qualified as Http
 import Network.Socket qualified as Socket
 import Network.Wai.Handler.Warp qualified as Warp
-import System.Exit (ExitCode)
 import System.IO
+import System.Monitor.Heartbeat (emitHeartbeatHandle, heartbeatThread)
 import System.Process
 
 -- | The path to the 'graphql-engine' executable.
@@ -194,11 +193,14 @@ spawnServer testEnv (HgeConfig {hgeConfigEnvironmentVars}) = do
   port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
   testLogMessage testEnv $ HgeInstanceStartMessage port
 
-  process@(_, Just hgeStdOut, Just hgeStdErr, ph) <-
+  process@(Just hgeStdIn, Just hgeStdOut, Just hgeStdErr, _) <-
     createProcess
       ( proc
           hgeBinPath
-          [ "serve",
+          [ "+Heartbeat",
+            "--enable-monitoring",
+            "-Heartbeat",
+            "serve",
             "--enable-console",
             "--server-port",
             show port,
@@ -211,6 +213,7 @@ spawnServer testEnv (HgeConfig {hgeConfigEnvironmentVars}) = do
               ("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "0")
                 : ("HASURA_GRAPHQL_ADMIN_SECRET", T.unpack adminSecret)
                 : allEnv,
+          std_in = CreatePipe,
           std_out = CreatePipe,
           std_err = CreatePipe,
           create_group = True
@@ -225,6 +228,7 @@ spawnServer testEnv (HgeConfig {hgeConfigEnvironmentVars}) = do
 
   cleanLogThread1 <- hgeLogRelayThread logger hgeStdOut
   cleanLogThread2 <- hgeStdErrRelayThread logger hgeStdErr
+  cleanHeartbeatThread <- heartbeatThread (emitHeartbeatHandle hgeStdIn) 10
 
   -- We do cleanup asynchronously, because we have observed that waiting for the
   -- spawned process to finish can take an inordinate amount of time.
@@ -232,16 +236,13 @@ spawnServer testEnv (HgeConfig {hgeConfigEnvironmentVars}) = do
   -- This does risk leaking processes, especially when doing the final cleanup.
   -- The only real solution to this is to have the process listen for heartbeats
   -- which we send, and the process stopping when the heartbeats do.
-  let cleanup = void $ forkIO $ do
-        startTime <- getCurrentTime
+  let cleanup = void $ do
         cleanupDb
+        cleanHeartbeatThread
         cleanLogThread1
         cleanLogThread2
-        interruptProcessGroupOf ph
-        exitCode <- waitForProcess ph
-        cleanupProcess process
-        endTime <- getCurrentTime
-        testLogMessage testEnv $ HgeInstanceShutdownMessage port exitCode (diffUTCTime endTime startTime)
+        void $ forkIO $ cleanupProcess process
+        testLogMessage testEnv $ HgeInstanceShutdownMessage port
 
   let server = HgeServerInstance "127.0.0.1" port adminSecret
   result <- Http.healthCheck' (T.unpack $ getHgeServerInstanceUrl server <> "/healthz")
@@ -279,18 +280,14 @@ instance LoggableMessage HgeInstanceFailedHealthcheckMessage where
 
 -- | Log message type used to indicate a HGE server instance has shutdown.
 data HgeInstanceShutdownMessage = HgeInstanceShutdownMessage
-  { hiShutdownPort :: Int,
-    hiShutdownExitCode :: ExitCode,
-    hiShutdownDuration :: NominalDiffTime
+  { hiShutdownPort :: Int
   }
 
 instance LoggableMessage HgeInstanceShutdownMessage where
   fromLoggableMessage HgeInstanceShutdownMessage {..} =
     J.object
       [ ("type", J.String "HgeInstanceShutdownMessage"),
-        ("port", J.Number (fromIntegral hiShutdownPort)),
-        ("duration", J.Number (realToFrac hiShutdownDuration)),
-        ("exit-code", J.String (tshow hiShutdownExitCode))
+        ("port", J.Number (fromIntegral hiShutdownPort))
       ]
 
 -- | Log message type used to indicate a single log-J.object output by a HGE

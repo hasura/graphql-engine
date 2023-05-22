@@ -38,11 +38,12 @@ import Hasura.Tracing (sampleAlways)
 import System.Environment (getEnvironment, lookupEnv, unsetEnv)
 import System.Exit qualified as Sys
 import System.Metrics qualified as EKG
+import System.Monitor.Heartbeat
 import System.Posix.Signals qualified as Signals
 
 {-# ANN main ("HLINT: ignore avoid getEnvironment" :: String) #-}
 main :: IO ()
-main = maybeWithGhcDebug $ do
+main = maybeWithGhcDebug $ monitorHeartbeatMain $ do
   catch
     do
       env <- Env.getEnvironment

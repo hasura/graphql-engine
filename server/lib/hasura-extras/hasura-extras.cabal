@@ -43,6 +43,7 @@ library
   build-depends:
     , QuickCheck
     , aeson
+    , async
     , attoparsec
     , autodocodec
     , base
@@ -71,6 +72,7 @@ library
     , network
     , network-bsd
     , network-uri
+    , optparse-generic
     , pg-client
     , refined
     , safe-exceptions
@@ -147,3 +149,5 @@ library
     -- We might see if maintainer is willing to split their package up so we can remove these:
     Net.IPv4
     Net.IPv6
+
+    System.Monitor.Heartbeat

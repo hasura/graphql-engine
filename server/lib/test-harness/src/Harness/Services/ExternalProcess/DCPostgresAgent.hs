@@ -33,7 +33,6 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.Pool
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
-import Data.Time (NominalDiffTime, diffUTCTime, getCurrentTime)
 import Data.Vector (fromList)
 import Harness.Exceptions
 import Harness.Http qualified as Http
@@ -42,8 +41,8 @@ import Hasura.Prelude
 import Network.HTTP.Simple qualified as Http
 import Network.Socket qualified as Socket
 import Network.Wai.Handler.Warp qualified as Warp
-import System.Exit (ExitCode)
 import System.IO
+import System.Monitor.Heartbeat (emitHeartbeatHandle, heartbeatThread)
 import System.Process
 
 -- | The path to the 'postgres-agent' executable.
@@ -159,17 +158,21 @@ spawnAgent testEnv (DcPgConfig {dcPgConfigEnvironmentVars}) = do
   port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
   testLogMessage testEnv $ DcPgInstanceStartMessage port
 
-  process@(_, Just dcPgStdOut, Just dcPgStdErr, ph) <-
+  process@(Just dcPgStdIn, Just dcPgStdOut, Just dcPgStdErr, _) <-
     createProcess
       ( proc
           dcPgBinPath
-          [ "--port",
+          [ "+Heartbeat",
+            "--enable-monitoring",
+            "-Heartbeat",
+            "--port",
             show port,
             "--use-colors",
             show False
           ]
       )
-        { std_out = CreatePipe,
+        { std_in = CreatePipe,
+          std_out = CreatePipe,
           std_err = CreatePipe,
           env = Just allEnv,
           create_group = True
@@ -184,6 +187,7 @@ spawnAgent testEnv (DcPgConfig {dcPgConfigEnvironmentVars}) = do
 
   cleanLogThread1 <- dcPgLogRelayThread logger dcPgStdOut
   cleanLogThread2 <- dcPgStdErrRelayThread logger dcPgStdErr
+  cleanHeartbeatThread <- heartbeatThread (emitHeartbeatHandle dcPgStdIn) 10
 
   -- We do cleanup asynchronously, because we have observed that waiting for the
   -- spawned process to finish can take an inordinate amount of time.
@@ -191,15 +195,12 @@ spawnAgent testEnv (DcPgConfig {dcPgConfigEnvironmentVars}) = do
   -- This does risk leaking processes, especially when doing the final cleanup.
   -- The only real solution to this is to have the process listen for heartbeats
   -- which we send, and the process stopping when the heartbeats do.
-  let cleanup = void $ forkIO do
-        startTime <- getCurrentTime
+  let cleanup = void $ do
+        cleanHeartbeatThread
         cleanLogThread1
         cleanLogThread2
-        interruptProcessGroupOf ph
-        exitCode <- waitForProcess ph
-        cleanupProcess process
-        endTime <- getCurrentTime
-        testLogMessage testEnv $ DcPgInstanceShutdownMessage port exitCode (diffUTCTime endTime startTime)
+        void $ forkIO $ cleanupProcess process
+        testLogMessage testEnv $ DcPgInstanceShutdownMessage port
 
   let server = DcPgAgentInstance "127.0.0.1" port
   result <- Http.healthCheck' (T.unpack $ getDcPgAgentInstanceUrl server <> "health")
@@ -234,18 +235,14 @@ instance LoggableMessage DcPgInstanceFailedHealthcheckMessage where
 
 -- | Log message type used to indicate a postgres-agent server instance has shutdown.
 data DcPgInstanceShutdownMessage = DcPgInstanceShutdownMessage
-  { hiShutdownPort :: Int,
-    hiShutdownExitCode :: ExitCode,
-    hiShutdownDuration :: NominalDiffTime
+  { hiShutdownPort :: Int
   }
 
 instance LoggableMessage DcPgInstanceShutdownMessage where
   fromLoggableMessage DcPgInstanceShutdownMessage {..} =
     J.object
       [ ("type", J.String "DcPgInstanceShutdownMessage"),
-        ("port", J.Number (fromIntegral hiShutdownPort)),
-        ("duration", J.Number (realToFrac hiShutdownDuration)),
-        ("exit-code", J.String (tshow hiShutdownExitCode))
+        ("port", J.Number (fromIntegral hiShutdownPort))
       ]
 
 -- | Log message type used to indicate a single line output by a postgres-agent
