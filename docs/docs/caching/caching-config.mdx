@@ -5,7 +5,7 @@ keywords:
   - queries
   - query
   - config
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 import ProductBadge from '@site/src/components/ProductBadge';
@@ -22,6 +22,9 @@ Schemas.
 
 Cached responses are stored for a period of time in a LRU (least-recently used) cache, and removed from the cache as per
 a user-specified TTL (time-to-live) which defaults to 60 seconds.
+
+For self-hosted Enterprise Edition, refer to the [enable caching](/enterprise/caching.mdx) documentation configure
+various parameters.
 
 ## Getting started
 
@@ -40,14 +43,6 @@ query MyCachedQuery @cached {
 If the response was cached successfully, the HTTP response will include a `Cache-Control` header, whose value
 (`max-age={SECONDS}`) indicates the maximum number of seconds for the returned response to remain in the cache.
 
-A query's response can be cached only if the following conditions hold:
-
-- For queries using `Actions` or `Remote Schemas`, the query does **not** make use of `forward_client_headers` (see
-  [RemoteSchemaDef](/api-reference/syntax-defs.mdx#remoteschemadef) and
-  [ActionDefinition](/api-reference/syntax-defs.mdx#actiondefinition)).
-- The response JSON is **under** 100KB in size
-
-For self-hosted Enterprise Edition, refer to the [enable caching](/enterprise/caching.mdx) documentation.
 
 ## Controlling cache lifetime
 
@@ -88,29 +83,6 @@ GraphQL variable, then there would be a cache miss, as it is considered a
 different query and will generate a new cache key.
 
 :::
-
-## Rate Limiting
-
-Cache writes are rate limited, with a rate depending on your plan. The rate limit is based on the total number of bytes
-written to the cache in a sliding window. If you exceed the rate limit, the HTTP response will indicate this with a
-warning header:
-
-```plaintext
- Warning: 199 - cache-store-capacity-exceeded
-```
-
-:::info Sliding window policies
-
-A sliding window policy maintains a queue of a specified size, into which entities flow. When the queue is full and a
-new entity arrives, the oldest entity in the queue is removed from the window (FIFO).
-
-:::
-
-## Session variables
-
-A session variable will only influence the cache key for a query if it is referenced by the execution plan. In practice,
-this means that session variables are only factored into cache keys if they are referenced in the permissions for a
-query. See the [API permissions](/api-reference/metadata-api/permission.mdx) documentation for more information.
 
 ## Response headers
 
