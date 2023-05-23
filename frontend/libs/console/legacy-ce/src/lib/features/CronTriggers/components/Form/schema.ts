@@ -13,6 +13,7 @@ export const schema = z.object({
   num_retries: z.string(),
   retry_interval_seconds: z.string(),
   timeout_seconds: z.string(),
+  tolerance_seconds: z.string(),
   include_in_metadata: z.boolean(),
   comment: z.string(),
 });
