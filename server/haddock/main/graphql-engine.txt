@@ -24219,18 +24219,26 @@ GetSourceTrackables :: SourceName -> GetSourceTrackables (b :: BackendType)
 
 -- | Fetch a list of tables for the request data source.
 runGetSourceTables :: forall b m r. (BackendMetadata b, CacheRM m, MonadError QErr m, MetadataM m, MonadIO m, MonadBaseControl IO m, MonadReader r m, Has (Logger Hasura) r, ProvidesNetwork m) => GetSourceTables b -> m EncJSON
-data GetTableInfo (b :: BackendType)
-GetTableInfo :: SourceName -> TableName -> GetTableInfo (b :: BackendType)
-[_gtiSourceName] :: GetTableInfo (b :: BackendType) -> SourceName
-[_gtiTableName] :: GetTableInfo (b :: BackendType) -> TableName
+data GetTableInfo_
+GetTableInfo_ :: SourceName -> TableName -> GetTableInfo_
+[_gtiSourceName_] :: GetTableInfo_ -> SourceName
+[_gtiTableName_] :: GetTableInfo_ -> TableName
 
--- | Fetch a schema information about a table for the requested data
---   source. Currently this is only supported for Data Connectors.
-runGetTableInfo :: (CacheRM m, MonadError QErr m, MetadataM m) => GetTableInfo b -> m EncJSON
+-- | Legacy data connector command. This doesn't use the DataConnector
+--   <a>ScalarType</a> to represent types.
+runGetTableInfo_ :: (CacheRM m, MonadError QErr m, MetadataM m) => GetTableInfo_ -> m EncJSON
+data GetTableInfo (b :: BackendType)
+GetTableInfo :: SourceName -> TableName b -> GetTableInfo (b :: BackendType)
+[_gtiSourceName] :: GetTableInfo (b :: BackendType) -> SourceName
+[_gtiTableName] :: GetTableInfo (b :: BackendType) -> TableName b
+
+-- | Get information about the given table.
+runGetTableInfo :: forall b m. (BackendMetadata b, CacheRM m, MonadError QErr m, MetadataM m) => GetTableInfo b -> m EncJSON
 instance GHC.Generics.Generic Hasura.RQL.DDL.Schema.Source.RenameSource
 instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.Source.DropSource
 instance GHC.Show.Show Hasura.RQL.DDL.Schema.Source.DropSource
-instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Schema.Source.GetTableInfo b)
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Schema.Source.GetTableInfo b)
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.GetTableInfo_
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Schema.Source.GetSourceTrackables b)
 instance Data.Aeson.Types.FromJSON.FromJSON (Hasura.RQL.DDL.Schema.Source.GetSourceTables b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Extended.FromJSONWithContext (Hasura.RQL.Types.BackendType.BackendSourceKind b) (Hasura.RQL.DDL.Schema.Source.UpdateSource b)
@@ -26171,6 +26179,7 @@ RMGetSourceKindCapabilities :: !GetSourceKindCapabilities -> RQLMetadataV1
 RMGetSourceTables :: !AnyBackend GetSourceTables -> RQLMetadataV1
 RMGetSourceTrackables :: !AnyBackend GetSourceTrackables -> RQLMetadataV1
 RMGetTableInfo :: !AnyBackend GetTableInfo -> RQLMetadataV1
+RMGetTableInfo_ :: !GetTableInfo_ -> RQLMetadataV1
 RMTrackTable :: !AnyBackend TrackTableV2 -> RQLMetadataV1
 RMTrackTables :: !AnyBackend TrackTables -> RQLMetadataV1
 RMUntrackTable :: !AnyBackend UntrackTable -> RQLMetadataV1
