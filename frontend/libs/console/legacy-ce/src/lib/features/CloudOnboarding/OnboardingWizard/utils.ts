@@ -17,6 +17,8 @@ import {
   oneClickDeploymentOnboardingShown,
   useCaseExperimentOnboarding,
   skippedOnboardingThroughURLParamVariables,
+  skippedUseCaseExperimentOnboarding,
+  skippedNeonOnboardingToConnectOtherDB,
 } from './constants';
 import { WizardState } from './hooks/useWizardState';
 import { OnboardingResponseData, UserOnboarding } from './types';
@@ -27,7 +29,10 @@ export function shouldShowOnboarding(onboardingData: UserOnboarding) {
 
   if (
     userActivity?.[skippedNeonOnboardingVariables.kind]?.value === 'true' ||
+    userActivity?.[skippedUseCaseExperimentOnboarding.kind]?.value === 'true' ||
     userActivity?.[skippedOnboardingThroughURLParamVariables.kind]?.value ===
+      'true' ||
+    userActivity?.[skippedNeonOnboardingToConnectOtherDB.kind]?.value ===
       'true' ||
     userActivity?.[onboardingCompleteVariables.kind]?.value === 'true' ||
     userActivity?.[hasuraSourceCreationStartVariables.kind]?.value === 'true' ||
