@@ -55,6 +55,7 @@ data RQLMetadataV1
   | RMGetSourceTables !(AnyBackend GetSourceTables)
   | RMGetSourceTrackables !(AnyBackend GetSourceTrackables)
   | RMGetTableInfo !(AnyBackend GetTableInfo)
+  | RMGetTableInfo_ !GetTableInfo_
   | -- Tables
     RMTrackTable !(AnyBackend TrackTableV2)
   | RMTrackTables !(AnyBackend TrackTables)

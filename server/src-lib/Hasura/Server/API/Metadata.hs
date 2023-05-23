@@ -213,6 +213,7 @@ queryModifiesMetadata = \case
       RMGetSourceTables _ -> False
       RMGetSourceTrackables _ -> False
       RMGetTableInfo _ -> False
+      RMGetTableInfo_ _ -> False
       RMTestConnectionTemplate _ -> False
       RMSuggestRelationships _ -> False
       RMGetNativeQuery _ -> False
@@ -387,6 +388,7 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMGetSourceTables q -> dispatchMetadata runGetSourceTables q
   RMGetSourceTrackables q -> dispatchMetadata runGetSourceTrackables q
   RMGetTableInfo q -> dispatchMetadata runGetTableInfo q
+  RMGetTableInfo_ q -> runGetTableInfo_ q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMTrackTables q -> dispatchMetadata runTrackTablesQ q
   RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q

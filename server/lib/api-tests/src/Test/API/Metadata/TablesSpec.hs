@@ -96,6 +96,7 @@ tests = do
     let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
         backendType = BackendType.backendTypeString backendTypeMetadata
         schemaName = Schema.getSchemaName testEnvironment
+        sourceName = BackendType.backendSourceName backendTypeMetadata
 
         actual :: IO Value
         actual =
@@ -104,7 +105,7 @@ tests = do
             [interpolateYaml|
               type: #{backendType}_get_source_tables
               args:
-                source: #{BackendType.backendSourceName backendTypeMetadata}
+                source: #{sourceName}
             |]
 
         expected :: Value
@@ -151,15 +152,16 @@ tests = do
     let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
         backendType = BackendType.backendTypeString backendTypeMetadata
         schemaName = Schema.getSchemaName testEnvironment
+        sourceName = BackendType.backendSourceName backendTypeMetadata
 
         actual :: IO Value
         actual =
           GraphqlEngine.postMetadata
             testEnvironment
             [interpolateYaml|
-              type: get_table_info
+              type: #{backendType}_get_table_info
               args:
-                source: #{BackendType.backendSourceName backendTypeMetadata}
+                source: #{sourceName}
                 table:
                   - #{schemaName}
                   - articles
@@ -173,17 +175,23 @@ tests = do
               - insertable: true
                 name: id
                 nullable: false
-                type: number
+                type:
+                - number
+                - Float
                 updatable: true
               - insertable: true
                 name: author
                 nullable: false
-                type: number
+                type:
+                - number
+                - Float
                 updatable: true
               - insertable: true
                 name: title
                 nullable: false
-                type: string
+                type:
+                - string
+                - String
                 updatable: true
               deletable: true
               insertable: true
@@ -204,15 +212,16 @@ tests = do
     let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
         backendType = BackendType.backendTypeString backendTypeMetadata
         schemaName = Schema.getSchemaName testEnvironment
+        sourceName = BackendType.backendSourceName backendTypeMetadata
 
         actual :: IO Value
         actual =
           GraphqlEngine.postMetadata
             testEnvironment
             [interpolateYaml|
-              type: get_table_info
+              type: #{backendType}_get_table_info
               args:
-                source: #{BackendType.backendSourceName backendTypeMetadata}
+                source: #{sourceName}
                 table:
                   - #{schemaName}
                   - made_up_table

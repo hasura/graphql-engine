@@ -24,9 +24,13 @@ module Hasura.RQL.DDL.Schema.Source
     GetSourceTrackables (..),
     runGetSourceTrackables,
 
-    -- * Get Table Name
+    -- * Get Table Info
     GetTableInfo (..),
     runGetTableInfo,
+
+    -- * Legacy Get Table Info
+    GetTableInfo_ (..),
+    runGetTableInfo_,
   )
 where
 
@@ -396,41 +400,65 @@ runGetSourceTables GetSourceTables {..} = do
 
 --------------------------------------------------------------------------------
 
-data GetTableInfo (b :: BackendType) = GetTableInfo
-  { _gtiSourceName :: Common.SourceName,
-    _gtiTableName :: API.TableName
+data GetTableInfo_ = GetTableInfo_
+  { _gtiSourceName_ :: Common.SourceName,
+    _gtiTableName_ :: API.TableName
   }
 
-instance FromJSON (GetTableInfo b) where
-  parseJSON = J.withObject "GetSourceTables" \o -> do
+instance FromJSON GetTableInfo_ where
+  parseJSON = J.withObject "GetTableInfo_" \o -> do
+    _gtiSourceName_ <- o .: "source"
+    _gtiTableName_ <- o .: "table"
+    pure $ GetTableInfo_ {..}
+
+-- | Legacy data connector command. This doesn't use the DataConnector
+-- 'ScalarType' to represent types.
+runGetTableInfo_ ::
+  ( CacheRM m,
+    MonadError Error.QErr m,
+    Metadata.MetadataM m
+  ) =>
+  GetTableInfo_ ->
+  m EncJSON
+runGetTableInfo_ GetTableInfo_ {..} = do
+  metadata <- Metadata.getMetadata
+
+  let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
+  abSourceMetadata <- lookupSourceMetadata _gtiSourceName_ sources
+
+  AnyBackend.dispatchAnyBackend @RQL.Types.Backend abSourceMetadata $ \Metadata.SourceMetadata {_smKind, _smConfiguration} -> do
+    case _smKind of
+      Backend.DataConnectorKind _dcName -> do
+        sourceInfo <- askSourceInfo @'DataConnector _gtiSourceName_
+        let tableName = Witch.from _gtiTableName_
+        let table = HashMap.lookup tableName $ _rsTables $ _siDbObjectsIntrospection sourceInfo
+        pure . EncJSON.encJFromJValue $ convertTableMetadataToTableInfo tableName <$> table
+      backend ->
+        Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
+
+data GetTableInfo (b :: BackendType) = GetTableInfo
+  { _gtiSourceName :: Common.SourceName,
+    _gtiTableName :: TableName b
+  }
+
+instance Backend b => FromJSON (GetTableInfo b) where
+  parseJSON = J.withObject "GetTableInfo_" \o -> do
     _gtiSourceName <- o .: "source"
     _gtiTableName <- o .: "table"
     pure $ GetTableInfo {..}
 
--- | Fetch a schema information about a table for the requested data source. Currently
--- this is only supported for Data Connectors.
+-- | Get information about the given table.
 runGetTableInfo ::
-  ( CacheRM m,
+  forall b m.
+  ( BackendMetadata b,
+    CacheRM m,
     MonadError Error.QErr m,
     Metadata.MetadataM m
   ) =>
   GetTableInfo b ->
   m EncJSON
 runGetTableInfo GetTableInfo {..} = do
-  metadata <- Metadata.getMetadata
-
-  let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
-  abSourceMetadata <- lookupSourceMetadata _gtiSourceName sources
-
-  AnyBackend.dispatchAnyBackend @RQL.Types.Backend abSourceMetadata $ \Metadata.SourceMetadata {_smKind, _smConfiguration} -> do
-    case _smKind of
-      Backend.DataConnectorKind _dcName -> do
-        sourceInfo <- askSourceInfo @'DataConnector _gtiSourceName
-        let tableName = Witch.from _gtiTableName
-        let table = HashMap.lookup tableName $ _rsTables $ _siDbObjectsIntrospection sourceInfo
-        pure . EncJSON.encJFromJValue $ convertTableMetadataToTableInfo tableName <$> table
-      backend ->
-        Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
+  fmap EncJSON.encJFromJValue (getTableInfo @b _gtiSourceName _gtiTableName)
 
 --------------------------------------------------------------------------------
 -- Internal helper functions
