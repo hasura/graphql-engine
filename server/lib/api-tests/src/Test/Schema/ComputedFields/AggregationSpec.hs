@@ -93,7 +93,7 @@ numberOfArticlesForAuthorSQL :: SchemaName -> Text
 numberOfArticlesForAuthorSQL schemaName =
   [i|
     CREATE FUNCTION #{ unSchemaName schemaName }.count_articles(author_row author)
-    RETURNS integer AS $$
+    RETURNS bigint AS $$
       SELECT COUNT(*)
       FROM article
       WHERE author_id = author_row.id
@@ -104,7 +104,7 @@ numberOfArticlesForAuthorSQLPlus :: SchemaName -> Text
 numberOfArticlesForAuthorSQLPlus schemaName =
   [i|
     CREATE FUNCTION #{ unSchemaName schemaName }.count_articles_plus(author_row author, plus int)
-    RETURNS integer AS $$
+    RETURNS bigint AS $$
       SELECT (COUNT(*) + plus)
       FROM article
       WHERE author_id = author_row.id
@@ -115,7 +115,7 @@ articleTitleLengthSQL :: SchemaName -> Text
 articleTitleLengthSQL schemaName =
   [i|
     CREATE FUNCTION #{ unSchemaName schemaName }.article_length(article_row article)
-    RETURNS integer AS $$
+    RETURNS int AS $$
       SELECT LENGTH(article_row.title) 
     $$ LANGUAGE sql STABLE;
   |]
