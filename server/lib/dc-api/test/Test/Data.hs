@@ -345,7 +345,7 @@ genresRows = sortBy (API.FieldName "GenreId") $ readTableFromXmlIntoRows genresT
 mkFibonacciRows :: Int -> [HashMap API.FieldName API.FieldValue]
 mkFibonacciRows n = take n $ fibonacciRow <$> fibs
   where
-    fibs = 1 : 1 : zipWith (+) fibs (tail fibs)
+    fibs = 0 : 1 : zipWith (+) fibs (tail fibs)
     fibonacciRow x = HashMap.singleton (API.FieldName "Value") (API.mkColumnFieldValue (J.Number x))
 
 genresTableRelationships :: API.TableRelationships

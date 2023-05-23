@@ -89,7 +89,7 @@
       "returns": {"type": "table", "table": ["Result"]},
       "response_cardinality": "many",
       "args": [
-        { "name": "take", "type": "Integer" },
+        { "name": "take", "type": "number" },
         { "name": "__hasura_session", "type": "JSON" }
       ],
       "description": "Fibonacci function - Take N Fibonacci numbers!"

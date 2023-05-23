@@ -36,7 +36,7 @@ function fibonacci(q: FunctionRequest): Rows {
   if(! n) { throw(Error('Expecting 0th arg')); }
 
   let rows = [];
-  let x = 1;
+  let x = 0;
   let y = 1;
   let z = 1;
   for(let i = 0; i < n; i++) {
@@ -50,11 +50,11 @@ function fibonacci(q: FunctionRequest): Rows {
 
 function fibbbbbbbs(): Rows {
   return [
-    { ArtistId: 1, Name: 'Joe' },
+    { ArtistId: 0, Name: 'Joe' },
     { ArtistId: 1, Name: 'Jim' },
-    { ArtistId: 2, Name: 'James' },
-    { ArtistId: 3, Name: 'Jack' },
-    { ArtistId: 5, Name: 'Joel' },
+    { ArtistId: 1, Name: 'James' },
+    { ArtistId: 2, Name: 'Jack' },
+    { ArtistId: 3, Name: 'Joel' },
   ]
 }
 
@@ -68,7 +68,7 @@ function fibbbbbbbs2(q: FunctionRequest): Rows {
   if(! argz) { throw(Error('Expecting 0th arg')); }
 
   let rows = [];
-  let x = 1;
+  let x = 0;
   let y = 1;
   let z = 1;
   for(let i = 0; i < n; i++) {
