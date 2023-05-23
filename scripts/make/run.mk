@@ -8,7 +8,7 @@ ENABLED_LOG_TYPES = startup,http-log,webhook-log,websocket-log,query-log,executi
 
 .PHONY: run-oss-server
 ## run-oss-server: run an OSS server backend by a PostgreSQL database
-run-oss-server: $(CONSOLE_CE_ASSETS_PATH)
+run-oss-server: $(CONSOLE_CE_ASSETS_PATH) remove-tix-file
 	docker compose up --wait postgres
 	cabal run graphql-engine:exe:graphql-engine -- \
 		--database-url '$(POSTGRES_URL)' \
@@ -18,7 +18,7 @@ run-oss-server: $(CONSOLE_CE_ASSETS_PATH)
 
 .PHONY: run-pro-server
 ## run-pro-server: run a pro server backend by a PostgreSQL database
-run-pro-server: $(CONSOLE_EE_ASSETS_PATH)
+run-pro-server: $(CONSOLE_EE_ASSETS_PATH) remove-tix-file
 	docker compose up --wait postgres
 	cabal run graphql-engine-pro:exe:graphql-engine-pro -- \
 		--database-url '$(POSTGRES_URL)' \
@@ -35,6 +35,6 @@ run-dc-postgres-agent: remove-tix-file
 
 .PHONY: run-dc-postgres-agent-watch
 ## run-dc-postgres-agent-watch
-run-dc-postgres-agent-watch:
+run-dc-postgres-agent-watch: remove-tix-file
 	$(DC_POSTGRES_DOCKER_COMPOSE) up --wait
 	watchexec -r -e .hs cabal run postgres-agent

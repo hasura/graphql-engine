@@ -133,6 +133,7 @@ instance
           _hciTestCodec = codec
         }
 
+  supportsAggregateComputedFields = True
   versionCheckImplementation = versionCheckImpl @pgKind
   runPingSource = runPingSourceImpl @pgKind
   isComparableType = Postgres.isComparableType

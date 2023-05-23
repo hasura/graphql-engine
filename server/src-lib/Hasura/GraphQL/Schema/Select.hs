@@ -1114,7 +1114,7 @@ tableAggregationFields ::
   forall b r m n.
   (MonadBuildSchema b r m n) =>
   TableInfo b ->
-  SchemaT r m (Parser 'Output n (IR.AggregateFields b))
+  SchemaT r m (Parser 'Output n (IR.AggregateFields b (IR.UnpreparedValue b)))
 tableAggregationFields tableInfo = do
   sourceInfo :: SourceInfo b <- asks getter
   let sourceName = _siName sourceInfo
@@ -1125,13 +1125,31 @@ tableAggregationFields tableInfo = do
   P.memoizeOn 'tableAggregationFields (sourceName, tableName) do
     tableGQLName <- getTableIdentifierName tableInfo
     allColumns <- tableSelectColumns tableInfo
+    allComputedFields <-
+      if supportsAggregateComputedFields @b -- See 'supportsAggregateComputedFields' for an explanation
+        then tableSelectComputedFields tableInfo
+        else pure []
     let numericColumns = onlyNumCols allColumns
+        numericComputedFields = onlyNumComputedFields allComputedFields
         comparableColumns = onlyComparableCols allColumns
         customOperatorsAndColumns =
           HashMap.toList $ HashMap.mapMaybe (getCustomAggOpsColumns allColumns) $ getCustomAggregateOperators @b (_siConfiguration sourceInfo)
         description = G.Description $ "aggregate fields of " <>> tableInfoName tableInfo
         selectName = runMkTypename mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggregateFieldTypeName tableGQLName
     count <- countField
+    nonCountComputedFieldsMap <-
+      fmap (HashMap.unionsWith (++) . concat) $
+        sequenceA $
+          catMaybes
+            [ -- operators on numeric computed fields
+              if null numericComputedFields
+                then Nothing
+                else Just $
+                  for numericAggOperators $ \operator -> do
+                    numFields <- mkNumericAggComputedFields tableName operator numericComputedFields
+
+                    pure $ HashMap.singleton operator numFields
+            ]
     nonCountFieldsMap <-
       fmap (HashMap.unionsWith (++) . concat) $
         sequenceA $
@@ -1159,11 +1177,14 @@ tableAggregationFields tableInfo = do
                     customFields <- traverse (uncurry mkNullableScalarTypeAggField) (toList columnTypes)
                     pure $ HashMap.singleton (C.fromCustomName operator) customFields
             ]
+
     let nonCountFields =
           HashMap.mapWithKey
             ( \operator fields -> parseAggOperator mkTypename operator tCase tableGQLName fields
             )
-            nonCountFieldsMap
+            (HashMap.unionWith (++) nonCountFieldsMap nonCountComputedFieldsMap)
+
+        aggregateFields :: [FieldParser n (IR.AggregateField b (IR.UnpreparedValue b))]
         aggregateFields = count : HashMap.elems nonCountFields
     pure $
       P.selectionSet selectName (Just description) aggregateFields
@@ -1181,7 +1202,24 @@ tableAggregationFields tableInfo = do
           )
         & nonEmpty
 
-    mkNumericAggFields :: GQLNameIdentifier -> [ColumnInfo b] -> SchemaT r m [FieldParser n (IR.ColFld b)]
+    mkNumericAggComputedFields :: TableName b -> GQLNameIdentifier -> [ComputedFieldInfo b] -> SchemaT r m [FieldParser n (IR.SelectionField b (IR.UnpreparedValue b))]
+    mkNumericAggComputedFields tableName _name computedFieldInfos =
+      traverse (mkColumnAggComputedField tableName) computedFieldInfos <&> catMaybes
+
+    mkColumnAggComputedField :: TableName b -> ComputedFieldInfo b -> SchemaT r m (Maybe (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b))))
+    mkColumnAggComputedField tableName computedFieldInfo = do
+      let annotatedFieldToSelectionField :: AnnotatedField b -> n (IR.SelectionField b (IR.UnpreparedValue b))
+          annotatedFieldToSelectionField = \case
+            IR.AFComputedField _ computedFieldName (IR.CFSScalar computedFieldScalarSelect _maybeShouldBeNullified) ->
+              pure $ IR.SFComputedField computedFieldName computedFieldScalarSelect
+            _ -> parseError "Only computed fields that return scalar types are supported"
+
+      computedField computedFieldInfo tableName tableInfo
+        >>= \case
+          (Just fieldParser) -> (pure . Just) (fieldParser `P.bindField` annotatedFieldToSelectionField)
+          Nothing -> pure Nothing
+
+    mkNumericAggFields :: GQLNameIdentifier -> [ColumnInfo b] -> SchemaT r m [FieldParser n (IR.SelectionField b (IR.UnpreparedValue b))]
     mkNumericAggFields name
       | (C.toSnakeG name) == Name._sum = traverse mkColumnAggField
       -- Memoize here for more sharing. Note: we can't do `P.memoizeOn 'mkNumericAggFields...`
@@ -1190,18 +1228,18 @@ tableAggregationFields tableInfo = do
           P.memoizeOn 'tableAggregationFields ("mkNumericAggFields" :: Text, columnInfo) $
             -- CAREFUL!: below must only reference columnInfo else memoization key needs to be adapted
             pure $! do
-              let !cfcol = IR.CFCol (ciColumn columnInfo) (ciType columnInfo)
+              let !cfcol = IR.SFCol (ciColumn columnInfo) (ciType columnInfo)
               P.selection_
                 (ciName columnInfo)
                 (ciDescription columnInfo)
                 (P.nullable P.float)
                 $> cfcol
 
-    mkColumnAggField :: ColumnInfo b -> SchemaT r m (FieldParser n (IR.ColFld b))
+    mkColumnAggField :: ColumnInfo b -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
     mkColumnAggField columnInfo =
       mkColumnAggField' columnInfo (ciType columnInfo)
 
-    mkColumnAggField' :: ColumnInfo b -> ColumnType b -> SchemaT r m (FieldParser n (IR.ColFld b))
+    mkColumnAggField' :: ColumnInfo b -> ColumnType b -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
     mkColumnAggField' columnInfo resultType = do
       field <- columnParser resultType (G.Nullability True)
       pure $
@@ -1209,13 +1247,13 @@ tableAggregationFields tableInfo = do
           (ciName columnInfo)
           (ciDescription columnInfo)
           field
-          $> IR.CFCol (ciColumn columnInfo) (ciType columnInfo)
+          $> IR.SFCol (ciColumn columnInfo) (ciType columnInfo)
 
-    mkNullableScalarTypeAggField :: ColumnInfo b -> ScalarType b -> SchemaT r m (FieldParser n (IR.ColFld b))
+    mkNullableScalarTypeAggField :: ColumnInfo b -> ScalarType b -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
     mkNullableScalarTypeAggField columnInfo resultType =
       mkColumnAggField' columnInfo (ColumnScalar resultType)
 
-    countField :: SchemaT r m (FieldParser n (IR.AggregateField b))
+    countField :: SchemaT r m (FieldParser n (IR.AggregateField b (IR.UnpreparedValue b)))
     countField = do
       columnsEnum <- tableSelectColumnsEnum tableInfo
       let distinctName = Name._distinct
@@ -1236,8 +1274,8 @@ tableAggregationFields tableInfo = do
       GQLNameIdentifier ->
       NamingCase ->
       GQLNameIdentifier ->
-      [FieldParser n (IR.ColFld b)] ->
-      FieldParser n (IR.AggregateField b)
+      [FieldParser n (IR.SelectionField b (IR.UnpreparedValue b))] ->
+      FieldParser n (IR.AggregateField b (IR.UnpreparedValue b))
     parseAggOperator makeTypename operator tCase tableGQLName columns =
       let opFieldName = applyFieldNameCaseIdentifier tCase operator
           opText = G.unName opFieldName
@@ -1245,7 +1283,7 @@ tableAggregationFields tableInfo = do
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
           subselectionParser =
             P.selectionSet setName setDesc columns
-              <&> parsedSelectionsToFields IR.CFExp
+              <&> parsedSelectionsToFields IR.SFExp
        in P.subselection_ opFieldName Nothing subselectionParser
             <&> IR.AFOp . IR.AggregateOp opText
 

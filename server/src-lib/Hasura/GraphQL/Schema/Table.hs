@@ -11,6 +11,7 @@ module Hasura.GraphQL.Schema.Table
     tableSelectFields,
     tableColumns,
     tableSelectColumns,
+    tableSelectComputedFields,
     tableUpdateColumns,
     getTableIdentifierName,
   )
@@ -255,7 +256,7 @@ tableColumns tableInfo =
     columnInfo (FIColumn ci) = Just ci
     columnInfo _ = Nothing
 
--- | Get the columns of a table that my be selected under the given select
+-- | Get the columns of a table that may be selected under the given select
 -- permissions.
 tableSelectColumns ::
   forall b r m.
@@ -272,6 +273,24 @@ tableSelectColumns tableInfo =
   where
     columnInfo (FIColumn ci) = Just ci
     columnInfo _ = Nothing
+
+-- | Get the computed fields of a table that may be selected under the given
+-- select permissions.
+tableSelectComputedFields ::
+  forall b r m.
+  ( Backend b,
+    MonadError QErr m,
+    MonadReader r m,
+    Has SchemaContext r,
+    Has (SourceInfo b) r
+  ) =>
+  TableInfo b ->
+  m [ComputedFieldInfo b]
+tableSelectComputedFields tableInfo =
+  mapMaybe computedFieldInfo <$> tableSelectFields tableInfo
+  where
+    computedFieldInfo (FIComputedField cfi) = Just cfi
+    computedFieldInfo _ = Nothing
 
 -- | Get the columns of a table that my be updated under the given update
 -- permissions.

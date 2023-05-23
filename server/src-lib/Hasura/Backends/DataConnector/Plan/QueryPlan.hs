@@ -445,7 +445,7 @@ translateAggregateField ::
   MonadError QErr m =>
   FieldPrefix ->
   FieldName ->
-  AggregateField 'DataConnector ->
+  AggregateField 'DataConnector (UnpreparedValue 'DataConnector) ->
   m (HashMap FieldName API.Aggregate)
 translateAggregateField fieldPrefix fieldName = \case
   AFCount countAggregate ->
@@ -461,14 +461,16 @@ translateAggregateField fieldPrefix fieldName = \case
 
     fmap (HashMap.fromList . catMaybes) . forM _aoFields $ \(columnFieldName, columnField) ->
       case columnField of
-        CFCol column resultType ->
+        SFCol column resultType ->
           let resultScalarType = Witch.from $ columnTypeToScalarType resultType
            in pure . Just $ (applyPrefix fieldPrefix' columnFieldName, API.SingleColumn $ API.SingleColumnAggregate aggFunction (Witch.from column) resultScalarType)
-        CFExp _txt ->
+        SFExp _txt ->
           -- We ignore literal text fields (we don't send them to the data connector agent)
           -- and add them back to the response JSON when we reshape what the agent returns
           -- to us
           pure Nothing
+        -- See Hasura.RQL.Types.Backend.supportsAggregateComputedFields
+        SFComputedField _ _ -> error "Aggregate computed fields aren't currently supported for Data Connectors!"
   AFExp _txt ->
     -- We ignore literal text fields (we don't send them to the data connector agent)
     -- and add them back to the response JSON when we reshape what the agent returns
@@ -559,7 +561,7 @@ reshapeTableAggregateFields tableAggregateFields API.QueryResponse {..} = do
 reshapeAggregateFields ::
   MonadError QErr m =>
   FieldPrefix ->
-  AggregateFields 'DataConnector ->
+  AggregateFields 'DataConnector v ->
   HashMap API.FieldName J.Value ->
   m J.Encoding
 reshapeAggregateFields fieldPrefix aggregateFields responseAggregates = do
@@ -574,15 +576,18 @@ reshapeAggregateFields fieldPrefix aggregateFields responseAggregates = do
       AFOp AggregateOp {..} -> do
         reshapedColumnFields <- forM _aoFields $ \(columnFieldName@(FieldName columnFieldNameText), columnField) ->
           case columnField of
-            CFCol _column _columnType -> do
+            SFCol _column _columnType -> do
               let fieldPrefix' = fieldPrefix <> prefixWith fieldName
               let columnFieldNameKey = API.FieldName . getFieldNameTxt $ applyPrefix fieldPrefix' columnFieldName
               responseAggregateValue <-
                 HashMap.lookup columnFieldNameKey responseAggregates
                   `onNothing` throw500 ("Unable to find expected aggregate " <> API.unFieldName columnFieldNameKey <> " in aggregates returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
               pure (columnFieldNameText, J.toEncoding responseAggregateValue)
-            CFExp txt ->
+            SFExp txt ->
               pure (columnFieldNameText, JE.text txt)
+            -- See Hasura.RQL.Types.Backend.supportsAggregateComputedFields
+            SFComputedField _ _ -> error "Aggregate computed fields aren't currently supported for Data Connectors!"
+
         pure (fieldNameText, encodeAssocListAsObject reshapedColumnFields)
       AFExp txt ->
         pure (fieldNameText, JE.text txt)

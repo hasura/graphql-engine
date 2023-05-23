@@ -100,7 +100,11 @@ class
     Ord (FunctionName b),
     Ord (ScalarType b),
     Ord (Column b),
+    Ord (ComputedFieldReturn b),
+    Ord (ComputedFieldImplicitArguments b),
     Ord (ConstraintName b),
+    Ord (FunctionArgument b),
+    Ord (XComputedField b),
     Data (TableName b),
     FromJSON (BackendConfig b),
     FromJSON (Column b),
@@ -365,6 +369,27 @@ class
   tableToFunction :: TableName b -> FunctionName b
   computedFieldFunction :: ComputedFieldDefinition b -> FunctionName b
   computedFieldReturnType :: ComputedFieldReturn b -> ComputedFieldReturnType b
+
+  -- | Backends that don't support aggregate computed fields will never
+  -- encounter an 'RQL.IR.Select.SelectionField'. However, backends are
+  -- expected to provide a total transformation from 'SelectionField' to the
+  -- backend's query language.
+  --
+  -- Rather than implement error handling for every backend that doesn't
+  -- support aggregate computed fields, and then remove that error handling for
+  -- each backend when we /add/ support - honestly, adding error handling would
+  -- probably take longer than adding aggregate computed field support - we
+  -- instead have a flag.
+  --
+  -- If a backend declares this flag as 'False', computed fields will not be
+  -- added to the GraphQL schema. This means that backends can safely handle
+  -- 'SFComputedField' with a runtime exception /as long as/ this flag is
+  -- 'False'.
+  --
+  -- Once all backends support all aggregate computed field operations, this
+  -- flag can be deleted.
+  supportsAggregateComputedFields :: Bool
+  supportsAggregateComputedFields = False
 
   -- | Build function arguments expression from computed field implicit arguments
   fromComputedFieldImplicitArguments :: v -> ComputedFieldImplicitArguments b -> [FunctionArgumentExp b v]

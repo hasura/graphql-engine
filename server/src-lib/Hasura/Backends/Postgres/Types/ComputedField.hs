@@ -57,7 +57,7 @@ data FunctionTableArgument
       -- ^ argument name
       Int
       -- ^ argument index
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData FunctionTableArgument
 
@@ -75,7 +75,7 @@ data FunctionSessionArgument
       -- ^ The argument name
       Int
       -- ^ The ordinal position in the function input parameters
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData FunctionSessionArgument
 
@@ -88,7 +88,7 @@ data ComputedFieldImplicitArguments = ComputedFieldImplicitArguments
   { _cffaTableArgument :: FunctionTableArgument,
     _cffaSessionArgument :: Maybe FunctionSessionArgument
   }
-  deriving stock (Show, Eq, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 instance NFData ComputedFieldImplicitArguments
 
@@ -109,7 +109,7 @@ fromComputedFieldImplicitArguments sess _ = [AESession sess, AETableRow]
 data ComputedFieldReturn
   = CFRScalar PGScalarType
   | CFRSetofTable QualifiedTable
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData ComputedFieldReturn
 

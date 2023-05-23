@@ -933,9 +933,9 @@ data FieldSource
 --            { _aoOp = "max"
 --            , _aoFields =
 --                [ ( FieldName {getFieldNameTxt = "AlbumId"}
---                  , CFCol (ColumnName {columnName = "AlbumId"} (ColumnScalar IntegerScalarType)))
+--                  , SFCol (ColumnName {columnName = "AlbumId"} (ColumnScalar IntegerScalarType)))
 --                , ( FieldName {getFieldNameTxt = "TrackId"}
---                  , CFCol (ColumnName {columnName = "TrackId"} (ColumnScalar IntegerScalarType)))
+--                  , SFCol (ColumnName {columnName = "TrackId"} (ColumnScalar IntegerScalarType)))
 --                ]
 --            }))
 --   ]
@@ -955,7 +955,7 @@ fromTableAggregateFieldG ::
   ReaderT EntityAlias FromIr FieldSource
 fromTableAggregateFieldG args permissionBasedTop (Rql.FieldName name, field) =
   case field of
-    Ir.TAFAgg (aggregateFields :: [(Rql.FieldName, Ir.AggregateField 'BigQuery)]) ->
+    Ir.TAFAgg (aggregateFields :: [(Rql.FieldName, Ir.AggregateField 'BigQuery Expression)]) ->
       case NE.nonEmpty aggregateFields of
         Nothing -> refute (pure NoAggregatesMustBeABug)
         Just fields -> do
@@ -997,7 +997,7 @@ fromTableAggregateFieldG args permissionBasedTop (Rql.FieldName name, field) =
               }
       pure (ArrayAggFieldSource arrayAgg (Just fieldSources))
 
-fromAggregateField :: Ir.AggregateField 'BigQuery -> ReaderT EntityAlias FromIr Aggregate
+fromAggregateField :: Ir.AggregateField 'BigQuery Expression -> ReaderT EntityAlias FromIr Aggregate
 fromAggregateField aggregateField =
   case aggregateField of
     Ir.AFExp text -> pure (TextAggregate text)
@@ -1013,8 +1013,10 @@ fromAggregateField aggregateField =
           ( \(Rql.FieldName fieldName, columnField) -> do
               expression' <-
                 case columnField of
-                  Ir.CFCol column _columnType -> fmap ColumnExpression (fromColumn column)
-                  Ir.CFExp text -> pure (ValueExpression (StringValue text))
+                  Ir.SFCol column _columnType -> fmap ColumnExpression (fromColumn column)
+                  Ir.SFExp text -> pure (ValueExpression (StringValue text))
+                  -- See Hasura.RQL.Types.Backend.supportsAggregateComputedFields
+                  Ir.SFComputedField _ _ -> error "Aggregate computed fields aren't currently supported for BigQuery!"
               pure (fieldName, expression')
           )
           fs

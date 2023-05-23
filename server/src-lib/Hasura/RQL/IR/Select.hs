@@ -50,8 +50,8 @@ module Hasura.RQL.IR.Select
     ArraySelect,
     ArraySelectFieldsG,
     ArraySelectG (..),
-    ColFld (..),
-    ColumnFields,
+    SelectionField (..),
+    SelectionFields,
     ComputedFieldScalarSelect (..),
     ComputedFieldSelect (..),
     ConnectionField (..),
@@ -315,21 +315,21 @@ traverseSourceRelationshipSelection f = \case
 -- Aggregation fields
 
 data TableAggregateFieldG (b :: BackendType) (r :: Type) v
-  = TAFAgg (AggregateFields b)
+  = TAFAgg (AggregateFields b v)
   | TAFNodes (XNodesAgg b) (AnnFieldsG b r v)
   | TAFExp Text
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
   ( Backend b,
-    Eq (AggregateFields b),
+    Eq (AggregateFields b v),
     Eq (AnnFieldsG b r v)
   ) =>
   Eq (TableAggregateFieldG b r v)
 
 deriving stock instance
   ( Backend b,
-    Show (AggregateFields b),
+    Show (AggregateFields b v),
     Show (AnnFieldsG b r v)
   ) =>
   Show (TableAggregateFieldG b r v)
@@ -340,25 +340,48 @@ instance Backend b => Bifoldable (TableAggregateFieldG b) where
     TAFNodes _ fields -> foldMap (foldMap $ bifoldMap f g) fields
     TAFExp {} -> mempty
 
-data AggregateField (b :: BackendType)
+data AggregateField (b :: BackendType) v
   = AFCount (CountType b)
-  | AFOp (AggregateOp b)
+  | AFOp (AggregateOp b v)
   | AFExp Text
+  deriving (Functor, Foldable, Traversable)
 
-deriving stock instance (Backend b) => Eq (AggregateField b)
+deriving stock instance
+  (Backend b, Eq (FunctionArgumentExp b v), Eq v) =>
+  Eq (AggregateField b v)
 
-deriving stock instance (Backend b) => Show (AggregateField b)
+deriving stock instance
+  (Backend b, Show (FunctionArgumentExp b v), Show v) =>
+  Show (AggregateField b v)
 
-data AggregateOp (b :: BackendType) = AggregateOp
+data AggregateOp (b :: BackendType) v = AggregateOp
   { _aoOp :: Text,
-    _aoFields :: (ColumnFields b)
+    _aoFields :: SelectionFields b v
   }
-  deriving stock (Eq, Show)
+  deriving (Functor, Foldable, Traversable)
 
-data ColFld (b :: BackendType)
-  = CFCol (Column b) (ColumnType b)
-  | CFExp Text
-  deriving stock (Eq, Show)
+deriving stock instance
+  (Backend b, Eq (FunctionArgumentExp b v), Eq v) =>
+  Eq (AggregateOp b v)
+
+deriving stock instance
+  (Backend b, Show (FunctionArgumentExp b v), Show v) =>
+  Show (AggregateOp b v)
+
+-- | Types of fields that can be selected in a user query.
+data SelectionField (b :: BackendType) v
+  = SFCol (Column b) (ColumnType b)
+  | SFComputedField ComputedFieldName (ComputedFieldScalarSelect b v)
+  | SFExp Text
+  deriving (Functor, Foldable, Traversable)
+
+deriving stock instance
+  (Backend b, Eq (FunctionArgumentExp b v), Eq v) =>
+  Eq (SelectionField b v)
+
+deriving stock instance
+  (Backend b, Show (FunctionArgumentExp b v), Show v) =>
+  Show (SelectionField b v)
 
 type TableAggregateField b = TableAggregateFieldG b Void (SQLExpression b)
 
@@ -366,9 +389,9 @@ type TableAggregateFields b = TableAggregateFieldsG b Void (SQLExpression b)
 
 type TableAggregateFieldsG b r v = Fields (TableAggregateFieldG b r v)
 
-type ColumnFields b = Fields (ColFld b)
+type SelectionFields b v = Fields (SelectionField b v)
 
-type AggregateFields b = Fields (AggregateField b)
+type AggregateFields b v = Fields (AggregateField b v)
 
 type AnnFieldsG b r v = Fields (AnnFieldG b r v)
 

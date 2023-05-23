@@ -216,6 +216,7 @@ library
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
     Test.Regression.SqlServerIdentifierQuotingSpec
     Test.ScheduledEvents.ScheduledEventsInvalidEnvVarSpec
+    Test.Schema.ComputedFields.AggregationSpec
     Test.Schema.ComputedFields.ScalarSpec
     Test.Schema.ComputedFields.TableSpec
     Test.Schema.ConflictsSpec

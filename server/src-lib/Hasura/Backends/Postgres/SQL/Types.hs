@@ -374,7 +374,7 @@ type QualifiedTable = QualifiedObject TableName
 type QualifiedFunction = QualifiedObject FunctionName
 
 newtype PGDescription = PGDescription {getPGDescription :: Text}
-  deriving (Show, Eq, FromJSON, ToJSON, PG.FromCol, NFData, Hashable)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, PG.FromCol, NFData, Hashable)
 
 newtype PGCol = PGCol {getPGColTxt :: Text}
   deriving
@@ -631,7 +631,7 @@ data PGTypeKind
   | PGKindRange
   | PGKindPseudo
   | PGKindUnknown Text
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData PGTypeKind
 
@@ -663,7 +663,7 @@ data QualifiedPGType = QualifiedPGType
     _qptName :: PGScalarType,
     _qptType :: PGTypeKind
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData QualifiedPGType
 

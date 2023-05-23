@@ -553,7 +553,7 @@ fromTableAggFieldG ::
   (Int, (IR.FieldName, IR.TableAggregateFieldG 'MSSQL Void Expression)) ->
   Maybe (Int, (IR.FieldName, [Projection]))
 fromTableAggFieldG = \case
-  (index, (fieldName, IR.TAFAgg (aggregateFields :: [(IR.FieldName, IR.AggregateField 'MSSQL)]))) ->
+  (index, (fieldName, IR.TAFAgg (aggregateFields :: [(IR.FieldName, IR.AggregateField 'MSSQL Expression)]))) ->
     Just $
       let aggregates =
             aggregateFields <&> \(fieldName', aggregateField) ->
@@ -571,7 +571,7 @@ fromTableNodesFieldG argsExistingJoins = \case
     pure (index, (fieldName, fieldSources'))
   _ -> Nothing
 
-fromAggregateField :: Text -> IR.AggregateField 'MSSQL -> Projection
+fromAggregateField :: Text -> IR.AggregateField 'MSSQL Expression -> Projection
 fromAggregateField alias aggregateField =
   case aggregateField of
     IR.AFExp text -> AggregateProjection $ Aliased (TextAggregate text) alias
@@ -583,11 +583,13 @@ fromAggregateField alias aggregateField =
       let projections :: [Projection] =
             fields <&> \(fieldName, columnField) ->
               case columnField of
-                IR.CFCol column _columnType ->
+                IR.SFCol column _columnType ->
                   let fname = columnFieldAggEntity column
                    in AggregateProjection $ Aliased (OpAggregate op [ColumnExpression fname]) (IR.getFieldNameTxt fieldName)
-                IR.CFExp text ->
+                IR.SFExp text ->
                   ExpressionProjection $ Aliased (ValueExpression (ODBC.TextValue text)) (IR.getFieldNameTxt fieldName)
+                -- See Hasura.RQL.Types.Backend.supportsAggregateComputedFields
+                IR.SFComputedField _ _ -> error "Aggregate computed fields aren't currently supported for MSSQL!"
        in ExpressionProjection $
             flip Aliased alias $
               safeJsonQueryExpression JsonSingleton $

@@ -27,17 +27,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended (ToTxt (toTxt))
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.Types
-  ( IsIdentifier (toIdentifier),
-    PGCol (..),
-    QualifiedObject (QualifiedObject),
-    QualifiedTable,
-    SchemaName (getSchemaTxt),
-    TableIdentifier (..),
-    identifierToTableIdentifier,
-    qualifiedObjectToText,
-    tableIdentifierToIdentifier,
-  )
+import Hasura.Backends.Postgres.SQL.Types (IsIdentifier (toIdentifier), PGCol (..), QualifiedObject (..), QualifiedTable, SchemaName (getSchemaTxt), TableIdentifier (..), identifierToTableIdentifier, qualifiedObjectToText, tableIdentifierToIdentifier)
 import Hasura.Backends.Postgres.Translate.BoolExp (toSQLBoolExp)
 import Hasura.Backends.Postgres.Translate.Column (toJSONableExp)
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
@@ -62,6 +52,7 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     encodeBase64,
     endCursorIdentifier,
     fromTableRowArgs,
+    fromTableRowArgsDon'tAddBase,
     hasNextPageIdentifier,
     hasPreviousPageIdentifier,
     nativeQueryNameToAlias,
@@ -214,7 +205,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
         TAFAgg aggFields ->
           pure
             ( aggregateFieldsToExtractorExps thisSourcePrefix aggFields,
-              aggregateFieldToExp aggFields strfyNum
+              aggregateFieldToExp thisSourcePrefix aggFields strfyNum
             )
         TAFNodes _ annFields -> do
           annFieldExtr <- processAnnFields thisSourcePrefix fieldName similarArrayFields annFields tCase
@@ -415,11 +406,6 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
       where
         ComputedFieldScalarSelect fn args ty colOpM = computedFieldScalar
 
-    withColumnOp :: Maybe S.ColumnOp -> S.SQLExp -> S.SQLExp
-    withColumnOp colOpM sqlExp = case colOpM of
-      Nothing -> sqlExp
-      Just (S.ColumnOp opText cExp) -> S.mkSQLOpExp opText sqlExp cExp
-
     mkNodeId :: SourceName -> QualifiedTable -> PrimaryKeyColumns ('Postgres pgKind) -> S.SQLExp
     mkNodeId _sourceName (QualifiedObject tableSchema tableName) pkeyColumns =
       let columnInfoToSQLExp pgColumnInfo =
@@ -435,6 +421,11 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
                   S.SELit (toTxt tableName)
                 ]
                   <> map columnInfoToSQLExp (toList pkeyColumns)
+
+withColumnOp :: Maybe S.ColumnOp -> S.SQLExp -> S.SQLExp
+withColumnOp colOpM sqlExp = case colOpM of
+  Nothing -> sqlExp
+  Just (S.ColumnOp opText cExp) -> S.mkSQLOpExp opText sqlExp cExp
 
 mkSimilarArrayFields ::
   forall pgKind v.
@@ -539,8 +530,12 @@ processArrayRelation sourcePrefixes fieldAlias relAlias arrSel _tCase =
           ()
         )
 
-aggregateFieldToExp :: AggregateFields ('Postgres pgKind) -> Options.StringifyNumbers -> S.SQLExp
-aggregateFieldToExp aggFlds strfyNum = jsonRow
+aggregateFieldToExp ::
+  TableIdentifier ->
+  AggregateFields ('Postgres pgKind) S.SQLExp ->
+  Options.StringifyNumbers ->
+  S.SQLExp
+aggregateFieldToExp sourcePrefix aggFlds strfyNum = jsonRow
   where
     jsonRow = S.applyJsonBuildObj (concatMap aggToFlds aggFlds)
     withAls fldName sqlExp = [S.SELit fldName, sqlExp]
@@ -552,12 +547,23 @@ aggregateFieldToExp aggFlds strfyNum = jsonRow
     aggOpToObj (AggregateOp opText flds) =
       S.applyJsonBuildObj $ concatMap (colFldsToExtr opText) flds
 
-    colFldsToExtr opText (FieldName t, CFCol col ty) =
+    colFldsToExtr opText (FieldName t, SFCol col ty) =
       [ S.SELit t,
         toJSONableExp strfyNum ty False Nothing $
           S.SEFnApp opText [S.SEIdentifier $ toIdentifier col] Nothing
       ]
-    colFldsToExtr _ (FieldName t, CFExp e) =
+    colFldsToExtr opText (FieldName t, SFComputedField _cfName (ComputedFieldScalarSelect {..})) =
+      [ S.SELit t,
+        toJSONableExp strfyNum (ColumnScalar _cfssType) False Nothing $
+          S.SEFnApp
+            opText
+            [ withColumnOp _cfssScalarArguments $
+                S.SEFunction $
+                  S.FunctionExp _cfssFunction (fromTableRowArgsDon'tAddBase sourcePrefix _cfssArguments) Nothing
+            ]
+            Nothing
+      ]
+    colFldsToExtr _ (FieldName t, SFExp e) =
       [S.SELit t, S.SELit e]
 
 processAnnSimpleSelect ::

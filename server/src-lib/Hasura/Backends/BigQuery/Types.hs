@@ -799,7 +799,7 @@ data ComputedFieldReturn
     ReturnExistingTable TableName
   | -- | An arbitrary table schema specified by column name and type pairs
     ReturnTableSchema [(ColumnName, G.Name, ScalarType)]
-  deriving stock (Show, Eq, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (Hashable, NFData)
 
 instance ToJSON ComputedFieldReturn where
@@ -818,7 +818,7 @@ data FunctionArgument = FunctionArgument
     -- | The data type of the argument
     _faType :: ScalarType
   }
-  deriving stock (Show, Eq, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (Hashable, NFData)
 
 instance ToJSON FunctionArgument where

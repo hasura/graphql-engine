@@ -23,7 +23,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 
 aggregateFieldsToExtractorExps ::
-  TableIdentifier -> AggregateFields ('Postgres pgKind) -> [(S.ColumnAlias, S.SQLExp)]
+  TableIdentifier -> AggregateFields ('Postgres pgKind) S.SQLExp -> [(S.ColumnAlias, S.SQLExp)]
 aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
   flip concatMap aggregateFields $ \(_, field) ->
     case field of
@@ -36,21 +36,54 @@ aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
   where
     colsToExps = fmap mkColExp
 
-    aggOpToExps = mapMaybe colToMaybeExp . _aoFields
-    colToMaybeExp = \case
-      (_, CFCol col _) -> Just $ mkColExp col
-      _ -> Nothing
+    -- Do we have any computed fields?
+    hasComputedFields =
+      any
+        ( \case
+            (_, AFOp (AggregateOp _ aoFields)) ->
+              any
+                ( \case
+                    (_, SFComputedField {}) -> True
+                    _ -> False
+                )
+                aoFields
+            _ -> False
+        )
+        aggregateFields
 
+    -- If we have /any/ computed fields, we need to select the entire row.
+    -- Otherwise, we can select specific fields.
+    aggOpToExps a =
+      if hasComputedFields
+        then [mkComputedFieldColExp]
+        else mapMaybe colToMaybeExp . _aoFields $ a
+
+    -- Assuming we don't have any computed fields, extract the columns we need.
+    colToMaybeExp = \case
+      (_, SFCol col _) -> Just $ mkColExp col
+      (_, SFComputedField {}) -> Nothing
+      (_, SFExp _) -> Nothing
+
+    -- Assuming we don't have any computed fields, generate an alias for each
+    -- column we extract.
     mkColExp c =
-      let qualCol = S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix) (toIdentifier c)
-          colAls = toIdentifier c
-       in (S.toColumnAlias colAls, qualCol)
+      let qualifiedColumn = S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix) (toIdentifier c)
+          columnAlias = toIdentifier c
+       in (S.toColumnAlias columnAlias, qualifiedColumn)
+
+    -- If we /do/ have computed fields, we select the entire row to pass to the
+    -- computed field function as an argument, and we can recover the fields we
+    -- need from that row.
+    mkComputedFieldColExp =
+      let columnAlias = identifierToTableIdentifier (Identifier "entire_table_row")
+          qualifiedColumn = S.SEStar (Just (S.QualifiedIdentifier (mkBaseTableIdentifier sourcePrefix) Nothing))
+       in (S.toColumnAlias (tableIdentifierToIdentifier columnAlias), qualifiedColumn)
 
 mkAggregateOrderByExtractorAndFields ::
   forall pgKind.
   Backend ('Postgres pgKind) =>
   AnnotatedAggregateOrderBy ('Postgres pgKind) ->
-  (S.Extractor, AggregateFields ('Postgres pgKind))
+  (S.Extractor, AggregateFields ('Postgres pgKind) S.SQLExp)
 mkAggregateOrderByExtractorAndFields annAggOrderBy =
   case annAggOrderBy of
     AAOCount ->
@@ -66,7 +99,7 @@ mkAggregateOrderByExtractorAndFields annAggOrderBy =
                   AggregateOp
                     opText
                     [ ( fromCol @('Postgres pgKind) pgColumn,
-                        CFCol pgColumn pgType
+                        SFCol pgColumn pgType
                       )
                     ]
               )
