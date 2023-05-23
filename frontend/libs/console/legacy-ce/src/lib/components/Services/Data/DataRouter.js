@@ -38,7 +38,7 @@ import { TableInsertItemContainer } from './TableInsertItem/TableInsertItemConta
 import { ModifyTableContainer } from './TableModify/ModifyTableContainer';
 import { LandingPageRoute as NativeQueries } from '../../../features/Data/LogicalModels/LandingPage/LandingPage';
 import { AddNativeQueryRoute } from '../../../features/Data/LogicalModels/AddNativeQuery/AddNativeQueryRoute';
-import { TrackStoredProcedureRoute } from '../../../features/Data/LogicalModels/StoredProcedures/StoredProcedureWidgetWrapper';
+import { TrackStoredProcedureRoute } from '../../../features/Data/LogicalModels/StoredProcedures/StoredProcedureWidget.route';
 
 const makeDataRouter = (
   connect,

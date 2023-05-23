@@ -3,19 +3,21 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useMetadata } from '../../../hasura-metadata-api';
-import { CardedTableFromReactTable } from '../components/CardedTableFromReactTable';
-import { StoredProcedure } from '../../../hasura-metadata-types';
+
 import { useCallback, useState } from 'react';
-import { Button } from '../../../../new-components/Button';
-import { StoredProcedureDisplayName } from './components/StoredProcedureDisplayName';
-import { useTrackStoredProcedure } from '../../hooks/useTrackStoredProcedure';
-import { hasuraToast } from '../../../../new-components/Toasts';
+import { Button } from '../../../../../new-components/Button';
+import { StoredProcedure } from '../../../../hasura-metadata-types';
+import { CardedTableFromReactTable } from '../../components/CardedTableFromReactTable';
+
+import { hasuraToast } from '../../../../../new-components/Toasts';
+import { useMetadata } from '../../../../hasura-metadata-api';
+import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessage';
+import { useTrackStoredProcedure } from '../../../hooks/useTrackStoredProcedure';
+import { StoredProcedureDisplayName } from '../../StoredProcedures/components/StoredProcedureDisplayName';
 import {
   STORED_PROCEDURE_UNTRACK_ERROR,
   STORED_PROCEDURE_UNTRACK_SUCCESS,
-} from '../constants';
-import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
+} from '../../constants';
 
 // this is local type for the table row. Do not export
 type RowType = { dataSourceName: string } & StoredProcedure;

@@ -90,6 +90,10 @@ type FieldWrapperProps = FieldWrapperPassThroughProps & {
    * The field error
    */
   error?: FieldError | undefined;
+  /**
+   * Disable wrapping children in layers of divs to enable impacting children with styles (e.g. centering a switch element)
+   */
+  doNotWrapChildren?: boolean;
 };
 
 export const fieldLabelStyles = clsx(
@@ -137,6 +141,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
     loading,
     noErrorPlaceholder = false,
     renderDescriptionLineBreaks = false,
+    doNotWrapChildren = false,
   } = props;
 
   let FieldLabel = () => <></>;
@@ -215,21 +220,39 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
       )}
     >
       <FieldLabel />
-      <div>
-        {/*
+      {doNotWrapChildren ? (
+        <>
+          {loading ? (
+            <div className={'relative'}>
+              {/* Just in case anyone is wondering... we render the children here b/c the height/width of the children takes up the space that the loading skeleton appears on top of. So, without the children, the skeleton would not appear. */}
+              {children}
+              <Skeleton
+                containerClassName="block leading-[0]"
+                className="absolute inset-0"
+              />
+            </div>
+          ) : (
+            children
+          )}
+          <FieldErrors />
+        </>
+      ) : (
+        <div>
+          {/*
           Remove line height to prevent skeleton bug
         */}
-        <div className={loading ? 'relative' : ''}>
-          {children}
-          {loading && (
-            <Skeleton
-              containerClassName="block leading-[0]"
-              className="absolute inset-0"
-            />
-          )}
+          <div className={loading ? 'relative' : ''}>
+            {children}
+            {loading && (
+              <Skeleton
+                containerClassName="block leading-[0]"
+                className="absolute inset-0"
+              />
+            )}
+          </div>
+          <FieldErrors />
         </div>
-        <FieldErrors />
-      </div>
+      )}
     </div>
   );
 };

@@ -4,33 +4,43 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import clsx from 'clsx';
-import React, { useRef } from 'react';
+import React from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { FaPlusCircle } from 'react-icons/fa';
 import { Button } from '../../../../../new-components/Button';
 import {
   GraphQLSanitizedInputField,
-  InputField,
   Select,
   fieldLabelStyles,
 } from '../../../../../new-components/Form';
 import { BooleanInput } from '../../components/BooleanInput';
 import { useCardedTableFromReactTableWithRef } from '../../components/CardedTableFromReactTable';
-import { NativeQueryArgumentNormalized, NativeQueryForm } from '../types';
+import {
+  AddLogicalModelField,
+  AddLogicalModelFormData,
+} from '../validationSchema';
 
-const columnHelper = createColumnHelper<NativeQueryArgumentNormalized>();
+const columnHelper = createColumnHelper<AddLogicalModelField>();
 
-export const ArgumentsField = ({ types }: { types: string[] }) => {
-  const { control } = useFormContext<NativeQueryForm>();
+export const FieldsInput = ({
+  name,
+  types,
+  disabled,
+}: {
+  name: string;
+  types: string[];
+  disabled?: boolean;
+}) => {
+  const { control } = useFormContext<AddLogicalModelFormData>();
 
   const { append, remove, fields } = useFieldArray({
     control,
-    name: 'arguments',
+    name: 'fields',
   });
 
-  const tableRef = useRef<HTMLDivElement>(null);
+  const tableRef = React.useRef<HTMLDivElement>(null);
 
-  const argumentColumns = React.useMemo(
+  const fieldsColumns = React.useMemo(
     () => [
       columnHelper.accessor('name', {
         id: 'name',
@@ -38,8 +48,10 @@ export const ArgumentsField = ({ types }: { types: string[] }) => {
           <GraphQLSanitizedInputField
             noErrorPlaceholder
             hideTips
-            placeholder="Parameter Name"
-            name={`arguments.${row.index}.name`}
+            dataTestId={`${name}[${row.index}].name`}
+            placeholder="Field Name"
+            name={`fields.${row.index}.name`}
+            disabled={disabled}
           />
         ),
         header: 'Name',
@@ -49,77 +61,71 @@ export const ArgumentsField = ({ types }: { types: string[] }) => {
         cell: ({ row }) => (
           <Select
             noErrorPlaceholder
-            // saving prop for future upgrade
-            //menuPortalTarget={tableRef.current}
-            name={`arguments.${row.index}.type`}
+            dataTestId={`${name}[${row.index}].type`}
+            name={`fields.${row.index}.type`}
             options={types.map(t => ({ label: t, value: t }))}
+            disabled={disabled}
           />
         ),
         header: 'Type',
       }),
-      columnHelper.accessor('default_value', {
-        id: 'default_value',
+
+      columnHelper.accessor('nullable', {
+        id: 'nullable',
         cell: ({ row }) => (
-          <InputField
-            noErrorPlaceholder
-            placeholder="Default Value"
-            name={`arguments.${row.index}.default_value`}
+          <BooleanInput
+            disabled={disabled}
+            name={`fields.${row.index}.nullable`}
           />
         ),
-        header: 'Default Value',
-      }),
-      columnHelper.accessor('required', {
-        id: 'required',
-        cell: ({ row }) => (
-          <BooleanInput name={`arguments.${row.index}.required`} />
-        ),
-        header: 'Required',
+        header: 'Nullable',
       }),
       columnHelper.display({
         id: 'action',
         header: 'Actions',
         cell: ({ row }) => (
           <div className="flex flex-row gap-2">
-            <Button mode="destructive" onClick={() => remove(row.index)}>
+            <Button
+              disabled={disabled}
+              mode="destructive"
+              onClick={() => remove(row.index)}
+            >
               Remove
             </Button>
           </div>
         ),
       }),
     ],
-    [remove, types]
+    [disabled, name, remove, types]
   );
 
   const argumentsTable = useReactTable({
     data: fields,
-    columns: argumentColumns,
+    columns: fieldsColumns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const ArgumentsTableElement =
-    useCardedTableFromReactTableWithRef<NativeQueryArgumentNormalized>();
+  const FieldsTableElement =
+    useCardedTableFromReactTableWithRef<AddLogicalModelField>();
 
   return (
     <div>
       <div className="flex flex-col gap-2 ">
         <div className="flex justify-between items-center">
-          <div className={clsx(fieldLabelStyles, 'mb-0')}>Query Parameters</div>
+          <div className={clsx(fieldLabelStyles, 'mb-0')}>Fields</div>
           <Button
             icon={<FaPlusCircle />}
             onClick={() => {
-              append({
-                name: '',
-                type: 'text',
-              });
+              append({ name: '', type: 'text', nullable: true });
             }}
           >
-            Add Parameter
+            Add Field
           </Button>
         </div>
-        <ArgumentsTableElement
+        <FieldsTableElement
           table={argumentsTable}
           ref={tableRef}
-          noRowsMessage={'No query parameters added.'}
+          noRowsMessage={'No fields added'}
         />
       </div>
     </div>

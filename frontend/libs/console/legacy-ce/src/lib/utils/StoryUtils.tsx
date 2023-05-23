@@ -32,9 +32,10 @@ export const TemplateStoriesFactory =
       </div>
     );
 
-export const dismissToast = (delay = 500) => {
+export const dismissToast = (delay = 300) => {
   return new Promise<void>(resolve => {
     // waiting a brief delay to ensures toast is available to dismiss after slide in transition
+    // delay is the same as the notificationOpen animation duration in tailwind.config.js
     setTimeout(() => {
       dismissAllToasts();
       resolve();
@@ -44,11 +45,25 @@ export const dismissToast = (delay = 500) => {
 
 // confirms a hasuraAlert by button text
 export const confirmAlert = async (
-  confirmText = 'Remove',
+  confirmText = 'Confirm',
   removalTimout = 3000
 ) => {
   const alert = await screen.findByRole('alertdialog');
   await userEvent.click(await within(alert).findByText(confirmText));
+
+  // this is important b/c in successfull async workflows, the alert remains on screen to indicate success
+  await waitForElementToBeRemoved(() => screen.queryByRole('alertdialog'), {
+    timeout: removalTimout,
+  });
+};
+
+// confirms a hasuraAlert by button text
+export const cancelAlert = async (
+  cancelText = 'Cancel',
+  removalTimout = 3000
+) => {
+  const alert = await screen.findByRole('alertdialog');
+  await userEvent.click(await within(alert).findByText(cancelText));
 
   // this is important b/c in successfull async workflows, the alert remains on screen to indicate success
   await waitForElementToBeRemoved(() => screen.queryByRole('alertdialog'), {

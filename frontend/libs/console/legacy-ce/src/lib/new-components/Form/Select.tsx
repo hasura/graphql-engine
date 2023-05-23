@@ -71,7 +71,7 @@ export const Select: React.VFC<SelectProps> = ({
         disabled={disabled}
         value={val || watchValue}
         data-test={dataTest}
-        data-testid={name}
+        data-testid={wrapperProps.dataTestId || name}
         {...register(name)}
       >
         {placeholder ? (

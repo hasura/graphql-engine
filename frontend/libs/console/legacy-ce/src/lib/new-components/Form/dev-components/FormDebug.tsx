@@ -9,6 +9,29 @@ import { consoleDevToolsEnabled } from '../../../utils/console-dev-tools/console
  * FormDebugWindow is usually preferrable, but this is handy to render directly for forms inside of dialogs
  *
  */
+type FieldArrayObject = Record<
+  string,
+  { message: string; type: string; ref?: unknown }
+>[];
+
+type ErrorObject = Record<
+  string,
+  { message: string; type: string; ref?: unknown } | FieldArrayObject
+>;
+
+function removeRefProperty(obj: ErrorObject): ErrorObject {
+  return Object.entries(obj).reduce<ErrorObject>((acc, [key, value]) => {
+    if (Array.isArray(value)) {
+      acc[key] = value.map(item => removeRefProperty(item)) as FieldArrayObject;
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { ref, ...rest } = value;
+      acc[key] = { ...rest };
+    }
+    return acc;
+  }, {});
+}
+
 export const FormDebug = () => {
   const methods = useFormContext();
   const formValues = methods.watch();
@@ -16,17 +39,7 @@ export const FormDebug = () => {
 
   const friendlyErrors = () => {
     try {
-      return Object.entries(formState.errors).reduce<
-        Record<string, { message: string; type: string }>
-      >((result, [key, value]) => {
-        return {
-          ...result,
-          [key]: {
-            message: value.message,
-            type: value.type,
-          },
-        };
-      }, {});
+      return removeRefProperty(formState.errors);
     } catch {
       return {};
     }

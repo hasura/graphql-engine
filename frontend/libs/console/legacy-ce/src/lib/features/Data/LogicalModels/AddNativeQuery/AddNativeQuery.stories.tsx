@@ -1,9 +1,13 @@
 import { expect } from '@storybook/jest';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj } from '@storybook/react';
 import { screen, userEvent, within } from '@storybook/testing-library';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { dismissToast } from '../../../../utils/StoryUtils';
 import { AddNativeQuery } from './AddNativeQuery';
 import { nativeQueryHandlers } from './mocks';
+import { RouteWrapper } from '../components/RouteWrapper';
+
+type Story = StoryObj<typeof AddNativeQuery>;
 
 export default {
   component: AddNativeQuery,
@@ -15,17 +19,9 @@ export default {
     }),
     layout: 'fullscreen',
   },
-} as ComponentMeta<typeof AddNativeQuery>;
-
-export const Basic: ComponentStory<typeof AddNativeQuery> = args => {
-  return <AddNativeQuery />;
 };
 
-const fillAndSubmitForm = async ({
-  canvasElement,
-}: {
-  canvasElement: HTMLElement;
-}) => {
+const fillAndSubmitForm: Story['play'] = async ({ canvasElement }) => {
   const c = within(canvasElement);
 
   /**
@@ -80,27 +76,50 @@ const fillAndSubmitForm = async ({
   await userEvent.click(c.getByText('Save'));
 };
 
-export const HappyPath: ComponentStory<typeof AddNativeQuery> = args => {
-  return (
-    <AddNativeQuery
-      defaultFormValues={{
-        code: `SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t("one", "two")`,
-      }}
-    />
-  );
+const defaultArgs: Story['args'] = {
+  defaultFormValues: {
+    code: `SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t("one", "two")`,
+  },
 };
 
-HappyPath.storyName = '😊 Happy Path';
+export const Basic: Story = {
+  render: args => (
+    <div className="p-5">
+      <AddNativeQuery {...args} />
+    </div>
+  ),
+};
 
-HappyPath.play = async ({ canvasElement }) => {
-  fillAndSubmitForm({ canvasElement });
-  expect(
-    await screen.findByText(
-      `Successfully tracked native query as: my_native_query`,
-      { exact: false },
-      { timeout: 3000 }
-    )
-  ).toBeInTheDocument();
+export const WithRouteWrapper: Story = {
+  render: args => (
+    <RouteWrapper pathname={'/data/native-queries/create'}>
+      <AddNativeQuery {...args} />
+    </RouteWrapper>
+  ),
+  name: '🚏 Route Wrapper',
+  parameters: {
+    consoleType: 'pro',
+  },
+};
+
+export const HappyPath: Story = {
+  ...Basic,
+  args: {
+    ...defaultArgs,
+  },
+  name: '😊 Happy Path',
+  play: async context => {
+    fillAndSubmitForm(context);
+    expect(
+      await screen.findByText(
+        `Successfully tracked native query as: my_native_query`,
+        { exact: false },
+        { timeout: 3000 }
+      )
+    ).toBeInTheDocument();
+
+    dismissToast();
+  },
 };
 
 /**
@@ -108,32 +127,28 @@ HappyPath.play = async ({ canvasElement }) => {
  * Query already exists Error
  *
  */
-export const ErrorExists: ComponentStory<typeof AddNativeQuery> = args => {
-  return (
-    <AddNativeQuery
-      defaultFormValues={{
-        code: `SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t("one", "two")`,
-      }}
-    />
-  );
-};
-ErrorExists.storyName = '🚨 Already Exists';
-ErrorExists.parameters = {
-  msw: nativeQueryHandlers({
-    metadataOptions: { postgres: { models: true, queries: true } },
-    trackNativeQueryResult: 'already_exists',
-  }),
-};
 
-ErrorExists.play = async ({ canvasElement }) => {
-  fillAndSubmitForm({ canvasElement });
-  expect(
-    await screen.findByText(
-      `Native query 'my_native_query' is already tracked.`,
-      { exact: false },
-      { timeout: 3000 }
-    )
-  ).toBeInTheDocument();
+export const ErrorExists: Story = {
+  ...HappyPath,
+  name: '🚨 Already Exists',
+  parameters: {
+    msw: nativeQueryHandlers({
+      metadataOptions: { postgres: { models: true, queries: true } },
+      trackNativeQueryResult: 'already_exists',
+    }),
+  },
+  play: async context => {
+    fillAndSubmitForm(context);
+    expect(
+      await screen.findByText(
+        `Native query 'my_native_query' is already tracked.`,
+        { exact: false },
+        { timeout: 3000 }
+      )
+    ).toBeInTheDocument();
+
+    dismissToast();
+  },
 };
 
 /**
@@ -141,32 +156,27 @@ ErrorExists.play = async ({ canvasElement }) => {
  * Validation Error
  *
  */
-export const ErrorValidation: ComponentStory<typeof AddNativeQuery> = args => {
-  return (
-    <AddNativeQuery
-      defaultFormValues={{
-        code: `select * from foo`,
-      }}
-    />
-  );
-};
-ErrorValidation.storyName = '🚨 Validation Error';
-ErrorValidation.parameters = {
-  msw: nativeQueryHandlers({
-    metadataOptions: { postgres: { models: true, queries: true } },
-    trackNativeQueryResult: 'validation_failed',
-  }),
-};
+export const ErrorValidation: Story = {
+  ...HappyPath,
+  name: '🚨 Validation Error',
+  parameters: {
+    msw: nativeQueryHandlers({
+      metadataOptions: { postgres: { models: true, queries: true } },
+      trackNativeQueryResult: 'validation_failed',
+    }),
+  },
+  play: async context => {
+    fillAndSubmitForm(context);
+    expect(
+      await screen.findByText(
+        `"exec_status": "FatalError"`,
+        { exact: false },
+        { timeout: 3000 }
+      )
+    ).toBeInTheDocument();
 
-ErrorValidation.play = async ({ canvasElement }) => {
-  fillAndSubmitForm({ canvasElement });
-  expect(
-    await screen.findByText(
-      `"exec_status": "FatalError"`,
-      { exact: false },
-      { timeout: 3000 }
-    )
-  ).toBeInTheDocument();
+    dismissToast();
+  },
 };
 
 /**
@@ -174,30 +184,25 @@ ErrorValidation.play = async ({ canvasElement }) => {
  * Native Queries disabled
  *
  */
-export const ErrorDisabled: ComponentStory<typeof AddNativeQuery> = args => {
-  return (
-    <AddNativeQuery
-      defaultFormValues={{
-        code: `SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t("one", "two")`,
-      }}
-    />
-  );
-};
-ErrorDisabled.storyName = '🚨 Logical Models Disabled';
-ErrorDisabled.parameters = {
-  msw: nativeQueryHandlers({
-    metadataOptions: { postgres: { models: true, queries: true } },
-    trackNativeQueryResult: 'native_queries_disabled',
-  }),
-};
+export const ErrorDisabled: Story = {
+  ...HappyPath,
+  name: '🚨 Logical Models Disabled',
+  parameters: {
+    msw: nativeQueryHandlers({
+      metadataOptions: { postgres: { models: true, queries: true } },
+      trackNativeQueryResult: 'native_queries_disabled',
+    }),
+  },
+  play: async context => {
+    fillAndSubmitForm(context);
+    expect(
+      await screen.findByText(
+        `NativeQueries is disabled!`,
+        { exact: false },
+        { timeout: 3000 }
+      )
+    ).toBeInTheDocument();
 
-ErrorDisabled.play = async ({ canvasElement }) => {
-  fillAndSubmitForm({ canvasElement });
-  expect(
-    await screen.findByText(
-      `NativeQueries is disabled!`,
-      { exact: false },
-      { timeout: 3000 }
-    )
-  ).toBeInTheDocument();
+    dismissToast();
+  },
 };

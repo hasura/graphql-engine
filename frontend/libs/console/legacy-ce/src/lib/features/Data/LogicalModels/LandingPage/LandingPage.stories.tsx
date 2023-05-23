@@ -72,7 +72,7 @@ const testRemoveQueryAndModel = async ({
     )[0]
   );
 
-  await confirmAlert();
+  await confirmAlert('Remove');
 
   if (removeResponse?.nativeQueries) {
     await expect(
@@ -86,7 +86,7 @@ const testRemoveQueryAndModel = async ({
 
   await userEvent.click((await c.findAllByText('Remove'))[0]);
 
-  await confirmAlert();
+  await confirmAlert('Remove');
 
   if (removeResponse?.logicalModels) {
     await expect(

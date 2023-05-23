@@ -19,7 +19,13 @@ export const BooleanInput = ({
     <Controller
       name={name}
       render={({ field: { onChange, value }, fieldState }) => (
-        <FieldWrapper id={name} {...wrapperProps} error={fieldState.error}>
+        <FieldWrapper
+          id={name}
+          {...wrapperProps}
+          className="items-center flex"
+          doNotWrapChildren
+          error={fieldState.error}
+        >
           <Switch
             data-testid="required-switch"
             checked={value}

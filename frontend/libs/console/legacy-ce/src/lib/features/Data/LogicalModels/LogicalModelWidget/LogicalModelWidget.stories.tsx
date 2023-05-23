@@ -25,6 +25,10 @@ export const DefaultView: ComponentStory<typeof LogicalModelWidget> = () => (
   <LogicalModelWidget />
 );
 
+DefaultView.parameters = {
+  msw: handlers['200'],
+};
+
 export const DialogVariant: ComponentStory<typeof LogicalModelWidget> = () => (
   <LogicalModelWidget asDialog />
 );
@@ -67,7 +71,7 @@ BasicUserFlow.play = async ({ canvasElement }) => {
     await canvas.findByLabelText('Logical Model Name', {}, { timeout: 4000 }),
     'foobar'
   );
-  fireEvent.click(canvas.getByText('Add new field'));
+  fireEvent.click(canvas.getByText('Add Field'));
 
   await userEvent.type(canvas.getByTestId('fields[0].name'), 'id');
   await userEvent.selectOptions(
@@ -75,7 +79,7 @@ BasicUserFlow.play = async ({ canvasElement }) => {
     'integer'
   );
 
-  fireEvent.click(canvas.getByText('Add new field'));
+  fireEvent.click(canvas.getByText('Add Field'));
 
   await userEvent.type(canvas.getByTestId('fields[1].name'), 'name');
   await userEvent.selectOptions(canvas.getByTestId('fields[1].type'), 'text');
@@ -105,7 +109,7 @@ NetworkErrorOnSubmit.play = async ({ canvasElement }) => {
     await canvas.findByLabelText('Logical Model Name', {}, { timeout: 4000 }),
     'foobar'
   );
-  fireEvent.click(canvas.getByText('Add new field'));
+  fireEvent.click(canvas.getByText('Add Field'));
 
   await userEvent.type(canvas.getByTestId('fields[0].name'), 'id');
   await userEvent.selectOptions(
@@ -113,7 +117,7 @@ NetworkErrorOnSubmit.play = async ({ canvasElement }) => {
     'integer'
   );
 
-  fireEvent.click(canvas.getByText('Add new field'));
+  fireEvent.click(canvas.getByText('Add Field'));
 
   await userEvent.type(canvas.getByTestId('fields[1].name'), 'name');
   await userEvent.selectOptions(canvas.getByTestId('fields[1].type'), 'text');

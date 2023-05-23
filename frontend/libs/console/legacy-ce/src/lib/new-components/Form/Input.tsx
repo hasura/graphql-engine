@@ -120,6 +120,7 @@ export const Input = ({
   prependLabel = '',
   appendLabel = '',
   dataTest,
+  dataTestId,
   clearButton,
   inputClassName,
   maybeError,
@@ -179,7 +180,7 @@ export const Input = ({
           onChange={onChange}
           onInput={onInput}
           disabled={disabled}
-          data-testid={name}
+          data-testid={dataTestId || name}
           onWheelCapture={fieldProps?.onWheelCapture || undefined}
           {...fieldProps}
         />

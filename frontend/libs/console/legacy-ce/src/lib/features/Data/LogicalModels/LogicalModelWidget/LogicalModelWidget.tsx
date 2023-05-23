@@ -15,7 +15,7 @@ import {
   LOGICAL_MODEL_CREATE_ERROR,
   LOGICAL_MODEL_CREATE_SUCCESS,
 } from '../constants';
-import { LogicalModelFormInputs } from './parts/LogicalModelFormInputs';
+import { LogicalModelFormInputs } from './components/LogicalModelFormInputs';
 import {
   AddLogicalModelFormData,
   addLogicalModelValidationSchema,
@@ -106,7 +106,7 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
   if (sourceOptionError || typeOptionError)
     return (
       <IndicatorCard status="negative" headline="Internal Error">
-        <div>{sourceOptionError}</div>
+        <div>{sourceOptionError?.toString()}</div>
         <div> {typeOptionError?.message}</div>
       </IndicatorCard>
     );
@@ -121,7 +121,6 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
           typeOptions={typeOptions}
           disabled={props.disabled}
         />
-
         <div className="flex justify-end">
           <Button type="submit" mode="primary" isLoading={isLoading}>
             {isEditMode ? 'Edit Logical Model' : 'Create Logical Model'}
@@ -133,19 +132,16 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
   return (
     <Dialog
       size="xl"
-      footer={
-        <Dialog.Footer
-          onSubmit={() => {
-            handleSubmit(onSubmit)();
-          }}
-          onClose={props.onCancel}
-          isLoading={isLoading}
-          callToDeny="Cancel"
-          callToAction="Create Logical Model"
-          onSubmitAnalyticsName="actions-tab-generate-types-submit"
-          onCancelAnalyticsName="actions-tab-generate-types-cancel"
-        />
-      }
+      description="Creating a logical model in advance can help generate Native Queries faster"
+      footer={{
+        onSubmit: () => handleSubmit(onSubmit)(),
+        onClose: props.onCancel,
+        isLoading,
+        callToDeny: 'Cancel',
+        callToAction: 'Create Logical Model',
+        onSubmitAnalyticsName: 'actions-tab-generate-types-submit',
+        onCancelAnalyticsName: 'actions-tab-generate-types-cancel',
+      }}
       title="Add Logical Model"
       hasBackdrop
       onClose={props.onCancel}
@@ -154,19 +150,17 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
         {isMetadataLoading || isIntrospectionLoading ? (
           <Skeleton count={8} height={20} />
         ) : (
-          <>
-            <p className="text-muted mb-6">
-              Creating a logical model in advance can help generate Native
-              Queries faster
-            </p>
-            <Form onSubmit={() => {}}>
-              <LogicalModelFormInputs
-                sourceOptions={sourceOptions}
-                typeOptions={typeOptions}
-                disabled={props.disabled}
-              />
-            </Form>
-          </>
+          <Form
+            onSubmit={() => {
+              // this is handled in the footer of the dialog
+            }}
+          >
+            <LogicalModelFormInputs
+              sourceOptions={sourceOptions}
+              typeOptions={typeOptions}
+              disabled={props.disabled}
+            />
+          </Form>
         )}
       </div>
     </Dialog>

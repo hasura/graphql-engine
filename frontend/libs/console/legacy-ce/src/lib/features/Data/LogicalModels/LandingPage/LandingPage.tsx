@@ -16,7 +16,7 @@ import { InjectedRouter, Link, withRouter } from 'react-router';
 import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
 import { Button } from '../../../../new-components/Button';
 import { RouteWrapper } from '../components/RouteWrapper';
-import { ListStoredProcedures } from '../StoredProcedures/ListStoredProcedures';
+import { ListStoredProcedures } from './components/ListStoredProcedures';
 
 export const LandingPage = ({
   push,

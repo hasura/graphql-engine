@@ -1,7 +1,7 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { ListStoredProcedures } from './ListStoredProcedures';
-import { handlers } from '../LogicalModelWidget/mocks/handlers';
+import { handlers } from '../../LogicalModelWidget/mocks/handlers';
 
 export default {
   component: ListStoredProcedures,
