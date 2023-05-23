@@ -77,6 +77,7 @@ instance
   ( MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
+    MonadMetadataStorage m,
     MonadResolveSource m,
     ProvidesNetwork m,
     HasCacheStaticConfig m
