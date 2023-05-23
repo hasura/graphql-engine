@@ -87,6 +87,10 @@ export type InputFieldProps<T extends InputFieldDefaultType> =
      */
     inputClassName?: string;
     rightButton?: ReactElement;
+    /**
+     * Custom props to be passed to the HTML input element
+     */
+    fieldProps?: React.HTMLProps<HTMLInputElement>;
   };
 
 export const InputField = <T extends z.infer<Schema>>({

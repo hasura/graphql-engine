@@ -103,6 +103,11 @@ export type InputProps = FieldWrapperPassThroughProps & {
    * Optional right button
    */
   rightButton?: React.ReactElement;
+
+  /**
+   * Custom props to be passed to the HTML input element
+   */
+  fieldProps?: React.HTMLProps<HTMLInputElement>;
 };
 
 export const Input = ({
@@ -175,6 +180,7 @@ export const Input = ({
           onInput={onInput}
           disabled={disabled}
           data-testid={name}
+          onWheelCapture={fieldProps?.onWheelCapture || undefined}
           {...fieldProps}
         />
         {showInputEndContainer && (
