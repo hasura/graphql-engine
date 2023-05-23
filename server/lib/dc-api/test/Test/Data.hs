@@ -583,7 +583,7 @@ data FunctionsTestData = FunctionsTestData
 mkFunctionsTestData :: API.SchemaResponse -> TestConfig -> FunctionsTestData
 mkFunctionsTestData schemaResponse testConfig =
   FunctionsTestData
-    { _ftdFunctionField = functionField schemaResponse testConfig,
+    { _ftdFunctionField = functionField schemaResponse testConfig (API.singletonTableName "Result"),
       _ftdFibonacciRows = mkFibonacciRows,
       _ftdFibonacciFunctionName = formatFunctionName testConfig (API.FunctionName (NonEmpty.singleton "Fibonacci")),
       _ftdSearchArticlesFunctionName = formatFunctionName testConfig (API.FunctionName (NonEmpty.singleton "SearchArticles"))
@@ -633,11 +633,11 @@ columnField schemaResponse testConfig tableName columnName =
     columnName' = formatColumnName testConfig $ API.ColumnName columnName
     scalarType = findColumnScalarType schemaResponse tableName columnName'
 
-functionField :: API.SchemaResponse -> TestConfig -> API.FunctionName -> Text -> API.Field
-functionField schemaResponse@API.SchemaResponse {..} testConfig functionName columnName =
+functionField :: API.SchemaResponse -> TestConfig -> API.TableName -> API.FunctionName -> Text -> API.Field
+functionField schemaResponse@API.SchemaResponse {..} testConfig defaultTableName functionName columnName =
   columnField schemaResponse testConfig tableName columnName
   where
-    tableName = fromMaybe (error $ "Return type of function " <> show functionName <> " not supported") (functionReturnType ^? API._FunctionReturnsTable)
+    tableName = fromMaybe defaultTableName (functionReturnType ^? API._FunctionReturnsTable)
     functionReturnType = maybe (error $ "Can't find the function " <> show functionName <> " in " <> show (API._fiName <$> _srFunctions)) API._fiReturns functionInfo
     functionInfo = find (\API.FunctionInfo {..} -> _fiName == functionName) _srFunctions
 
