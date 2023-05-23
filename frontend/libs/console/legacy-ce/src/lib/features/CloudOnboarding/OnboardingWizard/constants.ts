@@ -98,11 +98,6 @@ export const skippedNeonOnboardingVariables = {
   kind: 'skipped_onboarding',
 };
 
-export const skippedOnboardingWizardVariables = {
-  ...mutationVariables,
-  kind: 'skipped_onboarding_wizard',
-};
-
 export const neonOAuthStartVariables = {
   ...mutationVariables,
   kind: 'neon_login_start',
