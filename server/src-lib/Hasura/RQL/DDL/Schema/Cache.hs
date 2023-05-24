@@ -67,6 +67,7 @@ import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.Cache.Dependencies
 import Hasura.RQL.DDL.Schema.Cache.Fields
 import Hasura.RQL.DDL.Schema.Cache.Permission
+import Hasura.RQL.DDL.SchemaRegistry
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
@@ -154,6 +155,7 @@ buildRebuildableSchemaCache ::
   Env.Environment ->
   MetadataWithResourceVersion ->
   CacheDynamicConfig ->
+  Maybe SchemaRegistryContext ->
   CacheBuild RebuildableSchemaCache
 buildRebuildableSchemaCache =
   buildRebuildableSchemaCacheWithReason CatalogSync
@@ -164,11 +166,12 @@ buildRebuildableSchemaCacheWithReason ::
   Env.Environment ->
   MetadataWithResourceVersion ->
   CacheDynamicConfig ->
+  Maybe SchemaRegistryContext ->
   CacheBuild RebuildableSchemaCache
-buildRebuildableSchemaCacheWithReason reason logger env metadataWithVersion dynamicConfig = do
+buildRebuildableSchemaCacheWithReason reason logger env metadataWithVersion dynamicConfig mSchemaRegistryContext = do
   result <-
     flip runReaderT reason $
-      Inc.build (buildSchemaCacheRule logger env) (metadataWithVersion, dynamicConfig, initialInvalidationKeys, Nothing)
+      Inc.build (buildSchemaCacheRule logger env mSchemaRegistryContext) (metadataWithVersion, dynamicConfig, initialInvalidationKeys, Nothing)
 
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
@@ -355,15 +358,16 @@ buildSchemaCacheRule ::
   ) =>
   Logger Hasura ->
   Env.Environment ->
+  Maybe SchemaRegistryContext ->
   (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) `arr` SchemaCache
-buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDefaults resourceVersion, dynamicConfig, invalidationKeys, storedIntrospection) -> do
+buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResourceVersion metadataNoDefaults metadataResourceVersion, dynamicConfig, invalidationKeys, storedIntrospection) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
   let metadataDefaults = _cdcMetadataDefaults dynamicConfig
       metadata@Metadata {..} = overrideMetadataDefaults metadataNoDefaults metadataDefaults
   metadataDep <- Inc.newDependency -< metadata
 
-  (inconsistentObjects, (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies), ((adminIntrospection, gqlContext, gqlContextUnauth, inconsistentRemoteSchemas), (relayContext, relayContextUnauth))) <-
-    Inc.cache buildOutputsAndSchema -< (metadataDep, dynamicConfig, invalidationKeysDep, storedIntrospection)
+  (inconsistentObjects, (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies), ((adminIntrospection, gqlContext, gqlContextUnauth, inconsistentRemoteSchemas), (relayContext, relayContextUnauth), schemaRegistryAction)) <-
+    Inc.cache buildOutputsAndSchema -< (metadataDep, dynamicConfig, invalidationKeysDep, storedIntrospection, metadataResourceVersion)
 
   let (resolvedEndpoints, endpointCollectedInfo) = runIdentity $ runWriterT $ buildRESTEndpoints _metaQueryCollections (InsOrdHashMap.elems _metaRestEndpoints)
       (cronTriggersMap, cronTriggersCollectedInfo) = runIdentity $ runWriterT $ buildCronTriggers (InsOrdHashMap.elems _metaCronTriggers)
@@ -414,6 +418,13 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
 
       inconsistentQueryCollections = getInconsistentQueryCollections adminIntrospection _metaQueryCollections listedQueryObjects endpoints globalAllowLists
 
+  -- Write the Project Schema information to schema registry service
+  _ <-
+    bindA
+      -< do
+        for_ schemaRegistryAction $ \action -> do
+          liftIO action
+
   returnA
     -<
       SchemaCache
@@ -447,7 +458,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
               <> inconsistentQueryCollections,
           scApiLimits = _metaApiLimits,
           scMetricsConfig = _metaMetricsConfig,
-          scMetadataResourceVersion = resourceVersion,
+          scMetadataResourceVersion = metadataResourceVersion,
           scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions,
           scTlsAllowlist = networkTlsAllowlist _metaNetwork,
           scQueryCollections = _metaQueryCollections,
@@ -458,7 +469,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
         }
   where
     -- See Note [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata]
-    buildOutputsAndSchema = proc (metadataDep, dynamicConfig, invalidationKeysDep, storedIntrospection) -> do
+    buildOutputsAndSchema = proc (metadataDep, dynamicConfig, invalidationKeysDep, storedIntrospection, metadataResourceVersion) -> do
       (outputs, collectedInfo) <- runWriterA buildAndCollectInfo -< (dynamicConfig, metadataDep, invalidationKeysDep, storedIntrospection)
       let (inconsistentObjects, unresolvedDependencies) = partitionEithers $ toList collectedInfo
       out2@(resolvedOutputs, _dependencyInconsistentObjects, _resolvedDependencies) <- resolveDependencies -< (outputs, unresolvedDependencies)
@@ -475,6 +486,9 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
               (_boRemoteSchemas resolvedOutputs)
               (_boActions resolvedOutputs)
               (_boCustomTypes resolvedOutputs)
+              metadataResourceVersion
+              mSchemaRegistryContext
+              logger
       returnA -< (inconsistentObjects, out2, out3)
 
     resolveBackendInfo' ::

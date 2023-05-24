@@ -8,6 +8,7 @@ module Hasura.GraphQL.Schema
 where
 
 import Control.Concurrent.Extended (concurrentlyEIO, forConcurrentlyEIO)
+import Control.Concurrent.STM qualified as STM
 import Control.Lens hiding (contexts)
 import Control.Monad.Memoize
 import Data.Aeson.Ordered qualified as JO
@@ -17,6 +18,7 @@ import Data.HashSet qualified as Set
 import Data.List.Extended (duplicates)
 import Data.Text.Extended
 import Data.Text.NonEmpty qualified as NT
+import Database.PG.Query.Pool qualified as PG
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
@@ -43,11 +45,13 @@ import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename (MkTypename (..))
+import Hasura.Logging
 import Hasura.LogicalModel.Cache (_lmiPermissions)
 import Hasura.Name qualified as Name
 import Hasura.NativeQuery.Cache (NativeQueryCache, _nqiReturns)
 import Hasura.Prelude
 import Hasura.QueryTags.Types
+import Hasura.RQL.DDL.SchemaRegistry
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
@@ -66,12 +70,17 @@ import Hasura.RQL.Types.SourceCustomization as SC
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Server.Init.Logging
 import Hasura.Server.Types
 import Hasura.StoredProcedure.Cache (StoredProcedureCache, _spiReturns)
 import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
+
+-- | An alias for the `Context` information that is stored per role and the admin
+--    introspection that is stored in the schema cache.
+type RoleContextValue = (RoleContext GQLContext, HashSet InconsistentMetadata, G.SchemaIntrospection)
 
 -- Building contexts
 
@@ -108,6 +117,9 @@ buildGQLContext ::
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
   ActionCache ->
   AnnotatedCustomTypes ->
+  MetadataResourceVersion ->
+  Maybe SchemaRegistryContext ->
+  Logger Hasura ->
   m
     ( -- Hasura schema
       ( G.SchemaIntrospection,
@@ -118,7 +130,8 @@ buildGQLContext ::
       -- Relay schema
       ( HashMap RoleName (RoleContext GQLContext),
         GQLContext
-      )
+      ),
+      SchemaRegistryAction
     )
 buildGQLContext
   functionPermissions
@@ -129,7 +142,10 @@ buildGQLContext
   sources
   allRemoteSchemas
   allActions
-  customTypes = do
+  customTypes
+  metadataResourceVersion
+  mSchemaRegistryContext
+  logger = do
     let remoteSchemasRoles = concatMap (HashMap.keys . _rscPermissions . fst . snd) $ HashMap.toList allRemoteSchemas
         actionRoles =
           Set.insert adminRoleName $
@@ -171,24 +187,59 @@ buildGQLContext
     let hasuraContexts = fst <$> contexts
         relayContexts = snd <$> contexts
 
-    adminIntrospection <-
+    (adminErrs, adminIntrospection) <-
       case HashMap.lookup adminRoleName hasuraContexts of
-        Just (_context, _errors, introspection) -> pure introspection
+        Just (_context, errors, introspection) -> pure (errors, introspection)
         Nothing -> throw500 "buildGQLContext failed to build for the admin role"
     (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext (sqlGen, functionPermissions) sources allRemoteSchemas experimentalFeatures remoteSchemaPermissions
+
+    writeToSchemaRegistryAction <-
+      forM mSchemaRegistryContext $ \schemaRegistryCtx -> do
+        res <- liftIO $ runExceptT $ PG.runTx' (_srpaMetadataDbPoolRef schemaRegistryCtx) selectNowQuery
+        case res of
+          Left err ->
+            pure $ unLogger logger $ mkGenericLog @Text LevelWarn "schema-registry" ("failed to fetch the time from metadata db correctly: " <> showQErr err)
+          Right now -> do
+            let schemaRegistryMap = generateSchemaRegistryMap hasuraContexts
+                projectSchemaInfo =
+                  ProjectGQLSchemaInformation
+                    schemaRegistryMap
+                    (IsMetadataInconsistent $ checkMdErrs adminErrs)
+                    (calculateSchemaSDLHash (generateSDLWithAllTypes adminIntrospection) adminRoleName)
+                    metadataResourceVersion
+                    now
+            pure $
+              STM.atomically $
+                STM.writeTQueue (_srpaSchemaRegistryTQueueRef schemaRegistryCtx) $
+                  projectSchemaInfo
+
+    let hasuraContextsWithoutIntrospection = flip HashMap.mapWithKey hasuraContexts $ \r (context, err, schemaIntrospection) ->
+          if r == adminRoleName
+            then (context, err, schemaIntrospection)
+            else (context, err, G.SchemaIntrospection mempty)
+
     pure
       ( ( adminIntrospection,
-          view _1 <$> hasuraContexts,
+          view _1 <$> hasuraContextsWithoutIntrospection,
           unauthenticated,
-          Set.unions $ unauthenticatedRemotesErrors : (view _2 <$> HashMap.elems hasuraContexts)
+          Set.unions $ unauthenticatedRemotesErrors : (view _2 <$> HashMap.elems hasuraContextsWithoutIntrospection)
         ),
         ( relayContexts,
           -- Currently, remote schemas are exposed through Relay, but ONLY through
           -- the unauthenticated role.  This is probably an oversight.  See
           -- hasura/graphql-engine-mono#3883.
           unauthenticated
-        )
+        ),
+        writeToSchemaRegistryAction
       )
+    where
+      checkMdErrs = not . Set.null
+
+      generateSchemaRegistryMap :: HashMap RoleName RoleContextValue -> SchemaRegistryMap
+      generateSchemaRegistryMap mpr =
+        flip HashMap.mapWithKey mpr $ \r (_, _, schemaIntrospection) ->
+          let schemaSdl = generateSDLWithAllTypes schemaIntrospection
+           in (GQLSchemaInformation (SchemaSDL schemaSdl) (calculateSchemaSDLHash schemaSdl r))
 
 buildSchemaOptions ::
   (SQLGenCtx, Options.InferFunctionPermissions) ->
@@ -232,11 +283,7 @@ buildRoleContext ::
   Options.RemoteSchemaPermissions ->
   Set.HashSet ExperimentalFeature ->
   ApolloFederationStatus ->
-  m
-    ( RoleContext GQLContext,
-      HashSet InconsistentMetadata,
-      G.SchemaIntrospection
-    )
+  m RoleContextValue
 buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures apolloFederationStatus = do
   let schemaOptions = buildSchemaOptions options expFeatures
       schemaContext =
@@ -294,22 +341,17 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
     -- checks in the GraphQL schema. Furthermore, we want to persist this
     -- information in the case of the admin role.
     !introspectionSchema <- do
-      result <-
-        throwOnConflictingDefinitions $
-          convertToSchemaIntrospection
-            <$> buildIntrospectionSchema
-              (P.parserType queryParserBackend)
-              (P.parserType <$> mutationParserBackend)
-              (P.parserType <$> subscriptionParser)
-      pure $
-        -- We don't need to persist the introspection schema for all the roles here.
-        -- TODO(nicuveo): we treat the admin role differently in this function,
-        -- which is a bit inelegant; we might want to refactor this function and
-        -- split it into several steps, so that we can make a separate function for
-        -- the admin role that reuses the common parts and avoid such tests.
-        if role == adminRoleName
-          then result
-          else G.SchemaIntrospection mempty
+      throwOnConflictingDefinitions $
+        convertToSchemaIntrospection
+          <$> buildIntrospectionSchema
+            (P.parserType queryParserBackend)
+            (P.parserType <$> mutationParserBackend)
+            (P.parserType <$> subscriptionParser)
+
+    -- TODO(nicuveo): we treat the admin role differently in this function,
+    -- which is a bit inelegant; we might want to refactor this function and
+    -- split it into several steps, so that we can make a separate function for
+    -- the admin role that reuses the common parts and avoid such tests.
 
     void . throwOnConflictingDefinitions $
       buildIntrospectionSchema

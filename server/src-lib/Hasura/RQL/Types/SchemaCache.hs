@@ -121,6 +121,7 @@ import Data.Aeson.TH
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Int (Int64)
+import Data.Text qualified as T
 import Data.Text.Extended ((<<>))
 import Data.Text.Extended qualified as T
 import Database.MSSQL.Transaction qualified as MSSQL
@@ -178,6 +179,9 @@ initialResourceVersion = MetadataResourceVersion 0
 
 showMetadataResourceVersion :: MetadataResourceVersion -> Text
 showMetadataResourceVersion (MetadataResourceVersion version) = tshow version
+
+instance Show MetadataResourceVersion where
+  show = T.unpack . showMetadataResourceVersion
 
 data MetadataWithResourceVersion = MetadataWithResourceVersion
   { _mwrvMetadata :: Metadata,
