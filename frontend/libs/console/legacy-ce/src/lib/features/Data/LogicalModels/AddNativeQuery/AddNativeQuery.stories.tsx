@@ -109,7 +109,7 @@ export const HappyPath: Story = {
   },
   name: '😊 Happy Path',
   play: async context => {
-    fillAndSubmitForm(context);
+    await fillAndSubmitForm(context);
     expect(
       await screen.findByText(
         `Successfully tracked native query as: my_native_query`,
@@ -118,7 +118,7 @@ export const HappyPath: Story = {
       )
     ).toBeInTheDocument();
 
-    dismissToast();
+    await dismissToast();
   },
 };
 
@@ -138,7 +138,7 @@ export const ErrorExists: Story = {
     }),
   },
   play: async context => {
-    fillAndSubmitForm(context);
+    await fillAndSubmitForm(context);
     expect(
       await screen.findByText(
         `Native query 'my_native_query' is already tracked.`,
@@ -147,7 +147,7 @@ export const ErrorExists: Story = {
       )
     ).toBeInTheDocument();
 
-    dismissToast();
+    await dismissToast();
   },
 };
 
@@ -166,7 +166,7 @@ export const ErrorValidation: Story = {
     }),
   },
   play: async context => {
-    fillAndSubmitForm(context);
+    await fillAndSubmitForm(context);
     expect(
       await screen.findByText(
         `"exec_status": "FatalError"`,
@@ -175,7 +175,7 @@ export const ErrorValidation: Story = {
       )
     ).toBeInTheDocument();
 
-    dismissToast();
+    await dismissToast();
   },
 };
 
@@ -194,7 +194,7 @@ export const ErrorDisabled: Story = {
     }),
   },
   play: async context => {
-    fillAndSubmitForm(context);
+    await fillAndSubmitForm(context);
     expect(
       await screen.findByText(
         `NativeQueries is disabled!`,
@@ -203,6 +203,6 @@ export const ErrorDisabled: Story = {
       )
     ).toBeInTheDocument();
 
-    dismissToast();
+    await dismissToast();
   },
 };

@@ -1,6 +1,6 @@
 {
   "name": "storybook-addon-console-env",
-  "version": "2.0.4",
+  "version": "2.0.11",
   "main": "./preset.js",
   "files": [
     "**/*"

@@ -157,7 +157,7 @@ Create.play = async ({ canvasElement }) => {
   await userEvent.click(canvas.getByText('Create scheduled event'));
 
   // TODO: Ideally we should be checking if the success notification got fired, but our redux-based notifications does not work in storybook
-  waitFor(
+  await waitFor(
     async () => {
       await expect(await canvas.findByTestId('@onSuccess')).toHaveTextContent(
         'Form saved successfully!'

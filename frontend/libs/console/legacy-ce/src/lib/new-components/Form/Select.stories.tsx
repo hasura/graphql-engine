@@ -223,7 +223,7 @@ export const StateWithErrorMessage: ComponentStory<typeof Select> = () => {
 
   React.useEffect(() => {
     // Use useEffect hook to wait for the form to be rendered before triggering validation
-    trigger();
+    void trigger();
   }, []);
 
   return (

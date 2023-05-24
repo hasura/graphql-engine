@@ -39,7 +39,7 @@ export const nativeQueryHandlers = ({
     const response = (
       json: Record<string, any>,
       status: 200 | 400 | 500 = 200
-    ) => res(ctx.status(status), ctx.delay(), ctx.json(json));
+    ) => res(ctx.status(status), ctx.delay(100), ctx.json(json));
 
     if (reqBody.type === 'export_metadata') {
       return response(buildMetadata(metadataOptions));

@@ -40,7 +40,7 @@ export const Basic: StoryType = args => {
       >
         <InputField
           onCopy={v => {
-            navigator.clipboard.readText().then(t => {
+            void navigator.clipboard.readText().then(t => {
               setClipboardText(t);
               setShow(true);
             });
@@ -86,7 +86,7 @@ export const MoreExamples: StoryType = () => {
       >
         <InputField
           onCopy={v => {
-            navigator.clipboard.readText().then(t => {
+            void navigator.clipboard.readText().then(t => {
               setClipboardText(t);
               setShow(true);
             });
@@ -108,7 +108,7 @@ export const MoreExamples: StoryType = () => {
         <InputField
           onCopy={v => {
             action('onCopy');
-            navigator.clipboard.readText().then(t => {
+            void navigator.clipboard.readText().then(t => {
               setClipboardText(t);
               setShow(true);
             });
@@ -137,7 +137,7 @@ export const Testing: StoryType = args => {
       <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
         <InputField
           onCopy={v => {
-            navigator.clipboard.readText().then(t => {
+            void navigator.clipboard.readText().then(t => {
               setClipboardText(t);
               setShow(true);
             });

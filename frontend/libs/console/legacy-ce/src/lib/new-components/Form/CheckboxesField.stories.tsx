@@ -261,9 +261,9 @@ export const StateWithErrorMessage: ComponentStory<
   });
 
   React.useEffect(() => {
-    act(() => {
+    void act(() => {
       // Use useEffect hook to wait for the form to be rendered before triggering validation
-      trigger();
+      void trigger();
     });
   }, [trigger]);
 

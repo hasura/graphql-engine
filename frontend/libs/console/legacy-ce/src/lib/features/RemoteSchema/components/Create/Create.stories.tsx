@@ -89,7 +89,7 @@ Playground.play = async ({ canvasElement }) => {
 
   userEvent.click(await canvas.findByTestId('submit'));
 
-  waitFor(
+  await waitFor(
     async () => {
       await expect(await canvas.findByTestId('@onSuccess')).toHaveTextContent(
         'Form saved successfully!'

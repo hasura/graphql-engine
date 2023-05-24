@@ -1,6 +1,6 @@
 import { ComponentMeta, ComponentStory } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-
+import isChromatic from 'chromatic/isChromatic';
 import { expect } from '@storybook/jest';
 import { screen, userEvent, within } from '@storybook/testing-library';
 import { confirmAlert, dismissToast } from '../../../../utils/StoryUtils';
@@ -12,7 +12,6 @@ export default {
   decorators: [ReactQueryDecorator()],
   parameters: {
     layout: 'fullscreen',
-    // Until we find out why the delete confirm modal is sometimes present in the screnshots
     chromatic: { disableSnapshot: true },
   },
 } as ComponentMeta<typeof LandingPage>;
@@ -65,7 +64,14 @@ const testRemoveQueryAndModel = async ({
     logicalModels?: string;
   };
 }) => {
+  if (isChromatic()) {
+    return;
+  }
+
   const c = within(canvasElement);
+
+  await c.findAllByText('Native Queries', undefined, { timeout: 3000 });
+
   await userEvent.click(
     (
       await c.findAllByText('Remove', undefined, { timeout: 3000 })
@@ -124,7 +130,7 @@ HappyPath.parameters = {
 };
 
 HappyPath.play = async ({ canvasElement }) => {
-  testRemoveQueryAndModel({
+  await testRemoveQueryAndModel({
     canvasElement,
   });
 };
@@ -156,7 +162,7 @@ NotFound.parameters = {
 };
 
 NotFound.play = async ({ canvasElement }) => {
-  testRemoveQueryAndModel({
+  await testRemoveQueryAndModel({
     canvasElement,
     removeResponse: {
       nativeQueries: `Native query "hello_mssql_function" not found in source "mssql".`,
@@ -190,7 +196,7 @@ Disabled.parameters = {
 };
 
 Disabled.play = async ({ canvasElement }) => {
-  testRemoveQueryAndModel({
+  await testRemoveQueryAndModel({
     canvasElement,
     removeResponse: {
       nativeQueries: 'NativeQueries is disabled!',
@@ -320,7 +326,7 @@ StillBeingUsed.parameters = {
 };
 
 StillBeingUsed.play = async ({ canvasElement }) => {
-  testRemoveQueryAndModel({
+  await testRemoveQueryAndModel({
     canvasElement,
     removeResponse: {
       logicalModels:

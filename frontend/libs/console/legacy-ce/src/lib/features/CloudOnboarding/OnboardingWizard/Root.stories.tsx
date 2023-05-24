@@ -19,7 +19,7 @@ export default {
 export const WithSurvey: Story = () => {
   const queryClient = useQueryClient();
   // need to invalidate as useSurveysData hook is using a stale time
-  queryClient.invalidateQueries(SurveyQueryKey.fetchAllSurveyData, {
+  void queryClient.invalidateQueries(SurveyQueryKey.fetchAllSurveyData, {
     refetchActive: false,
   });
 
@@ -38,7 +38,7 @@ WithSurvey.parameters = {
 export const WithoutSurvey: Story = () => {
   const queryClient = useQueryClient();
   // need to invalidate as `useSurveysData` hook is using a stale time
-  queryClient.invalidateQueries(SurveyQueryKey.fetchAllSurveyData, {
+  void queryClient.invalidateQueries(SurveyQueryKey.fetchAllSurveyData, {
     refetchActive: false,
   });
 

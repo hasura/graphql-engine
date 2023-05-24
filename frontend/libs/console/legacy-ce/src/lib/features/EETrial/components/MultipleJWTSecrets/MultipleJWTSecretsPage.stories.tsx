@@ -21,7 +21,7 @@ export default {
     // desired response.
     Story => {
       const queryClient = useQueryClient();
-      queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
+      void queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
       return <Story />;
     },
     ReactQueryDecorator(),

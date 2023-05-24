@@ -40,6 +40,7 @@ export const Default: ComponentStory<typeof ReactTableWrapper> = () => {
       isRowsSelectionEnabled
       onRowsSelect={action('onRowsSelect')}
       onRowDelete={action('onRowDelete')}
+      tableColumns={[]}
     />
   );
 };
@@ -51,6 +52,7 @@ export const Basic: ComponentStory<typeof ReactTableWrapper> = () => {
       isRowsSelectionEnabled
       onRowsSelect={action('onRowsSelect')}
       onRowDelete={action('onRowDelete')}
+      tableColumns={[]}
     />
   );
 };
@@ -64,6 +66,7 @@ export const SelectionDisabled: ComponentStory<
       isRowsSelectionEnabled={false}
       onRowsSelect={action('onRowsSelect')}
       onRowDelete={action('onRowDelete')}
+      tableColumns={[]}
     />
   );
 };
@@ -73,23 +76,14 @@ Basic.storyName = '🧪 Test - Basic data with columns';
 Basic.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  waitFor(
-    async () => {
-      const albumRows = await canvas.findAllByTestId(/^@table-row-.*$/);
-      expect(albumRows.length).toBe(10);
+  expect(await canvas.findAllByTestId(/^@table-row-.*$/)).toHaveLength(10);
+  expect(await canvas.findAllByTestId(/^@table-cell-0-.*$/)).toHaveLength(3);
 
-      const firstRowOfAlbum = await canvas.findAllByTestId(
-        /^@table-cell-0-.*$/
-      );
-      expect(firstRowOfAlbum.length).toBe(4);
-
-      expect(firstRowOfAlbum[1]).toHaveTextContent('1'); // AlbumId
-      expect(firstRowOfAlbum[2]).toHaveTextContent(
-        'For Those About To Rock We Salute You'
-      );
-    },
-    { timeout: 5000 }
+  expect(await canvas.getByTestId('@table-cell-0-1')).toHaveTextContent('1'); // AlbumId
+  expect(await canvas.getByTestId('@table-cell-0-2')).toHaveTextContent(
+    'For Those About To Rock We Salute You'
   );
+  expect(await canvas.getByTestId('@table-cell-0-3')).toHaveTextContent('1');
 };
 
 export const WithRelationships: ComponentStory<
@@ -135,6 +129,7 @@ export const WithRelationships: ComponentStory<
       isRowsSelectionEnabled
       onRowsSelect={action('onRowsSelect')}
       onRowDelete={action('onRowDelete')}
+      tableColumns={[]}
     />
   );
 };
@@ -144,7 +139,7 @@ WithRelationships.storyName = '🧪 Test - Data with Relationships';
 WithRelationships.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  waitFor(
+  await waitFor(
     async () => {
       const albumRows = await canvas.findAllByTestId(/^@table-row-.*$/);
       expect(albumRows.length).toBe(10);

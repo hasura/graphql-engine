@@ -201,7 +201,7 @@ Create.play = async ({ canvasElement }) => {
   await userEvent.click(canvas.getByText('Add Cron Trigger'));
 
   // TODO: Ideally we should be checking if the success notification got fired, but our redux-based notifications does not work in storybook
-  waitFor(
+  await waitFor(
     async () => {
       await expect(await canvas.findByTestId('@onSuccess')).toHaveTextContent(
         'Form saved successfully!'
@@ -233,7 +233,7 @@ Modify.play = async ({ canvasElement }) => {
   await userEvent.click(canvas.getByText('Update Cron Trigger'));
 
   // TODO: Ideally we should be checking if the success notification got fired, but our redux-based notifications does not work in storybook
-  waitFor(
+  await waitFor(
     async () => {
       await expect(await canvas.findByTestId('@onSuccess')).toHaveTextContent(
         'Form saved successfully!'
