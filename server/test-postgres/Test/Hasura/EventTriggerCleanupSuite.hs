@@ -30,13 +30,15 @@ buildEventTriggerCleanupSuite :: IO Spec
 buildEventTriggerCleanupSuite = do
   env <- getEnvironment
 
-  pgUrlText :: Text <- flip onLeft (printErrExit . T.pack) $
-    runWithEnv env $ do
+  pgUrlText :: Text <- flip onLeft (printErrExit . T.pack)
+    $ runWithEnv env
+    $ do
       let envVar = _envVar databaseUrlOption
       maybeV <- considerEnv envVar
-      onNothing maybeV $
-        throwError $
-          "Expected: " <> envVar
+      onNothing maybeV
+        $ throwError
+        $ "Expected: "
+        <> envVar
 
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
 
@@ -281,7 +283,7 @@ triggerLogCleanupConfig shouldDelInv =
 -- * Utils
 
 -- | Stringifies QErrs and throws them.
-runExceptQErr :: MonadFail m => ExceptT QErr m a -> m a
+runExceptQErr :: (MonadFail m) => ExceptT QErr m a -> m a
 runExceptQErr ex = runExceptT ex >>= (`onLeft` (fail . T.unpack . showQErr))
 
 -- | Print QErr
@@ -291,7 +293,8 @@ printErrExit = (*> exitFailure) . T.putStrLn
 -- | Returns a count of cleanup schedules based on status
 getCleanupStatusCount :: TriggerName -> Text -> PG.TxE QErr Int
 getCleanupStatusCount triggername status =
-  runIdentity . PG.getRow
+  runIdentity
+    . PG.getRow
     <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|

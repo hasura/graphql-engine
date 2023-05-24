@@ -50,13 +50,16 @@ mkSelectExpFromColumnValues qt allCols = \case
     extractor = S.selectStar' $ S.QualifiedIdentifier rowIdentifier $ Just $ S.TypeAnn $ toSQLTxt qt
     sortedCols = sortCols allCols
     mkTupsFromColVal colVal =
-      fmap S.TupleExp $
-        forM sortedCols $ \ci -> do
+      fmap S.TupleExp
+        $ forM sortedCols
+        $ \ci -> do
           let pgCol = ciColumn ci
           val <-
-            onNothing (HashMap.lookup pgCol colVal) $
-              throw500 $
-                "column " <> pgCol <<> " not found in returning values"
+            onNothing (HashMap.lookup pgCol colVal)
+              $ throw500
+              $ "column "
+              <> pgCol
+              <<> " not found in returning values"
           pure $ txtEncodedToSQLExp (ciType ci) val
 
     selNoRows =

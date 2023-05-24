@@ -95,10 +95,10 @@ data GQLSchemaInformation = GQLSchemaInformation
 
 instance J.ToJSON GQLSchemaInformation where
   toJSON (GQLSchemaInformation schemaSdl schemaHash) =
-    J.object $
-      [ "schema_sdl" J..= (_sdl schemaSdl),
-        "schema_hash" J..= (_schemaHash schemaHash)
-      ]
+    J.object
+      $ [ "schema_sdl" J..= (_sdl schemaSdl),
+          "schema_hash" J..= (_schemaHash schemaHash)
+        ]
 
 data ProjectGQLSchemaInformation = ProjectGQLSchemaInformation
   { _pgsiSchemaRegistryMap :: SchemaRegistryMap,
@@ -149,15 +149,16 @@ newtype SchemaRegistryControlRole = SchemaRegistryControlRole {unSchemaRegistryC
 
 selectNowQuery :: PG.TxE QErr UTCTime
 selectNowQuery =
-  runIdentity . PG.getRow
+  runIdentity
+    . PG.getRow
     <$> PG.withQE SQLTypes.defaultTxErrorHandler (PG.fromText "SELECT now();") () False
 
 calculateSchemaSDLHash :: T.Text -> RoleName -> SchemaHash
 calculateSchemaSDLHash sdl role = SchemaHash $ bsToTxt hash
   where
     hash =
-      cryptoHash $
-        J.object
+      cryptoHash
+        $ J.object
           [ "schema_sdl" J..= sdl,
             "role" J..= roleNameToTxt role
           ]

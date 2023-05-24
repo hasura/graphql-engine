@@ -61,8 +61,8 @@ fetchAndValidateEnumValues ::
   [RawColumnInfo 'MSSQL] ->
   m (Either QErr EnumValues)
 fetchAndValidateEnumValues _ _ _ _ =
-  runExceptT $
-    throw400 NotSupported "Enum tables are not supported for MSSQL sources"
+  runExceptT
+    $ throw400 NotSupported "Enum tables are not supported for MSSQL sources"
 
 buildFunctionInfo ::
   (MonadError QErr m) =>

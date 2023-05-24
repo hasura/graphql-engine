@@ -71,7 +71,8 @@ instance J.FromJSON CorsConfig where
       False ->
         o .: "allowed_origins" >>= \v ->
           J.withText "origins" parseAllowAll v
-            <|> CCAllowedOrigins <$> J.parseJSON v
+            <|> CCAllowedOrigins
+            <$> J.parseJSON v
 
 isCorsDisabled :: CorsConfig -> Bool
 isCorsDisabled = \case

@@ -97,8 +97,8 @@ postDropSourceHook (MSSQLSourceConfig _ mssqlExecCtx _) tableTriggersMap = do
 
 doesSchemaExist :: (MonadMSSQLTx m) => SchemaName -> m Bool
 doesSchemaExist (SchemaName schemaName) = do
-  liftMSSQLTx $
-    Tx.singleRowQueryE
+  liftMSSQLTx
+    $ Tx.singleRowQueryE
       HGE.defaultMSSQLTxErrorHandler
       [ODBC.sql|
       SELECT CAST (
@@ -112,8 +112,8 @@ doesSchemaExist (SchemaName schemaName) = do
 
 doesTableExist :: (MonadMSSQLTx m) => TableName -> m Bool
 doesTableExist tableName = do
-  liftMSSQLTx $
-    Tx.singleRowQueryE
+  liftMSSQLTx
+    $ Tx.singleRowQueryE
       HGE.defaultMSSQLTxErrorHandler
       [ODBC.sql|
         SELECT CAST (
@@ -137,16 +137,16 @@ prepareCatalog sourceConfig = mssqlRunSerializableTx (_mscExecCtx sourceConfig) 
   eventLogTableExist <- doesTableExist $ TableName "event_log" "hdb_catalog"
   sourceVersionTableExist <- doesTableExist $ TableName "hdb_source_catalog_version" "hdb_catalog"
   if
-      -- Fresh database
-      | not hdbCatalogExist -> liftMSSQLTx do
-          unitQueryE HGE.defaultMSSQLTxErrorHandler "CREATE SCHEMA hdb_catalog"
-          initSourceCatalog
-          return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
-      -- Only 'hdb_catalog' schema defined
-      | not (sourceVersionTableExist || eventLogTableExist) -> do
-          liftMSSQLTx initSourceCatalog
-          return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
-      | otherwise -> migrateSourceCatalog
+    -- Fresh database
+    | not hdbCatalogExist -> liftMSSQLTx do
+        unitQueryE HGE.defaultMSSQLTxErrorHandler "CREATE SCHEMA hdb_catalog"
+        initSourceCatalog
+        return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
+    -- Only 'hdb_catalog' schema defined
+    | not (sourceVersionTableExist || eventLogTableExist) -> do
+        liftMSSQLTx initSourceCatalog
+        return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
+    | otherwise -> migrateSourceCatalog
   where
     initSourceCatalog = do
       unitQueryE HGE.defaultMSSQLTxErrorHandler $(makeRelativeToProject "src-rsr/mssql/init_mssql_source.sql" >>= ODBC.sqlFile)
@@ -165,11 +165,11 @@ migrateSourceCatalogFrom :: (MonadMSSQLTx m) => SourceCatalogVersion -> m (Recre
 migrateSourceCatalogFrom prevVersion
   | prevVersion == latestSourceCatalogVersion = pure (RETDoNothing, SCMSNothingToDo $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
   | [] <- neededMigrations =
-      throw400 NotSupported $
-        "Expected source catalog version <= "
-          <> tshow latestSourceCatalogVersion
-          <> ", but the current version is "
-          <> tshow prevVersion
+      throw400 NotSupported
+        $ "Expected source catalog version <= "
+        <> tshow latestSourceCatalogVersion
+        <> ", but the current version is "
+        <> tshow prevVersion
   | otherwise = do
       liftMSSQLTx $ traverse_ snd neededMigrations
       setSourceCatalogVersion latestSourceCatalogVersion

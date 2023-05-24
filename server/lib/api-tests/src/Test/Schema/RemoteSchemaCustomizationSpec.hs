@@ -27,11 +27,11 @@ spec = Fixture.runWithLocalTestEnvironment (NE.fromList [context]) tests
       (Fixture.fixture $ Fixture.RemoteGraphQLServer)
         { -- start only one remote server
           Fixture.mkLocalTestEnvironment = \_testEnvironment ->
-            RemoteServer.run $
-              RemoteServer.generateQueryInterpreter $
-                Query
-                  { echoEnum = echoEnumResolver
-                  },
+            RemoteServer.run
+              $ RemoteServer.generateQueryInterpreter
+              $ Query
+                { echoEnum = echoEnumResolver
+                },
           setupTeardown = \(testEnvironment, server) ->
             [ Fixture.SetupAction
                 { Fixture.setupAction =
@@ -175,5 +175,5 @@ enum Profession {
 
 |]
 
-echoEnumResolver :: Monad m => Arg "x" Profession -> m Profession
+echoEnumResolver :: (Monad m) => Arg "x" Profession -> m Profession
 echoEnumResolver (Arg x) = pure x

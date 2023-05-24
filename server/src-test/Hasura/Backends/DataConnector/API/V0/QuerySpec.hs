@@ -32,8 +32,8 @@ import Test.Hspec
 spec :: Spec
 spec = do
   describe "Field" $ do
-    describe "ColumnField" $
-      testToFromJSONToSchema
+    describe "ColumnField"
+      $ testToFromJSONToSchema
         (ColumnField (ColumnName "my_column_name") (ScalarType "string"))
         [aesonQQ|
           { "type": "column",
@@ -91,8 +91,8 @@ spec = do
 
   describe "TableRequest" $ do
     let queryRequest =
-          QRTable $
-            TableRequest
+          QRTable
+            $ TableRequest
               { _trTable = TableName ["my_table"],
                 _trRelationships = [],
                 _trQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing,
@@ -114,8 +114,8 @@ spec = do
 
   describe "FunctionRequest" $ do
     let queryRequest =
-          QRFunction $
-            FunctionRequest
+          QRFunction
+            $ FunctionRequest
               { _frFunction = FunctionName ["my_function"],
                 _frFunctionArguments = [],
                 _frRelationships = [],
@@ -222,7 +222,7 @@ genFunctionRequest =
     <*> Gen.set defaultRange genRelationships
     <*> genQuery
 
-genFunctionName :: MonadGen m => m FunctionName
+genFunctionName :: (MonadGen m) => m FunctionName
 genFunctionName = FunctionName <$> Gen.nonEmpty (linear 1 3) (genArbitraryAlphaNumText defaultRange)
 
 genFunctionArgument :: Gen FunctionArgument
@@ -233,10 +233,10 @@ genFunctionArgument =
 
 genArgumentValue :: Gen ArgumentValue
 genArgumentValue =
-  fmap ScalarArgumentValue $
-    ScalarValue
-      <$> genValue
-      <*> genScalarType
+  fmap ScalarArgumentValue
+    $ ScalarValue
+    <$> genValue
+    <*> genScalarType
 
 genTableRequest :: Gen QueryRequest
 genTableRequest =

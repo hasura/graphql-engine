@@ -58,23 +58,30 @@ runAddRemoteSchemaPermissions ::
 runAddRemoteSchemaPermissions remoteSchemaPermsCtx q = do
   metadata <- getMetadata
   unless (remoteSchemaPermsCtx == Options.EnableRemoteSchemaPermissions) $ do
-    throw400 ConstraintViolation $
-      "remote schema permissions can only be added when "
-        <> "remote schema permissions are enabled in the graphql-engine"
+    throw400 ConstraintViolation
+      $ "remote schema permissions can only be added when "
+      <> "remote schema permissions are enabled in the graphql-engine"
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
   remoteSchemaCtx <-
-    onNothing (HashMap.lookup name remoteSchemaMap) $
-      throw400 NotExists $
-        "remote schema " <> name <<> " doesn't exist"
-  when (doesRemoteSchemaPermissionExist metadata name role) $
-    throw400 AlreadyExists $
-      "permissions for role: "
-        <> role <<> " for remote schema:"
-        <> name <<> " already exists"
+    onNothing (HashMap.lookup name remoteSchemaMap)
+      $ throw400 NotExists
+      $ "remote schema "
+      <> name
+      <<> " doesn't exist"
+  when (doesRemoteSchemaPermissionExist metadata name role)
+    $ throw400 AlreadyExists
+    $ "permissions for role: "
+    <> role
+    <<> " for remote schema:"
+    <> name
+    <<> " already exists"
   void $ resolveRoleBasedRemoteSchema role name (_rscIntroOriginal remoteSchemaCtx) providedSchemaDoc
-  buildSchemaCacheFor (MORemoteSchemaPermissions name role) $
-    MetadataModifier $
-      metaRemoteSchemas . ix name . rsmPermissions %~ (:) remoteSchemaPermMeta
+  buildSchemaCacheFor (MORemoteSchemaPermissions name role)
+    $ MetadataModifier
+    $ metaRemoteSchemas
+    . ix name
+    . rsmPermissions
+    %~ (:) remoteSchemaPermMeta
   pure successMsg
   where
     AddRemoteSchemaPermission name role defn comment = q
@@ -97,15 +104,19 @@ runDropRemoteSchemaPermissions ::
 runDropRemoteSchemaPermissions (DropRemoteSchemaPermissions name roleName) = do
   metadata <- getMetadata
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
-  void $
-    onNothing (HashMap.lookup name remoteSchemaMap) $
-      throw400 NotExists $
-        "remote schema " <> name <<> " doesn't exist"
-  unless (doesRemoteSchemaPermissionExist metadata name roleName) $
-    throw400 NotExists $
-      "permissions for role: "
-        <> roleName <<> " for remote schema:"
-        <> name <<> " doesn't exist"
-  buildSchemaCacheFor (MORemoteSchemaPermissions name roleName) $
-    dropRemoteSchemaPermissionInMetadata name roleName
+  void
+    $ onNothing (HashMap.lookup name remoteSchemaMap)
+    $ throw400 NotExists
+    $ "remote schema "
+    <> name
+    <<> " doesn't exist"
+  unless (doesRemoteSchemaPermissionExist metadata name roleName)
+    $ throw400 NotExists
+    $ "permissions for role: "
+    <> roleName
+    <<> " for remote schema:"
+    <> name
+    <<> " doesn't exist"
+  buildSchemaCacheFor (MORemoteSchemaPermissions name roleName)
+    $ dropRemoteSchemaPermissionInMetadata name roleName
   pure successMsg

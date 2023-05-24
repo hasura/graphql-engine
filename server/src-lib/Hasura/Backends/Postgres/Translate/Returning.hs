@@ -63,8 +63,8 @@ pgColsToSelFlds ::
   [ColumnInfo ('Postgres pgKind)] ->
   [(FieldName, AnnField ('Postgres pgKind))]
 pgColsToSelFlds cols =
-  flip map cols $
-    \pgColInfo ->
+  flip map cols
+    $ \pgColInfo ->
       ( fromCol @('Postgres pgKind) $ ciColumn pgColInfo,
         mkAnnColumnField (ciColumn pgColInfo) (ciType pgColInfo) Nothing Nothing
         --  ^^ Nothing because mutations aren't supported
@@ -96,8 +96,8 @@ mkMutFldExp ::
 mkMutFldExp cteAlias preCalAffRows strfyNum tCase = \case
   MCount ->
     let countExp =
-          S.SESelect $
-            S.mkSelect
+          S.SESelect
+            $ S.mkSelect
               { S.selExtr = [S.Extractor S.countStar Nothing],
                 S.selFrom = Just $ S.FromExp $ pure $ S.FIIdentifier cteAlias
               }
@@ -168,8 +168,8 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase =
     allColumnsAlias = S.mkTableAlias $ "aca__" <> snakeCaseQualifiedObject qt
     allColumnsIdentifier = S.tableAliasToIdentifier allColumnsAlias
     allColumnsSelect =
-      S.CTESelect $
-        S.mkSelect
+      S.CTESelect
+        $ S.mkSelect
           { S.selExtr = map (S.mkExtr . ciColumn) (sortCols allCols),
             S.selFrom = Just $ S.mkIdenFromExp mutationResultIdentifier
           }
@@ -210,10 +210,10 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase =
 mkCheckErrorExp :: TableIdentifier -> S.SQLExp
 mkCheckErrorExp alias =
   let boolAndCheckConstraint =
-        S.handleIfNull (S.SEBool $ S.BELit True) $
-          S.SEFnApp "bool_and" [S.SEIdentifier checkConstraintIdentifier] Nothing
-   in S.SESelect $
-        S.mkSelect
+        S.handleIfNull (S.SEBool $ S.BELit True)
+          $ S.SEFnApp "bool_and" [S.SEIdentifier checkConstraintIdentifier] Nothing
+   in S.SESelect
+        $ S.mkSelect
           { S.selExtr = [S.Extractor boolAndCheckConstraint Nothing],
             S.selFrom = Just $ S.mkIdenFromExp alias
           }

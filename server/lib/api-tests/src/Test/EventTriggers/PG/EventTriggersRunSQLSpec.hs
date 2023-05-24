@@ -120,8 +120,8 @@ args:
 result_type: CommandOk
 result: null
          |]
-  it "inserting a new row should work fine" $
-    \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+  it "inserting a new row should work fine"
+    $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
@@ -251,8 +251,8 @@ renameTableContainingTriggerTests = do
            result_type: CommandOk
            result: null
          |]
-  it "inserting a new row should work fine" $
-    \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+  it "inserting a new row should work fine"
+    $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       shouldReturnYaml
@@ -294,8 +294,8 @@ postgresSetup testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger
@@ -324,8 +324,8 @@ postgresSetup testEnvironment webhookServer = do
 
 postgresTeardown :: TestEnvironment -> IO ()
 postgresTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: bulk
       args:
       - type: pg_delete_event_trigger

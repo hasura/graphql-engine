@@ -38,13 +38,13 @@ newtype DatabaseSchema = DatabaseSchema
 dbContainer :: TC.TestContainer Database
 dbContainer = do
   container <-
-    TC.run $
-      TC.containerRequest (TC.fromTag ("postgis/postgis:15-3.3-alpine"))
-        & TC.setSuffixedName "hge-test-upgrade-db"
-        & TC.setCmd ["-F"]
-        & TC.setEnv [("POSTGRES_PASSWORD", "password")]
-        & TC.setExpose [5432]
-        & TC.setWaitingFor (TC.waitUntilTimeout 30 (TC.waitUntilMappedPortReachable 5432))
+    TC.run
+      $ TC.containerRequest (TC.fromTag ("postgis/postgis:15-3.3-alpine"))
+      & TC.setSuffixedName "hge-test-upgrade-db"
+      & TC.setCmd ["-F"]
+      & TC.setEnv [("POSTGRES_PASSWORD", "password")]
+      & TC.setExpose [5432]
+      & TC.setWaitingFor (TC.waitUntilTimeout 30 (TC.waitUntilMappedPortReachable 5432))
   -- The container has a complicated startup script that starts the server,
   -- shuts it down, then starts it again, so waiting for the port is not enough.
   liftIO $ sleep 5

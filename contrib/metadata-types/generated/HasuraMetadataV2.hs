@@ -1382,9 +1382,9 @@ instance FromJSON HeaderFromValue where
   parseJSON (Object v) =
     HeaderFromValue
       <$> v
-      .: "name"
+        .: "name"
       <*> v
-      .: "value"
+        .: "value"
 
 instance ToJSON HeaderFromEnv where
   toJSON (HeaderFromEnv nameHeaderFromEnv valueFromEnvHeaderFromEnv) =
@@ -1397,9 +1397,9 @@ instance FromJSON HeaderFromEnv where
   parseJSON (Object v) =
     HeaderFromEnv
       <$> v
-      .: "name"
+        .: "name"
       <*> v
-      .: "value_from_env"
+        .: "value_from_env"
 
 instance ToJSON ObjectField where
   toJSON (ObjectField descriptionObjectField nameObjectField objectFieldTypeObjectField) =
@@ -1413,11 +1413,11 @@ instance FromJSON ObjectField where
   parseJSON (Object v) =
     ObjectField
       <$> v
-      .:? "description"
+        .:? "description"
       <*> v
-      .: "name"
+        .: "name"
       <*> v
-      .: "type"
+        .: "type"
 
 instance ToJSON HasuraMetadataV2 where
   toJSON (HasuraMetadataV2 actionsHasuraMetadataV2 allowlistHasuraMetadataV2 cronTriggersHasuraMetadataV2 customTypesHasuraMetadataV2 functionsHasuraMetadataV2 queryCollectionsHasuraMetadataV2 remoteSchemasHasuraMetadataV2 tablesHasuraMetadataV2 versionHasuraMetadataV2) =
@@ -1437,23 +1437,23 @@ instance FromJSON HasuraMetadataV2 where
   parseJSON (Object v) =
     HasuraMetadataV2
       <$> v
-      .:? "actions"
+        .:? "actions"
       <*> v
-      .:? "allowlist"
+        .:? "allowlist"
       <*> v
-      .:? "cron_triggers"
+        .:? "cron_triggers"
       <*> v
-      .:? "custom_types"
+        .:? "custom_types"
       <*> v
-      .:? "functions"
+        .:? "functions"
       <*> v
-      .:? "query_collections"
+        .:? "query_collections"
       <*> v
-      .:? "remote_schemas"
+        .:? "remote_schemas"
       <*> v
-      .: "tables"
+        .: "tables"
       <*> v
-      .: "version"
+        .: "version"
 
 instance ToJSON Action where
   toJSON (Action commentAction definitionAction nameAction permissionsAction) =
@@ -1468,13 +1468,13 @@ instance FromJSON Action where
   parseJSON (Object v) =
     Action
       <$> v
-      .:? "comment"
+        .:? "comment"
       <*> v
-      .: "definition"
+        .: "definition"
       <*> v
-      .: "name"
+        .: "name"
       <*> v
-      .:? "permissions"
+        .:? "permissions"
 
 instance ToJSON ActionDefinition where
   toJSON (ActionDefinition argumentsActionDefinition forwardClientHeadersActionDefinition handlerActionDefinition headersActionDefinition kindActionDefinition outputTypeActionDefinition actionDefinitionTypeActionDefinition) =
@@ -1492,19 +1492,19 @@ instance FromJSON ActionDefinition where
   parseJSON (Object v) =
     ActionDefinition
       <$> v
-      .:? "arguments"
+        .:? "arguments"
       <*> v
-      .:? "forward_client_headers"
+        .:? "forward_client_headers"
       <*> v
-      .: "handler"
+        .: "handler"
       <*> v
-      .:? "headers"
+        .:? "headers"
       <*> v
-      .:? "kind"
+        .:? "kind"
       <*> v
-      .:? "output_type"
+        .:? "output_type"
       <*> v
-      .:? "type"
+        .:? "type"
 
 instance ToJSON ActionDefinitionType where
   toJSON MutationActionDefinitionType = "mutation"
@@ -1527,9 +1527,9 @@ instance FromJSON InputArgument where
   parseJSON (Object v) =
     InputArgument
       <$> v
-      .: "name"
+        .: "name"
       <*> v
-      .: "type"
+        .: "type"
 
 instance ToJSON Header where
   toJSON (Header nameHeader valueHeader valueFromEnvHeader) =
@@ -1543,11 +1543,11 @@ instance FromJSON Header where
   parseJSON (Object v) =
     Header
       <$> v
-      .: "name"
+        .: "name"
       <*> v
-      .:? "value"
+        .:? "value"
       <*> v
-      .:? "value_from_env"
+        .:? "value_from_env"
 
 instance ToJSON Permission where
   toJSON (Permission rolePermission) =
@@ -1559,7 +1559,7 @@ instance FromJSON Permission where
   parseJSON (Object v) =
     Permission
       <$> v
-      .: "role"
+        .: "role"
 
 instance ToJSON AllowList where
   toJSON (AllowList collectionAllowList) =
@@ -1571,7 +1571,7 @@ instance FromJSON AllowList where
   parseJSON (Object v) =
     AllowList
       <$> v
-      .: "collection"
+        .: "collection"
 
 instance ToJSON CronTrigger where
   toJSON (CronTrigger commentCronTrigger headersCronTrigger includeInMetadataCronTrigger nameCronTrigger payloadCronTrigger retryConfCronTrigger scheduleCronTrigger webhookCronTrigger) =
@@ -1590,21 +1590,21 @@ instance FromJSON CronTrigger where
   parseJSON (Object v) =
     CronTrigger
       <$> v
-      .:? "comment"
+        .:? "comment"
       <*> v
-      .: "headers"
+        .: "headers"
       <*> v
-      .: "include_in_metadata"
+        .: "include_in_metadata"
       <*> v
-      .: "name"
+        .: "name"
       <*> v
-      .:? "payload"
+        .:? "payload"
       <*> v
-      .:? "retry_conf"
+        .:? "retry_conf"
       <*> v
-      .: "schedule"
+        .: "schedule"
       <*> v
-      .: "webhook"
+        .: "webhook"
 
 instance ToJSON RetryConfST where
   toJSON (RetryConfST numRetriesRetryConfST retryIntervalSecondsRetryConfST timeoutSecondsRetryConfST toleranceSecondsRetryConfST) =
@@ -1652,11 +1652,11 @@ instance FromJSON EnumType where
   parseJSON (Object v) =
     EnumType
       <$> v
-      .:? "description"
+        .:? "description"
       <*> v
-      .: "name"
+        .: "name"
       <*> v
-      .: "values"
+        .: "values"
 
 instance ToJSON EnumValue where
   toJSON (EnumValue descriptionEnumValue isDeprecatedEnumValue valueEnumValue) =
@@ -1670,11 +1670,11 @@ instance FromJSON EnumValue where
   parseJSON (Object v) =
     EnumValue
       <$> v
-      .:? "description"
+        .:? "description"
       <*> v
-      .:? "is_deprecated"
+        .:? "is_deprecated"
       <*> v
-      .: "value"
+        .: "value"
 
 instance ToJSON InputObjectType where
   toJSON (InputObjectType descriptionInputObjectType fieldsInputObjectType nameInputObjectType) =
@@ -1688,11 +1688,11 @@ instance FromJSON InputObjectType where
   parseJSON (Object v) =
     InputObjectType
       <$> v
-      .:? "description"
+        .:? "description"
       <*> v
-      .: "fields"
+        .: "fields"
       <*> v
-      .: "name"
+        .: "name"
 
 instance ToJSON InputObjectField where
   toJSON (InputObjectField descriptionInputObjectField nameInputObjectField inputObjectFieldTypeInputObjectField) =
@@ -1706,11 +1706,11 @@ instance FromJSON InputObjectField where
   parseJSON (Object v) =
     InputObjectField
       <$> v
-      .:? "description"
+        .:? "description"
       <*> v
-      .: "name"
+        .: "name"
       <*> v
-      .: "type"
+        .: "type"
 
 instance ToJSON ObjectType where
   toJSON (ObjectType descriptionObjectType fieldsObjectType nameObjectType relationshipsObjectType) =
@@ -1725,13 +1725,13 @@ instance FromJSON ObjectType where
   parseJSON (Object v) =
     ObjectType
       <$> v
-      .:? "description"
+        .:? "description"
       <*> v
-      .: "fields"
+        .: "fields"
       <*> v
-      .: "name"
+        .: "name"
       <*> v
-      .:? "relationships"
+        .:? "relationships"
 
 instance ToJSON CustomTypeObjectRelationship where
   toJSON (CustomTypeObjectRelationship fieldMappingCustomTypeObjectRelationship nameCustomTypeObjectRelationship remoteTableCustomTypeObjectRelationship customTypeObjectRelationshipTypeCustomTypeObjectRelationship) =
@@ -1746,13 +1746,13 @@ instance FromJSON CustomTypeObjectRelationship where
   parseJSON (Object v) =
     CustomTypeObjectRelationship
       <$> v
-      .: "field_mapping"
+        .: "field_mapping"
       <*> v
-      .: "name"
+        .: "name"
       <*> v
-      .: "remote_table"
+        .: "remote_table"
       <*> v
-      .: "type"
+        .: "type"
 
 instance ToJSON CustomTypeObjectRelationshipType where
   toJSON TypeArrayCustomTypeObjectRelationshipType = "array"
@@ -1783,9 +1783,9 @@ instance FromJSON QualifiedTable where
   parseJSON (Object v) =
     QualifiedTable
       <$> v
-      .: "name"
+        .: "name"
       <*> v
-      .: "schema"
+        .: "schema"
 
 instance ToJSON ScalarType where
   toJSON (ScalarType descriptionScalarType nameScalarType) =
@@ -1798,9 +1798,9 @@ instance FromJSON ScalarType where
   parseJSON (Object v) =
     ScalarType
       <$> v
-      .:? "description"
+        .:? "description"
       <*> v
-      .: "name"
+        .: "name"
 
 instance ToJSON CustomFunction where
   toJSON (CustomFunction configurationCustomFunction functionCustomFunction) =
@@ -1813,9 +1813,9 @@ instance FromJSON CustomFunction where
   parseJSON (Object v) =
     CustomFunction
       <$> v
-      .:? "configuration"
+        .:? "configuration"
       <*> v
-      .: "function"
+        .: "function"
 
 instance ToJSON FunctionConfiguration where
   toJSON (FunctionConfiguration sessionArgumentFunctionConfiguration) =
@@ -1847,9 +1847,9 @@ instance FromJSON QualifiedFunction where
   parseJSON (Object v) =
     QualifiedFunction
       <$> v
-      .: "name"
+        .: "name"
       <*> v
-      .: "schema"
+        .: "schema"
 
 instance ToJSON QueryCollectionEntry where
   toJSON (QueryCollectionEntry commentQueryCollectionEntry definitionQueryCollectionEntry nameQueryCollectionEntry) =
@@ -1863,11 +1863,11 @@ instance FromJSON QueryCollectionEntry where
   parseJSON (Object v) =
     QueryCollectionEntry
       <$> v
-      .:? "comment"
+        .:? "comment"
       <*> v
-      .: "definition"
+        .: "definition"
       <*> v
-      .: "name"
+        .: "name"
 
 instance ToJSON Definition where
   toJSON (Definition queriesDefinition) =
@@ -1879,7 +1879,7 @@ instance FromJSON Definition where
   parseJSON (Object v) =
     Definition
       <$> v
-      .: "queries"
+        .: "queries"
 
 instance ToJSON QueryCollection where
   toJSON (QueryCollection nameQueryCollection queryQueryCollection) =
@@ -1892,9 +1892,9 @@ instance FromJSON QueryCollection where
   parseJSON (Object v) =
     QueryCollection
       <$> v
-      .: "name"
+        .: "name"
       <*> v
-      .: "query"
+        .: "query"
 
 instance ToJSON RemoteSchema where
   toJSON (RemoteSchema commentRemoteSchema definitionRemoteSchema nameRemoteSchema) =
@@ -1908,11 +1908,11 @@ instance FromJSON RemoteSchema where
   parseJSON (Object v) =
     RemoteSchema
       <$> v
-      .:? "comment"
+        .:? "comment"
       <*> v
-      .: "definition"
+        .: "definition"
       <*> v
-      .: "name"
+        .: "name"
 
 instance ToJSON RemoteSchemaDef where
   toJSON (RemoteSchemaDef forwardClientHeadersRemoteSchemaDef headersRemoteSchemaDef timeoutSecondsRemoteSchemaDef urlRemoteSchemaDef urlFromEnvRemoteSchemaDef) =
@@ -1954,29 +1954,29 @@ instance FromJSON TableEntry where
   parseJSON (Object v) =
     TableEntry
       <$> v
-      .:? "array_relationships"
+        .:? "array_relationships"
       <*> v
-      .:? "computed_fields"
+        .:? "computed_fields"
       <*> v
-      .:? "configuration"
+        .:? "configuration"
       <*> v
-      .:? "delete_permissions"
+        .:? "delete_permissions"
       <*> v
-      .:? "event_triggers"
+        .:? "event_triggers"
       <*> v
-      .:? "insert_permissions"
+        .:? "insert_permissions"
       <*> v
-      .:? "is_enum"
+        .:? "is_enum"
       <*> v
-      .:? "object_relationships"
+        .:? "object_relationships"
       <*> v
-      .:? "remote_relationships"
+        .:? "remote_relationships"
       <*> v
-      .:? "select_permissions"
+        .:? "select_permissions"
       <*> v
-      .: "table"
+        .: "table"
       <*> v
-      .:? "update_permissions"
+        .:? "update_permissions"
 
 instance ToJSON ArrayRelationship where
   toJSON (ArrayRelationship commentArrayRelationship nameArrayRelationship usingArrayRelationship) =
@@ -1990,11 +1990,11 @@ instance FromJSON ArrayRelationship where
   parseJSON (Object v) =
     ArrayRelationship
       <$> v
-      .:? "comment"
+        .:? "comment"
       <*> v
-      .: "name"
+        .: "name"
       <*> v
-      .: "using"
+        .: "using"
 
 instance ToJSON ArrRelUsing where
   toJSON (ArrRelUsing foreignKeyConstraintOnArrRelUsing manualConfigurationArrRelUsing) =
@@ -2020,9 +2020,9 @@ instance FromJSON ArrRelUsingFKeyOn where
   parseJSON (Object v) =
     ArrRelUsingFKeyOn
       <$> v
-      .: "column"
+        .: "column"
       <*> v
-      .: "table"
+        .: "table"
 
 instance ToJSON ArrRelUsingManualMapping where
   toJSON (ArrRelUsingManualMapping columnMappingArrRelUsingManualMapping remoteTableArrRelUsingManualMapping) =
@@ -2035,9 +2035,9 @@ instance FromJSON ArrRelUsingManualMapping where
   parseJSON (Object v) =
     ArrRelUsingManualMapping
       <$> v
-      .: "column_mapping"
+        .: "column_mapping"
       <*> v
-      .: "remote_table"
+        .: "remote_table"
 
 instance ToJSON ComputedField where
   toJSON (ComputedField commentComputedField definitionComputedField nameComputedField) =
@@ -2051,11 +2051,11 @@ instance FromJSON ComputedField where
   parseJSON (Object v) =
     ComputedField
       <$> v
-      .:? "comment"
+        .:? "comment"
       <*> v
-      .: "definition"
+        .: "definition"
       <*> v
-      .: "name"
+        .: "name"
 
 instance ToJSON ComputedFieldDefinition where
   toJSON (ComputedFieldDefinition functionComputedFieldDefinition sessionArgumentComputedFieldDefinition tableArgumentComputedFieldDefinition) =
@@ -2069,11 +2069,11 @@ instance FromJSON ComputedFieldDefinition where
   parseJSON (Object v) =
     ComputedFieldDefinition
       <$> v
-      .: "function"
+        .: "function"
       <*> v
-      .:? "session_argument"
+        .:? "session_argument"
       <*> v
-      .:? "table_argument"
+        .:? "table_argument"
 
 instance ToJSON TableConfig where
   toJSON (TableConfig customColumnNamesTableConfig customNameTableConfig customRootFieldsTableConfig) =
@@ -2129,11 +2129,11 @@ instance FromJSON DeletePermissionEntry where
   parseJSON (Object v) =
     DeletePermissionEntry
       <$> v
-      .:? "comment"
+        .:? "comment"
       <*> v
-      .: "permission"
+        .: "permission"
       <*> v
-      .: "role"
+        .: "role"
 
 instance ToJSON DeletePermission where
   toJSON (DeletePermission filterDeletePermission) =
@@ -2171,17 +2171,17 @@ instance FromJSON EventTrigger where
   parseJSON (Object v) =
     EventTrigger
       <$> v
-      .: "definition"
+        .: "definition"
       <*> v
-      .:? "headers"
+        .:? "headers"
       <*> v
-      .: "name"
+        .: "name"
       <*> v
-      .: "retry_conf"
+        .: "retry_conf"
       <*> v
-      .:? "webhook"
+        .:? "webhook"
       <*> v
-      .:? "webhook_from_env"
+        .:? "webhook_from_env"
 
 instance ToJSON EventTriggerDefinition where
   toJSON (EventTriggerDefinition deleteEventTriggerDefinition enableManualEventTriggerDefinition insertEventTriggerDefinition updateEventTriggerDefinition) =
@@ -2196,13 +2196,13 @@ instance FromJSON EventTriggerDefinition where
   parseJSON (Object v) =
     EventTriggerDefinition
       <$> v
-      .:? "delete"
+        .:? "delete"
       <*> v
-      .: "enable_manual"
+        .: "enable_manual"
       <*> v
-      .:? "insert"
+        .:? "insert"
       <*> v
-      .:? "update"
+        .:? "update"
 
 instance ToJSON OperationSpec where
   toJSON (OperationSpec columnsOperationSpec payloadOperationSpec) =
@@ -2215,9 +2215,9 @@ instance FromJSON OperationSpec where
   parseJSON (Object v) =
     OperationSpec
       <$> v
-      .: "columns"
+        .: "columns"
       <*> v
-      .:? "payload"
+        .:? "payload"
 
 instance ToJSON EventTriggerColumns where
   toJSON (EnumInEventTriggerColumns x) = toJSON x
@@ -2262,11 +2262,11 @@ instance FromJSON InsertPermissionEntry where
   parseJSON (Object v) =
     InsertPermissionEntry
       <$> v
-      .:? "comment"
+        .:? "comment"
       <*> v
-      .: "permission"
+        .: "permission"
       <*> v
-      .: "role"
+        .: "role"
 
 instance ToJSON InsertPermission where
   toJSON (InsertPermission backendOnlyInsertPermission checkInsertPermission columnsInsertPermission setInsertPermission) =
@@ -2281,13 +2281,13 @@ instance FromJSON InsertPermission where
   parseJSON (Object v) =
     InsertPermission
       <$> v
-      .:? "backend_only"
+        .:? "backend_only"
       <*> v
-      .:? "check"
+        .:? "check"
       <*> v
-      .: "columns"
+        .: "columns"
       <*> v
-      .:? "set"
+        .:? "set"
 
 instance ToJSON ObjectRelationship where
   toJSON (ObjectRelationship commentObjectRelationship nameObjectRelationship usingObjectRelationship) =
@@ -2301,11 +2301,11 @@ instance FromJSON ObjectRelationship where
   parseJSON (Object v) =
     ObjectRelationship
       <$> v
-      .:? "comment"
+        .:? "comment"
       <*> v
-      .: "name"
+        .: "name"
       <*> v
-      .: "using"
+        .: "using"
 
 instance ToJSON ObjRelUsing where
   toJSON (ObjRelUsing foreignKeyConstraintOnObjRelUsing manualConfigurationObjRelUsing) =
@@ -2331,9 +2331,9 @@ instance FromJSON ObjRelUsingManualMapping where
   parseJSON (Object v) =
     ObjRelUsingManualMapping
       <$> v
-      .: "column_mapping"
+        .: "column_mapping"
       <*> v
-      .: "remote_table"
+        .: "remote_table"
 
 instance ToJSON RemoteRelationship where
   toJSON (RemoteRelationship definitionRemoteRelationship nameRemoteRelationship) =
@@ -2346,9 +2346,9 @@ instance FromJSON RemoteRelationship where
   parseJSON (Object v) =
     RemoteRelationship
       <$> v
-      .: "definition"
+        .: "definition"
       <*> v
-      .: "name"
+        .: "name"
 
 instance ToJSON RemoteRelationshipDef where
   toJSON (RemoteRelationshipDef hasuraFieldsRemoteRelationshipDef remoteFieldRemoteRelationshipDef remoteSchemaRemoteRelationshipDef) =
@@ -2362,11 +2362,11 @@ instance FromJSON RemoteRelationshipDef where
   parseJSON (Object v) =
     RemoteRelationshipDef
       <$> v
-      .: "hasura_fields"
+        .: "hasura_fields"
       <*> v
-      .: "remote_field"
+        .: "remote_field"
       <*> v
-      .: "remote_schema"
+        .: "remote_schema"
 
 instance ToJSON RemoteFieldValue where
   toJSON (RemoteFieldValue argumentsRemoteFieldValue fieldRemoteFieldValue) =
@@ -2379,9 +2379,9 @@ instance FromJSON RemoteFieldValue where
   parseJSON (Object v) =
     RemoteFieldValue
       <$> v
-      .: "arguments"
+        .: "arguments"
       <*> v
-      .:? "field"
+        .:? "field"
 
 instance ToJSON SelectPermissionEntry where
   toJSON (SelectPermissionEntry commentSelectPermissionEntry permissionSelectPermissionEntry roleSelectPermissionEntry) =
@@ -2395,11 +2395,11 @@ instance FromJSON SelectPermissionEntry where
   parseJSON (Object v) =
     SelectPermissionEntry
       <$> v
-      .:? "comment"
+        .:? "comment"
       <*> v
-      .: "permission"
+        .: "permission"
       <*> v
-      .: "role"
+        .: "role"
 
 instance ToJSON SelectPermission where
   toJSON (SelectPermission allowAggregationsSelectPermission columnsSelectPermission computedFieldsSelectPermission filterSelectPermission limitSelectPermission) =
@@ -2415,15 +2415,15 @@ instance FromJSON SelectPermission where
   parseJSON (Object v) =
     SelectPermission
       <$> v
-      .:? "allow_aggregations"
+        .:? "allow_aggregations"
       <*> v
-      .: "columns"
+        .: "columns"
       <*> v
-      .:? "computed_fields"
+        .:? "computed_fields"
       <*> v
-      .:? "filter"
+        .:? "filter"
       <*> v
-      .:? "limit"
+        .:? "limit"
 
 instance ToJSON UpdatePermissionEntry where
   toJSON (UpdatePermissionEntry commentUpdatePermissionEntry permissionUpdatePermissionEntry roleUpdatePermissionEntry) =
@@ -2437,11 +2437,11 @@ instance FromJSON UpdatePermissionEntry where
   parseJSON (Object v) =
     UpdatePermissionEntry
       <$> v
-      .:? "comment"
+        .:? "comment"
       <*> v
-      .: "permission"
+        .: "permission"
       <*> v
-      .: "role"
+        .: "role"
 
 instance ToJSON UpdatePermission where
   toJSON (UpdatePermission checkUpdatePermission columnsUpdatePermission filterUpdatePermission setUpdatePermission) =
@@ -2456,10 +2456,10 @@ instance FromJSON UpdatePermission where
   parseJSON (Object v) =
     UpdatePermission
       <$> v
-      .:? "check"
+        .:? "check"
       <*> v
-      .: "columns"
+        .: "columns"
       <*> v
-      .:? "filter"
+        .:? "filter"
       <*> v
-      .:? "set"
+        .:? "set"

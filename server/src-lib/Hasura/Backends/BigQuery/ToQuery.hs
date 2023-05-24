@@ -428,8 +428,8 @@ fromArrayAgg :: ArrayAgg -> Printer
 fromArrayAgg ArrayAgg {..} =
   SeqPrinter
     [ "ARRAY_AGG(",
-      IndentPrinter 10 $
-        SepByPrinter
+      IndentPrinter 10
+        $ SepByPrinter
           " "
           [ "STRUCT(" <+> IndentPrinter 7 projections <+> ")",
             fromOrderBys

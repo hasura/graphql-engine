@@ -206,13 +206,13 @@ runCronEventsGenerator logger cronTriggerStatsLogger getSC = do
     withCronTrigger cronTriggerCache cronTriggerStat = do
       case HashMap.lookup (_ctsName cronTriggerStat) cronTriggerCache of
         Nothing -> do
-          L.unLogger logger $
-            ScheduledTriggerInternalErr $
-              err500 Unexpected "could not find scheduled trigger in the schema cache"
+          L.unLogger logger
+            $ ScheduledTriggerInternalErr
+            $ err500 Unexpected "could not find scheduled trigger in the schema cache"
           pure Nothing
         Just cronTrigger ->
-          pure $
-            Just (cronTrigger, cronTriggerStat)
+          pure
+            $ Just (cronTrigger, cronTriggerStat)
 
 insertCronEventsFor ::
   (MonadMetadataStorage m, MonadError QErr m) =>
@@ -227,7 +227,8 @@ insertCronEventsFor cronTriggersWithStats = do
 
 generateCronEventsFrom :: UTCTime -> CronTriggerInfo -> [CronEventSeed]
 generateCronEventsFrom startTime CronTriggerInfo {..} =
-  map (CronEventSeed ctiName) $
+  map (CronEventSeed ctiName)
+    $
     -- generate next 100 events; see getDeprivedCronTriggerStatsTx:
     generateScheduleTimes startTime 100 ctiSchedule
 
@@ -259,9 +260,11 @@ processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents cronTriggers
   forConcurrently_ cronEvents $ \(CronEvent id' name st _ tries _ _) -> do
     case HashMap.lookup name cronTriggersInfo of
       Nothing ->
-        logInternalError $
-          err500 Unexpected $
-            "could not find cron trigger " <> name <<> " in the schema cache"
+        logInternalError
+          $ err500 Unexpected
+          $ "could not find cron trigger "
+          <> name
+          <<> " in the schema cache"
       Just CronTriggerInfo {..} -> do
         let payload =
               ScheduledEventWebhookPayload
@@ -276,16 +279,16 @@ processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents cronTriggers
             retryCtx = RetryContext tries ctiRetryConf
             eventProcessingTimeout = min upperBoundScheduledEventTimeout (unrefine $ strcTimeoutSeconds $ ctiRetryConf)
             processScheduledEventAction =
-              runExceptT $
-                flip runReaderT (logger, httpMgr) $
-                  processScheduledEvent
-                    scheduledTriggerMetrics
-                    id'
-                    ctiHeaders
-                    retryCtx
-                    payload
-                    ctiWebhookInfo
-                    Cron
+              runExceptT
+                $ flip runReaderT (logger, httpMgr)
+                $ processScheduledEvent
+                  scheduledTriggerMetrics
+                  id'
+                  ctiHeaders
+                  retryCtx
+                  payload
+                  ctiWebhookInfo
+                  Cron
         eventProcessedMaybe <-
           timeout (fromInteger (diffTimeToMicroSeconds eventProcessingTimeout)) $ processScheduledEventAction
         case eventProcessedMaybe of
@@ -354,8 +357,8 @@ processOneOffScheduledEvents
         case webhookAndHeaderInfo of
           Right (webhookEnvRecord, eventHeaderInfo) -> do
             let processScheduledEventAction =
-                  flip runReaderT (logger, httpMgr) $
-                    processScheduledEvent scheduledTriggerMetrics _ooseId eventHeaderInfo retryCtx payload webhookEnvRecord OneOff
+                  flip runReaderT (logger, httpMgr)
+                    $ processScheduledEvent scheduledTriggerMetrics _ooseId eventHeaderInfo retryCtx payload webhookEnvRecord OneOff
 
                 eventTimeout = unrefine $ strcTimeoutSeconds $ _ooseRetryConf
 
@@ -407,22 +410,22 @@ processScheduledTriggers ::
   LockedEventsCtx ->
   m (Forever m)
 processScheduledTriggers getEnvHook logger statsLogger httpMgr scheduledTriggerMetrics getSC LockedEventsCtx {..} = do
-  return $
-    Forever () $
-      const do
-        cronTriggersInfo <- scCronTriggers <$> liftIO getSC
-        env <- liftIO getEnvHook
-        getScheduledEventsForDelivery (HashMap.keys cronTriggersInfo) >>= \case
-          Left e -> logInternalError e
-          Right (cronEvents, oneOffEvents) -> do
-            logFetchedScheduledEventsStats statsLogger (CronEventsCount $ length cronEvents) (OneOffScheduledEventsCount $ length oneOffEvents)
-            processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents cronTriggersInfo leCronEvents
-            processOneOffScheduledEvents env logger httpMgr scheduledTriggerMetrics oneOffEvents leOneOffEvents
-        -- NOTE: cron events are scheduled at times with minute resolution (as on
-        -- unix), while one-off events can be set for arbitrary times. The sleep
-        -- time here determines how overdue a scheduled event (cron or one-off)
-        -- might be before we begin processing:
-        liftIO $ sleep (seconds 10)
+  return
+    $ Forever ()
+    $ const do
+      cronTriggersInfo <- scCronTriggers <$> liftIO getSC
+      env <- liftIO getEnvHook
+      getScheduledEventsForDelivery (HashMap.keys cronTriggersInfo) >>= \case
+        Left e -> logInternalError e
+        Right (cronEvents, oneOffEvents) -> do
+          logFetchedScheduledEventsStats statsLogger (CronEventsCount $ length cronEvents) (OneOffScheduledEventsCount $ length oneOffEvents)
+          processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents cronTriggersInfo leCronEvents
+          processOneOffScheduledEvents env logger httpMgr scheduledTriggerMetrics oneOffEvents leOneOffEvents
+      -- NOTE: cron events are scheduled at times with minute resolution (as on
+      -- unix), while one-off events can be set for arbitrary times. The sleep
+      -- time here determines how overdue a scheduled event (cron or one-off)
+      -- might be before we begin processing:
+      liftIO $ sleep (seconds 10)
   where
     logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
 
@@ -462,8 +465,9 @@ processScheduledEvent scheduledTriggerMetrics eventId eventHeaders retryCtx payl
             responseTransform = mkResponseTransform <$> sewpResponseTransform payload
 
         eitherReqRes <-
-          runExceptT $
-            mkRequest headers httpTimeout webhookReqBody requestTransform (_envVarValue webhookUrl) >>= \reqDetails -> do
+          runExceptT
+            $ mkRequest headers httpTimeout webhookReqBody requestTransform (_envVarValue webhookUrl)
+            >>= \reqDetails -> do
               let request = extractRequest reqDetails
                   logger e d = do
                     logHTTPForST e extraLogCtx d (_envVarName webhookUrl) decodedHeaders
@@ -889,8 +893,8 @@ unlockAllLockedScheduledEventsTx = do
 insertCronEventsTx :: [CronEventSeed] -> PG.TxE QErr ()
 insertCronEventsTx cronSeeds = do
   let insertCronEventsSql =
-        TB.run $
-          toSQL
+        TB.run
+          $ toSQL
             S.SQLInsert
               { siTable = cronEventsTable,
                 siCols = map unsafePGCol ["trigger_name", "scheduled_time"],
@@ -905,7 +909,8 @@ insertCronEventsTx cronSeeds = do
 
 insertOneOffScheduledEventTx :: OneOffEvent -> PG.TxE QErr EventId
 insertOneOffScheduledEventTx CreateScheduledEvent {..} =
-  runIdentity . PG.getRow
+  runIdentity
+    . PG.getRow
     <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|
@@ -952,18 +957,18 @@ mkScheduledEventStatusFilter :: [ScheduledEventStatus] -> S.BoolExp
 mkScheduledEventStatusFilter = \case
   [] -> S.BELit True
   v ->
-    S.BEIN (S.SEIdentifier $ Identifier "status") $
-      map (S.SELit . scheduledEventStatusToText) v
+    S.BEIN (S.SEIdentifier $ Identifier "status")
+      $ map (S.SELit . scheduledEventStatusToText) v
 
 scheduledTimeOrderBy :: S.OrderByExp
 scheduledTimeOrderBy =
   let scheduledTimeCol = S.SEIdentifier $ Identifier "scheduled_time"
-   in S.OrderByExp $
-        flip (NE.:|) [] $
-          S.OrderByItem
-            scheduledTimeCol
-            (Just S.OTAsc)
-            Nothing
+   in S.OrderByExp
+        $ flip (NE.:|) []
+        $ S.OrderByItem
+          scheduledTimeCol
+          (Just S.OTAsc)
+          Nothing
 
 -- | Build a select expression which outputs total count and
 -- list of json rows with pagination limit and offset applied
@@ -1016,7 +1021,7 @@ withCount (count, PG.ViaJSON a) = WithOptionalTotalCount (Just count) a
 withoutCount :: PG.ViaJSON a -> WithOptionalTotalCount a
 withoutCount (PG.ViaJSON a) = WithOptionalTotalCount Nothing a
 
-executeWithOptionalTotalCount :: J.FromJSON a => PG.Query -> RowsCountOption -> PG.TxE QErr (WithOptionalTotalCount a)
+executeWithOptionalTotalCount :: (J.FromJSON a) => PG.Query -> RowsCountOption -> PG.TxE QErr (WithOptionalTotalCount a)
 executeWithOptionalTotalCount sql getRowsCount =
   case getRowsCount of
     IncludeRowsCount -> (withCount . PG.getRow) <$> PG.withQE defaultTxErrorHandler sql () False
@@ -1150,8 +1155,8 @@ getScheduledEventsInvocationsQueryNoPagination (EventTables oneOffInvocationsTab
           let invocationTable = cronInvocationsTable
               eventTable = cronEventsTable'
               joinCondition =
-                S.JoinOn $
-                  S.BECompare
+                S.JoinOn
+                  $ S.BECompare
                     S.SEQ
                     (S.SEQIdentifier $ S.mkQIdentifierTable eventTable $ Identifier "id")
                     (S.SEQIdentifier $ S.mkQIdentifierTable invocationTable $ Identifier "event_id")

@@ -147,9 +147,10 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
               rolePermission <- onNothing (HashMap.lookup roleName accumulatedRolePermMap) $ do
                 parentRolePermissions <-
                   for (toList parentRoles) $ \role ->
-                    onNothing (HashMap.lookup role accumulatedRolePermMap) $
-                      throw500 $
-                        "remote schema permissions: bad ordering of roles, could not find the permission of role: " <>> role
+                    onNothing (HashMap.lookup role accumulatedRolePermMap)
+                      $ throw500
+                      $ "remote schema permissions: bad ordering of roles, could not find the permission of role: "
+                      <>> role
                 let combinedPermission = sconcat <$> nonEmpty parentRolePermissions
                 pure $ fromMaybe CPUndefined combinedPermission
               pure $ HashMap.insert roleName rolePermission accumulatedRolePermMap
@@ -181,7 +182,8 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
               recordDependencies -< (metadataObject, schemaObject, pure dependency)
               returnA -< resolvedSchemaIntrospection
           )
-        |) metadataObject
+        |)
+        metadataObject
 
     mkRemoteSchemaPermissionMetadataObject ::
       (RemoteSchemaName, RemoteSchemaPermissionMetadata) ->

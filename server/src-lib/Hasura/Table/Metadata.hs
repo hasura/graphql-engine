@@ -61,13 +61,13 @@ parseListAsMap ::
 parseListAsMap things mapFn listP = do
   list <- listP
   let duplicates = toList $ L.duplicates $ map mapFn list
-  unless (null duplicates) $
-    fail $
-      T.unpack $
-        "multiple declarations exist for the following "
-          <> things
-          <> ": "
-          <> T.commaSeparated duplicates
+  unless (null duplicates)
+    $ fail
+    $ T.unpack
+    $ "multiple declarations exist for the following "
+    <> things
+    <> ": "
+    <> T.commaSeparated duplicates
   pure $ oMapFromL mapFn list
 
 data ComputedFieldMetadata b = ComputedFieldMetadata
@@ -83,30 +83,33 @@ deriving instance (Backend b) => Eq (ComputedFieldMetadata b)
 
 instance (Backend b) => HasCodec (ComputedFieldMetadata b) where
   codec =
-    AC.object (backendPrefix @b <> "ComputedFieldMetadata") $
-      ComputedFieldMetadata
-        <$> requiredField' "name" AC..= _cfmName
-        <*> requiredField' "definition" AC..= _cfmDefinition
-        <*> optionalFieldWithOmittedDefault' "comment" Automatic AC..= _cfmComment
+    AC.object (backendPrefix @b <> "ComputedFieldMetadata")
+      $ ComputedFieldMetadata
+      <$> requiredField' "name"
+      AC..= _cfmName
+        <*> requiredField' "definition"
+      AC..= _cfmDefinition
+        <*> optionalFieldWithOmittedDefault' "comment" Automatic
+      AC..= _cfmComment
 
 instance (Backend b) => ToJSON (ComputedFieldMetadata b) where
   toJSON ComputedFieldMetadata {..} =
-    object $
-      [ "name" .= _cfmName,
-        "definition" .= _cfmDefinition,
-        "comment" .= _cfmComment
-      ]
+    object
+      $ [ "name" .= _cfmName,
+          "definition" .= _cfmDefinition,
+          "comment" .= _cfmComment
+        ]
 
 instance (Backend b) => FromJSON (ComputedFieldMetadata b) where
   parseJSON = withObject "ComputedFieldMetadata" $ \obj ->
     ComputedFieldMetadata
       <$> obj
-        .: "name"
+      .: "name"
       <*> obj
-        .: "definition"
+      .: "definition"
       <*> obj
-        .:? "comment"
-        .!= Automatic
+      .:? "comment"
+      .!= Automatic
 
 type Relationships a = InsOrdHashMap RelName a
 
@@ -144,34 +147,34 @@ instance (Backend b) => ToJSON (TableMetadata b) where
 
 instance (Backend b) => HasCodec (TableMetadata b) where
   codec =
-    CommentCodec "Representation of a table in metadata, 'tables.yaml' and 'metadata.json'" $
-      AC.object (backendPrefix @b <> "TableMetadata") $
-        TableMetadata
-          <$> requiredField' "table"
-            .== _tmTable
-          <*> optionalFieldWithOmittedDefault' "is_enum" False
-            .== _tmIsEnum
-          <*> optionalFieldWithOmittedDefault "configuration" emptyTableConfig configDoc
-            .== _tmConfiguration
-          <*> optSortedList "object_relationships" _rdName
-            .== _tmObjectRelationships
-          <*> optSortedList "array_relationships" _rdName
-            .== _tmArrayRelationships
-          <*> optSortedList "computed_fields" _cfmName
-            .== _tmComputedFields
-          <*> optSortedList "remote_relationships" _rrName
-            .== _tmRemoteRelationships
-          <*> optSortedList "insert_permissions" _pdRole
-            .== _tmInsertPermissions
-          <*> optSortedList "select_permissions" _pdRole
-            .== _tmSelectPermissions
-          <*> optSortedList "update_permissions" _pdRole
-            .== _tmUpdatePermissions
-          <*> optSortedList "delete_permissions" _pdRole
-            .== _tmDeletePermissions
-          <*> eventTriggers
-          <*> optionalFieldOrNull' "apollo_federation_config"
-            .== _tmApolloFederationConfig
+    CommentCodec "Representation of a table in metadata, 'tables.yaml' and 'metadata.json'"
+      $ AC.object (backendPrefix @b <> "TableMetadata")
+      $ TableMetadata
+      <$> requiredField' "table"
+      .== _tmTable
+        <*> optionalFieldWithOmittedDefault' "is_enum" False
+      .== _tmIsEnum
+        <*> optionalFieldWithOmittedDefault "configuration" emptyTableConfig configDoc
+      .== _tmConfiguration
+        <*> optSortedList "object_relationships" _rdName
+      .== _tmObjectRelationships
+        <*> optSortedList "array_relationships" _rdName
+      .== _tmArrayRelationships
+        <*> optSortedList "computed_fields" _cfmName
+      .== _tmComputedFields
+        <*> optSortedList "remote_relationships" _rrName
+      .== _tmRemoteRelationships
+        <*> optSortedList "insert_permissions" _pdRole
+      .== _tmInsertPermissions
+        <*> optSortedList "select_permissions" _pdRole
+      .== _tmSelectPermissions
+        <*> optSortedList "update_permissions" _pdRole
+      .== _tmUpdatePermissions
+        <*> optSortedList "delete_permissions" _pdRole
+      .== _tmDeletePermissions
+        <*> eventTriggers
+        <*> optionalFieldOrNull' "apollo_federation_config"
+      .== _tmApolloFederationConfig
     where
       -- Some backends do not implement event triggers. In those cases we tailor
       -- the codec to omit the @"event_triggers"@ field from the API.
@@ -218,20 +221,20 @@ mkTableMeta qt isEnum config =
 instance (Backend b) => FromJSON (TableMetadata b) where
   parseJSON = withObject "Object" $ \o -> do
     let unexpectedKeys = getUnexpectedKeys o
-    unless (null unexpectedKeys) $
-      fail $
-        "unexpected keys when parsing TableMetadata: "
-          <> show (HS.toList unexpectedKeys)
+    unless (null unexpectedKeys)
+      $ fail
+      $ "unexpected keys when parsing TableMetadata: "
+      <> show (HS.toList unexpectedKeys)
 
     TableMetadata
       <$> o
-        .: tableKey
+      .: tableKey
       <*> o
-        .:? isEnumKey
-        .!= False
+      .:? isEnumKey
+      .!= False
       <*> o
-        .:? configKey
-        .!= emptyTableConfig
+      .:? configKey
+      .!= emptyTableConfig
       <*> parseListAsMap "object relationships" _rdName (o .:? orKey .!= [])
       <*> parseListAsMap "array relationships" _rdName (o .:? arKey .!= [])
       <*> parseListAsMap "computed fields" _cfmName (o .:? cfKey .!= [])
@@ -242,7 +245,7 @@ instance (Backend b) => FromJSON (TableMetadata b) where
       <*> parseListAsMap "delete permissions" _pdRole (o .:? dpKey .!= [])
       <*> parseListAsMap "event triggers" etcName (o .:? etKey .!= [])
       <*> o
-        .:? enableAFKey
+      .:? enableAFKey
     where
       tableKey = "table"
       isEnumKey = "is_enum"

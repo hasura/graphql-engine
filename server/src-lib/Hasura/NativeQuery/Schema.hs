@@ -64,8 +64,9 @@ defaultSelectNativeQueryObject NativeQueryInfo {..} fieldName description = runM
   let sourceName = _siName sourceInfo
 
   logicalModelPermissions <-
-    MaybeT . fmap Just $
-      buildLogicalModelPermissions @b @r @m @n _nqiReturns
+    MaybeT
+      . fmap Just
+      $ buildLogicalModelPermissions @b @r @m @n _nqiReturns
 
   selectionSetParser <-
     MaybeT $ logicalModelSelectionSet _nqiRelationships _nqiReturns
@@ -75,24 +76,24 @@ defaultSelectNativeQueryObject NativeQueryInfo {..} fieldName description = runM
           sourceName
           (mkAnyBackend $ MO.SMONativeQuery @b _nqiRootFieldName)
 
-  pure $
-    P.setFieldParserOrigin sourceObj $
-      P.subselection
-        fieldName
-        description
-        nativeQueryArgsParser
-        selectionSetParser
-        <&> \(nqArgs, fields) ->
-          IR.AnnObjectSelectG
-            fields
-            ( IR.FromNativeQuery
-                NativeQuery
-                  { nqRootFieldName = _nqiRootFieldName,
-                    nqInterpolatedQuery = interpolatedQuery _nqiCode nqArgs,
-                    nqLogicalModel = buildLogicalModelIR _nqiReturns
-                  }
-            )
-            (IR._tpFilter logicalModelPermissions)
+  pure
+    $ P.setFieldParserOrigin sourceObj
+    $ P.subselection
+      fieldName
+      description
+      nativeQueryArgsParser
+      selectionSetParser
+    <&> \(nqArgs, fields) ->
+      IR.AnnObjectSelectG
+        fields
+        ( IR.FromNativeQuery
+            NativeQuery
+              { nqRootFieldName = _nqiRootFieldName,
+                nqInterpolatedQuery = interpolatedQuery _nqiCode nqArgs,
+                nqLogicalModel = buildLogicalModelIR _nqiReturns
+              }
+        )
+        (IR._tpFilter logicalModelPermissions)
 
 -- | select a native query - implementation is the same for root fields and
 -- array relationships
@@ -123,8 +124,9 @@ defaultSelectNativeQuery NativeQueryInfo {..} fieldName description = runMaybeT 
   stringifyNumbers <- retrieve Options.soStringifyNumbers
 
   logicalModelPermissions <-
-    MaybeT . fmap Just $
-      buildLogicalModelPermissions @b @r @m @n _nqiReturns
+    MaybeT
+      . fmap Just
+      $ buildLogicalModelPermissions @b @r @m @n _nqiReturns
 
   (selectionListParser, logicalModelsArgsParser) <-
     MaybeT $ buildLogicalModelFields _nqiRelationships _nqiReturns
@@ -134,31 +136,31 @@ defaultSelectNativeQuery NativeQueryInfo {..} fieldName description = runMaybeT 
           sourceName
           (mkAnyBackend $ MO.SMONativeQuery @b _nqiRootFieldName)
 
-  pure $
-    P.setFieldParserOrigin sourceObj $
-      P.subselection
-        fieldName
-        description
-        ( (,)
-            <$> logicalModelsArgsParser
-            <*> nativeQueryArgsParser
-        )
-        selectionListParser
-        <&> \((lmArgs, nqArgs), fields) ->
-          IR.AnnSelectG
-            { IR._asnFields = fields,
-              IR._asnFrom =
-                IR.FromNativeQuery
-                  NativeQuery
-                    { nqRootFieldName = _nqiRootFieldName,
-                      nqInterpolatedQuery = interpolatedQuery _nqiCode nqArgs,
-                      nqLogicalModel = buildLogicalModelIR _nqiReturns
-                    },
-              IR._asnPerm = logicalModelPermissions,
-              IR._asnArgs = lmArgs,
-              IR._asnStrfyNum = stringifyNumbers,
-              IR._asnNamingConvention = Just tCase
-            }
+  pure
+    $ P.setFieldParserOrigin sourceObj
+    $ P.subselection
+      fieldName
+      description
+      ( (,)
+          <$> logicalModelsArgsParser
+          <*> nativeQueryArgsParser
+      )
+      selectionListParser
+    <&> \((lmArgs, nqArgs), fields) ->
+      IR.AnnSelectG
+        { IR._asnFields = fields,
+          IR._asnFrom =
+            IR.FromNativeQuery
+              NativeQuery
+                { nqRootFieldName = _nqiRootFieldName,
+                  nqInterpolatedQuery = interpolatedQuery _nqiCode nqArgs,
+                  nqLogicalModel = buildLogicalModelIR _nqiReturns
+                },
+          IR._asnPerm = logicalModelPermissions,
+          IR._asnArgs = lmArgs,
+          IR._asnStrfyNum = stringifyNumbers,
+          IR._asnNamingConvention = Just tCase
+        }
 
 defaultBuildNativeQueryRootFields ::
   forall b r m n.
@@ -177,7 +179,7 @@ defaultBuildNativeQueryRootFields nqi@NativeQueryInfo {..} = do
 
 nativeQueryArgumentsSchema ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   G.Name ->
   HashMap ArgumentName (NullableScalarType b) ->
   MaybeT (SchemaT r m) (P.InputFieldsParser n (HashMap ArgumentName (Column.ColumnValue b)))
@@ -189,8 +191,8 @@ interpolatedQuery ::
   HashMap ArgumentName (Column.ColumnValue b) ->
   InterpolatedQuery (UnpreparedValue b)
 interpolatedQuery nqiCode nqArgs =
-  InterpolatedQuery $
-    (fmap . fmap)
+  InterpolatedQuery
+    $ (fmap . fmap)
       ( \var@(ArgumentName name) -> case HashMap.lookup var nqArgs of
           Just arg -> UVParameter (FromInternal name) arg
           Nothing ->

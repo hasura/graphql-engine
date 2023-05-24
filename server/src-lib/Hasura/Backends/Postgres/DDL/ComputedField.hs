@@ -58,21 +58,23 @@ showError qf = \case
     showFunctionTableArgument functionArg
       <> " of type "
       <> ty
-        <<> " is not the table to which the computed field is being added"
+      <<> " is not the table to which the computed field is being added"
   CFVEInvalidSessionArgument (ISANotFound argName) ->
     argName <<> " is not an input argument of the function " <>> qf
   CFVEInvalidSessionArgument (ISANotJSON functionArg) ->
     showFunctionSessionArgument functionArg <> " is not of type JSON"
   CFVENotBaseReturnType scalarType ->
     "the function "
-      <> qf <<> " returning type "
+      <> qf
+      <<> " returning type "
       <> pgScalarTypeToText scalarType
       <> " is not a BASE type"
   CFVEReturnTableNotFound table ->
     "the function "
-      <> qf <<> " returning set of table "
+      <> qf
+      <<> " returning set of table "
       <> table
-        <<> " is not tracked or not found in database"
+      <<> " is not tracked or not found in database"
   CFVENoInputArguments ->
     "the function " <> qf <<> " has no input arguments"
   CFVEFunctionVolatile ->
@@ -110,36 +112,36 @@ buildComputedFieldInfo trackedTables table _tableColumns computedField definitio
     computedFieldGraphQLName = G.mkName $ computedFieldNameToText computedField
 
     mkComputedFieldInfo ::
-      MV.MonadValidate [ComputedFieldValidateError] n =>
+      (MV.MonadValidate [ComputedFieldValidateError] n) =>
       n (ComputedFieldInfo ('Postgres pgKind))
     mkComputedFieldInfo = do
       -- Check if computed field name is a valid GraphQL name
-      unless (isJust computedFieldGraphQLName) $
-        MV.dispute $
-          pure $
-            CFVENotValidGraphQLName computedField
+      unless (isJust computedFieldGraphQLName)
+        $ MV.dispute
+        $ pure
+        $ CFVENotValidGraphQLName computedField
 
       -- Check if function is VOLATILE
-      when (rfiFunctionType rawFunctionInfo == FTVOLATILE) $
-        MV.dispute $
-          pure CFVEFunctionVolatile
+      when (rfiFunctionType rawFunctionInfo == FTVOLATILE)
+        $ MV.dispute
+        $ pure CFVEFunctionVolatile
 
       -- Validate and resolve return type
       returnType <-
         if rfiReturnsTable rawFunctionInfo
           then do
             let returnTable = typeToTable functionReturnType
-            unless (returnTable `S.member` trackedTables) $
-              MV.dispute $
-                pure $
-                  CFVEReturnTableNotFound returnTable
+            unless (returnTable `S.member` trackedTables)
+              $ MV.dispute
+              $ pure
+              $ CFVEReturnTableNotFound returnTable
             pure $ PG.CFRSetofTable returnTable
           else do
             let scalarType = _qptName functionReturnType
-            unless (isBaseType functionReturnType) $
-              MV.dispute $
-                pure $
-                  CFVENotBaseReturnType scalarType
+            unless (isBaseType functionReturnType)
+              $ MV.dispute
+              $ pure
+              $ CFVENotBaseReturnType scalarType
             pure $ PG.CFRScalar scalarType
 
       -- Validate and resolve table argument
@@ -175,8 +177,8 @@ buildComputedFieldInfo trackedTables table _tableColumns computedField definitio
             MV.refute $ pure $ CFVEInvalidSessionArgument $ ISANotFound argName
 
       let inputArgSeq =
-            Seq.fromList $
-              dropTableAndSessionArgument tableArgument maybePGSessionArg inputArgs
+            Seq.fromList
+              $ dropTableAndSessionArgument tableArgument maybePGSessionArg inputArgs
           computedFieldArgs = PG.ComputedFieldImplicitArguments tableArgument maybePGSessionArg
           computedFieldFunction =
             ComputedFieldFunction function inputArgSeq computedFieldArgs $ rfiDescription rawFunctionInfo
@@ -189,17 +191,17 @@ buildComputedFieldInfo trackedTables table _tableColumns computedField definitio
       QualifiedPGType ->
       n ()
     validateTableArgumentType tableArg qpt = do
-      when (_qptType qpt /= PGKindComposite) $
-        MV.dispute $
-          pure $
-            CFVEInvalidTableArgument $
-              ITANotComposite tableArg
+      when (_qptType qpt /= PGKindComposite)
+        $ MV.dispute
+        $ pure
+        $ CFVEInvalidTableArgument
+        $ ITANotComposite tableArg
       let typeTable = typeToTable qpt
-      unless (table == typeTable) $
-        MV.dispute $
-          pure $
-            CFVEInvalidTableArgument $
-              ITANotTable typeTable tableArg
+      unless (table == typeTable)
+        $ MV.dispute
+        $ pure
+        $ CFVEInvalidTableArgument
+        $ ITANotTable typeTable tableArg
 
     validateSessionArgumentType ::
       (MV.MonadValidate [ComputedFieldValidateError] n) =>
@@ -207,17 +209,19 @@ buildComputedFieldInfo trackedTables table _tableColumns computedField definitio
       QualifiedPGType ->
       n ()
     validateSessionArgumentType sessionArg qpt = do
-      unless (isJSONType $ _qptName qpt) $
-        MV.dispute $
-          pure $
-            CFVEInvalidSessionArgument $
-              ISANotJSON sessionArg
+      unless (isJSONType $ _qptName qpt)
+        $ MV.dispute
+        $ pure
+        $ CFVEInvalidSessionArgument
+        $ ISANotJSON sessionArg
 
     showErrors :: [ComputedFieldValidateError] -> Text
     showErrors allErrors =
       "the computed field "
-        <> computedField <<> " cannot be added to table "
-        <> table <<> " "
+        <> computedField
+        <<> " cannot be added to table "
+        <> table
+        <<> " "
         <> reasonMessage
       where
         reasonMessage = makeReasonMessage allErrors (showError function)

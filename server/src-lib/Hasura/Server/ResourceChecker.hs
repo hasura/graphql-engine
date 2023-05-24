@@ -99,8 +99,8 @@ getServerResources_ mountPath =
     -- we need to find the root cgroup folder
     -- 1269 1263 0:31 /kubepods/burstable/pod37349393 /sys/fs/cgroup/blkio ro,nosuid,nodev,noexec,relatime master:14 - cgroup cgroup rw,blkio
     getCGroupMode =
-      liftIO $
-        catchIOError
+      liftIO
+        $ catchIOError
           ( T.readFile mountPath
               >>= ( \contentLines ->
                       case find (\ls -> ("cgroup" `elem` ls || "cgroup2" `elem` ls) && length ls >= 9) contentLines of
@@ -112,8 +112,8 @@ getServerResources_ mountPath =
                                 <&> bool CGroupV1 CGroupV2
                                 <&> (,cgroupRoot)
                   )
-                . map T.words
-                . T.lines
+              . map T.words
+              . T.lines
           )
           (return . const (CGUnavailable, ""))
 
@@ -204,15 +204,15 @@ getCGroupV2Resources cgroupRoot = do
         _ -> Left $ RCInternalError "INVALID_CPU_PERIOD_AND_QUOTA"
 
     getCpuAllocationCGroupV2 =
-      catchCpuAllocation $
-        cpuLimits
-          `catchError` const cpuShares
-          `catchError` const (getCGroupV1CpuAllocation cgroupRoot)
+      catchCpuAllocation
+        $ cpuLimits
+        `catchError` const cpuShares
+        `catchError` const (getCGroupV1CpuAllocation cgroupRoot)
 
     getMemoryAllocationCGroupV2 =
-      catchMemoryAllocation $
-        getMemoryAllocation (cgroupRoot </> "memory.max")
-          `catchError` const (getCGroupV1MemoryAllocation cgroupRoot)
+      catchMemoryAllocation
+        $ getMemoryAllocation (cgroupRoot </> "memory.max")
+        `catchError` const (getCGroupV1MemoryAllocation cgroupRoot)
 
 deduceCpuLimits :: Int -> Int -> Either ResourceCheckerError (Int, Maybe ResourceCheckerError)
 deduceCpuLimits quota period
@@ -230,11 +230,11 @@ getMemoryAllocation path =
             bool (Just <$> liftEither (parseUint content)) getMaxPhysicalMemory (content == "max")
               <&> (,Nothing)
         )
-      . T.strip
+    . T.strip
 
 -- catch cpu allocation error with default physical cpu resource
 catchCpuAllocation ::
-  MonadIO m =>
+  (MonadIO m) =>
   ExceptT e m (Int, Maybe ResourceCheckerError) ->
   m (Int, Maybe ResourceCheckerError)
 catchCpuAllocation m =
@@ -243,7 +243,7 @@ catchCpuAllocation m =
 
 -- catch memory allocation error with default physical memory resource
 catchMemoryAllocation ::
-  MonadIO m =>
+  (MonadIO m) =>
   ExceptT ResourceCheckerError m (Maybe Int64, Maybe ResourceCheckerError) ->
   m (Maybe Int64, Maybe ResourceCheckerError)
 catchMemoryAllocation m =
@@ -263,7 +263,7 @@ readFileT mapError path = do
   eContent <- liftIO $ catchIOError (Right <$> T.readFile path) (pure . Left . show)
   liftEither $ mapLeft mapError eContent
 
-parseUint :: Integral a => T.Text -> Either ResourceCheckerError a
+parseUint :: (Integral a) => T.Text -> Either ResourceCheckerError a
 parseUint = bimap RCInternalError fst . T.decimal
 
 readFileUint ::

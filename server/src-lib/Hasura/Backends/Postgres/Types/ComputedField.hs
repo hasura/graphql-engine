@@ -36,11 +36,14 @@ instance Hashable ComputedFieldDefinition
 
 instance HasCodec ComputedFieldDefinition where
   codec =
-    AC.object "PostgresComputedFieldDefinition" $
-      ComputedFieldDefinition
-        <$> requiredField' "function" AC..= _cfdFunction
-        <*> optionalField' "table_argument" AC..= _cfdTableArgument
-        <*> optionalField' "session_argument" AC..= _cfdSessionArgument
+    AC.object "PostgresComputedFieldDefinition"
+      $ ComputedFieldDefinition
+      <$> requiredField' "function"
+      AC..= _cfdFunction
+        <*> optionalField' "table_argument"
+      AC..= _cfdTableArgument
+        <*> optionalField' "session_argument"
+      AC..= _cfdSessionArgument
 
 instance ToJSON ComputedFieldDefinition where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -53,10 +56,10 @@ instance FromJSON ComputedFieldDefinition where
 data FunctionTableArgument
   = FTAFirst
   | FTANamed
+      -- | argument name
       FunctionArgName
-      -- ^ argument name
+      -- | argument index
       Int
-      -- ^ argument index
   deriving (Show, Eq, Ord, Generic)
 
 instance NFData FunctionTableArgument
@@ -71,10 +74,10 @@ instance ToJSON FunctionTableArgument where
 -- SQL function as a JSON object.
 data FunctionSessionArgument
   = FunctionSessionArgument
+      -- | The argument name
       FunctionArgName
-      -- ^ The argument name
+      -- | The ordinal position in the function input parameters
       Int
-      -- ^ The ordinal position in the function input parameters
   deriving (Show, Eq, Ord, Generic)
 
 instance NFData FunctionSessionArgument
@@ -117,8 +120,8 @@ instance Hashable ComputedFieldReturn
 
 instance ToJSON ComputedFieldReturn where
   toJSON =
-    genericToJSON $
-      defaultOptions
+    genericToJSON
+      $ defaultOptions
         { constructorTagModifier = snakeCase . drop 3,
           sumEncoding = TaggedObject "type" "info"
         }

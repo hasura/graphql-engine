@@ -150,7 +150,7 @@ createUntrackedTables tables (testEnvironment, _) = do
     insertTable sourceName testEnvironment table
 
 -- | Post an http request to start tracking the table
-trackTable :: HasCallStack => String -> TestEnvironment -> Schema.Table -> IO ()
+trackTable :: (HasCallStack) => String -> TestEnvironment -> Schema.Table -> IO ()
 trackTable sourceName testEnvironment Schema.Table {tableName} = do
   let backendType = BackendType.backendTypeString backendTypeMetadata
       requestType = backendType <> "_track_table"
@@ -189,16 +189,16 @@ createTable sourceName testEnv Schema.Table {tableName, tableColumns, tablePrima
 
   -- Build a SQL QUERY AND THEN CALL run_sql
   let expr =
-        Text.unpack $
-          Text.unwords
+        Text.unpack
+          $ Text.unwords
             [ "CREATE TABLE",
               wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName,
               "(",
-              Text.commaSeparated $
-                (mkColumn <$> tableColumns)
-                  <> (bool [mkPrimaryKey pk] [] (null pk))
-                  <> (mkReference schemaName <$> tableReferences)
-                  <> map uniqueConstraint tableConstraints,
+              Text.commaSeparated
+                $ (mkColumn <$> tableColumns)
+                <> (bool [mkPrimaryKey pk] [] (null pk))
+                <> (mkReference schemaName <$> tableReferences)
+                <> map uniqueConstraint tableConstraints,
               ");"
             ]
   runSql testEnv sourceName expr
@@ -287,18 +287,18 @@ insertTable sourceName testEnv Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
       let schemaName = Schema.getSchemaName testEnv
-      runSql testEnv sourceName $
-        Text.unpack $
-          Text.unwords
-            [ "INSERT INTO",
-              wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName,
-              "(",
-              Text.commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
-              ")",
-              "VALUES",
-              Text.commaSeparated $ mkRow <$> tableData,
-              ";"
-            ]
+      runSql testEnv sourceName
+        $ Text.unpack
+        $ Text.unwords
+          [ "INSERT INTO",
+            wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName,
+            "(",
+            Text.commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
+            ")",
+            "VALUES",
+            Text.commaSeparated $ mkRow <$> tableData,
+            ";"
+          ]
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =

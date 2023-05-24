@@ -105,13 +105,13 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) = do
       sqlSelect = AnnSelectG fields from perm selectArgs strfyNum Nothing
       permLimitSubQuery = PLSQNotRequired
       ((selectSource, nodeExtractors), SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}) =
-        runWriter $
-          flip runReaderT strfyNum $
-            processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery sqlSelect
+        runWriter
+          $ flip runReaderT strfyNum
+          $ processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery sqlSelect
       selectNode = SelectNode nodeExtractors joinTree
       topExtractor =
-        asJsonAggExtr JASMultipleRows rootFldAls permLimitSubQuery $
-          orderByForJsonAgg selectSource
+        asJsonAggExtr JASMultipleRows rootFldAls permLimitSubQuery
+          $ orderByForJsonAgg selectSource
       cursorLatestValueExp :: S.SQLExp =
         let columnAlias = ciName cursorColInfo
             pgColumn = ciColumn cursorColInfo
@@ -124,9 +124,9 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) = do
             colExp =
               [ S.SELit (G.unName columnAlias),
                 S.SETyAnn
-                  ( mkMaxOrMinSQLExp maxOrMinTxt $
-                      toIdentifier $
-                        contextualizeBaseTableColumn rootFldIdentifier pgColumn
+                  ( mkMaxOrMinSQLExp maxOrMinTxt
+                      $ toIdentifier
+                      $ contextualizeBaseTableColumn rootFldIdentifier pgColumn
                   )
                   S.textTypeAnn
               ]
@@ -146,8 +146,8 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) = do
 
     -- TODO: these functions also exist in `resolveMultiplexedValue`, de-duplicate these!
     fromResVars pgType jPath =
-      addTypeAnnotation pgType $
-        S.SEOpApp
+      addTypeAnnotation pgType
+        $ S.SEOpApp
           (S.SQLOp "#>>")
           [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier (TableIdentifier "_subs") Nothing) (Identifier "result_vars"),
             S.SEArray $ map S.SELit jPath

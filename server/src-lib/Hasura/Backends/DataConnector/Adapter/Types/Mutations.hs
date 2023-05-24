@@ -30,11 +30,11 @@ data DataConnectorUpdateVariant v
   = SingleBatch (UpdateBatch 'DataConnector UpdateOperator v)
   | MultipleBatches [UpdateBatch 'DataConnector UpdateOperator v]
 
-deriving stock instance Backend 'DataConnector => Functor DataConnectorUpdateVariant
+deriving stock instance (Backend 'DataConnector) => Functor DataConnectorUpdateVariant
 
-deriving stock instance Backend 'DataConnector => Foldable DataConnectorUpdateVariant
+deriving stock instance (Backend 'DataConnector) => Foldable DataConnectorUpdateVariant
 
-deriving stock instance Backend 'DataConnector => Traversable DataConnectorUpdateVariant
+deriving stock instance (Backend 'DataConnector) => Traversable DataConnectorUpdateVariant
 
 --------------------------------------------------------------------------------
 

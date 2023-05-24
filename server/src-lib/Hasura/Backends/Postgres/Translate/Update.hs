@@ -33,7 +33,7 @@ data UpdateCTE
 -- | Create the update CTE.
 mkUpdateCTE ::
   forall pgKind.
-  Backend ('Postgres pgKind) =>
+  (Backend ('Postgres pgKind)) =>
   AnnotatedUpdate ('Postgres pgKind) ->
   UpdateCTE
 mkUpdateCTE (AnnotatedUpdateG tn permFltr chk updateVariant _ columnsInfo _tCase) =
@@ -53,8 +53,8 @@ mkUpdateCTE (AnnotatedUpdateG tn permFltr chk updateVariant _ columnsInfo _tCase
 
     checkConstraint :: Maybe S.RetExp
     checkConstraint =
-      Just $
-        S.RetExp
+      Just
+        $ S.RetExp
           [ S.selectStar,
             asCheckErrorExtractor
               . insertCheckConstraint
@@ -75,8 +75,9 @@ mkUpdateCTE (AnnotatedUpdateG tn permFltr chk updateVariant _ columnsInfo _tCase
           }
 
 expandOperator :: [ColumnInfo ('Postgres pgKind)] -> (PGCol, UpdateOpExpression S.SQLExp) -> S.SetExpItem
-expandOperator infos (column, op) = S.SetExpItem $
-  (column,) $ case op of
+expandOperator infos (column, op) = S.SetExpItem
+  $ (column,)
+  $ case op of
     UpdateSet e -> e
     UpdateInc e -> S.mkSQLOpExp S.incOp identifier (asNum e)
     UpdateAppend e -> S.mkSQLOpExp S.jsonbConcatOp identifier (asJSON e)
@@ -90,7 +91,7 @@ expandOperator infos (column, op) = S.SetExpItem $
     asText e = S.SETyAnn e S.textTypeAnn
     asJSON e = S.SETyAnn e S.jsonbTypeAnn
     asArray a = S.SETyAnn (S.SEArray a) S.textArrTypeAnn
-    asNum e = S.SETyAnn e $
-      case find (\info -> ciColumn info == column) infos <&> ciType of
+    asNum e = S.SETyAnn e
+      $ case find (\info -> ciColumn info == column) infos <&> ciType of
         Just (ColumnScalar s) -> S.mkTypeAnn $ CollectableTypeScalar s
         _ -> S.numericTypeAnn

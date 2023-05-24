@@ -76,17 +76,17 @@ selectFunction mkRootFieldName fi@FunctionInfo {..} description = runMaybeT do
     functionArgsParser <- customSQLFunctionArgs fi _fiGQLName _fiGQLArgsName
     let argsParser = liftA2 (,) functionArgsParser tableArgsParser
         functionFieldName = runMkRootFieldName mkRootFieldName _fiGQLName
-    pure $
-      P.subselection functionFieldName description argsParser selectionSetParser
-        <&> \((funcArgs, tableArgs'), fields) ->
-          IR.AnnSelectG
-            { IR._asnFields = fields,
-              IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
-              IR._asnPerm = tablePermissionsInfo selectPermissions,
-              IR._asnArgs = tableArgs',
-              IR._asnStrfyNum = stringifyNumbers,
-              IR._asnNamingConvention = Just tCase
-            }
+    pure
+      $ P.subselection functionFieldName description argsParser selectionSetParser
+      <&> \((funcArgs, tableArgs'), fields) ->
+        IR.AnnSelectG
+          { IR._asnFields = fields,
+            IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
+            IR._asnPerm = tablePermissionsInfo selectPermissions,
+            IR._asnArgs = tableArgs',
+            IR._asnStrfyNum = stringifyNumbers,
+            IR._asnNamingConvention = Just tCase
+          }
   where
     returnFunctionParser =
       case _fiJsonAggSelect of
@@ -127,25 +127,25 @@ selectFunctionAggregate mkRootFieldName fi@FunctionInfo {..} description = runMa
         argsParser = liftA2 (,) functionArgsParser tableArgsParser
         selectionName = mkTypename (applyTypeNameCaseIdentifier tCase $ mkTableAggregateTypeName tableGQLName)
         aggregationParser =
-          fmap (parsedSelectionsToFields IR.TAFExp) $
-            P.nonNullableParser $
-              P.selectionSet
-                selectionName
-                Nothing
-                [ IR.TAFNodes xNodesAgg <$> P.subselection_ Name._nodes Nothing nodesParser,
-                  IR.TAFAgg <$> P.subselection_ Name._aggregate Nothing aggregateParser
-                ]
-    pure $
-      P.subselection aggregateFieldName description argsParser aggregationParser
-        <&> \((funcArgs, tableArgs'), fields) ->
-          IR.AnnSelectG
-            { IR._asnFields = fields,
-              IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
-              IR._asnPerm = tablePermissionsInfo selectPermissions,
-              IR._asnArgs = tableArgs',
-              IR._asnStrfyNum = stringifyNumbers,
-              IR._asnNamingConvention = Just tCase
-            }
+          fmap (parsedSelectionsToFields IR.TAFExp)
+            $ P.nonNullableParser
+            $ P.selectionSet
+              selectionName
+              Nothing
+              [ IR.TAFNodes xNodesAgg <$> P.subselection_ Name._nodes Nothing nodesParser,
+                IR.TAFAgg <$> P.subselection_ Name._aggregate Nothing aggregateParser
+              ]
+    pure
+      $ P.subselection aggregateFieldName description argsParser aggregationParser
+      <&> \((funcArgs, tableArgs'), fields) ->
+        IR.AnnSelectG
+          { IR._asnFields = fields,
+            IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
+            IR._asnPerm = tablePermissionsInfo selectPermissions,
+            IR._asnArgs = tableArgs',
+            IR._asnStrfyNum = stringifyNumbers,
+            IR._asnNamingConvention = Just tCase
+          }
 
 selectFunctionConnection ::
   forall pgKind r m n.
@@ -177,24 +177,24 @@ selectFunctionConnection mkRootFieldName fi@FunctionInfo {..} description pkeyCo
     tableConnectionArgsParser <- tableConnectionArgs pkeyColumns returnTableInfo
     functionArgsParser <- customSQLFunctionArgs fi _fiGQLName _fiGQLArgsName
     let argsParser = liftA2 (,) functionArgsParser tableConnectionArgsParser
-    pure $
-      P.subselection fieldName description argsParser selectionSetParser
-        <&> \((funcArgs, (args, split, slice)), fields) ->
-          IR.ConnectionSelect
-            { IR._csXRelay = xRelayInfo,
-              IR._csPrimaryKeyColumns = pkeyColumns,
-              IR._csSplit = split,
-              IR._csSlice = slice,
-              IR._csSelect =
-                IR.AnnSelectG
-                  { IR._asnFields = fields,
-                    IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
-                    IR._asnPerm = tablePermissionsInfo selectPermissions,
-                    IR._asnArgs = args,
-                    IR._asnStrfyNum = stringifyNumbers,
-                    IR._asnNamingConvention = Just tCase
-                  }
-            }
+    pure
+      $ P.subselection fieldName description argsParser selectionSetParser
+      <&> \((funcArgs, (args, split, slice)), fields) ->
+        IR.ConnectionSelect
+          { IR._csXRelay = xRelayInfo,
+            IR._csPrimaryKeyColumns = pkeyColumns,
+            IR._csSplit = split,
+            IR._csSlice = slice,
+            IR._csSelect =
+              IR.AnnSelectG
+                { IR._asnFields = fields,
+                  IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
+                  IR._asnPerm = tablePermissionsInfo selectPermissions,
+                  IR._asnArgs = args,
+                  IR._asnStrfyNum = stringifyNumbers,
+                  IR._asnNamingConvention = Just tCase
+                }
+          }
 
 -- | Computed field parser
 computedFieldPG ::
@@ -225,8 +225,8 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
           fieldArgsParser = do
             args <- functionArgsParser
             colOp <- scalarSelectionArgumentsParser @('Postgres pgKind) $ ColumnScalar scalarReturnType
-            pure $
-              IR.AFComputedField
+            pure
+              $ IR.AFComputedField
                 _cfiXComputedFieldInfo
                 _cfiName
                 ( IR.CFSScalar
@@ -247,19 +247,19 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
       selectionSetParser <- MaybeT (fmap (P.multiple . P.nonNullableParser) <$> tableSelectionSet otherTableInfo)
       selectArgsParser <- lift $ tableArguments otherTableInfo
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
-      pure $
-        P.subselection fieldName fieldDescription fieldArgsParser selectionSetParser
-          <&> \((functionArgs', args), fields) ->
-            IR.AFComputedField _cfiXComputedFieldInfo _cfiName $
-              IR.CFSTable JASMultipleRows $
-                IR.AnnSelectG
-                  { IR._asnFields = fields,
-                    IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
-                    IR._asnPerm = tablePermissionsInfo remotePerms,
-                    IR._asnArgs = args,
-                    IR._asnStrfyNum = stringifyNumbers,
-                    IR._asnNamingConvention = Just tCase
-                  }
+      pure
+        $ P.subselection fieldName fieldDescription fieldArgsParser selectionSetParser
+        <&> \((functionArgs', args), fields) ->
+          IR.AFComputedField _cfiXComputedFieldInfo _cfiName
+            $ IR.CFSTable JASMultipleRows
+            $ IR.AnnSelectG
+              { IR._asnFields = fields,
+                IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
+                IR._asnPerm = tablePermissionsInfo remotePerms,
+                IR._asnArgs = args,
+                IR._asnStrfyNum = stringifyNumbers,
+                IR._asnNamingConvention = Just tCase
+              }
   where
     fieldDescription :: Maybe G.Description
     fieldDescription = G.Description <$> _cfiDescription
@@ -292,8 +292,8 @@ customSQLFunctionArgs ::
   SchemaT r m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
 customSQLFunctionArgs FunctionInfo {..} functionName functionArgsName =
   functionArgs
-    ( FTACustomFunction $
-        CustomFunctionNames
+    ( FTACustomFunction
+        $ CustomFunctionNames
           { cfnFunctionName = functionName,
             cfnArgsName = functionArgsName
           }
@@ -331,60 +331,63 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
       defaultArguments = FunctionArgsExp (snd <$> session) HashMap.empty
 
   if
-      | length session > 1 ->
-          -- We somehow found more than one session argument; this should never
-          -- happen and is an error on our side.
-          throw500 "there shouldn't be more than one session argument"
-      | null optional && null mandatory ->
-          -- There are no user-provided arguments to the function: there will be
-          -- no args field.
-          pure $ pure defaultArguments
-      | otherwise -> do
-          -- There are user-provided arguments: we need to parse an args object.
-          argumentParsers <- sequenceA $ optional <> mandatory
-          objectName <-
-            mkTypename . applyTypeNameCaseIdentifier tCase
-              <$> case functionTrackedAs of
-                FTAComputedField computedFieldName _sourceName tableName -> do
-                  tableInfo <- askTableInfo tableName
-                  computedFieldGQLName <- textToName $ computedFieldNameToText computedFieldName
-                  tableGQLName <- getTableIdentifierName @('Postgres pgKind) tableInfo
-                  pure $ mkFunctionArgsTypeName computedFieldGQLName tableGQLName
-                FTACustomFunction (CustomFunctionNames {cfnArgsName}) ->
-                  pure $ C.fromCustomName cfnArgsName
-          let fieldName = Name._args
-              fieldDesc =
-                case functionTrackedAs of
-                  FTAComputedField computedFieldName _sourceName tableName ->
-                    G.Description $
-                      "input parameters for computed field "
-                        <> computedFieldName <<> " defined on table " <>> tableName
-                  FTACustomFunction (CustomFunctionNames {cfnFunctionName}) ->
-                    G.Description $ "input parameters for function " <>> cfnFunctionName
-              objectParser =
-                P.object objectName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
-                  -- After successfully parsing, we create a dictionary of the parsed fields
-                  -- and we re-iterate through the original list of sql arguments, now with
-                  -- the knowledge of their graphql name.
-                  let foundArguments = HashMap.fromList $ catMaybes arguments <> session
-                      argsWithNames = zip names inputArgs
+    | length session > 1 ->
+        -- We somehow found more than one session argument; this should never
+        -- happen and is an error on our side.
+        throw500 "there shouldn't be more than one session argument"
+    | null optional && null mandatory ->
+        -- There are no user-provided arguments to the function: there will be
+        -- no args field.
+        pure $ pure defaultArguments
+    | otherwise -> do
+        -- There are user-provided arguments: we need to parse an args object.
+        argumentParsers <- sequenceA $ optional <> mandatory
+        objectName <-
+          mkTypename
+            . applyTypeNameCaseIdentifier tCase
+            <$> case functionTrackedAs of
+              FTAComputedField computedFieldName _sourceName tableName -> do
+                tableInfo <- askTableInfo tableName
+                computedFieldGQLName <- textToName $ computedFieldNameToText computedFieldName
+                tableGQLName <- getTableIdentifierName @('Postgres pgKind) tableInfo
+                pure $ mkFunctionArgsTypeName computedFieldGQLName tableGQLName
+              FTACustomFunction (CustomFunctionNames {cfnArgsName}) ->
+                pure $ C.fromCustomName cfnArgsName
+        let fieldName = Name._args
+            fieldDesc =
+              case functionTrackedAs of
+                FTAComputedField computedFieldName _sourceName tableName ->
+                  G.Description
+                    $ "input parameters for computed field "
+                    <> computedFieldName
+                    <<> " defined on table "
+                    <>> tableName
+                FTACustomFunction (CustomFunctionNames {cfnFunctionName}) ->
+                  G.Description $ "input parameters for function " <>> cfnFunctionName
+            objectParser =
+              P.object objectName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
+                -- After successfully parsing, we create a dictionary of the parsed fields
+                -- and we re-iterate through the original list of sql arguments, now with
+                -- the knowledge of their graphql name.
+                let foundArguments = HashMap.fromList $ catMaybes arguments <> session
+                    argsWithNames = zip names inputArgs
 
-                  -- All elements (in the orignal sql order) that are found in the result map
-                  -- are treated as positional arguments, whether they were originally named or
-                  -- not.
-                  (positional, left) <- spanMaybeM (\(name, _) -> pure $ HashMap.lookup name foundArguments) argsWithNames
+                -- All elements (in the orignal sql order) that are found in the result map
+                -- are treated as positional arguments, whether they were originally named or
+                -- not.
+                (positional, left) <- spanMaybeM (\(name, _) -> pure $ HashMap.lookup name foundArguments) argsWithNames
 
-                  -- If there are arguments left, it means we found one that was not passed
-                  -- positionally. As a result, any remaining argument will have to be passed
-                  -- by name. We fail with a parse error if we encounter a positional sql
-                  -- argument (that does not have a name in the sql function), as:
-                  --   * only the last positional arguments can be omitted;
-                  --   * it has no name we can use.
-                  -- We also fail if we find a mandatory argument that was not
-                  -- provided by the user.
-                  named <- HashMap.fromList . catMaybes <$> traverse (namedArgument foundArguments) left
-                  pure $ FunctionArgsExp positional named
-          pure $ P.field fieldName (Just fieldDesc) objectParser
+                -- If there are arguments left, it means we found one that was not passed
+                -- positionally. As a result, any remaining argument will have to be passed
+                -- by name. We fail with a parse error if we encounter a positional sql
+                -- argument (that does not have a name in the sql function), as:
+                --   * only the last positional arguments can be omitted;
+                --   * it has no name we can use.
+                -- We also fail if we find a mandatory argument that was not
+                -- provided by the user.
+                named <- HashMap.fromList . catMaybes <$> traverse (namedArgument foundArguments) left
+                pure $ FunctionArgsExp positional named
+        pure $ P.field fieldName (Just fieldDesc) objectParser
   where
     sessionPlaceholder :: Postgres.ArgumentExp (IR.UnpreparedValue b)
     sessionPlaceholder = Postgres.AEInput IR.UVSession
@@ -440,8 +443,8 @@ functionArgs functionTrackedAs (toList -> inputArgs) = do
           Just _ -> pure $ Just (name, parsedValue)
           Nothing -> P.parseErrorWith P.NotSupported "Only last set of positional arguments can be omitted"
         Nothing ->
-          whenMaybe (not $ Postgres.unHasDefault $ Postgres.faHasDefault arg) $
-            P.parseErrorWith P.NotSupported "Non default arguments cannot be omitted"
+          whenMaybe (not $ Postgres.unHasDefault $ Postgres.faHasDefault arg)
+            $ P.parseErrorWith P.NotSupported "Non default arguments cannot be omitted"
 
 buildFunctionQueryFieldsPG ::
   forall r m n pgKind.
@@ -456,9 +459,13 @@ buildFunctionQueryFieldsPG ::
 buildFunctionQueryFieldsPG mkRootFieldName functionName functionInfo tableName = do
   let -- select function
       funcDesc =
-        Just . G.Description $
-          flip fromMaybe (_fiComment functionInfo) $
-            "execute function " <> functionName <<> " which returns " <>> tableName
+        Just
+          . G.Description
+          $ flip fromMaybe (_fiComment functionInfo)
+          $ "execute function "
+          <> functionName
+          <<> " which returns "
+          <>> tableName
       -- select function agg
       funcAggDesc =
         Just $ G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> tableName

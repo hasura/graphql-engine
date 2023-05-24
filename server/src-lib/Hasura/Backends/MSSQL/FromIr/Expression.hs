@@ -51,25 +51,25 @@ fromGBoolExp =
       selectFrom <- lift (aliasQualifiedTable _geTable)
       scopedTo selectFrom $ do
         whereExpression <- fromGBoolExp _geWhere
-        pure $
-          ExistsExpression $
-            emptySelect
-              { selectOrderBy = Nothing,
-                selectProjections =
-                  [ ExpressionProjection
-                      ( Aliased
-                          { aliasedThing = trueExpression,
-                            aliasedAlias = existsFieldName
-                          }
-                      )
-                  ],
-                selectFrom = Just selectFrom,
-                selectJoins = mempty,
-                selectWhere = Where [whereExpression],
-                selectTop = NoTop,
-                selectFor = NoFor,
-                selectOffset = Nothing
-              }
+        pure
+          $ ExistsExpression
+          $ emptySelect
+            { selectOrderBy = Nothing,
+              selectProjections =
+                [ ExpressionProjection
+                    ( Aliased
+                        { aliasedThing = trueExpression,
+                          aliasedAlias = existsFieldName
+                        }
+                    )
+                ],
+              selectFrom = Just selectFrom,
+              selectJoins = mempty,
+              selectWhere = Where [whereExpression],
+              selectTop = NoTop,
+              selectFor = NoFor,
+              selectOffset = Nothing
+            }
 
 -- | Translate boolean expressions into TSQL 'Expression's.
 --

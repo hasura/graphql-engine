@@ -66,8 +66,8 @@ mkFirstElementExp expIdentifier =
 mkLastElementExp :: S.SQLExp -> S.SQLExp
 mkLastElementExp expIdentifier =
   let arrayExp = S.SEFnApp "array_agg" [expIdentifier] Nothing
-   in S.SEArrayIndex arrayExp $
-        S.SEFnApp "array_length" [arrayExp, S.intToSQLExp 1] Nothing
+   in S.SEArrayIndex arrayExp
+        $ S.SEFnApp "array_length" [arrayExp, S.intToSQLExp 1] Nothing
 
 cursorIdentifier :: Identifier
 cursorIdentifier = Identifier "__cursor"
@@ -136,12 +136,12 @@ selectFromToFromItem prefix = \case
   FromTable tn -> S.FISimple tn Nothing
   FromIdentifier i -> S.FIIdentifier $ TableIdentifier $ unFIIdentifier i
   FromFunction qf args defListM ->
-    S.FIFunc $
-      S.FunctionExp qf (fromTableRowArgs prefix args) $
-        Just $
-          S.mkFunctionAlias
-            qf
-            (fmap (fmap (first S.toColumnAlias)) defListM)
+    S.FIFunc
+      $ S.FunctionExp qf (fromTableRowArgs prefix args)
+      $ Just
+      $ S.mkFunctionAlias
+        qf
+        (fmap (fmap (first S.toColumnAlias)) defListM)
   FromStoredProcedure {} -> error "selectFromToFromItem: FromStoredProcedure"
   FromNativeQuery lm ->
     S.FIIdentifier (S.tableAliasToIdentifier $ nativeQueryNameToAlias (nqRootFieldName lm))

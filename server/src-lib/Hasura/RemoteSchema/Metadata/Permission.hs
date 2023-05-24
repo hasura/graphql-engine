@@ -27,13 +27,13 @@ instance Hashable RemoteSchemaPermissionDefinition
 
 instance HasCodec RemoteSchemaPermissionDefinition where
   codec =
-    object "RemoteSchemaPermissionDefinition" $
-      RemoteSchemaPermissionDefinition
-        <$> requiredFieldWith
-          "schema"
-          graphQLSchemaDocumentCodec
-          "GraphQL schema document, e.g. the content of schema.gql"
-          .= _rspdSchema
+    object "RemoteSchemaPermissionDefinition"
+      $ RemoteSchemaPermissionDefinition
+      <$> requiredFieldWith
+        "schema"
+        graphQLSchemaDocumentCodec
+        "GraphQL schema document, e.g. the content of schema.gql"
+      .= _rspdSchema
 
 instance J.FromJSON RemoteSchemaPermissionDefinition where
   parseJSON = J.withObject "RemoteSchemaPermissionDefinition" $ \obj -> do
@@ -52,10 +52,13 @@ data RemoteSchemaPermissionMetadata = RemoteSchemaPermissionMetadata
 
 instance HasCodec RemoteSchemaPermissionMetadata where
   codec =
-    object "RemoteSchemaPermissionMetadata" $
-      RemoteSchemaPermissionMetadata
-        <$> requiredField' "role" .= _rspmRole
-        <*> requiredField' "definition" .= _rspmDefinition
-        <*> optionalField' "comment" .= _rspmComment
+    object "RemoteSchemaPermissionMetadata"
+      $ RemoteSchemaPermissionMetadata
+      <$> requiredField' "role"
+      .= _rspmRole
+        <*> requiredField' "definition"
+      .= _rspmDefinition
+        <*> optionalField' "comment"
+      .= _rspmComment
 
 $(J.deriveJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaPermissionMetadata)

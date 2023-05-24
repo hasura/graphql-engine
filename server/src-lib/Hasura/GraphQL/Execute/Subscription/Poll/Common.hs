@@ -93,8 +93,8 @@ newtype SubscriberMetadata = SubscriberMetadata {unSubscriberMetadata :: J.Value
 
 mkSubscriberMetadata :: WS.WSId -> OperationId -> Maybe OperationName -> RequestId -> SubscriberMetadata
 mkSubscriberMetadata websocketId operationId operationName reqId =
-  SubscriberMetadata $
-    J.object
+  SubscriberMetadata
+    $ J.object
       [ "websocket_id" J..= websocketId,
         "operation_id" J..= operationId,
         "operation_name" J..= operationName,
@@ -198,8 +198,8 @@ dumpCohortMap cohortMap = do
   cohorts <- STM.atomically $ TMap.toList cohortMap
   fmap J.toJSON . forM cohorts $ \(variableValues, cohort) -> do
     cohortJ <- dumpCohort cohort
-    return $
-      J.object
+    return
+      $ J.object
         [ "variables" J..= variableValues,
           "cohort" J..= cohortJ
         ]
@@ -209,8 +209,8 @@ dumpCohortMap cohortMap = do
         prevResHash <- STM.readTVar respTV
         curOpIds <- TMap.toList curOps
         newOpIds <- TMap.toList newOps
-        return $
-          J.object
+        return
+          $ J.object
             [ "resp_id" J..= respId,
               "current_ops" J..= map fst curOpIds,
               "new_ops" J..= map fst newOpIds,
@@ -302,8 +302,8 @@ dumpPollerMap extended pollerMap =
           if extended
             then Just <$> dumpCohortMap cohortsMap
             else return Nothing
-        return $
-          J.object
+        return
+          $ J.object
             [ "source" J..= source,
               "role" J..= role,
               "thread_id" J..= show (Immortal.threadId threadId),

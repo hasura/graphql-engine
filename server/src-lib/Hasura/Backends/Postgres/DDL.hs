@@ -47,8 +47,9 @@ parseCollectableType pgType = \case
     CollectableTypeArray ofType -> do
       vals <- runAesonParser parseJSON val
       scalarValues <- parseScalarValuesColumnType ofType vals
-      return . PSESQLExp $
-        SETyAnn
+      return
+        . PSESQLExp
+        $ SETyAnn
           (SEArray $ map (toTxtValue . ColumnValue ofType) scalarValues)
           (mkTypeAnn $ CollectableTypeArray (unsafePGColumnToBackend ofType))
 

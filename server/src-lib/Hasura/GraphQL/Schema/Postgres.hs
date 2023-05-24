@@ -18,12 +18,13 @@ import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Object
 
 buildActionQueryFields ::
-  MonadBuildActionSchema r m n =>
+  (MonadBuildActionSchema r m n) =>
   AnnotatedCustomTypes ->
   ActionInfo ->
   SchemaT r m [FieldParser n (QueryRootField UnpreparedValue)]
 buildActionQueryFields customTypes actionInfo =
-  maybeToList . applyActionOrigin actionInfo
+  maybeToList
+    . applyActionOrigin actionInfo
     <$> case _adType (_aiDefinition actionInfo) of
       ActionQuery ->
         fmap (fmap (RFAction . AQQuery)) <$> actionExecute customTypes actionInfo
@@ -32,12 +33,13 @@ buildActionQueryFields customTypes actionInfo =
         fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery (_actObjectTypes customTypes) actionInfo
 
 buildActionMutationFields ::
-  MonadBuildActionSchema r m n =>
+  (MonadBuildActionSchema r m n) =>
   AnnotatedCustomTypes ->
   ActionInfo ->
   SchemaT r m [FieldParser n (MutationRootField UnpreparedValue)]
 buildActionMutationFields customTypes actionInfo =
-  maybeToList . applyActionOrigin actionInfo
+  maybeToList
+    . applyActionOrigin actionInfo
     <$> case _adType (_aiDefinition actionInfo) of
       ActionQuery -> pure Nothing
       ActionMutation ActionSynchronous ->
@@ -46,12 +48,13 @@ buildActionMutationFields customTypes actionInfo =
         fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation (_actInputTypes customTypes) actionInfo
 
 buildActionSubscriptionFields ::
-  MonadBuildActionSchema r m n =>
+  (MonadBuildActionSchema r m n) =>
   AnnotatedCustomTypes ->
   ActionInfo ->
   SchemaT r m [FieldParser n (QueryRootField UnpreparedValue)]
 buildActionSubscriptionFields customTypes actionInfo =
-  maybeToList . applyActionOrigin actionInfo
+  maybeToList
+    . applyActionOrigin actionInfo
     <$> case _adType (_aiDefinition actionInfo) of
       ActionQuery -> pure Nothing
       ActionMutation ActionSynchronous -> pure Nothing

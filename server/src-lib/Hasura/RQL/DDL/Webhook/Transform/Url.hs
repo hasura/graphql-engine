@@ -48,7 +48,7 @@ instance Transform Url where
 -- transformations, this can be seen as an implementation of these
 -- transformations as normal Haskell functions.
 applyUrlTransformFn ::
-  MonadError TransformErrorBundle m =>
+  (MonadError TransformErrorBundle m) =>
   UrlTransformFn ->
   RequestTransformCtx ->
   Url ->

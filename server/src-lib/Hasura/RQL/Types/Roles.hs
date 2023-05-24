@@ -81,10 +81,12 @@ instance Hashable Role
 
 instance HasCodec Role where
   codec =
-    AC.object "Role" $
-      Role
-        <$> requiredField' "role_name" AC..= _rRoleName
-        <*> requiredField' "role_set" AC..= _rParentRoles
+    AC.object "Role"
+      $ Role
+      <$> requiredField' "role_name"
+      AC..= _rRoleName
+        <*> requiredField' "role_set"
+      AC..= _rParentRoles
 
 instance ToJSON Role where
   toJSON (Role roleName parentRoles) =

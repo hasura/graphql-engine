@@ -134,9 +134,13 @@ buildFunctionQueryFields' ::
 buildFunctionQueryFields' mkRootFieldName functionName functionInfo tableName = do
   let -- Implementation modified from buildFunctionQueryFieldsPG
       funcDesc =
-        Just . GQL.Description $
-          flip fromMaybe (RQL._fiComment functionInfo <|> RQL._fiDescription functionInfo) $
-            "execute function " <> functionName <<> " which returns " <>> tableName
+        Just
+          . GQL.Description
+          $ flip fromMaybe (RQL._fiComment functionInfo <|> RQL._fiDescription functionInfo)
+          $ "execute function "
+          <> functionName
+          <<> " which returns "
+          <>> tableName
 
       queryResultType =
         case RQL._fiJsonAggSelect functionInfo of
@@ -176,17 +180,17 @@ selectFunction mkRootFieldName fi@RQL.FunctionInfo {..} description = runMaybeT 
     functionArgsParser <- customFunctionArgs fi _fiGQLName _fiGQLArgsName
     let argsParser = liftA2 (,) functionArgsParser tableArgsParser
         functionFieldName = RQL.runMkRootFieldName mkRootFieldName _fiGQLName
-    pure $
-      P.subselection functionFieldName description argsParser selectionSetParser
-        <&> \((funcArgs, tableArgs''), fields) ->
-          IR.AnnSelectG
-            { IR._asnFields = fields,
-              IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
-              IR._asnPerm = GS.S.tablePermissionsInfo selectPermissions,
-              IR._asnArgs = tableArgs'',
-              IR._asnStrfyNum = stringifyNumbers,
-              IR._asnNamingConvention = Just tCase
-            }
+    pure
+      $ P.subselection functionFieldName description argsParser selectionSetParser
+      <&> \((funcArgs, tableArgs''), fields) ->
+        IR.AnnSelectG
+          { IR._asnFields = fields,
+            IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
+            IR._asnPerm = GS.S.tablePermissionsInfo selectPermissions,
+            IR._asnArgs = tableArgs'',
+            IR._asnStrfyNum = stringifyNumbers,
+            IR._asnNamingConvention = Just tCase
+          }
   where
     returnFunctionParser =
       case _fiJsonAggSelect of
@@ -198,15 +202,15 @@ selectFunction mkRootFieldName fi@RQL.FunctionInfo {..} description = runMaybeT 
 -- | The custom SQL functions' input "args" field parser
 -- > function_name(args: function_args)
 customFunctionArgs ::
-  MonadBuildSchema 'DataConnector r m n =>
+  (MonadBuildSchema 'DataConnector r m n) =>
   RQL.FunctionInfo 'DataConnector ->
   GQL.Name ->
   GQL.Name ->
   GS.C.SchemaT r m (P.InputFieldsParser n (RQL.FunctionArgsExp 'DataConnector (IR.UnpreparedValue 'DataConnector)))
 customFunctionArgs RQL.FunctionInfo {..} functionName functionArgsName =
   functionArgs'
-    ( FTACustomFunction $
-        RQL.CustomFunctionNames
+    ( FTACustomFunction
+        $ RQL.CustomFunctionNames
           { cfnFunctionName = functionName,
             cfnArgsName = functionArgsName
           }
@@ -216,7 +220,7 @@ customFunctionArgs RQL.FunctionInfo {..} functionName functionArgsName =
 -- NOTE: Modified version of server/src-lib/Hasura/Backends/Postgres/Schema/Select.hs ~ functionArgs
 functionArgs' ::
   forall r m n.
-  MonadBuildSchema 'DataConnector r m n =>
+  (MonadBuildSchema 'DataConnector r m n) =>
   FunctionTrackedAs 'DataConnector ->
   Seq.Seq (RQL.FunctionInputArgument 'DataConnector) ->
   GS.C.SchemaT r m (P.InputFieldsParser n (RQL.FunctionArgsExp 'DataConnector (IR.UnpreparedValue 'DataConnector)))
@@ -228,41 +232,44 @@ functionArgs' functionTrackedAs (toList -> inputArgs) = do
       (names, session, optional, mandatory) = mconcat $ snd $ mapAccumL splitArguments 1 inputArgs
       defaultArguments = RQL.FunctionArgsExp (snd <$> session) HashMap.empty
   if
-      | length session > 1 ->
-          throw500 "there shouldn't be more than one session argument"
-      | null optional && null mandatory ->
-          pure $ pure defaultArguments
-      | otherwise -> do
-          argumentParsers <- sequenceA $ optional <> mandatory
-          objectName <-
-            mkTypename . RQL.applyTypeNameCaseIdentifier tCase
-              <$> case functionTrackedAs of
-                FTAComputedField computedFieldName _sourceName tableName -> do
-                  tableInfo <- GS.C.askTableInfo tableName
-                  computedFieldGQLName <- GS.C.textToName $ computedFieldNameToText computedFieldName
-                  tableGQLName <- GS.T.getTableIdentifierName @'DataConnector tableInfo
-                  pure $ RQL.mkFunctionArgsTypeName computedFieldGQLName tableGQLName
-                FTACustomFunction (CustomFunctionNames {cfnArgsName}) ->
-                  pure $ fromCustomName cfnArgsName
-          let fieldName = Name._args
-              fieldDesc =
-                case functionTrackedAs of
-                  FTAComputedField computedFieldName _sourceName tableName ->
-                    GQL.Description $
-                      "input parameters for computed field "
-                        <> computedFieldName <<> " defined on table " <>> tableName
-                  FTACustomFunction (CustomFunctionNames {cfnFunctionName}) ->
-                    GQL.Description $ "input parameters for function " <>> cfnFunctionName
-              objectParser =
-                P.object objectName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
-                  let foundArguments = HashMap.fromList $ catMaybes arguments <> session
-                      argsWithNames = zip names inputArgs
+    | length session > 1 ->
+        throw500 "there shouldn't be more than one session argument"
+    | null optional && null mandatory ->
+        pure $ pure defaultArguments
+    | otherwise -> do
+        argumentParsers <- sequenceA $ optional <> mandatory
+        objectName <-
+          mkTypename
+            . RQL.applyTypeNameCaseIdentifier tCase
+            <$> case functionTrackedAs of
+              FTAComputedField computedFieldName _sourceName tableName -> do
+                tableInfo <- GS.C.askTableInfo tableName
+                computedFieldGQLName <- GS.C.textToName $ computedFieldNameToText computedFieldName
+                tableGQLName <- GS.T.getTableIdentifierName @'DataConnector tableInfo
+                pure $ RQL.mkFunctionArgsTypeName computedFieldGQLName tableGQLName
+              FTACustomFunction (CustomFunctionNames {cfnArgsName}) ->
+                pure $ fromCustomName cfnArgsName
+        let fieldName = Name._args
+            fieldDesc =
+              case functionTrackedAs of
+                FTAComputedField computedFieldName _sourceName tableName ->
+                  GQL.Description
+                    $ "input parameters for computed field "
+                    <> computedFieldName
+                    <<> " defined on table "
+                    <>> tableName
+                FTACustomFunction (CustomFunctionNames {cfnFunctionName}) ->
+                  GQL.Description $ "input parameters for function " <>> cfnFunctionName
+            objectParser =
+              P.object objectName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
+                let foundArguments = HashMap.fromList $ catMaybes arguments <> session
+                    argsWithNames = zip names inputArgs
 
-                  -- All args have names in DC for now
-                  named <- HashMap.fromList . catMaybes <$> traverse (namedArgument foundArguments) argsWithNames
-                  pure $ RQL.FunctionArgsExp [] named
+                -- All args have names in DC for now
+                named <- HashMap.fromList . catMaybes <$> traverse (namedArgument foundArguments) argsWithNames
+                pure $ RQL.FunctionArgsExp [] named
 
-          pure $ P.field fieldName (Just fieldDesc) objectParser
+        pure $ P.field fieldName (Just fieldDesc) objectParser
   where
     sessionPlaceholder :: DC.ArgumentExp (IR.UnpreparedValue b)
     sessionPlaceholder = DC.AEInput IR.UVSession
@@ -466,23 +473,26 @@ columnParser' ::
   GS.C.SchemaT r m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
 columnParser' columnType nullability = case columnType of
   RQL.ColumnScalar scalarType@(DC.ScalarType name graphQLType) ->
-    P.memoizeOn 'columnParser' (scalarType, nullability) $
-      GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType) . possiblyNullable' scalarType nullability
-        <$> do
-          gqlName <-
-            GQL.mkName name
-              `onNothing` throw400 ValidationFailed ("The column type name " <> name <<> " is not a valid GraphQL name")
-          pure $ case graphQLType of
-            Nothing -> P.jsonScalar gqlName (Just "A custom scalar type")
-            Just DC.GraphQLInt -> (J.Number . fromIntegral) <$> P.namedInt gqlName
-            Just DC.GraphQLFloat -> (J.Number . fromFloatDigits) <$> P.namedFloat gqlName
-            Just DC.GraphQLString -> J.String <$> P.namedString gqlName
-            Just DC.GraphQLBoolean -> J.Bool <$> P.namedBoolean gqlName
-            Just DC.GraphQLID -> J.String <$> P.namedIdentifier gqlName
+    P.memoizeOn 'columnParser' (scalarType, nullability)
+      $ GS.C.peelWithOrigin
+      . fmap (RQL.ColumnValue columnType)
+      . possiblyNullable' scalarType nullability
+      <$> do
+        gqlName <-
+          GQL.mkName name
+            `onNothing` throw400 ValidationFailed ("The column type name " <> name <<> " is not a valid GraphQL name")
+        pure $ case graphQLType of
+          Nothing -> P.jsonScalar gqlName (Just "A custom scalar type")
+          Just DC.GraphQLInt -> (J.Number . fromIntegral) <$> P.namedInt gqlName
+          Just DC.GraphQLFloat -> (J.Number . fromFloatDigits) <$> P.namedFloat gqlName
+          Just DC.GraphQLString -> J.String <$> P.namedString gqlName
+          Just DC.GraphQLBoolean -> J.Bool <$> P.namedBoolean gqlName
+          Just DC.GraphQLID -> J.String <$> P.namedIdentifier gqlName
   RQL.ColumnEnumReference (RQL.EnumReference tableName enumValues customTableName) ->
     case nonEmpty (HashMap.toList enumValues) of
       Just enumValuesList ->
-        GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType)
+        GS.C.peelWithOrigin
+          . fmap (RQL.ColumnValue columnType)
           <$> enumParser' tableName enumValuesList customTableName nullability
       Nothing -> throw400 ValidationFailed "empty enum values"
 
@@ -510,7 +520,8 @@ orderByOperators' :: RQL.SourceInfo 'DataConnector -> NamingCase -> (GQL.Name, N
 orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
   let dcName = DC._scDataConnectorName _siConfiguration
       orderBy = GQL.addSuffixes (DC.unDataConnectorName dcName) [$$(GQL.litSuffix "_order_by")]
-   in (orderBy,) $
+   in (orderBy,)
+        $
         -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
         NE.fromList
           [ ( define $$(GQL.litName "asc") "in ascending order",
@@ -537,28 +548,28 @@ comparisonExps' columnType = do
     typedParser <- columnParser' columnType (GQL.Nullability False)
     let name = GQL.addSuffixes (P.getName typedParser) [$$(GQL.litSuffix "_"), GQL.convertNameToSuffix (DC.unDataConnectorName dataConnectorName), $$(GQL.litSuffix "_comparison_exp")]
         desc =
-          GQL.Description $
-            "Boolean expression to compare columns of type "
-              <> P.getName typedParser
-                <<> ". All fields are combined with logical 'AND'."
+          GQL.Description
+            $ "Boolean expression to compare columns of type "
+            <> P.getName typedParser
+            <<> ". All fields are combined with logical 'AND'."
         columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
     customOperators <- (fmap . fmap . fmap) IR.ABackendSpecific <$> mkCustomOperators sourceInfo tCase collapseIfNull (P.getName typedParser)
-    pure $
-      P.object name (Just desc) $
-        fmap catMaybes $
-          sequenceA $
-            concat
-              [ GS.BE.equalityOperators
-                  tCase
-                  collapseIfNull
-                  (IR.mkParameter <$> typedParser)
-                  (mkListLiteral <$> columnListParser),
-                GS.BE.comparisonOperators
-                  tCase
-                  collapseIfNull
-                  (IR.mkParameter <$> typedParser),
-                customOperators
-              ]
+    pure
+      $ P.object name (Just desc)
+      $ fmap catMaybes
+      $ sequenceA
+      $ concat
+        [ GS.BE.equalityOperators
+            tCase
+            collapseIfNull
+            (IR.mkParameter <$> typedParser)
+            (mkListLiteral <$> columnListParser),
+          GS.BE.comparisonOperators
+            tCase
+            collapseIfNull
+            (IR.mkParameter <$> typedParser),
+          customOperators
+        ]
   where
     mkListLiteral :: [RQL.ColumnValue 'DataConnector] -> IR.UnpreparedValue 'DataConnector
     mkListLiteral columnValues =
@@ -584,9 +595,12 @@ comparisonExps' columnType = do
       GS.C.SchemaT r m (P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector))))
     mkCustomOperator tCase collapseIfNull (operatorName, argType) = do
       argParser <- mkArgParser argType
-      pure $
-        GS.BE.mkBoolOperator tCase collapseIfNull (fromCustomName operatorName) Nothing $
-          CustomBooleanOperator (GQL.unName operatorName) . Just . Right <$> argParser
+      pure
+        $ GS.BE.mkBoolOperator tCase collapseIfNull (fromCustomName operatorName) Nothing
+        $ CustomBooleanOperator (GQL.unName operatorName)
+        . Just
+        . Right
+        <$> argParser
 
     mkArgParser :: DC.ScalarType -> GS.C.SchemaT r m (P.Parser 'P.Both n (IR.UnpreparedValue 'DataConnector))
     mkArgParser argType =
@@ -611,12 +625,12 @@ tableArgs' tableInfo = do
             _saOffset = offsetArg,
             _saDistinct = Nothing
           }
-  pure $
-    mkSelectArgs
-      <$> whereParser
-      <*> orderByParser
-      <*> GS.S.tableLimitArg
-      <*> GS.S.tableOffsetArg
+  pure
+    $ mkSelectArgs
+    <$> whereParser
+    <*> orderByParser
+    <*> GS.S.tableLimitArg
+    <*> GS.S.tableOffsetArg
 
 countTypeInput' ::
   (MonadParse n) =>

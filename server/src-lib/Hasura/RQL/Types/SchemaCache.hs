@@ -210,9 +210,9 @@ mkLogicalModelParentDep ::
 mkLogicalModelParentDep source logicalModelName = do
   let sourceObject :: SchemaObjId
       sourceObject =
-        SOSourceObj source $
-          AB.mkAnyBackend @b $
-            SOILogicalModel logicalModelName
+        SOSourceObj source
+          $ AB.mkAnyBackend @b
+          $ SOILogicalModel logicalModelName
 
   SchemaDependency sourceObject DRTable
 
@@ -243,10 +243,10 @@ mkLogicalModelColDep ::
 mkLogicalModelColDep reason source logicalModelName column = do
   let sourceObject :: SchemaObjId
       sourceObject =
-        SOSourceObj source $
-          AB.mkAnyBackend $
-            SOILogicalModelObj @b logicalModelName $
-              LMOCol @b column
+        SOSourceObj source
+          $ AB.mkAnyBackend
+          $ SOILogicalModelObj @b logicalModelName
+          $ LMOCol @b column
 
   SchemaDependency sourceObject reason
 
@@ -339,17 +339,20 @@ askSourceInfo sourceName = do
         metadata <- getMetadata
         maybe
           -- 2. The named source exists but does not match the expected type
-          ( throw400 NotExists $
-              "source with name "
-                <> sourceName <<> " has backend type "
-                <> T.toTxt (AB.lowerTag matchingNameSourceInfo)
-                  <<> " which does not match the expected type "
-                <> T.toTxt (reify $ backendTag @b)
+          ( throw400 NotExists
+              $ "source with name "
+              <> sourceName
+              <<> " has backend type "
+              <> T.toTxt (AB.lowerTag matchingNameSourceInfo)
+              <<> " which does not match the expected type "
+              <> T.toTxt (reify $ backendTag @b)
           )
           -- 3. The named source exists, and is of the expected type, but is inconsistent
-          ( const $
-              throw400 Unexpected $
-                "source with name " <> sourceName <<> " is inconsistent"
+          ( const
+              $ throw400 Unexpected
+              $ "source with name "
+              <> sourceName
+              <<> " is inconsistent"
           )
           (metadata ^. metaSources . at sourceName)
 
@@ -436,9 +439,12 @@ askTableInfo ::
   m (TableInfo b)
 askTableInfo sourceName tableName = do
   rawSchemaCache <- askSchemaCache
-  onNothing (unsafeTableInfo sourceName tableName $ scSources rawSchemaCache) $
-    throw400 NotExists $
-      "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
+  onNothing (unsafeTableInfo sourceName tableName $ scSources rawSchemaCache)
+    $ throw400 NotExists
+    $ "table "
+    <> tableName
+    <<> " does not exist in source: "
+    <> sourceNameToText sourceName
 
 -- | Similar to 'askTableInfo', but drills further down to extract the
 -- underlying core info.
@@ -477,9 +483,12 @@ askTableMetadata ::
   TableName b ->
   m (TableMetadata b)
 askTableMetadata sourceName tableName = do
-  onNothingM (getMetadata <&> preview focusTableMetadata) $
-    throw400 NotExists $
-      "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
+  onNothingM (getMetadata <&> preview focusTableMetadata)
+    $ throw400 NotExists
+    $ "table "
+    <> tableName
+    <<> " does not exist in source: "
+    <> sourceNameToText sourceName
   where
     focusTableMetadata :: Traversal' Metadata (TableMetadata b)
     focusTableMetadata =
@@ -527,9 +536,12 @@ askFunctionInfo ::
   m (FunctionInfo b)
 askFunctionInfo sourceName functionName = do
   rawSchemaCache <- askSchemaCache
-  onNothing (unsafeFunctionInfo sourceName functionName $ scSources rawSchemaCache) $
-    throw400 NotExists $
-      "function " <> functionName <<> " does not exist in source: " <> sourceNameToText sourceName
+  onNothing (unsafeFunctionInfo sourceName functionName $ scSources rawSchemaCache)
+    $ throw400 NotExists
+    $ "function "
+    <> functionName
+    <<> " does not exist in source: "
+    <> sourceNameToText sourceName
 
 -------------------------------------------------------------------------------
 
@@ -697,10 +709,10 @@ getDependentObjsWith ::
 getDependentObjsWith f sc objId =
   map fst $ filter (isDependency . snd) $ HashMap.toList $ scDepMap sc
   where
-    isDependency deps = not $
-      HS.null $
-        flip HS.filter deps $
-          \(SchemaDependency depId reason) -> objId `induces` depId && f reason
+    isDependency deps = not
+      $ HS.null
+      $ flip HS.filter deps
+      $ \(SchemaDependency depId reason) -> objId `induces` depId && f reason
     -- induces a b : is b dependent on a
     induces (SOSource s1) (SOSource s2) = s1 == s2
     induces (SOSource s1) (SOSourceObj s2 _) = s1 == s2
@@ -823,9 +835,9 @@ getBoolExpDeps' = \case
     BoolExpCtx {source} <- ask
     let tableDep =
           SchemaDependency
-            ( SOSourceObj source $
-                AB.mkAnyBackend $
-                  SOITable @b refqt
+            ( SOSourceObj source
+                $ AB.mkAnyBackend
+                $ SOITable @b refqt
             )
             DRRemoteTable
     (tableDep :) <$> local (\e -> e {currTable = refqt}) (getBoolExpDeps' whereExp)
@@ -853,9 +865,9 @@ getColExpDeps bexp = do
           let relationshipName = riName relInfo
               schemaDependency =
                 SchemaDependency
-                  ( SOSourceObj source $
-                      AB.mkAnyBackend $
-                        SOITableObj @b currTable (TORel relationshipName)
+                  ( SOSourceObj source
+                      $ AB.mkAnyBackend
+                      $ SOITableObj @b currTable (TORel relationshipName)
                   )
                   DROnType
            in do
@@ -876,9 +888,9 @@ getColExpDeps bexp = do
        in case _acfbBoolExp computedFieldBoolExp of
             CFBEScalar opExps ->
               let computedFieldDep =
-                    mkComputedFieldDep' $
-                      bool DRSessionVariable DROnType $
-                        any hasStaticExp opExps
+                    mkComputedFieldDep'
+                      $ bool DRSessionVariable DROnType
+                      $ any hasStaticExp opExps
                in (computedFieldDep :) <$> getOpExpDeps opExps
             CFBETable cfTable cfTableBoolExp ->
               (mkComputedFieldDep' DROnType :) <$> local (\e -> e {currTable = cfTable}) (getBoolExpDeps' cfTableBoolExp)
@@ -919,7 +931,9 @@ askFieldInfoMapSource ::
   TableName b ->
   m (FieldInfoMap (FieldInfo b))
 askFieldInfoMapSource tableName = do
-  fmap _tciFieldInfoMap $
-    onNothingM (lookupTableCoreInfo tableName) $
-      throw400 NotExists $
-        "table " <> tableName <<> " does not exist"
+  fmap _tciFieldInfoMap
+    $ onNothingM (lookupTableCoreInfo tableName)
+    $ throw400 NotExists
+    $ "table "
+    <> tableName
+    <<> " does not exist"

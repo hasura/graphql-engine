@@ -223,11 +223,11 @@ rebuildRebuildableAppContext ::
 rebuildRebuildableAppContext readerCtx (RebuildableAppContext _ _ rule) serveOptions env = do
   let newInvalidationKeys = InvalidationKeys
   result <-
-    liftEitherM $
-      liftIO $
-        runExceptT $
-          flip runReaderT readerCtx $
-            Inc.build rule (serveOptions, env, newInvalidationKeys)
+    liftEitherM
+      $ liftIO
+      $ runExceptT
+      $ flip runReaderT readerCtx
+      $ Inc.build rule (serveOptions, env, newInvalidationKeys)
   let appContext = Inc.result result
       !newCtx = RebuildableAppContext appContext newInvalidationKeys (Inc.rebuildRule result)
   pure newCtx
@@ -286,8 +286,8 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
           -< do
             (logger, httpManager) <- ask
             authModeRes <-
-              runExceptT $
-                setupAuthMode
+              runExceptT
+                $ setupAuthMode
                   adminSecretHashSet
                   webHook
                   jwtSecrets
@@ -301,9 +301,9 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
     buildResponseInternalErrorsConfig = Inc.cache proc (adminInternalErrors, devMode) -> do
       let responseInternalErrorsConfig =
             if
-                | isDevModeEnabled devMode -> InternalErrorsAllRequests
-                | isAdminInternalErrorsEnabled adminInternalErrors -> InternalErrorsAdminOnly
-                | otherwise -> InternalErrorsDisabled
+              | isDevModeEnabled devMode -> InternalErrorsAllRequests
+              | isAdminInternalErrorsEnabled adminInternalErrors -> InternalErrorsAdminOnly
+              | otherwise -> InternalErrorsDisabled
       returnA -< responseInternalErrorsConfig
 
 --------------------------------------------------------------------------------

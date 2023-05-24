@@ -61,10 +61,10 @@ instance (Backend b) => HasCodec (LogicalModelTypeScalar b) where
       ("A scalar type used in a Logical Model.")
       $ AC.object (backendPrefix @b <> "LogicalModelTypeScalar")
       $ LogicalModelTypeScalarC
-        <$> AC.requiredField "scalar" scalarDoc
-          AC..= lmtsScalar
+      <$> AC.requiredField "scalar" scalarDoc
+      AC..= lmtsScalar
         <*> AC.optionalFieldWithDefault "nullable" False nullableDoc
-          AC..= lmtsNullable
+      AC..= lmtsNullable
     where
       scalarDoc = "Name of the scalar type"
       nullableDoc = "Whether this field is allowed to contain null values or not"
@@ -101,10 +101,10 @@ instance (Backend b) => HasCodec (LogicalModelTypeArray b) where
       ("An array type used in a Logical Model.")
       $ AC.object (backendPrefix @b <> "LogicalModelTypeArray")
       $ LogicalModelTypeArrayC
-        <$> AC.requiredField "array" arrayDoc
-          AC..= lmtaArray
+      <$> AC.requiredField "array" arrayDoc
+      AC..= lmtaArray
         <*> AC.optionalFieldWithDefault "nullable" False nullableDoc
-          AC..= lmtaNullable
+      AC..= lmtaNullable
     where
       arrayDoc = "Type of items inside array"
       nullableDoc = "Whether this field can be null or not"
@@ -134,10 +134,10 @@ instance HasCodec LogicalModelTypeReference where
       ("A reference to another Logical Model.")
       $ AC.object "LogicalModelTypeReference"
       $ LogicalModelTypeReferenceC
-        <$> AC.requiredField "logical_model" referenceDoc
-          AC..= lmtrReference
+      <$> AC.requiredField "logical_model" referenceDoc
+      AC..= lmtrReference
         <*> AC.optionalFieldWithDefault "nullable" False nullableDoc
-          AC..= lmtrNullable
+      AC..= lmtrNullable
     where
       referenceDoc = "Name of another Logical Model to nest"
       nullableDoc = "Whether this field can be null or not"
@@ -248,14 +248,14 @@ instance (Backend b) => HasCodec (LogicalModelField b) where
           ("A field of a logical model")
           $ AC.object (backendPrefix @b <> "LogicalModelField")
           $ LogicalModelFieldSimple
-            <$> AC.requiredField "name" nameDoc
-              AC..= lmfsName
+          <$> AC.requiredField "name" nameDoc
+          AC..= lmfsName
             <*> AC.requiredField "type" typeDoc
-              AC..= lmfsScalar
+          AC..= lmfsScalar
             <*> AC.optionalFieldWithDefault "nullable" False nullableDoc
-              AC..= lmfsNullable
+          AC..= lmfsNullable
             <*> AC.optionalField "description" descriptionDoc
-              AC..= lmfsDescription
+          AC..= lmfsDescription
         where
           nameDoc = "Name of the field"
           nullableDoc = "Is field nullable or not?"
@@ -269,12 +269,12 @@ instance (Backend b) => HasCodec (LogicalModelField b) where
           ("A field of a logical model")
           $ AC.object (backendPrefix @b <> "LogicalModelField")
           $ LogicalModelField
-            <$> AC.requiredField "name" nameDoc
-              AC..= lmfName
+          <$> AC.requiredField "name" nameDoc
+          AC..= lmfName
             <*> AC.requiredField "type" typeDoc
-              AC..= lmfType
+          AC..= lmfType
             <*> AC.optionalField "description" descriptionDoc
-              AC..= lmfDescription
+          AC..= lmfDescription
         where
           nameDoc = "Name of the field"
           typeDoc = "Type of the field"

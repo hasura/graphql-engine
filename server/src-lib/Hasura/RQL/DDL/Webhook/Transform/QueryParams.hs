@@ -49,7 +49,7 @@ instance Transform QueryParams where
 -- transformations, this can be seen as an implementation of these
 -- transformations as normal Haskell functions.
 applyQueryParamsTransformFn ::
-  MonadError TransformErrorBundle m =>
+  (MonadError TransformErrorBundle m) =>
   QueryParamsTransformFn ->
   RequestTransformCtx ->
   QueryParams ->
@@ -58,12 +58,13 @@ applyQueryParamsTransformFn fn context _oldQueryParams = case fn of
   AddOrReplace addOrReplaceParams -> do
     -- NOTE: We use `ApplicativeDo` here to take advantage of Validation's
     -- applicative sequencing
-    queryParams <- liftEither . V.toEither $
-      for addOrReplaceParams \(rawKey, rawValue) -> do
+    queryParams <- liftEither
+      . V.toEither
+      $ for addOrReplaceParams \(rawKey, rawValue) -> do
         key <- runUnescapedRequestTemplateTransform' context rawKey
         value <- traverse (runUnescapedRequestTemplateTransform' context) rawValue
-        pure $
-          if key == "null" || value == Just "null"
+        pure
+          $ if key == "null" || value == Just "null"
             then Nothing
             else Just (key, value)
     pure $ QueryParams (catMaybes queryParams)

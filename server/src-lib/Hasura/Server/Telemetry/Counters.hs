@@ -153,17 +153,17 @@ totalTimeBuckets = coerce [0.000, 0.001, 0.050, 1.000, 3600.000 :: Seconds]
 
 -- | Save a timing metric sample in our in-memory store. These will be
 -- accumulated and uploaded periodically in "Hasura.Server.Telemetry".
-recordTimingMetric :: MonadIO m => RequestDimensions -> RequestTimings -> m ()
+recordTimingMetric :: (MonadIO m) => RequestDimensions -> RequestTimings -> m ()
 recordTimingMetric reqDimensions RequestTimings {..} = liftIO $ do
   let ourBucket =
-        fromMaybe (RunningTimeBucket 0) $ -- although we expect 'head' would be safe here
-          listToMaybe $
-            dropWhile (> coerce telemTimeTot) $
-              reverse $
-                sort totalTimeBuckets
-  atomicModifyIORef' requestCounters $
-    (,())
-      . HashMap.insertWith (<>) (reqDimensions, ourBucket) RequestTimingsCount {telemCount = 1, ..}
+        fromMaybe (RunningTimeBucket 0)
+          $ listToMaybe -- although we expect 'head' would be safe here
+          $ dropWhile (> coerce telemTimeTot)
+          $ reverse
+          $ sort totalTimeBuckets
+  atomicModifyIORef' requestCounters
+    $ (,())
+    . HashMap.insertWith (<>) (reqDimensions, ourBucket) RequestTimingsCount {telemCount = 1, ..}
 
 -- | The final shape of this part of our metrics data JSON. This should allow
 -- reasonably efficient querying using GIN indexes and JSONB containment
@@ -193,10 +193,10 @@ instance J.ToJSON ServiceTimingMetrics
 
 instance J.FromJSON ServiceTimingMetrics
 
-dumpServiceTimingMetrics :: MonadIO m => m ServiceTimingMetrics
+dumpServiceTimingMetrics :: (MonadIO m) => m ServiceTimingMetrics
 dumpServiceTimingMetrics = liftIO $ do
   cs <- readIORef requestCounters
-  let serviceTimingMetrics = flip map (HashMap.toList cs) $
-        \((dimensions, bucket), metrics) -> ServiceTimingMetric {..}
+  let serviceTimingMetrics = flip map (HashMap.toList cs)
+        $ \((dimensions, bucket), metrics) -> ServiceTimingMetric {..}
       collectionTag = round approxStartTime
   return ServiceTimingMetrics {..}

@@ -41,7 +41,7 @@ instance Transform Method where
 -- transformations, this can be seen as an implementation of these
 -- transformations as normal Haskell functions.
 applyMethodTransformFn ::
-  MonadError TransformErrorBundle m =>
+  (MonadError TransformErrorBundle m) =>
   MethodTransformFn ->
   RequestTransformCtx ->
   Method ->

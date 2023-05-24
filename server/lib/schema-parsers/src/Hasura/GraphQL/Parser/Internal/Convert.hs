@@ -27,7 +27,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- Disable custom prelude warnings in preparation for extracting this module into a separate package.
 {-# ANN module ("HLint: ignore Use onNothing" :: String) #-}
 
-valueToJSON :: MonadParse m => G.GType -> InputValue Variable -> m J.Value
+valueToJSON :: (MonadParse m) => G.GType -> InputValue Variable -> m J.Value
 valueToJSON expectedType inputVal = do
   peeledVal <- peelVariable expectedType inputVal
   pure $ valueToJSON' peeledVal

@@ -56,9 +56,9 @@ data NativeQueryMetadata (b :: BackendType) = NativeQueryMetadata
   }
   deriving (Generic)
 
-deriving instance Backend b => Eq (NativeQueryMetadata b)
+deriving instance (Backend b) => Eq (NativeQueryMetadata b)
 
-deriving instance Backend b => Show (NativeQueryMetadata b)
+deriving instance (Backend b) => Show (NativeQueryMetadata b)
 
 instance (Backend b) => HasCodec (NativeQueryMetadata b) where
   codec =
@@ -66,20 +66,20 @@ instance (Backend b) => HasCodec (NativeQueryMetadata b) where
       ("A native query as represented in metadata.")
       $ AC.object (backendPrefix @b <> "NativeQueryMetadata")
       $ NativeQueryMetadata
-        <$> requiredField "root_field_name" fieldNameDoc
-          AC..= _nqmRootFieldName
+      <$> requiredField "root_field_name" fieldNameDoc
+      AC..= _nqmRootFieldName
         <*> requiredField "code" sqlDoc
-          AC..= _nqmCode
+      AC..= _nqmCode
         <*> requiredField "returns" returnsDoc
-          AC..= _nqmReturns
+      AC..= _nqmReturns
         <*> optionalFieldWithDefault "arguments" mempty argumentDoc
-          AC..= _nqmArguments
+      AC..= _nqmArguments
         <*> optSortedList "array_relationships" _rdName
-          AC..= _nqmArrayRelationships
+      AC..= _nqmArrayRelationships
         <*> optSortedList "object_relationships" _rdName
-          AC..= _nqmObjectRelationships
+      AC..= _nqmObjectRelationships
         <*> optionalField "description" descriptionDoc
-          AC..= _nqmDescription
+      AC..= _nqmDescription
     where
       fieldNameDoc = "Root field name for the native query"
       sqlDoc = "Native code expression (SQL) to run"

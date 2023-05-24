@@ -60,8 +60,9 @@ defaultBuildStoredProcedureRootFields StoredProcedureInfo {..} = runMaybeT $ do
   stringifyNumbers <- retrieve Options.soStringifyNumbers
 
   logicalModelPermissions <-
-    MaybeT . fmap Just $
-      buildLogicalModelPermissions @b @r @m @n _spiReturns
+    MaybeT
+      . fmap Just
+      $ buildLogicalModelPermissions @b @r @m @n _spiReturns
 
   (selectionSetParser, logicalModelsArgsParser) <-
     MaybeT $ buildLogicalModelFields mempty _spiReturns
@@ -83,37 +84,37 @@ defaultBuildStoredProcedureRootFields StoredProcedureInfo {..} = runMaybeT $ do
           sourceName
           (mkAnyBackend $ MO.SMOStoredProcedure @b _spiStoredProcedure)
 
-  pure $
-    P.setFieldParserOrigin sourceObj $
-      P.subselection
-        fieldName
-        description
-        ( (,)
-            <$> logicalModelsArgsParser
-            <*> storedProcedureArgsParser
-        )
-        selectionSetParser
-        <&> \((lmArgs, spArgs), fields) ->
-          QDBMultipleRows $
-            IR.AnnSelectG
-              { IR._asnFields = fields,
-                IR._asnFrom =
-                  IR.FromStoredProcedure
-                    StoredProcedure
-                      { spStoredProcedure = _spiStoredProcedure,
-                        spGraphqlName = _spiGraphqlName,
-                        spArgs = arguments spArgs,
-                        spLogicalModel = buildLogicalModelIR _spiReturns
-                      },
-                IR._asnPerm = logicalModelPermissions,
-                IR._asnArgs = lmArgs,
-                IR._asnStrfyNum = stringifyNumbers,
-                IR._asnNamingConvention = Just tCase
-              }
+  pure
+    $ P.setFieldParserOrigin sourceObj
+    $ P.subselection
+      fieldName
+      description
+      ( (,)
+          <$> logicalModelsArgsParser
+          <*> storedProcedureArgsParser
+      )
+      selectionSetParser
+    <&> \((lmArgs, spArgs), fields) ->
+      QDBMultipleRows
+        $ IR.AnnSelectG
+          { IR._asnFields = fields,
+            IR._asnFrom =
+              IR.FromStoredProcedure
+                StoredProcedure
+                  { spStoredProcedure = _spiStoredProcedure,
+                    spGraphqlName = _spiGraphqlName,
+                    spArgs = arguments spArgs,
+                    spLogicalModel = buildLogicalModelIR _spiReturns
+                  },
+            IR._asnPerm = logicalModelPermissions,
+            IR._asnArgs = lmArgs,
+            IR._asnStrfyNum = stringifyNumbers,
+            IR._asnNamingConvention = Just tCase
+          }
 
 storedProcedureArgumentsSchema ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   G.Name ->
   HashMap ArgumentName (NullableScalarType b) ->
   MaybeT (SchemaT r m) (P.InputFieldsParser n (HashMap ArgumentName (Column.ColumnValue b)))

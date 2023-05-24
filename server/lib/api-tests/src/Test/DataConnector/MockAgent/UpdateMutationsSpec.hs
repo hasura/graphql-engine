@@ -134,8 +134,8 @@ tests = do
                           [ ("updatedRows_TrackId", API.mkColumnFieldValue $ J.Number 3),
                             ("updatedRows_Name", API.mkColumnFieldValue $ J.String "Another Name"),
                             ( "updatedRows_Genre",
-                              API.mkRelationshipFieldValue $
-                                mkRowsQueryResponse
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
                                   [ [ ("Name", API.mkColumnFieldValue $ J.String "Rock")
                                     ]
                                   ]
@@ -145,8 +145,8 @@ tests = do
                           [ ("updatedRows_TrackId", API.mkColumnFieldValue $ J.Number 4),
                             ("updatedRows_Name", API.mkColumnFieldValue $ J.String "Another Name"),
                             ( "updatedRows_Genre",
-                              API.mkRelationshipFieldValue $
-                                mkRowsQueryResponse
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
                                   [ [ ("Name", API.mkColumnFieldValue $ J.String "Rock")
                                     ]
                                   ]
@@ -156,8 +156,8 @@ tests = do
                           [ ("updatedRows_TrackId", API.mkColumnFieldValue $ J.Number 5),
                             ("updatedRows_Name", API.mkColumnFieldValue $ J.String "Another Name"),
                             ( "updatedRows_Genre",
-                              API.mkRelationshipFieldValue $
-                                mkRowsQueryResponse
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
                                   [ [ ("Name", API.mkColumnFieldValue $ J.String "Rock")
                                     ]
                                   ]
@@ -193,78 +193,79 @@ tests = do
     let expectedRequest =
           emptyMutationRequest
             & API.mrTableRelationships
-              .~ Set.fromList
-                [ API.TableRelationships
-                    { API._trelSourceTable = mkTableName "Track",
-                      API._trelRelationships =
-                        HashMap.fromList
-                          [ ( API.RelationshipName "Genre",
-                              API.Relationship
-                                { API._rTargetTable = mkTableName "Genre",
-                                  API._rRelationshipType = API.ObjectRelationship,
-                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
-                                }
-                            )
-                          ]
-                    }
-                ]
-            & API.mrOperations
-              .~ [ API.UpdateOperation $
-                     API.UpdateMutationOperation
-                       { API._umoTable = mkTableName "Track",
-                         API._umoUpdates =
-                           Set.fromList
-                             [ API.SetColumn $
-                                 API.RowColumnOperatorValue
-                                   { API._rcovColumn = API.ColumnName "Name",
-                                     API._rcovValue = J.String "Another Name",
-                                     API._rcovValueType = API.ScalarType "string"
-                                   },
-                               API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|]) $
-                                 API.RowColumnOperatorValue
-                                   { API._rcovColumn = API.ColumnName "Milliseconds",
-                                     API._rcovValue = J.Number 1000,
-                                     API._rcovValueType = API.ScalarType "number"
-                                   },
-                               API.SetColumn $
-                                 API.RowColumnOperatorValue
-                                   { API._rcovColumn = API.ColumnName "AlbumId",
-                                     API._rcovValue = J.Number 3,
-                                     API._rcovValueType = API.ScalarType "number"
-                                   }
+            .~ Set.fromList
+              [ API.TableRelationships
+                  { API._trelSourceTable = mkTableName "Track",
+                    API._trelRelationships =
+                      HashMap.fromList
+                        [ ( API.RelationshipName "Genre",
+                            API.Relationship
+                              { API._rTargetTable = mkTableName "Genre",
+                                API._rRelationshipType = API.ObjectRelationship,
+                                API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+                              }
+                          )
+                        ]
+                  }
+              ]
+              & API.mrOperations
+            .~ [ API.UpdateOperation
+                   $ API.UpdateMutationOperation
+                     { API._umoTable = mkTableName "Track",
+                       API._umoUpdates =
+                         Set.fromList
+                           [ API.SetColumn
+                               $ API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "Name",
+                                   API._rcovValue = J.String "Another Name",
+                                   API._rcovValueType = API.ScalarType "string"
+                                 },
+                             API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|])
+                               $ API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "Milliseconds",
+                                   API._rcovValue = J.Number 1000,
+                                   API._rcovValueType = API.ScalarType "number"
+                                 },
+                             API.SetColumn
+                               $ API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "AlbumId",
+                                   API._rcovValue = J.Number 3,
+                                   API._rcovValueType = API.ScalarType "number"
+                                 }
+                           ],
+                       API._umoWhere =
+                         Just
+                           . API.And
+                           $ Set.fromList
+                             [ API.ApplyBinaryComparisonOperator
+                                 API.Equal
+                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number")),
+                               API.ApplyBinaryComparisonOperator
+                                 API.Equal
+                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "GenreId") $ API.ScalarType "number")
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 1) (API.ScalarType "number"))
                              ],
-                         API._umoWhere =
-                           Just . API.And $
-                             Set.fromList
-                               [ API.ApplyBinaryComparisonOperator
-                                   API.Equal
-                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number")),
-                                 API.ApplyBinaryComparisonOperator
-                                   API.Equal
-                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "GenreId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 1) (API.ScalarType "number"))
-                               ],
-                         API._umoPostUpdateCheck =
-                           Just $
-                             API.ApplyBinaryComparisonOperator
-                               API.GreaterThan
-                               (API.ComparisonColumn API.CurrentTable (API.ColumnName "UnitPrice") $ API.ScalarType "number")
-                               (API.ScalarValueComparison $ API.ScalarValue (J.Number 0) (API.ScalarType "number")),
-                         API._umoReturningFields =
-                           mkFieldsMap
-                             [ ("updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number")),
-                               ("updatedRows_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string")),
-                               ( "updatedRows_Genre",
-                                 API.RelField
-                                   ( API.RelationshipField
-                                       (API.RelationshipName "Genre")
-                                       (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")])
-                                   )
-                               )
-                             ]
-                       }
-                 ]
+                       API._umoPostUpdateCheck =
+                         Just
+                           $ API.ApplyBinaryComparisonOperator
+                             API.GreaterThan
+                             (API.ComparisonColumn API.CurrentTable (API.ColumnName "UnitPrice") $ API.ScalarType "number")
+                             (API.ScalarValueComparison $ API.ScalarValue (J.Number 0) (API.ScalarType "number")),
+                       API._umoReturningFields =
+                         mkFieldsMap
+                           [ ("updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number")),
+                             ("updatedRows_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string")),
+                             ( "updatedRows_Genre",
+                               API.RelField
+                                 ( API.RelationshipField
+                                     (API.RelationshipName "Genre")
+                                     (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")])
+                                 )
+                             )
+                           ]
+                     }
+               ]
     _mrrRecordedRequest `shouldBe` Just (Mutation expectedRequest)
 
   mockAgentGraphqlTest "update_many rows with update permissions" $ \_testEnv performGraphqlRequest -> do
@@ -297,8 +298,8 @@ tests = do
                           [ ("updatedRows_TrackId", API.mkColumnFieldValue $ J.Number 3),
                             ("updatedRows_Name", API.mkColumnFieldValue $ J.String "Another Name"),
                             ( "updatedRows_Genre",
-                              API.mkRelationshipFieldValue $
-                                mkRowsQueryResponse
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
                                   [ [ ("Name", API.mkColumnFieldValue $ J.String "Rock")
                                     ]
                                   ]
@@ -314,8 +315,8 @@ tests = do
                           [ ("updatedRows_TrackId", API.mkColumnFieldValue $ J.Number 4),
                             ("updatedRows_Name", API.mkColumnFieldValue $ J.String "Better Name"),
                             ( "updatedRows_Genre",
-                              API.mkRelationshipFieldValue $
-                                mkRowsQueryResponse
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
                                   [ [ ("Name", API.mkColumnFieldValue $ J.String "Rock")
                                     ]
                                   ]
@@ -325,8 +326,8 @@ tests = do
                           [ ("updatedRows_TrackId", API.mkColumnFieldValue $ J.Number 5),
                             ("updatedRows_Name", API.mkColumnFieldValue $ J.String "Better Name"),
                             ( "updatedRows_Genre",
-                              API.mkRelationshipFieldValue $
-                                mkRowsQueryResponse
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
                                   [ [ ("Name", API.mkColumnFieldValue $ J.String "Rock")
                                     ]
                                   ]
@@ -362,8 +363,8 @@ tests = do
       |]
 
     let sharedPostUpdateCheck =
-          Just $
-            API.ApplyBinaryComparisonOperator
+          Just
+            $ API.ApplyBinaryComparisonOperator
               API.GreaterThan
               (API.ComparisonColumn API.CurrentTable (API.ColumnName "UnitPrice") $ API.ScalarType "number")
               (API.ScalarValueComparison $ API.ScalarValue (J.Number 0) (API.ScalarType "number"))
@@ -382,99 +383,101 @@ tests = do
     let expectedRequest =
           emptyMutationRequest
             & API.mrTableRelationships
-              .~ Set.fromList
-                [ API.TableRelationships
-                    { API._trelSourceTable = mkTableName "Track",
-                      API._trelRelationships =
-                        HashMap.fromList
-                          [ ( API.RelationshipName "Genre",
-                              API.Relationship
-                                { API._rTargetTable = mkTableName "Genre",
-                                  API._rRelationshipType = API.ObjectRelationship,
-                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
-                                }
-                            )
-                          ]
-                    }
-                ]
-            & API.mrOperations
-              .~ [ API.UpdateOperation $
-                     API.UpdateMutationOperation
-                       { API._umoTable = mkTableName "Track",
-                         API._umoUpdates =
-                           Set.fromList
-                             [ API.SetColumn $
-                                 API.RowColumnOperatorValue
-                                   { API._rcovColumn = API.ColumnName "Name",
-                                     API._rcovValue = J.String "Another Name",
-                                     API._rcovValueType = API.ScalarType "string"
-                                   },
-                               API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|]) $
-                                 API.RowColumnOperatorValue
-                                   { API._rcovColumn = API.ColumnName "Milliseconds",
-                                     API._rcovValue = J.Number 1000,
-                                     API._rcovValueType = API.ScalarType "number"
-                                   },
-                               API.SetColumn $
-                                 API.RowColumnOperatorValue
-                                   { API._rcovColumn = API.ColumnName "AlbumId",
-                                     API._rcovValue = J.Number 3,
-                                     API._rcovValueType = API.ScalarType "number"
-                                   }
+            .~ Set.fromList
+              [ API.TableRelationships
+                  { API._trelSourceTable = mkTableName "Track",
+                    API._trelRelationships =
+                      HashMap.fromList
+                        [ ( API.RelationshipName "Genre",
+                            API.Relationship
+                              { API._rTargetTable = mkTableName "Genre",
+                                API._rRelationshipType = API.ObjectRelationship,
+                                API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+                              }
+                          )
+                        ]
+                  }
+              ]
+              & API.mrOperations
+            .~ [ API.UpdateOperation
+                   $ API.UpdateMutationOperation
+                     { API._umoTable = mkTableName "Track",
+                       API._umoUpdates =
+                         Set.fromList
+                           [ API.SetColumn
+                               $ API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "Name",
+                                   API._rcovValue = J.String "Another Name",
+                                   API._rcovValueType = API.ScalarType "string"
+                                 },
+                             API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|])
+                               $ API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "Milliseconds",
+                                   API._rcovValue = J.Number 1000,
+                                   API._rcovValueType = API.ScalarType "number"
+                                 },
+                             API.SetColumn
+                               $ API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "AlbumId",
+                                   API._rcovValue = J.Number 3,
+                                   API._rcovValueType = API.ScalarType "number"
+                                 }
+                           ],
+                       API._umoWhere =
+                         Just
+                           . API.And
+                           $ Set.fromList
+                             [ API.ApplyBinaryComparisonOperator
+                                 API.Equal
+                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number")),
+                               API.ApplyBinaryComparisonOperator
+                                 API.Equal
+                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number"))
                              ],
-                         API._umoWhere =
-                           Just . API.And $
-                             Set.fromList
-                               [ API.ApplyBinaryComparisonOperator
-                                   API.Equal
-                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number")),
-                                 API.ApplyBinaryComparisonOperator
-                                   API.Equal
-                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number"))
-                               ],
-                         API._umoPostUpdateCheck = sharedPostUpdateCheck,
-                         API._umoReturningFields = sharedReturning
-                       },
-                   API.UpdateOperation $
-                     API.UpdateMutationOperation
-                       { API._umoTable = mkTableName "Track",
-                         API._umoUpdates =
-                           Set.fromList
-                             [ API.SetColumn $
-                                 API.RowColumnOperatorValue
-                                   { API._rcovColumn = API.ColumnName "Name",
-                                     API._rcovValue = J.String "Better Name",
-                                     API._rcovValueType = API.ScalarType "string"
-                                   },
-                               API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|]) $
-                                 API.RowColumnOperatorValue
-                                   { API._rcovColumn = API.ColumnName "UnitPrice",
-                                     API._rcovValue = J.Number 1,
-                                     API._rcovValueType = API.ScalarType "number"
-                                   },
-                               API.SetColumn $
-                                 API.RowColumnOperatorValue
-                                   { API._rcovColumn = API.ColumnName "AlbumId",
-                                     API._rcovValue = J.Number 3,
-                                     API._rcovValueType = API.ScalarType "number"
-                                   }
+                       API._umoPostUpdateCheck = sharedPostUpdateCheck,
+                       API._umoReturningFields = sharedReturning
+                     },
+                 API.UpdateOperation
+                   $ API.UpdateMutationOperation
+                     { API._umoTable = mkTableName "Track",
+                       API._umoUpdates =
+                         Set.fromList
+                           [ API.SetColumn
+                               $ API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "Name",
+                                   API._rcovValue = J.String "Better Name",
+                                   API._rcovValueType = API.ScalarType "string"
+                                 },
+                             API.CustomUpdateColumnOperator (API.UpdateColumnOperatorName [G.name|inc|])
+                               $ API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "UnitPrice",
+                                   API._rcovValue = J.Number 1,
+                                   API._rcovValueType = API.ScalarType "number"
+                                 },
+                             API.SetColumn
+                               $ API.RowColumnOperatorValue
+                                 { API._rcovColumn = API.ColumnName "AlbumId",
+                                   API._rcovValue = J.Number 3,
+                                   API._rcovValueType = API.ScalarType "number"
+                                 }
+                           ],
+                       API._umoWhere =
+                         Just
+                           . API.And
+                           $ Set.fromList
+                             [ API.ApplyBinaryComparisonOperator
+                                 API.Equal
+                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number")),
+                               API.ApplyBinaryComparisonOperator
+                                 API.GreaterThan
+                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number"))
                              ],
-                         API._umoWhere =
-                           Just . API.And $
-                             Set.fromList
-                               [ API.ApplyBinaryComparisonOperator
-                                   API.Equal
-                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number")),
-                                 API.ApplyBinaryComparisonOperator
-                                   API.GreaterThan
-                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number"))
-                               ],
-                         API._umoPostUpdateCheck = sharedPostUpdateCheck,
-                         API._umoReturningFields = sharedReturning
-                       }
-                 ]
+                       API._umoPostUpdateCheck = sharedPostUpdateCheck,
+                       API._umoReturningFields = sharedReturning
+                     }
+               ]
     _mrrRecordedRequest `shouldBe` Just (Mutation expectedRequest)

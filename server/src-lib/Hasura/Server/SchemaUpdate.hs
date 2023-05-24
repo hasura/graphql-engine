@@ -66,13 +66,13 @@ logThreadStarted ::
   m ()
 logThreadStarted logger instanceId threadType thread =
   let msg = tshow threadType <> " thread started"
-   in unLogger logger $
-        StartupLog LevelInfo "schema-sync" $
-          object
-            [ "instance_id" .= getInstanceId instanceId,
-              "thread_id" .= show (Immortal.threadId thread),
-              "message" .= msg
-            ]
+   in unLogger logger
+        $ StartupLog LevelInfo "schema-sync"
+        $ object
+          [ "instance_id" .= getInstanceId instanceId,
+            "thread_id" .= show (Immortal.threadId thread),
+            "message" .= msg
+          ]
 
 {- Note [Schema Cache Sync]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -120,7 +120,7 @@ if listen started after schema cache init start time.
 -- | An async thread which listen to Postgres notify to enable schema syncing
 -- See Note [Schema Cache Sync]
 startSchemaSyncListenerThread ::
-  C.ForkableMonadIO m =>
+  (C.ForkableMonadIO m) =>
   Logger Hasura ->
   PG.PGPool ->
   InstanceId ->
@@ -130,8 +130,8 @@ startSchemaSyncListenerThread ::
 startSchemaSyncListenerThread logger pool instanceId interval metaVersionRef = do
   -- Start listener thread
   listenerThread <-
-    C.forkManagedT "SchemeUpdate.listener" logger $
-      listener logger pool metaVersionRef (unrefine interval)
+    C.forkManagedT "SchemeUpdate.listener" logger
+      $ listener logger pool metaVersionRef (unrefine interval)
   logThreadStarted logger instanceId TTListener listenerThread
   pure listenerThread
 
@@ -153,8 +153,8 @@ startSchemaSyncProcessorThread appStateRef logTVar = do
   let logger = _lsLogger appEnvLoggers
   -- Start processor thread
   processorThread <-
-    C.forkManagedT "SchemeUpdate.processor" logger $
-      processor appEnvMetadataVersionRef appStateRef logTVar
+    C.forkManagedT "SchemeUpdate.processor" logger
+      $ processor appEnvMetadataVersionRef appStateRef logTVar
   logThreadStarted logger appEnvInstanceId TTProcessor processorThread
   pure processorThread
 
@@ -166,8 +166,8 @@ schemaVersionCheckHandler ::
   PG.PGPool -> STM.TMVar MetadataResourceVersion -> IO (Either QErr ())
 schemaVersionCheckHandler pool metaVersionRef =
   runExceptT
-    ( PG.runTx pool (PG.RepeatableRead, Nothing) $
-        fetchMetadataResourceVersionFromCatalog
+    ( PG.runTx pool (PG.RepeatableRead, Nothing)
+        $ fetchMetadataResourceVersionFromCatalog
     )
     >>= \case
       Right version -> Right <$> forcePut metaVersionRef version
@@ -212,7 +212,7 @@ toLogError es qerr mrv = not $ isQErrLastSeen || isMetadataResourceVersionLastSe
 
 -- | An IO action that listens to postgres for events and pushes them to a Queue, in a loop forever.
 listener ::
-  MonadIO m =>
+  (MonadIO m) =>
   Logger Hasura ->
   PG.PGPool ->
   STM.TMVar MetadataResourceVersion ->
@@ -234,9 +234,9 @@ listener logger pool metaVersionRef interval = L.iterateM_ listenerLoop defaultE
             else do
               pure errorState
         Right _ -> do
-          when (isInErrorState errorState) $
-            logInfo logger TTListener $
-              object ["message" .= ("SchemaSync Restored..." :: Text)]
+          when (isInErrorState errorState)
+            $ logInfo logger TTListener
+            $ object ["message" .= ("SchemaSync Restored..." :: Text)]
           pure defaultErrorState
       liftIO $ C.sleep $ milliseconds interval
       pure nextErr
@@ -283,8 +283,9 @@ refreshSchemaCache
   logTVar = do
     AppEnv {..} <- askAppEnv
     let logger = _lsLogger appEnvLoggers
-    respErr <- runExceptT $
-      withSchemaCacheUpdate appStateRef logger (Just logTVar) $ do
+    respErr <- runExceptT
+      $ withSchemaCacheUpdate appStateRef logger (Just logTVar)
+      $ do
         rebuildableCache <- liftIO $ fst <$> getRebuildableSchemaCacheWithVersion appStateRef
         appContext <- liftIO $ getAppContext appStateRef
         let dynamicConfig = buildCacheDynamicConfig appContext
@@ -293,41 +294,41 @@ refreshSchemaCache
             schemaCache <- askSchemaCache
             let engineResourceVersion = scMetadataResourceVersion schemaCache
             unless (engineResourceVersion == resourceVersion) $ do
-              logInfo logger threadType $
-                String $
-                  T.unwords
-                    [ "Received metadata resource version:",
-                      showMetadataResourceVersion resourceVersion <> ",",
-                      "different from the current engine resource version:",
-                      showMetadataResourceVersion engineResourceVersion <> ".",
-                      "Trying to update the schema cache."
-                    ]
+              logInfo logger threadType
+                $ String
+                $ T.unwords
+                  [ "Received metadata resource version:",
+                    showMetadataResourceVersion resourceVersion <> ",",
+                    "different from the current engine resource version:",
+                    showMetadataResourceVersion engineResourceVersion <> ".",
+                    "Trying to update the schema cache."
+                  ]
 
               MetadataWithResourceVersion metadata latestResourceVersion <- liftEitherM fetchMetadata
 
-              logInfo logger threadType $
-                String $
-                  T.unwords
-                    [ "Fetched metadata with resource version:",
-                      showMetadataResourceVersion latestResourceVersion
-                    ]
+              logInfo logger threadType
+                $ String
+                $ T.unwords
+                  [ "Fetched metadata with resource version:",
+                    showMetadataResourceVersion latestResourceVersion
+                  ]
 
               notifications <- liftEitherM $ fetchMetadataNotifications engineResourceVersion appEnvInstanceId
 
               case notifications of
                 [] -> do
-                  logInfo logger threadType $
-                    String $
-                      T.unwords
-                        [ "Fetched metadata notifications and received no notifications. Not updating the schema cache.",
-                          "Only setting resource version:",
-                          showMetadataResourceVersion latestResourceVersion,
-                          "in schema cache"
-                        ]
+                  logInfo logger threadType
+                    $ String
+                    $ T.unwords
+                      [ "Fetched metadata notifications and received no notifications. Not updating the schema cache.",
+                        "Only setting resource version:",
+                        showMetadataResourceVersion latestResourceVersion,
+                        "in schema cache"
+                      ]
                   setMetadataResourceVersionInSchemaCache latestResourceVersion
                 _ -> do
-                  logInfo logger threadType $
-                    String "Fetched metadata notifications and received some notifications. Updating the schema cache."
+                  logInfo logger threadType
+                    $ String "Fetched metadata notifications and received some notifications. Updating the schema cache."
                   let cacheInvalidations =
                         if any ((== (engineResourceVersion + 1)) . fst) notifications
                           then -- If (engineResourceVersion + 1) is in the list of notifications then
@@ -341,25 +342,26 @@ refreshSchemaCache
                                 ciRemoteSchemas = HS.fromList $ getAllRemoteSchemas schemaCache,
                                 ciSources = HS.fromList $ HashMap.keys $ scSources schemaCache,
                                 ciDataConnectors =
-                                  maybe mempty (HS.fromList . HashMap.keys . unBackendInfoWrapper) $
-                                    BackendMap.lookup @'DataConnector $
-                                      scBackendCache schemaCache
+                                  maybe mempty (HS.fromList . HashMap.keys . unBackendInfoWrapper)
+                                    $ BackendMap.lookup @'DataConnector
+                                    $ scBackendCache schemaCache
                               }
                   buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata
                   setMetadataResourceVersionInSchemaCache latestResourceVersion
-                  logInfo logger threadType $
-                    String $
-                      "Schema cache updated with resource version: " <> showMetadataResourceVersion latestResourceVersion
+                  logInfo logger threadType
+                    $ String
+                    $ "Schema cache updated with resource version: "
+                    <> showMetadataResourceVersion latestResourceVersion
         pure (msg, cache)
     onLeft respErr (logError logger threadType . TEQueryError)
 
 logInfo :: (MonadIO m) => Logger Hasura -> SchemaSyncThreadType -> Value -> m ()
 logInfo logger threadType val =
-  unLogger logger $
-    SchemaSyncLog LevelInfo threadType val
+  unLogger logger
+    $ SchemaSyncLog LevelInfo threadType val
 
 logError :: (MonadIO m, ToJSON a) => Logger Hasura -> SchemaSyncThreadType -> a -> m ()
 logError logger threadType err =
-  unLogger logger $
-    SchemaSyncLog LevelError threadType $
-      object ["error" .= toJSON err]
+  unLogger logger
+    $ SchemaSyncLog LevelError threadType
+    $ object ["error" .= toJSON err]

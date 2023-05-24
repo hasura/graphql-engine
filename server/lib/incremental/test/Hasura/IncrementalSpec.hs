@@ -71,7 +71,8 @@ spec = do
                     Inc.cache $ arrM (tell . S.singleton) -< (k, v)
                     returnA -< v * 2
                 )
-            |) m
+            |)
+              m
 
       (result1, log1) <- runWriterT . Inc.build rule $ HashMap.fromList [("a", 1), ("b", 2)]
       Inc.result result1 `shouldBe` HashMap.fromList [("a", 2), ("b", 4)]

@@ -25,7 +25,7 @@ import Hasura.Server.Utils (APIVersion (..))
 instance FromJSON RQLMetadataV1 where
   parseJSON = withObject "RQLMetadataV1" \o -> do
     queryType <- o .: "type"
-    let args :: forall a. FromJSON a => A.Parser a
+    let args :: forall a. (FromJSON a) => A.Parser a
         args = o .: "args"
     case queryType of
       -- backend agnostic
@@ -106,17 +106,17 @@ instance FromJSON RQLMetadataV1 where
           -- 2) Attempt to run all the backend specific command parsers against the source kind, cmd, and arg:
           -- NOTE: If parsers succeed then this will pick out the first successful one.
           command <- choice <$> sequenceA [p backendSourceKind' cmd argValue | p <- metadataV1CommandParsers @b]
-          onNothing command $
-            fail $
-              "unknown metadata command \""
-                <> T.unpack cmd
-                <> "\" for backend "
-                <> T.unpack (T.toTxt backendSourceKind')
+          onNothing command
+            $ fail
+            $ "unknown metadata command \""
+            <> T.unpack cmd
+            <> "\" for backend "
+            <> T.unpack (T.toTxt backendSourceKind')
 
 instance FromJSON RQLMetadataV2 where
   parseJSON =
-    genericParseJSON $
-      defaultOptions
+    genericParseJSON
+      $ defaultOptions
         { constructorTagModifier = snakeCase . drop 4,
           sumEncoding = TaggedObject "type" "args"
         }
@@ -135,7 +135,7 @@ instance FromJSON RQLMetadataRequest where
 -- 'BackendSourceKind' and the action suffix.
 --
 -- For example: @"pg_add_source"@ parses as @(PostgresVanillaValue, "add_source")@
-parseQueryType :: MonadFail m => Text -> m (AnyBackend BackendSourceKind, Text)
+parseQueryType :: (MonadFail m) => Text -> m (AnyBackend BackendSourceKind, Text)
 parseQueryType queryType =
   let (prefix, T.drop 1 -> cmd) = T.breakOn "_" queryType
    in (,cmd)

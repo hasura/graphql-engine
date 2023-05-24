@@ -109,7 +109,7 @@ parseToMatch _ actual = actual
 shouldReturnYamlF :: (HasCallStack, Has ShouldReturnYamlF testEnvironment) => testEnvironment -> (Value -> IO Value) -> IO Value -> Value -> IO ()
 shouldReturnYamlF = getShouldReturnYamlF . getter
 
-shouldReturnYamlFInternal :: HasCallStack => Options -> (Value -> IO Value) -> IO Value -> Value -> IO ()
+shouldReturnYamlFInternal :: (HasCallStack) => Options -> (Value -> IO Value) -> IO Value -> Value -> IO ()
 shouldReturnYamlFInternal options transform actualIO expected = do
   actual <-
     actualIO >>= transform >>= \actual ->
@@ -129,12 +129,12 @@ shouldReturnYamlFInternal options transform actualIO expected = do
 -- Since @Data.Yaml@ uses the same underlying 'Value' type as
 -- @Data.Aeson@, we could pull that in as a dependency and alias
 -- some of these functions accordingly.
-shouldBeYaml :: HasCallStack => Value -> Value -> IO ()
+shouldBeYaml :: (HasCallStack) => Value -> Value -> IO ()
 shouldBeYaml actual expected = do
   shouldBe (Visual actual) (Visual expected)
 
 -- | Assert that the expected json value should be a subset of the actual value, in the sense of 'jsonSubsetOf'.
-shouldAtLeastBe :: HasCallStack => Value -> Value -> IO ()
+shouldAtLeastBe :: (HasCallStack) => Value -> Value -> IO ()
 shouldAtLeastBe actual expected | expected `jsonSubsetOf` actual = return ()
 shouldAtLeastBe actual expected =
   expectationFailure $ "The expected value:\n\n" <> show (Visual expected) <> "\nis not a subset of the actual value:\n\n" <> show (Visual actual)
@@ -155,8 +155,8 @@ jsonSubsetOf _sub _sup = False
 
 subobjectOf :: KM.KeyMap J.Value -> KM.KeyMap J.Value -> Bool
 subobjectOf sub sup =
-  KM.foldr (&&) True $
-    KM.alignWith
+  KM.foldr (&&) True
+    $ KM.alignWith
       ( \case
           This _ -> False -- key is only in the sub
           That _ -> True -- key is only in sup

@@ -73,8 +73,8 @@ makeSourceJoinCall networkFunction userInfo remoteSourceJoin jaFieldName joinArg
   --   AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin \(sjc :: SourceJoinCall b) ->
   --     buildSourceJoinCall @b userInfo jaFieldName joinArguments sjc
   maybeSourceCall <-
-    AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin $
-      buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName
+    AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin
+      $ buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName
   -- if there actually is a remote call:
   for maybeSourceCall \sourceCall -> do
     -- step 2: send this call over the network
@@ -108,11 +108,11 @@ buildSourceJoinCall ::
 buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName remoteSourceJoin = do
   let rows =
         IntMap.toList joinArguments <&> \(argumentId, argument) ->
-          KM.insert "__argument_id__" (J.toJSON argumentId) $
-            KM.fromList $
-              map (bimap (K.fromText . getFieldNameTxt) JO.fromOrdered) $
-                HashMap.toList $
-                  unJoinArgument argument
+          KM.insert "__argument_id__" (J.toJSON argumentId)
+            $ KM.fromList
+            $ map (bimap (K.fromText . getFieldNameTxt) JO.fromOrdered)
+            $ HashMap.toList
+            $ unJoinArgument argument
       rowSchema = fmap snd (_rsjJoinColumns remoteSourceJoin)
   for (NE.nonEmpty rows) $ \nonEmptyRows -> do
     let sourceConfig = _rsjSourceConfig remoteSourceJoin
@@ -136,9 +136,9 @@ buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName 
     -- NOTE: We're making an assumption that the 'FieldName' propagated upwards
     -- from 'collectJoinArguments' is reasonable to use for logging.
     let rootFieldAlias = mkUnNamespacedRootFieldAlias fieldName
-    pure $
-      AB.mkAnyBackend $
-        SourceJoinCall rootFieldAlias sourceConfig stepInfo
+    pure
+      $ AB.mkAnyBackend
+      $ SourceJoinCall rootFieldAlias sourceConfig stepInfo
 
 -------------------------------------------------------------------------------
 -- Step 3: extracting the join index
@@ -180,22 +180,23 @@ buildJoinIndex response = do
       Right (i, "") -> pure i
       _ -> Nothing
     throwInvalidJsonErr errMsg =
-      throw500 $
-        "failed to decode JSON response from the source: " <> errMsg
+      throw500
+        $ "failed to decode JSON response from the source: "
+        <> errMsg
     throwMissingRelationshipDataErr =
-      throw500 $
-        "cannot find relationship data (aliased as 'f') within the source \
-        \response"
+      throw500
+        $ "cannot find relationship data (aliased as 'f') within the source \
+          \response"
     throwMissingArgumentIdErr =
-      throw500 $
-        "cannot find '__argument_id__' within the source response"
+      throw500
+        $ "cannot find '__argument_id__' within the source response"
     throwInvalidArgumentIdValueErr =
       throw500 $ "expected 'argument_id' to get parsed as backend integer type"
     throwNoNestedObjectErr =
-      throw500 $
-        "expected an object one level deep in the remote schema's response, \
-        \but found an array/scalar value instead"
+      throw500
+        $ "expected an object one level deep in the remote schema's response, \
+          \but found an array/scalar value instead"
     throwNoListOfObjectsErr =
-      throw500 $
-        "expected a list of objects in the remote schema's response, but found \
-        \an object/scalar value instead"
+      throw500
+        $ "expected a list of objects in the remote schema's response, but found \
+          \an object/scalar value instead"

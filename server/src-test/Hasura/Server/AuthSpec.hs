@@ -135,8 +135,8 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
     describe "unauth role set" $ do
       mode <-
-        runIO $
-          setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing mempty (Just ourUnauthRole)
+        runIO
+          $ setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing mempty (Just ourUnauthRole)
       it "accepts when admin secret matches" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
           `shouldReturn` Right adminRoleName
@@ -173,8 +173,8 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
   -- Unauthorized role is not supported for webhook
   describe "webhook" $ do
     mode <-
-      runIO $
-        setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") (Just fakeAuthHook) mempty Nothing
+      runIO
+        $ setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") (Just fakeAuthHook) mempty Nothing
 
     it "accepts when admin secret matches" $ do
       getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
@@ -221,8 +221,8 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
   describe "JWT" $ do
     describe "unauth role NOT set" $ do
       mode <-
-        runIO $
-          setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing [fakeJWTConfig] Nothing
+        runIO
+          $ setupAuthMode'E (Just $ Set.singleton $ hashAdminSecret "secret") Nothing [fakeJWTConfig] Nothing
 
       it "accepts when admin secret matches" $ do
         getUserInfoWithExpTime mempty [(adminSecretHeader, "secret")] mode
@@ -254,8 +254,8 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
     describe "unauth role set" $ do
       mode <-
-        runIO $
-          setupAuthMode'E
+        runIO
+          $ setupAuthMode'E
             (Just $ Set.singleton $ hashAdminSecret "secret")
             Nothing
             [fakeJWTConfig]
@@ -293,23 +293,23 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
 
     describe "when Authorization header sent, and no admin secret" $ do
       modeA <-
-        runIO $
-          setupAuthMode'E
+        runIO
+          $ setupAuthMode'E
             (Just $ Set.singleton $ hashAdminSecret "secret")
             Nothing
             [fakeJWTConfig]
             (Just ourUnauthRole)
       modeB <-
-        runIO $
-          setupAuthMode'E
+        runIO
+          $ setupAuthMode'E
             (Just $ Set.singleton $ hashAdminSecret "secret")
             Nothing
             [fakeJWTConfig]
             Nothing
 
       -- Here the unauth role does not come into play at all, so map same tests over both modes:
-      forM_ [(modeA, "with unauth role set"), (modeB, "with unauth role NOT set")] $
-        \(mode, modeMsg) -> describe modeMsg $ do
+      forM_ [(modeA, "with unauth role set"), (modeB, "with unauth role NOT set")]
+        $ \(mode, modeMsg) -> describe modeMsg $ do
           it "authorizes successfully with JWT when requested role allowed" $ do
             let claim =
                   unObject
@@ -446,10 +446,10 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
     describe "JWT configured with namespace key, the key is a text value which is expected to be at the root of the JWT token" $ do
       it "parses claims map from the JWT token with correct namespace " $ do
         let claimsObj =
-              unObject $
-                [ "x-hasura-allowed-roles" .= (["user", "editor"] :: [Text]),
-                  "x-hasura-default-role" .= ("user" :: Text)
-                ]
+              unObject
+                $ [ "x-hasura-allowed-roles" .= (["user", "editor"] :: [Text]),
+                    "x-hasura-default-role" .= ("user" :: Text)
+                  ]
         let obj = unObject $ ["claims_map" .= claimsObj]
             claimsSet = mkClaimsSetWithUnregisteredClaims obj
         parseClaimsMap_ claimsSet (JCNamespace (ClaimNs "claims_map") defaultClaimsFormat)
@@ -457,10 +457,10 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
 
       it "doesn't parse claims map from the JWT token with wrong namespace " $ do
         let claimsObj =
-              unObject $
-                [ "x-hasura-allowed-roles" .= (["user", "editor"] :: [Text]),
-                  "x-hasura-default-role" .= ("user" :: Text)
-                ]
+              unObject
+                $ [ "x-hasura-allowed-roles" .= (["user", "editor"] :: [Text]),
+                    "x-hasura-default-role" .= ("user" :: Text)
+                  ]
         let obj = unObject $ ["claims_map" .= claimsObj]
             claimsSet = mkClaimsSetWithUnregisteredClaims obj
         parseClaimsMap_ claimsSet (JCNamespace (ClaimNs "wrong_claims_map") defaultClaimsFormat)
@@ -469,12 +469,12 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
     describe "JWT configured with namespace JSON path, JSON path to the claims map" $ do
       it "parse claims map from the JWT token using claims namespace JSON Path" $ do
         let unregisteredClaims =
-              unObject $
-                [ "x-hasura-allowed-roles" .= (["user", "editor"] :: [Text]),
-                  "x-hasura-default-role" .= ("user" :: Text),
-                  "sub" .= ("random" :: Text),
-                  "exp" .= (1626420800 :: Int) -- we ignore these non session variables, in the response
-                ]
+              unObject
+                $ [ "x-hasura-allowed-roles" .= (["user", "editor"] :: [Text]),
+                    "x-hasura-default-role" .= ("user" :: Text),
+                    "sub" .= ("random" :: Text),
+                    "exp" .= (1626420800 :: Int) -- we ignore these non session variables, in the response
+                  ]
             claimsSetWithSub =
               (JWT.emptyClaimsSet & JWT.claimSub .~ Just "random") & JWT.unregisteredClaims .~ KM.toMapText unregisteredClaims
         parseClaimsMap_ claimsSetWithSub (JCNamespace (ClaimNsPath (mkJSONPathE "$")) defaultClaimsFormat)
@@ -483,10 +483,10 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
 
       it "throws error while attempting to parse claims map from the JWT token with a wrong namespace JSON Path" $ do
         let claimsObj =
-              unObject $
-                [ "x-hasura-allowed-roles" .= (["user", "editor"] :: [Text]),
-                  "x-hasura-default-role" .= ("user" :: Text)
-                ]
+              unObject
+                $ [ "x-hasura-allowed-roles" .= (["user", "editor"] :: [Text]),
+                    "x-hasura-default-role" .= ("user" :: Text)
+                  ]
             obj = unObject $ ["hasura_claims" .= claimsObj]
             claimsSet = mkClaimsSetWithUnregisteredClaims obj
         parseClaimsMap_ claimsSet (JCNamespace (ClaimNsPath (mkJSONPathE "$.claims")) defaultClaimsFormat)
@@ -494,16 +494,16 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
 
   describe "JWT configured with custom JWT claims" $ do
     let rolesObj =
-          unObject $
-            [ "allowed" .= (["user", "editor"] :: [Text]),
-              "default" .= ("user" :: Text)
-            ]
+          unObject
+            $ [ "allowed" .= (["user", "editor"] :: [Text]),
+                "default" .= ("user" :: Text)
+              ]
         userId = unObject ["id" .= ("1" :: Text)]
         obj =
-          unObject $
-            [ "roles" .= rolesObj,
-              "user" .= userId
-            ]
+          unObject
+            $ [ "roles" .= rolesObj,
+                "user" .= userId
+              ]
         claimsSet = mkClaimsSetWithUnregisteredClaims obj
         userIdClaim = mkSessionVariable "x-hasura-user-id"
 
@@ -591,8 +591,8 @@ mkCustomAllowedRoleClaim claimPath defVal =
   case claimPath of
     Just path -> JWTCustomClaimsMapJSONPath (mkJSONPathE path) $ defAllowedRoles
     Nothing ->
-      JWTCustomClaimsMapStatic $
-        fromMaybe (mkRoleNameE <$> ["user", "editor"]) defAllowedRoles
+      JWTCustomClaimsMapStatic
+        $ fromMaybe (mkRoleNameE <$> ["user", "editor"]) defAllowedRoles
   where
     defAllowedRoles = fmap mkRoleNameE <$> defVal
 
@@ -634,15 +634,15 @@ setupAuthMode' ::
   m (Either () AuthMode)
 setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole = do
   httpManager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
-  fmap (mapLeft $ const ()) $
-    runExceptT $
-      setupAuthMode
-        (fromMaybe Set.empty mAdminSecretHash)
-        mWebHook
-        jwtSecrets
-        mUnAuthRole
-        (Logger $ void . return)
-        httpManager
+  fmap (mapLeft $ const ())
+    $ runExceptT
+    $ setupAuthMode
+      (fromMaybe Set.empty mAdminSecretHash)
+      mWebHook
+      jwtSecrets
+      mUnAuthRole
+      (Logger $ void . return)
+      httpManager
 
 mkClaimsSetWithUnregisteredClaims :: J.Object -> JWT.ClaimsSet
 mkClaimsSetWithUnregisteredClaims unregisteredClaims =

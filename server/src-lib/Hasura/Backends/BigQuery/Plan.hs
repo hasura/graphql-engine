@@ -26,7 +26,7 @@ import Hasura.Session
 -- Top-level planner
 
 planNoPlan ::
-  MonadError E.QErr m =>
+  (MonadError E.QErr m) =>
   FromIrConfig ->
   UserInfo ->
   QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->

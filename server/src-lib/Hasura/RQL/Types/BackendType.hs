@@ -167,8 +167,8 @@ instance HasCodec (BackendSourceKind ('DataConnector)) where
 
 mkCodecStaticBackendSourceKind :: BackendSourceKind b -> JSONCodec (BackendSourceKind b)
 mkCodecStaticBackendSourceKind backendSourceKind =
-  bimapCodec dec enc $
-    parseAlternatives (literalTextCodec longName) (literalTextCodec <$> aliases)
+  bimapCodec dec enc
+    $ parseAlternatives (literalTextCodec longName) (literalTextCodec <$> aliases)
   where
     dec text =
       if text `elem` validValues

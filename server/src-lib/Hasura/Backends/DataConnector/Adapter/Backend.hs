@@ -95,12 +95,12 @@ instance Backend 'DataConnector where
     where
       scalarTypesCapabilities = API.unScalarTypesCapabilities $ API._cScalarTypes _scCapabilities
       insertOps typeName API.ScalarTypeCapabilities {..} m =
-        HashMap.foldrWithKey insertOp m $
-          API.unAggregateFunctions _stcAggregateFunctions
+        HashMap.foldrWithKey insertOp m
+          $ API.unAggregateFunctions _stcAggregateFunctions
         where
           insertOp funtionName resultTypeName =
-            HashMap.insertWith HashMap.union funtionName $
-              HashMap.singleton
+            HashMap.insertWith HashMap.union funtionName
+              $ HashMap.singleton
                 (DC.mkScalarType _scCapabilities typeName)
                 (DC.mkScalarType _scCapabilities resultTypeName)
 
@@ -176,11 +176,11 @@ data CustomBooleanOperator a = CustomBooleanOperator
   }
   deriving stock (Eq, Generic, Foldable, Functor, Traversable, Show)
 
-instance NFData a => NFData (CustomBooleanOperator a)
+instance (NFData a) => NFData (CustomBooleanOperator a)
 
-instance Hashable a => Hashable (CustomBooleanOperator a)
+instance (Hashable a) => Hashable (CustomBooleanOperator a)
 
-instance J.ToJSON a => ToJSONKeyValue (CustomBooleanOperator a) where
+instance (J.ToJSON a) => ToJSONKeyValue (CustomBooleanOperator a) where
   toJSONKeyValue CustomBooleanOperator {..} = (fromText _cboName, J.toJSON _cboRHS)
 
 parseValue :: DC.ScalarType -> J.Value -> J.Parser J.Value

@@ -49,8 +49,9 @@ fetchAndValidateEnumValues ::
   [RawColumnInfo ('Postgres pgKind)] ->
   m (Either QErr EnumValues)
 fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos =
-  runExceptT $
-    either (throw400 ConstraintViolation . showErrors) pure =<< runValidateT fetchAndValidate
+  runExceptT
+    $ either (throw400 ConstraintViolation . showErrors) pure
+    =<< runValidateT fetchAndValidate
   where
     fetchAndValidate ::
       (MonadIO n, MonadBaseControl IO n, MonadValidate [EnumTableIntegrityError ('Postgres pgKind)] n) =>
@@ -62,9 +63,9 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
         Nothing -> refute mempty
         Just primaryKeyColumn -> do
           result <-
-            runPgSourceReadTx pgSourceConfig $
-              runValidateT $
-                fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn
+            runPgSourceReadTx pgSourceConfig
+              $ runValidateT
+              $ fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn
           case result of
             Left e -> (refute . pure . EnumTablePostgresError . qeError) e
             Right (Left vErrs) -> refute vErrs
@@ -112,7 +113,8 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
                     "values "
                       <> commaSeparated (reverse otherValues)
                       <> ", and "
-                      <> lastValue <<> pluralString
+                      <> lastValue
+                      <<> pluralString
              in "the " <> valuesString
           EnumTableNonTextualCommentColumn colInfo -> typeMismatch "comment column" colInfo PGText
           EnumTableTooManyColumns cols ->
@@ -127,8 +129,11 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
                in "the table’s "
                     <> description
                     <> " ("
-                    <> rciName colInfo <<> ") must have type "
-                    <> expected <<> ", not type " <>> scalarType
+                    <> rciName colInfo
+                    <<> ") must have type "
+                    <> expected
+                    <<> ", not type "
+                    <>> scalarType
 
 fetchEnumValuesFromDb ::
   forall pgKind m.
@@ -141,16 +146,16 @@ fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn = do
   let nullExtr = Extractor SENull Nothing
       commentExtr = maybe nullExtr (mkExtr . rciName) maybeCommentColumn
       query =
-        PG.fromBuilder $
-          toSQL
+        PG.fromBuilder
+          $ toSQL
             mkSelect
               { selFrom = Just $ mkSimpleFromExp tableName,
                 selExtr = [mkExtr (rciName primaryKeyColumn), commentExtr]
               }
   rawEnumValues <- liftTx $ PG.withQE defaultTxErrorHandler query () True
   when (null rawEnumValues) $ dispute [EnumTableNoEnumValues]
-  let enumValues = flip map rawEnumValues $
-        \(enumValueText, comment) ->
+  let enumValues = flip map rawEnumValues
+        $ \(enumValueText, comment) ->
           case mkValidEnumValueName enumValueText of
             Nothing -> Left enumValueText
             Just enumValue -> Right (EnumValue enumValue, EnumValueInfo comment)

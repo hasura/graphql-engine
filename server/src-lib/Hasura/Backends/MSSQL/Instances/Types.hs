@@ -64,8 +64,8 @@ instance Backend 'MSSQL where
 
   type HealthCheckTest 'MSSQL = HealthCheckTestSql
   healthCheckImplementation =
-    Just $
-      HealthCheckImplementation
+    Just
+      $ HealthCheckImplementation
         { _hciDefaultTest = defaultHealthCheckTestSql,
           _hciTestCodec = codec
         }

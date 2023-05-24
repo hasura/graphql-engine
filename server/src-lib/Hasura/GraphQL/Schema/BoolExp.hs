@@ -116,8 +116,9 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
             P.fieldOptional Name.__not Nothing (BoolNot <$> recur)
           ]
 
-    pure $
-      BoolAnd <$> P.object name (Just description) do
+    pure
+      $ BoolAnd
+      <$> P.object name (Just description) do
         tableFields <- map BoolField . catMaybes <$> sequenceA tableFieldParsers
         specialFields <- catMaybes <$> sequenceA connectiveFieldParsers
         aggregationPredicateFields <- map (BoolField . AVAggregationPredicates) <$> aggregationPredicatesParser'
@@ -142,9 +143,9 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
             RelTargetTable remoteTable -> do
               remoteTableInfo <- askTableInfo $ remoteTable
               let remoteTablePermissions =
-                    (fmap . fmap) (partialSQLExpToUnpreparedValue) $
-                      maybe annBoolExpTrue spiFilter $
-                        tableSelectPermissions roleName remoteTableInfo
+                    (fmap . fmap) (partialSQLExpToUnpreparedValue)
+                      $ maybe annBoolExpTrue spiFilter
+                      $ tableSelectPermissions roleName remoteTableInfo
               remoteBoolExp <- lift $ tableBoolExp remoteTableInfo
               pure $ fmap (AVRelationship relationshipInfo . RelationshipFilters remoteTablePermissions) remoteBoolExp
         FIComputedField ComputedFieldInfo {..} -> do
@@ -153,8 +154,8 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
           case toList _cffInputArgs of
             [] -> do
               let functionArgs =
-                    flip FunctionArgsExp mempty $
-                      fromComputedFieldImplicitArguments @b UVSession _cffComputedFieldImplicitArgs
+                    flip FunctionArgsExp mempty
+                      $ fromComputedFieldImplicitArguments @b UVSession _cffComputedFieldImplicitArgs
 
               fmap (AVComputedField . AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName functionArgs)
                 <$> case computedFieldReturnType @b _cfiReturnType of
@@ -205,10 +206,10 @@ logicalModelBoolExp logicalModel =
 
           memoizeKey = name
           description =
-            G.Description $
-              "Boolean expression to filter rows from the logical model for "
-                <> name
-                  <<> ". All fields are combined with a logical 'AND'."
+            G.Description
+              $ "Boolean expression to filter rows from the logical model for "
+              <> name
+              <<> ". All fields are combined with a logical 'AND'."
        in boolExpInternal gqlName fieldInfo description memoizeKey mkAggPredParser
 
 -- |
@@ -230,10 +231,10 @@ tableBoolExp tableInfo = do
   fieldInfos <- tableSelectFields tableInfo
   let mkAggPredParser = aggregationPredicatesParser tableInfo
   let description =
-        G.Description $
-          "Boolean expression to filter rows from the table "
-            <> tableInfoName tableInfo
-              <<> ". All fields are combined with a logical 'AND'."
+        G.Description
+          $ "Boolean expression to filter rows from the table "
+          <> tableInfoName tableInfo
+          <<> ". All fields are combined with a logical 'AND'."
 
   let memoizeKey = tableInfoName tableInfo
   boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser

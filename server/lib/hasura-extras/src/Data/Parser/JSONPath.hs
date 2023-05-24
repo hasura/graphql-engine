@@ -37,8 +37,8 @@ encodeJSONPath path = "$" <> foldMap formatPart path
 parseJSONPath :: Text -> Either Text JSONPath
 parseJSONPath "$" = Right []
 parseJSONPath txt =
-  Bifunctor.first (const invalidMessage) $
-    parseOnly (optional (char '$') *> many1' element <* endOfInput) txt
+  Bifunctor.first (const invalidMessage)
+    $ parseOnly (optional (char '$') *> many1' element <* endOfInput) txt
   where
     invalidMessage =
       txt
@@ -76,8 +76,12 @@ bracketElement = do
   pure result
   where
     parseJSONString inQuotes =
-      maybe (fail "Invalid JSON string") (pure . K.fromText) . J.decode . TL.encodeUtf8 $
-        "\"" <> inQuotes <> "\""
+      maybe (fail "Invalid JSON string") (pure . K.fromText)
+        . J.decode
+        . TL.encodeUtf8
+        $ "\""
+        <> inQuotes
+        <> "\""
 
     doubleQuotedString = do
       void $ char '"'

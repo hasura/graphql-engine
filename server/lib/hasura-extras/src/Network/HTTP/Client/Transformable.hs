@@ -105,7 +105,7 @@ instance J.ToJSON Client.Request where
 --
 -- NOTE: This function will throw an error in 'MonadThrow' if the URL is
 -- invalid.
-mkRequestThrow :: MonadThrow m => Text -> m Client.Request
+mkRequestThrow :: (MonadThrow m) => Text -> m Client.Request
 mkRequestThrow = Client.parseRequest . T.unpack
 
 -- | 'mkRequestThrow' with the 'MonadThrow' instance specialized to 'Either'.

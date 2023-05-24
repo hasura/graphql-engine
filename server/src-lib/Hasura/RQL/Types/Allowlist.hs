@@ -53,9 +53,9 @@ instance HasCodec AllowlistScope where
     where
       global = AC.object "AllowlistScopeGlobal" $ discriminatorBoolField "global" True
       scopeRoles =
-        AC.object "AllowlistScopeRoles" $
-          void (discriminatorBoolField "global" False)
-            *> requiredField' "roles"
+        AC.object "AllowlistScopeRoles"
+          $ void (discriminatorBoolField "global" False)
+          *> requiredField' "roles"
 
       dec (Left _) = Right AllowlistScopeGlobal
       dec (Right roles)
@@ -94,10 +94,12 @@ data AllowlistEntry = AllowlistEntry
 
 instance HasCodec AllowlistEntry where
   codec =
-    AC.object "AllowlistEntry" $
-      AllowlistEntry
-        <$> requiredField' "collection" AC..= aeCollection
-        <*> optionalFieldWithDefault' "scope" AllowlistScopeGlobal AC..= aeScope
+    AC.object "AllowlistEntry"
+      $ AllowlistEntry
+      <$> requiredField' "collection"
+      AC..= aeCollection
+        <*> optionalFieldWithDefault' "scope" AllowlistScopeGlobal
+      AC..= aeScope
 
 instance ToJSON AllowlistEntry where
   toJSON = genericToJSON hasuraJSON
@@ -128,10 +130,11 @@ metadataAllowlistInsert entry@(AllowlistEntry coll _) al =
     insertIfAbsent = \case
       Nothing -> Right (Just entry)
       Just _ ->
-        Left $
-          "collection "
-            <> coll <<> " already exists in the allowlist, scope ignored;"
-            <> " to change scope, use update_scope_of_collection_in_allowlist"
+        Left
+          $ "collection "
+          <> coll
+          <<> " already exists in the allowlist, scope ignored;"
+          <> " to change scope, use update_scope_of_collection_in_allowlist"
 
 metadataAllowlistUpdateScope ::
   AllowlistEntry -> MetadataAllowlist -> Either Text MetadataAllowlist
@@ -217,12 +220,12 @@ inlineAllowlist collections allowlist = InlinedAllowlist global perRole
       [coll | AllowlistEntry coll AllowlistScopeGlobal <- InsOrdHashMap.elems allowlist]
     perRoleCollections :: HashMap RoleName [CollectionName]
     perRoleCollections =
-      inverseMap $
-        [ (coll, toList roles)
-          | AllowlistEntry coll (AllowlistScopeRoles roles) <- InsOrdHashMap.elems allowlist
-        ]
+      inverseMap
+        $ [ (coll, toList roles)
+            | AllowlistEntry coll (AllowlistScopeRoles roles) <- InsOrdHashMap.elems allowlist
+          ]
 
-    inverseMap :: Hashable b => [(a, [b])] -> HashMap b [a]
+    inverseMap :: (Hashable b) => [(a, [b])] -> HashMap b [a]
     inverseMap = HashMap.fromListWith (<>) . concatMap (\(c, rs) -> [(r, [c]) | r <- rs])
 
     global = inlineQueries globalCollections

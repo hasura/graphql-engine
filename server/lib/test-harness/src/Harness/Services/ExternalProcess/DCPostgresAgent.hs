@@ -178,8 +178,8 @@ spawnAgent testEnv (DcPgConfig {dcPgConfigEnvironmentVars}) = do
           create_group = True
         }
       `catchAny` ( \exn ->
-                     error $
-                       unlines
+                     error
+                       $ unlines
                          [ "Failed to spawn postgres-agent process:",
                            show exn
                          ]

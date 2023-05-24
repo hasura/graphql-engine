@@ -86,16 +86,16 @@ pgConnectionStringFromParamsSpec =
 commentSpec :: Spec
 commentSpec =
   describe "Comment" $ do
-    prop "should roundtrip between Comment and Maybe Text" $
-      \str ->
+    prop "should roundtrip between Comment and Maybe Text"
+      $ \str ->
         let text = Text.pack <$> str
          in (commentToMaybeText . commentFromMaybeText) text `shouldBe` text
 
 withRecordInconsistencyEqualSpec :: Spec
 withRecordInconsistencyEqualSpec =
   describe "withRecordInconsistency" do
-    prop "Should equal withRecordInconsistencyM" $
-      \inputMetadata (errOrUnit :: Either QErr ()) ->
+    prop "Should equal withRecordInconsistencyM"
+      $ \inputMetadata (errOrUnit :: Either QErr ()) ->
         let arrowInputArr = ErrorA (arr (const errOrUnit))
             arrow = withRecordInconsistency @_ @InconsistentMetadata arrowInputArr
             arrowOutput =

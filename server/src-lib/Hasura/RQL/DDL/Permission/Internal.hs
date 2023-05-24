@@ -61,16 +61,16 @@ assertPermDefined ::
   TableInfo backend ->
   m ()
 assertPermDefined role pt tableInfo =
-  unless (any (permissionIsDefined pt) rpi) $
-    throw400 PermissionDenied $
-      "'"
-        <> tshow pt
-        <> "'"
-        <> " permission on "
-        <> tableInfoName tableInfo
-          <<> " for role "
-        <> role
-          <<> " does not exist"
+  unless (any (permissionIsDefined pt) rpi)
+    $ throw400 PermissionDenied
+    $ "'"
+    <> tshow pt
+    <> "'"
+    <> " permission on "
+    <> tableInfoName tableInfo
+    <<> " for role "
+    <> role
+    <<> " does not exist"
   where
     rpi = HashMap.lookup role $ _tiRolePermInfoMap tableInfo
 
@@ -99,9 +99,9 @@ procBoolExp source tn fieldInfoMap be = do
   let rhsParser = BoolExpRHSParser parseCollectableType PSESession
 
   rootFieldInfoMap <-
-    fmap _tciFieldInfoMap $
-      lookupTableCoreInfo tn
-        `onNothingM` throw500 ("unexpected: " <> tn <<> " doesn't exist")
+    fmap _tciFieldInfoMap
+      $ lookupTableCoreInfo tn
+      `onNothingM` throw500 ("unexpected: " <> tn <<> " doesn't exist")
 
   abe <- annBoolExp rhsParser rootFieldInfoMap fieldInfoMap $ unBoolExp be
   let deps = getBoolExpDeps source tn abe
@@ -189,8 +189,8 @@ annColExp rhsParser rootFieldInfoMap colInfoMap (ColExp fieldName colVal) = do
           relBoolExp <- decodeValue colVal
           relFieldInfoMap <- askFieldInfoMapSource rhsTableName
           annRelBoolExp <- annBoolExp rhsParser rootFieldInfoMap relFieldInfoMap $ unBoolExp relBoolExp
-          return $
-            AVRelationship
+          return
+            $ AVRelationship
               relInfo
               ( RelationshipFilters
                   { -- Note that we do not include the permissions of the target table, since
@@ -232,6 +232,10 @@ data DropPerm b = DropPerm
 instance (Backend b) => FromJSON (DropPerm b) where
   parseJSON = withObject "DropPerm" $ \o ->
     DropPerm
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .: "role"
+      <$> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "table"
+      <*> o
+      .: "role"

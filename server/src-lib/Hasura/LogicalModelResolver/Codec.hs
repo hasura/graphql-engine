@@ -31,9 +31,9 @@ nativeQueryRelationshipsCodec =
     )
     ( fmap (\(fld, nst) -> MergedObject (NameField fld) nst) . InsOrdHashMap.toList
     )
-    ( AC.listCodec $
-        AC.object "RelDefRelManualNativeQueryConfig" $
-          AC.objectCodec @(MergedObject (NameField RelName) (RelDef (RelManualNativeQueryConfig b)))
+    ( AC.listCodec
+        $ AC.object "RelDefRelManualNativeQueryConfig"
+        $ AC.objectCodec @(MergedObject (NameField RelName) (RelDef (RelManualNativeQueryConfig b)))
     )
 
 data MergedObject a b = MergedObject

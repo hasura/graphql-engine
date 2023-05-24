@@ -75,8 +75,8 @@ authorsTable tableName =
 tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests =
   describe "removing a source with event trigger via replace_metadata should also remove the event trigger related stuffs (hdb_catalog.event_log)" do
-    it "remove source via replace_metadata, check that the event_log table is removed as well" $
-      \(testEnvironment, (_, _)) -> do
+    it "remove source via replace_metadata, check that the event_log table is removed as well"
+      $ \(testEnvironment, (_, _)) -> do
         -- `hdb_catalog.event_log` should be existing before (as we have added an event trigger in setup)
         checkIfPGTableExists testEnvironment "hdb_catalog.event_log" >>= (`shouldBe` True)
 
@@ -112,8 +112,8 @@ postgresSetup testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger

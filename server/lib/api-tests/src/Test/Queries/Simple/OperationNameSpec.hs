@@ -27,8 +27,8 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
-  withEachProtocol $
-    Fixture.run
+  withEachProtocol
+    $ Fixture.run
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnv, _) ->
@@ -55,8 +55,8 @@ spec = do
                   [ BigQuery.setupTablesAction schema testEnv
                   ],
                 Fixture.customOptions =
-                  Just $
-                    Fixture.defaultOptions
+                  Just
+                    $ Fixture.defaultOptions
                       { Fixture.stringifyNumbers = True
                       }
               },

@@ -118,7 +118,7 @@ introspectionQuery = J.object ["query" .= Text.decodeUtf8 rawQuery]
 -- | Gets the length of @.data.__schema.types@ from an introspected schema.
 --
 -- We use this to ensure that the metadata looks correct.
-typeLength :: forall m. MonadFail m => J.Value -> m Int
+typeLength :: forall m. (MonadFail m) => J.Value -> m Int
 typeLength schema = do
   types <- getProperty "data" schema >>= getProperty "__schema" >>= getProperty "types"
   case types of

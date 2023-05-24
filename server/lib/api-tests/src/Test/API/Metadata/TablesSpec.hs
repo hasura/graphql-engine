@@ -49,8 +49,8 @@ spec = do
                 [ BigQuery.setupTablesAction schema testEnvironment
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
             },
@@ -205,8 +205,9 @@ tests = do
             |]
           _ -> error "Unimplemented"
 
-    when (backendType == "sqlite") $
-      actual >>= \result -> result `shouldAtLeastBe` expected
+    when (backendType == "sqlite")
+      $ actual
+      >>= \result -> result `shouldAtLeastBe` expected
 
   it "Returns null for an invalid table" \testEnvironment -> do
     let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
@@ -227,5 +228,5 @@ tests = do
                   - made_up_table
             |]
 
-    when (backendType == "sqlite") $
-      shouldReturnYaml testEnvironment actual Null
+    when (backendType == "sqlite")
+      $ shouldReturnYaml testEnvironment actual Null

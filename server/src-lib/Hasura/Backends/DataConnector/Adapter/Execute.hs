@@ -40,7 +40,7 @@ encodePreparedQueryToJsonText = \case
   QueryRequest req -> encodeToJsonText req
   MutationRequest req -> encodeToJsonText req
 
-encodeToJsonText :: J.ToJSON a => a -> Text
+encodeToJsonText :: (J.ToJSON a) => a -> Text
 encodeToJsonText =
   TE.decodeUtf8 . BL.toStrict . J.encode
 
@@ -66,8 +66,8 @@ instance BackendExecute 'DataConnector where
   mkDBQueryExplain fieldName UserInfo {..} sourceName sourceConfig ir _headers _gName = do
     queryPlan@Plan {..} <- Plan.mkQueryPlan _uiSession sourceConfig ir
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
-    pure $
-      mkAnyBackend @'DataConnector
+    pure
+      $ mkAnyBackend @'DataConnector
         DBStepInfo
           { dbsiSourceName = sourceName,
             dbsiSourceConfig = transformedSourceConfig,
@@ -123,8 +123,9 @@ buildExplainAction fieldName sourceName SourceConfig {..} Plan {..} =
     Nothing -> pure . encJFromJValue . toExplainPlan fieldName $ _pRequest
     Just API.ExplainCapabilities -> do
       explainResponse <- Client.explain sourceName _scConfig _pRequest
-      pure . encJFromJValue $
-        ExplainPlan
+      pure
+        . encJFromJValue
+        $ ExplainPlan
           fieldName
           (Just (API._erQuery explainResponse))
           (Just (API._erLines explainResponse))

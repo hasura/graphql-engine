@@ -96,10 +96,10 @@ insertIntoTable backendInsertAction scenario tableInfo fieldName description = r
           backendInsert <- backendInsertParser
           objects <- mkObjectsArg objectParser
           pure $ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms
-    pure $
-      P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
-        P.subselection fieldName description argsParser selectionParser
-          <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) False insertObject (IR.MOutMultirowFields output) (Just tCase)
+    pure
+      $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
+      $ P.subselection fieldName description argsParser selectionParser
+      <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) False insertObject (IR.MOutMultirowFields output) (Just tCase)
   where
     mkObjectsArg objectParser =
       P.field
@@ -147,10 +147,10 @@ insertOneIntoTable backendInsertAction scenario tableInfo fieldName description 
           backendInsert <- backendInsertParser
           object <- mkObjectArg objectParser
           pure $ mkInsertObject [object] tableInfo backendInsert insertPerms updatePerms
-    pure $
-      P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
-        P.subselection fieldName description argsParser selectionParser
-          <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) True insertObject (IR.MOutSinglerowObject output) (Just tCase)
+    pure
+      $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
+      $ P.subselection fieldName description argsParser selectionParser
+      <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) True insertObject (IR.MOutSinglerowObject output) (Just tCase)
   where
     mkObjectArg objectParser =
       P.field
@@ -230,8 +230,9 @@ tableFieldsInput tableInfo = do
           isAllowed = Set.member (ciColumn columnInfo) (ipiCols insertPerms)
       guard isAllowed
       fieldParser <- lift $ columnParser (ciType columnInfo) (G.Nullability $ ciIsNullable columnInfo)
-      pure $
-        P.fieldOptional columnName columnDesc fieldParser `mapField` \value ->
+      pure
+        $ P.fieldOptional columnName columnDesc fieldParser
+        `mapField` \value ->
           IR.AIColumn (ciColumn columnInfo, IR.mkParameter value)
 
 mkDefaultRelationshipParser ::
@@ -251,14 +252,16 @@ mkDefaultRelationshipParser backendInsertAction xNestedInserts relationshipInfo 
   case riType relationshipInfo of
     ObjRel -> do
       parser <- MaybeT $ objectRelationshipInput backendInsertAction otherTableInfo
-      pure $
-        P.fieldOptional relFieldName Nothing (P.nullable parser) <&> \objRelIns -> do
+      pure
+        $ P.fieldOptional relFieldName Nothing (P.nullable parser)
+        <&> \objRelIns -> do
           rel <- join objRelIns
           Just $ IR.AIObjectRelationship xNestedInserts $ IR.RelationInsert rel relationshipInfo
     ArrRel -> do
       parser <- MaybeT $ arrayRelationshipInput backendInsertAction otherTableInfo
-      pure $
-        P.fieldOptional relFieldName Nothing (P.nullable parser) <&> \arrRelIns -> do
+      pure
+        $ P.fieldOptional relFieldName Nothing (P.nullable parser)
+        <&> \arrRelIns -> do
           rel <- join arrRelIns
           guard $ not $ null $ IR._aiInsertObject rel
           Just $ IR.AIArrayRelationship xNestedInserts $ IR.RelationInsert rel relationshipInfo
@@ -404,10 +407,11 @@ deleteFromTable scenario tableInfo fieldName description = runMaybeT $ do
     whereArg <- P.field whereName (Just whereDesc) <$> tableBoolExp tableInfo
     selection <- mutationSelectionSet tableInfo
     let columns = tableColumns tableInfo
-    pure $
-      P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
-        P.subselection fieldName description whereArg selection
-          <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) . fmap IR.MOutMultirowFields
+    pure
+      $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
+      $ P.subselection fieldName description whereArg selection
+      <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase)
+      . fmap IR.MOutMultirowFields
 
 -- | Construct a root field, normally called delete_tablename_by_pk, that can be used to delete an
 -- individual rows from a DB table, specified by primary key. Select permissions are required, as
@@ -440,10 +444,11 @@ deleteFromTableByPk scenario tableInfo fieldName description = runMaybeT $ do
   -- For more info see Note [Backend only permissions]
   guard $ not $ scenario == Frontend && dpiBackendOnly deletePerms
   selection <- MaybeT $ tableSelectionSet tableInfo
-  pure $
-    P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
-      P.subselection fieldName description pkArgs selection
-        <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) . fmap IR.MOutSinglerowObject
+  pure
+    $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
+    $ P.subselection fieldName description pkArgs selection
+    <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase)
+    . fmap IR.MOutSinglerowObject
 
 mkDeleteObject ::
   (Backend b) =>
@@ -496,14 +501,14 @@ mutationSelectionSet tableInfo = do
         selectionDesc = G.Description $ "response of any mutation on the table " <>> tableName
         selectionFields =
           catMaybes
-            [ Just $
-                IR.MCount
-                  <$ P.selection_ affectedRowsName (Just affectedRowsDesc) P.int,
+            [ Just
+                $ IR.MCount
+                <$ P.selection_ affectedRowsName (Just affectedRowsDesc) P.int,
               returning
             ]
-    pure $
-      P.selectionSet selectionName (Just selectionDesc) selectionFields
-        <&> parsedSelectionsToFields IR.MExp
+    pure
+      $ P.selectionSet selectionName (Just selectionDesc) selectionFields
+      <&> parsedSelectionsToFields IR.MExp
 
 -- | How to specify a database row by primary key.
 --
@@ -521,9 +526,15 @@ primaryKeysArguments tableInfo = runMaybeT $ do
   primaryKeys <- hoistMaybe $ _tciPrimaryKey . _tiCoreInfo $ tableInfo
   let columns = _pkColumns primaryKeys
   guard $ all (\c -> ciColumn c `HashMap.member` spiCols selectPerms) columns
-  lift $
-    fmap (BoolAnd . toList) . sequenceA <$> for columns \columnInfo -> do
+  lift
+    $ fmap (BoolAnd . toList)
+    . sequenceA
+    <$> for columns \columnInfo -> do
       field <- columnParser (ciType columnInfo) (G.Nullability False)
-      pure $
-        BoolField . AVColumn columnInfo . pure . AEQ True . IR.mkParameter
-          <$> P.field (ciName columnInfo) (ciDescription columnInfo) field
+      pure
+        $ BoolField
+        . AVColumn columnInfo
+        . pure
+        . AEQ True
+        . IR.mkParameter
+        <$> P.field (ciName columnInfo) (ciDescription columnInfo) field

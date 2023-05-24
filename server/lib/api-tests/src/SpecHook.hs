@@ -113,11 +113,12 @@ setupTestingMode = do
   environment <- getEnvironment
   lookupTestingMode environment `onLeft` error
 
-hook :: HasCallStack => SpecWith GlobalTestEnvironment -> Spec
+hook :: (HasCallStack) => SpecWith GlobalTestEnvironment -> Spec
 hook specs = do
   (testingMode, (logger, _cleanupLogger)) <-
-    runIO $
-      readIORef globalConfigRef `onNothingM` do
+    runIO
+      $ readIORef globalConfigRef
+      `onNothingM` do
         testingMode <- setupTestingMode
         (logger, cleanupLogger) <- setupLogger
         setupGlobalConfig testingMode (logger, cleanupLogger)
@@ -134,8 +135,8 @@ hook specs = do
         TestNoBackends -> True -- this is for catching "everything else"
         TestNewPostgresVariant {} -> "Postgres" `elem` labels
 
-  aroundAllWith (const . bracket (setupTestEnvironment testingMode logger) teardownTestEnvironment) $
-    mapSpecForest (filterForestWithLabels shouldRunTest) (contextualizeLogger specs)
+  aroundAllWith (const . bracket (setupTestEnvironment testingMode logger) teardownTestEnvironment)
+    $ mapSpecForest (filterForestWithLabels shouldRunTest) (contextualizeLogger specs)
 
 {-# NOINLINE globalConfigRef #-}
 globalConfigRef :: IORef (Maybe (TestingMode, (Logger, IO ())))

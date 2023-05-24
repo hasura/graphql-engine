@@ -88,11 +88,14 @@ instance HasCodec ConnSourceConfig where
   codec = AC.bimapCodec dec enc $ AC.possiblyJointEitherCodec withValueProp inlineConfig
     where
       withValueProp =
-        AC.object "DataConnectorConnSourceConfig" $
-          ConnSourceConfig
-            <$> requiredField' "value" AC..= value
-            <*> optionalField' "template" AC..= template
-            <*> optionalField' "timeout" AC..= timeout
+        AC.object "DataConnectorConnSourceConfig"
+          $ ConnSourceConfig
+          <$> requiredField' "value"
+          AC..= value
+            <*> optionalField' "template"
+          AC..= template
+            <*> optionalField' "timeout"
+          AC..= timeout
       inlineConfig = codec @API.Config
 
       dec (Left config) = Right config
@@ -119,9 +122,9 @@ sourceTimeoutMicroseconds = \case
 
 instance HasCodec SourceTimeout where
   codec =
-    AC.dimapCodec dec enc $
-      AC.disjointEitherCodec secondsCodec $
-        AC.disjointEitherCodec millisecondsCodec microsecondsCodec
+    AC.dimapCodec dec enc
+      $ AC.disjointEitherCodec secondsCodec
+      $ AC.disjointEitherCodec millisecondsCodec microsecondsCodec
     where
       secondsCodec = AC.object "DataConnectorSourceTimeoutSeconds" $ requiredFieldWith' "seconds" AC.scientificCodec
       millisecondsCodec = AC.object "DataConnectorSourceTimeoutMilliseconds" $ requiredFieldWith' "milliseconds" AC.scientificCodec
@@ -165,13 +168,20 @@ data SourceConfig = SourceConfig
 
 instance Eq SourceConfig where
   SourceConfig ep1 capabilities1 config1 template1 _ timeout1 dcName1 env1 == SourceConfig ep2 capabilities2 config2 template2 _ timeout2 dcName2 env2 =
-    ep1 == ep2
-      && capabilities1 == capabilities2
-      && config1 == config2
-      && template1 == template2
-      && timeout1 == timeout2
-      && dcName1 == dcName2
-      && env1 == env2
+    ep1
+      == ep2
+      && capabilities1
+      == capabilities2
+      && config1
+      == config2
+      && template1
+      == template2
+      && timeout1
+      == timeout2
+      && dcName1
+      == dcName2
+      && env1
+      == env2
 
 instance Show SourceConfig where
   show _ = "SourceConfig"
@@ -198,9 +208,9 @@ data FunctionReturnType
 
 instance AC.HasCodec FunctionReturnType where
   codec =
-    AC.named "FunctionReturnType" $
-      AC.object "FunctionReturnType" $
-        AC.discriminatedUnionCodec "type" enc dec
+    AC.named "FunctionReturnType"
+      $ AC.object "FunctionReturnType"
+      $ AC.discriminatedUnionCodec "type" enc dec
     where
       typeField = pure ()
       tableField = AC.requiredField' "table"
@@ -223,10 +233,12 @@ data DataConnectorOptions = DataConnectorOptions
 
 instance HasCodec DataConnectorOptions where
   codec =
-    AC.object "DataConnectorOptions" $
-      DataConnectorOptions
-        <$> requiredFieldWith' "uri" baseUrlCodec AC..= _dcoUri
-        <*> optionalField' "display_name" AC..= _dcoDisplayName
+    AC.object "DataConnectorOptions"
+      $ DataConnectorOptions
+      <$> requiredFieldWith' "uri" baseUrlCodec
+      AC..= _dcoUri
+        <*> optionalField' "display_name"
+      AC..= _dcoDisplayName
 
 instance FromJSON DataConnectorOptions where
   parseJSON = genericParseJSON hasuraJSON
@@ -265,7 +277,8 @@ instance HasCodec TableName where
 
 instance FromJSON TableName where
   parseJSON value =
-    TableName <$> J.parseJSON value
+    TableName
+      <$> J.parseJSON value
       -- Fallback parsing of a single string to support older metadata
       <|> J.withText "TableName" (\text -> pure . TableName $ text :| []) value
 

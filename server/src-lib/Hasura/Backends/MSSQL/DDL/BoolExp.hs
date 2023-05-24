@@ -40,8 +40,8 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
       v -> pure . AEQ False <$> parseWithTy columnType v
 
     parseOperation :: ColumnType 'MSSQL -> (Text, J.Value) -> m (OpExpG 'MSSQL v)
-    parseOperation columnType (opStr, val) = withPathK opStr $
-      case opStr of
+    parseOperation columnType (opStr, val) = withPathK opStr
+      $ case opStr of
         "_eq" -> parseEq
         "$eq" -> parseEq
         "_neq" -> parseNeq
@@ -104,15 +104,16 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
         parseOneNoSess ty = rhsParser (CollectableTypeScalar ty)
 
         guardType validTys =
-          unless (isScalarColumnWhere (`elem` validTys) colTy) $
-            throwError $
-              buildMsg colTy validTys
+          unless (isScalarColumnWhere (`elem` validTys) colTy)
+            $ throwError
+            $ buildMsg colTy validTys
 
         buildMsg ty expTys =
-          err400 UnexpectedPayload $
-            " is of type "
-              <> ty <<> "; this operator works only on columns of type "
-              <> T.intercalate "/" (map dquote expTys)
+          err400 UnexpectedPayload
+            $ " is of type "
+            <> ty
+            <<> "; this operator works only on columns of type "
+            <> T.intercalate "/" (map dquote expTys)
 
         parseVal :: (J.FromJSON a) => m a
         parseVal = decodeValue val

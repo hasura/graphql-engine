@@ -97,7 +97,8 @@ customizeNamespace (Just namespace) fromParsedSelection mkNamespaceTypename fiel
   where
     parser :: Parser 'Output n (NamespacedField a)
     parser =
-      Namespaced . InsOrdHashMap.mapWithKey fromParsedSelection
+      Namespaced
+        . InsOrdHashMap.mapWithKey fromParsedSelection
         <$> P.selectionSet (runMkTypename mkNamespaceTypename namespace) Nothing fieldParsers
 customizeNamespace Nothing _ _ fieldParsers =
   -- No namespace so just wrap the field parser results in @NotNamespaced@.

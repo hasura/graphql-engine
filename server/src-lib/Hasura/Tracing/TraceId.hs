@@ -41,7 +41,7 @@ data TraceId
 traceIdBytes :: Int
 traceIdBytes = 16
 
-randomTraceId :: MonadIO m => m TraceId
+randomTraceId :: (MonadIO m) => m TraceId
 randomTraceId = liftIO do
   (w1, w2) <-
     flip Random.applyAtomicGen Random.globalStdGen $ \gen0 ->
@@ -60,9 +60,11 @@ traceIdFromBytes :: ByteString -> Maybe TraceId
 traceIdFromBytes bs = do
   guard $ ByteString.length bs == traceIdBytes
   (w1, w2) <-
-    eitherToMaybe $
-      flip Serialize.runGet bs $
-        (,) <$> Serialize.getWord64be <*> Serialize.getWord64be
+    eitherToMaybe
+      $ flip Serialize.runGet bs
+      $ (,)
+      <$> Serialize.getWord64be
+      <*> Serialize.getWord64be
   guard $ w1 .|. w2 /= 0
   pure $ TraceId w1 w2
 
@@ -95,7 +97,7 @@ newtype SpanId = SpanId Word64
 spanIdBytes :: Int
 spanIdBytes = 8
 
-randomSpanId :: MonadIO m => m SpanId
+randomSpanId :: (MonadIO m) => m SpanId
 randomSpanId = liftIO do
   w <- Random.uniformM Random.globalStdGen
   if w == 0

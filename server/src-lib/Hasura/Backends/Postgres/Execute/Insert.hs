@@ -62,8 +62,8 @@ convertToSQLTransaction (IR.AnnotatedInsert fieldName isSingle annIns mutationOu
   if null $ IR._aiInsertObject annIns
     then pure $ IR.buildEmptyMutResp mutationOutput
     else
-      withPaths ["selectionSet", fieldName, "args", suffix] $
-        insertMultipleObjects annIns mempty userInfo mutationOutput planVars stringifyNum tCase
+      withPaths ["selectionSet", fieldName, "args", suffix]
+        $ insertMultipleObjects annIns mempty userInfo mutationOutput planVars stringifyNum tCase
   where
     withPaths p x = foldr ($) x $ withPathK <$> p
     suffix = bool "objects" "object" isSingle
@@ -160,8 +160,8 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
     let cte = mkInsertQ table onConflict finalInsCols checkCond
 
     PGE.MutateResp affRows colVals <-
-      liftTx $
-        PGE.mutateAndFetchCols @pgKind table allColumns (PGT.MCCheckConstraint cte, planVars) stringifyNum tCase
+      liftTx
+        $ PGE.mutateAndFetchCols @pgKind table allColumns (PGT.MCCheckConstraint cte, planVars) stringifyNum tCase
     colValM <- asSingleObject colVals
 
     arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null allAfterInsertRels
@@ -183,8 +183,8 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
 
     afterInsertDepCols :: [ColumnInfo ('Postgres pgKind)]
     afterInsertDepCols =
-      flip (getColInfos @('Postgres pgKind)) allColumns $
-        concatMap (HashMap.keys . riMapping . IR._riRelationInfo) allAfterInsertRels
+      flip (getColInfos @('Postgres pgKind)) allColumns
+        $ concatMap (HashMap.keys . riMapping . IR._riRelationInfo) allAfterInsertRels
 
     objToArr :: forall a b. IR.ObjectRelationInsert b a -> IR.ArrayRelationInsert b a
     objToArr IR.RelationInsert {..} = IR.RelationInsert (singleToMulti _riInsertData) _riRelationInfo
@@ -199,8 +199,8 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
       afterInsertDepColsWithVal <- fetchFromColVals colVal afterInsertDepCols
       arrInsARows <-
-        forM allAfterInsertRels $
-          insertArrRel afterInsertDepColsWithVal userInfo planVars stringifyNum tCase
+        forM allAfterInsertRels
+          $ insertArrRel afterInsertDepColsWithVal userInfo planVars stringifyNum tCase
       return $ sum arrInsARows
 
     asSingleObject ::
@@ -214,7 +214,8 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
     cannotInsArrRelErr :: Text
     cannotInsArrRelErr =
       "cannot proceed to insert array relations since insert to table "
-        <> table <<> " affects zero rows"
+        <> table
+        <<> " affects zero rows"
 
 insertObjRel ::
   forall pgKind m.
@@ -252,8 +253,10 @@ insertObjRel planVars userInfo stringifyNum tCase objRelIns =
     rColInfos = getColInfos rCols allCols
     errMsg =
       "cannot proceed to insert object relation "
-        <> relName <<> " since insert to table "
-        <> table <<> " affects zero rows"
+        <> relName
+        <<> " since insert to table "
+        <> table
+        <<> " affects zero rows"
 
 insertArrRel ::
   ( MonadTx m,
@@ -272,16 +275,16 @@ insertArrRel ::
   m Int
 insertArrRel resCols userInfo planVars stringifyNum tCase arrRelIns =
   withPathK (relNameToTxt $ riName relInfo) $ do
-    let additionalColumns = HashMap.fromList $
-          flip mapMaybe resCols \(column, value) -> do
+    let additionalColumns = HashMap.fromList
+          $ flip mapMaybe resCols \(column, value) -> do
             target <- HashMap.lookup column mapping
             Just (target, value)
     resBS <-
-      withPathK "data" $
-        insertMultipleObjects multiObjIns additionalColumns userInfo mutOutput planVars stringifyNum tCase
+      withPathK "data"
+        $ insertMultipleObjects multiObjIns additionalColumns userInfo mutOutput planVars stringifyNum tCase
     resObj <- decodeEncJSON resBS
-    onNothing (HashMap.lookup ("affected_rows" :: Text) resObj) $
-      throw500 "affected_rows not returned in array rel insert"
+    onNothing (HashMap.lookup ("affected_rows" :: Text) resObj)
+      $ throw500 "affected_rows not returned in array rel insert"
   where
     IR.RelationInsert multiObjIns relInfo = arrRelIns
     mapping = riMapping relInfo
@@ -304,25 +307,25 @@ validateInsert ::
   m ()
 validateInsert insCols objRels addCols = do
   -- validate insertCols
-  unless (null insConflictCols) $
-    throw400 ValidationFailed $
-      "cannot insert "
-        <> showPGCols insConflictCols
-        <> " columns as their values are already being determined by parent insert"
+  unless (null insConflictCols)
+    $ throw400 ValidationFailed
+    $ "cannot insert "
+    <> showPGCols insConflictCols
+    <> " columns as their values are already being determined by parent insert"
 
   forM_ objRels $ \relInfo -> do
     let lCols = HashMap.keys $ riMapping relInfo
         relName = riName relInfo
         relNameTxt = relNameToTxt relName
         lColConflicts = lCols `intersect` (addCols <> insCols)
-    withPathK relNameTxt $
-      unless (null lColConflicts) $
-        throw400 ValidationFailed $
-          "cannot insert object relationship "
-            <> relName
-              <<> " as "
-            <> showPGCols lColConflicts
-            <> " column values are already determined"
+    withPathK relNameTxt
+      $ unless (null lColConflicts)
+      $ throw400 ValidationFailed
+      $ "cannot insert object relationship "
+      <> relName
+      <<> " as "
+      <> showPGCols lColConflicts
+      <> " column values are already determined"
   where
     insConflictCols = insCols `intersect` addCols
 
@@ -360,10 +363,11 @@ fetchFromColVals colVal reqCols =
   forM reqCols $ \ci -> do
     let valM = HashMap.lookup (ciColumn ci) colVal
     val <-
-      onNothing valM $
-        throw500 $
-          "column "
-            <> ciColumn ci <<> " not found in given colVal"
+      onNothing valM
+        $ throw500
+        $ "column "
+        <> ciColumn ci
+        <<> " not found in given colVal"
     let pgColVal = case val of
           TENull -> Postgres.SENull
           TELit t -> Postgres.SELit t

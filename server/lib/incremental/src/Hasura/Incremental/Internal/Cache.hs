@@ -28,7 +28,7 @@ class (ArrowKleisli m arr) => ArrowCache m arr | arr -> m where
   --
   -- __Note that only direct inputs and outputs of the given arrow are cached.__ If an arrow
   -- provides access to values through a side-channel, they will __not__ participate in caching.
-  cache :: (Given Accesses => Eq a) => arr a b -> arr a b
+  cache :: ((Given Accesses) => Eq a) => arr a b -> arr a b
 
   -- | Creates a new 'Dependency', which allows fine-grained caching of composite values; see the
   -- documentation for 'Dependency' for more details.
@@ -54,10 +54,10 @@ instance (Monoid w, ArrowCache m arr) => ArrowCache m (WriterA w arr) where
   dependOn = liftA dependOn
   {-# INLINE dependOn #-}
 
-instance MonadIO m => ArrowCache m (Rule m) where
+instance (MonadIO m) => ArrowCache m (Rule m) where
   cache ::
     forall a b.
-    (Given Accesses => Eq a) =>
+    ((Given Accesses) => Eq a) =>
     Rule m a b ->
     Rule m a b
   cache r0 = Rule \s a k -> do
@@ -71,8 +71,8 @@ instance MonadIO m => ArrowCache m (Rule m) where
       cached :: Accesses -> a -> b -> Rule m a (b, Accesses) -> Rule m a b
       cached accesses a b (Rule r) = Rule \s a' k ->
         if
-            | unchanged accesses a a' -> (k $! (s <> accesses)) b (cached accesses a b (Rule r))
-            | otherwise -> r s a' \s' (b', accesses') r' -> k s' b' (cached accesses' a' b' r')
+          | unchanged accesses a a' -> (k $! (s <> accesses)) b (cached accesses a b (Rule r))
+          | otherwise -> r s a' \s' (b', accesses') r' -> k s' b' (cached accesses' a' b' r')
 
   newDependency = Rule \s a k -> do
     key <- DependencyRoot <$> newUniqueS

@@ -49,7 +49,7 @@ import Network.HTTP.Types qualified as HTTP
 -- Top-level planner
 
 planQuery ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SessionVariables ->
   QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (QueryWithDDL Select)
@@ -59,7 +59,7 @@ planQuery sessionVariables queryDB = do
 
 -- | For more information, see the module/documentation of 'Hasura.GraphQL.Execute.RemoteJoin.Source'.
 planSourceRelationship ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SessionVariables ->
   -- | List of json objects, each of which becomes a row of the table
   NE.NonEmpty J.Object ->
@@ -88,7 +88,7 @@ planSourceRelationship
         )
 
 runIrWrappingRoot ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   FromIr Select ->
   m (QueryWithDDL Select)
 runIrWrappingRoot selectAction =
@@ -97,7 +97,7 @@ runIrWrappingRoot selectAction =
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.
 prepareValueQuery ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SessionVariables ->
   UnpreparedValue 'MSSQL ->
   m Expression
@@ -126,7 +126,7 @@ prepareValueQuery sessionVariables =
         <*> pure DataLengthMax
 
 planSubscription ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   InsOrdHashMap.InsOrdHashMap G.Name (QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL)) ->
   SessionVariables ->
   m (Reselect, PrepareState)
@@ -222,8 +222,8 @@ prepareValueSubscription globalVariables =
       modify' (\s -> s {sessionVariables = sessionVariables s <> globalVariables})
       pure $ resultVarExp (RootPath `FieldPath` "session")
     UVSessionVar _typ text -> do
-      unless (text `Set.member` globalVariables) $
-        throw400
+      unless (text `Set.member` globalVariables)
+        $ throw400
           NotFound
           ("missing session variable: " <>> sessionVariableToText text)
       modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
@@ -251,12 +251,12 @@ prepareValueSubscription globalVariables =
   where
     resultVarExp :: JsonPath -> Expression
     resultVarExp =
-      JsonValueExpression $
-        ColumnExpression $
-          FieldName
-            { fieldNameEntity = rowAlias,
-              fieldName = resultVarsAlias
-            }
+      JsonValueExpression
+        $ ColumnExpression
+        $ FieldName
+          { fieldNameEntity = rowAlias,
+            fieldName = resultVarsAlias
+          }
 
     queryDot :: Text -> JsonPath
     queryDot name = RootPath `FieldPath` "query" `FieldPath` name

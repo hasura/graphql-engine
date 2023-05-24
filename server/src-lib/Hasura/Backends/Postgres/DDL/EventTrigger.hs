@@ -93,9 +93,9 @@ fetchUndeliveredEvents sourceConfig sourceName triggerNames maintenanceMode fetc
   case fetchEventsTxE of
     Left err -> throwError $ prefixQErr "something went wrong while fetching events: " err
     Right fetchEventsTx ->
-      liftEitherM $
-        liftIO $
-          runPgSourceWriteTx sourceConfig InternalRawQuery fetchEventsTx
+      liftEitherM
+        $ liftIO
+        $ runPgSourceWriteTx sourceConfig InternalRawQuery fetchEventsTx
 
 setRetry ::
   ( MonadIO m,
@@ -124,12 +124,12 @@ insertManualEvent sourceConfig tableName triggerName payload userInfo traceCtx =
   -- while being used in the PG function `insert_event_log`.
   -- See Issue(#7087) for more details on a bug that was being caused
   -- in the absence of these methods.
-  liftEitherM $
-    liftIO $
-      runPgSourceWriteTx sourceConfig InternalRawQuery $
-        setHeadersTx (_uiSession userInfo)
-          >> setTraceContextInTx traceCtx
-          >> insertPGManualEvent tableName triggerName payload
+  liftEitherM
+    $ liftIO
+    $ runPgSourceWriteTx sourceConfig InternalRawQuery
+    $ setHeadersTx (_uiSession userInfo)
+    >> setTraceContextInTx traceCtx
+    >> insertPGManualEvent tableName triggerName payload
 
 getMaintenanceModeVersion ::
   ( MonadIO m,
@@ -148,8 +148,9 @@ recordSuccess ::
   MaintenanceMode MaintenanceModeVersion ->
   m (Either QErr ())
 recordSuccess sourceConfig event invocation maintenanceModeVersion =
-  liftIO $
-    runPgSourceWriteTx sourceConfig InternalRawQuery $ do
+  liftIO
+    $ runPgSourceWriteTx sourceConfig InternalRawQuery
+    $ do
       insertInvocation (tmName (eTrigger event)) invocation
       setSuccessTx event maintenanceModeVersion
 
@@ -173,8 +174,9 @@ recordError' ::
   MaintenanceMode MaintenanceModeVersion ->
   m (Either QErr ())
 recordError' sourceConfig event invocation processEventError maintenanceModeVersion =
-  liftIO $
-    runPgSourceWriteTx sourceConfig InternalRawQuery $ do
+  liftIO
+    $ runPgSourceWriteTx sourceConfig InternalRawQuery
+    $ do
       for_ invocation $ insertInvocation (tmName (eTrigger event))
       case processEventError of
         PESetRetry retryTime -> setRetryTx event retryTime maintenanceModeVersion
@@ -197,11 +199,12 @@ dropTriggerAndArchiveEvents ::
   QualifiedTable ->
   m ()
 dropTriggerAndArchiveEvents sourceConfig triggerName _table =
-  liftEitherM $
-    liftIO $
-      runPgSourceWriteTx sourceConfig InternalRawQuery $ do
-        dropTriggerQ triggerName
-        archiveEvents triggerName
+  liftEitherM
+    $ liftIO
+    $ runPgSourceWriteTx sourceConfig InternalRawQuery
+    $ do
+      dropTriggerQ triggerName
+      archiveEvents triggerName
 
 createMissingSQLTriggers ::
   ( MonadIO m,
@@ -218,8 +221,9 @@ createMissingSQLTriggers ::
   TriggerOpsDef ('Postgres pgKind) ->
   m ()
 createMissingSQLTriggers serverConfigCtx sourceConfig table (allCols, _) triggerName triggerOnReplication opsDefinition = do
-  liftEitherM $
-    runPgSourceWriteTx sourceConfig InternalRawQuery $ do
+  liftEitherM
+    $ runPgSourceWriteTx sourceConfig InternalRawQuery
+    $ do
       for_ (tdInsert opsDefinition) (doesSQLTriggerExist INSERT)
       for_ (tdUpdate opsDefinition) (doesSQLTriggerExist UPDATE)
       for_ (tdDelete opsDefinition) (doesSQLTriggerExist DELETE)
@@ -227,7 +231,8 @@ createMissingSQLTriggers serverConfigCtx sourceConfig table (allCols, _) trigger
     doesSQLTriggerExist op opSpec = do
       let opTriggerName = pgTriggerName op triggerName
       doesOpTriggerFunctionExist <-
-        runIdentity . PG.getRow
+        runIdentity
+          . PG.getRow
           <$> PG.withQE
             defaultTxErrorHandler
             [PG.sql|
@@ -239,9 +244,9 @@ createMissingSQLTriggers serverConfigCtx sourceConfig table (allCols, _) trigger
               |]
             (Identity opTriggerName)
             True
-      unless doesOpTriggerFunctionExist $
-        flip runReaderT serverConfigCtx $
-          mkTrigger triggerName table triggerOnReplication allCols op opSpec
+      unless doesOpTriggerFunctionExist
+        $ flip runReaderT serverConfigCtx
+        $ mkTrigger triggerName table triggerOnReplication allCols op opSpec
 
 createTableEventTrigger ::
   (Backend ('Postgres pgKind), MonadIO m, MonadBaseControl IO m) =>
@@ -256,8 +261,8 @@ createTableEventTrigger ::
   m (Either QErr ())
 createTableEventTrigger serverConfigCtx sourceConfig table columns triggerName triggerOnReplication opsDefinition _ = runPgSourceWriteTx sourceConfig InternalRawQuery $ do
   -- Create the given triggers
-  flip runReaderT serverConfigCtx $
-    mkAllTriggersQ triggerName table triggerOnReplication columns opsDefinition
+  flip runReaderT serverConfigCtx
+    $ mkAllTriggersQ triggerName table triggerOnReplication columns opsDefinition
 
 dropDanglingSQLTrigger ::
   ( MonadIO m,
@@ -269,10 +274,10 @@ dropDanglingSQLTrigger ::
   HashSet Ops ->
   m ()
 dropDanglingSQLTrigger sourceConfig triggerName _ ops =
-  liftEitherM $
-    liftIO $
-      runPgSourceWriteTx sourceConfig InternalRawQuery $
-        traverse_ (dropTriggerOp triggerName) ops
+  liftEitherM
+    $ liftIO
+    $ runPgSourceWriteTx sourceConfig InternalRawQuery
+    $ traverse_ (dropTriggerOp triggerName) ops
 
 updateColumnInEventTrigger ::
   QualifiedTable ->
@@ -320,25 +325,26 @@ checkIfTriggerExists ::
   HashSet Ops ->
   m Bool
 checkIfTriggerExists sourceConfig triggerName ops = do
-  liftEitherM $
-    liftIO $
-      runPgSourceWriteTx sourceConfig InternalRawQuery $
-        -- We want to avoid creating event triggers with same name since this will
-        -- cause undesired behaviour. Note that only SQL functions associated with
-        -- SQL triggers are dropped when "replace = true" is set in the event trigger
-        -- configuration. Hence, the best way to check if we should allow the
-        -- creation of a trigger with the name 'triggerName' is to check if any
-        -- function with such a name exists in the the hdb_catalog.
-        --
-        -- For eg: If a create_event_trigger request comes with trigger name as
-        -- "triggerName" and there is already a trigger with "triggerName" in the
-        -- metadata, then
-        --    1. When "replace = false", the function with name 'triggerName' exists
-        --       so the creation is not allowed
-        --    2. When "replace = true", the function with name 'triggerName' is first
-        --       dropped, hence we are allowed to create the trigger with name
-        --       'triggerName'
-        fmap or (traverse (checkIfFunctionExistsQ triggerName) (HashSet.toList ops))
+  liftEitherM
+    $ liftIO
+    $ runPgSourceWriteTx sourceConfig InternalRawQuery
+    $
+    -- We want to avoid creating event triggers with same name since this will
+    -- cause undesired behaviour. Note that only SQL functions associated with
+    -- SQL triggers are dropped when "replace = true" is set in the event trigger
+    -- configuration. Hence, the best way to check if we should allow the
+    -- creation of a trigger with the name 'triggerName' is to check if any
+    -- function with such a name exists in the the hdb_catalog.
+    --
+    -- For eg: If a create_event_trigger request comes with trigger name as
+    -- "triggerName" and there is already a trigger with "triggerName" in the
+    -- metadata, then
+    --    1. When "replace = false", the function with name 'triggerName' exists
+    --       so the creation is not allowed
+    --    2. When "replace = true", the function with name 'triggerName' is first
+    --       dropped, hence we are allowed to create the trigger with name
+    --       'triggerName'
+    fmap or (traverse (checkIfFunctionExistsQ triggerName) (HashSet.toList ops))
 
 ---- DATABASE QUERIES ---------------------
 --
@@ -377,7 +383,8 @@ insertPGManualEvent ::
   Value ->
   PG.TxE QErr EventId
 insertPGManualEvent (QualifiedObject schemaName tableName) triggerName rowData = do
-  runIdentity . PG.getRow
+  runIdentity
+    . PG.getRow
     <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|
@@ -404,15 +411,15 @@ getMaintenanceModeVersionTx = liftTx $ do
   -- the previous version and the current version will change depending
   -- upon between which versions we need to support maintenance mode
   if
-      | catalogVersion == MetadataCatalogVersion 40 -> pure PreviousMMVersion
-      -- The catalog is migrated to the 43rd version for a source
-      -- which was initialised by a v1 graphql-engine instance (See @initSource@).
-      | catalogVersion == MetadataCatalogVersion 43 -> pure CurrentMMVersion
-      | catalogVersion == latestCatalogVersion -> pure CurrentMMVersion
-      | otherwise ->
-          throw500 $
-            "Maintenance mode is only supported with catalog versions: 40, 43 and "
-              <> tshow latestCatalogVersionString
+    | catalogVersion == MetadataCatalogVersion 40 -> pure PreviousMMVersion
+    -- The catalog is migrated to the 43rd version for a source
+    -- which was initialised by a v1 graphql-engine instance (See @initSource@).
+    | catalogVersion == MetadataCatalogVersion 43 -> pure CurrentMMVersion
+    | catalogVersion == latestCatalogVersion -> pure CurrentMMVersion
+    | otherwise ->
+        throw500
+          $ "Maintenance mode is only supported with catalog versions: 40, 43 and "
+          <> tshow latestCatalogVersionString
 
 -- | Lock and return events not yet being processed or completed, up to some
 -- limit. Process events approximately in created_at order, but we make no
@@ -631,8 +638,8 @@ checkEvent eid = do
     getEvent (x : _) = return x
 
     assertEventUnlocked (Identity locked) =
-      when locked $
-        throw400 Busy "event is already being processed"
+      when locked
+        $ throw400 Busy "event is already being processed"
 
 markForDelivery :: EventId -> PG.TxE QErr ()
 markForDelivery eid =
@@ -658,7 +665,8 @@ redeliverEventTx eventId = do
 --   when a graceful shutdown is initiated.
 unlockEventsTx :: [EventId] -> PG.TxE QErr Int
 unlockEventsTx eventIds =
-  runIdentity . PG.getRow
+  runIdentity
+    . PG.getRow
     <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|
@@ -709,45 +717,47 @@ mkTriggerFunctionQ triggerName (QualifiedObject schema table) allCols op (Subscr
   strfyNum <- asks stringifyNum
   let dbQualifiedTriggerName = pgIdenTrigger op triggerName
   () <-
-    liftTx $
-      PG.multiQE defaultTxErrorHandler $
-        PG.fromText . TL.toStrict $
-          let -- If there are no specific delivery columns selected by user then all the columns will be delivered
-              -- in payload hence 'SubCStar'.
-              deliveryColumns = fromMaybe SubCStar deliveryColumns'
-              getApplicableColumns = \case
-                SubCStar -> allCols
-                SubCArray cols -> getColInfos cols allCols
+    liftTx
+      $ PG.multiQE defaultTxErrorHandler
+      $ PG.fromText
+      . TL.toStrict
+      $ let
+            -- If there are no specific delivery columns selected by user then all the columns will be delivered
+            -- in payload hence 'SubCStar'.
+            deliveryColumns = fromMaybe SubCStar deliveryColumns'
+            getApplicableColumns = \case
+              SubCStar -> allCols
+              SubCArray cols -> getColInfos cols allCols
 
-              -- Columns that should be present in the payload. By default, all columns are present.
-              applicableDeliveryCols = getApplicableColumns deliveryColumns
-              getRowExpression opVar = applyRowToJson' $ mkRowExpression opVar strfyNum applicableDeliveryCols
+            -- Columns that should be present in the payload. By default, all columns are present.
+            applicableDeliveryCols = getApplicableColumns deliveryColumns
+            getRowExpression opVar = applyRowToJson' $ mkRowExpression opVar strfyNum applicableDeliveryCols
 
-              -- Columns that user subscribed to listen for changes. By default, we listen on all columns.
-              applicableListenCols = getApplicableColumns listenColumns
-              renderRow opVar = applyRow $ mkRowExpression opVar strfyNum applicableListenCols
+            -- Columns that user subscribed to listen for changes. By default, we listen on all columns.
+            applicableListenCols = getApplicableColumns listenColumns
+            renderRow opVar = applyRow $ mkRowExpression opVar strfyNum applicableListenCols
 
-              oldDataExp = case op of
-                INSERT -> SENull
-                UPDATE -> getRowExpression OLD
-                DELETE -> getRowExpression OLD
-                MANUAL -> SENull
-              newDataExp = case op of
-                INSERT -> getRowExpression NEW
-                UPDATE -> getRowExpression NEW
-                DELETE -> SENull
-                MANUAL -> SENull
+            oldDataExp = case op of
+              INSERT -> SENull
+              UPDATE -> getRowExpression OLD
+              DELETE -> getRowExpression OLD
+              MANUAL -> SENull
+            newDataExp = case op of
+              INSERT -> getRowExpression NEW
+              UPDATE -> getRowExpression NEW
+              DELETE -> SENull
+              MANUAL -> SENull
 
-              name = triggerNameToTxt triggerName
-              qualifiedTriggerName = unQualifiedTriggerName dbQualifiedTriggerName
-              schemaName = pgFmtLit $ getSchemaTxt schema
-              tableName = pgFmtLit $ getTableTxt table
+            name = triggerNameToTxt triggerName
+            qualifiedTriggerName = unQualifiedTriggerName dbQualifiedTriggerName
+            schemaName = pgFmtLit $ getSchemaTxt schema
+            tableName = pgFmtLit $ getTableTxt table
 
-              oldRow = toSQLTxt $ renderRow OLD
-              newRow = toSQLTxt $ renderRow NEW
-              oldPayloadExpression = toSQLTxt oldDataExp
-              newPayloadExpression = toSQLTxt newDataExp
-           in $(makeRelativeToProject "src-rsr/trigger.sql.shakespeare" >>= ST.stextFile)
+            oldRow = toSQLTxt $ renderRow OLD
+            newRow = toSQLTxt $ renderRow NEW
+            oldPayloadExpression = toSQLTxt oldDataExp
+            newPayloadExpression = toSQLTxt newDataExp
+         in $(makeRelativeToProject "src-rsr/trigger.sql.shakespeare" >>= ST.stextFile)
   pure dbQualifiedTriggerName
   where
     applyRowToJson' e = SEFnApp "row_to_json" [e] Nothing
@@ -758,11 +768,11 @@ mkTriggerFunctionQ triggerName (QualifiedObject schema table) allCols op (Subscr
       mkRowExp $ map (\col -> toExtractor (mkQId opVar strfyNum col) col) columns
 
     mkQId opVar strfyNum colInfo =
-      toJSONableExp strfyNum (ciType colInfo) False Nothing $
-        SEQIdentifier $
-          QIdentifier (opToQual opVar) $
-            toIdentifier $
-              ciColumn colInfo
+      toJSONableExp strfyNum (ciType colInfo) False Nothing
+        $ SEQIdentifier
+        $ QIdentifier (opToQual opVar)
+        $ toIdentifier
+        $ ciColumn colInfo
 
     -- Generate the SQL expression
     toExtractor sqlExp column
@@ -778,8 +788,8 @@ checkIfTriggerExistsForTableQ ::
   QualifiedTable ->
   PG.TxE QErr Bool
 checkIfTriggerExistsForTableQ (QualifiedTriggerName triggerName) (QualifiedObject schemaName tableName) =
-  fmap (runIdentity . PG.getRow) $
-    PG.withQE
+  fmap (runIdentity . PG.getRow)
+    $ PG.withQE
       defaultTxErrorHandler
       -- 'regclass' converts non-quoted strings to lowercase but since identifiers
       -- such as table name needs are case-sensitive, we add quotes to table name
@@ -802,8 +812,8 @@ checkIfFunctionExistsQ ::
   PG.TxE QErr Bool
 checkIfFunctionExistsQ triggerName op = do
   let qualifiedTriggerName = pgTriggerName op triggerName
-  fmap (runIdentity . PG.getRow) $
-    PG.withQE
+  fmap (runIdentity . PG.getRow)
+    $ PG.withQE
       defaultTxErrorHandler
       [PG.sql|
       SELECT EXISTS (
@@ -833,13 +843,13 @@ mkTrigger triggerName table triggerOnReplication allCols op subOpSpec = do
   -- check if the SQL trigger exists and only if the SQL trigger doesn't exist
   -- we create the SQL trigger.
   doesTriggerExist <- liftTx $ checkIfTriggerExistsForTableQ (pgTriggerName op triggerName) table
-  unless doesTriggerExist $
-    let createTriggerSqlQuery =
-          PG.fromText $ createTriggerSQL dbTriggerNameTxt (toSQLTxt table) (tshow op)
-     in liftTx $ do
-          PG.unitQE defaultTxErrorHandler createTriggerSqlQuery () False
-          when (triggerOnReplication == TOREnableTrigger) $
-            PG.unitQE defaultTxErrorHandler (alwaysEnableTriggerQuery dbTriggerNameTxt (toSQLTxt table)) () False
+  unless doesTriggerExist
+    $ let createTriggerSqlQuery =
+            PG.fromText $ createTriggerSQL dbTriggerNameTxt (toSQLTxt table) (tshow op)
+       in liftTx $ do
+            PG.unitQE defaultTxErrorHandler createTriggerSqlQuery () False
+            when (triggerOnReplication == TOREnableTrigger)
+              $ PG.unitQE defaultTxErrorHandler (alwaysEnableTriggerQuery dbTriggerNameTxt (toSQLTxt table)) () False
   where
     createTriggerSQL triggerNameTxt tableName opText =
       [ST.st|
@@ -847,8 +857,8 @@ mkTrigger triggerName table triggerOnReplication allCols op subOpSpec = do
       |]
 
     alwaysEnableTriggerQuery triggerNameTxt tableTxt =
-      PG.fromText $
-        [ST.st|
+      PG.fromText
+        $ [ST.st|
         ALTER TABLE #{tableTxt} ENABLE ALWAYS TRIGGER #{triggerNameTxt};
       |]
 
@@ -894,18 +904,18 @@ addCleanupSchedules sourceConfig triggersWithcleanupConfig =
                       lastScheduledTime
             )
             triggersWithcleanupConfig
-    unless (null scheduledTriggersAndTimestamps) $
-      liftEitherM $
-        liftIO $
-          runPgSourceWriteTx sourceConfig InternalRawQuery $
-            insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
+    unless (null scheduledTriggersAndTimestamps)
+      $ liftEitherM
+      $ liftIO
+      $ runPgSourceWriteTx sourceConfig InternalRawQuery
+      $ insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
 
 -- | Insert the cleanup logs for the fiven trigger name and schedules
 insertEventTriggerCleanupLogsTx :: [(TriggerName, [Time.UTCTime])] -> PG.TxET QErr IO ()
 insertEventTriggerCleanupLogsTx triggersWithschedules = do
   let insertCleanupEventsSql =
-        TB.run $
-          toSQL
+        TB.run
+          $ toSQL
             S.SQLInsert
               { siTable = cleanupLogTable,
                 siCols = map unsafePGCol ["trigger_name", "scheduled_at", "status"],
@@ -995,8 +1005,8 @@ getCleanupEventsForDeletion sourceConfig =
 
 markCleanupEventsAsDeadTx :: [Text] -> PG.TxE QErr ()
 markCleanupEventsAsDeadTx toDeadEvents = do
-  unless (null toDeadEvents) $
-    PG.unitQE
+  unless (null toDeadEvents)
+    $ PG.unitQE
       defaultTxErrorHandler
       [PG.sql|
         UPDATE hdb_catalog.hdb_event_log_cleanups l
@@ -1104,7 +1114,8 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
   deletedInvocationLogs <-
     if tlccCleanInvocationLogs
       then
-        runIdentity . PG.getRow
+        runIdentity
+          . PG.getRow
           <$> PG.withQE
             defaultTxErrorHandler
             [PG.sql|
@@ -1130,7 +1141,8 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
         pure 0
   --  Finally delete the event logs.
   deletedEventLogs <-
-    runIdentity . PG.getRow
+    runIdentity
+      . PG.getRow
       <$> PG.withQE
         defaultTxErrorHandler
         [PG.sql|
@@ -1264,8 +1276,8 @@ fetchEventById sourceConfig getEventById = do
   fetchEventByIdTxE' <- liftIO $ runPgSourceReadTx sourceConfig $ fetchEventByIdTxE getEventById
   case fetchEventByIdTxE' of
     Left err ->
-      throwError $
-        prefixQErr ("unexpected error while fetching event with id " <> eventId <> ": ") err
+      throwError
+        $ prefixQErr ("unexpected error while fetching event with id " <> eventId <> ": ") err
     Right eventLogWithInvocations -> do
       if isNothing (elwiEvent eventLogWithInvocations)
         then throw400 NotExists errMsg

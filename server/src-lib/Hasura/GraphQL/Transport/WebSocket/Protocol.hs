@@ -241,8 +241,9 @@ encodeServerErrorMsg ecode = encJToLBS . encJFromJValue $ case ecode of
 
 encodeServerMsg :: ServerMsg -> BL.ByteString
 encodeServerMsg msg =
-  encJToLBS $
-    encJFromAssocList $ case msg of
+  encJToLBS
+    $ encJFromAssocList
+    $ case msg of
       SMConnAck ->
         [encTy SMT_GQL_CONNECTION_ACK]
       SMConnKeepAlive ->
@@ -299,8 +300,9 @@ getNewWSTimer :: Seconds -> IO WSConnInitTimer
 getNewWSTimer timeout = do
   timerState <- newTVarIO Running
   timer <- newEmptyTMVarIO
-  void $
-    forkIO $ do
+  void
+    $ forkIO
+    $ do
       sleep (seconds timeout)
       atomically $ do
         runTimerState <- readTVar timerState

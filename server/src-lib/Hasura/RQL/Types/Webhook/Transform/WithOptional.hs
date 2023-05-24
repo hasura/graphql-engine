@@ -40,7 +40,7 @@ deriving newtype instance
 -- and  @'WithOptional' f b@ if an isomorphism exists between @a@ and @f b@.
 withOptional ::
   forall a b f.
-  Coercible a (f b) =>
+  (Coercible a (f b)) =>
   Maybe a ->
   WithOptional f b
 withOptional = coerce
@@ -60,10 +60,10 @@ withOptionalField' name = withOptionalFieldWith' name (codec @a)
 -- This version takes a codec for the underlying value type as an argument.
 withOptionalFieldWith' ::
   forall a b f.
-  Coercible a (f b) =>
+  (Coercible a (f b)) =>
   Text ->
   ValueCodec a a ->
   ObjectCodec (WithOptional f b) (WithOptional f b)
 withOptionalFieldWith' name aCodec =
-  dimapCodec withOptional (fmap coerce . getOptional) $
-    optionalFieldWith' name aCodec
+  dimapCodec withOptional (fmap coerce . getOptional)
+    $ optionalFieldWith' name aCodec

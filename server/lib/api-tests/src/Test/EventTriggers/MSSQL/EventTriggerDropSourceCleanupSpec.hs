@@ -75,8 +75,8 @@ authorsTable tableName =
 tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests =
   describe "dropping a source with event triggers should remove 'hdb_catalog' schema and the SQL triggers created on the table" do
-    it "check: inserting a new row invokes a event trigger" $
-      \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+    it "check: inserting a new row invokes a event trigger"
+      $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
             insertQuery =
@@ -115,8 +115,8 @@ tests =
 
         eventPayload `shouldBeYaml` expectedEventPayload
 
-    it "drop source, check the table works as it was before event trigger was created on it" $
-      \(testEnvironment, _) -> do
+    it "drop source, check the table works as it was before event trigger was created on it"
+      $ \(testEnvironment, _) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
         let dropSourceQuery =
@@ -184,8 +184,8 @@ mssqlSetupWithEventTriggers testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: mssql_create_event_trigger

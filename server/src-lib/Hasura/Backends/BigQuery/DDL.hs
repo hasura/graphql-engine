@@ -37,8 +37,8 @@ fetchAndValidateEnumValues ::
   [RawColumnInfo 'BigQuery] ->
   m (Either QErr EnumValues)
 fetchAndValidateEnumValues _ _ _ _ =
-  runExceptT $
-    throw400 NotSupported "Enum tables are not supported for BigQuery sources"
+  runExceptT
+    $ throw400 NotSupported "Enum tables are not supported for BigQuery sources"
 
 buildFunctionInfo ::
   (MonadError QErr m) =>

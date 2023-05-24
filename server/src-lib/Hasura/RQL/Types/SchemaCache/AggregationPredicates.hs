@@ -32,9 +32,9 @@ defaultGetAggregationPredicateDeps (AggregationPredicatesImplementation relInfo 
         RelTargetTable tn -> tn
       schemaDependency =
         SchemaDependency
-          ( SOSourceObj source $
-              AB.mkAnyBackend $
-                SOITableObj @b currTable (TORel relationshipName)
+          ( SOSourceObj source
+              $ AB.mkAnyBackend
+              $ SOITableObj @b currTable (TORel relationshipName)
           )
           DROnType
    in (schemaDependency :) <$> local (\e -> e {currTable = relationshipTable}) (getFunctionDeps functions)

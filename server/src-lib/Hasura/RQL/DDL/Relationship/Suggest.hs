@@ -56,11 +56,11 @@ instance (Backend b) => HasCodec (SuggestRels b) where
       "SuggestRels"
       ( SuggestRels
           <$> optionalFieldWithOmittedDefault "source" defaultSource "The source to suggest relationships for - Defaults to 'default'."
-            .= _srsSource
-          <*> optionalFieldOrNull "tables" "The list of tables to suggest relationships for - Defaults to all tracked tables."
-            .= _srsTables
-          <*> optionalFieldWithOmittedDefault "omit_tracked" False "Determines if currently tracked relationships should be ommited from suggestions - Defaults to false."
-            .= _srsOmitTracked
+          .= _srsSource
+            <*> optionalFieldOrNull "tables" "The list of tables to suggest relationships for - Defaults to all tracked tables."
+          .= _srsTables
+            <*> optionalFieldWithOmittedDefault "omit_tracked" False "Determines if currently tracked relationships should be ommited from suggestions - Defaults to false."
+          .= _srsOmitTracked
       )
       <??> ["API call to request suggestions for relationships"]
 
@@ -76,7 +76,7 @@ instance (Backend b) => HasCodec (SuggestedRelationships b) where
       "SuggestedRelationships"
       ( Relationships
           <$> requiredField' "relationships"
-            .= sRelationships
+          .= sRelationships
       )
 
 data Relationship b = Relationship
@@ -93,11 +93,11 @@ instance (Backend b) => HasCodec (Relationship b) where
       "Relationship"
       ( Relationship
           <$> requiredField' "type"
-            .= rType
-          <*> requiredField' "from"
-            .= rFrom
-          <*> requiredField' "to"
-            .= rTo
+          .= rType
+            <*> requiredField' "from"
+          .= rFrom
+            <*> requiredField' "to"
+          .= rTo
       )
 
 data Mapping b = Mapping
@@ -114,11 +114,11 @@ instance (Backend b) => HasCodec (Mapping b) where
       "Mapping"
       ( Mapping
           <$> requiredField' "table"
-            .= mTable
-          <*> requiredField' "columns"
-            .= mColumns
-          <*> optionalFieldOrNull' "constraint_name"
-            .= mConstraintName
+          .= mTable
+            <*> requiredField' "columns"
+          .= mColumns
+            <*> optionalFieldOrNull' "constraint_name"
+          .= mConstraintName
       )
 
 --  | Most of the heavy lifting for this module occurs in this function.
@@ -167,9 +167,9 @@ suggestRelsFK omitTracked tables name uniqueConstraints tracked predicate foreig
     discard b x = bool Nothing (Just x) (not b)
     invert = HashMap.fromList . map swap . HashMap.toList
     trackedBack =
-      H.fromList $
-        mapMaybe (relationships (getRelationshipsInputs @b)) $
-          maybe [] (HashMap.elems . _tciFieldInfoMap) relatedTable
+      H.fromList
+        $ mapMaybe (relationships (getRelationshipsInputs @b))
+        $ maybe [] (HashMap.elems . _tciFieldInfoMap) relatedTable
 
 -- we're only interested in suggesting table-based relationships for now
 getRelationshipsInputs ::
@@ -194,10 +194,10 @@ suggestRelsTable omitTracked tables predicate (name, table) =
     foreignKeys = _tciForeignKeys table
     constraints = _tciUniqueConstraints table
     tracked =
-      H.fromList $
-        mapMaybe (relationships (getRelationshipsInputs @b)) $
-          HashMap.elems $
-            _tciFieldInfoMap table
+      H.fromList
+        $ mapMaybe (relationships (getRelationshipsInputs @b))
+        $ HashMap.elems
+        $ _tciFieldInfoMap table
 
 relationships :: (RelInfo b1 -> Maybe b2) -> FieldInfo b1 -> Maybe b2
 relationships f = (=<<) f . preview _FIRelationship
@@ -211,8 +211,9 @@ suggestRelsResponse ::
   (TableName b -> Bool) ->
   SuggestedRelationships b
 suggestRelsResponse omitTracked tables predicate =
-  Relationships $
-    suggestRelsTable omitTracked tables predicate =<< HashMap.toList tables
+  Relationships
+    $ suggestRelsTable omitTracked tables predicate
+    =<< HashMap.toList tables
 
 tablePredicate :: (Hashable a) => Maybe [a] -> a -> Bool
 tablePredicate Nothing _ = True

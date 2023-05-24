@@ -142,9 +142,9 @@ transformTable tableInfo =
       foreignKeysMetadata = HS.fromList $ map ForeignKeyMetadata $ coalesceKeys $ concat foreignKeys
       primaryKey = transformPrimaryKey <$> staJoinedSysPrimaryKey tableInfo
       identityColumns =
-        map (ColumnName . scName) $
-          filter scIsIdentity $
-            staJoinedSysColumn tableInfo
+        map (ColumnName . scName)
+          $ filter scIsIdentity
+          $ staJoinedSysColumn tableInfo
    in ( tableName,
         DBTableMetadata
           tableOID

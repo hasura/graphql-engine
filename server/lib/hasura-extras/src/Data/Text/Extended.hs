@@ -43,16 +43,16 @@ instance ToTxt Void where
 instance ToTxt (G.Value Void) where
   toTxt = TB.run . G.value
 
-bquote :: ToTxt t => t -> Text
+bquote :: (ToTxt t) => t -> Text
 bquote t = DT.singleton '`' <> toTxt t <> DT.singleton '`'
 
-squote :: ToTxt t => t -> Text
+squote :: (ToTxt t) => t -> Text
 squote t = DT.singleton '\'' <> toTxt t <> DT.singleton '\''
 
-dquote :: ToTxt t => t -> Text
+dquote :: (ToTxt t) => t -> Text
 dquote t = DT.singleton '"' <> toTxt t <> DT.singleton '"'
 
-paren :: ToTxt t => t -> Text
+paren :: (ToTxt t) => t -> Text
 paren t = "(" <> toTxt t <> ")"
 
 parenB :: TB.Builder -> TB.Builder
@@ -66,12 +66,12 @@ commaSeparated = DT.intercalate ", " . fmap toTxt . toList
 
 infixr 6 <>>
 
-(<>>) :: ToTxt t => Text -> t -> Text
+(<>>) :: (ToTxt t) => Text -> t -> Text
 (<>>) lTxt a = lTxt <> dquote a
 
 infixr 6 <<>
 
-(<<>) :: ToTxt t => t -> Text -> Text
+(<<>) :: (ToTxt t) => t -> Text -> Text
 (<<>) a rTxt = dquote a <> rTxt
 
 infixr 6 <~>

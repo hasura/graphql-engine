@@ -60,26 +60,39 @@ instance NFData RemoteSchemaDef
 
 instance HasCodec RemoteSchemaDef where
   codec =
-    object "RemoteSchemaDef" $
-      RemoteSchemaDef
-        <$> optionalField' "url" .= _rsdUrl
-        <*> optionalField' "url_from_env" .= _rsdUrlFromEnv
-        <*> optionalField' "headers" .= _rsdHeaders
-        <*> optionalFieldWithDefault' "forward_client_headers" False .= _rsdForwardClientHeaders
-        <*> optionalField' "timeout_seconds" .= _rsdTimeoutSeconds
-        <*> optionalField' "customization" .= _rsdCustomization
+    object "RemoteSchemaDef"
+      $ RemoteSchemaDef
+      <$> optionalField' "url"
+      .= _rsdUrl
+        <*> optionalField' "url_from_env"
+      .= _rsdUrlFromEnv
+        <*> optionalField' "headers"
+      .= _rsdHeaders
+        <*> optionalFieldWithDefault' "forward_client_headers" False
+      .= _rsdForwardClientHeaders
+        <*> optionalField' "timeout_seconds"
+      .= _rsdTimeoutSeconds
+        <*> optionalField' "customization"
+      .= _rsdCustomization
 
 $(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaDef)
 
 instance J.FromJSON RemoteSchemaDef where
   parseJSON = J.withObject "Object" $ \o ->
     RemoteSchemaDef
-      <$> o J..:? "url"
-      <*> o J..:? "url_from_env"
-      <*> o J..:? "headers"
-      <*> o J..:? "forward_client_headers" J..!= False
-      <*> o J..:? "timeout_seconds"
-      <*> o J..:? "customization"
+      <$> o
+      J..:? "url"
+      <*> o
+      J..:? "url_from_env"
+      <*> o
+      J..:? "headers"
+      <*> o
+      J..:? "forward_client_headers"
+      J..!= False
+      <*> o
+      J..:? "timeout_seconds"
+      <*> o
+      J..:? "customization"
 
 getUrlFromEnv :: (MonadError QErr m) => Env.Environment -> Text -> m (EnvRecord N.URI)
 getUrlFromEnv env urlFromEnv = do
@@ -103,28 +116,37 @@ data RemoteSchemaMetadataG r = RemoteSchemaMetadata
 
 instance (HasCodec (RemoteRelationshipG r), Typeable r) => HasCodec (RemoteSchemaMetadataG r) where
   codec =
-    object ("RemoteSchemaMetadata_" <> typeableName @r) $
-      RemoteSchemaMetadata
-        <$> requiredField' "name" .= _rsmName
-        <*> requiredField' "definition" .= _rsmDefinition
-        <*> optionalField' "comment" .= _rsmComment
-        <*> optionalFieldWithDefault' "permissions" mempty .= _rsmPermissions
+    object ("RemoteSchemaMetadata_" <> typeableName @r)
+      $ RemoteSchemaMetadata
+      <$> requiredField' "name"
+      .= _rsmName
+        <*> requiredField' "definition"
+      .= _rsmDefinition
+        <*> optionalField' "comment"
+      .= _rsmComment
+        <*> optionalFieldWithDefault' "permissions" mempty
+      .= _rsmPermissions
         <*> optionalFieldWithDefaultWith'
           "remote_relationships"
           (insertionOrderedElemsCodec _rstrsName)
           mempty
-          .= _rsmRemoteRelationships
+      .= _rsmRemoteRelationships
 
-instance J.FromJSON (RemoteRelationshipG r) => J.FromJSON (RemoteSchemaMetadataG r) where
+instance (J.FromJSON (RemoteRelationshipG r)) => J.FromJSON (RemoteSchemaMetadataG r) where
   parseJSON = J.withObject "RemoteSchemaMetadata" \obj ->
     RemoteSchemaMetadata
-      <$> obj J..: "name"
-      <*> obj J..: "definition"
-      <*> obj J..:? "comment"
-      <*> obj J..:? "permissions" J..!= mempty
+      <$> obj
+      J..: "name"
+      <*> obj
+      J..: "definition"
+      <*> obj
+      J..:? "comment"
+      <*> obj
+      J..:? "permissions"
+      J..!= mempty
       <*> (oMapFromL _rstrsName <$> obj J..:? "remote_relationships" J..!= [])
 
-instance J.ToJSON (RemoteRelationshipG r) => J.ToJSON (RemoteSchemaMetadataG r) where
+instance (J.ToJSON (RemoteRelationshipG r)) => J.ToJSON (RemoteSchemaMetadataG r) where
   toJSON RemoteSchemaMetadata {..} =
     J.object
       [ "name" J..= _rsmName,

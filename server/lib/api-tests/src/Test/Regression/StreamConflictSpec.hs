@@ -19,8 +19,8 @@ spec =
                 [ Postgres.setupTablesAction schema testEnv
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.skipTests =
                         Just "Disabled until we can dynamically change server settings per test. To test, add EFHideStreamFields to soSubscriptions in Harness.Constants -> serveOptions"
                     }

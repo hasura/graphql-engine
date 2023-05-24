@@ -27,7 +27,7 @@ import Language.GraphQL.Draft.Syntax
   )
 
 data TypeDefinitionsWrapper origin where
-  TypeDefinitionsWrapper :: HasTypeDefinitions origin a => a -> TypeDefinitionsWrapper origin
+  TypeDefinitionsWrapper :: (HasTypeDefinitions origin a) => a -> TypeDefinitionsWrapper origin
 
 {-
 Note [Collecting types from the GraphQL schema]
@@ -93,7 +93,7 @@ different data sources.
 -- attempting to detect any conflicting defintions that may have made it this
 -- far (See 'ConflictingDefinitions' for details).
 collectTypeDefinitions ::
-  HasTypeDefinitions origin a =>
+  (HasTypeDefinitions origin a) =>
   a ->
   Either (ConflictingDefinitions origin) (HashMap Name (SomeDefinitionTypeInfo origin))
 collectTypeDefinitions x =
@@ -201,10 +201,10 @@ instance HasTypeDefinitions origin (Definition origin (TypeInfo origin k)) where
         | someOld == someNew -> put $! HashMap.insert dName (someOld, stack `NE.cons` origins) definitions
         | otherwise -> throwError $ ConflictingDefinitions (someNew, stack) (someOld, origins)
 
-instance HasTypeDefinitions origin a => HasTypeDefinitions origin [a] where
+instance (HasTypeDefinitions origin a) => HasTypeDefinitions origin [a] where
   accumulateTypeDefinitions = traverse_ accumulateTypeDefinitions
 
-instance HasTypeDefinitions origin a => HasTypeDefinitions origin (Maybe a) where
+instance (HasTypeDefinitions origin a) => HasTypeDefinitions origin (Maybe a) where
   accumulateTypeDefinitions = traverse_ accumulateTypeDefinitions
 
 instance HasTypeDefinitions origin (TypeDefinitionsWrapper origin) where

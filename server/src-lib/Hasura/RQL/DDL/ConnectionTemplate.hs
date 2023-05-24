@@ -33,9 +33,13 @@ instance (Backend b) => FromJSON (TestConnectionTemplate b) where
   parseJSON v =
     flip (J.withObject "TestConnectionTemplate") v $ \o ->
       TestConnectionTemplate
-        <$> o J..:? "source_name" J..!= defaultSource
-        <*> o J..: "request_context"
-        <*> o J..:? "connection_template"
+        <$> o
+        J..:? "source_name"
+        J..!= defaultSource
+        <*> o
+        J..: "request_context"
+        <*> o
+        J..:? "connection_template"
 
 -- | Resolver for the metadata API `<backend>_test_connection_template`
 runTestConnectionTemplate ::

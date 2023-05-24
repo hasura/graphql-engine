@@ -36,18 +36,18 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith GlobalTestEnvironment
 spec = do
   withHge emptyHgeConfig $ do
-    withPostgresSource "postgres-source" $
-      withSchemaName "test_schema" $
-        withPostgresSchema schema $
-          tests
+    withPostgresSource "postgres-source"
+      $ withSchemaName "test_schema"
+      $ withPostgresSchema schema
+      $ tests
 
-    DC.withDcPostgresSource "dc-postgres-source" $
-      withSchemaName "test_schema" $
-        DC.withDcPostgresSchema schema $
-          tests
+    DC.withDcPostgresSource "dc-postgres-source"
+      $ withSchemaName "test_schema"
+      $ DC.withDcPostgresSchema schema
+      $ tests
 
-  withEachProtocol $
-    Fixture.run
+  withEachProtocol
+    $ Fixture.run
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnvironment, _) ->
@@ -69,8 +69,8 @@ spec = do
                   [ BigQuery.setupTablesAction schema testEnvironment
                   ],
                 Fixture.customOptions =
-                  Just $
-                    Fixture.defaultOptions
+                  Just
+                    $ Fixture.defaultOptions
                       { Fixture.stringifyNumbers = True
                       }
               },

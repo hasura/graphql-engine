@@ -130,7 +130,7 @@ requestL = lens getter setter
 -- interpolation on the request url.
 applyRequestTransform ::
   forall m.
-  MonadError TransformErrorBundle m =>
+  (MonadError TransformErrorBundle m) =>
   (HTTP.Request -> RequestContext) ->
   RequestTransformFns ->
   HTTP.Request ->
@@ -144,8 +144,8 @@ applyRequestTransform mkCtx transformations request =
     -- Apply all of the provided request transformation functions to the
     -- request data extracted from the given 'HTTP.Request'.
     transformReqData transformCtx reqData =
-      B.bsequence' $
-        B.bzipWith3C @Transform
+      B.bsequence'
+        $ B.bzipWith3C @Transform
           transformField
           transformCtx
           transformations
@@ -193,8 +193,10 @@ mkRespTemplateTransform (Body.ModifyAsJSON template) context =
   runResponseTemplateTransform template context
 mkRespTemplateTransform (Body.ModifyAsFormURLEncoded formTemplates) context = do
   result <-
-    liftEither . V.toEither . for formTemplates $
-      runUnescapedResponseTemplateTransform' context
+    liftEither
+      . V.toEither
+      . for formTemplates
+      $ runUnescapedResponseTemplateTransform' context
   pure . J.String . TE.decodeUtf8 . BL.toStrict $ Body.foldFormEncoded result
 
 mkResponseTransform :: MetadataResponseTransform -> ResponseTransform

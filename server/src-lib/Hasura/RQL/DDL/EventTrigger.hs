@@ -125,12 +125,12 @@ instance (Backend b) => FromJSON (CreateEventTriggerQuery b) where
     requestTransform <- o .:? "request_transform"
     responseTransform <- o .:? "response_transform"
     cleanupConfig <- o .:? "cleanup_config"
-    when (isIllegalTriggerName name) $
-      fail "only alphanumeric and underscore and hyphens allowed for name"
-    unless (T.length (triggerNameToTxt name) <= maxTriggerNameLength) $
-      fail "event trigger name can be at most 42 characters"
-    unless (any isJust [insert, update, delete] || enableManual) $
-      fail "atleast one amongst insert/update/delete/enable_manual spec must be provided"
+    when (isIllegalTriggerName name)
+      $ fail "only alphanumeric and underscore and hyphens allowed for name"
+    unless (T.length (triggerNameToTxt name) <= maxTriggerNameLength)
+      $ fail "event trigger name can be at most 42 characters"
+    unless (any isJust [insert, update, delete] || enableManual)
+      $ fail "atleast one amongst insert/update/delete/enable_manual spec must be provided"
     case (webhook, webhookFromEnv) of
       (Just _, Nothing) -> return ()
       (Nothing, Just _) -> return ()
@@ -157,8 +157,11 @@ data DeleteEventTriggerQuery (b :: BackendType) = DeleteEventTriggerQuery
 instance FromJSON (DeleteEventTriggerQuery b) where
   parseJSON = withObject "DeleteEventTriggerQuery" $ \o ->
     DeleteEventTriggerQuery
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "name"
+      <$> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "name"
 
 data RedeliverEventQuery (b :: BackendType) = RedeliverEventQuery
   { _rdeqEventId :: EventId,
@@ -168,8 +171,11 @@ data RedeliverEventQuery (b :: BackendType) = RedeliverEventQuery
 instance FromJSON (RedeliverEventQuery b) where
   parseJSON = withObject "RedeliverEventQuery" $ \o ->
     RedeliverEventQuery
-      <$> o .: "event_id"
-      <*> o .:? "source" .!= defaultSource
+      <$> o
+      .: "event_id"
+      <*> o
+      .:? "source"
+      .!= defaultSource
 
 data InvokeEventTriggerQuery (b :: BackendType) = InvokeEventTriggerQuery
   { _ietqName :: TriggerName,
@@ -180,9 +186,13 @@ data InvokeEventTriggerQuery (b :: BackendType) = InvokeEventTriggerQuery
 instance (Backend b) => FromJSON (InvokeEventTriggerQuery b) where
   parseJSON = withObject "InvokeEventTriggerQuery" $ \o ->
     InvokeEventTriggerQuery
-      <$> o .: "name"
-      <*> o .:? "source" .!= defaultSource
-      <*> o .: "payload"
+      <$> o
+      .: "name"
+      <*> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "payload"
 
 -- | This typeclass have the implementation logic for the event trigger log cleanup.
 --
@@ -276,9 +286,9 @@ resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update d
 
 droppedTriggerOps :: TriggerOpsDef b -> TriggerOpsDef b -> HashSet Ops
 droppedTriggerOps oldEventTriggerOps newEventTriggerOps =
-  Set.fromList $
-    catMaybes $
-      [ (bool Nothing (Just INSERT) (isDroppedOp (tdInsert oldEventTriggerOps) (tdInsert newEventTriggerOps))),
+  Set.fromList
+    $ catMaybes
+    $ [ (bool Nothing (Just INSERT) (isDroppedOp (tdInsert oldEventTriggerOps) (tdInsert newEventTriggerOps))),
         (bool Nothing (Just UPDATE) (isDroppedOp (tdUpdate oldEventTriggerOps) (tdUpdate newEventTriggerOps))),
         (bool Nothing (Just DELETE) (isDroppedOp (tdDelete oldEventTriggerOps) (tdDelete newEventTriggerOps)))
       ]
@@ -306,10 +316,10 @@ createEventTriggerQueryMetadata q = do
       source = _cetqSource q
       triggerName = etcName triggerConf
       metadataObj =
-        MOSourceObjId source $
-          AB.mkAnyBackend $
-            SMOTableObj @b table $
-              MTOTrigger triggerName
+        MOSourceObjId source
+          $ AB.mkAnyBackend
+          $ SMOTableObj @b table
+          $ MTOTrigger triggerName
   sourceInfo <- askSourceInfo @b source
   let sourceConfig = (_siConfiguration sourceInfo)
       newConfig = _cteqCleanupConfig q
@@ -334,12 +344,13 @@ createEventTriggerQueryMetadata q = do
         else for_ newConfig \cleanupConfig -> do
           (`onLeft` logQErr) =<< generateCleanupSchedules (AB.mkAnyBackend sourceInfo) triggerName cleanupConfig
 
-  buildSchemaCacheFor metadataObj $
-    MetadataModifier $
-      tableMetadataSetter @b source table . tmEventTriggers
-        %~ if replace
-          then ix triggerName .~ triggerConf
-          else InsOrdHashMap.insert triggerName triggerConf
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter @b source table
+    . tmEventTriggers
+    %~ if replace
+      then ix triggerName .~ triggerConf
+      else InsOrdHashMap.insert triggerName triggerConf
 
 runCreateEventTriggerQuery ::
   forall b m r.
@@ -369,10 +380,11 @@ runDeleteEventTriggerQuery (DeleteEventTriggerQuery sourceName triggerName) = do
   sourceConfig <- askSourceConfig @b sourceName
   tableName <- (_tciName . _tiCoreInfo) <$> askTabInfoFromTrigger @b sourceName triggerName
 
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      MetadataModifier $
-        tableMetadataSetter @b sourceName tableName %~ dropEventTriggerInMetadata triggerName
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ tableMetadataSetter @b sourceName tableName
+    %~ dropEventTriggerInMetadata triggerName
 
   dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
 
@@ -576,9 +588,9 @@ buildEventTriggerInfo
             triggerOnReplication
         tabDep =
           SchemaDependency
-            ( SOSourceObj source $
-                AB.mkAnyBackend $
-                  SOITable @b tableName
+            ( SOSourceObj source
+                $ AB.mkAnyBackend
+                $ SOITable @b tableName
             )
             DRParent
     pure (eTrigInfo, tabDep Seq.:<| getTrigDefDeps @b source tableName def)
@@ -591,22 +603,22 @@ getTrigDefDeps ::
   TriggerOpsDef b ->
   Seq SchemaDependency
 getTrigDefDeps source tableName (TriggerOpsDef mIns mUpd mDel _) =
-  mconcat $
-    Seq.fromList
-      <$> catMaybes
-        [ subsOpSpecDeps <$> mIns,
-          subsOpSpecDeps <$> mUpd,
-          subsOpSpecDeps <$> mDel
-        ]
+  mconcat
+    $ Seq.fromList
+    <$> catMaybes
+      [ subsOpSpecDeps <$> mIns,
+        subsOpSpecDeps <$> mUpd,
+        subsOpSpecDeps <$> mDel
+      ]
   where
     subsOpSpecDeps :: SubscribeOpSpec b -> [SchemaDependency]
     subsOpSpecDeps os =
       let cols = getColsFromSub $ sosColumns os
           mkColDependency dependencyReason col =
             SchemaDependency
-              ( SOSourceObj source $
-                  AB.mkAnyBackend $
-                    SOITableObj @b tableName (TOCol @b col)
+              ( SOSourceObj source
+                  $ AB.mkAnyBackend
+                  $ SOITableObj @b tableName (TOCol @b col)
               )
               dependencyReason
           colDeps = map (mkColDependency DRColumn) cols
@@ -668,14 +680,17 @@ updateCleanupStatusInMetadata ::
 updateCleanupStatusInMetadata cleanupConfig cleanupSwitch sourceName tableName triggerName = do
   let newCleanupConfig = Just $ cleanupConfig {_atlccPaused = cleanupSwitch}
       metadataObj =
-        MOSourceObjId sourceName $
-          AB.mkAnyBackend $
-            SMOTableObj @b tableName $
-              MTOTrigger triggerName
+        MOSourceObjId sourceName
+          $ AB.mkAnyBackend
+          $ SMOTableObj @b tableName
+          $ MTOTrigger triggerName
 
-  buildSchemaCacheFor metadataObj $
-    MetadataModifier $
-      tableMetadataSetter @b sourceName tableName . tmEventTriggers . ix triggerName %~ updateCleanupConfig newCleanupConfig
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter @b sourceName tableName
+    . tmEventTriggers
+    . ix triggerName
+    %~ updateCleanupConfig newCleanupConfig
 
 -- | Function to start/stop the cleanup action based on the event triggers supplied in
 -- TriggerLogCleanupToggleConfig conf

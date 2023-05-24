@@ -97,15 +97,15 @@ instance (Backend b, FromJSONKeyValue a) => FromJSON (GBoolExp b a) where
   parseJSON = withObject "boolean expression" \o ->
     BoolAnd <$> forM (KM.toList o) \(k, v) ->
       if
-          | k == "$or" -> BoolOr <$> parseJSON v <?> Key k
-          | k == "_or" -> BoolOr <$> parseJSON v <?> Key k
-          | k == "$and" -> BoolAnd <$> parseJSON v <?> Key k
-          | k == "_and" -> BoolAnd <$> parseJSON v <?> Key k
-          | k == "$not" -> BoolNot <$> parseJSON v <?> Key k
-          | k == "_not" -> BoolNot <$> parseJSON v <?> Key k
-          | k == "$exists" -> BoolExists <$> parseJSON v <?> Key k
-          | k == "_exists" -> BoolExists <$> parseJSON v <?> Key k
-          | otherwise -> BoolField <$> parseJSONKeyValue (k, v)
+        | k == "$or" -> BoolOr <$> parseJSON v <?> Key k
+        | k == "_or" -> BoolOr <$> parseJSON v <?> Key k
+        | k == "$and" -> BoolAnd <$> parseJSON v <?> Key k
+        | k == "_and" -> BoolAnd <$> parseJSON v <?> Key k
+        | k == "$not" -> BoolNot <$> parseJSON v <?> Key k
+        | k == "_not" -> BoolNot <$> parseJSON v <?> Key k
+        | k == "$exists" -> BoolExists <$> parseJSON v <?> Key k
+        | k == "_exists" -> BoolExists <$> parseJSON v <?> Key k
+        | otherwise -> BoolField <$> parseJSONKeyValue (k, v)
 
 instance (Backend backend, ToJSONKeyValue field) => ToJSON (GBoolExp backend field) where
   -- A representation for boolean values as JSON.
@@ -196,7 +196,7 @@ newtype BoolExp (b :: BackendType) = BoolExp {unBoolExp :: GBoolExp b ColExp}
 -- decoding GBoolExp. To accurately represent GBoolExp with a codec we will need
 -- Autodocodec to gain support for expressing an object type with "additional
 -- properties" for fields.
-instance Backend b => HasCodec (BoolExp b) where
+instance (Backend b) => HasCodec (BoolExp b) where
   codec = CommentCodec doc $ named (backendPrefix @b <> "BoolExp") $ dimapCodec BoolExp unBoolExp jsonCodec
     where
       jsonCodec :: JSONCodec (GBoolExp b ColExp)
@@ -232,7 +232,7 @@ instance
   ) =>
   Hashable (PartialSQLExp b)
 
-instance Backend b => ToJSON (PartialSQLExp b) where
+instance (Backend b) => ToJSON (PartialSQLExp b) where
   toJSON = \case
     PSESessVar colTy sessVar -> toJSON (colTy, sessVar)
     PSESession -> String "hasura_session"
@@ -244,7 +244,7 @@ isStaticValue = \case
   PSESession -> False
   PSESQLExp _ -> True
 
-hasStaticExp :: Backend b => OpExpG b (PartialSQLExp b) -> Bool
+hasStaticExp :: (Backend b) => OpExpG b (PartialSQLExp b) -> Bool
 hasStaticExp = getAny . foldMap (Any . isStaticValue)
 
 ----------------------------------------------------------------------------------------------------
@@ -282,15 +282,15 @@ data OpExpG (backend :: BackendType) field
 data RootOrCurrentColumn b = RootOrCurrentColumn RootOrCurrent (Column b)
   deriving (Generic)
 
-deriving instance Backend b => Show (RootOrCurrentColumn b)
+deriving instance (Backend b) => Show (RootOrCurrentColumn b)
 
-deriving instance Backend b => Eq (RootOrCurrentColumn b)
+deriving instance (Backend b) => Eq (RootOrCurrentColumn b)
 
-instance Backend b => NFData (RootOrCurrentColumn b)
+instance (Backend b) => NFData (RootOrCurrentColumn b)
 
-instance Backend b => Hashable (RootOrCurrentColumn b)
+instance (Backend b) => Hashable (RootOrCurrentColumn b)
 
-instance Backend b => ToJSON (RootOrCurrentColumn b)
+instance (Backend b) => ToJSON (RootOrCurrentColumn b)
 
 -- | The arguments of column-operators may refer to either the so-called 'root
 -- tabular value' or 'current tabular value'.
@@ -622,10 +622,10 @@ instance (NFData a) => NFData (DWithinGeomOp a)
 
 instance (Hashable a) => Hashable (DWithinGeomOp a)
 
-instance FromJSON a => FromJSON (DWithinGeomOp a) where
+instance (FromJSON a) => FromJSON (DWithinGeomOp a) where
   parseJSON = genericParseJSON hasuraJSON
 
-instance ToJSON a => ToJSON (DWithinGeomOp a) where
+instance (ToJSON a) => ToJSON (DWithinGeomOp a) where
   toJSON = genericToJSON hasuraJSON
   toEncoding = genericToEncoding hasuraJSON
 
@@ -641,10 +641,10 @@ instance (NFData a) => NFData (DWithinGeogOp a)
 
 instance (Hashable a) => Hashable (DWithinGeogOp a)
 
-instance FromJSON a => FromJSON (DWithinGeogOp a) where
+instance (FromJSON a) => FromJSON (DWithinGeogOp a) where
   parseJSON = genericParseJSON hasuraJSON
 
-instance ToJSON a => ToJSON (DWithinGeogOp a) where
+instance (ToJSON a) => ToJSON (DWithinGeogOp a) where
   toJSON = genericToJSON hasuraJSON
   toEncoding = genericToEncoding hasuraJSON
 
@@ -659,10 +659,10 @@ instance (NFData a) => NFData (STIntersectsNbandGeommin a)
 
 instance (Hashable a) => Hashable (STIntersectsNbandGeommin a)
 
-instance FromJSON field => FromJSON (STIntersectsNbandGeommin field) where
+instance (FromJSON field) => FromJSON (STIntersectsNbandGeommin field) where
   parseJSON = genericParseJSON hasuraJSON
 
-instance ToJSON field => ToJSON (STIntersectsNbandGeommin field) where
+instance (ToJSON field) => ToJSON (STIntersectsNbandGeommin field) where
   toJSON = genericToJSON hasuraJSON
   toEncoding = genericToEncoding hasuraJSON
 
@@ -677,10 +677,10 @@ instance (NFData a) => NFData (STIntersectsGeomminNband a)
 
 instance (Hashable a) => Hashable (STIntersectsGeomminNband a)
 
-instance FromJSON field => FromJSON (STIntersectsGeomminNband field) where
+instance (FromJSON field) => FromJSON (STIntersectsGeomminNband field) where
   parseJSON = genericParseJSON hasuraJSON
 
-instance ToJSON field => ToJSON (STIntersectsGeomminNband field) where
+instance (ToJSON field) => ToJSON (STIntersectsGeomminNband field) where
   toJSON = genericToJSON hasuraJSON
   toEncoding = genericToEncoding hasuraJSON
 

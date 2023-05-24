@@ -33,13 +33,13 @@ reset = flip writeTVar HashMap.empty . unTMap
 null :: TMap k v -> STM Bool
 null = fmap HashMap.null . readTVar . unTMap
 
-lookup :: Hashable k => k -> TMap k v -> STM (Maybe v)
+lookup :: (Hashable k) => k -> TMap k v -> STM (Maybe v)
 lookup k = fmap (HashMap.lookup k) . readTVar . unTMap
 
-insert :: Hashable k => v -> k -> TMap k v -> STM ()
+insert :: (Hashable k) => v -> k -> TMap k v -> STM ()
 insert !v k mapTv = modifyTVar' (unTMap mapTv) $ HashMap.insert k v
 
-delete :: Hashable k => k -> TMap k v -> STM ()
+delete :: (Hashable k) => k -> TMap k v -> STM ()
 delete k mapTv = modifyTVar' (unTMap mapTv) $ HashMap.delete k
 
 toList :: TMap k v -> STM [(k, v)]
@@ -51,7 +51,7 @@ filterWithKey f mapTV = modifyTVar' (unTMap mapTV) $ HashMap.filterWithKey f
 replace :: TMap k v -> HashMap.HashMap k v -> STM ()
 replace mapTV v = void $ swapTVar (unTMap mapTV) v
 
-union :: Hashable k => TMap k v -> TMap k v -> STM (TMap k v)
+union :: (Hashable k) => TMap k v -> TMap k v -> STM (TMap k v)
 union mapA mapB = do
   l <- readTVar $ unTMap mapA
   r <- readTVar $ unTMap mapB

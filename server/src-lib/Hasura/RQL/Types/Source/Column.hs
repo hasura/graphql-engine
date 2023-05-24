@@ -45,13 +45,13 @@ data SourceColumnInfo b = SourceColumnInfo
   deriving anyclass (Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec (SourceColumnInfo b)
 
-deriving instance Backend b => Eq (SourceColumnInfo b)
+deriving instance (Backend b) => Eq (SourceColumnInfo b)
 
-deriving instance Backend b => Ord (SourceColumnInfo b)
+deriving instance (Backend b) => Ord (SourceColumnInfo b)
 
-deriving instance Backend b => Show (SourceColumnInfo b)
+deriving instance (Backend b) => Show (SourceColumnInfo b)
 
-instance Backend b => HasCodec (SourceColumnInfo b) where
+instance (Backend b) => HasCodec (SourceColumnInfo b) where
   codec =
     object "ColumnInfo" $
       SourceColumnInfo

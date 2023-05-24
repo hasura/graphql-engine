@@ -34,7 +34,7 @@ mkNonEmptyText text = Just $ NonEmptyText text
 mkNonEmptyTextUnsafe :: Text -> NonEmptyText
 mkNonEmptyTextUnsafe = NonEmptyText
 
-parseNonEmptyText :: MonadFail m => Text -> m NonEmptyText
+parseNonEmptyText :: (MonadFail m) => Text -> m NonEmptyText
 parseNonEmptyText text = mkNonEmptyText text `onNothing` fail "empty string not allowed"
 
 nonEmptyText :: Text -> Code Q NonEmptyText
@@ -66,7 +66,8 @@ instance FromJSONKey NonEmptyText where
 
 instance PG.FromCol NonEmptyText where
   fromCol bs =
-    mkNonEmptyText <$> PG.fromCol bs
+    mkNonEmptyText
+      <$> PG.fromCol bs
       >>= maybe (Left "empty string not allowed") Right
 
 instance HasCodec NonEmptyText where

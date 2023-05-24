@@ -26,22 +26,22 @@ import Test.Hspec
 spec :: Spec
 spec = do
   describe "OrderByTarget" $ do
-    describe "OrderByColumn" $
-      testToFromJSONToSchema
+    describe "OrderByColumn"
+      $ testToFromJSONToSchema
         (OrderByColumn (ColumnName "test_column"))
         [aesonQQ|
           { "type": "column",
             "column": "test_column"
           }
         |]
-    describe "OrderByStarCountAggregate" $
-      testToFromJSONToSchema
+    describe "OrderByStarCountAggregate"
+      $ testToFromJSONToSchema
         (OrderByStarCountAggregate)
         [aesonQQ|
           { "type": "star_count_aggregate" }
         |]
-    describe "OrderBySingleColumnAggregate" $
-      testToFromJSONToSchema
+    describe "OrderBySingleColumnAggregate"
+      $ testToFromJSONToSchema
         (OrderBySingleColumnAggregate (SingleColumnAggregate (SingleColumnAggregateFunction [G.name|sum|]) (ColumnName "test_column") (ScalarType "number")))
         [aesonQQ|
           { "type": "single_column_aggregate",
@@ -116,10 +116,10 @@ spec = do
     jsonOpenApiProperties genOrderBy
 
   describe "OrderDirection" $ do
-    describe "Ascending" $
-      testToFromJSONToSchema Ascending [aesonQQ|"asc"|]
-    describe "Descending" $
-      testToFromJSONToSchema Descending [aesonQQ|"desc"|]
+    describe "Ascending"
+      $ testToFromJSONToSchema Ascending [aesonQQ|"asc"|]
+    describe "Descending"
+      $ testToFromJSONToSchema Descending [aesonQQ|"desc"|]
     jsonOpenApiProperties genOrderDirection
 
 genOrderBy :: Gen OrderBy

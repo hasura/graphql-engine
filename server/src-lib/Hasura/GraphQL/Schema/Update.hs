@@ -75,12 +75,12 @@ buildUpdateOperators ::
 buildUpdateOperators presetCols ops tableInfo = do
   parsers :: P.InputFieldsParser n [HashMap (Column b) op] <-
     sequenceA . catMaybes <$> traverse (runUpdateOperator tableInfo) ops
-  pure $
-    parsers
-      `P.bindFields` ( \opExps -> do
-                         let withPreset = presetCols : opExps
-                         mergeDisjoint @b withPreset
-                     )
+  pure
+    $ parsers
+    `P.bindFields` ( \opExps -> do
+                       let withPreset = presetCols : opExps
+                       mergeDisjoint @b withPreset
+                   )
 
 -- | The columns that have 'preset' definitions applied to them. (see
 -- <https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#column-presets
@@ -127,8 +127,8 @@ mergeDisjoint parsedResults = do
   let unioned = HashMap.unionsAll parsedResults
       duplicates = HashMap.keys $ HashMap.filter (not . null . NE.tail) unioned
 
-  unless (null duplicates) $
-    P.parseError
+  unless (null duplicates)
+    $ P.parseError
       ( "Column found in multiple operators: "
           <> toErrorValue duplicates
           <> "."
@@ -170,15 +170,16 @@ updateOperator tableGQLName opName opFieldName mkParser columns opDesc objDesc =
       let fieldName = ciName columnInfo
           fieldDesc = ciDescription columnInfo
       fieldParser <- mkParser columnInfo
-      pure $
-        P.fieldOptional fieldName fieldDesc fieldParser
-          `mapField` \value -> (ciColumn columnInfo, value)
+      pure
+        $ P.fieldOptional fieldName fieldDesc fieldParser
+        `mapField` \value -> (ciColumn columnInfo, value)
   let objName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableOperatorInputTypeName tableGQLName opName
-  pure $
-    fmap (HashMap.fromList . (fold :: Maybe [(Column b, a)] -> [(Column b, a)])) $
-      P.fieldOptional (applyFieldNameCaseIdentifier tCase opFieldName) (Just opDesc) $
-        P.object objName (Just objDesc) $
-          (catMaybes . toList) <$> sequenceA fieldParsers
+  pure
+    $ fmap (HashMap.fromList . (fold :: Maybe [(Column b, a)] -> [(Column b, a)]))
+    $ P.fieldOptional (applyFieldNameCaseIdentifier tCase opFieldName) (Just opDesc)
+    $ P.object objName (Just objDesc)
+    $ (catMaybes . toList)
+    <$> sequenceA fieldParsers
 {-# ANN updateOperator ("HLint: ignore Use tuple-section" :: String) #-}
 
 setOp ::

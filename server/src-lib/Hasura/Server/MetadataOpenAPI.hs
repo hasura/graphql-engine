@@ -24,8 +24,9 @@ metadataOpenAPI :: OpenApi
 metadataOpenAPI =
   mempty {_openApiComponents = mempty {_componentsSchemas = definitions}}
   where
-    definitions = fst $
-      flip runDeclare mempty $ do
+    definitions = fst
+      $ flip runDeclare mempty
+      $ do
         NamedSchema mName codecSchema <- declareNamedSchemaViaCodec (Proxy @MetadataDTO)
         declare $ InsOrdHashMap.fromList [(fromMaybe "MetadataDTO" mName, codecSchema)]
         pure codecSchema

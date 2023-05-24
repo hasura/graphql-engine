@@ -17,7 +17,7 @@ instance Filterable (InsOrdHashMap.InsOrdHashMap k) where
   mapMaybe = InsOrdHashMap.mapMaybe
   filter = InsOrdHashMap.filter
 
-partition :: Hashable k => (v -> Bool) -> InsOrdHashMap.InsOrdHashMap k v -> (InsOrdHashMap.InsOrdHashMap k v, InsOrdHashMap.InsOrdHashMap k v)
+partition :: (Hashable k) => (v -> Bool) -> InsOrdHashMap.InsOrdHashMap k v -> (InsOrdHashMap.InsOrdHashMap k v, InsOrdHashMap.InsOrdHashMap k v)
 partition predicate =
   InsOrdHashMap.foldlWithKey'
     ( \(left, right) key val ->

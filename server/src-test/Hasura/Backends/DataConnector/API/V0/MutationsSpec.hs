@@ -157,8 +157,8 @@ spec = do
 
   describe "InsertFieldValue" $ do
     describe "ColumnInsertFieldValue" $ do
-      describe "Object" $
-        testToFromJSONToSchema
+      describe "Object"
+        $ testToFromJSONToSchema
           (mkColumnInsertFieldValue $ Object [("property", "Wow")])
           [aesonQQ| { "property": "Wow" } |]
       describe "String" $ do
@@ -188,15 +188,15 @@ spec = do
     jsonOpenApiProperties genInsertFieldValue
 
   describe "ObjectRelationInsertionOrder" $ do
-    describe "BeforeParent" $
-      testToFromJSONToSchema BeforeParent [aesonQQ|"before_parent"|]
-    describe "AfterParent" $
-      testToFromJSONToSchema AfterParent [aesonQQ|"after_parent"|]
+    describe "BeforeParent"
+      $ testToFromJSONToSchema BeforeParent [aesonQQ|"before_parent"|]
+    describe "AfterParent"
+      $ testToFromJSONToSchema AfterParent [aesonQQ|"after_parent"|]
     jsonOpenApiProperties genObjectRelationInsertionOrder
 
   describe "RowUpdate" $ do
-    describe "SetColumnRowUpdate" $
-      testToFromJSONToSchema
+    describe "SetColumnRowUpdate"
+      $ testToFromJSONToSchema
         (SetColumn $ RowColumnOperatorValue (ColumnName "my_column") (Number 10) (ScalarType "number"))
         [aesonQQ|
             { "type": "set",
@@ -204,8 +204,8 @@ spec = do
               "value": 10,
               "value_type": "number" }
           |]
-    describe "CustomUpdateColumnOperator" $
-      testToFromJSONToSchema
+    describe "CustomUpdateColumnOperator"
+      $ testToFromJSONToSchema
         (CustomUpdateColumnOperator (UpdateColumnOperatorName [G.name|increment|]) (RowColumnOperatorValue (ColumnName "my_column") (Number 10) (ScalarType "number")))
         [aesonQQ|
             { "type": "custom_operator",
@@ -276,16 +276,16 @@ genColumnInsertSchema =
     <*> Gen.bool
     <*> Gen.maybe genColumnValueGenerationStrategy
 
-genObjectRelationInsertSchema :: MonadGen m => m ObjectRelationInsertSchema
+genObjectRelationInsertSchema :: (MonadGen m) => m ObjectRelationInsertSchema
 genObjectRelationInsertSchema =
   ObjectRelationInsertSchema
     <$> genRelationshipName
     <*> genObjectRelationInsertionOrder
 
-genObjectRelationInsertionOrder :: MonadGen m => m ObjectRelationInsertionOrder
+genObjectRelationInsertionOrder :: (MonadGen m) => m ObjectRelationInsertionOrder
 genObjectRelationInsertionOrder = Gen.enumBounded
 
-genArrayRelationInsertSchema :: MonadGen m => m ArrayRelationInsertSchema
+genArrayRelationInsertSchema :: (MonadGen m) => m ArrayRelationInsertSchema
 genArrayRelationInsertSchema = ArrayRelationInsertSchema <$> genRelationshipName
 
 genMutationOperation :: Gen MutationOperation

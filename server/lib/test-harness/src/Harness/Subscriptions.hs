@@ -191,7 +191,7 @@ withSubscriptionsHeaders headers = aroundAllWith \actionWithSubAndTest testEnv -
 
 -- | Get the next response received on a subscription.
 -- Blocks until data is available.
-getNextResponse :: HasCallStack => SubscriptionHandle -> IO Value
+getNextResponse :: (HasCallStack) => SubscriptionHandle -> IO Value
 getNextResponse handle = do
   let time = seconds subscriptionsTimeoutTime
   res <- timeout (fromIntegral $ diffTimeToMicroSeconds time) $ takeMVar (unSubscriptionHandle handle)
@@ -202,10 +202,10 @@ subscriptionsTimeoutTime = 20
 
 mkInitMessageHeaders :: HgeServerInstance -> [(T.Text, T.Text)] -> Value
 mkInitMessageHeaders hgeInstance hdrs =
-  ( toJSON $
-      Map.fromList $
-        [ ("content-type", "application/json"),
+  ( toJSON
+      $ Map.fromList
+      $ [ ("content-type", "application/json"),
           ("X-Hasura-Admin-Secret", hgeAdminSecret hgeInstance)
         ]
-          <> hdrs
+      <> hdrs
   )

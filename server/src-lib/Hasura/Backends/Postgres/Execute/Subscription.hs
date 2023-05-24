@@ -152,10 +152,10 @@ mkMultiplexedQuery rootFields =
               S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result")
             ],
           S.selFrom =
-            Just $
-              S.FromExp
-                [ S.FIJoin $
-                    S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
+            Just
+              $ S.FromExp
+                [ S.FIJoin
+                    $ S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
                 ]
         }
 
@@ -170,8 +170,8 @@ mkMultiplexedQuery rootFields =
         [S.toColumnAlias $ Identifier "result_id", S.toColumnAlias $ Identifier "result_vars"]
 
     (sqlFrom, customSQLCTEs) =
-      runWriter $
-        traverse
+      runWriter
+        $ traverse
           ( \(fieldAlias, resolvedAST) ->
               toSQLFromItem (S.mkTableAlias $ G.unName fieldAlias) resolvedAST
           )
@@ -217,10 +217,10 @@ mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
               S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "cursor")) (Just $ S.toColumnAlias $ Identifier "cursor")
             ],
           S.selFrom =
-            Just $
-              S.FromExp
-                [ S.FIJoin $
-                    S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
+            Just
+              $ S.FromExp
+                [ S.FIJoin
+                    $ S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
                 ]
         }
 
@@ -294,8 +294,8 @@ resolveMultiplexedValue allSessionVars = \case
     pure $ fromResVars (CollectableTypeScalar PGJSON) ["session"]
   where
     fromResVars pgType jPath =
-      addTypeAnnotation pgType $
-        S.SEOpApp
+      addTypeAnnotation pgType
+        $ S.SEOpApp
           (S.SQLOp "#>>")
           [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier subsIdentifier Nothing) (Identifier "result_vars"),
             S.SEArray $ map S.SELit jPath

@@ -95,9 +95,10 @@ mkUserInfo ::
 mkUserInfo roleBuild userAdminSecret sessionVariables = do
   roleName <- case roleBuild of
     URBFromSessionVariables ->
-      onNothing maybeSessionRole $
-        throw400 InvalidParams $
-          userRoleHeader <> " not found in session variables"
+      onNothing maybeSessionRole
+        $ throw400 InvalidParams
+        $ userRoleHeader
+        <> " not found in session variables"
     URBFromSessionVariablesFallback roleName' -> pure $ fromMaybe roleName' maybeSessionRole
     URBPreDetermined roleName' -> pure roleName'
   backendOnlyFieldAccess <- getBackendOnlyFieldAccess
@@ -126,8 +127,10 @@ mkUserInfo roleBuild userAdminSecret sessionVariables = do
             Just varVal ->
               case parseStringAsBool (T.unpack varVal) of
                 Left err ->
-                  throw400 BadRequest $
-                    useBackendOnlyPermissionsHeader <> ": " <> T.pack err
+                  throw400 BadRequest
+                    $ useBackendOnlyPermissionsHeader
+                    <> ": "
+                    <> T.pack err
                 Right privilege -> pure $ if privilege then BOFAAllowed else BOFADisallowed
 
 maybeRoleFromSessionVariables :: SessionVariables -> Maybe RoleName

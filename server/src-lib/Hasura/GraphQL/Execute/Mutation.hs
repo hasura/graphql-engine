@@ -107,8 +107,8 @@ convertMutationSelectionSet
   reqId
   maybeOperationName = do
     mutationParser <-
-      onNothing (gqlMutationParser gqlContext) $
-        throw400 ValidationFailed "no mutations exist"
+      onNothing (gqlMutationParser gqlContext)
+        $ throw400 ValidationFailed "no mutations exist"
 
     (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe HashMap.empty (GH._grVariables gqlUnparsed)) directives fields
     -- Parse the GraphQL query into the RQL AST
@@ -140,8 +140,8 @@ convertMutationSelectionSet
             RFRemote remoteField -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
               let (noRelsRemoteField, remoteJoins) = RJ.getRemoteJoinsGraphQLField resolvedRemoteField
-              pure $
-                buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation noRelsRemoteField remoteJoins (GH._grOperationName gqlUnparsed)
+              pure
+                $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation noRelsRemoteField remoteJoins (GH._grOperationName gqlUnparsed)
             RFAction action -> do
               let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionMutation action
               (actionName, _fch) <- pure $ case noRelsDBAST of

@@ -124,11 +124,11 @@ type PGError = Either PGErrInternal PGConnErr
 type PGExec a = ExceptT PGError IO a
 
 throwPGIntErr ::
-  MonadError PGError m => PGErrInternal -> m a
+  (MonadError PGError m) => PGErrInternal -> m a
 throwPGIntErr = throwError . Left
 
 throwPGConnErr ::
-  MonadError PGError m => PGConnErr -> m a
+  (MonadError PGError m) => PGConnErr -> m a
 throwPGConnErr = throwError . Right
 
 readConnErr :: PQ.Connection -> IO Text
@@ -416,7 +416,7 @@ cancelOnAsync conn action = do
         `catch` (\(PGCancelErr msg) -> throwPGIntErr $ PGIUnexpected $ "error cancelling query: " <> msg)
 
 mkPGRetryPolicy ::
-  MonadIO m =>
+  (MonadIO m) =>
   -- | number of retries
   Int ->
   PGRetryPolicyM m

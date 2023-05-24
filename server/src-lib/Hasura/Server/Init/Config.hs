@@ -224,29 +224,29 @@ instance FromJSON PostgresConnDetailsRaw where
 
 instance ToJSON PostgresConnDetailsRaw where
   toJSON PostgresConnDetailsRaw {..} =
-    J.object $
-      [ "host" .= connHost,
-        "port" .= connPort,
-        "user" .= connUser,
-        "password" .= connPassword,
-        "database" .= connDatabase
-      ]
-        <> catMaybes [fmap ("options" .=) connOptions]
+    J.object
+      $ [ "host" .= connHost,
+          "port" .= connPort,
+          "user" .= connUser,
+          "password" .= connPassword,
+          "database" .= connDatabase
+        ]
+      <> catMaybes [fmap ("options" .=) connOptions]
 
 rawConnDetailsToUrlText :: PostgresConnDetailsRaw -> Text
 rawConnDetailsToUrlText PostgresConnDetailsRaw {..} =
-  Text.pack $
-    "postgresql://"
-      <> connUser
-      <> ":"
-      <> connPassword
-      <> "@"
-      <> connHost
-      <> ":"
-      <> show connPort
-      <> "/"
-      <> connDatabase
-      <> maybe "" ("?options=" <>) connOptions
+  Text.pack
+    $ "postgresql://"
+    <> connUser
+    <> ":"
+    <> connPassword
+    <> "@"
+    <> connHost
+    <> ":"
+    <> show connPort
+    <> "/"
+    <> connDatabase
+    <> maybe "" ("?options=" <>) connOptions
 
 --------------------------------------------------------------------------------
 

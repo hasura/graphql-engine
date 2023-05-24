@@ -84,7 +84,7 @@ data InputArgument a
   | IASessionVariables FunctionArgName
   deriving (Show, Eq, Functor, Generic)
 
-instance ToJSON a => ToJSON (InputArgument a) where
+instance (ToJSON a) => ToJSON (InputArgument a) where
   toJSON = genericToJSON defaultOptions {constructorTagModifier = snakeCase . drop 2, sumEncoding = TaggedObject "type" "argument"}
   toEncoding = genericToEncoding defaultOptions {constructorTagModifier = snakeCase . drop 2, sumEncoding = TaggedObject "type" "argument"}
 
@@ -114,8 +114,10 @@ newtype FunctionPermissionInfo = FunctionPermissionInfo
 
 instance HasCodec FunctionPermissionInfo where
   codec =
-    AC.object "FunctionPermissionInfo" $
-      FunctionPermissionInfo <$> AC.requiredField' "role" AC..= _fpmRole
+    AC.object "FunctionPermissionInfo"
+      $ FunctionPermissionInfo
+      <$> AC.requiredField' "role"
+      AC..= _fpmRole
 
 instance FromJSON FunctionPermissionInfo where
   parseJSON = genericParseJSON hasuraJSON
@@ -140,17 +142,22 @@ instance NFData FunctionCustomRootFields
 
 instance HasCodec FunctionCustomRootFields where
   codec =
-    AC.bimapCodec checkForDup id $
-      AC.object "FunctionCustomRootFields" $
-        FunctionCustomRootFields
-          <$> AC.optionalFieldWith' "function" graphQLFieldNameCodec AC..= _fcrfFunction
-          <*> AC.optionalFieldWith' "function_aggregate" graphQLFieldNameCodec AC..= _fcrfFunctionAggregate
+    AC.bimapCodec checkForDup id
+      $ AC.object "FunctionCustomRootFields"
+      $ FunctionCustomRootFields
+      <$> AC.optionalFieldWith' "function" graphQLFieldNameCodec
+      AC..= _fcrfFunction
+        <*> AC.optionalFieldWith' "function_aggregate" graphQLFieldNameCodec
+      AC..= _fcrfFunctionAggregate
     where
       checkForDup (FunctionCustomRootFields (Just f) (Just fa))
         | f == fa =
-            Left $
-              T.unpack $
-                "the following custom root field names are duplicated: " <> toTxt f <<> " and " <>> toTxt fa
+            Left
+              $ T.unpack
+              $ "the following custom root field names are duplicated: "
+              <> toTxt f
+              <<> " and "
+              <>> toTxt fa
       checkForDup fields = Right fields
 
 instance ToJSON FunctionCustomRootFields where
@@ -165,10 +172,12 @@ instance FromJSON FunctionCustomRootFields where
     case (function, functionAggregate) of
       (Just f, Just fa)
         | f == fa ->
-            fail $
-              T.unpack $
-                "the following custom root field names are duplicated: "
-                  <> toTxt f <<> " and " <>> toTxt fa
+            fail
+              $ T.unpack
+              $ "the following custom root field names are duplicated: "
+              <> toTxt f
+              <<> " and "
+              <>> toTxt fa
       _ ->
         pure ()
 
@@ -209,9 +218,9 @@ data FunctionInfo (b :: BackendType) = FunctionInfo
   }
   deriving (Generic)
 
-deriving instance Backend b => Show (FunctionInfo b)
+deriving instance (Backend b) => Show (FunctionInfo b)
 
-deriving instance Backend b => Eq (FunctionInfo b)
+deriving instance (Backend b) => Eq (FunctionInfo b)
 
 instance (Backend b) => ToJSON (FunctionInfo b) where
   toJSON = genericToJSON hasuraJSON
@@ -224,9 +233,9 @@ data TrackableFunctionInfo b = TrackableFunctionInfo
   }
   deriving (Generic)
 
-deriving instance Backend b => Show (TrackableFunctionInfo b)
+deriving instance (Backend b) => Show (TrackableFunctionInfo b)
 
-deriving instance Backend b => Eq (TrackableFunctionInfo b)
+deriving instance (Backend b) => Eq (TrackableFunctionInfo b)
 
 instance (Backend b) => ToJSON (TrackableFunctionInfo b) where
   toJSON (TrackableFunctionInfo name volitility) =
@@ -239,9 +248,9 @@ newtype TrackableTableInfo b = TrackableTableInfo
   {tfTableiName :: TableName b}
   deriving (Generic)
 
-deriving instance Backend b => Show (TrackableTableInfo b)
+deriving instance (Backend b) => Show (TrackableTableInfo b)
 
-deriving instance Backend b => Eq (TrackableTableInfo b)
+deriving instance (Backend b) => Eq (TrackableTableInfo b)
 
 instance (Backend b) => ToJSON (TrackableTableInfo b) where
   toJSON (TrackableTableInfo ti) = object ["name" Data.Aeson..= ti]
@@ -252,9 +261,9 @@ data TrackableInfo b = TrackableInfo
   }
   deriving (Generic)
 
-deriving instance Backend b => Show (TrackableInfo b)
+deriving instance (Backend b) => Show (TrackableInfo b)
 
-deriving instance Backend b => Eq (TrackableInfo b)
+deriving instance (Backend b) => Eq (TrackableInfo b)
 
 instance (Backend b) => ToJSON (TrackableInfo b) where
   toJSON (TrackableInfo functions tables) =
@@ -281,32 +290,43 @@ data FunctionConfig b = FunctionConfig
   }
   deriving (Generic)
 
-deriving stock instance Backend b => Show (FunctionConfig b)
+deriving stock instance (Backend b) => Show (FunctionConfig b)
 
-deriving stock instance Backend b => Eq (FunctionConfig b)
+deriving stock instance (Backend b) => Eq (FunctionConfig b)
 
-instance Backend b => NFData (FunctionConfig b)
+instance (Backend b) => NFData (FunctionConfig b)
 
-instance Backend b => HasCodec (FunctionConfig b) where
+instance (Backend b) => HasCodec (FunctionConfig b) where
   codec =
-    AC.object "FunctionConfig" $
-      FunctionConfig
-        <$> AC.optionalField' "session_argument" AC..= _fcSessionArgument
-        <*> AC.optionalField' "exposed_as" AC..= _fcExposedAs
-        <*> AC.optionalFieldWithDefault' "custom_root_fields" emptyFunctionCustomRootFields AC..= _fcCustomRootFields
-        <*> AC.optionalFieldWith' "custom_name" graphQLFieldNameCodec AC..= _fcCustomName
-        <*> AC.optionalFieldWith' "response" codec AC..= _fcResponse
+    AC.object "FunctionConfig"
+      $ FunctionConfig
+      <$> AC.optionalField' "session_argument"
+      AC..= _fcSessionArgument
+        <*> AC.optionalField' "exposed_as"
+      AC..= _fcExposedAs
+        <*> AC.optionalFieldWithDefault' "custom_root_fields" emptyFunctionCustomRootFields
+      AC..= _fcCustomRootFields
+        <*> AC.optionalFieldWith' "custom_name" graphQLFieldNameCodec
+      AC..= _fcCustomName
+        <*> AC.optionalFieldWith' "response" codec
+      AC..= _fcResponse
 
-instance Backend b => FromJSON (FunctionConfig b) where
+instance (Backend b) => FromJSON (FunctionConfig b) where
   parseJSON = withObject "FunctionConfig" $ \obj ->
     FunctionConfig
-      <$> obj .:? "session_argument"
-      <*> obj .:? "exposed_as"
-      <*> obj .:? "custom_root_fields" .!= emptyFunctionCustomRootFields
-      <*> obj .:? "custom_name"
-      <*> obj .:? "response"
+      <$> obj
+      .:? "session_argument"
+      <*> obj
+      .:? "exposed_as"
+      <*> obj
+      .:? "custom_root_fields"
+      .!= emptyFunctionCustomRootFields
+      <*> obj
+      .:? "custom_name"
+      <*> obj
+      .:? "response"
 
-instance Backend b => ToJSON (FunctionConfig b) where
+instance (Backend b) => ToJSON (FunctionConfig b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
   toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
@@ -318,11 +338,11 @@ type DBFunctionsMetadata b = HashMap (FunctionName b) (FunctionOverloads b)
 
 newtype FunctionOverloads b = FunctionOverloads {getFunctionOverloads :: NonEmpty (RawFunctionInfo b)}
 
-deriving newtype instance Backend b => Eq (FunctionOverloads b)
+deriving newtype instance (Backend b) => Eq (FunctionOverloads b)
 
-deriving newtype instance Backend b => Show (FunctionOverloads b)
+deriving newtype instance (Backend b) => Show (FunctionOverloads b)
 
-deriving newtype instance FromJSON (RawFunctionInfo b) => FromJSON (FunctionOverloads b)
+deriving newtype instance (FromJSON (RawFunctionInfo b)) => FromJSON (FunctionOverloads b)
 
 data FunctionArgsExpG a = FunctionArgsExp
   { _faePositional :: [a],

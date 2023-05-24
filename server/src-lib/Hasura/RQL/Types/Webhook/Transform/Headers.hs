@@ -52,10 +52,12 @@ data AddReplaceOrRemoveFields = AddReplaceOrRemoveFields
 
 instance HasCodec AddReplaceOrRemoveFields where
   codec =
-    object "AddReplaceOrRemoveFields" $
-      AddReplaceOrRemoveFields
-        <$> optionalFieldWithDefaultWith' "add_headers" addCodec mempty .= addOrReplaceHeaders
-        <*> optionalFieldWithDefaultWith' "remove_headers" removeCodec mempty .= removeHeaders
+    object "AddReplaceOrRemoveFields"
+      $ AddReplaceOrRemoveFields
+      <$> optionalFieldWithDefaultWith' "add_headers" addCodec mempty
+      .= addOrReplaceHeaders
+        <*> optionalFieldWithDefaultWith' "remove_headers" removeCodec mempty
+      .= removeHeaders
     where
       addCodec = dimapCodec HashMap.toList HashMap.fromList $ caseInsensitiveHashMapCodec codec
       removeCodec = listCodec caseInsensitiveTextCodec

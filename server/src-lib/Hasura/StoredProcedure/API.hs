@@ -59,18 +59,18 @@ instance (Backend b) => HasCodec (TrackStoredProcedure b) where
       ("A request to track a stored procedure")
       $ AC.object (backendPrefix @b <> "TrackStoredProcedure")
       $ TrackStoredProcedure
-        <$> AC.requiredField "source" sourceDoc
-          AC..= tspSource
+      <$> AC.requiredField "source" sourceDoc
+      AC..= tspSource
         <*> AC.requiredField "stored_procedure" spDoc
-          AC..= tspStoredProcedure
+      AC..= tspStoredProcedure
         <*> AC.requiredField "configuration" configDoc
-          AC..= tspConfig
+      AC..= tspConfig
         <*> AC.optionalFieldWithDefault "arguments" mempty argumentsDoc
-          AC..= tspArguments
+      AC..= tspArguments
         <*> AC.optionalField "description" descriptionDoc
-          AC..= tspDescription
+      AC..= tspDescription
         <*> AC.requiredField "returns" returnsDoc
-          AC..= tspReturns
+      AC..= tspReturns
     where
       sourceDoc = "The source in which this stored procedure should be tracked"
       configDoc = "The configuration for the SQL stored procedure"
@@ -128,16 +128,16 @@ data GetStoredProcedure (b :: BackendType) = GetStoredProcedure
   { gspSource :: SourceName
   }
 
-deriving instance Backend b => Show (GetStoredProcedure b)
+deriving instance (Backend b) => Show (GetStoredProcedure b)
 
-deriving instance Backend b => Eq (GetStoredProcedure b)
+deriving instance (Backend b) => Eq (GetStoredProcedure b)
 
-instance Backend b => FromJSON (GetStoredProcedure b) where
+instance (Backend b) => FromJSON (GetStoredProcedure b) where
   parseJSON = withObject "GetStoredProcedure" $ \o -> do
     gspSource <- o .: "source"
     pure GetStoredProcedure {..}
 
-instance Backend b => ToJSON (GetStoredProcedure b) where
+instance (Backend b) => ToJSON (GetStoredProcedure b) where
   toJSON GetStoredProcedure {..} =
     object
       [ "source" .= gspSource
@@ -183,12 +183,12 @@ runTrackStoredProcedure env trackStoredProcedureRequest = do
 
   sourceMetadata <-
     maybe
-      ( throw400 NotFound $
-          "Source '"
-            <> sourceNameToText source
-            <> "' of kind "
-            <> toTxt (reify (backendTag @b))
-            <> " not found."
+      ( throw400 NotFound
+          $ "Source '"
+          <> sourceNameToText source
+          <> "' of kind "
+          <> toTxt (reify (backendTag @b))
+          <> " not found."
       )
       pure
       . preview (metaSources . ix source . toSourceMetadata @b)
@@ -200,17 +200,17 @@ runTrackStoredProcedure env trackStoredProcedureRequest = do
 
   let storedProcedure = _spmStoredProcedure metadata
       metadataObj =
-        MOSourceObjId source $
-          AB.mkAnyBackend $
-            SMOStoredProcedure @b storedProcedure
+        MOSourceObjId source
+          $ AB.mkAnyBackend
+          $ SMOStoredProcedure @b storedProcedure
       existingStoredProcedures = InsOrdHashMap.keys (_smStoredProcedures sourceMetadata)
   when (storedProcedure `elem` existingStoredProcedures) do
     throw400 AlreadyTracked $ "Stored procedure '" <> toTxt storedProcedure <> "' is already tracked."
 
-  buildSchemaCacheFor metadataObj $
-    MetadataModifier $
-      (metaSources . ix source . toSourceMetadata @b . smStoredProcedures)
-        %~ InsOrdHashMap.insert storedProcedure metadata
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ (metaSources . ix source . toSourceMetadata @b . smStoredProcedures)
+    %~ InsOrdHashMap.insert storedProcedure metadata
 
   pure successMsg
   where
@@ -222,17 +222,17 @@ data UntrackStoredProcedure (b :: BackendType) = UntrackStoredProcedure
     utspStoredProcedure :: FunctionName b
   }
 
-deriving instance Backend b => Show (UntrackStoredProcedure b)
+deriving instance (Backend b) => Show (UntrackStoredProcedure b)
 
-deriving instance Backend b => Eq (UntrackStoredProcedure b)
+deriving instance (Backend b) => Eq (UntrackStoredProcedure b)
 
-instance Backend b => FromJSON (UntrackStoredProcedure b) where
+instance (Backend b) => FromJSON (UntrackStoredProcedure b) where
   parseJSON = withObject "UntrackStoredProcedure" $ \o -> do
     utspSource <- o .: "source"
     utspStoredProcedure <- o .: "stored_procedure"
     pure UntrackStoredProcedure {..}
 
-instance Backend b => ToJSON (UntrackStoredProcedure b) where
+instance (Backend b) => ToJSON (UntrackStoredProcedure b) where
   toJSON UntrackStoredProcedure {..} =
     object
       [ "source" .= utspSource,
@@ -255,12 +255,12 @@ runUntrackStoredProcedure q = do
   assertStoredProcedureExists @b source storedProcedure
 
   let metadataObj =
-        MOSourceObjId source $
-          AB.mkAnyBackend $
-            SMOStoredProcedure @b storedProcedure
+        MOSourceObjId source
+          $ AB.mkAnyBackend
+          $ SMOStoredProcedure @b storedProcedure
 
-  buildSchemaCacheFor metadataObj $
-    dropStoredProcedureInMetadata @b source storedProcedure
+  buildSchemaCacheFor metadataObj
+    $ dropStoredProcedureInMetadata @b source storedProcedure
   pure successMsg
   where
     source = utspSource q
@@ -268,14 +268,17 @@ runUntrackStoredProcedure q = do
 
 dropStoredProcedureInMetadata ::
   forall b.
-  BackendMetadata b =>
+  (BackendMetadata b) =>
   SourceName ->
   FunctionName b ->
   MetadataModifier
 dropStoredProcedureInMetadata source rootFieldName = do
-  MetadataModifier $
-    metaSources . ix source . toSourceMetadata @b . smStoredProcedures
-      %~ InsOrdHashMap.delete rootFieldName
+  MetadataModifier
+    $ metaSources
+    . ix source
+    . toSourceMetadata @b
+    . smStoredProcedures
+    %~ InsOrdHashMap.delete rootFieldName
 
 -- | check feature flag is enabled before carrying out any actions
 throwIfFeatureDisabled :: (HasFeatureFlagChecker m, MonadError QErr m) => m ()

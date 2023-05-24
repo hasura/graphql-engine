@@ -36,8 +36,8 @@ spec = do
                 [ BigQuery.setupTablesAction schema testEnv
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True,
                       Fixture.skipTests = Just "BigQuery returns numbers as strings, which means the second test fails"
                     }

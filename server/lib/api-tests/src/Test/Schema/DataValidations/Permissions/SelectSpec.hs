@@ -63,8 +63,8 @@ spec = do
                   setupMetadata DoesNotSupportArrayTypes BigQuery.backendTypeMetadata testEnvironment
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
             }
@@ -226,8 +226,8 @@ tests arrayTypeSupport = describe "Permissions on queries" do
     shouldReturnYaml testEnvironment actual expected
 
   it "Editor role can select in review and published articles only" \testEnvironment -> do
-    when (arrayTypeSupport == DoesNotSupportArrayTypes) $
-      pendingWith "Backend does not support array types"
+    when (arrayTypeSupport == DoesNotSupportArrayTypes)
+      $ pendingWith "Backend does not support array types"
 
     let schemaName :: Schema.SchemaName
         schemaName = Schema.getSchemaName testEnvironment

@@ -41,10 +41,10 @@ runGetFeatureFlag (Types.CheckFeatureFlag getFeatureFlag) GetFeatureFlag {..} = 
     Nothing -> Error.throw400 Error.NotFound $ "Feature Flag '" <> gfgIdentifier <> "' not found"
     Just flag -> do
       flagValue <- liftIO $ getFeatureFlag flag
-      pure $
-        EncJSON.encJFromJValue $
-          J.object
-            [ "identifier" .= gfgIdentifier,
-              "value" .= flagValue,
-              "description" .= FeatureFlag.ffDescription flag
-            ]
+      pure
+        $ EncJSON.encJFromJValue
+        $ J.object
+          [ "identifier" .= gfgIdentifier,
+            "value" .= flagValue,
+            "description" .= FeatureFlag.ffDescription flag
+          ]

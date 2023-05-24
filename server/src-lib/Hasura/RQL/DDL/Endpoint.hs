@@ -27,13 +27,16 @@ runCreateEndpoint endpoint@EndpointMetadata {..} = do
   endpointsMap <- _metaRestEndpoints <$> getMetadata
 
   InsOrdHashMap.lookup _ceName endpointsMap `for_` \_ ->
-    throw400 AlreadyExists $
-      "Endpoint with name: " <> toTxt _ceName <> " already exists"
+    throw400 AlreadyExists
+      $ "Endpoint with name: "
+      <> toTxt _ceName
+      <> " already exists"
 
-  withNewInconsistentObjsCheck $
-    buildSchemaCacheFor (MOEndpoint _ceName) $
-      MetadataModifier $
-        metaRestEndpoints %~ InsOrdHashMap.insert _ceName endpoint
+  withNewInconsistentObjsCheck
+    $ buildSchemaCacheFor (MOEndpoint _ceName)
+    $ MetadataModifier
+    $ metaRestEndpoints
+    %~ InsOrdHashMap.insert _ceName endpoint
   return successMsg
 
 runDropEndpoint ::
@@ -45,9 +48,9 @@ runDropEndpoint ::
   m EncJSON
 runDropEndpoint DropEndpoint {..} = do
   checkExists _deName
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      dropEndpointInMetadata _deName
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ dropEndpointInMetadata _deName
   return successMsg
 
 dropEndpointInMetadata :: EndpointName -> MetadataModifier
@@ -57,7 +60,9 @@ dropEndpointInMetadata name =
 checkExists :: (MetadataM m, MonadError QErr m) => EndpointName -> m ()
 checkExists name = do
   endpointsMap <- _metaRestEndpoints <$> getMetadata
-  void $
-    onNothing (InsOrdHashMap.lookup name endpointsMap) $
-      throw400 NotExists $
-        "endpoint with name: " <> toTxt name <> " does not exist"
+  void
+    $ onNothing (InsOrdHashMap.lookup name endpointsMap)
+    $ throw400 NotExists
+    $ "endpoint with name: "
+    <> toTxt name
+    <> " does not exist"

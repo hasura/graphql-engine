@@ -191,12 +191,12 @@ runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion computeResource
             payloads = J.encode <$> telemetries
 
             serverTelemetry =
-              J.encode $
-                ServerTelemetryRow $
-                  ServerTelemetry
-                    (_rcrCpu computeResources)
-                    (_rcrMemory computeResources)
-                    (_rcrErrorCode computeResources)
+              J.encode
+                $ ServerTelemetryRow
+                $ ServerTelemetry
+                  (_rcrCpu computeResources)
+                  (_rcrMemory computeResources)
+                  (_rcrErrorCode computeResources)
 
         for_ (serverTelemetry : payloads) $ \payload -> do
           logger $ debugLBS $ "metrics_info: " <> payload
@@ -289,9 +289,9 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
       _mtPermissions =
         PermissionMetric {..}
       _mtEventTriggers =
-        HashMap.size $
-          HashMap.filter (not . HashMap.null) $
-            HashMap.map _tiEventTriggerInfoMap sourceTableCache
+        HashMap.size
+          $ HashMap.filter (not . HashMap.null)
+          $ HashMap.map _tiEventTriggerInfoMap sourceTableCache
       _mtRemoteSchemas = HashMap.size <$> remoteSchemaMap
       _mtFunctions = HashMap.size $ HashMap.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
       _mtActions = computeActionsMetrics <$> actionCache

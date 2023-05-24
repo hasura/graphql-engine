@@ -59,8 +59,8 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cohortSnapshot
         return (newSinks <> curSinks, mempty)
       else return (newSinks, curSinks)
   pushResultToSubscribers subscribersToPush
-  pure $
-    over
+  pure
+    $ over
       (each . each)
       ( \Subscriber {..} ->
           SubscriberExecutionDetails _sId _sMetadata
@@ -77,7 +77,7 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cohortSnapshot
 -- active 'Poller'. This needs to be async exception safe.
 pollLiveQuery ::
   forall b.
-  BackendTransport b =>
+  (BackendTransport b) =>
   PollerId ->
   STM.TVar PollerResponseState ->
   SubscriptionsOptions ->
@@ -138,8 +138,9 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
             case mxRes of
               Left _ -> Nothing
               Right resp -> Just $ getSum $ foldMap (Sum . BS.length . snd) resp
-      (pushTime, cohortsExecutionDetails) <- withElapsedTime $
-        A.forConcurrently operations $ \(res, cohortId, respData, snapshot) -> do
+      (pushTime, cohortsExecutionDetails) <- withElapsedTime
+        $ A.forConcurrently operations
+        $ \(res, cohortId, respData, snapshot) -> do
           (pushedSubscribers, ignoredSubscribers) <-
             pushResultToCohort res (fst <$> respData) lqMeta snapshot
           pure
@@ -158,8 +159,8 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
       let pgExecutionTime = case reify (backendTag @b) of
             Postgres Vanilla -> Just queryExecutionTime
             _ -> Nothing
-      pure $
-        BatchExecutionDetails
+      pure
+        $ BatchExecutionDetails
           pgExecutionTime
           queryExecutionTime
           pushTime

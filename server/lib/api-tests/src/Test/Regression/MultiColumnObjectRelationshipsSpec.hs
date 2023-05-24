@@ -51,8 +51,8 @@ spec = do
                   setupRelationships BigQuery.backendTypeMetadata testEnv
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
             },

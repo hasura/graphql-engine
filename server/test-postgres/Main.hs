@@ -59,13 +59,15 @@ main = do
   env <- getEnvironment
   let envMap = Env.mkEnvironment env
 
-  pgUrlText <- flip onLeft printErrExit $
-    runWithEnv env $ do
+  pgUrlText <- flip onLeft printErrExit
+    $ runWithEnv env
+    $ do
       let envVar = _envVar databaseUrlOption
       maybeV <- considerEnv envVar
-      onNothing maybeV $
-        throwError $
-          "Expected: " <> envVar
+      onNothing maybeV
+        $ throwError
+        $ "Expected: "
+        <> envVar
 
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
       urlConf = UrlValue $ InputWebhook $ mkPlainURLTemplate pgUrlText
@@ -126,8 +128,8 @@ main = do
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver staticConfig
 
         (_appInit, appEnv) <-
-          lowerManagedT $
-            initialiseAppEnv
+          lowerManagedT
+            $ initialiseAppEnv
               envMap
               globalCtx
               serveOptions
@@ -158,10 +160,10 @@ main = do
   eventTriggerLogCleanupSuite <- EventTriggerCleanupSuite.buildEventTriggerCleanupSuite
 
   hspec do
-    describe "Migrate suite" $
-      beforeAll setupCacheRef $
-        describe "Hasura.Server.Migrate" $
-          MigrateSuite.suite sourceConfig pgContext pgConnInfo
+    describe "Migrate suite"
+      $ beforeAll setupCacheRef
+      $ describe "Hasura.Server.Migrate"
+      $ MigrateSuite.suite sourceConfig pgContext pgConnInfo
     describe "Streaming subscription suite" $ streamingSubscriptionSuite
     describe "Event trigger log cleanup suite" $ eventTriggerLogCleanupSuite
 

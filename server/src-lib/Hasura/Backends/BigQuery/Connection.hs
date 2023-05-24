@@ -87,7 +87,7 @@ resolveConfigurationJson env = \case
       Right sa -> pure . Right $ sa
 
 resolveConfigurationInput ::
-  QErrM m =>
+  (QErrM m) =>
   Env.Environment ->
   ConfigurationInput ->
   m Text
@@ -96,7 +96,7 @@ resolveConfigurationInput env = \case
   FromEnv v -> MSSQLConn.getEnv env v
 
 resolveConfigurationInputs ::
-  QErrM m =>
+  (QErrM m) =>
   Env.Environment ->
   ConfigurationInputs ->
   m [Text]
@@ -104,12 +104,12 @@ resolveConfigurationInputs env = \case
   FromYamls a -> pure a
   FromEnvs v -> filter (not . T.null) . T.splitOn "," <$> MSSQLConn.getEnv env v
 
-initConnection :: MonadIO m => ServiceAccount -> BigQueryProjectId -> Maybe RetryOptions -> m BigQueryConnection
+initConnection :: (MonadIO m) => ServiceAccount -> BigQueryProjectId -> Maybe RetryOptions -> m BigQueryConnection
 initConnection _bqServiceAccount _bqProjectId _bqRetryOptions = do
   _bqAccessTokenMVar <- liftIO $ newMVar Nothing -- `runBigQuery` initializes the token
   pure BigQueryConnection {..}
 
-getAccessToken :: MonadIO m => ServiceAccount -> m (Either TokenProblem TokenResp)
+getAccessToken :: (MonadIO m) => ServiceAccount -> m (Either TokenProblem TokenResp)
 getAccessToken sa = do
   eJwt <- encodeBearerJWT sa ["https://www.googleapis.com/auth/cloud-platform"]
   case eJwt of
@@ -119,9 +119,9 @@ getAccessToken sa = do
         Left unicodeEx -> pure . Left . BearerTokenDecodeProblem $ unicodeEx
         Right assertion -> do
           tokenFetchResponse :: Response (Either JSONException TokenResp) <-
-            httpJSONEither $
-              setRequestBodyJSON (mkTokenRequest assertion) $
-                parseRequest_ ("POST " <> tokenURL)
+            httpJSONEither
+              $ setRequestBodyJSON (mkTokenRequest assertion)
+              $ parseRequest_ ("POST " <> tokenURL)
           if getResponseStatusCode tokenFetchResponse /= 200
             then pure . Left . TokenRequestNonOK . getResponseStatus $ tokenFetchResponse
             else case getResponseBody tokenFetchResponse of
@@ -162,14 +162,14 @@ getAccessToken sa = do
         mkSigInput n = header <> "." <> payload
           where
             header =
-              b64EncodeJ $
-                J.object
+              b64EncodeJ
+                $ J.object
                   [ "alg" J..= ("RS256" :: T.Text),
                     "typ" J..= ("JWT" :: T.Text)
                   ]
             payload =
-              b64EncodeJ $
-                J.object
+              b64EncodeJ
+                $ J.object
                   [ "aud" J..= tokenURL,
                     "scope" J..= T.intercalate " " (map unScope scopes),
                     "iat" J..= n,
@@ -178,10 +178,11 @@ getAccessToken sa = do
                   ]
 
 -- | Get a usable token. If the token has expired refresh it.
-getUsableToken :: MonadIO m => BigQueryConnection -> m (Either TokenProblem TokenResp)
+getUsableToken :: (MonadIO m) => BigQueryConnection -> m (Either TokenProblem TokenResp)
 getUsableToken BigQueryConnection {_bqServiceAccount, _bqAccessTokenMVar} =
-  liftIO $
-    modifyMVar _bqAccessTokenMVar $ \mTokenResp -> do
+  liftIO
+    $ modifyMVar _bqAccessTokenMVar
+    $ \mTokenResp -> do
       case mTokenResp of
         Nothing -> do
           refreshedToken <- getAccessToken _bqServiceAccount

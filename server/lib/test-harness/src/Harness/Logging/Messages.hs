@@ -44,7 +44,7 @@ import System.Log.FastLogger qualified as FL
 import Test.Hspec.Core.Format
 
 -- | Newtype wrapper around logging action to encapsulate existential type.
-newtype Logger = Logger {runLogger :: forall a. LoggableMessage a => a -> IO ()}
+newtype Logger = Logger {runLogger :: forall a. (LoggableMessage a) => a -> IO ()}
 
 -- | Log a structured message in tests
 testLogMessage :: (Has Logger env, LoggableMessage msg) => env -> msg -> IO ()
@@ -87,7 +87,7 @@ class LoggableMessage a where
 --
 -- If you find yourself wanting to do this, consider defining a new, bespoke
 -- message type that describes what you want to log.
-instance TypeError ('Text "Please define a custom message type rather than logging raw JSON values") => LoggableMessage Value where
+instance (TypeError ('Text "Please define a custom message type rather than logging raw JSON values")) => LoggableMessage Value where
   fromLoggableMessage = error "Please define a custom message type rather than logging raw JSON values"
 
 newtype LogTrace = LogTrace Text
@@ -96,7 +96,7 @@ instance LoggableMessage LogTrace where
   fromLoggableMessage (LogTrace msg) =
     object [("type", String "LogTrace"), ("message", String msg)]
 
-logTrace :: TraceString a => a -> LogTrace
+logTrace :: (TraceString a) => a -> LogTrace
 logTrace = LogTrace . toTraceString
 
 newtype LogHspecEvent = LogHspecEvent {unLogHspecEvent :: Event}
@@ -114,11 +114,11 @@ instance LoggableMessage LogHspecEvent where
     where
       encEvent :: Text -> [Pair] -> Value
       encEvent eventTag eventFields =
-        object $
-          [ ("type", String "Hspec Event"),
-            ("event_tag", toJSON eventTag)
-          ]
-            <> eventFields
+        object
+          $ [ ("type", String "Hspec Event"),
+              ("event_tag", toJSON eventTag)
+            ]
+          <> eventFields
 
       encPath :: ([String], String) -> [Pair]
       encPath (groups, req) =
@@ -333,7 +333,7 @@ instance LoggableMessage LogFixtureTeardownFailed where
 -- to sort through.
 newtype LogHarness = LogHarness {unLogHarness :: Text}
 
-logHarness :: TraceString a => a -> LogHarness
+logHarness :: (TraceString a) => a -> LogHarness
 logHarness = LogHarness . toTraceString
 
 instance LoggableMessage LogHarness where
@@ -347,5 +347,5 @@ instance LoggableMessage LogHarness where
 flLogger :: (FL.LogStr -> IO ()) -> Logger
 flLogger logAction = Logger (logAction . msgToLogStr)
 
-msgToLogStr :: LoggableMessage a => a -> FL.LogStr
+msgToLogStr :: (LoggableMessage a) => a -> FL.LogStr
 msgToLogStr = FL.toLogStr . (<> "\n") . encode . fromLoggableMessage

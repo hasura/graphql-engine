@@ -107,8 +107,8 @@ recordSetAsHeaderAndRows Execute.RecordSet {rows} = J.toJSON (thead : tbody)
 
 recordSetAsSchema :: Execute.RecordSet -> J.Value
 recordSetAsSchema rs@(Execute.RecordSet {rows}) =
-  recordSetAsHeaderAndRows $
-    rs
+  recordSetAsHeaderAndRows
+    $ rs
       { Execute.rows =
           InsOrdHashMap.adjust
             (Execute.TextOutputValue . LT.toStrict . encodeToLazyText . J.toJSON)

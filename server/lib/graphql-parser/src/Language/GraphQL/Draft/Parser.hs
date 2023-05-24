@@ -136,10 +136,10 @@ class PossibleTypes pos where
 instance PossibleTypes () where
   possibleTypes = pure ()
 
-selectionSet :: Variable var => Parser (AST.SelectionSet AST.FragmentSpread var)
+selectionSet :: (Variable var) => Parser (AST.SelectionSet AST.FragmentSpread var)
 selectionSet = braces $ many1 selection
 
-selection :: Variable var => Parser (AST.Selection AST.FragmentSpread var)
+selection :: (Variable var) => Parser (AST.Selection AST.FragmentSpread var)
 selection =
   AST.SelectionField <$> field
     -- Inline first to catch `on` case
@@ -155,7 +155,7 @@ aliasAndFld = do
     Nothing -> return (Nothing, n)
 {-# INLINE aliasAndFld #-}
 
-field :: Variable var => Parser (AST.Field AST.FragmentSpread var)
+field :: (Variable var) => Parser (AST.Field AST.FragmentSpread var)
 field = do
   (alM, n) <- aliasAndFld
   AST.Field alM n
@@ -165,7 +165,7 @@ field = do
 
 -- * Fragments
 
-fragmentSpread :: Variable var => Parser (AST.FragmentSpread var)
+fragmentSpread :: (Variable var) => Parser (AST.FragmentSpread var)
 -- TODO: Make sure it fails when `... on`.
 -- See https://facebook.github.io/graphql/#FragmentSpread
 fragmentSpread =
@@ -175,7 +175,7 @@ fragmentSpread =
     <*> optempty directives
 
 -- InlineFragment tried first in order to guard against 'on' keyword
-inlineFragment :: Variable var => Parser (AST.InlineFragment AST.FragmentSpread var)
+inlineFragment :: (Variable var) => Parser (AST.InlineFragment AST.FragmentSpread var)
 inlineFragment =
   AST.InlineFragment
     <$ tok "..."
@@ -207,7 +207,7 @@ number = do
 
 -- This will try to pick the first type it can runParser. If you are working with
 -- explicit types use the `typedValue` parser.
-value :: Variable var => Parser (AST.Value var)
+value :: (Variable var) => Parser (AST.Value var)
 value =
   tok
     ( AST.VVariable <$> variable
@@ -254,17 +254,17 @@ stringLiteral = unescapeText =<< (char '"' *> jstring_ <?> "string")
     unescapeText :: Text -> Parser Text
     unescapeText str = either fail pure $ A.parseOnly jstring ("\"" <> encodeUtf8 str <> "\"")
 
-listLiteral :: Variable var => Parser [AST.Value var]
+listLiteral :: (Variable var) => Parser [AST.Value var]
 listLiteral = brackets (many value) <?> "list"
 
-objectLiteral :: Variable var => Parser (HashMap AST.Name (AST.Value var))
+objectLiteral :: (Variable var) => Parser (HashMap AST.Name (AST.Value var))
 objectLiteral = braces (objectFields many) <?> "object"
 
-arguments :: Variable var => Parser (HashMap AST.Name (AST.Value var))
+arguments :: (Variable var) => Parser (HashMap AST.Name (AST.Value var))
 arguments = parens (objectFields many1) <?> "arguments"
 
 objectFields ::
-  Variable var =>
+  (Variable var) =>
   (forall b. Parser b -> Parser [b]) ->
   Parser (HashMap AST.Name (AST.Value var))
 objectFields several = foldM insertField HashMap.empty =<< several objectField
@@ -276,10 +276,10 @@ objectFields several = foldM insertField HashMap.empty =<< several objectField
 
 -- * Directives
 
-directives :: Variable var => Parser [AST.Directive var]
+directives :: (Variable var) => Parser [AST.Directive var]
 directives = many1 directive
 
-directive :: Variable var => Parser (AST.Directive var)
+directive :: (Variable var) => Parser (AST.Directive var)
 directive =
   AST.Directive
     <$ tok "@"
@@ -370,7 +370,7 @@ fieldDefinition =
 argumentsDefinition :: Parser (AST.ArgumentsDefinition AST.InputValueDefinition)
 argumentsDefinition = parens $ many1 inputValueDefinition
 
-interfaceTypeDefinition :: PossibleTypes pos => Parser (AST.InterfaceTypeDefinition pos AST.InputValueDefinition)
+interfaceTypeDefinition :: (PossibleTypes pos) => Parser (AST.InterfaceTypeDefinition pos AST.InputValueDefinition)
 interfaceTypeDefinition =
   AST.InterfaceTypeDefinition
     <$> optDesc
@@ -526,7 +526,7 @@ between :: Parser Text -> Parser Text -> Parser a -> Parser a
 between open close p = tok open *> p <* tok close
 
 -- `empty` /= `pure mempty` for `Parser`.
-optempty :: Monoid a => Parser a -> Parser a
+optempty :: (Monoid a) => Parser a -> Parser a
 optempty = option mempty
 
 data Expecting

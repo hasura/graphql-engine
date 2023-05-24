@@ -45,8 +45,8 @@ spec =
                   <> bigquerySetupFunctions testEnv
                   <> setupMetadata testEnv,
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
             }
@@ -114,8 +114,8 @@ postgresSetupFunctions testEnv =
       articleTableSQL = unSchemaName schemaName <> ".article"
    in [ Fixture.SetupAction
           { Fixture.setupAction =
-              Postgres.run_ testEnv $
-                [i|
+              Postgres.run_ testEnv
+                $ [i|
                   CREATE FUNCTION #{ fetch_articles schemaName }(author_row author, search TEXT)
                   RETURNS SETOF article AS $$
                     SELECT *
@@ -130,8 +130,8 @@ postgresSetupFunctions testEnv =
           },
         Fixture.SetupAction
           { Fixture.setupAction =
-              Postgres.run_ testEnv $
-                [i|
+              Postgres.run_ testEnv
+                $ [i|
                   CREATE FUNCTION #{ fetch_articles_no_user_args schemaName }(author_row author)
                   RETURNS SETOF article AS $$
                     SELECT *
@@ -149,8 +149,8 @@ bigquerySetupFunctions testEnv =
       articleTableSQL = unSchemaName schemaName <> ".article"
    in [ Fixture.SetupAction
           { Fixture.setupAction =
-              BigQuery.run_ $
-                [i|
+              BigQuery.run_
+                $ [i|
                   CREATE TABLE FUNCTION
                   #{ fetch_articles schemaName }(a_id INT64, search STRING)
                   AS
@@ -163,8 +163,8 @@ bigquerySetupFunctions testEnv =
           },
         Fixture.SetupAction
           { Fixture.setupAction =
-              BigQuery.run_ $
-                [i|
+              BigQuery.run_
+                $ [i|
                   CREATE TABLE FUNCTION
                   #{ fetch_articles_no_user_args schemaName }(a_id INT64)
                   AS

@@ -132,7 +132,7 @@ type TypeDefinitionsWrapper = P.TypeDefinitionsWrapper MetadataObjId
 -- | In order to aid type inference and type checking, we define this pattern
 -- synonym (an actual one) which restricts 'P.TypeDefinitionsWrapper' to have
 -- 'MetadataObjId' set for its origin type parameter.
-pattern TypeDefinitionsWrapper :: () => forall a. HasTypeDefinitions a => a -> TypeDefinitionsWrapper
+pattern TypeDefinitionsWrapper :: () => forall a. (HasTypeDefinitions a) => a -> TypeDefinitionsWrapper
 pattern TypeDefinitionsWrapper typeDef = P.TypeDefinitionsWrapper typeDef
 
 toQErr :: (MonadError QErr m) => Either ParseError a -> m a

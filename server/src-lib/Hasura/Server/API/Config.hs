@@ -105,9 +105,9 @@ runGetConfig
     where
       isPrometheusMetricsEnabled = METRICS `Set.member` enabledAPIs
       featureFlagSettings =
-        Set.fromList $
-          (\(FeatureFlag {ffDescription, ffIdentifier}, enabled) -> FeatureFlagInfo {ffiName = getIdentifier ffIdentifier, ffiEnabled = enabled, ffiDescription = ffDescription})
-            <$> featureFlags
+        Set.fromList
+          $ (\(FeatureFlag {ffDescription, ffIdentifier}, enabled) -> FeatureFlagInfo {ffiName = getIdentifier ffIdentifier, ffiEnabled = enabled, ffiDescription = ffDescription})
+          <$> featureFlags
 
 isAdminSecretSet :: AuthMode -> Bool
 isAdminSecretSet = \case

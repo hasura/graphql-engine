@@ -164,8 +164,8 @@ serializeHTTPExceptionMessageForDebugging = serializeHTTPExceptionWithErrorMessa
 
 encodeHTTPRequestJSON :: HTTP.Request -> J.Value
 encodeHTTPRequestJSON request =
-  J.Object $
-    KM.fromList
+  J.Object
+    $ KM.fromList
       [ ("host", J.toJSON $ TE.decodeUtf8 $ HTTP.host request),
         ("port", J.toJSON $ HTTP.port request),
         ("secure", J.toJSON $ HTTP.secure request),
@@ -197,12 +197,12 @@ getHttpExceptionJson (ShowErrorInfo isShowHTTPErrorInfo) httpException =
               then serializeHTTPExceptionWithErrorMessage (ShowHeadersAndEnvVarInfo False) (unHttpException httpException)
               else serializeHTTPExceptionMessage httpException
           reqJSON = encodeHTTPRequestJSON req
-      J.object $
-        [ "type" J..= ("http_exception" :: Text),
-          "message" J..= exceptionContent,
-          "request" J..= reqJSON
-        ]
-          <> maybe mempty (\status -> ["status" J..= status]) statusMaybe
+      J.object
+        $ [ "type" J..= ("http_exception" :: Text),
+            "message" J..= exceptionContent,
+            "request" J..= reqJSON
+          ]
+        <> maybe mempty (\status -> ["status" J..= status]) statusMaybe
 
 -- it will not show HTTP Exception error message info
 instance J.ToJSON HttpException where
@@ -232,5 +232,5 @@ serializeServantClientErrorMessageForDebugging = \case
     Nothing -> "error in the connection: " <> serializeExceptionForDebugging exn
   other -> serializeServantClientErrorMessage other
 
-serializeExceptionForDebugging :: Exception e => e -> Text
+serializeExceptionForDebugging :: (Exception e) => e -> Text
 serializeExceptionForDebugging = T.pack . displayException

@@ -49,18 +49,19 @@ traverseWithIndex f = zipWithM f [0 ..]
 logicalModelToColumnInfo :: forall b. (Backend b) => Int -> (Column b, NullableScalarType b) -> Maybe (StructuredColumnInfo b)
 logicalModelToColumnInfo i (column, NullableScalarType {..}) = do
   name <- G.mkName (toTxt column)
-  pure $
+  pure
+    $
     -- TODO(dmoverton): handle object and array columns
-    SCIScalarColumn $
-      ColumnInfo
-        { ciColumn = column,
-          ciName = name,
-          ciPosition = i,
-          ciType = ColumnScalar nstType,
-          ciIsNullable = nstNullable,
-          ciDescription = G.Description <$> nstDescription,
-          ciMutability = ColumnMutability {_cmIsInsertable = False, _cmIsUpdatable = False}
-        }
+    SCIScalarColumn
+    $ ColumnInfo
+      { ciColumn = column,
+        ciName = name,
+        ciPosition = i,
+        ciType = ColumnScalar nstType,
+        ciIsNullable = nstNullable,
+        ciDescription = G.Description <$> nstDescription,
+        ciMutability = ColumnMutability {_cmIsInsertable = False, _cmIsUpdatable = False}
+      }
 
 logicalModelFieldsToFieldInfo ::
   forall b.

@@ -133,7 +133,7 @@ mkHgeInstancePool logger = do
       return $ HgeServerHandle hge cleanup
 
 withPool ::
-  Has Logger testEnvironment =>
+  (Has Logger testEnvironment) =>
   testEnvironment ->
   HgePool ->
   HgePoolArguments ->
@@ -209,18 +209,18 @@ spawnServer testEnv (HgeConfig {hgeConfigEnvironmentVars}) = do
           ]
       )
         { env =
-            Just $
-              ("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "0")
-                : ("HASURA_GRAPHQL_ADMIN_SECRET", T.unpack adminSecret)
-                : allEnv,
+            Just
+              $ ("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "0")
+              : ("HASURA_GRAPHQL_ADMIN_SECRET", T.unpack adminSecret)
+              : allEnv,
           std_in = CreatePipe,
           std_out = CreatePipe,
           std_err = CreatePipe,
           create_group = True
         }
       `catchAny` ( \exn ->
-                     error $
-                       unlines
+                     error
+                       $ unlines
                          [ "Failed to spawn Graphql-Engine process:",
                            show exn
                          ]

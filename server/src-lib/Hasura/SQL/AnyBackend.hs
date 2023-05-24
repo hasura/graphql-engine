@@ -217,7 +217,7 @@ traverseBackend ::
     f.
   (AllBackendsSatisfy c, Functor f) =>
   AnyBackend i ->
-  (forall b. c b => i b -> f (j b)) ->
+  (forall b. (c b) => i b -> f (j b)) ->
   f (AnyBackend j)
 traverseBackend e f = case e of
   PostgresVanillaValue x -> PostgresVanillaValue <$> f x
@@ -232,7 +232,7 @@ mkAnyBackend ::
   forall
     (b :: BackendType)
     (i :: BackendType -> Type).
-  HasTag b =>
+  (HasTag b) =>
   i b ->
   AnyBackend i
 mkAnyBackend x = case backendTag @b of
@@ -269,9 +269,9 @@ dispatchAnyBackend ::
     (c :: BackendType -> Constraint)
     (i :: BackendType -> Type)
     (r :: Type).
-  AllBackendsSatisfy c =>
+  (AllBackendsSatisfy c) =>
   AnyBackend i ->
-  (forall (b :: BackendType). c b => i b -> r) ->
+  (forall (b :: BackendType). (c b) => i b -> r) ->
   r
 dispatchAnyBackend e f = case e of
   PostgresVanillaValue x -> f x
@@ -287,10 +287,10 @@ dispatchAnyBackendWithTwoConstraints ::
     (c2 :: BackendType -> Constraint)
     (i :: BackendType -> Type)
     (r :: Type).
-  AllBackendsSatisfy c1 =>
-  AllBackendsSatisfy c2 =>
+  (AllBackendsSatisfy c1) =>
+  (AllBackendsSatisfy c2) =>
   AnyBackend i ->
-  (forall (b :: BackendType). c1 b => c2 b => i b -> r) ->
+  (forall (b :: BackendType). (c1 b) => (c2 b) => i b -> r) ->
   r
 dispatchAnyBackendWithTwoConstraints e f = case e of
   PostgresVanillaValue x -> f x
@@ -307,9 +307,9 @@ dispatchAnyBackend' ::
     (c :: Type -> Constraint)
     (i :: BackendType -> Type)
     (r :: Type).
-  i `SatisfiesForAllBackends` c =>
+  (i `SatisfiesForAllBackends` c) =>
   AnyBackend i ->
-  (forall (b :: BackendType). c (i b) => i b -> r) ->
+  (forall (b :: BackendType). (c (i b)) => i b -> r) ->
   r
 dispatchAnyBackend' e f = case e of
   PostgresVanillaValue x -> f x
@@ -327,10 +327,10 @@ dispatchAnyBackend'' ::
     (c2 :: BackendType -> Constraint)
     (i :: BackendType -> Type)
     (r :: Type).
-  i `SatisfiesForAllBackends` c1 =>
-  AllBackendsSatisfy c2 =>
+  (i `SatisfiesForAllBackends` c1) =>
+  (AllBackendsSatisfy c2) =>
   AnyBackend i ->
-  (forall (b :: BackendType). c2 b => c1 (i b) => i b -> r) ->
+  (forall (b :: BackendType). (c2 b) => (c1 (i b)) => i b -> r) ->
   r
 dispatchAnyBackend'' e f = case e of
   PostgresVanillaValue x -> f x
@@ -348,8 +348,8 @@ composeAnyBackend ::
     (c :: BackendType -> Constraint)
     (i :: BackendType -> Type)
     (r :: Type).
-  AllBackendsSatisfy c =>
-  (forall (b :: BackendType). c b => i b -> i b -> r) ->
+  (AllBackendsSatisfy c) =>
+  (forall (b :: BackendType). (c b) => i b -> i b -> r) ->
   AnyBackend i ->
   AnyBackend i ->
   r ->
@@ -371,8 +371,8 @@ mergeAnyBackend ::
   forall
     (c :: Type -> Constraint)
     (i :: BackendType -> Type).
-  i `SatisfiesForAllBackends` c =>
-  (forall (b :: BackendType). c (i b) => i b -> i b -> i b) ->
+  (i `SatisfiesForAllBackends` c) =>
+  (forall (b :: BackendType). (c (i b)) => i b -> i b -> i b) ->
   AnyBackend i ->
   AnyBackend i ->
   AnyBackend i ->
@@ -395,7 +395,7 @@ unpackAnyBackend ::
   forall
     (b :: BackendType)
     (i :: BackendType -> Type).
-  HasTag b =>
+  (HasTag b) =>
   AnyBackend i ->
   Maybe (i b)
 unpackAnyBackend exists = case (backendTag @b, exists) of
@@ -431,7 +431,7 @@ dispatchAnyBackendArrow ::
     (arr :: Type -> Type -> Type)
     x.
   (ArrowChoice arr, AllBackendsSatisfy c1, AllBackendsSatisfy c2) =>
-  (forall b. c1 b => c2 b => arr (i b, x) r) ->
+  (forall b. (c1 b) => (c2 b) => arr (i b, x) r) ->
   arr (AnyBackend i, x) r
 dispatchAnyBackendArrow arrow = proc (ab, x) -> do
   case ab of
@@ -455,7 +455,7 @@ dispatchAnyBackendArrow arrow = proc (ab, x) -> do
 -- | Attempts to parse an 'AnyBackend' from a JSON value, using the provided
 -- backend information.
 parseAnyBackendFromJSON ::
-  i `SatisfiesForAllBackends` FromJSON =>
+  (i `SatisfiesForAllBackends` FromJSON) =>
   BackendType ->
   Value ->
   Parser (AnyBackend i)
@@ -472,7 +472,7 @@ parseAnyBackendFromJSON backendKind value = case backendKind of
 -- argument.
 anyBackendCodec ::
   forall i.
-  i `SatisfiesForAllBackends` HasCodec =>
+  (i `SatisfiesForAllBackends` HasCodec) =>
   BackendType ->
   JSONCodec (AnyBackend i)
 anyBackendCodec backendKind = case backendKind of
@@ -489,7 +489,7 @@ anyBackendCodec backendKind = case backendKind of
 -- used for debug purposes, as it has no way of inserting the backend kind in
 -- the output, since there's no guarantee that the output will be an object.
 debugAnyBackendToJSON ::
-  i `SatisfiesForAllBackends` ToJSON =>
+  (i `SatisfiesForAllBackends` ToJSON) =>
   AnyBackend i ->
   Value
 debugAnyBackendToJSON e = dispatchAnyBackend' @ToJSON e toJSON
@@ -498,15 +498,15 @@ debugAnyBackendToJSON e = dispatchAnyBackend' @ToJSON e toJSON
 
 -- * Instances for 'AnyBackend'
 
-deriving instance i `SatisfiesForAllBackends` Show => Show (AnyBackend i)
+deriving instance (i `SatisfiesForAllBackends` Show) => Show (AnyBackend i)
 
-deriving instance i `SatisfiesForAllBackends` Eq => Eq (AnyBackend i)
+deriving instance (i `SatisfiesForAllBackends` Eq) => Eq (AnyBackend i)
 
-deriving instance i `SatisfiesForAllBackends` Ord => Ord (AnyBackend i)
+deriving instance (i `SatisfiesForAllBackends` Ord) => Ord (AnyBackend i)
 
-instance i `SatisfiesForAllBackends` Hashable => Hashable (AnyBackend i)
+instance (i `SatisfiesForAllBackends` Hashable) => Hashable (AnyBackend i)
 
-instance i `SatisfiesForAllBackends` FromJSON => FromJSONKeyValue (AnyBackend i) where
+instance (i `SatisfiesForAllBackends` FromJSON) => FromJSONKeyValue (AnyBackend i) where
   parseJSONKeyValue (backendTypeStr, value) = do
     backendType <- parseBackendTypeFromText $ Key.toText backendTypeStr
     parseAnyBackendFromJSON backendType value

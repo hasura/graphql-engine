@@ -160,12 +160,12 @@ data AggregationPredicateArguments (b :: BackendType)
   | AggregationPredicateArguments (NonEmpty (Column b))
   deriving stock (Generic)
 
-deriving instance B.Backend b => Eq (AggregationPredicateArguments b)
+deriving instance (B.Backend b) => Eq (AggregationPredicateArguments b)
 
-deriving instance B.Backend b => Show (AggregationPredicateArguments b)
+deriving instance (B.Backend b) => Show (AggregationPredicateArguments b)
 
-instance Backend b => Hashable (AggregationPredicateArguments b)
+instance (Backend b) => Hashable (AggregationPredicateArguments b)
 
-instance Backend b => NFData (AggregationPredicateArguments b)
+instance (Backend b) => NFData (AggregationPredicateArguments b)
 
 instance (Backend b) => ToJSON (AggregationPredicateArguments b)

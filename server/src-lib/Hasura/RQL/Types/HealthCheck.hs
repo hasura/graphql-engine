@@ -26,9 +26,10 @@ newtype HealthCheckTestSql = HealthCheckTestSql
 
 instance HasCodec HealthCheckTestSql where
   codec =
-    AC.object "HealthCheckTestSql" $
-      HealthCheckTestSql
-        <$> optionalFieldWithDefault' "sql" defaultTestSql AC..= _hctSql
+    AC.object "HealthCheckTestSql"
+      $ HealthCheckTestSql
+      <$> optionalFieldWithDefault' "sql" defaultTestSql
+      AC..= _hctSql
 
 instance ToJSON HealthCheckTestSql where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -88,11 +89,20 @@ instance (Backend b) => FromJSON (HealthCheckConfig b) where
     Just (HealthCheckImplementation {..}) ->
       withObject "Object" $ \o ->
         HealthCheckConfig
-          <$> o .:? "test" .!= _hciDefaultTest
-          <*> o .: "interval"
-          <*> o .:? "retries" .!= defaultRetries
-          <*> o .:? "retry_interval" .!= defaultRetryInterval
-          <*> o .:? "timeout" .!= defaultTimeout
+          <$> o
+          .:? "test"
+          .!= _hciDefaultTest
+          <*> o
+          .: "interval"
+          <*> o
+          .:? "retries"
+          .!= defaultRetries
+          <*> o
+          .:? "retry_interval"
+          .!= defaultRetryInterval
+          <*> o
+          .:? "timeout"
+          .!= defaultTimeout
     Nothing -> \_ ->
       parseFail
         "cannot deserialize health check config because backend does not implement health checks"
@@ -103,13 +113,18 @@ healthCheckConfigCodec ::
   HealthCheckImplementation (HealthCheckTest b) ->
   JSONCodec (HealthCheckConfig b)
 healthCheckConfigCodec (HealthCheckImplementation {..}) =
-  AC.object (backendPrefix @b <> "HealthCheckConfig") $
-    HealthCheckConfig
-      <$> optionalFieldWithOmittedDefaultWith' "test" _hciTestCodec _hciDefaultTest AC..= _hccTest
-      <*> requiredField' "interval" AC..= _hccInterval
-      <*> optionalFieldWithOmittedDefault' "retries" defaultRetries AC..= _hccRetries
-      <*> optionalFieldWithOmittedDefault' "retry_interval" defaultRetryInterval AC..= _hccRetryInterval
-      <*> optionalFieldWithOmittedDefault' "timeout" defaultTimeout AC..= _hccTimeout
+  AC.object (backendPrefix @b <> "HealthCheckConfig")
+    $ HealthCheckConfig
+    <$> optionalFieldWithOmittedDefaultWith' "test" _hciTestCodec _hciDefaultTest
+    AC..= _hccTest
+      <*> requiredField' "interval"
+    AC..= _hccInterval
+      <*> optionalFieldWithOmittedDefault' "retries" defaultRetries
+    AC..= _hccRetries
+      <*> optionalFieldWithOmittedDefault' "retry_interval" defaultRetryInterval
+    AC..= _hccRetryInterval
+      <*> optionalFieldWithOmittedDefault' "timeout" defaultTimeout
+    AC..= _hccTimeout
 
 defaultRetries :: HealthCheckRetries
 defaultRetries = HealthCheckRetries 3

@@ -28,9 +28,9 @@ instance MonadParse TestMonad where
 fakeScalar :: G.Name -> G.Value Variable
 fakeScalar name =
   if
-      | name == GName._Int -> G.VInt 4242
-      | name == GName._Boolean -> G.VBoolean False
-      | otherwise -> error $ "no test value implemented for scalar " <> show name
+    | name == GName._Int -> G.VInt 4242
+    | name == GName._Boolean -> G.VBoolean False
+    | otherwise -> error $ "no test value implemented for scalar " <> show name
 
 fakeInputFieldValue :: forall origin. InputFieldInfo origin -> G.Value Variable
 fakeInputFieldValue (InputFieldInfo t _) = go t

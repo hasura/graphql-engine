@@ -198,8 +198,8 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cursorValues r
       else -- when the response is unchanged, the response is only sent to the newly added subscribers
         return (newSinks, curSinks)
   pushResultToSubscribers subscribersToPush
-  pure $
-    over
+  pure
+    $ over
       (each . each)
       ( \Subscriber {..} ->
           SubscriberExecutionDetails _sId _sMetadata
@@ -230,15 +230,15 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cursorValues r
     response = result <&> \payload -> SubscriptionResponse payload dTime
 
     pushResultToSubscribers subscribers =
-      unless isResponseEmpty $
-        flip A.mapConcurrently_ subscribers $
-          \Subscriber {..} -> _sOnChangeCallback response
+      unless isResponseEmpty
+        $ flip A.mapConcurrently_ subscribers
+        $ \Subscriber {..} -> _sOnChangeCallback response
 
 -- | A single iteration of the streaming query polling loop. Invocations on the
 -- same mutable objects may race.
 pollStreamingQuery ::
   forall b.
-  BackendTransport b =>
+  (BackendTransport b) =>
   PollerId ->
   STM.TVar PollerResponseState ->
   SubscriptionsOptions ->
@@ -308,8 +308,9 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
             case mxRes of
               Left _ -> Nothing
               Right resp -> Just $ getSum $ foldMap ((\(_, sqlResp, _) -> Sum . BS.length $ sqlResp)) resp
-      (pushTime, cohortsExecutionDetails) <- withElapsedTime $
-        A.forConcurrently operations $ \(res, cohortId, respData, latestCursorValueMaybe, (snapshot, cohort)) -> do
+      (pushTime, cohortsExecutionDetails) <- withElapsedTime
+        $ A.forConcurrently operations
+        $ \(res, cohortId, respData, latestCursorValueMaybe, (snapshot, cohort)) -> do
           let latestCursorValue@(CursorVariableValues updatedCursorVarVal) =
                 let prevCursorVariableValue = CursorVariableValues $ C._unValidatedVariables $ C._cvCursorVariables $ C._csVariables snapshot
                  in case latestCursorValueMaybe of
@@ -417,8 +418,8 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
                       newCohort <- do
                         existingSubs <- TMap.new
                         newSubs <- TMap.new
-                        pure $
-                          C.Cohort
+                        pure
+                          $ C.Cohort
                             (C._cCohortId currentCohort)
                             (C._cPreviousResponse currentCohort)
                             existingSubs
@@ -477,8 +478,8 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
           oldCohortNewSubscribers = C._cNewSubscribers oldCohort
       mergedExistingSubscribers <- TMap.union newCohortExistingSubscribers oldCohortExistingSubscribers
       mergedNewSubscribers <- TMap.union newCohortNewSubscribers oldCohortNewSubscribers
-      pure $
-        newCohort
+      pure
+        $ newCohort
           { C._cNewSubscribers = mergedNewSubscribers,
             C._cExistingSubscribers = mergedExistingSubscribers
           }

@@ -73,25 +73,29 @@ newtype instance TransformCtx Body = TransformCtx RequestTransformCtx
 
 instance HasCodec BodyTransformFn where
   codec =
-    dimapCodec dec enc $
-      disjointEitherCodec removeCodec $
-        disjointEitherCodec modifyAsJSONCodec modifyAsFormURLEncodecCodec
+    dimapCodec dec enc
+      $ disjointEitherCodec removeCodec
+      $ disjointEitherCodec modifyAsJSONCodec modifyAsFormURLEncodecCodec
     where
       removeCodec = object "BodyTransformFn_Remove" $ discriminatorField "action" "remove"
 
       modifyAsJSONCodec =
-        dimapCodec snd ((),) $
-          object "BodyTransformFn_ModifyAsJSON" $
-            (,)
-              <$> discriminatorField "action" "transform" .= fst
-              <*> requiredField' @Template "template" .= snd
+        dimapCodec snd ((),)
+          $ object "BodyTransformFn_ModifyAsJSON"
+          $ (,)
+          <$> discriminatorField "action" "transform"
+          .= fst
+            <*> requiredField' @Template "template"
+          .= snd
 
       modifyAsFormURLEncodecCodec =
-        dimapCodec snd ((),) $
-          object "BodyTransformFn_ModifyAsFormURLEncoded" $
-            (,)
-              <$> discriminatorField "action" "x_www_form_urlencoded" .= fst
-              <*> requiredField' @(M.HashMap Text UnescapedTemplate) "form_template" .= snd
+        dimapCodec snd ((),)
+          $ object "BodyTransformFn_ModifyAsFormURLEncoded"
+          $ (,)
+          <$> discriminatorField "action" "x_www_form_urlencoded"
+          .= fst
+            <*> requiredField' @(M.HashMap Text UnescapedTemplate) "form_template"
+          .= snd
 
       dec (Left _) = Remove
       dec (Right (Left template)) = ModifyAsJSON template

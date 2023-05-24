@@ -72,8 +72,9 @@ data DangerouslyCollapseBooleans
 
 instance FromJSON DangerouslyCollapseBooleans where
   parseJSON =
-    withBool "DangerouslyCollapseBooleans" $
-      pure . \case
+    withBool "DangerouslyCollapseBooleans"
+      $ pure
+      . \case
         True -> DangerouslyCollapseBooleans
         False -> Don'tDangerouslyCollapseBooleans
 
@@ -92,8 +93,9 @@ data InferFunctionPermissions
 
 instance FromJSON InferFunctionPermissions where
   parseJSON =
-    withBool "InferFunctionPermissions" $
-      pure . \case
+    withBool "InferFunctionPermissions"
+      $ pure
+      . \case
         True -> InferFunctionPermissions
         False -> Don'tInferFunctionPermissions
 
@@ -111,8 +113,9 @@ data RemoteSchemaPermissions
 
 instance FromJSON RemoteSchemaPermissions where
   parseJSON =
-    withBool "RemoteSchemaPermissions" $
-      pure . \case
+    withBool "RemoteSchemaPermissions"
+      $ pure
+      . \case
         True -> EnableRemoteSchemaPermissions
         False -> DisableRemoteSchemaPermissions
 

@@ -105,7 +105,7 @@ spec =
 newtype Thing a = Thing a
   deriving newtype (Eq, Hashable)
 
-instance Show a => ToErrorValue (Thing a) where
+instance (Show a) => ToErrorValue (Thing a) where
   toErrorValue (Thing x) = toErrorMessage $ "Thing " <> Text.pack (show x)
 
 newtype SingleQuoted = SingleQuoted Char

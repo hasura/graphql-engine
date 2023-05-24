@@ -53,7 +53,7 @@ newtype AgentClientT m a = AgentClientT (ReaderT AgentClientContext m a)
 runAgentClientT :: AgentClientT m a -> AgentClientContext -> m a
 runAgentClientT (AgentClientT action) ctx = runReaderT action ctx
 
-askClientContext :: Monad m => AgentClientT m AgentClientContext
+askClientContext :: (Monad m) => AgentClientT m AgentClientContext
 askClientContext = AgentClientT ask
 
 instance (MonadIO m, MonadTrace m, MonadError QErr m) => RunClient (AgentClientT m) where

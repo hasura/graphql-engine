@@ -40,8 +40,8 @@ withHge ::
 withHge hgeConfig specs = do
   flip aroundWith specs \action testEnvironment -> runManaged do
     server <- drawFromPool testEnvironment hgeConfig
-    liftIO $
-      action
+    liftIO
+      $ action
         ( PostGraphql (hgePostGraphql (server, testEnvironment)),
           (ShouldReturnYamlF (shouldReturnYamlFInternal defaultOptions), (server, testEnvironment))
         )

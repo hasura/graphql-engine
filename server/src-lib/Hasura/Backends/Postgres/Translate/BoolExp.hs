@@ -166,9 +166,9 @@ translateBoolExp = \case
           functionAlias <- S.toTableAlias <$> freshIdentifier function
           let functionIdentifier = S.tableAliasToIdentifier functionAlias
               functionExp =
-                mkComputedFieldFunctionExp currTableReference function sessionArgPresence $
-                  Just $
-                    functionAlias
+                mkComputedFieldFunctionExp currTableReference function sessionArgPresence
+                  $ Just
+                  $ functionAlias
           S.mkExists (S.FIFunc functionExp) <$> withCurrentTable (S.QualifiedIdentifier functionIdentifier Nothing) (translateBoolExp be)
     AVAggregationPredicates aggPreds -> translateAVAggregationPredicates aggPreds
 
@@ -182,11 +182,11 @@ freshIdentifier obj = do
   curVarNum <- get
   put $ curVarNum + 1
   let newIdentifier =
-        Identifier $
-          "_be_"
-            <> tshow curVarNum
-            <> "_"
-            <> snakeCaseQualifiedObject obj
+        Identifier
+          $ "_be_"
+          <> tshow curVarNum
+          <> "_"
+          <> snakeCaseQualifiedObject obj
   return newIdentifier
 
 identifierWithSuffix :: (ToTxt a) => QualifiedObject a -> Text -> Identifier
@@ -290,8 +290,8 @@ translateAggPredsSubselect
         fromExp = pure $ S.FISimple relTableName $ Just $ S.toTableAlias relTableNameAlias
         -- WHERE <relationship_table_key> AND <row_permissions> AND <mFilter>
         whereExp = sqlAnd $ [tableRelExp, rowPermExp] ++ maybeToList mFilter
-    pure $
-      S.mkSelFromItem
+    pure
+      $ S.mkSelFromItem
         S.mkSelect
           { S.selExtr = [extractorsExp],
             S.selFrom = Just $ S.FromExp fromExp,
@@ -324,13 +324,14 @@ translateAggPredArguments predArgs relTableNameIdentifier =
 translateTableRelationship :: HashMap PGCol PGCol -> TableIdentifier -> BoolExpM S.BoolExp
 translateTableRelationship colMapping relTableNameIdentifier = do
   BoolExpCtx {currTableReference} <- ask
-  pure $
-    sqlAnd $
-      flip map (HashMap.toList colMapping) $ \(lCol, rCol) ->
-        S.BECompare
-          S.SEQ
-          (S.mkIdentifierSQLExp (S.QualifiedIdentifier relTableNameIdentifier Nothing) rCol)
-          (S.mkIdentifierSQLExp currTableReference lCol)
+  pure
+    $ sqlAnd
+    $ flip map (HashMap.toList colMapping)
+    $ \(lCol, rCol) ->
+      S.BECompare
+        S.SEQ
+        (S.mkIdentifierSQLExp (S.QualifiedIdentifier relTableNameIdentifier Nothing) rCol)
+        (S.mkIdentifierSQLExp currTableReference lCol)
 
 data LHSField b
   = LColumn FieldName

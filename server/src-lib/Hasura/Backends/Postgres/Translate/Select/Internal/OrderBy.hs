@@ -112,10 +112,10 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
       let ordByAlias = mkAnnOrderByAlias sourcePrefix fieldAlias similarArrayFields annObCol
       (ordByAlias,) <$> case annObCol of
         AOCColumn pgColInfo ->
-          pure $
-            S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix) $
-              toIdentifier $
-                ciColumn pgColInfo
+          pure
+            $ S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix)
+            $ toIdentifier
+            $ ciColumn pgColInfo
         AOCObjectRelation relInfo relFilter rest -> withWriteObjectRelation $ do
           let RelInfo {riName = relName, riMapping = colMapping, riTarget = relTarget} = relInfo
               relSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
@@ -174,8 +174,8 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
                   computedFieldSourcePrefix = mkComputedFieldTableIdentifier sourcePrefix fieldName
                   (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
                   fromItem =
-                    selectFromToFromItem sourcePrefix $
-                      FromFunction _cfobFunction _cfobFunctionArgsExp Nothing
+                    selectFromToFromItem sourcePrefix
+                      $ FromFunction _cfobFunction _cfobFunctionArgsExp Nothing
                   functionQual = S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText _cfobFunction) Nothing
                   selectSource =
                     SelectSource
@@ -241,11 +241,11 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
       [OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.ColumnAlias, SQLExpression ('Postgres pgKind)))] ->
       S.SQLExp
     mkCursorExp orderByItemExps =
-      S.applyJsonBuildObj $
-        flip concatMap orderByItemExps $
-          \orderByItemExp ->
-            let OrderByItemG _ (annObCol, (_, valExp)) _ = orderByItemExp
-             in annObColToJSONField valExp annObCol
+      S.applyJsonBuildObj
+        $ flip concatMap orderByItemExps
+        $ \orderByItemExp ->
+          let OrderByItemG _ (annObCol, (_, valExp)) _ = orderByItemExp
+           in annObColToJSONField valExp annObCol
       where
         mkAggOrderByValExp valExp = \case
           AAOCount -> [S.SELit "count", valExp]

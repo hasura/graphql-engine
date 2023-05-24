@@ -211,7 +211,7 @@ fromOrderedObject obj =
     map (bimap K.fromText fromOrdered) $
       Data.Aeson.Ordered.toList obj
 
-asObject :: IsString s => Value -> Either s Object
+asObject :: (IsString s) => Value -> Either s Object
 asObject = \case
   Object o -> Right o
   _ -> Left "expecting ordered object"

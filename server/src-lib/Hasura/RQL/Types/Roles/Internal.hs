@@ -172,11 +172,16 @@ instance
   where
   (InsPermInfo colsL checkL setL backendOnlyL reqHeadersL)
     ==~ (InsPermInfo colsR checkR setR backendOnlyR reqHeadersR) =
-      colsL == colsR
-        && checkL ==~ checkR
-        && setL == setR
-        && backendOnlyL == backendOnlyR
-        && reqHeadersL == reqHeadersR
+      colsL
+        == colsR
+        && checkL
+        ==~ checkR
+        && setL
+        == setR
+        && backendOnlyL
+        == backendOnlyR
+        && reqHeadersL
+        == reqHeadersR
 
 instance
   ( Backend b,
@@ -186,13 +191,20 @@ instance
   where
   (UpdPermInfo colsL tableL filterL checkL setL backendOnlyL reqHeadersL)
     ==~ (UpdPermInfo colsR tableR filterR checkR setR backendOnlyR reqHeadersR) =
-      colsL == colsR
-        && tableL == tableR
-        && filterL ==~ filterR
-        && checkL ==~ checkR
-        && setL == setR
-        && backendOnlyL == backendOnlyR
-        && reqHeadersL == reqHeadersR
+      colsL
+        == colsR
+        && tableL
+        == tableR
+        && filterL
+        ==~ filterR
+        && checkL
+        ==~ checkR
+        && setL
+        == setR
+        && backendOnlyL
+        == backendOnlyR
+        && reqHeadersL
+        == reqHeadersR
 
 instance
   ( Backend b,
@@ -202,10 +214,14 @@ instance
   where
   (DelPermInfo tableL filterL backendOnlyL reqHeadersL)
     ==~ (DelPermInfo tableR filterR backendOnlyR reqHeadersR) =
-      tableL == tableR
-        && filterL ==~ filterR
-        && backendOnlyL == backendOnlyR
-        && reqHeadersL == reqHeadersR
+      tableL
+        == tableR
+        && filterL
+        ==~ filterR
+        && backendOnlyL
+        == backendOnlyR
+        && reqHeadersL
+        == reqHeadersR
 
 instance OnlyRelevantEq RemoteSchemaInputValueDefinition where
   RemoteSchemaInputValueDefinition defnL presetL
@@ -220,10 +236,14 @@ instance OnlyRelevantEq RemoteSchemaIntrospection where
 instance OnlyRelevantEq IntrospectionResult where
   IntrospectionResult (RemoteSchemaIntrospection typeDefnsL) queryRootL mutationRootL subsRootL
     ==~ IntrospectionResult (RemoteSchemaIntrospection typeDefnsR) queryRootR mutationRootR subsRootR =
-      sort (HashMap.elems typeDefnsL) ==~ sort (HashMap.elems typeDefnsR)
-        && queryRootL == queryRootR
-        && mutationRootL == mutationRootR
-        && subsRootL == subsRootR
+      sort (HashMap.elems typeDefnsL)
+        ==~ sort (HashMap.elems typeDefnsR)
+        && queryRootL
+        == queryRootR
+        && mutationRootL
+        == mutationRootR
+        && subsRootL
+        == subsRootR
 
 instance (OnlyRelevantEq a) => OnlyRelevantEq (Maybe a) where
   (==~) l r =
@@ -248,40 +268,58 @@ instance OnlyRelevantEq G.ScalarTypeDefinition where
 instance (OnlyRelevantEq a, Ord a) => OnlyRelevantEq (G.FieldDefinition a) where
   G.FieldDefinition _descL nameL argumentsL typeL directivesL
     ==~ G.FieldDefinition _descR nameR argumentsR typeR directivesR =
-      nameL == nameR
-        && sort argumentsL ==~ sort argumentsR
-        && typeL == typeR
-        && Set.fromList directivesL == Set.fromList directivesR
+      nameL
+        == nameR
+        && sort argumentsL
+        ==~ sort argumentsR
+        && typeL
+        == typeR
+        && Set.fromList directivesL
+        == Set.fromList directivesR
 
 instance (OnlyRelevantEq a, Ord a) => OnlyRelevantEq (G.ObjectTypeDefinition a) where
   G.ObjectTypeDefinition _descL nameL implementsInterfacesL directivesL fieldDefnsL
     ==~ G.ObjectTypeDefinition _descR nameR implementsInterfacesR directivesR fieldDefnsR =
-      nameL == nameR
-        && Set.fromList implementsInterfacesL == Set.fromList implementsInterfacesR
-        && Set.fromList directivesL == Set.fromList directivesR
-        && sort fieldDefnsL ==~ sort fieldDefnsR
+      nameL
+        == nameR
+        && Set.fromList implementsInterfacesL
+        == Set.fromList implementsInterfacesR
+        && Set.fromList directivesL
+        == Set.fromList directivesR
+        && sort fieldDefnsL
+        ==~ sort fieldDefnsR
 
 instance (OnlyRelevantEq a, Ord a) => OnlyRelevantEq (G.InterfaceTypeDefinition [G.Name] a) where
   G.InterfaceTypeDefinition _descL nameL directivesL fieldDefnsL possibleTypesL
     ==~ G.InterfaceTypeDefinition _descR nameR directivesR fieldDefnsR possibleTypesR =
-      nameL == nameR
-        && Set.fromList directivesL == Set.fromList directivesR
-        && sort fieldDefnsL ==~ sort fieldDefnsR
-        && Set.fromList possibleTypesL == Set.fromList possibleTypesR
+      nameL
+        == nameR
+        && Set.fromList directivesL
+        == Set.fromList directivesR
+        && sort fieldDefnsL
+        ==~ sort fieldDefnsR
+        && Set.fromList possibleTypesL
+        == Set.fromList possibleTypesR
 
 instance OnlyRelevantEq G.UnionTypeDefinition where
   G.UnionTypeDefinition _descL nameL directivesL membersL
     ==~ G.UnionTypeDefinition _descR nameR directivesR membersR =
-      nameL == nameR
-        && Set.fromList directivesL == Set.fromList directivesR
-        && Set.fromList membersL == Set.fromList membersR
+      nameL
+        == nameR
+        && Set.fromList directivesL
+        == Set.fromList directivesR
+        && Set.fromList membersL
+        == Set.fromList membersR
 
 instance (OnlyRelevantEq a, Ord a) => OnlyRelevantEq (G.InputObjectTypeDefinition a) where
   G.InputObjectTypeDefinition _descL nameL directivesL defnsL
     ==~ G.InputObjectTypeDefinition _descR nameR directivesR defnsR =
-      nameL == nameR
-        && Set.fromList directivesL == Set.fromList directivesR
-        && sort defnsL ==~ sort defnsR
+      nameL
+        == nameR
+        && Set.fromList directivesL
+        == Set.fromList directivesR
+        && sort defnsL
+        ==~ sort defnsR
 
 instance OnlyRelevantEq G.EnumValueDefinition where
   G.EnumValueDefinition _descL nameL directivesL
@@ -291,9 +329,12 @@ instance OnlyRelevantEq G.EnumValueDefinition where
 instance OnlyRelevantEq G.EnumTypeDefinition where
   G.EnumTypeDefinition _descL nameL directivesL valueDefnsL
     ==~ G.EnumTypeDefinition _descR nameR directivesR valueDefnsR =
-      nameL == nameR
-        && Set.fromList directivesL == Set.fromList directivesR
-        && sort valueDefnsL ==~ sort valueDefnsR
+      nameL
+        == nameR
+        && Set.fromList directivesL
+        == Set.fromList directivesR
+        && sort valueDefnsL
+        ==~ sort valueDefnsR
 
 instance (OnlyRelevantEq a, Ord a) => OnlyRelevantEq (G.TypeDefinition [G.Name] a) where
   G.TypeDefinitionScalar scalarDefnL ==~ G.TypeDefinitionScalar scalarDefnR = scalarDefnL ==~ scalarDefnR
@@ -307,10 +348,14 @@ instance (OnlyRelevantEq a, Ord a) => OnlyRelevantEq (G.TypeDefinition [G.Name] 
 instance OnlyRelevantEq G.InputValueDefinition where
   G.InputValueDefinition _descL nameL typeL defaultValueL directivesL
     ==~ G.InputValueDefinition _descR nameR typeR defaultValueR directivesR =
-      nameL == nameR
-        && typeL == typeR
-        && defaultValueL == defaultValueR
-        && Set.fromList directivesL == Set.fromList directivesR
+      nameL
+        == nameR
+        && typeL
+        == typeR
+        && defaultValueL
+        == defaultValueR
+        && Set.fromList directivesL
+        == Set.fromList directivesR
 
 maybeToCheckPermission :: Maybe a -> CheckPermission a
 maybeToCheckPermission = maybe CPUndefined CPDefined

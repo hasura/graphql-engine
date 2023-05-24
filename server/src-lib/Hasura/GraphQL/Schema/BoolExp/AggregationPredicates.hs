@@ -70,8 +70,10 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
   aggregationFunctions <- fails $ return $ nonEmpty aggFns
   roleName <- retrieve scRole
 
-  collectOptionalFieldsNE . succeedingBranchesNE $
-    arrayRelationships <&> \rel -> do
+  collectOptionalFieldsNE
+    . succeedingBranchesNE
+    $ arrayRelationships
+    <&> \rel -> do
       relTableName <- case riTarget rel of
         RelTargetNativeQuery _ -> error "defaultAggregationPredicatesParser RelTargetNativeQuery"
         RelTargetTable tn -> pure tn
@@ -98,10 +100,12 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
                   -- existing on the table.
                   case fnArguments of
                     ArgumentsStar ->
-                      maybe AggregationPredicateArgumentsStar AggregationPredicateArguments . nonEmpty
+                      maybe AggregationPredicateArgumentsStar AggregationPredicateArguments
+                        . nonEmpty
                         <$> fuse (fieldOptionalDefault Name._arguments Nothing [] . P.list <$> fails (tableSelectColumnsEnum relTable))
                     SingleArgument typ ->
-                      AggregationPredicateArguments . (NE.:| [])
+                      AggregationPredicateArguments
+                        . (NE.:| [])
                         <$> fuse
                           ( P.field Name._arguments Nothing
                               <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar typ)) relFunGqlName relTable)

@@ -138,10 +138,18 @@ instance J.ToJSON ReloadMetadata where
 instance FromJSON ReloadMetadata where
   parseJSON = J.withObject "ReloadMetadata" $ \o ->
     ReloadMetadata
-      <$> o .:? "reload_remote_schemas" .!= reloadAllRemoteSchemas
-      <*> o .:? "reload_sources" .!= reloadAllSources
-      <*> o .:? "recreate_event_triggers" .!= RSReloadList mempty
-      <*> o .:? "reload_data_connectors" .!= reloadAllDataConnectors
+      <$> o
+      .:? "reload_remote_schemas"
+      .!= reloadAllRemoteSchemas
+      <*> o
+      .:? "reload_sources"
+      .!= reloadAllSources
+      <*> o
+      .:? "recreate_event_triggers"
+      .!= RSReloadList mempty
+      <*> o
+      .:? "reload_data_connectors"
+      .!= reloadAllDataConnectors
 
 -- | Undocumented Metadata API action which serializes the entire
 -- 'SchemaCache'.
@@ -192,8 +200,9 @@ data AllowInconsistentMetadata
 
 instance FromJSON AllowInconsistentMetadata where
   parseJSON =
-    J.withBool "AllowInconsistentMetadata" $
-      pure . bool NoAllowInconsistentMetadata AllowInconsistentMetadata
+    J.withBool "AllowInconsistentMetadata"
+      $ pure
+      . bool NoAllowInconsistentMetadata AllowInconsistentMetadata
 
 instance ToJSON AllowInconsistentMetadata where
   toJSON = J.toJSON . toBool
@@ -232,9 +241,14 @@ data ReplaceMetadataV2 = ReplaceMetadataV2
 instance FromJSON ReplaceMetadataV2 where
   parseJSON = J.withObject "ReplaceMetadataV2" $ \o ->
     ReplaceMetadataV2
-      <$> o .:? "allow_inconsistent_metadata" .!= NoAllowInconsistentMetadata
-      <*> o .:? "allow_warnings" .!= AllowWarnings
-      <*> o .: "metadata"
+      <$> o
+      .:? "allow_inconsistent_metadata"
+      .!= NoAllowInconsistentMetadata
+      <*> o
+      .:? "allow_warnings"
+      .!= AllowWarnings
+      <*> o
+      .: "metadata"
 
 instance ToJSON ReplaceMetadataV2 where
   toJSON ReplaceMetadataV2 {..} =

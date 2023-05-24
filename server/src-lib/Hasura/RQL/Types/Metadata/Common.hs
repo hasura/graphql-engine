@@ -97,13 +97,13 @@ parseListAsMap ::
 parseListAsMap things mapFn listP = do
   list <- listP
   let duplicates = toList $ L.duplicates $ map mapFn list
-  unless (null duplicates) $
-    fail $
-      T.unpack $
-        "multiple declarations exist for the following "
-          <> things
-          <> ": "
-          <> T.commaSeparated duplicates
+  unless (null duplicates)
+    $ fail
+    $ T.unpack
+    $ "multiple declarations exist for the following "
+    <> things
+    <> ": "
+    <> T.commaSeparated duplicates
   pure $ oMapFromL mapFn list
 
 type EventTriggers b = InsOrdHashMap TriggerName (EventTriggerConf b)
@@ -169,7 +169,8 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
 
 backendSourceMetadataCodec :: JSONCodec BackendSourceMetadata
 backendSourceMetadataCodec =
-  named "SourceMetadata" $
+  named "SourceMetadata"
+    $
     -- Attempt to match against @SourceMetadata@ codecs for each native backend
     -- type. If none match then apply the @SourceMetadata DataConnector@ codec.
     -- DataConnector is the fallback case because the possible values for its
@@ -209,28 +210,28 @@ anySourceMetadataCodec = dimapCodec dec enc
 
 instance (Backend b) => HasCodec (SourceMetadata b) where
   codec =
-    AC.object (backendPrefix @b <> "SourceMetadata") $
-      SourceMetadata
-        <$> requiredField' "name"
-          .== _smName
+    AC.object (backendPrefix @b <> "SourceMetadata")
+      $ SourceMetadata
+      <$> requiredField' "name"
+      .== _smName
         <*> requiredField' "kind"
-          .== _smKind
+      .== _smKind
         <*> requiredFieldWith' "tables" (sortedElemsCodec _tmTable)
-          .== _smTables
+      .== _smTables
         <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) mempty
-          .== _smFunctions
+      .== _smFunctions
         <*> optionalFieldOrNullWithOmittedDefaultWith' "native_queries" (sortedElemsCodec _nqmRootFieldName) mempty
-          .== _smNativeQueries
+      .== _smNativeQueries
         <*> optionalFieldOrNullWithOmittedDefaultWith' "stored_procedures" (sortedElemsCodec _spmStoredProcedure) mempty
-          .== _smStoredProcedures
+      .== _smStoredProcedures
         <*> optionalFieldOrNullWithOmittedDefaultWith' "logical_models" (sortedElemsCodec _lmmName) mempty
-          .== _smLogicalModels
+      .== _smLogicalModels
         <*> requiredField' "configuration"
-          .== _smConfiguration
+      .== _smConfiguration
         <*> optionalFieldOrNull' "query_tags"
-          .== _smQueryTags
+      .== _smQueryTags
         <*> optionalFieldWithOmittedDefault' "customization" emptySourceCustomization
-          .== _smCustomization
+      .== _smCustomization
         <*> healthCheckField
     where
       healthCheckField = case healthCheckImplementation @b of
@@ -252,21 +253,21 @@ mkSourceMetadata ::
   Maybe (HealthCheckConfig b) ->
   BackendSourceMetadata
 mkSourceMetadata name backendSourceKind config customization healthCheckConfig =
-  BackendSourceMetadata $
-    AB.mkAnyBackend $
-      SourceMetadata
-        @b
-        name
-        backendSourceKind
-        mempty
-        mempty
-        mempty
-        mempty
-        mempty
-        config
-        Nothing
-        customization
-        healthCheckConfig
+  BackendSourceMetadata
+    $ AB.mkAnyBackend
+    $ SourceMetadata
+      @b
+      name
+      backendSourceKind
+      mempty
+      mempty
+      mempty
+      mempty
+      mempty
+      config
+      Nothing
+      customization
+      healthCheckConfig
 
 -- | Source configuration as stored in the Metadata DB for some existentialized backend.
 newtype BackendSourceMetadata = BackendSourceMetadata {unBackendSourceMetadata :: AB.AnyBackend SourceMetadata}
@@ -299,23 +300,31 @@ parseNonSourcesMetadata ::
     )
 parseNonSourcesMetadata o = do
   remoteSchemas <-
-    parseListAsMap "remote schemas" _rsmName $
-      o .:? "remote_schemas" .!= []
+    parseListAsMap "remote schemas" _rsmName
+      $ o
+      .:? "remote_schemas"
+      .!= []
   queryCollections <-
-    parseListAsMap "query collections" _ccName $
-      o .:? "query_collections" .!= []
+    parseListAsMap "query collections" _ccName
+      $ o
+      .:? "query_collections"
+      .!= []
   allowlist <- parseListAsMap "allowlist entries" aeCollection $ o .:? "allowlist" .!= []
   customTypes <- o .:? "custom_types" .!= emptyCustomTypes
   actions <- parseListAsMap "actions" _amName $ o .:? "actions" .!= []
   cronTriggers <-
-    parseListAsMap "cron triggers" ctName $
-      o .:? "cron_triggers" .!= []
+    parseListAsMap "cron triggers" ctName
+      $ o
+      .:? "cron_triggers"
+      .!= []
 
   apiLimits <- o .:? "api_limits" .!= emptyApiLimit
   metricsConfig <- o .:? "metrics_config" .!= emptyMetricsConfig
   inheritedRoles <-
-    parseListAsMap "inherited roles" _rRoleName $
-      o .:? "inherited_roles" .!= []
+    parseListAsMap "inherited roles" _rRoleName
+      $ o
+      .:? "inherited_roles"
+      .!= []
   introspectionDisabledForRoles <- o .:? "graphql_schema_introspection" .!= mempty
   pure
     ( remoteSchemas,

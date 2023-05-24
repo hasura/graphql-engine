@@ -92,7 +92,7 @@ type FromIrInner = StateT (Map Text Int) (Validate (NonEmpty Error))
 
 -- | Run a 'FromIr' action, throwing errors that have been collected using the
 -- supplied action, and attach CTEs created from native queries to the select query.
-runFromIrUseCTEs :: MonadError QErr m => FromIr Select -> m (QueryWithDDL Select)
+runFromIrUseCTEs :: (MonadError QErr m) => FromIr Select -> m (QueryWithDDL Select)
 runFromIrUseCTEs fromir = runIdentity <$> runFromIr attachCTEs (Identity fromir)
 
 -- | Run a 'FromIr' action, throwing errors that have been collected using the
@@ -105,7 +105,7 @@ runFromIrUseCTEsT = runFromIr attachCTEs
 --
 -- If CTEs were reported, we throw an error, since we don't support native queries
 -- in this context yet.
-runFromIrErrorOnCTEs :: MonadError QErr m => FromIr a -> m (QueryWithDDL a)
+runFromIrErrorOnCTEs :: (MonadError QErr m) => FromIr a -> m (QueryWithDDL a)
 runFromIrErrorOnCTEs fromir = runIdentity <$> runFromIr errorOnCTEs (Identity fromir)
 
 -- | Run a 'FromIr' action, throwing errors that have been collected using the supplied action.
@@ -118,10 +118,10 @@ runFromIr toResult =
     . traverse (runWriterT . unFromIr)
 
 -- | attach CTEs created from native queries to the select query.
-attachCTEs :: MonadValidate (NonEmpty Error) m => (Select, IRWriter) -> m (QueryWithDDL Select)
+attachCTEs :: (MonadValidate (NonEmpty Error) m) => (Select, IRWriter) -> m (QueryWithDDL Select)
 attachCTEs (select, IRWriter before after ctes) =
-  pure $
-    QueryWithDDL
+  pure
+    $ QueryWithDDL
       { qwdBeforeSteps = before,
         qwdQuery = select {selectWith = ctes <> selectWith select},
         qwdAfterSteps = after
@@ -129,12 +129,12 @@ attachCTEs (select, IRWriter before after ctes) =
 
 -- | If CTEs were reported, we throw an error, since we don't support native queries
 --   in this context yet.
-errorOnCTEs :: MonadValidate (NonEmpty Error) m => (a, IRWriter) -> m (QueryWithDDL a)
+errorOnCTEs :: (MonadValidate (NonEmpty Error) m) => (a, IRWriter) -> m (QueryWithDDL a)
 errorOnCTEs (result, IRWriter {irwBefore, irwAfter, irwCTEs}) =
   case irwCTEs of
     Nothing ->
-      pure $
-        QueryWithDDL
+      pure
+        $ QueryWithDDL
           { qwdBeforeSteps = irwBefore,
             qwdQuery = result,
             qwdAfterSteps = irwAfter
@@ -178,8 +178,8 @@ generateAlias template = do
   occurrence <- M.findWithDefault 1 rendered <$> FromIr get
   pure (rendered <> tshow occurrence)
   where
-    rendered = T.take 20 $
-      case template of
+    rendered = T.take 20
+      $ case template of
         ArrayRelationTemplate sample -> "ar_" <> sample
         ArrayAggregateTemplate sample -> "aa_" <> sample
         ObjectRelationTemplate sample -> "or_" <> sample

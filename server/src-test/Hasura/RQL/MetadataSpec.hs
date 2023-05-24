@@ -50,37 +50,41 @@ spec = describe "Remote Relationship Metadata" do
 spec_roundtrip :: Spec
 spec_roundtrip = describe "JSON Roundtrip" do
   describe "Metadata" do
-    it "example remote relationship fragment" $
-      hedgehog do
+    it "example remote relationship fragment"
+      $ hedgehog do
         metadata :: Metadata <-
-          evalAesonResult $
-            J.fromJSON remote_relationship_metadata_fragment
+          evalAesonResult
+            $ J.fromJSON remote_relationship_metadata_fragment
         trippingJSONValue metadata
 
   describe "CreateFromSourceRelationship" do
-    it "'pg_create_remote_relationship' query" $
-      hedgehog $ do
+    it "'pg_create_remote_relationship' query"
+      $ hedgehog
+      $ do
         let argument = mk_pg_remote_relationship_argument "create" ^?! key "args"
         cfsr :: (CreateFromSourceRelationship ('Postgres 'Vanilla)) <-
           evalAesonResult $ J.fromJSON argument
         trippingJSON cfsr
 
-    it "'pg_create_remote_relationship' query with the 'old' schema" $
-      hedgehog $ do
+    it "'pg_create_remote_relationship' query with the 'old' schema"
+      $ hedgehog
+      $ do
         let argument = mk_pg_remote_relationship_old_argument "create" ^?! key "args"
         cfsr :: (CreateFromSourceRelationship ('Postgres 'Vanilla)) <-
           evalAesonResult $ J.fromJSON argument
         trippingJSON cfsr
 
-    it "'mssql_create_remote_relationship' query" $
-      hedgehog $ do
+    it "'mssql_create_remote_relationship' query"
+      $ hedgehog
+      $ do
         let argument = mk_mssql_remote_relationship_argument "create" ^?! key "args"
         cfsr :: (CreateFromSourceRelationship 'MSSQL) <-
           evalAesonResult $ J.fromJSON argument
         trippingJSON cfsr
 
-    it "'bigquery_create_remote_relationship' query" $
-      hedgehog $ do
+    it "'bigquery_create_remote_relationship' query"
+      $ hedgehog
+      $ do
         let argument = mk_bigquery_remote_relationship_argument "create" ^?! key "args"
         cfsr :: (CreateFromSourceRelationship 'BigQuery) <-
           evalAesonResult $ J.fromJSON argument
@@ -205,8 +209,8 @@ spec_query_tags_examples =
       ]
       \(mdisabled, mformat, momit_request_id) ->
         it ("decodes with (disabled, format, omit_request_id) set to " <> show (mdisabled, mformat, momit_request_id)) do
-          decodesJSON @RQLMetadataV1 $
-            J.object
+          decodesJSON @RQLMetadataV1
+            $ J.object
               [ "type" J..= J.String "set_query_tags",
                 "args"
                   J..= J.object
@@ -279,9 +283,9 @@ mk_backend_remote_relationship_argument :: Text -> Text -> J.Value
 mk_backend_remote_relationship_argument backend action =
   backend_create_remote_relationship_fragment
     & _Object
-      %~ KM.insert
-        (Key.fromText "type")
-        (J.String $ backend <> "_" <> action <> "_remote_relationship")
+    %~ KM.insert
+      (Key.fromText "type")
+      (J.String $ backend <> "_" <> action <> "_remote_relationship")
 
 -- | Constructor for @v1/metadata@ @mssql_(create|update|delete)_remote_relationship@
 -- arguments using the new, unified schema.
@@ -309,13 +313,14 @@ mk_pg_remote_relationship_argument action =
 mk_bigquery_remote_relationship_argument :: Text -> J.Value
 mk_bigquery_remote_relationship_argument action =
   mk_backend_remote_relationship_argument "bigquery" action
-    & key "args" . key "table"
-      .~ J.Object
-        ( KM.fromList
-            [ ("name", "profiles"),
-              ("dataset", "test")
-            ]
-        )
+    & key "args"
+    . key "table"
+    .~ J.Object
+      ( KM.fromList
+          [ ("name", "profiles"),
+            ("dataset", "test")
+          ]
+      )
 
 -- | Constructor for @v1/metadata@ @pg_(create|update|delete)_remote_relationship@
 -- arguments using the old, non-unified schema.
@@ -323,9 +328,9 @@ mk_pg_remote_relationship_old_argument :: Text -> J.Value
 mk_pg_remote_relationship_old_argument action =
   fragment
     & _Object
-      %~ KM.insert
-        (Key.fromText "type")
-        (J.String $ "pg_" <> action <> "_remote_relationship")
+    %~ KM.insert
+      (Key.fromText "type")
+      (J.String $ "pg_" <> action <> "_remote_relationship")
   where
     fragment =
       [yamlQQ|
@@ -348,9 +353,9 @@ mk_pg_remote_relationship_old_new_argument :: Text -> J.Value
 mk_pg_remote_relationship_old_new_argument action =
   fragment
     & _Object
-      %~ KM.insert
-        (Key.fromText "type")
-        (J.String $ "pg_" <> action <> "_remote_relationship")
+    %~ KM.insert
+      (Key.fromText "type")
+      (J.String $ "pg_" <> action <> "_remote_relationship")
   where
     fragment =
       [yamlQQ|
@@ -434,8 +439,8 @@ rejectsJSON :: forall a. (HasCallStack, Typeable a, FromJSON a) => String -> J.V
 rejectsJSON message value = case J.fromJSON @a value of
   J.Error err -> err `shouldContain` message
   J.Success _ ->
-    expectationFailure $
-      mconcat
+    expectationFailure
+      $ mconcat
         [ "expected parsing ",
           show $ typeRep $ Proxy @a,
           " to fail, but it succeeded"

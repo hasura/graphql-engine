@@ -201,8 +201,9 @@ data TableType
   deriving (Eq)
 
 instance PG.FromCol TableType where
-  fromCol bs = flip PG.fromColHelper bs $
-    PD.enum $ \case
+  fromCol bs = flip PG.fromColHelper bs
+    $ PD.enum
+    $ \case
       "BASE TABLE" -> Just TTBaseTable
       "VIEW" -> Just TTView
       "FOREIGN TABLE" -> Just TTForeignTable
@@ -287,10 +288,12 @@ instance (HasCodec a, Typeable a) => HasCodec (QualifiedObject a) where
   codec = parseAlternative objCodec strCodec
     where
       objCodec =
-        AC.object ("PostgresQualified_" <> typeableName @a) $
-          QualifiedObject
-            <$> optionalFieldWithDefault' "schema" publicSchema AC..= qSchema
-            <*> requiredField' "name" AC..= qName
+        AC.object ("PostgresQualified_" <> typeableName @a)
+          $ QualifiedObject
+          <$> optionalFieldWithDefault' "schema" publicSchema
+          AC..= qSchema
+            <*> requiredField' "name"
+          AC..= qName
       strCodec = QualifiedObject publicSchema <$> codec @a
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
@@ -298,8 +301,11 @@ instance (FromJSON a) => FromJSON (QualifiedObject a) where
     QualifiedObject publicSchema <$> parseJSON v
   parseJSON (Object o) =
     QualifiedObject
-      <$> o .:? "schema" .!= publicSchema
-      <*> o .: "name"
+      <$> o
+      .:? "schema"
+      .!= publicSchema
+      <*> o
+      .: "name"
   parseJSON _ =
     fail "expecting a string/object for QualifiedObject"
 
@@ -313,10 +319,10 @@ instance (ToJSON a) => ToJSON (QualifiedObject a) where
 instance (ToJSON a, ToTxt a) => ToJSONKey (QualifiedObject a) where
   toJSONKey = ToJSONKeyText (K.fromText . qualifiedObjectToText) (text . qualifiedObjectToText)
 
-instance ToTxt a => ToTxt (QualifiedObject a) where
+instance (ToTxt a) => ToTxt (QualifiedObject a) where
   toTxt = qualifiedObjectToText
 
-instance ToTxt a => ToErrorValue (QualifiedObject a) where
+instance (ToTxt a) => ToErrorValue (QualifiedObject a) where
   toErrorValue (QualifiedObject sn o) = ErrorValue.squote $ getSchemaTxt sn <> "." <> toTxt o
 
 instance (Hashable a) => Hashable (QualifiedObject a)
@@ -325,17 +331,17 @@ instance (ToSQL a) => ToSQL (QualifiedObject a) where
   toSQL (QualifiedObject sn o) =
     toSQL sn <> "." <> toSQL o
 
-qualifiedObjectToText :: ToTxt a => QualifiedObject a -> Text
+qualifiedObjectToText :: (ToTxt a) => QualifiedObject a -> Text
 qualifiedObjectToText (QualifiedObject sn o)
   | sn == publicSchema = toTxt o
   | otherwise = getSchemaTxt sn <> "." <> toTxt o
 
-snakeCaseQualifiedObject :: ToTxt a => QualifiedObject a -> Text
+snakeCaseQualifiedObject :: (ToTxt a) => QualifiedObject a -> Text
 snakeCaseQualifiedObject (QualifiedObject sn o)
   | sn == publicSchema = toTxt o
   | otherwise = getSchemaTxt sn <> "_" <> toTxt o
 
-getIdentifierQualifiedObject :: ToTxt a => QualifiedObject a -> Either QErr C.GQLNameIdentifier
+getIdentifierQualifiedObject :: (ToTxt a) => QualifiedObject a -> Either QErr C.GQLNameIdentifier
 getIdentifierQualifiedObject obj@(QualifiedObject sn o) = do
   let tLst =
         if sn == publicSchema
@@ -350,9 +356,10 @@ getIdentifierQualifiedObject obj@(QualifiedObject sn o) = do
     `onNothing` throw400
       ValidationFailed
       ( "cannot include "
-          <> obj <<> " in the GraphQL schema because "
+          <> obj
+          <<> " in the GraphQL schema because "
           <> C.toSnakeT tLst
-            <<> " is not a valid GraphQL identifier"
+          <<> " is not a valid GraphQL identifier"
       )
 
 namingConventionSupport :: SupportedNamingCase
@@ -361,12 +368,13 @@ namingConventionSupport = AllConventions
 qualifiedObjectToName :: (ToTxt a, MonadError QErr m) => QualifiedObject a -> m G.Name
 qualifiedObjectToName objectName = do
   let textName = snakeCaseQualifiedObject objectName
-  onNothing (G.mkName textName) $
-    throw400 ValidationFailed $
-      "cannot include "
-        <> objectName <<> " in the GraphQL schema because "
-        <> textName
-          <<> " is not a valid GraphQL identifier"
+  onNothing (G.mkName textName)
+    $ throw400 ValidationFailed
+    $ "cannot include "
+    <> objectName
+    <<> " in the GraphQL schema because "
+    <> textName
+    <<> " is not a valid GraphQL identifier"
 
 -- | Represents a database table qualified with the schema name.
 type QualifiedTable = QualifiedObject TableName
@@ -570,8 +578,8 @@ instance FromJSON PGScalarType where
   parseJSON (Object o) = do
     typeType <- o .: "type"
     typeName <- o .: "name"
-    pure $
-      case typeType of
+    pure
+      $ case typeType of
         PGKindEnum -> PGEnumScalar typeName
         PGKindComposite -> PGCompositeScalar typeName
         _ -> textToPGScalarType typeName
@@ -638,8 +646,8 @@ instance NFData PGTypeKind
 instance Hashable PGTypeKind
 
 instance FromJSON PGTypeKind where
-  parseJSON = withText "postgresTypeKind" $
-    \t -> pure $ case t of
+  parseJSON = withText "postgresTypeKind"
+    $ \t -> pure $ case t of
       "b" -> PGKindBase
       "c" -> PGKindComposite
       "d" -> PGKindDomain
@@ -712,7 +720,7 @@ instance NFData PGRawFunctionInfo
 
 $(deriveJSON hasuraJSON ''PGRawFunctionInfo)
 
-mkScalarTypeName :: MonadError QErr m => PGScalarType -> m G.Name
+mkScalarTypeName :: (MonadError QErr m) => PGScalarType -> m G.Name
 mkScalarTypeName PGInteger = pure GName._Int
 mkScalarTypeName PGBoolean = pure GName._Boolean
 mkScalarTypeName PGFloat = pure GName._Float
@@ -731,7 +739,8 @@ mkScalarTypeName (PGCompositeScalar compositeScalarType) =
     `onNothing` throw400
       ValidationFailed
       ( "cannot use SQL type "
-          <> compositeScalarType <<> " in the GraphQL schema because its name is not a "
+          <> compositeScalarType
+          <<> " in the GraphQL schema because its name is not a "
           <> "valid GraphQL identifier"
       )
 mkScalarTypeName scalarType =
@@ -739,7 +748,8 @@ mkScalarTypeName scalarType =
     `onNothing` throw400
       ValidationFailed
       ( "cannot use SQL type "
-          <> scalarType <<> " in the GraphQL schema because its name is not a "
+          <> scalarType
+          <<> " in the GraphQL schema because its name is not a "
           <> "valid GraphQL identifier"
       )
 

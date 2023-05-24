@@ -311,7 +311,7 @@ fixtureRepl Fixture {name, mkLocalTestEnvironment, setupTeardown} globalTestEnvi
 runSetupActions :: Logger -> [SetupAction] -> IO (IO ())
 runSetupActions logger acts = go acts []
   where
-    log :: forall a. LoggableMessage a => a -> IO ()
+    log :: forall a. (LoggableMessage a) => a -> IO ()
     log = runLogger logger
 
     go :: [SetupAction] -> [IO ()] -> IO (IO ())
@@ -460,14 +460,14 @@ withPermissions (toList -> permissions) spec = do
   where
     succeeding :: (ActionWith TestEnvironment -> IO ()) -> ActionWith TestEnvironment -> IO ()
     succeeding k test = k \testEnvironment -> do
-      for_ permissions $
-        postMetadata_ testEnvironment
-          . Permissions.createPermissionMetadata testEnvironment
+      for_ permissions
+        $ postMetadata_ testEnvironment
+        . Permissions.createPermissionMetadata testEnvironment
 
       test testEnvironment {permissions = NonAdmin permissions} `finally` do
-        for_ permissions $
-          postMetadata_ testEnvironment
-            . Permissions.dropPermissionMetadata testEnvironment
+        for_ permissions
+          $ postMetadata_ testEnvironment
+          . Permissions.dropPermissionMetadata testEnvironment
 
     failing :: (ActionWith TestEnvironment -> IO ()) -> ActionWith TestEnvironment -> IO ()
     failing k test = k \testEnvironment -> do
@@ -475,16 +475,16 @@ withPermissions (toList -> permissions) spec = do
       -- they lead to test failures.
       for_ (subsequences permissions) \subsequence ->
         unless (subsequence == permissions) do
-          for_ subsequence $
-            postMetadata_ testEnvironment
-              . Permissions.createPermissionMetadata testEnvironment
+          for_ subsequence
+            $ postMetadata_ testEnvironment
+            . Permissions.createPermissionMetadata testEnvironment
 
           let attempt :: IO () -> IO ()
               attempt x =
                 try x >>= \case
                   Right _ ->
-                    expectationFailure $
-                      mconcat
+                    expectationFailure
+                      $ mconcat
                         [ "Unexpectedly adequate permissions:\n",
                           ppShow subsequence
                         ]
@@ -492,6 +492,6 @@ withPermissions (toList -> permissions) spec = do
                     pure ()
 
           attempt (test testEnvironment {permissions = NonAdmin subsequence}) `finally` do
-            for_ subsequence $
-              postMetadata_ testEnvironment
-                . Permissions.dropPermissionMetadata testEnvironment
+            for_ subsequence
+              $ postMetadata_ testEnvironment
+              . Permissions.dropPermissionMetadata testEnvironment

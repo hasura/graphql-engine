@@ -801,8 +801,8 @@ mkSubqueryAggregatesFieldValue :: HashMap API.FieldName J.Value -> API.FieldValu
 mkSubqueryAggregatesFieldValue aggregates =
   API.mkRelationshipFieldValue $ API.QueryResponse Nothing (Just aggregates)
 
-mkAndExpr :: Foldable f => f API.Expression -> API.Expression
+mkAndExpr :: (Foldable f) => f API.Expression -> API.Expression
 mkAndExpr = API.And . Set.fromList . Foldable.toList
 
-mkOrExpr :: Foldable f => f API.Expression -> API.Expression
+mkOrExpr :: (Foldable f) => f API.Expression -> API.Expression
 mkOrExpr = API.Or . Set.fromList . Foldable.toList

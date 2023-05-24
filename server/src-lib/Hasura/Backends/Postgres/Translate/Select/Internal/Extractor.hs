@@ -81,7 +81,7 @@ aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
 
 mkAggregateOrderByExtractorAndFields ::
   forall pgKind.
-  Backend ('Postgres pgKind) =>
+  (Backend ('Postgres pgKind)) =>
   AnnotatedAggregateOrderBy ('Postgres pgKind) ->
   (S.Extractor, AggregateFields ('Postgres pgKind) S.SQLExp)
 mkAggregateOrderByExtractorAndFields annAggOrderBy =
@@ -95,8 +95,8 @@ mkAggregateOrderByExtractorAndFields annAggOrderBy =
           pgType = ciType pgColumnInfo
        in ( S.Extractor (S.SEFnApp opText [S.SEIdentifier $ toIdentifier pgColumn] Nothing) alias,
             [ ( FieldName opText,
-                AFOp $
-                  AggregateOp
+                AFOp
+                  $ AggregateOp
                     opText
                     [ ( fromCol @('Postgres pgKind) pgColumn,
                         SFCol pgColumn pgType
@@ -132,20 +132,20 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
           rowIdentifier = S.mkQIdenExp subSelIdentifier alias
           extr = S.Extractor (mkSimpleJsonAgg rowIdentifier newOrderBy) Nothing
           fromExp =
-            S.FromExp $
-              pure $
-                S.mkSelFromItem subSelect $
-                  S.toTableAlias subSelAls
-       in S.SESelect $
-            S.mkSelect
+            S.FromExp
+              $ pure
+              $ S.mkSelFromItem subSelect
+              $ S.toTableAlias subSelAls
+       in S.SESelect
+            $ S.mkSelect
               { S.selExtr = pure extr,
                 S.selFrom = Just fromExp
               }
 
     mkSubSelect limit =
       let jsonRowExtr =
-            flip S.Extractor (Just alias) $
-              S.mkQIdenExp unnestTableIdentifier alias
+            flip S.Extractor (Just alias)
+              $ S.mkQIdenExp unnestTableIdentifier alias
           obExtrs = flip map newOBAliases $ \a ->
             S.Extractor (S.mkQIdenExp unnestTableIdentifier a) $ Just $ S.toColumnAlias a
        in S.mkSelect
@@ -156,16 +156,18 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
             }
 
     unnestFromItem =
-      let arrayAggItems = flip map (rowIdenExp : obCols) $
-            \s -> S.SEFnApp "array_agg" [s] Nothing
-       in S.FIUnnest arrayAggItems (S.toTableAlias unnestTable) $
-            alias : map S.toColumnAlias newOBAliases
+      let arrayAggItems = flip map (rowIdenExp : obCols)
+            $ \s -> S.SEFnApp "array_agg" [s] Nothing
+       in S.FIUnnest arrayAggItems (S.toTableAlias unnestTable)
+            $ alias
+            : map S.toColumnAlias newOBAliases
 
     newOrderBy = S.OrderByExp <$> NE.nonEmpty newOBItems
 
     (newOBItems, obCols, newOBAliases) = maybe ([], [], []) transformOrderBy ordBy
-    transformOrderBy (S.OrderByExp l) = unzip3 $
-      flip map (zip (toList l) [1 ..]) $ \(obItem, i :: Int) ->
+    transformOrderBy (S.OrderByExp l) = unzip3
+      $ flip map (zip (toList l) [1 ..])
+      $ \(obItem, i :: Int) ->
         let iden = Identifier $ "ob_col_" <> tshow i
          in ( obItem {S.oExpression = S.SEIdentifier iden},
               S.oExpression obItem,

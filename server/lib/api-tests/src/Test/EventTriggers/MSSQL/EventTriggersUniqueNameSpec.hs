@@ -87,8 +87,8 @@ articlesTable tableName =
 tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests =
   describe "only unique trigger names are allowed" do
-    it "check: inserting a new row invokes a event trigger" $
-      \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+    it "check: inserting a new row invokes a event trigger"
+      $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
             insertQuery =
@@ -127,8 +127,8 @@ tests =
 
         eventPayload `shouldBeYaml` expectedEventPayload
 
-    it "metadata_api: does not allow creating an event trigger with a name that already exists" $
-      \(testEnvironment, (webhookServer, _)) -> do
+    it "metadata_api: does not allow creating an event trigger with a name that already exists"
+      $ \(testEnvironment, (webhookServer, _)) -> do
         -- metadata <- GraphqlEngine.exportMetadata testEnvironment
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
@@ -160,8 +160,8 @@ tests =
           (GraphqlEngine.postWithHeadersStatus 400 testEnvironment "/v1/metadata/" mempty createEventTriggerWithDuplicateName)
           createEventTriggerWithDuplicateNameExpectedResponse
 
-    it "replace_metadata: does not allow creating an event trigger with a name that already exists" $
-      \(testEnvironment, (webhookServer, _)) -> do
+    it "replace_metadata: does not allow creating an event trigger with a name that already exists"
+      $ \(testEnvironment, (webhookServer, _)) -> do
         let replaceMetadata = getReplaceMetadata testEnvironment webhookServer
 
             replaceMetadataWithDuplicateNameExpectedResponse =
@@ -186,8 +186,8 @@ mssqlSetupWithEventTriggers testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: mssql_create_event_trigger
@@ -251,8 +251,8 @@ getReplaceMetadata testEnvironment webhookServer =
 
 mssqlTeardown :: TestEnvironment -> IO ()
 mssqlTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: bulk
       args:
       - type: mssql_delete_event_trigger

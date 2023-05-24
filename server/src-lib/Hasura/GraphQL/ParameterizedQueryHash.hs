@@ -156,7 +156,8 @@ normalizeSelectionSet = (normalizeSelection =<<)
       J.Number _ -> G.VNull
       J.Array l -> G.VList $ jsonToNormalizedGQLVal <$> toList l
       J.Object vals ->
-        G.VObject $
+        G.VObject
+          $
           -- FIXME(#3479): THIS WILL CREATE INVALID GRAPHQL OBJECTS
           HashMap.fromList
             [ (name, jsonToNormalizedGQLVal val)

@@ -51,7 +51,7 @@ newtype NEHashMap k v = NEHashMap {unNEHashMap :: HashMap k v}
 -------------------------------------------------------------------------------
 
 -- | Construct a non-empty map with a single element.
-singleton :: Hashable k => k -> v -> NEHashMap k v
+singleton :: (Hashable k) => k -> v -> NEHashMap k v
 singleton k v = NEHashMap $ HashMap.singleton k v
 
 -- | Construct a non-empty map with the supplied mappings.
@@ -66,12 +66,12 @@ fromHashMap m
 -- * if the provided list contains duplicate mappings, the later mappings take
 --   precedence;
 -- * if the provided list is empty, returns 'Nothing'.
-fromList :: Hashable k => [(k, v)] -> Maybe (NEHashMap k v)
+fromList :: (Hashable k) => [(k, v)] -> Maybe (NEHashMap k v)
 fromList [] = Nothing
 fromList v = Just $ NEHashMap $ HashMap.fromList v
 
 -- | A variant of 'fromList' that uses 'NonEmpty' inputs.
-fromNonEmpty :: Hashable k => NonEmpty (k, v) -> NEHashMap k v
+fromNonEmpty :: (Hashable k) => NonEmpty (k, v) -> NEHashMap k v
 fromNonEmpty (x NE.:| xs) = NEHashMap (HashMap.fromList (x : xs))
 
 -- | Convert a non-empty map to a 'HashMap'.
@@ -91,14 +91,14 @@ toList = HashMap.toList . unNEHashMap
 
 -- | Return the value to which the specified key is mapped, or 'Nothing' if
 -- this map contains no mapping for the key.
-lookup :: Hashable k => k -> NEHashMap k v -> Maybe v
+lookup :: (Hashable k) => k -> NEHashMap k v -> Maybe v
 lookup k (NEHashMap m) = HashMap.lookup k m
 
 -- | Return the value to which the specified key is mapped, or 'Nothing' if
 -- this map contains no mapping for the key.
 --
 -- This is a flipped version of 'lookup'.
-(!?) :: Hashable k => NEHashMap k v -> k -> Maybe v
+(!?) :: (Hashable k) => NEHashMap k v -> k -> Maybe v
 (!?) = flip lookup
 
 -- | Return a list of this map's keys.
@@ -115,14 +115,14 @@ elems = HashMap.elems . unNEHashMap
 --
 -- If a key occurs in both maps, the left map @m1@ (first argument) will be
 -- preferred.
-union :: Hashable k => NEHashMap k v -> NEHashMap k v -> NEHashMap k v
+union :: (Hashable k) => NEHashMap k v -> NEHashMap k v -> NEHashMap k v
 union (NEHashMap m1) (NEHashMap m2) = NEHashMap $ HashMap.union m1 m2
 
 -- | The union of two maps using a given value-wise union function.
 --
 -- If a key occurs in both maps, the provided function (first argument) will be
 -- used to compute the result.
-unionWith :: Hashable k => (v -> v -> v) -> NEHashMap k v -> NEHashMap k v -> NEHashMap k v
+unionWith :: (Hashable k) => (v -> v -> v) -> NEHashMap k v -> NEHashMap k v -> NEHashMap k v
 unionWith fun (NEHashMap m1) (NEHashMap m2) = NEHashMap $ HashMap.unionWith fun m1 m2
 
 -------------------------------------------------------------------------------
@@ -132,7 +132,7 @@ unionWith fun (NEHashMap m1) (NEHashMap m2) = NEHashMap $ HashMap.unionWith fun 
 -- The size of the result may be smaller if f maps two or more distinct keys to
 -- the same new key. In this case there is no guarantee which of the associated
 -- values is chosen for the conflicting key.
-mapKeys :: Hashable k2 => (k1 -> k2) -> NEHashMap k1 v -> NEHashMap k2 v
+mapKeys :: (Hashable k2) => (k1 -> k2) -> NEHashMap k1 v -> NEHashMap k2 v
 mapKeys fun (NEHashMap m) = NEHashMap $ HashMap.mapKeys fun m
 
 -------------------------------------------------------------------------------

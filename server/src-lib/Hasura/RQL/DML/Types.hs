@@ -55,9 +55,12 @@ instance FromJSON OrderByExp where
           `onLeft` const (fail "string format for 'order_by' entry : {+/-}column Eg : +posted")
       parseObject o =
         OrderByItemG
-          <$> o .:? "type"
-          <*> o .: "column"
-          <*> o .:? "nulls"
+          <$> o
+          .:? "type"
+          <*> o
+          .: "column"
+          <*> o
+          .:? "nulls"
       orderByParser =
         OrderByItemG
           <$> orderTypeParser
@@ -78,8 +81,11 @@ data DMLQuery a
 instance (FromJSON a) => FromJSON (DMLQuery a) where
   parseJSON = withObject "query" \o ->
     DMLQuery
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
+      <$> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "table"
       <*> parseJSON (Object o)
 
 getSourceDMLQuery :: forall a. DMLQuery a -> SourceName
@@ -123,12 +129,14 @@ instance FromJSON SelCol where
       Right x -> return $ SCStar x
   parseJSON v@(Object o) =
     SCExtRel
-      <$> o .: "name"
-      <*> o .:? "alias"
+      <$> o
+      .: "name"
+      <*> o
+      .:? "alias"
       <*> parseJSON v
   parseJSON _ =
-    fail $
-      mconcat
+    fail
+      $ mconcat
         [ "A column should either be a string or an ",
           "object (relationship)"
         ]
@@ -187,11 +195,17 @@ data InsertQuery = InsertQuery
 instance FromJSON InsertQuery where
   parseJSON = withObject "insert query" $ \o ->
     InsertQuery
-      <$> o .: "table"
-      <*> o .:? "source" .!= defaultSource
-      <*> o .: "objects"
-      <*> o .:? "on_conflict"
-      <*> o .:? "returning"
+      <$> o
+      .: "table"
+      <*> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "objects"
+      <*> o
+      .:? "on_conflict"
+      <*> o
+      .:? "returning"
 
 type UpdVals b = ColumnValues b Value
 
@@ -210,14 +224,21 @@ data UpdateQuery = UpdateQuery
 instance FromJSON UpdateQuery where
   parseJSON = withObject "update query" \o ->
     UpdateQuery
-      <$> o .: "table"
-      <*> o .:? "source" .!= defaultSource
-      <*> o .: "where"
+      <$> o
+      .: "table"
+      <*> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "where"
       <*> ((o .: "$set" <|> o .:? "values") .!= HashMap.empty)
       <*> (o .:? "$inc" .!= HashMap.empty)
       <*> (o .:? "$mul" .!= HashMap.empty)
-      <*> o .:? "$default" .!= []
-      <*> o .:? "returning"
+      <*> o
+      .:? "$default"
+      .!= []
+      <*> o
+      .:? "returning"
 
 data DeleteQuery = DeleteQuery
   { doTable :: QualifiedTable,
@@ -230,10 +251,15 @@ data DeleteQuery = DeleteQuery
 instance FromJSON DeleteQuery where
   parseJSON = withObject "delete query" $ \o ->
     DeleteQuery
-      <$> o .: "table"
-      <*> o .:? "source" .!= defaultSource
-      <*> o .: "where"
-      <*> o .:? "returning"
+      <$> o
+      .: "table"
+      <*> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "where"
+      <*> o
+      .:? "returning"
 
 data CountQuery = CountQuery
   { cqTable :: QualifiedTable,
@@ -246,10 +272,15 @@ data CountQuery = CountQuery
 instance FromJSON CountQuery where
   parseJSON = withObject "count query" $ \o ->
     CountQuery
-      <$> o .: "table"
-      <*> o .:? "source" .!= defaultSource
-      <*> o .:? "distinct"
-      <*> o .:? "where"
+      <$> o
+      .: "table"
+      <*> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .:? "distinct"
+      <*> o
+      .:? "where"
 
 data QueryT
   = QTInsert InsertQuery

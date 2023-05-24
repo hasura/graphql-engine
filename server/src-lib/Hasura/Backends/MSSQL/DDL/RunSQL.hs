@@ -81,8 +81,8 @@ runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
       then do
         (results, metadataUpdater) <- runTx _siConfiguration $ withMetadataCheck _siTables
         -- Build schema cache with updated metadata
-        withNewInconsistentObjsCheck $
-          buildSchemaCacheWithInvalidations mempty {ciSources = HS.singleton _mrsSource} metadataUpdater
+        withNewInconsistentObjsCheck
+          $ buildSchemaCacheWithInvalidations mempty {ciSources = HS.singleton _mrsSource} metadataUpdater
         pure results
       else runTx _siConfiguration sqlQueryTx
   pure $ encJFromJValue $ toResult results

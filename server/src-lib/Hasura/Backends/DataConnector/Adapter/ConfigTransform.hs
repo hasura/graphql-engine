@@ -57,7 +57,7 @@ validateConnSourceConfig dcName sourceName configSchemaResponse connSourceConfig
   validateConfiguration sourceName dcName configSchemaResponse transformedConfig
 
 validateConfiguration ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   Common.SourceName ->
   DC.DataConnectorName ->
   API.ConfigSchemaResponse ->
@@ -65,11 +65,11 @@ validateConfiguration ::
   m ()
 validateConfiguration sourceName dataConnectorName configSchema config = do
   let errors = API.validateConfigAgainstConfigSchema configSchema config
-  unless (null errors) $
-    let errorsText = Text.unlines (("- " <>) . Text.pack <$> errors)
-     in throw400
-          DataConnectorError
-          ("Configuration for source " <> Text.dquote sourceName <> " is not valid based on the configuration schema declared by the " <> Text.dquote dataConnectorName <> " data connector agent. Errors:\n" <> errorsText)
+  unless (null errors)
+    $ let errorsText = Text.unlines (("- " <>) . Text.pack <$> errors)
+       in throw400
+            DataConnectorError
+            ("Configuration for source " <> Text.dquote sourceName <> " is not valid based on the configuration schema declared by the " <> Text.dquote dataConnectorName <> " data connector agent. Errors:\n" <> errorsText)
 
 additionalFunctions :: Env.Environment -> HashMap Text (J.Value -> Either Kriti.CustomFunctionError J.Value)
 additionalFunctions env = KFunc.environmentFunctions env

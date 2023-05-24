@@ -103,10 +103,12 @@ instance Hashable ListedQuery
 
 instance HasCodec ListedQuery where
   codec =
-    AC.object "ListedQuery" $
-      ListedQuery
-        <$> requiredField' "name" AC..= _lqName
-        <*> requiredField' "query" AC..= _lqQuery
+    AC.object "ListedQuery"
+      $ ListedQuery
+      <$> requiredField' "name"
+      AC..= _lqName
+        <*> requiredField' "query"
+      AC..= _lqQuery
 
 instance FromJSON ListedQuery where
   parseJSON = genericParseJSON hasuraJSON
@@ -121,9 +123,10 @@ newtype CollectionDef = CollectionDef
 
 instance HasCodec CollectionDef where
   codec =
-    AC.object "CollectionDef" $
-      CollectionDef
-        <$> requiredField' "queries" AC..= _cdQueries
+    AC.object "CollectionDef"
+      $ CollectionDef
+      <$> requiredField' "queries"
+      AC..= _cdQueries
 
 instance FromJSON CollectionDef where
   parseJSON = genericParseJSON hasuraJSON
@@ -143,11 +146,14 @@ data CreateCollection = CreateCollection
 
 instance HasCodec CreateCollection where
   codec =
-    AC.object "CreateCollection" $
-      CreateCollection
-        <$> requiredField' "name" AC..= _ccName
-        <*> requiredField' "definition" AC..= _ccDefinition
-        <*> optionalField' "comment" AC..= _ccComment
+    AC.object "CreateCollection"
+      $ CreateCollection
+      <$> requiredField' "name"
+      AC..= _ccName
+        <*> requiredField' "definition"
+      AC..= _ccDefinition
+        <*> optionalField' "comment"
+      AC..= _ccComment
 
 instance FromJSON CreateCollection where
   parseJSON = genericParseJSON hasuraJSON

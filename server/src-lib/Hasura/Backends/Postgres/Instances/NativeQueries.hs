@@ -100,10 +100,12 @@ validateNativeQuery pgTypeOidMapping env connConf logicalModel model = do
           throwError
             (err400 ValidationFailed "Failed to validate query")
               { qeInternal =
-                  Just $
-                    ExtraInternal $
-                      toJSON @Text $
-                        "Column named '" <> toTxt name <> "' is not returned from the query."
+                  Just
+                    $ ExtraInternal
+                    $ toJSON @Text
+                    $ "Column named '"
+                    <> toTxt name
+                    <> "' is not returned from the query."
               }
         Just actualOid
           | Just expectedOid <- InsOrdHashMap.lookup expectedType pgTypeOidMapping,
@@ -111,20 +113,20 @@ validateNativeQuery pgTypeOidMapping env connConf logicalModel model = do
               throwError
                 (err400 ValidationFailed "Failed to validate query")
                   { qeInternal =
-                      Just $
-                        ExtraInternal $
-                          toJSON @Text $
-                            Text.unwords $
-                              [ "Return column '" <> name <> "' has a type mismatch.",
-                                "The expected type is '" <> toTxt expectedType <> "',"
-                              ]
-                                <> case Map.lookup actualOid (invertPgTypeOidMap pgTypeOidMapping) of
-                                  Just t ->
-                                    ["but the actual type is '" <> toTxt t <> "'."]
-                                  Nothing ->
-                                    [ "and has the " <> tshow expectedOid <> ",",
-                                      "but the actual type has the " <> tshow actualOid <> "."
-                                    ]
+                      Just
+                        $ ExtraInternal
+                        $ toJSON @Text
+                        $ Text.unwords
+                        $ [ "Return column '" <> name <> "' has a type mismatch.",
+                            "The expected type is '" <> toTxt expectedType <> "',"
+                          ]
+                        <> case Map.lookup actualOid (invertPgTypeOidMap pgTypeOidMapping) of
+                          Just t ->
+                            ["but the actual type is '" <> toTxt t <> "'."]
+                          Nothing ->
+                            [ "and has the " <> tshow expectedOid <> ",",
+                              "but the actual type has the " <> tshow actualOid <> "."
+                            ]
                   }
         Just {} -> pure ()
 
@@ -182,7 +184,7 @@ renameIQ = runRenaming . fmap InterpolatedQuery . mapM renameII . getInterpolate
     -- When subsequently rendering the prepared statement definition however, it
     -- is more convenient to inspect the environment by index.
     -- Therefore we invert the map as part of renaming.
-    inverseMap :: Ord b => Map a b -> Map b a
+    inverseMap :: (Ord b) => Map a b -> Map b a
     inverseMap = Map.fromList . map swap . Map.toList
 
 -- | Pretty print an interpolated query with numbered parameters.
@@ -200,7 +202,7 @@ renderIQ (InterpolatedQuery items) = foldMap printItem items
 -- Used by 'validateNativeQuery'. Exported for testing.
 nativeQueryToPreparedStatement ::
   forall m pgKind.
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   LogicalModelMetadata ('Postgres pgKind) ->
   NativeQueryMetadata ('Postgres pgKind) ->
   m (BS.ByteString, Text)
@@ -241,9 +243,10 @@ nativeQueryToPreparedStatement logicalModel model = do
 
       preparedQuery = "PREPARE " <> prepname <> argumentSignature <> " AS " <> wrapInCTE logimoCode
 
-  when (Set.empty /= undeclaredArguments) $
-    throwError $
-      err400 ValidationFailed $
-        "Undeclared arguments: " <> commaSeparated (map tshow $ Set.toList undeclaredArguments)
+  when (Set.empty /= undeclaredArguments)
+    $ throwError
+    $ err400 ValidationFailed
+    $ "Undeclared arguments: "
+    <> commaSeparated (map tshow $ Set.toList undeclaredArguments)
 
   pure (Text.encodeUtf8 prepname, preparedQuery)

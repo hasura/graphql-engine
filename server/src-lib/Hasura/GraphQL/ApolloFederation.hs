@@ -62,8 +62,8 @@ anyParser =
       J.Object obj -> case KMap.lookup typenameKey obj of
         Just (J.String txt) -> case G.mkName txt of
           Just tName ->
-            pure $
-              ApolloFederationAnyType
+            pure
+              $ ApolloFederationAnyType
                 { afTypename = tName,
                   afPKValues = KMap.delete typenameKey obj
                 }
@@ -110,30 +110,34 @@ modifyApolloFedParserFunc
         cvValue <- case KMap.lookup (K.fromText colName) afPKValues of
           Nothing -> P.parseError . toErrorMessage $ "cannot find " <> colName <> " in _Any type"
           Just va -> liftQErr $ parseScalarValueColumnType (ciType columnInfo) va
-        pure $
-          IR.BoolField . IR.AVColumn columnInfo . pure . IR.AEQ True . IR.mkParameter $
-            ValueNoOrigin $
-              ColumnValue {..}
+        pure
+          $ IR.BoolField
+          . IR.AVColumn columnInfo
+          . pure
+          . IR.AEQ True
+          . IR.mkParameter
+          $ ValueNoOrigin
+          $ ColumnValue {..}
     let whereExpr = Just $ IR.BoolAnd $ toList allConstraints
         sourceName = _siName
         sourceConfig = _siConfiguration
         tableName = _tciName _tiCoreInfo
         queryDBRoot =
-          IR.QDBR $
-            IR.QDBSingleRow $
-              IR.AnnSelectG
-                { IR._asnFields = annField,
-                  IR._asnFrom = IR.FromTable tableName,
-                  IR._asnPerm = selectPermissions,
-                  IR._asnArgs = IR.noSelectArgs {IR._saWhere = whereExpr},
-                  IR._asnStrfyNum = stringifyNumbers,
-                  IR._asnNamingConvention = tCase
-                }
-    pure $
-      IR.RFDB sourceName $
-        AB.mkAnyBackend $
-          IR.SourceConfigWith sourceConfig Nothing $
-            queryDBRoot
+          IR.QDBR
+            $ IR.QDBSingleRow
+            $ IR.AnnSelectG
+              { IR._asnFields = annField,
+                IR._asnFrom = IR.FromTable tableName,
+                IR._asnPerm = selectPermissions,
+                IR._asnArgs = IR.noSelectArgs {IR._saWhere = whereExpr},
+                IR._asnStrfyNum = stringifyNumbers,
+                IR._asnNamingConvention = tCase
+              }
+    pure
+      $ IR.RFDB sourceName
+      $ AB.mkAnyBackend
+      $ IR.SourceConfigWith sourceConfig Nothing
+      $ queryDBRoot
     where
       liftQErr = either (P.parseError . toErrorMessage . qeError) pure . runExcept
 
@@ -176,11 +180,11 @@ apolloRootFields apolloFederationStatus apolloFedTableParsers =
       -- `serviceField` is essential to connect hasura to gateway, `entityField`
       -- is essential only if we have types that has @key directive
       if
-          | isApolloFederationEnabled apolloFederationStatus && not (null apolloFedTableParsers) ->
-              [serviceField, entityField]
-          | isApolloFederationEnabled apolloFederationStatus ->
-              [serviceField]
-          | otherwise -> []
+        | isApolloFederationEnabled apolloFederationStatus && not (null apolloFedTableParsers) ->
+            [serviceField, entityField]
+        | isApolloFederationEnabled apolloFederationStatus ->
+            [serviceField]
+        | otherwise -> []
 
 -- helpers
 
@@ -228,16 +232,17 @@ generateSDLFromIntrospection genSdlType (G.SchemaIntrospection sIntro) = sdl
 
     getSchemaDocument :: G.SchemaDocument
     getSchemaDocument =
-      G.SchemaDocument $
-        G.TypeSystemDefinitionSchema (G.SchemaDefinition Nothing rootOpTypeDefns) : typeDefns
+      G.SchemaDocument
+        $ G.TypeSystemDefinitionSchema (G.SchemaDefinition Nothing rootOpTypeDefns)
+        : typeDefns
 
 -- | Filter out schema components from sdl which are not required by apollo federation
 filterTypeDefinition :: G.TypeDefinition possibleTypes G.InputValueDefinition -> G.TypeDefinition possibleTypes G.InputValueDefinition
 filterTypeDefinition = \case
   G.TypeDefinitionObject (G.ObjectTypeDefinition a b c d e) ->
     -- We are skipping the schema types here
-    G.TypeDefinitionObject $
-      G.ObjectTypeDefinition a b c d (filter (not . T.isPrefixOf "__" . G.unName . G._fldName) e)
+    G.TypeDefinitionObject
+      $ G.ObjectTypeDefinition a b c d (filter (not . T.isPrefixOf "__" . G.unName . G._fldName) e)
   typeDef -> typeDef
 
 generateSDLWithAllTypes :: G.SchemaIntrospection -> Text

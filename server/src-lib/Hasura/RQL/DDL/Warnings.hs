@@ -66,8 +66,9 @@ data AllowWarnings
 
 instance FromJSON AllowWarnings where
   parseJSON =
-    J.withBool "AllowWarnings" $
-      pure . bool DisallowWarnings AllowWarnings
+    J.withBool "AllowWarnings"
+      $ pure
+      . bool DisallowWarnings AllowWarnings
 
 instance ToJSON AllowWarnings where
   toJSON = J.toJSON . toBool
@@ -120,10 +121,11 @@ runMetadataWarnings = flip runStateT mempty
 
 mkSuccessResponseWithWarnings :: MetadataWarnings -> EncJSON
 mkSuccessResponseWithWarnings warnings =
-  encJFromJValue . J.object $
-    [ "message" .= ("success" :: Text)
-    ]
-      <> ["warnings" .= warnings | not (null warnings)]
+  encJFromJValue
+    . J.object
+    $ [ "message" .= ("success" :: Text)
+      ]
+    <> ["warnings" .= warnings | not (null warnings)]
 
 successMsgWithWarnings :: (Monad m) => (StateT MetadataWarnings m ()) -> m EncJSON
 successMsgWithWarnings action = do

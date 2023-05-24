@@ -75,11 +75,11 @@ trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryOb
                       Nothing -> []
 
                     value =
-                      J.object $
-                        [ ("type" .= (BackendType.backendScalarType backendTypeConfig) nativeQueryColumnType),
-                          ("nullable" .= nativeQueryColumnNullable)
-                        ]
-                          <> descriptionPair
+                      J.object
+                        $ [ ("type" .= (BackendType.backendScalarType backendTypeConfig) nativeQueryColumnType),
+                            ("nullable" .= nativeQueryColumnNullable)
+                          ]
+                        <> descriptionPair
                  in (key, value)
             )
 
@@ -101,7 +101,7 @@ trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryOb
           returns: *nativeQueryLogicalModel
       |]
 
-trackNativeQuery :: HasCallStack => String -> NativeQuery -> TestEnvironment -> IO ()
+trackNativeQuery :: (HasCallStack) => String -> NativeQuery -> TestEnvironment -> IO ()
 trackNativeQuery sourceName logMod testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
 
@@ -120,7 +120,7 @@ untrackNativeQueryCommand source backendTypeMetadata NativeQuery {nativeQueryNam
         root_field_name: *nativeQueryName
     |]
 
-untrackNativeQuery :: HasCallStack => String -> NativeQuery -> TestEnvironment -> IO ()
+untrackNativeQuery :: (HasCallStack) => String -> NativeQuery -> TestEnvironment -> IO ()
 untrackNativeQuery source logMod testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
 

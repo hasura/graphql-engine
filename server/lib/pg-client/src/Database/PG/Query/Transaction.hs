@@ -96,7 +96,7 @@ newtype TxET e m a = TxET
       MonadFix
     )
 
-transformerJoinTxET :: Monad m => TxET e (TxET e m) a -> TxET e m a
+transformerJoinTxET :: (Monad m) => TxET e (TxET e m) a -> TxET e m a
 transformerJoinTxET x =
   TxET $ ReaderT $ \pgConn -> do
     result <- runReaderT (txHandler $ runExceptT (runReaderT (txHandler x) pgConn)) pgConn
@@ -112,9 +112,9 @@ instance MonadTrans (TxET e) where
 instance MFunctor (TxET e) where
   hoist f = TxET . hoist (hoist f) . txHandler
 
-deriving via (ReaderT PGConn (ExceptT e m)) instance MonadBase IO m => MonadBase IO (TxET e m)
+deriving via (ReaderT PGConn (ExceptT e m)) instance (MonadBase IO m) => MonadBase IO (TxET e m)
 
-deriving via (ReaderT PGConn (ExceptT e m)) instance MonadBaseControl IO m => MonadBaseControl IO (TxET e m)
+deriving via (ReaderT PGConn (ExceptT e m)) instance (MonadBaseControl IO m) => MonadBaseControl IO (TxET e m)
 
 type TxE e a = TxET e IO a
 
@@ -236,7 +236,7 @@ describePreparedStatement ef name = TxET $
         describePrepared pgConn name
 
 serverVersion ::
-  MonadIO m => TxET e m Int
+  (MonadIO m) => TxET e m Int
 serverVersion = do
   conn <- asks pgPQConn
   liftIO $ PQ.serverVersion conn

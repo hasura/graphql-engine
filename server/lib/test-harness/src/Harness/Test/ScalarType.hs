@@ -159,8 +159,8 @@ backendScalarValue bsv fn = case fn bsv of
 
 defaultSerialType :: ScalarType
 defaultSerialType =
-  TCustomType $
-    defaultBackendScalarType
+  TCustomType
+    $ defaultBackendScalarType
       { bstMssql = Just "INT IDENTITY(1,1)",
         bstCitus = Just "SERIAL",
         -- cockroachdb's serial behaves differently than postgresql's serial:

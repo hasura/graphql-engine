@@ -81,10 +81,10 @@ runPGQuery ::
 runPGQuery reqId query fieldName _userInfo logger _ sourceConfig tx genSql resolvedConnectionTemplate = do
   -- log the generated SQL and the graphql query
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId (resolvedConnectionTemplate <$ resolvedConnectionTemplate)
-  withElapsedTime $
-    newSpan ("Postgres Query for root field " <>> fieldName) $
-      runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate) $
-        fmap snd (runOnBaseMonad tx)
+  withElapsedTime
+    $ newSpan ("Postgres Query for root field " <>> fieldName)
+    $ runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate)
+    $ fmap snd (runOnBaseMonad tx)
 
 runPGMutation ::
   ( MonadIO m,
@@ -107,10 +107,10 @@ runPGMutation ::
 runPGMutation reqId query fieldName userInfo logger _ sourceConfig tx _genSql resolvedConnectionTemplate = do
   -- log the graphql query
   logQueryLog logger $ mkQueryLog query fieldName Nothing reqId (resolvedConnectionTemplate <$ resolvedConnectionTemplate)
-  withElapsedTime $
-    newSpan ("Postgres Mutation for root field " <>> fieldName) $
-      runTxWithCtxAndUserInfo userInfo (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate) $
-        runOnBaseMonad tx
+  withElapsedTime
+    $ newSpan ("Postgres Mutation for root field " <>> fieldName)
+    $ runTxWithCtxAndUserInfo userInfo (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate)
+    $ runOnBaseMonad tx
 
 runPGSubscription ::
   (MonadIO m, MonadBaseControl IO m) =>
@@ -120,10 +120,10 @@ runPGSubscription ::
   ResolvedConnectionTemplate ('Postgres pgKind) ->
   m (DiffTime, Either QErr [(CohortId, B.ByteString)])
 runPGSubscription sourceConfig query variables resolvedConnectionTemplate =
-  withElapsedTime $
-    runExceptT $
-      runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate) $
-        PGL.executeMultiplexedQuery query variables
+  withElapsedTime
+    $ runExceptT
+    $ runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate)
+    $ PGL.executeMultiplexedQuery query variables
 
 runPGStreamingSubscription ::
   (MonadIO m, MonadBaseControl IO m) =>
@@ -133,8 +133,9 @@ runPGStreamingSubscription ::
   ResolvedConnectionTemplate ('Postgres pgKind) ->
   m (DiffTime, Either QErr [(CohortId, B.ByteString, CursorVariableValues)])
 runPGStreamingSubscription sourceConfig query variables resolvedConnectionTemplate =
-  withElapsedTime $
-    runExceptT $ do
+  withElapsedTime
+    $ runExceptT
+    $ do
       res <- runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate) $ PGL.executeStreamingMultiplexedQuery query variables
       pure $ res <&> (\(cohortId, cohortRes, cursorVariableVals) -> (cohortId, cohortRes, PG.getViaJSON cursorVariableVals))
 
@@ -149,8 +150,8 @@ runPGQueryExplain ::
   DBStepInfo ('Postgres pgKind) ->
   m EncJSON
 runPGQueryExplain _ (DBStepInfo _ sourceConfig _ action resolvedConnectionTemplate) =
-  runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate) $
-    fmap arResult (runOnBaseMonad action)
+  runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate)
+    $ fmap arResult (runOnBaseMonad action)
 
 mkQueryLog ::
   GQLReqUnparsed ->
@@ -191,10 +192,10 @@ runPGMutationTransaction ::
   m (DiffTime, RootFieldMap EncJSON)
 runPGMutationTransaction reqId query userInfo logger sourceConfig resolvedConnectionTemplate mutations = do
   logQueryLog logger $ mkQueryLog query (mkUnNamespacedRootFieldAlias Name._transaction) Nothing reqId (resolvedConnectionTemplate <$ resolvedConnectionTemplate)
-  withElapsedTime $
-    runTxWithCtxAndUserInfo userInfo (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate) $
-      flip InsOrdHashMap.traverseWithKey mutations \fieldName dbsi ->
-        newSpan ("Postgres Mutation for root field " <>> fieldName) $
-          fmap arResult $
-            runOnBaseMonad $
-              dbsiAction dbsi
+  withElapsedTime
+    $ runTxWithCtxAndUserInfo userInfo (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate)
+    $ flip InsOrdHashMap.traverseWithKey mutations \fieldName dbsi ->
+      newSpan ("Postgres Mutation for root field " <>> fieldName)
+        $ fmap arResult
+        $ runOnBaseMonad
+        $ dbsiAction dbsi

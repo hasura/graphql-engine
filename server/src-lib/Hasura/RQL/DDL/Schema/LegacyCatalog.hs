@@ -81,26 +81,28 @@ saveMetadataToHdbTables
         saveTableToCatalog _tmTable _tmIsEnum _tmConfiguration
 
         -- Relationships
-        withPathK "object_relationships" $
-          indexedForM_ _tmObjectRelationships $ \objRel ->
+        withPathK "object_relationships"
+          $ indexedForM_ _tmObjectRelationships
+          $ \objRel ->
             insertRelationshipToCatalog _tmTable ObjRel objRel
-        withPathK "array_relationships" $
-          indexedForM_ _tmArrayRelationships $ \arrRel ->
+        withPathK "array_relationships"
+          $ indexedForM_ _tmArrayRelationships
+          $ \arrRel ->
             insertRelationshipToCatalog _tmTable ArrRel arrRel
 
         -- Computed Fields
-        withPathK "computed_fields" $
-          indexedForM_ _tmComputedFields $
-            \(ComputedFieldMetadata name definition comment) ->
-              addComputedFieldToCatalog $
-                AddComputedField defaultSource _tmTable name definition comment
+        withPathK "computed_fields"
+          $ indexedForM_ _tmComputedFields
+          $ \(ComputedFieldMetadata name definition comment) ->
+            addComputedFieldToCatalog
+              $ AddComputedField defaultSource _tmTable name definition comment
 
         -- Remote Relationships
-        withPathK "remote_relationships" $
-          indexedForM_ _tmRemoteRelationships $
-            \RemoteRelationship {..} -> do
-              addRemoteRelationshipToCatalog $
-                CreateFromSourceRelationship defaultSource _tmTable _rrName _rrDefinition
+        withPathK "remote_relationships"
+          $ indexedForM_ _tmRemoteRelationships
+          $ \RemoteRelationship {..} -> do
+            addRemoteRelationshipToCatalog
+              $ CreateFromSourceRelationship defaultSource _tmTable _rrName _rrDefinition
 
         -- Permissions
         withPathK "insert_permissions" $ processPerms _tmTable _tmInsertPermissions
@@ -109,51 +111,54 @@ saveMetadataToHdbTables
         withPathK "delete_permissions" $ processPerms _tmTable _tmDeletePermissions
 
         -- Event triggers
-        withPathK "event_triggers" $
-          indexedForM_ _tmEventTriggers $
-            \etc -> addEventTriggerToCatalog _tmTable etc
+        withPathK "event_triggers"
+          $ indexedForM_ _tmEventTriggers
+          $ \etc -> addEventTriggerToCatalog _tmTable etc
 
     -- sql functions
-    withPathK "functions" $
-      indexedForM_ functions $
-        \(FunctionMetadata function config _ _) -> addFunctionToCatalog function config
+    withPathK "functions"
+      $ indexedForM_ functions
+      $ \(FunctionMetadata function config _ _) -> addFunctionToCatalog function config
 
     -- query collections
     systemDefined <- ask
-    withPathK "query_collections" $
-      indexedForM_ collections $
-        \c -> liftTx $ addCollectionToCatalog c systemDefined
+    withPathK "query_collections"
+      $ indexedForM_ collections
+      $ \c -> liftTx $ addCollectionToCatalog c systemDefined
 
     -- allow list
     withPathK "allowlist" $ do
       indexedForM_ allowlist $ \(AllowlistEntry collectionName scope) -> do
-        unless (scope == AllowlistScopeGlobal) $
-          throw400 NotSupported $
-            "cannot downgrade to v1 because the "
-              <> collectionName
-                <<> " added to the allowlist is a role based allowlist"
+        unless (scope == AllowlistScopeGlobal)
+          $ throw400 NotSupported
+          $ "cannot downgrade to v1 because the "
+          <> collectionName
+          <<> " added to the allowlist is a role based allowlist"
         liftTx $ addCollectionToAllowlistCatalog collectionName
 
     -- remote schemas
-    withPathK "remote_schemas" $
-      indexedMapM_ (liftTx . addRemoteSchemaToCatalog) schemas
+    withPathK "remote_schemas"
+      $ indexedMapM_ (liftTx . addRemoteSchemaToCatalog) schemas
 
     -- custom types
     withPathK "custom_types" $ setCustomTypesInCatalog customTypes
 
     -- cron triggers
-    withPathK "cron_triggers" $
-      indexedForM_ cronTriggers $ \ct -> liftTx $ do
+    withPathK "cron_triggers"
+      $ indexedForM_ cronTriggers
+      $ \ct -> liftTx $ do
         addCronTriggerToCatalog ct
 
     -- actions
-    withPathK "actions" $
-      indexedForM_ actions $ \action -> do
+    withPathK "actions"
+      $ indexedForM_ actions
+      $ \action -> do
         let createAction =
               CreateAction (_amName action) (_amDefinition action) (_amComment action)
         addActionToCatalog createAction
-        withPathK "permissions" $
-          indexedForM_ (_amPermissions action) $ \permission -> do
+        withPathK "permissions"
+          $ indexedForM_ (_amPermissions action)
+          $ \permission -> do
             let createActionPermission =
                   CreateActionPermission
                     (_amName action)
@@ -170,8 +175,8 @@ saveTableToCatalog ::
   (MonadTx m, MonadReader SystemDefined m) => QualifiedTable -> Bool -> TableConfig ('Postgres 'Vanilla) -> m ()
 saveTableToCatalog (QualifiedObject sn tn) isEnum config = do
   systemDefined <- ask
-  liftTx $
-    PG.unitQE
+  liftTx
+    $ PG.unitQE
       defaultTxErrorHandler
       [PG.sql|
     INSERT INTO "hdb_catalog"."hdb_table"
@@ -225,8 +230,8 @@ addComputedFieldToCatalog ::
   AddComputedField ('Postgres 'Vanilla) ->
   m ()
 addComputedFieldToCatalog q =
-  liftTx $
-    PG.withQE
+  liftTx
+    $ PG.withQE
       defaultTxErrorHandler
       [PG.sql|
      INSERT INTO hdb_catalog.hdb_computed_field
@@ -242,8 +247,8 @@ addComputedFieldToCatalog q =
 
 addRemoteRelationshipToCatalog :: (MonadTx m) => CreateFromSourceRelationship ('Postgres 'Vanilla) -> m ()
 addRemoteRelationshipToCatalog CreateFromSourceRelationship {..} =
-  liftTx $
-    PG.unitQE
+  liftTx
+    $ PG.unitQE
       defaultTxErrorHandler
       [PG.sql|
        INSERT INTO hdb_catalog.hdb_remote_relationship
@@ -262,8 +267,8 @@ addFunctionToCatalog ::
   m ()
 addFunctionToCatalog (QualifiedObject sn fn) config = do
   systemDefined <- ask
-  liftTx $
-    PG.unitQE
+  liftTx
+    $ PG.unitQE
       defaultTxErrorHandler
       [PG.sql|
          INSERT INTO "hdb_catalog"."hdb_function"
@@ -290,8 +295,8 @@ addRemoteSchemaToCatalog (RemoteSchemaMetadata name def comment _ _) =
 addCollectionToCatalog ::
   (MonadTx m) => CreateCollection -> SystemDefined -> m ()
 addCollectionToCatalog (CreateCollection name defn mComment) systemDefined =
-  liftTx $
-    PG.unitQE
+  liftTx
+    $ PG.unitQE
       defaultTxErrorHandler
       [PG.sql|
     INSERT INTO hdb_catalog.hdb_query_collection
@@ -303,8 +308,8 @@ addCollectionToCatalog (CreateCollection name defn mComment) systemDefined =
 
 addCollectionToAllowlistCatalog :: (MonadTx m) => CollectionName -> m ()
 addCollectionToAllowlistCatalog collName =
-  liftTx $
-    PG.unitQE
+  liftTx
+    $ PG.unitQE
       defaultTxErrorHandler
       [PG.sql|
       INSERT INTO hdb_catalog.hdb_allowlist
@@ -338,8 +343,8 @@ setCustomTypesInCatalog customTypes = liftTx do
 
 addActionToCatalog :: (MonadTx m) => CreateAction -> m ()
 addActionToCatalog (CreateAction actionName actionDefinition comment) = do
-  liftTx $
-    PG.unitQE
+  liftTx
+    $ PG.unitQE
       defaultTxErrorHandler
       [PG.sql|
     INSERT into hdb_catalog.hdb_action
@@ -351,8 +356,8 @@ addActionToCatalog (CreateAction actionName actionDefinition comment) = do
 
 addActionPermissionToCatalog :: (MonadTx m) => CreateActionPermission -> m ()
 addActionPermissionToCatalog CreateActionPermission {..} = do
-  liftTx $
-    PG.unitQE
+  liftTx
+    $ PG.unitQE
       defaultTxErrorHandler
       [PG.sql|
     INSERT into hdb_catalog.hdb_action_permission
@@ -369,8 +374,8 @@ addPermissionToCatalog ::
   SystemDefined ->
   m ()
 addPermissionToCatalog (QualifiedObject sn tn) (PermDef rn qdef mComment) systemDefined =
-  liftTx $
-    PG.unitQE
+  liftTx
+    $ PG.unitQE
       defaultTxErrorHandler
       [PG.sql|
            INSERT INTO
@@ -414,8 +419,9 @@ parseLegacyRemoteRelationshipDefinition =
 fetchMetadataFromHdbTables :: (MonadTx m) => m MetadataNoSources
 fetchMetadataFromHdbTables = liftTx do
   tables <- fetchTables
-  let tableMetaMap = InsOrdHashMap.fromList . flip map tables $
-        \(schema, name, isEnum, maybeConfig) ->
+  let tableMetaMap = InsOrdHashMap.fromList
+        . flip map tables
+        $ \(schema, name, isEnum, maybeConfig) ->
           let qualifiedName = QualifiedObject schema name
               configuration = maybe emptyTableConfig PG.getViaJSON maybeConfig
            in (qualifiedName, mkTableMeta qualifiedName isEnum configuration)
@@ -467,8 +473,8 @@ fetchMetadataFromHdbTables = liftTx do
   actions <- oMapFromL _amName <$> fetchActions
   cronTriggers <- fetchCronTriggers
 
-  pure $
-    MetadataNoSources
+  pure
+    $ MetadataNoSources
       fullTableMetaMap
       functions
       remoteSchemas
@@ -559,13 +565,14 @@ fetchMetadataFromHdbTables = liftTx do
                     |]
           ()
           False
-      pure $
-        oMapFromL _fmFunction $
-          flip map l $ \(sn, fn, PG.ViaJSON config) ->
-            -- function permissions were only introduced post 43rd
-            -- migration, so it's impossible we get any permissions
-            -- here
-            FunctionMetadata (QualifiedObject sn fn) config [] Nothing
+      pure
+        $ oMapFromL _fmFunction
+        $ flip map l
+        $ \(sn, fn, PG.ViaJSON config) ->
+          -- function permissions were only introduced post 43rd
+          -- migration, so it's impossible we get any permissions
+          -- here
+          FunctionMetadata (QualifiedObject sn fn) config [] Nothing
 
     fetchRemoteSchemas =
       map fromRow
@@ -623,14 +630,16 @@ fetchMetadataFromHdbTables = liftTx do
              |]
           ()
           False
-      pure $
-        flip map r $ \(schema, table, name, PG.ViaJSON definition, comment) ->
+      pure
+        $ flip map r
+        $ \(schema, table, name, PG.ViaJSON definition, comment) ->
           ( QualifiedObject schema table,
             ComputedFieldMetadata name definition (commentFromMaybeText comment)
           )
 
     fetchCronTriggers =
-      oMapFromL ctName . map uncurryCronTrigger
+      oMapFromL ctName
+        . map uncurryCronTrigger
         <$> PG.withQE
           defaultTxErrorHandler
           [PG.sql|
@@ -659,7 +668,9 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchCustomTypes :: PG.TxE QErr CustomTypes
     fetchCustomTypes =
-      PG.getViaJSON . runIdentity . PG.getRow
+      PG.getViaJSON
+        . runIdentity
+        . PG.getRow
         <$> PG.rawQE
           defaultTxErrorHandler
           [PG.sql|
@@ -669,7 +680,9 @@ fetchMetadataFromHdbTables = liftTx do
           False
 
     fetchActions =
-      PG.getViaJSON . runIdentity . PG.getRow
+      PG.getViaJSON
+        . runIdentity
+        . PG.getRow
         <$> PG.rawQE
           defaultTxErrorHandler
           [PG.sql|
@@ -718,8 +731,9 @@ fetchMetadataFromHdbTables = liftTx do
              |]
           ()
           False
-      pure $
-        flip map r $ \(schema, table, name, PG.ViaJSON definition) ->
+      pure
+        $ flip map r
+        $ \(schema, table, name, PG.ViaJSON definition) ->
           ( QualifiedObject schema table,
             name,
             definition
@@ -727,8 +741,8 @@ fetchMetadataFromHdbTables = liftTx do
 
 addCronTriggerForeignKeyConstraint :: (MonadTx m) => m ()
 addCronTriggerForeignKeyConstraint =
-  liftTx $
-    PG.unitQE
+  liftTx
+    $ PG.unitQE
       defaultTxErrorHandler
       [PG.sql|
       ALTER TABLE hdb_catalog.hdb_cron_events ADD CONSTRAINT
@@ -784,24 +798,24 @@ recreateSystemMetadata = do
         table
           "hdb_catalog"
           "hdb_table"
-          [ objectRel $$(nonEmptyText "detail") $
-              manualConfig "information_schema" "tables" tableNameMapping,
-            objectRel $$(nonEmptyText "primary_key") $
-              manualConfig "hdb_catalog" "hdb_primary_key" tableNameMapping,
-            arrayRel $$(nonEmptyText "columns") $
-              manualConfig "information_schema" "columns" tableNameMapping,
-            arrayRel $$(nonEmptyText "foreign_key_constraints") $
-              manualConfig "hdb_catalog" "hdb_foreign_key_constraint" tableNameMapping,
-            arrayRel $$(nonEmptyText "relationships") $
-              manualConfig "hdb_catalog" "hdb_relationship" tableNameMapping,
-            arrayRel $$(nonEmptyText "permissions") $
-              manualConfig "hdb_catalog" "hdb_permission_agg" tableNameMapping,
-            arrayRel $$(nonEmptyText "computed_fields") $
-              manualConfig "hdb_catalog" "hdb_computed_field" tableNameMapping,
-            arrayRel $$(nonEmptyText "check_constraints") $
-              manualConfig "hdb_catalog" "hdb_check_constraint" tableNameMapping,
-            arrayRel $$(nonEmptyText "unique_constraints") $
-              manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping
+          [ objectRel $$(nonEmptyText "detail")
+              $ manualConfig "information_schema" "tables" tableNameMapping,
+            objectRel $$(nonEmptyText "primary_key")
+              $ manualConfig "hdb_catalog" "hdb_primary_key" tableNameMapping,
+            arrayRel $$(nonEmptyText "columns")
+              $ manualConfig "information_schema" "columns" tableNameMapping,
+            arrayRel $$(nonEmptyText "foreign_key_constraints")
+              $ manualConfig "hdb_catalog" "hdb_foreign_key_constraint" tableNameMapping,
+            arrayRel $$(nonEmptyText "relationships")
+              $ manualConfig "hdb_catalog" "hdb_relationship" tableNameMapping,
+            arrayRel $$(nonEmptyText "permissions")
+              $ manualConfig "hdb_catalog" "hdb_permission_agg" tableNameMapping,
+            arrayRel $$(nonEmptyText "computed_fields")
+              $ manualConfig "hdb_catalog" "hdb_computed_field" tableNameMapping,
+            arrayRel $$(nonEmptyText "check_constraints")
+              $ manualConfig "hdb_catalog" "hdb_check_constraint" tableNameMapping,
+            arrayRel $$(nonEmptyText "unique_constraints")
+              $ manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping
           ],
         table "hdb_catalog" "hdb_primary_key" [],
         table "hdb_catalog" "hdb_foreign_key_constraint" [],
@@ -814,17 +828,17 @@ recreateSystemMetadata = do
         table
           "hdb_catalog"
           "event_triggers"
-          [ arrayRel $$(nonEmptyText "events") $
-              manualConfig "hdb_catalog" "event_log" [("name", "trigger_name")]
+          [ arrayRel $$(nonEmptyText "events")
+              $ manualConfig "hdb_catalog" "event_log" [("name", "trigger_name")]
           ],
         table
           "hdb_catalog"
           "event_log"
-          [ objectRel $$(nonEmptyText "trigger") $
-              manualConfig "hdb_catalog" "event_triggers" [("trigger_name", "name")],
-            arrayRel $$(nonEmptyText "logs") $
-              RUFKeyOn $
-                ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "event_invocation_logs") (pure "event_id")
+          [ objectRel $$(nonEmptyText "trigger")
+              $ manualConfig "hdb_catalog" "event_triggers" [("trigger_name", "name")],
+            arrayRel $$(nonEmptyText "logs")
+              $ RUFKeyOn
+              $ ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "event_invocation_logs") (pure "event_id")
           ],
         table
           "hdb_catalog"
@@ -834,8 +848,8 @@ recreateSystemMetadata = do
         table
           "hdb_catalog"
           "hdb_function_agg"
-          [ objectRel $$(nonEmptyText "return_table_info") $
-              manualConfig
+          [ objectRel $$(nonEmptyText "return_table_info")
+              $ manualConfig
                 "hdb_catalog"
                 "hdb_table"
                 [ ("return_type_schema", "table_schema"),
@@ -851,8 +865,8 @@ recreateSystemMetadata = do
         table
           "hdb_catalog"
           "hdb_action"
-          [ arrayRel $$(nonEmptyText "permissions") $
-              manualConfig
+          [ arrayRel $$(nonEmptyText "permissions")
+              $ manualConfig
                 "hdb_catalog"
                 "hdb_action_permission"
                 [("action_name", "action_name")]
@@ -861,13 +875,13 @@ recreateSystemMetadata = do
         table
           "hdb_catalog"
           "hdb_role"
-          [ arrayRel $$(nonEmptyText "action_permissions") $
-              manualConfig
+          [ arrayRel $$(nonEmptyText "action_permissions")
+              $ manualConfig
                 "hdb_catalog"
                 "hdb_action_permission"
                 [("role_name", "role_name")],
-            arrayRel $$(nonEmptyText "permissions") $
-              manualConfig
+            arrayRel $$(nonEmptyText "permissions")
+              $ manualConfig
                 "hdb_catalog"
                 "hdb_permission_agg"
                 [("role_name", "role_name")]
@@ -875,17 +889,17 @@ recreateSystemMetadata = do
         table
           "hdb_catalog"
           "hdb_cron_triggers"
-          [ arrayRel $$(nonEmptyText "cron_events") $
-              RUFKeyOn $
-                ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_events") (pure "trigger_name")
+          [ arrayRel $$(nonEmptyText "cron_events")
+              $ RUFKeyOn
+              $ ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_events") (pure "trigger_name")
           ],
         table
           "hdb_catalog"
           "hdb_cron_events"
           [ objectRel $$(nonEmptyText "cron_trigger") $ RUFKeyOn $ SameTable (pure "trigger_name"),
-            arrayRel $$(nonEmptyText "cron_event_logs") $
-              RUFKeyOn $
-                ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_event_invocation_logs") (pure "event_id")
+            arrayRel $$(nonEmptyText "cron_event_logs")
+              $ RUFKeyOn
+              $ ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_cron_event_invocation_logs") (pure "event_id")
           ],
         table
           "hdb_catalog"
@@ -895,9 +909,9 @@ recreateSystemMetadata = do
         table
           "hdb_catalog"
           "hdb_scheduled_events"
-          [ arrayRel $$(nonEmptyText "scheduled_event_logs") $
-              RUFKeyOn $
-                ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_scheduled_event_invocation_logs") (pure "event_id")
+          [ arrayRel $$(nonEmptyText "scheduled_event_logs")
+              $ RUFKeyOn
+              $ ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_scheduled_event_invocation_logs") (pure "event_id")
           ],
         table
           "hdb_catalog"
@@ -915,7 +929,7 @@ recreateSystemMetadata = do
     objectRel name using = Left $ RelDef (RelName name) using Nothing
     arrayRel name using = Right $ RelDef (RelName name) using Nothing
     manualConfig schemaName tableName columns =
-      RUManual $
-        RelManualTableConfig
+      RUManual
+        $ RelManualTableConfig
           (QualifiedObject schemaName tableName)
           (RelManualCommon (HashMap.fromList columns) Nothing)

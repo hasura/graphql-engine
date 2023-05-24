@@ -173,19 +173,19 @@ instance J.ToJSON (HTTPRespExtra a) where
   toJSON (HTTPRespExtra resp ctxt req webhookVarName logHeaders) =
     case resp of
       Left errResp ->
-        J.object $
-          [ "response" J..= J.toJSON errResp,
-            "request" J..= sanitiseReqJSON req,
-            "event_id" J..= elEventId ctxt
-          ]
-            ++ eventName
+        J.object
+          $ [ "response" J..= J.toJSON errResp,
+              "request" J..= sanitiseReqJSON req,
+              "event_id" J..= elEventId ctxt
+            ]
+          ++ eventName
       Right okResp ->
-        J.object $
-          [ "response" J..= J.toJSON okResp,
-            "request" J..= J.toJSON req,
-            "event_id" J..= elEventId ctxt
-          ]
-            ++ eventName
+        J.object
+          $ [ "response" J..= J.toJSON okResp,
+              "request" J..= J.toJSON req,
+              "event_id" J..= elEventId ctxt
+            ]
+          ++ eventName
     where
       eventName = case elEventName ctxt of
         Just name -> ["event_name" J..= name]
@@ -194,8 +194,8 @@ instance J.ToJSON (HTTPRespExtra a) where
         HVValue txt -> J.String txt
         HVEnv txt -> J.String txt
       getRedactedHeaders =
-        J.Object $
-          foldr (\(HeaderConf name val) -> KM.insert (J.fromText name) (getValue val)) mempty logHeaders
+        J.Object
+          $ foldr (\(HeaderConf name val) -> KM.insert (J.fromText name) (getValue val)) mempty logHeaders
       updateReqDetail v reqType =
         let webhookRedactedReq = J.toJSON v & key reqType . key "url" .~ J.String webhookVarName
             redactedReq = webhookRedactedReq & key reqType . key "headers" .~ getRedactedHeaders
@@ -291,7 +291,7 @@ data TransformableRequestError a
   deriving (Show)
 
 mkRequest ::
-  MonadError (TransformableRequestError a) m =>
+  (MonadError (TransformableRequestError a) m) =>
   [HTTP.Header] ->
   HTTP.ResponseTimeout ->
   -- | the request body. It is passed as a 'BL.Bytestring' because we need to

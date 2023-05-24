@@ -40,7 +40,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 
 parseGraphQLQuery ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   GQLContext ->
   [G.VariableDefinition] ->
   Maybe (HashMap G.Name J.Value) ->
@@ -130,8 +130,8 @@ convertQuerySelSet
               let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
               (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of
                 AQQuery s ->
-                  ( AEPSync $
-                      resolveActionExecution
+                  ( AEPSync
+                      $ resolveActionExecution
                         httpManager
                         env
                         logger

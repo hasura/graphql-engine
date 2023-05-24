@@ -10,7 +10,7 @@ import Data.Time.Format (defaultTimeLocale, parseTimeM)
 import Hasura.Prelude
 
 -- | Extracts an absolute expiration time from a Expires header.
-parseExpirationTime :: MonadError String m => Text -> m UTCTime
+parseExpirationTime :: (MonadError String m) => Text -> m UTCTime
 parseExpirationTime =
   fromText
     >>> parseTimeM True defaultTimeLocale "%a, %d %b %Y %T GMT"

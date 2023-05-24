@@ -102,18 +102,18 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (AddSource b) 
   parseJSONWithContext backendKind = withObject "AddSource" $ \o ->
     AddSource
       <$> o
-        .: "name"
+      .: "name"
       <*> pure backendKind
       <*> o
-        .: "configuration"
+      .: "configuration"
       <*> o
-        .:? "replace_configuration"
-        .!= False
+      .:? "replace_configuration"
+      .!= False
       <*> o
-        .:? "customization"
-        .!= emptySourceCustomization
+      .:? "customization"
+      .!= emptySourceCustomization
       <*> o
-        .:? "health_check"
+      .:? "health_check"
 
 runAddSource ::
   forall m b.
@@ -167,17 +167,21 @@ runRenameSource ::
 runRenameSource RenameSource {..} = do
   sources <- scSources <$> askSchemaCache
 
-  unless (HashMap.member _rmName sources) $
-    throw400 NotExists $
-      "Could not find source with name " <>> _rmName
+  unless (HashMap.member _rmName sources)
+    $ throw400 NotExists
+    $ "Could not find source with name "
+    <>> _rmName
 
-  when (HashMap.member _rmNewName sources) $
-    throw400 AlreadyExists $
-      "Source with name " <> _rmNewName <<> " already exists"
+  when (HashMap.member _rmNewName sources)
+    $ throw400 AlreadyExists
+    $ "Source with name "
+    <> _rmNewName
+    <<> " already exists"
 
   let metadataModifier =
-        MetadataModifier $
-          metaSources %~ renameBackendSourceMetadata _rmName _rmNewName
+        MetadataModifier
+          $ metaSources
+          %~ renameBackendSourceMetadata _rmName _rmNewName
   buildSchemaCacheFor (MOSource _rmNewName) metadataModifier
 
   pure successMsg
@@ -230,10 +234,12 @@ runDropSource dropSourceInfo@(DropSource name cascade) = do
       AB.dispatchAnyBackend @BackendMetadata backendSourceInfo $ dropSource dropSourceInfo
     Nothing -> do
       metadata <- getMetadata
-      void $
-        onNothing (metadata ^. metaSources . at name) $
-          throw400 NotExists $
-            "source with name " <> name <<> " does not exist"
+      void
+        $ onNothing (metadata ^. metaSources . at name)
+        $ throw400 NotExists
+        $ "source with name "
+        <> name
+        <<> " does not exist"
       if cascade
         then -- Without sourceInfo we can't cascade, so throw an error
           throw400 Unexpected $ "source with name " <> name <<> " is inconsistent"
@@ -262,8 +268,8 @@ dropSource (DropSource sourceName cascade) sourceInfo = do
   schemaCache <- askSchemaCache
   let remoteDeps = getRemoteDependencies schemaCache sourceName
 
-  unless (cascade || null remoteDeps) $
-    reportDependentObjectsExist remoteDeps
+  unless (cascade || null remoteDeps)
+    $ reportDependentObjectsExist remoteDeps
 
   metadataModifier <- execWriterT $ do
     traverse_ purgeSourceAndSchemaDependencies remoteDeps
@@ -315,13 +321,13 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (UpdateSource 
   parseJSONWithContext _ = withObject "UpdateSource" $ \o ->
     UpdateSource
       <$> o
-        .: "name"
+      .: "name"
       <*> o
-        .:? "configuration"
+      .:? "configuration"
       <*> o
-        .:? "customization"
+      .:? "customization"
       <*> o
-        .:? "health_check"
+      .:? "health_check"
 
 runUpdateSource ::
   forall m b.
@@ -441,7 +447,7 @@ data GetTableInfo (b :: BackendType) = GetTableInfo
     _gtiTableName :: TableName b
   }
 
-instance Backend b => FromJSON (GetTableInfo b) where
+instance (Backend b) => FromJSON (GetTableInfo b) where
   parseJSON = J.withObject "GetTableInfo_" \o -> do
     _gtiSourceName <- o .: "source"
     _gtiTableName <- o .: "table"

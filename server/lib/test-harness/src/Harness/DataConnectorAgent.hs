@@ -47,5 +47,5 @@ withClone agentUri TestEnvironment {..} templateName useClone = runDataConnector
     (liftIO $ useClone response)
     ((dcClient // API._datasets // API._deleteClone) cloneName)
 
-createManagedClone :: MonadManaged m => String -> TestEnvironment -> API.DatasetTemplateName -> m API.DatasetCreateCloneResponse
+createManagedClone :: (MonadManaged m) => String -> TestEnvironment -> API.DatasetTemplateName -> m API.DatasetCreateCloneResponse
 createManagedClone agentUri testEnvironment templateName = managed (withClone agentUri testEnvironment templateName)

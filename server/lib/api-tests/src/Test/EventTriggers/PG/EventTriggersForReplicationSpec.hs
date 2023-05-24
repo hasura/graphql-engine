@@ -83,8 +83,8 @@ articlesTable tableName =
 tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests =
   describe "verify trigger status when logical replication is used" do
-    it "verify trigger is enabled on logical replication" $
-      \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
+    it "verify trigger is enabled on logical replication"
+      $ \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
         postgresSetupWithEventTriggers testEnvironment webhookServer "True"
         let getTriggerInfoQuery =
               [interpolateYaml|
@@ -118,8 +118,8 @@ tests =
           (GraphqlEngine.postV2Query 200 testEnvironment getTriggerInfoQuery)
           expectedResponseForEnablingTriggers
 
-    it "verify trigger is disabled on logical replication" $
-      \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
+    it "verify trigger is disabled on logical replication"
+      $ \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
         postgresSetupWithEventTriggers testEnvironment webhookServer "False"
         let getTriggerInfoQuery =
               [interpolateYaml|
@@ -162,8 +162,8 @@ postgresSetupWithEventTriggers testEnvironment webhookServer triggerOnReplicatio
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: pg_create_event_trigger
       args:
         name: author_trigger
@@ -183,8 +183,8 @@ postgresSetupWithEventTriggers testEnvironment webhookServer triggerOnReplicatio
 
 postgresTeardown :: TestEnvironment -> IO ()
 postgresTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: pg_delete_event_trigger
       args:
         name: author_trigger

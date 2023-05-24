@@ -84,16 +84,16 @@ spec = do
     describe "When no aggregation functions are given" do
       it "Yields no parsers" do
         let maybeParser =
-              runSchemaTest sourceInfo $
-                defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
+              runSchemaTest sourceInfo
+                $ defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
                   []
                   albumTableInfo
         (Unshowable maybeParser) `shouldSatisfy` (isNothing . unUnshowable)
 
     describe "When some aggregation functions are given" do
       let maybeParser =
-            runSchemaTest sourceInfo $
-              defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
+            runSchemaTest sourceInfo
+              $ defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
                 [ FunctionSignature
                     { fnName = "count",
                       fnGQLName = [G.name|count|],

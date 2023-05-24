@@ -118,7 +118,7 @@ arityJsonAggSelect = \case
   API.FunctionArityMany -> JASMultipleRows
 
 functionReturnTypeFromAPI ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   DC.FunctionName ->
   (Maybe (FunctionReturnType 'DataConnector), API.FunctionReturnType) ->
   m DC.TableName
@@ -126,13 +126,13 @@ functionReturnTypeFromAPI funcGivenName = \case
   (Just (DC.FunctionReturnsTable t), _) -> pure t
   (_, API.FunctionReturnsTable t) -> pure (Witch.into t)
   _ ->
-    throw400 NotSupported $
-      "Function "
-        <> toTxt funcGivenName
-        <> " is missing a return type - This should be explicit in metadata, or inferred from agent"
+    throw400 NotSupported
+      $ "Function "
+      <> toTxt funcGivenName
+      <> " is missing a return type - This should be explicit in metadata, or inferred from agent"
 
 buildFunctionInfo' ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SourceName ->
   DC.FunctionName ->
   SystemDefined ->
@@ -165,10 +165,10 @@ buildFunctionInfo'
           (Just (DC.FunctionReturnsTable t), _) -> pure $ SOSourceObj sourceName $ mkAnyBackend $ SOITable @'DataConnector t
           (_, API.FunctionReturnsTable t) -> pure $ SOSourceObj sourceName $ mkAnyBackend $ SOITable @'DataConnector (Witch.into t)
           _ ->
-            throw400 NotSupported $
-              "Function "
-                <> tshow funcName
-                <> " is missing a return type - This should be explicit in metadata, or inferred from agent"
+            throw400 NotSupported
+              $ "Function "
+              <> tshow funcName
+              <> " is missing a return type - This should be explicit in metadata, or inferred from agent"
 
       inputArguments <- do
         let argNames = map API._faInputArgName infoArgs
@@ -178,15 +178,17 @@ buildFunctionInfo'
         case _fcSessionArgument of
           Nothing -> pure $ Seq.fromList $ map IAUserProvided infoArgs
           Just sessionArgName -> do
-            unless (any (\arg -> getFuncArgNameTxt sessionArgName == API._faInputArgName arg) infoArgs) $
-              throw400 NotSupported $
-                "Session argument not mappable: " <> tshow sessionArgName
-            pure $
-              Seq.fromList $
-                flip map infoArgs $ \arg ->
-                  if getFuncArgNameTxt sessionArgName == API._faInputArgName arg
-                    then IASessionVariables sessionArgName
-                    else IAUserProvided arg
+            unless (any (\arg -> getFuncArgNameTxt sessionArgName == API._faInputArgName arg) infoArgs)
+              $ throw400 NotSupported
+              $ "Session argument not mappable: "
+              <> tshow sessionArgName
+            pure
+              $ Seq.fromList
+              $ flip map infoArgs
+              $ \arg ->
+                if getFuncArgNameTxt sessionArgName == API._faInputArgName arg
+                  then IASessionVariables sessionArgName
+                  else IAUserProvided arg
 
       functionReturnType <- functionReturnTypeFromAPI funcName (_fcResponse, returnType)
 
@@ -227,7 +229,8 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
         ( \dataConnectorName dataConnectorOptions -> do
             getDataConnectorCapabilitiesIfNeeded -< (invalidationKeys, dataConnectorName, dataConnectorOptions)
         )
-      |) (toHashMap optionsMap)
+      |)
+      (toHashMap optionsMap)
   returnA -< HashMap.catMaybes maybeDataConnectorCapabilities
   where
     getDataConnectorCapabilitiesIfNeeded ::
@@ -240,7 +243,8 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
         withRecordInconsistency
           ( bindErrorA -< ExceptT $ getDataConnectorCapabilities dataConnectorOptions httpMgr
           )
-        |) metadataObj
+        |)
+        metadataObj
 
     getDataConnectorCapabilities ::
       DC.DataConnectorOptions ->
@@ -289,8 +293,8 @@ resolveSourceConfig'
 
 getDataConnectorInfo :: (MonadError QErr m) => DC.DataConnectorName -> HashMap DC.DataConnectorName DC.DataConnectorInfo -> m DC.DataConnectorInfo
 getDataConnectorInfo dataConnectorName backendInfo =
-  onNothing (HashMap.lookup dataConnectorName backendInfo) $
-    throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend info")
+  onNothing (HashMap.lookup dataConnectorName backendInfo)
+    $ throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend info")
 
 mkRawColumnType :: API.Capabilities -> API.ColumnType -> RQL.T.C.RawColumnType 'DataConnector
 mkRawColumnType capabilities = \case
@@ -318,8 +322,8 @@ resolveDatabaseMetadata' logger SourceMetadata {_smName} sourceConfig@DC.SourceC
                 { _ptmiOid = OID 0, -- TODO: This is wrong and needs to be fixed. It is used for diffing tables and seeing what's new/deleted/altered, so reusing 0 for all tables is problematic.
                   _ptmiColumns = do
                     API.ColumnInfo {..} <- _tiColumns
-                    pure $
-                      RQL.T.C.RawColumnInfo
+                    pure
+                      $ RQL.T.C.RawColumnInfo
                         { rciName = Witch.from _ciName,
                           rciPosition = 1, -- TODO: This is very wrong and needs to be fixed. It is used for diffing tables and seeing what's new/deleted/altered, so reusing 1 for all columns is problematic.
                           rciType = mkRawColumnType _scCapabilities _ciType,
@@ -353,8 +357,8 @@ resolveDatabaseMetadata' logger SourceMetadata {_smName} sourceConfig@DC.SourceC
          in HashMap.fromList do
               infos@(API.FunctionInfo {..} NEList.:| _) <- grouped
               pure (Witch.into _fiName, FunctionOverloads infos)
-   in pure $
-        DBObjectsIntrospection
+   in pure
+        $ DBObjectsIntrospection
           { _rsTables = tables,
             _rsFunctions = functions,
             _rsScalars = mempty
@@ -392,8 +396,8 @@ toTableObjectType capabilities API.ObjectTypeDefinition {..} =
     toTableObjectFieldDefinition API.ColumnInfo {..} = do
       fieldType <- getFieldType capabilities _ciType
       fieldName <- G.mkName $ API.unColumnName _ciName
-      pure $
-        RQL.T.T.TableObjectFieldDefinition
+      pure
+        $ RQL.T.T.TableObjectFieldDefinition
           { _tofdColumn = Witch.from _ciName,
             _tofdName = fieldName,
             _tofdDescription = G.Description <$> _ciDescription,
@@ -406,8 +410,9 @@ toTableObjectType capabilities API.ObjectTypeDefinition {..} =
 -- metadata.
 buildForeignKeySet :: API.ForeignKeys -> HashSet (RQL.T.T.ForeignKeyMetadata 'DataConnector)
 buildForeignKeySet (API.ForeignKeys constraints) =
-  HashSet.fromList $
-    constraints & HashMap.foldMapWithKey @[RQL.T.T.ForeignKeyMetadata 'DataConnector]
+  HashSet.fromList
+    $ constraints
+    & HashMap.foldMapWithKey @[RQL.T.T.ForeignKeyMetadata 'DataConnector]
       \constraintName API.Constraint {..} -> maybeToList do
         let columnMapAssocList = HashMap.foldrWithKey' (\(API.ColumnName k) (API.ColumnName v) acc -> (DC.ColumnName k, DC.ColumnName v) : acc) [] _cColumnMapping
         columnMapping <- NEHashMap.fromList columnMapAssocList
@@ -443,8 +448,8 @@ parseBoolExpOperations' rhsParser rootFieldInfoMap fieldInfoMap columnRef value 
       v -> pure . AEQ False <$> parseWithTy columnType v
 
     parseOperation :: (Text, J.Value) -> m (OpExpG 'DataConnector v)
-    parseOperation (opStr, val) = withPathK opStr $
-      case opStr of
+    parseOperation (opStr, val) = withPathK opStr
+      $ case opStr of
         "_eq" -> parseEq
         "$eq" -> parseEq
         "_neq" -> parseNeq
@@ -523,12 +528,16 @@ parseBoolExpOperations' rhsParser rootFieldInfoMap fieldInfoMap columnRef value 
         validateRhsColumn :: RQL.T.T.FieldInfoMap (RQL.T.T.FieldInfo 'DataConnector) -> DC.ColumnName -> m DC.ColumnName
         validateRhsColumn fieldInfoMap' rhsCol = do
           rhsType <- RQL.T.T.askColumnType fieldInfoMap' rhsCol "column operators can only compare table columns"
-          when (columnType /= rhsType) $
-            throw400 UnexpectedPayload $
-              "incompatible column types: "
-                <> columnRef <<> " has type "
-                <> columnType <<> ", but "
-                <> rhsCol <<> " has type " <>> rhsType
+          when (columnType /= rhsType)
+            $ throw400 UnexpectedPayload
+            $ "incompatible column types: "
+            <> columnRef
+            <<> " has type "
+            <> columnType
+            <<> ", but "
+            <> rhsCol
+            <<> " has type "
+            <>> rhsType
           pure rhsCol
 
 parseCollectableType' ::
@@ -564,8 +573,8 @@ buildObjectRelationshipInfo' ::
   ObjRelDef 'DataConnector ->
   m (RelInfo 'DataConnector, Seq SchemaDependency)
 buildObjectRelationshipInfo' sourceConfig sourceName fks tableName objRel = do
-  ifSupportsLocalRelationships sourceName sourceConfig $
-    defaultBuildObjectRelationshipInfo sourceName fks tableName objRel
+  ifSupportsLocalRelationships sourceName sourceConfig
+    $ defaultBuildObjectRelationshipInfo sourceName fks tableName objRel
 
 buildArrayRelationshipInfo' ::
   (MonadError QErr m) =>
@@ -576,8 +585,8 @@ buildArrayRelationshipInfo' ::
   ArrRelDef 'DataConnector ->
   m (RelInfo 'DataConnector, Seq SchemaDependency)
 buildArrayRelationshipInfo' sourceConfig sourceName fks tableName arrRel =
-  ifSupportsLocalRelationships sourceName sourceConfig $
-    defaultBuildArrayRelationshipInfo sourceName fks tableName arrRel
+  ifSupportsLocalRelationships sourceName sourceConfig
+    $ defaultBuildArrayRelationshipInfo sourceName fks tableName arrRel
 
 ifSupportsLocalRelationships :: (MonadError QErr m) => SourceName -> DC.SourceConfig -> m a -> m a
 ifSupportsLocalRelationships sourceName DC.SourceConfig {..} action = do

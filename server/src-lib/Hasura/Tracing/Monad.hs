@@ -63,7 +63,7 @@ instance MonadTrans TraceT where
   lift = TraceT . lift
 
 -- | Hides the fact that TraceT is a reader to the rest of the stack.
-instance MonadReader r m => MonadReader r (TraceT m) where
+instance (MonadReader r m) => MonadReader r (TraceT m) where
   ask = lift ask
   local f (TraceT m) = TraceT $ mapReaderT (local f) m
 
@@ -102,8 +102,8 @@ instance (MonadIO m, MonadBaseControl IO m) => MonadTrace (TraceT m) where
                   { teTraceContext = subContext,
                     teMetadataRef = metadataRef
                   }
-          runReporter reporter subContext name (readIORef metadataRef) $
-            local (_2 .~ Just subTraceEnv) body
+          runReporter reporter subContext name (readIORef metadataRef)
+            $ local (_2 .~ Just subTraceEnv) body
 
   currentContext = TraceT $ asks $ fmap teTraceContext . snd
 
@@ -131,7 +131,7 @@ data TraceEnv = TraceEnv
 
 -- Helper for consistently deciding whether or not to sample a trace based on
 -- trace context and sampling policy.
-decideSampling :: MonadIO m => SamplingState -> SamplingPolicy -> m SamplingDecision
+decideSampling :: (MonadIO m) => SamplingState -> SamplingPolicy -> m SamplingDecision
 decideSampling samplingState samplingPolicy =
   case samplingState of
     SamplingDefer -> liftIO samplingPolicy

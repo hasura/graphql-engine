@@ -61,8 +61,8 @@ validateDeleteQWith
 
     -- Check if select is allowed
     selPerm <-
-      modifyErr (<> selNecessaryMsg) $
-        askSelPermInfo tableInfo
+      modifyErr (<> selNecessaryMsg)
+        $ askSelPermInfo tableInfo
 
     let fieldInfoMap = _tciFieldInfoMap coreInfo
         allCols = mapMaybe (^? _SCIScalarColumn) $ getCols fieldInfoMap
@@ -73,15 +73,15 @@ validateDeleteQWith
 
     -- convert the where clause
     annSQLBoolExp <-
-      withPathK "where" $
-        convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr fieldInfoMap (valueParserWithCollectableType prepValBldr)
+      withPathK "where"
+        $ convBoolExp fieldInfoMap selPerm rqlBE sessVarBldr fieldInfoMap (valueParserWithCollectableType prepValBldr)
 
     resolvedDelFltr <-
-      convAnnBoolExpPartialSQL sessVarBldr $
-        dpiFilter delPerm
+      convAnnBoolExpPartialSQL sessVarBldr
+        $ dpiFilter delPerm
 
-    return $
-      AnnDel
+    return
+      $ AnnDel
         tableName
         (resolvedDelFltr, annSQLBoolExp)
         (mkDefaultMutFlds mAnnRetCols)
@@ -100,9 +100,9 @@ validateDeleteQ ::
 validateDeleteQ query = do
   let source = doSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
-  flip runTableCacheRT tableCache $
-    runDMLP1T $
-      validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query
+  flip runTableCacheRT tableCache
+    $ runDMLP1T
+    $ validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder query
 
 runDelete ::
   forall m.
@@ -123,5 +123,5 @@ runDelete sqlGen q = do
   userInfo <- askUserInfo
   validateDeleteQ q
     >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) LegacyRQLQuery
-      . flip runReaderT emptyQueryTagsComment
-      . execDeleteQuery strfyNum Nothing userInfo
+    . flip runReaderT emptyQueryTagsComment
+    . execDeleteQuery strfyNum Nothing userInfo

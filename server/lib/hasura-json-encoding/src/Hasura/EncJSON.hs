@@ -146,7 +146,7 @@ encJFromLBS :: BL.ByteString -> EncJSON
 encJFromLBS = EncJSON . BB.lazyByteString
 {-# INLINE encJFromLBS #-}
 
-encJFromJValue :: J.ToJSON a => a -> EncJSON
+encJFromJValue :: (J.ToJSON a) => a -> EncJSON
 encJFromJValue = encJFromBuilder . J.fromEncoding . J.toEncoding
 {-# INLINE encJFromJValue #-}
 

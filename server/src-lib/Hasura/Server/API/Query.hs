@@ -198,8 +198,8 @@ runQuery ::
 runQuery appContext sc query = do
   AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
-  when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB query) $
-    throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
+  when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB query)
+    $ throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
   let exportsMetadata = \case
         RQV1 (RQExportMetadata _) -> True

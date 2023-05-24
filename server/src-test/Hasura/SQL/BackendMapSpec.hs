@@ -25,8 +25,8 @@ spec = describe "BackendMap" do
     let mssqlConfig = BM.singleton @'MSSQL @BackendConfigWrapper (BackendConfigWrapper ())
     let dataconnectorConfig =
           BM.singleton @'DataConnector @BackendConfigWrapper
-            ( BackendConfigWrapper $
-                Map.singleton
+            ( BackendConfigWrapper
+                $ Map.singleton
                   (fromRight' $ mkDataConnectorName $ fromJust $ GQL.mkName "MyConnector")
                   ( DataConnectorOptions
                       { _dcoUri = fromRight' $ S.parseBaseUrl "https://somehost.org/",

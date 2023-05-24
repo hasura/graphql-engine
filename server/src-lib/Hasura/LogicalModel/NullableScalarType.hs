@@ -32,11 +32,11 @@ instance (Backend b) => HasObjectCodec (NullableScalarType b) where
   objectCodec =
     NullableScalarType
       <$> AC.requiredField "type" columnDoc
-        AC..= nstType
-      <*> AC.optionalFieldWithDefault "nullable" False nullableDoc
-        AC..= nstNullable
-      <*> AC.optionalField "description" descriptionDoc
-        AC..= nstDescription
+      AC..= nstType
+        <*> AC.optionalFieldWithDefault "nullable" False nullableDoc
+      AC..= nstNullable
+        <*> AC.optionalField "description" descriptionDoc
+      AC..= nstDescription
     where
       columnDoc = "The base scalar type"
       nullableDoc = "Whether the type is nullable"
@@ -45,7 +45,7 @@ instance (Backend b) => HasObjectCodec (NullableScalarType b) where
 deriving via
   (Autodocodec (NullableScalarType b))
   instance
-    Backend b => ToJSON (NullableScalarType b)
+    (Backend b) => ToJSON (NullableScalarType b)
 
 deriving stock instance (Backend b) => Eq (NullableScalarType b)
 
@@ -89,7 +89,7 @@ nullableScalarTypeMapCodec =
     )
     ( fmap (\(fld, nst) -> MergedObject (NameField fld) nst) . InsOrdHashMap.toList
     )
-    ( AC.listCodec $
-        AC.object "NullableScalarType" $
-          AC.objectCodec @(MergedObject (NameField (Column b)) (NullableScalarType b))
+    ( AC.listCodec
+        $ AC.object "NullableScalarType"
+        $ AC.objectCodec @(MergedObject (NameField (Column b)) (NullableScalarType b))
     )

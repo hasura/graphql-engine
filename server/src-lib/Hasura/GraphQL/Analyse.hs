@@ -145,8 +145,8 @@ analyzeGraphQLQuery schema G.TypedOperationDefinition {..} = runAnalysis schema 
         throwDiagnosis RootTypeNotAnObject
   -- analyze the variables
   variables <- analyzeVariables _todVariableDefinitions
-  pure $
-    Structure
+  pure
+    $ Structure
       (fromMaybe mempty selection)
       variables
 
@@ -169,8 +169,9 @@ analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
       G.SelectionInlineFragment inlineFrag ->
         mconcat <$> traverse analyzeSelection (G._ifSelectionSet inlineFrag)
       G.SelectionField field@G.Field {..} ->
-        fmap join $
-          withField _fName $ withCatchAndRecord do
+        fmap join
+          $ withField _fName
+          $ withCatchAndRecord do
             -- attempt to find that field in the object's definition
             G.FieldDefinition {..} <-
               findDefinition _fName
@@ -207,21 +208,21 @@ analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
     mergeFields name field1 field2 = case (field1, field2) of
       -- both are scalars: we check that they're the same
       (FieldScalarInfo t1 s1, FieldScalarInfo t2 _) -> do
-        when (t1 /= t2) $
-          throwDiagnosis $
-            MismatchedFields name t1 t2
+        when (t1 /= t2)
+          $ throwDiagnosis
+          $ MismatchedFields name t1 t2
         pure $ FieldScalarInfo t1 s1
       -- both are enums: we check that they're the same
       (FieldEnumInfo t1 e1, FieldEnumInfo t2 _) -> do
-        when (t1 /= t2) $
-          throwDiagnosis $
-            MismatchedFields name t1 t2
+        when (t1 /= t2)
+          $ throwDiagnosis
+          $ MismatchedFields name t1 t2
         pure $ FieldEnumInfo t1 e1
       -- both are objects, we merge their selection sets
       (FieldObjectInfo t1 o1, FieldObjectInfo t2 o2) -> do
-        when (t1 /= t2) $
-          throwDiagnosis $
-            MismatchedFields name t1 t2
+        when (t1 /= t2)
+          $ throwDiagnosis
+          $ MismatchedFields name t1 t2
         mergedSelection <-
           HashMap.unionWithM
             mergeFields
@@ -250,17 +251,17 @@ analyzeField gType typeDefinition G.Field {..} = case typeDefinition of
     throwDiagnosis $ InputObjectInOutput $ G._iotdName iotd
   G.TypeDefinitionScalar std -> do
     -- scalars do not admit a selection set
-    unless (null _fSelectionSet) $
-      throwDiagnosis $
-        ScalarSelectionSet $
-          G._stdName std
+    unless (null _fSelectionSet)
+      $ throwDiagnosis
+      $ ScalarSelectionSet
+      $ G._stdName std
     pure $ Just $ FieldScalarInfo gType $ ScalarInfo std
   G.TypeDefinitionEnum etd -> do
     -- enums do not admit a selection set
-    unless (null _fSelectionSet) $
-      throwDiagnosis $
-        EnumSelectionSet $
-          G._etdName etd
+    unless (null _fSelectionSet)
+      $ throwDiagnosis
+      $ EnumSelectionSet
+      $ G._etdName etd
     pure $ Just $ FieldEnumInfo gType $ EnumInfo etd
   G.TypeDefinitionUnion _utd ->
     -- TODO: implement unions
@@ -270,18 +271,18 @@ analyzeField gType typeDefinition G.Field {..} = case typeDefinition of
     pure Nothing
   G.TypeDefinitionObject otd -> do
     -- TODO: check field arguments?
-    when (null _fSelectionSet) $
-      throwDiagnosis $
-        ObjectMissingSelectionSet $
-          G._otdName otd
+    when (null _fSelectionSet)
+      $ throwDiagnosis
+      $ ObjectMissingSelectionSet
+      $ G._otdName otd
     subselection <- analyzeObjectSelectionSet otd _fSelectionSet
-    pure $
-      Just $
-        FieldObjectInfo gType $
-          ObjectInfo
-            { _oiTypeDefinition = otd,
-              _oiSelection = subselection
-            }
+    pure
+      $ Just
+      $ FieldObjectInfo gType
+      $ ObjectInfo
+        { _oiTypeDefinition = otd,
+          _oiSelection = subselection
+        }
 
 --------------------------------------------------------------------------------
 -- Variables analysis
@@ -364,10 +365,10 @@ newtype Analysis a
 
 runAnalysis :: G.SchemaIntrospection -> Analysis a -> (Maybe a, [Text])
 runAnalysis schema (Analysis a) =
-  postProcess $
-    runWriter $
-      flip runReaderT (pure "$", schema) $
-        runExceptT a
+  postProcess
+    $ runWriter
+    $ flip runReaderT (pure "$", schema)
+    $ runExceptT a
   where
     -- if there was an uncaught error, add it to the list
     postProcess = \case

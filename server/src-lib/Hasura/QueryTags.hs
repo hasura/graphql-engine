@@ -118,6 +118,6 @@ class (Monad m) => MonadQueryTags m where
   default createQueryTags :: forall t n. (m ~ t n, MonadQueryTags n) => QueryTagsAttributes -> Maybe QueryTagsConfig -> Tagged m QueryTagsComment
   createQueryTags qtSourceConfig attr = retag (createQueryTags @n qtSourceConfig attr) :: Tagged (t n) QueryTagsComment
 
-instance MonadQueryTags m => MonadQueryTags (ReaderT r m)
+instance (MonadQueryTags m) => MonadQueryTags (ReaderT r m)
 
-instance MonadQueryTags m => MonadQueryTags (ExceptT e m)
+instance (MonadQueryTags m) => MonadQueryTags (ExceptT e m)

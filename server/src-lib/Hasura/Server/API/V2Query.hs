@@ -77,7 +77,7 @@ data RQLQuery
 instance FromJSON RQLQuery where
   parseJSON = withObject "RQLQuery" \o -> do
     t <- o .: "type"
-    let args :: forall a. FromJSON a => Parser a
+    let args :: forall a. (FromJSON a) => Parser a
         args = o .: "args"
         dcNameFromRunSql = T.stripSuffix "_run_sql" >=> GQL.mkName >=> preview _Right . mkDataConnectorName
     case t of
@@ -119,8 +119,8 @@ runQuery ::
   m (EncJSON, RebuildableSchemaCache)
 runQuery appContext schemaCache rqlQuery = do
   AppEnv {..} <- askAppEnv
-  when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery) $
-    throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
+  when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery)
+    $ throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
   let dynamicConfig = buildCacheDynamicConfig appContext
   MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
@@ -134,13 +134,13 @@ runQuery appContext schemaCache rqlQuery = do
       MaintenanceModeDisabled -> do
         -- set modified metadata in storage
         newResourceVersion <-
-          Tracing.newSpan "setMetadata" $
-            liftEitherM $
-              setMetadata currentResourceVersion updatedMetadata
+          Tracing.newSpan "setMetadata"
+            $ liftEitherM
+            $ setMetadata currentResourceVersion updatedMetadata
         -- notify schema cache sync
-        Tracing.newSpan "notifySchemaCacheSync" $
-          liftEitherM $
-            notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
+        Tracing.newSpan "notifySchemaCacheSync"
+          $ liftEitherM
+          $ notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
       MaintenanceModeEnabled () ->
         throw500 "metadata cannot be modified in maintenance mode"
   pure (result, updatedCache)
@@ -190,8 +190,8 @@ runQueryM sqlGen rq = Tracing.newSpan (T.pack $ constrName rq) $ case rq of
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
   RQBulk l -> encJFromList <$> indexedMapM (runQueryM sqlGen) l
   RQConcurrentBulk l -> do
-    when (queryModifiesSchema rq) $
-      throw500 "Only read-only queries are allowed in a concurrent_bulk"
+    when (queryModifiesSchema rq)
+      $ throw500 "Only read-only queries are allowed in a concurrent_bulk"
     encJFromList <$> mapConcurrently (runQueryM sqlGen) l
 
 queryModifiesUserDB :: RQLQuery -> Bool

@@ -45,31 +45,31 @@ statsToAnyBackend :: forall b. (HasTag b) => ActionResult b -> (Maybe (AnyBacken
 statsToAnyBackend ActionResult {..} =
   (fmap (mkAnyBackend @b . ExecutionStats) arStatistics, arResult)
 
-deriving newtype instance Backend b => J.ToJSON (ExecutionStats b)
+deriving newtype instance (Backend b) => J.ToJSON (ExecutionStats b)
 
 instance J.ToJSON ExecutionLog where
   toJSON (ExecutionLog reqId mstatistics) =
-    J.object $
-      [ "request_id" J..= reqId,
-        "statistics" J..= case mstatistics of
-          Just statistics -> dispatchAnyBackend' @J.ToJSON statistics J.toJSON
-          Nothing -> J.toJSON ()
-      ]
+    J.object
+      $ [ "request_id" J..= reqId,
+          "statistics" J..= case mstatistics of
+            Just statistics -> dispatchAnyBackend' @J.ToJSON statistics J.toJSON
+            Nothing -> J.toJSON ()
+        ]
 
 instance L.ToEngineLog ExecutionLog L.Hasura where
   toEngineLog ql = (L.LevelInfo, L.ELTExecutionLog, J.toJSON ql)
 
-class Monad m => MonadExecutionLog m where
+class (Monad m) => MonadExecutionLog m where
   logExecutionLog ::
     L.Logger L.Hasura ->
     ExecutionLog ->
     m ()
 
-instance MonadExecutionLog m => MonadExecutionLog (ExceptT e m) where
+instance (MonadExecutionLog m) => MonadExecutionLog (ExceptT e m) where
   logExecutionLog logger l = lift $ logExecutionLog logger l
 
-instance MonadExecutionLog m => MonadExecutionLog (ReaderT r m) where
+instance (MonadExecutionLog m) => MonadExecutionLog (ReaderT r m) where
   logExecutionLog logger l = lift $ logExecutionLog logger l
 
-instance MonadExecutionLog m => MonadExecutionLog (TraceT m) where
+instance (MonadExecutionLog m) => MonadExecutionLog (TraceT m) where
   logExecutionLog logger l = lift $ logExecutionLog logger l

@@ -52,7 +52,7 @@ instance Transform Headers where
 -- header transformations, this can be seen as an implementation of these
 -- transformations as normal Haskell functions.
 applyHeadersTransformFn ::
-  MonadError TransformErrorBundle m =>
+  (MonadError TransformErrorBundle m) =>
   HeadersTransformFn ->
   RequestTransformCtx ->
   Headers ->
@@ -69,8 +69,9 @@ applyHeadersTransformFn fn context (Headers originalHeaders) = case fn of
 
     -- NOTE: We use `ApplicativeDo` here to take advantage of Validation's
     -- applicative sequencing
-    newHeaders <- liftEither . V.toEither $
-      for addOrReplaceHeaders \(rawKey, rawValue) -> do
+    newHeaders <- liftEither
+      . V.toEither
+      $ for addOrReplaceHeaders \(rawKey, rawValue) -> do
         let key = CI.map TE.encodeUtf8 rawKey
         value <- runUnescapedRequestTemplateTransform' context rawValue
         pure (key, value)

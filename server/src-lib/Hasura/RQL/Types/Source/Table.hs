@@ -58,13 +58,13 @@ data SourceTableInfo b = SourceTableInfo
   deriving anyclass (Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec (SourceTableInfo b)
 
-deriving stock instance Backend b => Eq (SourceTableInfo b)
+deriving stock instance (Backend b) => Eq (SourceTableInfo b)
 
-deriving stock instance Backend b => Ord (SourceTableInfo b)
+deriving stock instance (Backend b) => Ord (SourceTableInfo b)
 
-deriving stock instance Backend b => Show (SourceTableInfo b)
+deriving stock instance (Backend b) => Show (SourceTableInfo b)
 
-instance Backend b => HasCodec (SourceTableInfo b) where
+instance (Backend b) => HasCodec (SourceTableInfo b) where
   codec =
     object "TableInfo" $
       SourceTableInfo
@@ -98,13 +98,13 @@ newtype SourceForeignKeys b = SourceForeignKeys {_unSourceForeignKeys :: HashMap
   deriving anyclass (Hashable)
   deriving (FromJSON, ToJSON) via Autodocodec (SourceForeignKeys b)
 
-deriving stock instance Backend b => Eq (SourceForeignKeys b)
+deriving stock instance (Backend b) => Eq (SourceForeignKeys b)
 
-deriving stock instance Backend b => Ord (SourceForeignKeys b)
+deriving stock instance (Backend b) => Ord (SourceForeignKeys b)
 
-deriving stock instance Backend b => Show (SourceForeignKeys b)
+deriving stock instance (Backend b) => Show (SourceForeignKeys b)
 
-instance Backend b => HasCodec (SourceForeignKeys b) where
+instance (Backend b) => HasCodec (SourceForeignKeys b) where
   codec = dimapCodec SourceForeignKeys _unSourceForeignKeys $ codec @(HashMap (ConstraintName b) (SourceConstraint b))
 
 --------------------------------------------------------------------------------
@@ -117,13 +117,13 @@ data SourceConstraint b = SourceConstraint
   deriving anyclass (Hashable)
   deriving (FromJSON, ToJSON) via Autodocodec (SourceConstraint b)
 
-deriving stock instance Backend b => Eq (SourceConstraint b)
+deriving stock instance (Backend b) => Eq (SourceConstraint b)
 
-deriving stock instance Backend b => Ord (SourceConstraint b)
+deriving stock instance (Backend b) => Ord (SourceConstraint b)
 
-deriving stock instance Backend b => Show (SourceConstraint b)
+deriving stock instance (Backend b) => Show (SourceConstraint b)
 
-instance Backend b => HasCodec (SourceConstraint b) where
+instance (Backend b) => HasCodec (SourceConstraint b) where
   codec =
     object "SourceConstraint" $
       SourceConstraint

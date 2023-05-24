@@ -151,32 +151,34 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
     then case (appEnvEnableMaintenanceMode, appEnvEnableReadOnlyMode) of
       (MaintenanceModeDisabled, ReadOnlyModeDisabled) -> do
         -- set modified metadata in storage
-        L.unLogger logger $
-          SchemaSyncLog L.LevelInfo TTMetadataApi $
-            String $
-              "Attempting to insert new metadata in storage"
+        L.unLogger logger
+          $ SchemaSyncLog L.LevelInfo TTMetadataApi
+          $ String
+          $ "Attempting to insert new metadata in storage"
         newResourceVersion <-
-          Tracing.newSpan "setMetadata" $
-            liftEitherM $
-              setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
-        L.unLogger logger $
-          SchemaSyncLog L.LevelInfo TTMetadataApi $
-            String $
-              "Successfully inserted new metadata in storage with resource version: " <> showMetadataResourceVersion newResourceVersion
+          Tracing.newSpan "setMetadata"
+            $ liftEitherM
+            $ setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+        L.unLogger logger
+          $ SchemaSyncLog L.LevelInfo TTMetadataApi
+          $ String
+          $ "Successfully inserted new metadata in storage with resource version: "
+          <> showMetadataResourceVersion newResourceVersion
 
         -- notify schema cache sync
-        Tracing.newSpan "notifySchemaCacheSync" $
-          liftEitherM $
-            notifySchemaCacheSync newResourceVersion appEnvInstanceId cacheInvalidations
-        L.unLogger logger $
-          SchemaSyncLog L.LevelInfo TTMetadataApi $
-            String $
-              "Inserted schema cache sync notification at resource version:" <> showMetadataResourceVersion newResourceVersion
+        Tracing.newSpan "notifySchemaCacheSync"
+          $ liftEitherM
+          $ notifySchemaCacheSync newResourceVersion appEnvInstanceId cacheInvalidations
+        L.unLogger logger
+          $ SchemaSyncLog L.LevelInfo TTMetadataApi
+          $ String
+          $ "Inserted schema cache sync notification at resource version:"
+          <> showMetadataResourceVersion newResourceVersion
 
         (_, modSchemaCache', _) <-
-          Tracing.newSpan "setMetadataResourceVersionInSchemaCache" $
-            setMetadataResourceVersionInSchemaCache newResourceVersion
-              & runCacheRWT dynamicConfig modSchemaCache
+          Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
+            $ setMetadataResourceVersionInSchemaCache newResourceVersion
+            & runCacheRWT dynamicConfig modSchemaCache
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->
@@ -349,11 +351,11 @@ runMetadataQueryM env checkFeatureFlag remoteSchemaPerms currentResourceVersion 
     -- NOTE: This is a good place to install tracing, since it's involved in
     -- the recursive case via "bulk":
     RMV1 q ->
-      Tracing.newSpan ("v1 " <> T.pack (constrName q)) $
-        runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersion q
+      Tracing.newSpan ("v1 " <> T.pack (constrName q))
+        $ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersion q
     RMV2 q ->
-      Tracing.newSpan ("v2 " <> T.pack (constrName q)) $
-        runMetadataQueryV2M currentResourceVersion q
+      Tracing.newSpan ("v2 " <> T.pack (constrName q))
+        $ runMetadataQueryV2M currentResourceVersion q
 
 runMetadataQueryV1M ::
   forall m r.
@@ -541,12 +543,12 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
     pure (encJFromList results)
   where
     dispatchMetadata ::
-      (forall b. BackendMetadata b => i b -> a) ->
+      (forall b. (BackendMetadata b) => i b -> a) ->
       AnyBackend i ->
       a
     dispatchMetadata f x = dispatchAnyBackend @BackendMetadata x f
 
-    dispatchEventTrigger :: (forall b. BackendEventTrigger b => i b -> a) -> AnyBackend i -> a
+    dispatchEventTrigger :: (forall b. (BackendEventTrigger b) => i b -> a) -> AnyBackend i -> a
     dispatchEventTrigger f x = dispatchAnyBackend @BackendEventTrigger x f
 
     dispatchMetadataAndEventTrigger ::

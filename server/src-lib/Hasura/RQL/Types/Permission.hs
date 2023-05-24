@@ -63,8 +63,9 @@ instance NFData PermType
 instance Hashable PermType
 
 instance PG.FromCol PermType where
-  fromCol bs = flip PG.fromColHelper bs $
-    PD.enum $ \case
+  fromCol bs = flip PG.fromColHelper bs
+    $ PD.enum
+    $ \case
       "insert" -> Just PTInsert
       "update" -> Just PTUpdate
       "select" -> Just PTSelect
@@ -135,19 +136,19 @@ data PermDefPermission (b :: BackendType) (perm :: BackendType -> Type) where
   UpdPerm' :: UpdPerm b -> PermDefPermission b UpdPerm
   DelPerm' :: DelPerm b -> PermDefPermission b DelPerm
 
-instance Backend b => FromJSON (PermDefPermission b SelPerm) where
+instance (Backend b) => FromJSON (PermDefPermission b SelPerm) where
   parseJSON = fmap SelPerm' . parseJSON
 
-instance Backend b => FromJSON (PermDefPermission b InsPerm) where
+instance (Backend b) => FromJSON (PermDefPermission b InsPerm) where
   parseJSON = fmap InsPerm' . parseJSON
 
-instance Backend b => FromJSON (PermDefPermission b UpdPerm) where
+instance (Backend b) => FromJSON (PermDefPermission b UpdPerm) where
   parseJSON = fmap UpdPerm' . parseJSON
 
-instance Backend b => FromJSON (PermDefPermission b DelPerm) where
+instance (Backend b) => FromJSON (PermDefPermission b DelPerm) where
   parseJSON = fmap DelPerm' . parseJSON
 
-instance Backend b => ToJSON (PermDefPermission b perm) where
+instance (Backend b) => ToJSON (PermDefPermission b perm) where
   toJSON = \case
     SelPerm' p -> toJSON p
     InsPerm' p -> toJSON p
@@ -157,9 +158,9 @@ instance Backend b => ToJSON (PermDefPermission b perm) where
 instance (Backend b, HasCodec (perm b), IsPerm perm) => HasCodec (PermDefPermission b perm) where
   codec = dimapCodec mkPermDefPermission unPermDefPermission codec
 
-deriving stock instance Backend b => Show (PermDefPermission b perm)
+deriving stock instance (Backend b) => Show (PermDefPermission b perm)
 
-deriving stock instance Backend b => Eq (PermDefPermission b perm)
+deriving stock instance (Backend b) => Eq (PermDefPermission b perm)
 
 -----------------------------
 
@@ -200,7 +201,7 @@ reflectPermDefPermission = \case
 instance (Backend b, ToJSON (perm b)) => ToJSON (PermDef b perm) where
   toJSON = object . toAesonPairs
 
-instance Backend b => ToAesonPairs (PermDef b perm) where
+instance (Backend b) => ToAesonPairs (PermDef b perm) where
   toAesonPairs (PermDef rn perm comment) =
     [ "role" .= rn,
       "permission" .= perm,
@@ -209,11 +210,14 @@ instance Backend b => ToAesonPairs (PermDef b perm) where
 
 instance (Backend b, HasCodec (perm b), IsPerm perm) => HasCodec (PermDef b perm) where
   codec =
-    AC.object (backendPrefix @b <> T.toTitle (permTypeToCode (permType @perm)) <> "PermDef") $
-      PermDef
-        <$> requiredField' "role" .== _pdRole
-        <*> requiredField' "permission" .== _pdPermission
-        <*> optionalFieldOrNull' "comment" .== _pdComment
+    AC.object (backendPrefix @b <> T.toTitle (permTypeToCode (permType @perm)) <> "PermDef")
+      $ PermDef
+      <$> requiredField' "role"
+      .== _pdRole
+        <*> requiredField' "permission"
+      .== _pdPermission
+        <*> optionalFieldOrNull' "comment"
+      .== _pdComment
     where
       (.==) = (AC..=)
 
@@ -232,9 +236,10 @@ instance ToJSON QueryRootFieldType where
 
 instance HasCodec QueryRootFieldType where
   codec =
-    stringConstCodec $
-      NonEmpty.fromList $
-        (\x -> (x, T.pack $ snakeCase $ drop 4 $ show x)) <$> [minBound ..]
+    stringConstCodec
+      $ NonEmpty.fromList
+      $ (\x -> (x, T.pack $ snakeCase $ drop 4 $ show x))
+      <$> [minBound ..]
 
 data SubscriptionRootFieldType
   = SRFTSelect
@@ -252,9 +257,10 @@ instance ToJSON SubscriptionRootFieldType where
 
 instance HasCodec SubscriptionRootFieldType where
   codec =
-    stringConstCodec $
-      NonEmpty.fromList $
-        (\x -> (x, T.pack $ snakeCase $ drop 4 $ show x)) <$> [minBound ..]
+    stringConstCodec
+      $ NonEmpty.fromList
+      $ (\x -> (x, T.pack $ snakeCase $ drop 4 $ show x))
+      <$> [minBound ..]
 
 -- Insert permission
 data InsPerm (b :: BackendType) = InsPerm
@@ -265,25 +271,34 @@ data InsPerm (b :: BackendType) = InsPerm
   }
   deriving (Show, Eq, Generic)
 
-instance Backend b => FromJSON (InsPerm b) where
+instance (Backend b) => FromJSON (InsPerm b) where
   parseJSON = withObject "InsPerm" $ \o ->
     InsPerm
-      <$> o .: "check"
-      <*> o .:? "set"
-      <*> o .:? "columns"
-      <*> o .:? "backend_only" .!= False
+      <$> o
+      .: "check"
+      <*> o
+      .:? "set"
+      <*> o
+      .:? "columns"
+      <*> o
+      .:? "backend_only"
+      .!= False
 
-instance Backend b => ToJSON (InsPerm b) where
+instance (Backend b) => ToJSON (InsPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
-instance Backend b => HasCodec (InsPerm b) where
+instance (Backend b) => HasCodec (InsPerm b) where
   codec =
-    AC.object (backendPrefix @b <> "InsPerm") $
-      InsPerm
-        <$> requiredField' "check" AC..= ipCheck
-        <*> optionalField' "set" AC..= ipSet
-        <*> optionalField' "columns" AC..= ipColumns
-        <*> optionalFieldWithDefault' "backend_only" False AC..= ipBackendOnly
+    AC.object (backendPrefix @b <> "InsPerm")
+      $ InsPerm
+      <$> requiredField' "check"
+      AC..= ipCheck
+        <*> optionalField' "set"
+      AC..= ipSet
+        <*> optionalField' "columns"
+      AC..= ipColumns
+        <*> optionalFieldWithDefault' "backend_only" False
+      AC..= ipBackendOnly
 
 type InsPermDef b = PermDef b InsPerm
 
@@ -311,7 +326,7 @@ instance (Hashable rootFieldType, HasCodec rootFieldType) => HasCodec (AllowedRo
       enc ARFAllowAllRootFields = Nothing
       enc (ARFAllowConfiguredRootFields fields) = Just $ Set.toList fields
 
-instance Semigroup (HashSet rootFieldType) => Semigroup (AllowedRootFields rootFieldType) where
+instance (Semigroup (HashSet rootFieldType)) => Semigroup (AllowedRootFields rootFieldType) where
   ARFAllowAllRootFields <> _ = ARFAllowAllRootFields
   _ <> ARFAllowAllRootFields = ARFAllowAllRootFields
   ARFAllowConfiguredRootFields rfL <> ARFAllowConfiguredRootFields rfR =
@@ -340,7 +355,7 @@ data SelPerm (b :: BackendType) = SelPerm
   }
   deriving (Show, Eq, Generic)
 
-instance Backend b => ToJSON (SelPerm b) where
+instance (Backend b) => ToJSON (SelPerm b) where
   toJSON SelPerm {..} =
     let queryRootFieldsPair =
           case spAllowedQueryRootFields of
@@ -356,17 +371,17 @@ instance Backend b => ToJSON (SelPerm b) where
           case spLimit of
             Nothing -> mempty
             Just limit -> ["limit" .= limit]
-     in object $
-          [ "columns" .= spColumns,
-            "filter" .= spFilter,
-            "allow_aggregations" .= spAllowAggregations,
-            "computed_fields" .= spComputedFields
-          ]
-            <> queryRootFieldsPair
-            <> subscriptionRootFieldsPair
-            <> limitPair
+     in object
+          $ [ "columns" .= spColumns,
+              "filter" .= spFilter,
+              "allow_aggregations" .= spAllowAggregations,
+              "computed_fields" .= spComputedFields
+            ]
+          <> queryRootFieldsPair
+          <> subscriptionRootFieldsPair
+          <> limitPair
 
-instance Backend b => FromJSON (SelPerm b) where
+instance (Backend b) => FromJSON (SelPerm b) where
   parseJSON = do
     withObject "SelPerm" $ \o -> do
       queryRootFieldsMaybe <- o .:? "query_root_fields"
@@ -382,25 +397,39 @@ instance Backend b => FromJSON (SelPerm b) where
           Nothing -> pure $ ARFAllowAllRootFields
 
       SelPerm
-        <$> o .: "columns"
-        <*> o .: "filter"
-        <*> o .:? "limit"
-        <*> o .:? "allow_aggregations" .!= False
-        <*> o .:? "computed_fields" .!= []
+        <$> o
+        .: "columns"
+        <*> o
+        .: "filter"
+        <*> o
+        .:? "limit"
+        <*> o
+        .:? "allow_aggregations"
+        .!= False
+        <*> o
+        .:? "computed_fields"
+        .!= []
         <*> pure allowedQueryRootFields
         <*> pure allowedSubscriptionRootFields
 
-instance Backend b => HasCodec (SelPerm b) where
+instance (Backend b) => HasCodec (SelPerm b) where
   codec =
-    AC.object (backendPrefix @b <> "SelPerm") $
-      SelPerm
-        <$> requiredField' "columns" AC..= spColumns
-        <*> requiredField' "filter" AC..= spFilter
-        <*> optionalField' "limit" AC..= spLimit
-        <*> optionalFieldWithOmittedDefault' "allow_aggregations" False AC..= spAllowAggregations
-        <*> optionalFieldWithOmittedDefault' "computed_fields" [] AC..= spComputedFields
-        <*> optionalFieldWithOmittedDefault' "query_root_fields" ARFAllowAllRootFields AC..= spAllowedQueryRootFields
-        <*> optionalFieldWithOmittedDefault' "subscription_root_fields" ARFAllowAllRootFields AC..= spAllowedSubscriptionRootFields
+    AC.object (backendPrefix @b <> "SelPerm")
+      $ SelPerm
+      <$> requiredField' "columns"
+      AC..= spColumns
+        <*> requiredField' "filter"
+      AC..= spFilter
+        <*> optionalField' "limit"
+      AC..= spLimit
+        <*> optionalFieldWithOmittedDefault' "allow_aggregations" False
+      AC..= spAllowAggregations
+        <*> optionalFieldWithOmittedDefault' "computed_fields" []
+      AC..= spComputedFields
+        <*> optionalFieldWithOmittedDefault' "query_root_fields" ARFAllowAllRootFields
+      AC..= spAllowedQueryRootFields
+        <*> optionalFieldWithOmittedDefault' "subscription_root_fields" ARFAllowAllRootFields
+      AC..= spAllowedSubscriptionRootFields
 
 type SelPermDef b = PermDef b SelPerm
 
@@ -411,21 +440,26 @@ data DelPerm (b :: BackendType) = DelPerm
   }
   deriving (Show, Eq, Generic)
 
-instance Backend b => FromJSON (DelPerm b) where
+instance (Backend b) => FromJSON (DelPerm b) where
   parseJSON = withObject "DelPerm" $ \o ->
     DelPerm
-      <$> o .: "filter"
-      <*> o .:? "backend_only" .!= False
+      <$> o
+      .: "filter"
+      <*> o
+      .:? "backend_only"
+      .!= False
 
-instance Backend b => ToJSON (DelPerm b) where
+instance (Backend b) => ToJSON (DelPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
-instance Backend b => HasCodec (DelPerm b) where
+instance (Backend b) => HasCodec (DelPerm b) where
   codec =
-    AC.object (backendPrefix @b <> "DelPerm") $
-      DelPerm
-        <$> requiredField' "filter" .== dcFilter
-        <*> optionalFieldWithOmittedDefault' "backend_only" False .== dcBackendOnly
+    AC.object (backendPrefix @b <> "DelPerm")
+      $ DelPerm
+      <$> requiredField' "filter"
+      .== dcFilter
+        <*> optionalFieldWithOmittedDefault' "backend_only" False
+      .== dcBackendOnly
     where
       (.==) = (AC..=)
 
@@ -446,29 +480,40 @@ data UpdPerm (b :: BackendType) = UpdPerm
   }
   deriving (Show, Eq, Generic)
 
-instance Backend b => FromJSON (UpdPerm b) where
+instance (Backend b) => FromJSON (UpdPerm b) where
   parseJSON = withObject "UpdPerm" $ \o ->
     UpdPerm
-      <$> o .: "columns"
-      <*> o .:? "set"
-      <*> o .: "filter"
-      <*> o .:? "check"
-      <*> o .:? "backend_only" .!= False
+      <$> o
+      .: "columns"
+      <*> o
+      .:? "set"
+      <*> o
+      .: "filter"
+      <*> o
+      .:? "check"
+      <*> o
+      .:? "backend_only"
+      .!= False
 
-instance Backend b => ToJSON (UpdPerm b) where
+instance (Backend b) => ToJSON (UpdPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
-instance Backend b => HasCodec (UpdPerm b) where
+instance (Backend b) => HasCodec (UpdPerm b) where
   codec =
-    AC.object (backendPrefix @b <> "UpdPerm") $
-      UpdPerm
-        <$> requiredField "columns" "Allowed columns" AC..= ucColumns
-        <*> optionalField "set" "Preset columns" AC..= ucSet
-        <*> requiredField' "filter" AC..= ucFilter
+    AC.object (backendPrefix @b <> "UpdPerm")
+      $ UpdPerm
+      <$> requiredField "columns" "Allowed columns"
+      AC..= ucColumns
+        <*> optionalField "set" "Preset columns"
+      AC..= ucSet
+        <*> requiredField' "filter"
+      AC..= ucFilter
         -- Include @null@ in serialized output for this field because that is
         -- the way the @toOrdJSON@ serialization is written.
-        <*> optionalFieldOrIncludedNull' "check" AC..= ucCheck
-        <*> optionalFieldWithOmittedDefault' "backend_only" False AC..= ucBackendOnly
+        <*> optionalFieldOrIncludedNull' "check"
+      AC..= ucCheck
+        <*> optionalFieldWithOmittedDefault' "backend_only" False
+      AC..= ucBackendOnly
 
 type UpdPermDef b = PermDef b UpdPerm
 
@@ -477,16 +522,16 @@ type UpdPermDef b = PermDef b UpdPerm
 -- See https://gitlab.haskell.org/ghc/ghc/-/issues/9813
 $(return [])
 
-instance Backend b => FromJSON (PermDef b SelPerm) where
+instance (Backend b) => FromJSON (PermDef b SelPerm) where
   parseJSON = genericParseJSON hasuraJSON
 
-instance Backend b => FromJSON (PermDef b InsPerm) where
+instance (Backend b) => FromJSON (PermDef b InsPerm) where
   parseJSON = genericParseJSON hasuraJSON
 
-instance Backend b => FromJSON (PermDef b UpdPerm) where
+instance (Backend b) => FromJSON (PermDef b UpdPerm) where
   parseJSON = genericParseJSON hasuraJSON
 
-instance Backend b => FromJSON (PermDef b DelPerm) where
+instance (Backend b) => FromJSON (PermDef b DelPerm) where
   parseJSON = genericParseJSON hasuraJSON
 
 $(makeLenses ''PermDef)

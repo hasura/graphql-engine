@@ -64,9 +64,9 @@ data CustomFunctionNames = CustomFunctionNames
   }
   deriving (Show, Eq, Generic)
 
-deriving instance Backend b => Show (FunctionTrackedAs b)
+deriving instance (Backend b) => Show (FunctionTrackedAs b)
 
-deriving instance Backend b => Eq (FunctionTrackedAs b)
+deriving instance (Backend b) => Eq (FunctionTrackedAs b)
 
 data ComputedFieldFunction (b :: BackendType) = ComputedFieldFunction
   { _cffName :: FunctionName b,
@@ -114,11 +114,11 @@ instance (Backend b) => ToJSON (ComputedFieldInfo b) where
     object ["name" .= name, "function" .= func, "return_type" .= tp, "description" .= description]
 
 -- | Return all the computed fields in the given list that have numeric types.
-onlyNumComputedFields :: forall b. Backend b => [ComputedFieldInfo b] -> [ComputedFieldInfo b]
+onlyNumComputedFields :: forall b. (Backend b) => [ComputedFieldInfo b] -> [ComputedFieldInfo b]
 onlyNumComputedFields = filter isNumComputedField
 
 -- | Check whether a computed field has a numeric type.
-isNumComputedField :: forall b. Backend b => ComputedFieldInfo b -> Bool
+isNumComputedField :: forall b. (Backend b) => ComputedFieldInfo b -> Bool
 isNumComputedField cfi = case computedFieldReturnType @b (_cfiReturnType cfi) of
   ReturnsScalar t -> isNumType @b t
   _ -> False

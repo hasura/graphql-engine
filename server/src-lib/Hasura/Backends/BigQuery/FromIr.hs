@@ -185,8 +185,8 @@ data ParentSelectFromEntity
 
 runFromIr :: FromIrConfig -> FromIr a -> Validate (NonEmpty Error) (a, FromIrWriter)
 runFromIr config fromIr =
-  runWriterT $
-    evalStateT
+  runWriterT
+    $ evalStateT
       (runReaderT (unFromIr fromIr) (FromIrReader {config}))
       (FromIrState {indices = mempty})
 
@@ -460,8 +460,8 @@ fromSelectAggregate minnerJoinFields annSelectG = do
                   )
               ]
       indexColumn =
-        ColumnExpression $
-          FieldName
+        ColumnExpression
+          $ FieldName
             { fieldNameEntity = innerSelectAlias,
               fieldName = unEntityAlias indexAlias
             }
@@ -796,9 +796,9 @@ fromFunction parentEntityAlias functionName positionalArgs namedArgs = do
         case parentEntityAlias of
           NoParentEntity -> refute $ pure NoParentEntityInternalError
           ParentEntityAlias entityAlias ->
-            pure $
-              ColumnExpression $
-                FieldName columnName (entityAliasText entityAlias)
+            pure
+              $ ColumnExpression
+              $ FieldName columnName (entityAliasText entityAlias)
 
 fromAnnBoolExp ::
   Ir.GBoolExp 'BigQuery (Ir.AnnBoolExpFld 'BigQuery Expression) ->
@@ -1427,9 +1427,11 @@ fromArrayAggregateSelectG annRelationSelectG = do
         joinRightTable = fromAlias (selectFrom select),
         joinOn,
         joinProvenance =
-          ArrayAggregateJoinProvenance $
-            mapMaybe (\p -> (,aggregateProjectionsFieldOrigin p) <$> projectionAlias p) . toList . selectProjections $
-              select,
+          ArrayAggregateJoinProvenance
+            $ mapMaybe (\p -> (,aggregateProjectionsFieldOrigin p) <$> projectionAlias p)
+            . toList
+            . selectProjections
+            $ select,
         -- Above: Needed by DataLoader to determine the type of
         -- Haskell-native join to perform.
         joinFieldName,
@@ -1818,7 +1820,7 @@ fromGBoolExp =
 
 -- | Attempt to refine a list into a 'NonEmpty'. If the given list is empty,
 -- this will 'refute' the computation with an 'UnexpectedEmptyList' error.
-toNonEmpty :: MonadValidate (NonEmpty Error) m => [x] -> m (NonEmpty x)
+toNonEmpty :: (MonadValidate (NonEmpty Error) m) => [x] -> m (NonEmpty x)
 toNonEmpty = \case
   [] -> refute (UnexpectedEmptyList :| [])
   x : xs -> pure (x :| xs)

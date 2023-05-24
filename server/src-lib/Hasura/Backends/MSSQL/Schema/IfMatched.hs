@@ -95,8 +95,8 @@ ifMatchedObjectParser tableInfo = runMaybeT do
         updateColumnsName = Name._update_columns
         whereName = Name._where
     whereExpParser <- tableBoolExp tableInfo
-    pure $
-      P.object objectName (Just objectDesc) do
+    pure
+      $ P.object objectName (Just objectDesc) do
         _imConditions <-
           (\whereExp -> BoolAnd $ updateFilter : maybeToList whereExp)
             <$> P.fieldOptional whereName Nothing whereExpParser
@@ -130,18 +130,19 @@ tableInsertMatchColumnsEnum tableInfo = do
   columns <- tableSelectColumns tableInfo
   let enumName = mkTypename $ tableGQLName <> Name.__insert_match_column
       description =
-        Just $
-          G.Description $
-            "select match_columns of table " <>> tableInfoName tableInfo
-  pure $
-    P.enum enumName description
-      <$> nonEmpty
-        [ ( define $ ciName column,
-            ciColumn column
-          )
-          | SCIScalarColumn column <- columns,
-            isMatchColumnValid column
-        ]
+        Just
+          $ G.Description
+          $ "select match_columns of table "
+          <>> tableInfoName tableInfo
+  pure
+    $ P.enum enumName description
+    <$> nonEmpty
+      [ ( define $ ciName column,
+          ciColumn column
+        )
+        | SCIScalarColumn column <- columns,
+          isMatchColumnValid column
+      ]
   where
     define name =
       P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo

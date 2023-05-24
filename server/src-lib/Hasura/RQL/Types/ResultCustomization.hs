@@ -66,8 +66,9 @@ customizeTypeNameString :: HashMap G.Name G.Name -> ResultCustomizer
 customizeTypeNameString typeNameMap | HashMap.null typeNameMap = mempty
 customizeTypeNameString typeNameMap =
   ResultCustomizer $ \_aliasMapping -> \case
-    JO.String t -> JO.String $
-      fromMaybe t $ do
+    JO.String t -> JO.String
+      $ fromMaybe t
+      $ do
         -- This function is only meant to be applied on type names, and creating a
         -- GraphQL name out of the string should never fail. If it nonetheless
         -- fails, we assume there will not be customization information and we

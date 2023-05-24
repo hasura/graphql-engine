@@ -80,7 +80,7 @@ withFreshPool pool action =
     . const
     $ lift action
 
-err :: Show a => a -> IO (Maybe String)
+err :: (Show a) => a -> IO (Maybe String)
 err = pure . Just . show
 
 nada :: IO ()

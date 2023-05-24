@@ -69,13 +69,13 @@ instance FromJSON SourceKindInfo where
 
 instance ToJSON SourceKindInfo where
   toJSON SourceKindInfo {..} =
-    J.object $
-      [ "kind" .= _skiSourceKind,
-        "builtin" .= _skiBuiltin,
-        "available" .= _skiAvailable
-      ]
-        ++ ["display_name" .= _skiDisplayName | has _skiDisplayName]
-        ++ ["release_name" .= _skiReleaseName | has _skiReleaseName]
+    J.object
+      $ [ "kind" .= _skiSourceKind,
+          "builtin" .= _skiBuiltin,
+          "available" .= _skiAvailable
+        ]
+      ++ ["display_name" .= _skiDisplayName | has _skiDisplayName]
+      ++ ["release_name" .= _skiReleaseName | has _skiReleaseName]
     where
       has :: Maybe Text -> Bool
       has x = not $ isNothing x || x == Just ""
@@ -137,7 +137,7 @@ builtinSourceKinds =
   SourceKinds $ mapMaybe mkNativeSource (filter (/= Backend.DataConnector) Backend.supportedBackends)
 
 -- | Collect 'SourceKindInfo' from Native and GDC backend types.
-collectSourceKinds :: Metadata.MetadataM m => m SourceKinds
+collectSourceKinds :: (Metadata.MetadataM m) => m SourceKinds
 collectSourceKinds = fmap (builtinSourceKinds <>) agentSourceKinds
 
 runListSourceKinds ::

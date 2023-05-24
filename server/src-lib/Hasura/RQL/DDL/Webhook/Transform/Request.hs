@@ -133,8 +133,8 @@ runUnescapedRequestTemplateTransform' ::
   UnescapedTemplate ->
   Validation TransformErrorBundle ByteString
 runUnescapedRequestTemplateTransform' context unescapedTemplate =
-  fromEither $
-    runUnescapedRequestTemplateTransform context unescapedTemplate
+  fromEither
+    $ runUnescapedRequestTemplateTransform context unescapedTemplate
 
 -- TODO: Should this live in 'Hasura.RQL.DDL.Webhook.Transform.Validation'?
 validateRequestUnescapedTemplateTransform ::

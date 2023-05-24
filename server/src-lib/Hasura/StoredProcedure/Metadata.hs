@@ -40,9 +40,9 @@ data StoredProcedureMetadata (b :: BackendType) = StoredProcedureMetadata
   }
   deriving (Generic)
 
-deriving instance Backend b => Eq (StoredProcedureMetadata b)
+deriving instance (Backend b) => Eq (StoredProcedureMetadata b)
 
-deriving instance Backend b => Show (StoredProcedureMetadata b)
+deriving instance (Backend b) => Show (StoredProcedureMetadata b)
 
 instance (Backend b) => HasCodec (StoredProcedureMetadata b) where
   codec =
@@ -50,16 +50,16 @@ instance (Backend b) => HasCodec (StoredProcedureMetadata b) where
       ("A stored procedure as represented in metadata.")
       $ AC.object (backendPrefix @b <> "StoredProcedureMetadata")
       $ StoredProcedureMetadata
-        <$> AC.requiredField "stored_procedure" spDoc
-          AC..= _spmStoredProcedure
+      <$> AC.requiredField "stored_procedure" spDoc
+      AC..= _spmStoredProcedure
         <*> requiredField "configuration" configDoc
-          AC..= _spmConfig
+      AC..= _spmConfig
         <*> requiredField "returns" returnsDoc
-          AC..= _spmReturns
+      AC..= _spmReturns
         <*> optionalFieldWithDefault "arguments" mempty argumentDoc
-          AC..= _spmArguments
+      AC..= _spmArguments
         <*> optionalField "description" descriptionDoc
-          AC..= _spmDescription
+      AC..= _spmDescription
     where
       spDoc = "The name of the SQL stored procedure"
       configDoc = "The configuration for the SQL stored procedure"

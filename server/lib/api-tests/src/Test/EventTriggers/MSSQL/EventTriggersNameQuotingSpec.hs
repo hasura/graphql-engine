@@ -69,8 +69,8 @@ authorsTable tableName =
 
 tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests = describe "weird trigger names are allowed" do
-  it "metadata_api: allow creating an event trigger with weird name via replace_metadata" $
-    \(testEnvironment, (webhookServer, _)) -> do
+  it "metadata_api: allow creating an event trigger with weird name via replace_metadata"
+    $ \(testEnvironment, (webhookServer, _)) -> do
       let createEventTriggerWithWeirdName =
             addEventTriggerViaReplaceMetadata testEnvironment "weird]name]" webhookServer
           createEventTriggerWithWeirdNameExpectedResponse =

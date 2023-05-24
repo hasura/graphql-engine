@@ -30,16 +30,20 @@ instance HasCodec HeaderConf where
   codec = bimapCodec dec enc $ disjointEitherCodec valCodec fromEnvCodec
     where
       valCodec =
-        AC.object "HeaderConfValue" $
-          (,)
-            <$> requiredField' "name" AC..= fst
-            <*> requiredField' "value" AC..= snd
+        AC.object "HeaderConfValue"
+          $ (,)
+          <$> requiredField' "name"
+          AC..= fst
+            <*> requiredField' "value"
+          AC..= snd
 
       fromEnvCodec =
-        AC.object "HeaderConfFromEnv" $
-          (,)
-            <$> requiredField' "name" AC..= fst
-            <*> requiredField' "value_from_env" AC..= snd
+        AC.object "HeaderConfFromEnv"
+          $ (,)
+          <$> requiredField' "name"
+          AC..= fst
+            <*> requiredField' "value_from_env"
+          AC..= snd
 
       dec (Left (name, value)) = Right $ HeaderConf name (HVValue value)
       dec (Right (name, valueFromEnv)) =
@@ -59,9 +63,10 @@ instance FromJSON HeaderConf where
       (Nothing, Nothing) -> fail "expecting value or value_from_env keys"
       (Just val, Nothing) -> return $ HeaderConf name (HVValue val)
       (Nothing, Just val) -> do
-        when (T.isPrefixOf "HASURA_GRAPHQL_" val) $
-          fail $
-            "env variables starting with \"HASURA_GRAPHQL_\" are not allowed in value_from_env: " <> T.unpack val
+        when (T.isPrefixOf "HASURA_GRAPHQL_" val)
+          $ fail
+          $ "env variables starting with \"HASURA_GRAPHQL_\" are not allowed in value_from_env: "
+          <> T.unpack val
         return $ HeaderConf name (HVEnv val)
       (Just _, Just _) -> fail "expecting only one of value or value_from_env keys"
   parseJSON _ = fail "expecting object for headers"

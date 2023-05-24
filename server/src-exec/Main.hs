@@ -112,13 +112,13 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
         let Loggers _ logger _ = appEnvLoggers appEnv
 
         _idleGCThread <-
-          C.forkImmortal "ourIdleGC" logger $
-            GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
+          C.forkImmortal "ourIdleGC" logger
+            $ GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
         runAppM appEnv do
           appStateRef <- initialiseAppContext env serveOptions appInit
-          lowerManagedT $
-            runHGEServer (const $ pure ()) appStateRef initTime Nothing OSSConsole ekgStore
+          lowerManagedT
+            $ runHGEServer (const $ pure ()) appStateRef initTime Nothing OSSConsole ekgStore
     HCExport -> do
       metadataConnection <- initMetadataConnectionInfo env metadataDbUrl rci
       res <- runTxWithMinimalPool metadataConnection fetchMetadataFromCatalog

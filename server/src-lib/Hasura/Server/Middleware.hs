@@ -38,14 +38,14 @@ corsMiddleware getPolicy app req sendResp = do
 
     respondPreFlight :: B.ByteString -> CorsPolicy -> Response
     respondPreFlight origin policy =
-      setHeaders (mkPreFlightHeaders requestedHeaders) $
-        injectCorsHeaders origin policy emptyResponse
+      setHeaders (mkPreFlightHeaders requestedHeaders)
+        $ injectCorsHeaders origin policy emptyResponse
 
     emptyResponse = responseLBS HTTP.status204 [] ""
     requestedHeaders =
-      fromMaybe "" $
-        getRequestHeader "Access-Control-Request-Headers" $
-          requestHeaders req
+      fromMaybe ""
+        $ getRequestHeader "Access-Control-Request-Headers"
+        $ requestHeaders req
 
     injectCorsHeaders :: B.ByteString -> CorsPolicy -> Response -> Response
     injectCorsHeaders origin policy = setHeaders (mkCorsHeaders origin policy)

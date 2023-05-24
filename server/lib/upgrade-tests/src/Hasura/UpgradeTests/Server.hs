@@ -57,18 +57,18 @@ withBaseHge version (DatabaseSchema schemaUrl) f =
   TC.runTestContainer TC.defaultConfig do
     port <- liftIO getFreePort
     _container <-
-      TC.run $
-        TC.containerRequest (TC.fromTag ("hasura/graphql-engine:" <> version))
-          & TC.setSuffixedName "hge-test-upgrade-base-server"
-          & TC.setCmd
-            [ "graphql-engine",
-              "--database-url",
-              Text.pack schemaUrl,
-              "serve",
-              "--server-port",
-              tshow port
-            ]
-          & TC.withNetwork hostNetwork
+      TC.run
+        $ TC.containerRequest (TC.fromTag ("hasura/graphql-engine:" <> version))
+        & TC.setSuffixedName "hge-test-upgrade-base-server"
+        & TC.setCmd
+          [ "graphql-engine",
+            "--database-url",
+            Text.pack schemaUrl,
+            "serve",
+            "--server-port",
+            tshow port
+          ]
+        & TC.withNetwork hostNetwork
     let url = "http://localhost:" <> show port
     liftIO do
       Http.healthCheck $ url <> "/healthz"

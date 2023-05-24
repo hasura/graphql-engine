@@ -308,8 +308,8 @@ tests = do
   describe "test_nested_select_with_foreign_key_alter" do
     -- from: queries/graphql_query/citus/nested_select_with_foreign_key_alter_citus.yaml [0]
     it "Alter foreign key constraint on article table" \testEnvironment -> do
-      void $
-        GraphqlEngine.postV2Query
+      void
+        $ GraphqlEngine.postV2Query
           200
           testEnvironment
           [interpolateYaml|

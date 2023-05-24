@@ -52,11 +52,14 @@ instance NFData ToSchemaRelationshipDef
 
 instance HasCodec ToSchemaRelationshipDef where
   codec =
-    object "ToSchemaRelationshipDef" $
-      ToSchemaRelationshipDef
-        <$> requiredField' "remote_schema" .= _trrdRemoteSchema
-        <*> requiredFieldWith' "lhs_fields" hashSetCodec .= _trrdLhsFields
-        <*> requiredField' "remote_field" .= _trrdRemoteField
+    object "ToSchemaRelationshipDef"
+      $ ToSchemaRelationshipDef
+      <$> requiredField' "remote_schema"
+      .= _trrdRemoteSchema
+        <*> requiredFieldWith' "lhs_fields" hashSetCodec
+      .= _trrdLhsFields
+        <*> requiredField' "remote_field"
+      .= _trrdRemoteField
 
 -- | Targeted field in a remote schema relationship.
 -- TODO: explain about subfields and why this is a container
@@ -67,27 +70,28 @@ instance NFData RemoteFields
 
 instance HasCodec RemoteFields where
   codec =
-    named "RemoteFields" $
-      bimapCodec dec enc $
-        hashMapCodec argumentsCodec
-          <?> "Remote fields are represented by an object that maps each field name to its arguments."
+    named "RemoteFields"
+      $ bimapCodec dec enc
+      $ hashMapCodec argumentsCodec
+      <?> "Remote fields are represented by an object that maps each field name to its arguments."
     where
       argumentsCodec :: JSONCodec (RemoteArguments, Maybe RemoteFields)
       argumentsCodec =
-        object "FieldCall" $
-          (,)
-            <$> requiredField' "arguments"
-              .= fst
+        object "FieldCall"
+          $ (,)
+          <$> requiredField' "arguments"
+          .= fst
             <*> optionalField' "field"
-              .= snd
+          .= snd
 
       dec :: HashMap G.Name (RemoteArguments, Maybe RemoteFields) -> Either String RemoteFields
       dec hashmap = case HashMap.toList hashmap of
         [(fieldName, (arguments, maybeSubField))] ->
           let subfields = maybe [] (toList . unRemoteFields) maybeSubField
-           in Right $
-                RemoteFields $
-                  FieldCall {fcName = fieldName, fcArguments = arguments} :| subfields
+           in Right
+                $ RemoteFields
+                $ FieldCall {fcName = fieldName, fcArguments = arguments}
+                :| subfields
         [] -> Left "Expecting one single mapping, received none."
         _ -> Left "Expecting one single mapping, received too many."
 
@@ -153,10 +157,10 @@ instance Hashable RemoteArguments
 
 instance HasCodec RemoteArguments where
   codec =
-    named "RemoteArguments" $
-      CommentCodec "Remote arguments are represented by an object that maps each argument name to its value." $
-        dimapCodec RemoteArguments getRemoteArguments $
-          hashMapCodec (graphQLValueCodec varCodec)
+    named "RemoteArguments"
+      $ CommentCodec "Remote arguments are represented by an object that maps each argument name to its value."
+      $ dimapCodec RemoteArguments getRemoteArguments
+      $ hashMapCodec (graphQLValueCodec varCodec)
     where
       varCodec = bimapCodec decodeVariable encodeVariable textCodec
 
@@ -234,22 +238,24 @@ data RemoteSchemaTypeRelationships r = RemoteSchemaTypeRelationships
 
 instance (HasCodec (RemoteRelationshipG r), Typeable r) => HasCodec (RemoteSchemaTypeRelationships r) where
   codec =
-    AC.object ("RemoteSchemaMetadata_" <> typeableName @r) $
-      RemoteSchemaTypeRelationships
-        <$> requiredFieldWith' "type_name" graphQLFieldNameCodec AC..= _rstrsName
+    AC.object ("RemoteSchemaMetadata_" <> typeableName @r)
+      $ RemoteSchemaTypeRelationships
+      <$> requiredFieldWith' "type_name" graphQLFieldNameCodec
+      AC..= _rstrsName
         <*> optionalFieldWithDefaultWith'
           "relationships"
           (insertionOrderedElemsCodec _rrName)
           mempty
-          AC..= _rstrsRelationships
+      AC..= _rstrsRelationships
 
-instance J.FromJSON (RemoteRelationshipG r) => J.FromJSON (RemoteSchemaTypeRelationships r) where
+instance (J.FromJSON (RemoteRelationshipG r)) => J.FromJSON (RemoteSchemaTypeRelationships r) where
   parseJSON = J.withObject "RemoteSchemaMetadata" \obj ->
     RemoteSchemaTypeRelationships
-      <$> obj J..: "type_name"
+      <$> obj
+      J..: "type_name"
       <*> (oMapFromL _rrName <$> obj J..:? "relationships" J..!= [])
 
-instance J.ToJSON (RemoteRelationshipG r) => J.ToJSON (RemoteSchemaTypeRelationships r) where
+instance (J.ToJSON (RemoteRelationshipG r)) => J.ToJSON (RemoteSchemaTypeRelationships r) where
   toJSON RemoteSchemaTypeRelationships {..} =
     J.object
       [ "type_name" J..= _rstrsName,

@@ -83,15 +83,19 @@ data SubscriptionsState = SubscriptionsState
 
 initSubscriptionsState :: SubscriptionPostPollHook -> IO SubscriptionsState
 initSubscriptionsState pollHook =
-  STM.atomically $
-    SubscriptionsState <$> STMMap.new <*> STMMap.new <*> pure pollHook <*> TMap.new
+  STM.atomically
+    $ SubscriptionsState
+    <$> STMMap.new
+    <*> STMMap.new
+    <*> pure pollHook
+    <*> TMap.new
 
 dumpSubscriptionsState :: Bool -> LiveQueriesOptions -> StreamQueriesOptions -> SubscriptionsState -> IO J.Value
 dumpSubscriptionsState extended liveQOpts streamQOpts (SubscriptionsState lqMap streamMap _ _) = do
   lqMapJ <- dumpPollerMap extended lqMap
   streamMapJ <- dumpPollerMap extended streamMap
-  return $
-    J.object
+  return
+    $ J.object
       [ "options" J..= liveQOpts,
         "live_queries_map" J..= lqMapJ,
         "stream_queries_map" J..= streamMapJ,
@@ -160,7 +164,7 @@ findPollerForSubscriber subscriber pollerMap pollerKey cohortKey addToCohort add
 -- | Fork a thread handling a regular (live query) subscription
 addLiveQuery ::
   forall b.
-  BackendTransport b =>
+  (BackendTransport b) =>
   L.Logger L.Hasura ->
   ServerMetrics ->
   PrometheusMetrics ->
@@ -199,8 +203,8 @@ addLiveQuery
 
     $assertNFHere subscriber -- so we don't write thunks to mutable vars
     (pollerMaybe, ()) <-
-      STM.atomically $
-        findPollerForSubscriber
+      STM.atomically
+        $ findPollerForSubscriber
           subscriber
           lqMap
           handlerId
@@ -214,8 +218,9 @@ addLiveQuery
     -- cancelled after putTMVar
     for_ pollerMaybe $ \poller -> do
       pollerId <- PollerId <$> UUID.nextRandom
-      threadRef <- forkImmortal ("pollLiveQuery." <> show pollerId) logger $
-        forever $ do
+      threadRef <- forkImmortal ("pollLiveQuery." <> show pollerId) logger
+        $ forever
+        $ do
           (lqOpts, _) <- getSubscriptionOptions
           let SubscriptionsOptions _ refetchInterval = lqOpts
           pollLiveQuery @b
@@ -272,7 +277,7 @@ addLiveQuery
 -- | Fork a thread handling a streaming subscription
 addStreamSubscriptionQuery ::
   forall b.
-  BackendTransport b =>
+  (BackendTransport b) =>
   L.Logger L.Hasura ->
   ServerMetrics ->
   PrometheusMetrics ->
@@ -314,8 +319,8 @@ addStreamSubscriptionQuery
 
     $assertNFHere subscriber -- so we don't write thunks to mutable vars
     (handlerM, cohortCursorTVar) <-
-      STM.atomically $
-        findPollerForSubscriber
+      STM.atomically
+        $ findPollerForSubscriber
           subscriber
           streamQueryMap
           handlerId
@@ -329,8 +334,9 @@ addStreamSubscriptionQuery
     -- cancelled after putTMVar
     for_ handlerM $ \handler -> do
       pollerId <- PollerId <$> UUID.nextRandom
-      threadRef <- forkImmortal ("pollStreamingQuery." <> show (unPollerId pollerId)) logger $
-        forever $ do
+      threadRef <- forkImmortal ("pollStreamingQuery." <> show (unPollerId pollerId)) logger
+        $ forever
+        $ do
           (_, streamQOpts) <- getSubscriptionOptions
           let SubscriptionsOptions _ refetchInterval = streamQOpts
           pollStreamingQuery @b
@@ -398,8 +404,9 @@ removeLiveQuery ::
   Maybe OperationName ->
   IO ()
 removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberDetails handlerId cohortId sinkId) granularPrometheusMetricsState maybeOperationName = mask_ $ do
-  join $
-    STM.atomically $ do
+  join
+    $ STM.atomically
+    $ do
       detM <- getQueryDet lqMap
       case detM of
         Nothing -> return (pure ())
@@ -421,8 +428,9 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
 
     getQueryDet subMap = do
       pollerM <- STMMap.lookup handlerId subMap
-      fmap join $
-        forM pollerM $ \poller -> do
+      fmap join
+        $ forM pollerM
+        $ \poller -> do
           cohortM <- TMap.lookup cohortId (_pCohorts poller)
           return $ (poller,) <$> cohortM
 
@@ -445,7 +453,8 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
         then do
           STMMap.delete handlerId lqMap
           threadRefM <- fmap _pThread <$> STM.tryReadTMVar ioState
-          return $
+          return
+            $
             -- deferred IO:
             case threadRefM of
               Just threadRef -> do
@@ -461,15 +470,15 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
               -- This would seem to imply addLiveQuery broke or a bug
               -- elsewhere. Be paranoid and log:
               Nothing ->
-                L.unLogger logger $
-                  L.UnstructuredLog L.LevelError $
-                    fromString $
-                      "In removeLiveQuery no worker thread installed. Please report this as a bug: "
-                        <> show lqId
+                L.unLogger logger
+                  $ L.UnstructuredLog L.LevelError
+                  $ fromString
+                  $ "In removeLiveQuery no worker thread installed. Please report this as a bug: "
+                  <> show lqId
         else do
           let numSubscriptionMetric = submActiveSubscriptions $ pmSubscriptionMetrics $ prometheusMetrics
-          return $
-            recordMetricWithLabel
+          return
+            $ recordMetricWithLabel
               granularPrometheusMetricsState
               True
               (GaugeVector.dec numSubscriptionMetric promMetricGranularLabel)
@@ -486,8 +495,9 @@ removeStreamingQuery ::
   Maybe OperationName ->
   IO ()
 removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (SubscriberDetails handlerId (cohortId, cursorVariableTV) sinkId) granularPrometheusMetricsState maybeOperationName = mask_ $ do
-  join $
-    STM.atomically $ do
+  join
+    $ STM.atomically
+    $ do
       detM <- getQueryDet streamQMap
       case detM of
         Nothing -> return (pure ())
@@ -512,8 +522,9 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
       pollerM <- STMMap.lookup handlerId subMap
       (CursorVariableValues currentCohortCursorVal) <- STM.readTVar cursorVariableTV
       let updatedCohortId = modifyCursorCohortVariables (mkUnsafeValidateVariables currentCohortCursorVal) cohortId
-      fmap join $
-        forM pollerM $ \poller -> do
+      fmap join
+        $ forM pollerM
+        $ \poller -> do
           cohortM <- TMap.lookup updatedCohortId (_pCohorts poller)
           return $ (poller,updatedCohortId,) <$> cohortM
 
@@ -536,7 +547,8 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
         then do
           STMMap.delete handlerId streamQMap
           threadRefM <- fmap _pThread <$> STM.tryReadTMVar ioState
-          return $
+          return
+            $
             -- deferred IO:
             case threadRefM of
               Just threadRef -> do
@@ -552,20 +564,20 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
               -- This would seem to imply addStreamSubscriptionQuery broke or a bug
               -- elsewhere. Be paranoid and log:
               Nothing ->
-                L.unLogger logger $
-                  L.UnstructuredLog L.LevelError $
-                    fromString $
-                      "In removeStreamingQuery no worker thread installed. Please report this as a bug: "
-                        <> " poller_id: "
-                        <> show handlerId
-                        <> ", cohort_id: "
-                        <> show cohortId
-                        <> ", subscriber_id:"
-                        <> show sinkId
+                L.unLogger logger
+                  $ L.UnstructuredLog L.LevelError
+                  $ fromString
+                  $ "In removeStreamingQuery no worker thread installed. Please report this as a bug: "
+                  <> " poller_id: "
+                  <> show handlerId
+                  <> ", cohort_id: "
+                  <> show cohortId
+                  <> ", subscriber_id:"
+                  <> show sinkId
         else do
           let numSubscriptionMetric = submActiveSubscriptions $ pmSubscriptionMetrics $ prometheusMetrics
-          return $
-            recordMetricWithLabel
+          return
+            $ recordMetricWithLabel
               granularPrometheusMetricsState
               True
               (GaugeVector.dec numSubscriptionMetric promMetricGranularLabel)
@@ -613,8 +625,8 @@ addAsyncActionLiveQuery ::
   LiveAsyncActionQuery ->
   IO ()
 addAsyncActionLiveQuery queriesState opId actionIds onException liveQuery =
-  STM.atomically $
-    TMap.insert (AsyncActionQueryLive actionIds onException liveQuery) opId queriesState
+  STM.atomically
+    $ TMap.insert (AsyncActionQueryLive actionIds onException liveQuery) opId queriesState
 
 removeAsyncActionLiveQuery ::
   AsyncActionSubscriptionState -> OperationId -> IO ()

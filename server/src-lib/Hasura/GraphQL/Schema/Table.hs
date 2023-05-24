@@ -100,9 +100,10 @@ tableSelectColumnsEnum tableInfo = do
   columns <- tableSelectColumns tableInfo
   let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableSelectColumnTypeName tableGQLName
       description =
-        Just $
-          G.Description $
-            "select columns of table " <>> tableInfoName tableInfo
+        Just
+          $ G.Description
+          $ "select columns of table "
+          <>> tableInfoName tableInfo
   -- We noticed many 'Definition's allocated, from 'define' below, so memoize
   -- to gain more sharing and lower memory residency.
   case nonEmpty $ map (define . structuredColumnInfoName &&& structuredColumnInfoColumn) columns of
@@ -112,8 +113,8 @@ tableSelectColumnsEnum tableInfo = do
         <$> P.memoizeOn
           'tableSelectColumnsEnum
           (enumName, description, columns)
-          ( pure $
-              P.enum enumName description columnDefinitions
+          ( pure
+              $ P.enum enumName description columnDefinitions
           )
   where
     define name =
@@ -143,17 +144,20 @@ tableSelectColumnsPredEnum columnPredicate predName tableInfo = do
   columns <- filter (columnPredicate . ciType) . mapMaybe (^? _SCIScalarColumn) <$> tableSelectColumns tableInfo
   let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkSelectColumnPredTypeName tableGQLName predName
       description =
-        Just $
-          G.Description $
-            "select \"" <> G.unName predName' <> "\" columns of table " <>> tableInfoName tableInfo
-  pure $
-    P.enum enumName description
-      <$> nonEmpty
-        [ ( define $ ciName column,
-            ciColumn column
-          )
-          | column <- columns
-        ]
+        Just
+          $ G.Description
+          $ "select \""
+          <> G.unName predName'
+          <> "\" columns of table "
+          <>> tableInfoName tableInfo
+  pure
+    $ P.enum enumName description
+    <$> nonEmpty
+      [ ( define $ ciName column,
+          ciColumn column
+        )
+        | column <- columns
+      ]
   where
     define name =
       P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo
@@ -202,12 +206,12 @@ updateColumnsPlaceholderParser tableInfo = do
     Nothing -> do
       tableGQLName <- getTableIdentifierName tableInfo
       let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableUpdateColumnTypeName tableGQLName
-      pure $
-        P.enum enumName (Just $ G.Description $ "placeholder for update columns of table " <> tableInfoName tableInfo <<> " (current role has no relevant permissions)") $
-          pure
-            ( P.Definition @_ @P.EnumValueInfo Name.__PLACEHOLDER (Just $ G.Description "placeholder (do not use)") Nothing [] P.EnumValueInfo,
-              Nothing
-            )
+      pure
+        $ P.enum enumName (Just $ G.Description $ "placeholder for update columns of table " <> tableInfoName tableInfo <<> " (current role has no relevant permissions)")
+        $ pure
+          ( P.Definition @_ @P.EnumValueInfo Name.__PLACEHOLDER (Just $ G.Description "placeholder (do not use)") Nothing [] P.EnumValueInfo,
+            Nothing
+          )
 
 tableSelectPermissions :: RoleName -> TableInfo b -> Maybe (SelPermInfo b)
 tableSelectPermissions role tableInfo = _permSel $ getRolePermInfo role tableInfo

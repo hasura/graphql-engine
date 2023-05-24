@@ -21,16 +21,16 @@ spec = do
     testToFromJSONToSchema (TableName ["my_table_name"]) [aesonQQ|["my_table_name"]|]
     jsonOpenApiProperties genTableName
   describe "TableInfo" $ do
-    describe "minimal" $
-      testFromJSON
+    describe "minimal"
+      $ testFromJSON
         (TableInfo (TableName ["my_table_name"]) Table [] Nothing (ForeignKeys mempty) Nothing False False False)
         [aesonQQ|
           { "name": ["my_table_name"],
             "columns": []
           }
         |]
-    describe "non-minimal" $
-      testToFromJSONToSchema
+    describe "non-minimal"
+      $ testToFromJSONToSchema
         ( TableInfo
             (TableName ["my_table_name"])
             View
@@ -53,8 +53,8 @@ spec = do
             "deletable": true
           }
         |]
-    describe "foreign-key" $
-      testToFromJSONToSchema
+    describe "foreign-key"
+      $ testToFromJSONToSchema
         ( TableInfo
             (TableName ["my_table_name"])
             Table
@@ -87,21 +87,21 @@ spec = do
         |]
     jsonOpenApiProperties genTableInfo
 
-genTableName :: MonadGen m => m TableName
+genTableName :: (MonadGen m) => m TableName
 genTableName = TableName <$> Gen.nonEmpty (linear 1 3) (genArbitraryAlphaNumText defaultRange)
 
-genForeignKeys :: MonadGen m => m ForeignKeys
+genForeignKeys :: (MonadGen m) => m ForeignKeys
 genForeignKeys = ForeignKeys <$> genHashMap genConstraintName genConstraint defaultRange
 
-genConstraintName :: MonadGen m => m ConstraintName
+genConstraintName :: (MonadGen m) => m ConstraintName
 genConstraintName = ConstraintName <$> genArbitraryAlphaNumText defaultRange
 
-genConstraint :: MonadGen m => m Constraint
+genConstraint :: (MonadGen m) => m Constraint
 genConstraint =
   let mapping = genHashMap genColumnName genColumnName defaultRange
    in Constraint <$> genTableName <*> mapping
 
-genTableType :: MonadGen m => m TableType
+genTableType :: (MonadGen m) => m TableType
 genTableType = Gen.enumBounded
 
 -- | Note: this generator is intended for serialization tests only and does not ensure valid Foreign Key Constraints.

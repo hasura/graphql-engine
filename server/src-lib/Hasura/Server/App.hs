@@ -161,7 +161,7 @@ newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
 instance MonadTrans Handler where
   lift = Handler . lift . lift
 
-instance Monad m => UserInfoM (Handler m) where
+instance (Monad m) => UserInfoM (Handler m) where
   askUserInfo = asks hcUser
 
 runHandler :: (HasResourceLimits m, MonadBaseControl IO m) => HandlerCtx -> Handler m a -> m (Either QErr a)
@@ -234,10 +234,10 @@ parseBody reqBody =
 onlyAdmin :: (MonadError QErr m, MonadReader HandlerCtx m) => m ()
 onlyAdmin = do
   uRole <- asks (_uiRole . hcUser)
-  unless (uRole == adminRoleName) $
-    throw400 AccessDenied "You have to be an admin to access this endpoint"
+  unless (uRole == adminRoleName)
+    $ throw400 AccessDenied "You have to be an admin to access this endpoint"
 
-setHeader :: MonadIO m => HTTP.Header -> Spock.ActionCtxT ctx m ()
+setHeader :: (MonadIO m) => HTTP.Header -> Spock.ActionCtxT ctx m ()
 setHeader (headerName, headerValue) =
   Spock.setHeader (bsToTxt $ CI.original headerName) (bsToTxt headerValue)
 
@@ -252,23 +252,23 @@ class (Monad m) => MonadMetadataApiAuthorization m where
   authorizeV2QueryApi ::
     V2Q.RQLQuery -> HandlerCtx -> m (Either QErr ())
 
-instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (ReaderT r m) where
+instance (MonadMetadataApiAuthorization m) => MonadMetadataApiAuthorization (ReaderT r m) where
   authorizeV1QueryApi q hc = lift $ authorizeV1QueryApi q hc
   authorizeV1MetadataApi q hc = lift $ authorizeV1MetadataApi q hc
   authorizeV2QueryApi q hc = lift $ authorizeV2QueryApi q hc
 
-instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (ExceptT e m) where
+instance (MonadMetadataApiAuthorization m) => MonadMetadataApiAuthorization (ExceptT e m) where
   authorizeV1QueryApi q hc = lift $ authorizeV1QueryApi q hc
   authorizeV1MetadataApi q hc = lift $ authorizeV1MetadataApi q hc
   authorizeV2QueryApi q hc = lift $ authorizeV2QueryApi q hc
 
-instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (Tracing.TraceT m) where
+instance (MonadMetadataApiAuthorization m) => MonadMetadataApiAuthorization (Tracing.TraceT m) where
   authorizeV1QueryApi q hc = lift $ authorizeV1QueryApi q hc
   authorizeV1MetadataApi q hc = lift $ authorizeV1MetadataApi q hc
   authorizeV2QueryApi q hc = lift $ authorizeV2QueryApi q hc
 
 -- | The config API (/v1alpha1/config) handler
-class Monad m => MonadConfigApiHandler m where
+class (Monad m) => MonadConfigApiHandler m where
   runConfigApiHandler ::
     AppStateRef impl ->
     Spock.SpockCtxT () m ()
@@ -310,12 +310,12 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
     let traceIdMaybe =
           lookup "X-B3-TraceId" headers >>= \rawTraceId ->
             if
-                | Char8.length rawTraceId == 32 ->
-                    Tracing.traceIdFromHex rawTraceId
-                | Char8.length rawTraceId == 16 ->
-                    Tracing.traceIdFromHex $ Char8.replicate 16 '0' <> rawTraceId
-                | otherwise ->
-                    Nothing
+              | Char8.length rawTraceId == 32 ->
+                  Tracing.traceIdFromHex rawTraceId
+              | Char8.length rawTraceId == 16 ->
+                  Tracing.traceIdFromHex $ Char8.replicate 16 '0' <> rawTraceId
+              | otherwise ->
+                  Nothing
 
     case traceIdMaybe of
       Just traceId -> do
@@ -523,8 +523,8 @@ v2QueryHandler schemaCacheRefUpdater query = Tracing.newSpan "v2 Query" $ do
   schemaCache <- asks hcSchemaCache
   (liftEitherM . authorizeV2QueryApi query) =<< ask
   res <-
-    bool (fst <$> dbAction schemaCache) (schemaCacheRefUpdater dbAction) $
-      V2Q.queryModifiesSchema query
+    bool (fst <$> dbAction schemaCache) (schemaCacheRefUpdater dbAction)
+      $ V2Q.queryModifiesSchema query
   return $ HttpResponse res []
   where
     -- Hit postgres
@@ -651,11 +651,11 @@ consoleAssetsHandler logger loggingSettings dir path = do
   -- '..' in paths need not be handed as it is resolved in the url by
   -- spock's routing. we get the expanded path.
   eFileContents <-
-    liftIO $
-      try @IOException do
+    liftIO
+      $ try @IOException do
         unless validFilename $ throwIO $ userError "invalid asset filename"
-        BL.readFile $
-          joinPath [T.unpack dir, pathStr]
+        BL.readFile
+          $ joinPath [T.unpack dir, pathStr]
   either (onError reqHeaders) onSuccess eFileContents
   where
     pathStr = T.unpack path
@@ -693,7 +693,7 @@ ceConsoleTypeIdentifier = \case
   OSSConsole -> "oss"
   ProLiteConsole -> "pro-lite"
 
-instance ConsoleRenderer m => ConsoleRenderer (Tracing.TraceT m) where
+instance (ConsoleRenderer m) => ConsoleRenderer (Tracing.TraceT m) where
   type ConsoleType (Tracing.TraceT m) = ConsoleType m
   renderConsole a b c d e f = lift $ renderConsole a b c d e f
 
@@ -722,8 +722,9 @@ configApiGetHandler ::
   AppStateRef impl ->
   Spock.SpockCtxT () m ()
 configApiGetHandler appStateRef = do
-  Spock.get "v1alpha1/config" $
-    onlyWhenApiEnabled isConfigEnabled appStateRef $ do
+  Spock.get "v1alpha1/config"
+    $ onlyWhenApiEnabled isConfigEnabled appStateRef
+    $ do
       AppEnv {..} <- lift askAppEnv
       AppContext {..} <- liftIO $ getAppContext appStateRef
       let (CheckFeatureFlag checkFeatureFlag) = appEnvCheckFeatureFlag
@@ -731,8 +732,9 @@ configApiGetHandler appStateRef = do
         traverse
           (\ff -> (,) ff <$> liftIO (checkFeatureFlag ff))
           (HashMap.elems (getFeatureFlags featureFlags))
-      mkSpockAction appStateRef encodeQErr id $
-        mkGetHandler $ do
+      mkSpockAction appStateRef encodeQErr id
+        $ mkGetHandler
+        $ do
           onlyAdmin
           let res =
                 runGetConfig
@@ -793,9 +795,9 @@ mkWaiApp ::
 mkWaiApp setupHook appStateRef consoleType ekgStore wsServerEnv = do
   appEnv@AppEnv {..} <- askAppEnv
   spockApp <- liftWithStateless $ \lowerIO ->
-    Spock.spockAsApp $
-      Spock.spockT lowerIO $
-        httpApp setupHook appStateRef appEnv consoleType ekgStore
+    Spock.spockAsApp
+      $ Spock.spockT lowerIO
+      $ httpApp setupHook appStateRef appEnv consoleType ekgStore
 
   let wsServerApp = WS.createWSServerApp (_lsEnabledLogTypes appEnvLoggingSettings) wsServerEnv appEnvWebSocketConnectionInitTimeout appEnvLicenseKeyCache
       stopWSServer = WS.stopWSServerApp wsServerEnv
@@ -843,8 +845,8 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore = do
   setupHook appStateRef
 
   -- cors middleware
-  Spock.middleware $
-    corsMiddleware (acCorsPolicy <$> getAppContext appStateRef)
+  Spock.middleware
+    $ corsMiddleware (acCorsPolicy <$> getAppContext appStateRef)
 
   -- API Console and Root Dir
   serveApiConsole
@@ -868,21 +870,21 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore = do
                 inconsistenciesMessage = "inconsistent objects in schema"
             (status, responseText) <-
               if
-                  | (isInconsistent && isStrict) -> do
-                      -- Inconsistencies exist and strict mode enabled. Report inconsistencies as ERROR with status 500.
-                      let message = "ERROR: " <> inconsistenciesMessage
-                      logError $ err500 InvalidConfiguration message
-                      pure (HTTP.status500, message)
-                  | (isInconsistent && not isStrict) -> do
-                      -- Inconsistencies exist and strict mode disabled. Warn inconsistencies with status 200.
-                      let message = "WARN: " <> inconsistenciesMessage
-                      logSuccess $ LT.fromStrict message
-                      pure (HTTP.status200, message)
-                  | otherwise -> do
-                      -- No inconsistencies in schema cache, report OK
-                      let message = "OK"
-                      logSuccess $ LT.fromStrict message
-                      pure (HTTP.status200, message)
+                | (isInconsistent && isStrict) -> do
+                    -- Inconsistencies exist and strict mode enabled. Report inconsistencies as ERROR with status 500.
+                    let message = "ERROR: " <> inconsistenciesMessage
+                    logError $ err500 InvalidConfiguration message
+                    pure (HTTP.status500, message)
+                | (isInconsistent && not isStrict) -> do
+                    -- Inconsistencies exist and strict mode disabled. Warn inconsistencies with status 200.
+                    let message = "WARN: " <> inconsistenciesMessage
+                    logSuccess $ LT.fromStrict message
+                    pure (HTTP.status200, message)
+                | otherwise -> do
+                    -- No inconsistencies in schema cache, report OK
+                    let message = "OK"
+                    logSuccess $ LT.fromStrict message
+                    pure (HTTP.status200, message)
 
             Spock.setStatus status >> Spock.text responseText
 
@@ -951,50 +953,54 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore = do
     onlyWhenApiEnabled isMetadataEnabled appStateRef gqlExplainAction
 
   Spock.post "v1/query" $ do
-    onlyWhenApiEnabled isMetadataEnabled appStateRef $
-      spockAction encodeQErr id $ do
+    onlyWhenApiEnabled isMetadataEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ do
         mkPostHandler $ fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler (v1QueryHandler schemaCacheUpdater)
 
   Spock.post "v1/metadata" $ do
-    onlyWhenApiEnabled isMetadataEnabled appStateRef $
-      spockAction encodeQErr id $
-        mkPostHandler $
-          fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler (v1MetadataHandler schemaCacheUpdater)
+    onlyWhenApiEnabled isMetadataEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkPostHandler
+      $ fmap (emptyHttpLogGraphQLInfo,)
+      <$> mkAPIRespHandler (v1MetadataHandler schemaCacheUpdater)
 
   Spock.post "v2/query" $ do
-    onlyWhenApiEnabled isMetadataEnabled appStateRef $
-      spockAction encodeQErr id $
-        mkPostHandler $
-          fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler (v2QueryHandler schemaCacheUpdater)
+    onlyWhenApiEnabled isMetadataEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkPostHandler
+      $ fmap (emptyHttpLogGraphQLInfo,)
+      <$> mkAPIRespHandler (v2QueryHandler schemaCacheUpdater)
 
   Spock.post "v1alpha1/pg_dump" $ do
-    onlyWhenApiEnabled isPGDumpEnabled appStateRef $
-      spockAction encodeQErr id $
-        mkPostHandler $
-          fmap (emptyHttpLogGraphQLInfo,) <$> v1Alpha1PGDumpHandler
+    onlyWhenApiEnabled isPGDumpEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkPostHandler
+      $ fmap (emptyHttpLogGraphQLInfo,)
+      <$> v1Alpha1PGDumpHandler
 
   runConfigApiHandler appStateRef
 
   Spock.post "v1alpha1/graphql" $ do
-    onlyWhenApiEnabled isGraphQLEnabled appStateRef $
-      spockAction GH.encodeGQErr id $
-        mkGQLRequestHandler $
-          mkGQLAPIRespHandler $
-            v1Alpha1GQHandler E.QueryHasura
+    onlyWhenApiEnabled isGraphQLEnabled appStateRef
+      $ spockAction GH.encodeGQErr id
+      $ mkGQLRequestHandler
+      $ mkGQLAPIRespHandler
+      $ v1Alpha1GQHandler E.QueryHasura
 
   Spock.post "v1/graphql" $ do
-    onlyWhenApiEnabled isGraphQLEnabled appStateRef $
-      spockAction GH.encodeGQErr allMod200 $
-        mkGQLRequestHandler $
-          mkGQLAPIRespHandler $
-            v1GQHandler
+    onlyWhenApiEnabled isGraphQLEnabled appStateRef
+      $ spockAction GH.encodeGQErr allMod200
+      $ mkGQLRequestHandler
+      $ mkGQLAPIRespHandler
+      $ v1GQHandler
 
   Spock.post "v1beta1/relay" $ do
-    onlyWhenApiEnabled isGraphQLEnabled appStateRef $
-      spockAction GH.encodeGQErr allMod200 $
-        mkGQLRequestHandler $
-          mkGQLAPIRespHandler $
-            v1GQRelayHandler
+    onlyWhenApiEnabled isGraphQLEnabled appStateRef
+      $ spockAction GH.encodeGQErr allMod200
+      $ mkGQLRequestHandler
+      $ mkGQLAPIRespHandler
+      $ v1GQRelayHandler
 
   -- This exposes some simple RTS stats when we run with `+RTS -T`. We want
   -- this to be available even when developer APIs are not compiled in, to
@@ -1009,54 +1015,60 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore = do
       Spock.json stats
 
   Spock.get "dev/ekg" $ do
-    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef $
-      spockAction encodeQErr id $
-        mkGetHandler $ do
-          onlyAdmin
-          respJ <- liftIO $ EKG.sampleAll ekgStore
-          return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue $ EKG.sampleToJson respJ) [])
+    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkGetHandler
+      $ do
+        onlyAdmin
+        respJ <- liftIO $ EKG.sampleAll ekgStore
+        return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue $ EKG.sampleToJson respJ) [])
 
   -- This deprecated endpoint used to show the query plan cache pre-PDV.
   -- Eventually this endpoint can be removed.
   Spock.get "dev/plan_cache" $ do
-    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef $
-      spockAction encodeQErr id $
-        mkGetHandler $ do
-          onlyAdmin
-          return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue J.Null) [])
+    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkGetHandler
+      $ do
+        onlyAdmin
+        return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue J.Null) [])
 
   Spock.get "dev/subscriptions" $ do
-    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef $
-      spockAction encodeQErr id $
-        mkGetHandler $ do
-          onlyAdmin
-          appCtx <- liftIO $ getAppContext appStateRef
-          respJ <- liftIO $ ES.dumpSubscriptionsState False (acLiveQueryOptions appCtx) (acStreamQueryOptions appCtx) appEnvSubscriptionState
-          return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue respJ) [])
+    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkGetHandler
+      $ do
+        onlyAdmin
+        appCtx <- liftIO $ getAppContext appStateRef
+        respJ <- liftIO $ ES.dumpSubscriptionsState False (acLiveQueryOptions appCtx) (acStreamQueryOptions appCtx) appEnvSubscriptionState
+        return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue respJ) [])
 
   Spock.get "dev/subscriptions/extended" $ do
-    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef $
-      spockAction encodeQErr id $
-        mkGetHandler $ do
-          onlyAdmin
-          appCtx <- liftIO $ getAppContext appStateRef
-          respJ <- liftIO $ ES.dumpSubscriptionsState True (acLiveQueryOptions appCtx) (acStreamQueryOptions appCtx) appEnvSubscriptionState
-          return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue respJ) [])
+    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkGetHandler
+      $ do
+        onlyAdmin
+        appCtx <- liftIO $ getAppContext appStateRef
+        respJ <- liftIO $ ES.dumpSubscriptionsState True (acLiveQueryOptions appCtx) (acStreamQueryOptions appCtx) appEnvSubscriptionState
+        return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue respJ) [])
 
   Spock.get "dev/dataconnector/schema" $ do
-    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef $
-      spockAction encodeQErr id $
-        mkGetHandler $ do
-          onlyAdmin
-          return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue openApiSchema) [])
-
-  Spock.get "api/swagger/json" $
-    spockAction encodeQErr id $
-      mkGetHandler $ do
+    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkGetHandler
+      $ do
         onlyAdmin
-        sc <- liftIO $ getSchemaCache appStateRef
-        json <- buildOpenAPI sc
-        return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue json) [])
+        return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue openApiSchema) [])
+
+  Spock.get "api/swagger/json"
+    $ spockAction encodeQErr id
+    $ mkGetHandler
+    $ do
+      onlyAdmin
+      sc <- liftIO $ getSchemaCache appStateRef
+      json <- buildOpenAPI sc
+      return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue json) [])
 
   forM_ [Spock.GET, Spock.POST] $ \m -> Spock.hookAny m $ \_ -> do
     req <- Spock.request
@@ -1093,15 +1105,16 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore = do
     -- all graphql errors should be of type 200
     allMod200 qe = qe {qeStatus = HTTP.status200}
     gqlExplainAction = do
-      spockAction encodeQErr id $
-        mkPostHandler $
-          fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler gqlExplainHandler
+      spockAction encodeQErr id
+        $ mkPostHandler
+        $ fmap (emptyHttpLogGraphQLInfo,)
+        <$> mkAPIRespHandler gqlExplainHandler
 
     serveApiConsole = do
       -- redirect / to /console
       Spock.get Spock.root $ do
-        onlyWhenApiEnabled (\appCtx -> isConsoleEnabled (acConsoleStatus appCtx) && isMetadataEnabled appCtx) appStateRef $
-          Spock.redirect "console"
+        onlyWhenApiEnabled (\appCtx -> isConsoleEnabled (acConsoleStatus appCtx) && isMetadataEnabled appCtx) appStateRef
+          $ Spock.redirect "console"
 
       -- serve console html
       Spock.get ("console" <//> Spock.wildcard) $ \path -> do
@@ -1121,7 +1134,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore = do
 -- an endpoint can be switched ON/OFF dynamically, hence serve the endpoint only
 -- when it is enabled else throw HTTP Error 404
 onlyWhenApiEnabled ::
-  MonadIO m =>
+  (MonadIO m) =>
   (AppContext -> Bool) ->
   AppStateRef impl ->
   Spock.ActionCtxT ctx m b ->

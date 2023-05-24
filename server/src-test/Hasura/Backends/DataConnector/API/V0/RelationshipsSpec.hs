@@ -28,10 +28,10 @@ spec = do
     testToFromJSONToSchema (RelationshipName "relationship_name") [aesonQQ|"relationship_name"|]
     jsonOpenApiProperties genRelationshipName
   describe "RelationshipType" $ do
-    describe "ObjectRelationship" $
-      testToFromJSONToSchema ObjectRelationship [aesonQQ|"object"|]
-    describe "ArrayRelationship" $
-      testToFromJSONToSchema ArrayRelationship [aesonQQ|"array"|]
+    describe "ObjectRelationship"
+      $ testToFromJSONToSchema ObjectRelationship [aesonQQ|"object"|]
+    describe "ArrayRelationship"
+      $ testToFromJSONToSchema ArrayRelationship [aesonQQ|"array"|]
     jsonOpenApiProperties genRelationshipType
   describe "Relationship" $ do
     let relationship =
@@ -97,14 +97,14 @@ spec = do
       |]
     jsonOpenApiProperties genTableRelationships
 
-genRelationshipName :: MonadGen m => m RelationshipName
+genRelationshipName :: (MonadGen m) => m RelationshipName
 genRelationshipName =
   RelationshipName <$> genArbitraryAlphaNumText defaultRange
 
-genRelationshipType :: MonadGen m => m RelationshipType
+genRelationshipType :: (MonadGen m) => m RelationshipType
 genRelationshipType = Gen.enumBounded
 
-genRelationship :: MonadGen m => m Relationship
+genRelationship :: (MonadGen m) => m Relationship
 genRelationship =
   Relationship
     <$> genTableName
@@ -114,17 +114,17 @@ genRelationship =
 genRelationships :: Gen Relationships
 genRelationships = (RTable <$> genTableRelationships) <|> (RFunction <$> genFunctionRelationships)
 
-genTableRelationships :: MonadGen m => m TableRelationships
+genTableRelationships :: (MonadGen m) => m TableRelationships
 genTableRelationships =
   TableRelationships
     <$> genTableName
     <*> fmap HashMap.fromList (Gen.list defaultRange ((,) <$> genRelationshipName <*> genRelationship))
 
-genFunctionRelationships :: MonadGen m => m FunctionRelationships
+genFunctionRelationships :: (MonadGen m) => m FunctionRelationships
 genFunctionRelationships =
   FunctionRelationships
     <$> genFunctionName
     <*> fmap HashMap.fromList (Gen.list defaultRange ((,) <$> genRelationshipName <*> genRelationship))
 
-genFunctionName :: MonadGen m => m FunctionName
+genFunctionName :: (MonadGen m) => m FunctionName
 genFunctionName = FunctionName <$> Gen.nonEmpty (linear 1 3) (genArbitraryAlphaNumText defaultRange)

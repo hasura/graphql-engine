@@ -71,11 +71,11 @@ trackStoredProcedureCommand sourceName backendTypeConfig StoredProcedure {stored
                       Nothing -> []
 
                     value =
-                      J.object $
-                        [ ("type" .= (BackendType.backendScalarType backendTypeConfig) storedProcedureColumnType),
-                          ("nullable" .= storedProcedureColumnNullable)
-                        ]
-                          <> descriptionPair
+                      J.object
+                        $ [ ("type" .= (BackendType.backendScalarType backendTypeConfig) storedProcedureColumnType),
+                            ("nullable" .= storedProcedureColumnNullable)
+                          ]
+                        <> descriptionPair
                  in (key, value)
             )
 
@@ -97,7 +97,7 @@ trackStoredProcedureCommand sourceName backendTypeConfig StoredProcedure {stored
           returns: *storedProcedureLogicalModel
       |]
 
-trackStoredProcedure :: HasCallStack => String -> StoredProcedure -> TestEnvironment -> IO ()
+trackStoredProcedure :: (HasCallStack) => String -> StoredProcedure -> TestEnvironment -> IO ()
 trackStoredProcedure sourceName logMod testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
 
@@ -116,7 +116,7 @@ untrackStoredProcedureCommand source backendTypeMetadata StoredProcedure {stored
         stored_procedure: *storedProcedureName
     |]
 
-untrackStoredProcedure :: HasCallStack => String -> StoredProcedure -> TestEnvironment -> IO ()
+untrackStoredProcedure :: (HasCallStack) => String -> StoredProcedure -> TestEnvironment -> IO ()
 untrackStoredProcedure source logMod testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
 

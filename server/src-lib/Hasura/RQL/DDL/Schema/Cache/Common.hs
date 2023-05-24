@@ -339,7 +339,8 @@ buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) -> do
               Nothing -> returnA -< Nothing
               Just info -> buildInfo -< (e, info)
         )
-      |) groupedInfos
+      |)
+      groupedInfos
   returnA -< catMaybes infoMapMaybes
 {-# INLINEABLE buildInfoMap #-}
 

@@ -264,32 +264,32 @@ instance Arbitrary IntrospectionResult where
     scalarTypeDefinitions <-
       for scalarTypeNames genScalarTypeDefinition
     objectTypeDefinitions <-
-      for objectTypeNames $
-        genObjectTypeDefinition inputValues outputTypeNames interfaceTypeNames
+      for objectTypeNames
+        $ genObjectTypeDefinition inputValues outputTypeNames interfaceTypeNames
     interfaceTypeDefinitions <-
-      for interfaceTypeNames $
-        genInterfaceTypeDefinition inputValues outputTypeNames
+      for interfaceTypeNames
+        $ genInterfaceTypeDefinition inputValues outputTypeNames
     unionTypeDefinitions <-
-      for unionTypeNames $
-        genUnionTypeDefinition objectTypeNames
+      for unionTypeNames
+        $ genUnionTypeDefinition objectTypeNames
     enumTypeDefinitions <-
       for enumTypeNames genEnumTypeDefinition
     inputObjectTypeDefinitions <-
-      for inputObjectTypeNames $
-        genInputObjectTypeDefinition inputValues
+      for inputObjectTypeNames
+        $ genInputObjectTypeDefinition inputValues
 
     -- finally, create an IntrospectionResult from the aggregated definitions
     let irDoc =
-          RemoteSchemaIntrospection $
-            HashMap.fromListOn getTypeName $
-              concat
-                [ GraphQL.TypeDefinitionScalar <$> scalarTypeDefinitions,
-                  GraphQL.TypeDefinitionObject <$> objectTypeDefinitions,
-                  GraphQL.TypeDefinitionInterface <$> interfaceTypeDefinitions,
-                  GraphQL.TypeDefinitionUnion <$> unionTypeDefinitions,
-                  GraphQL.TypeDefinitionEnum <$> enumTypeDefinitions,
-                  GraphQL.TypeDefinitionInputObject <$> inputObjectTypeDefinitions
-                ]
+          RemoteSchemaIntrospection
+            $ HashMap.fromListOn getTypeName
+            $ concat
+              [ GraphQL.TypeDefinitionScalar <$> scalarTypeDefinitions,
+                GraphQL.TypeDefinitionObject <$> objectTypeDefinitions,
+                GraphQL.TypeDefinitionInterface <$> interfaceTypeDefinitions,
+                GraphQL.TypeDefinitionUnion <$> unionTypeDefinitions,
+                GraphQL.TypeDefinitionEnum <$> enumTypeDefinitions,
+                GraphQL.TypeDefinitionInputObject <$> inputObjectTypeDefinitions
+              ]
     irQueryRoot <- elements objectTypeNames
     let maybeObjectTypeName = elements $ Nothing : (Just <$> objectTypeNames)
     irMutationRoot <- maybeObjectTypeName

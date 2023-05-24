@@ -19,39 +19,39 @@ import System.Environment (lookupEnv)
 -- | Get an environment variable and parse it to a value using 'read'.
 getEnvRead :: (Read a, Typeable a, HasCallStack) => String -> IO a
 getEnvRead var =
-  withFrozenCallStack $
-    getEnvWith var readVarValue
+  withFrozenCallStack
+    $ getEnvWith var readVarValue
 
 -- | Get an environment variable without parsing it.
 getEnvString :: (IsString a, HasCallStack) => String -> IO a
 getEnvString var =
-  withFrozenCallStack $
-    getEnvWith var (\_ value -> pure (fromString value))
+  withFrozenCallStack
+    $ getEnvWith var (\_ value -> pure (fromString value))
 
 -- | Get a json environment variable and parse it.
 getEnvJson :: forall a. (Typeable a, J.FromJSON a, HasCallStack) => String -> IO a
 getEnvJson var =
-  withFrozenCallStack $
-    getEnvWith var decodeJson
+  withFrozenCallStack
+    $ getEnvWith var decodeJson
 
 -- | Get a environment variable holding a path to a json file and parse the contents of the file.
 getEnvJsonFile :: forall a. (Typeable a, J.FromJSON a, HasCallStack) => String -> IO a
 getEnvJsonFile var =
-  withFrozenCallStack $
-    getEnvWith var (\var' value -> decodeJson var' =<< readFile value)
+  withFrozenCallStack
+    $ getEnvWith var (\var' value -> decodeJson var' =<< readFile value)
 
 -------------------------------------------------------------------------------------------
 
 -- * Helpers
 
 -- | Fetches a a value from an environment variable and applies a function to the variable and value.
-getEnvWith :: HasCallStack => String -> (String -> String -> IO a) -> IO a
+getEnvWith :: (HasCallStack) => String -> (String -> String -> IO a) -> IO a
 getEnvWith var f =
   withFrozenCallStack $ do
     f var =<< getEnv var
 
 -- | Like 'System.Environment.getEnv', but with 'HasCallStack'.
-getEnv :: HasCallStack => String -> IO String
+getEnv :: (HasCallStack) => String -> IO String
 getEnv var = do
   value <- lookupEnv var
   onNothing value (error $ "getEnv: " <> var <> " does not exist (no environment variable)")

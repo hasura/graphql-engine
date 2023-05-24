@@ -113,17 +113,19 @@ tests = describe "Order By Tests" $ do
 
     _mrrRecordedRequest
       `shouldBe` Just
-        ( Query $
-            mkTableRequest
+        ( Query
+            $ mkTableRequest
               (mkTableName "Album")
               ( emptyQuery
                   & API.qFields
-                    ?~ mkFieldsMap
-                      [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                        ("Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
-                      ]
-                  & API.qLimit ?~ 3
-                  & API.qOrderBy ?~ API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId")) API.Ascending :| [])
+                  ?~ mkFieldsMap
+                    [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
+                      ("Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
+                    ]
+                    & API.qLimit
+                  ?~ 3
+                    & API.qOrderBy
+                  ?~ API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId")) API.Ascending :| [])
               )
         )
 
@@ -156,51 +158,53 @@ tests = describe "Order By Tests" $ do
 
     _mrrRecordedRequest
       `shouldBe` Just
-        ( Query $
-            mkTableRequest
+        ( Query
+            $ mkTableRequest
               (mkTableName "Artist")
               ( emptyQuery
-                  & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string"))]
-                  & API.qLimit ?~ 2
-                  & API.qOrderBy
-                    ?~ API.OrderBy
-                      ( HashMap.fromList
+                  & API.qFields
+                  ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string"))]
+                    & API.qLimit
+                  ?~ 2
+                    & API.qOrderBy
+                  ?~ API.OrderBy
+                    ( HashMap.fromList
+                        [ ( API.RelationshipName "Albums",
+                            API.OrderByRelation Nothing mempty
+                          )
+                        ]
+                    )
+                    ( NE.fromList
+                        [ API.OrderByElement [API.RelationshipName "Albums"] API.OrderByStarCountAggregate API.Ascending,
+                          API.OrderByElement
+                            [API.RelationshipName "Albums"]
+                            ( API.OrderBySingleColumnAggregate
+                                $ API.SingleColumnAggregate
+                                  (API.SingleColumnAggregateFunction [G.name|max|])
+                                  (API.ColumnName "AlbumId")
+                                  (API.ScalarType "number")
+                            )
+                            API.Ascending
+                        ]
+                    )
+              )
+            & API.qrRelationships
+            .~ Set.fromList
+              [ API.RTable
+                  API.TableRelationships
+                    { _trelSourceTable = mkTableName "Artist",
+                      _trelRelationships =
+                        HashMap.fromList
                           [ ( API.RelationshipName "Albums",
-                              API.OrderByRelation Nothing mempty
+                              API.Relationship
+                                { _rTargetTable = mkTableName "Album",
+                                  _rRelationshipType = API.ArrayRelationship,
+                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                }
                             )
                           ]
-                      )
-                      ( NE.fromList
-                          [ API.OrderByElement [API.RelationshipName "Albums"] API.OrderByStarCountAggregate API.Ascending,
-                            API.OrderByElement
-                              [API.RelationshipName "Albums"]
-                              ( API.OrderBySingleColumnAggregate $
-                                  API.SingleColumnAggregate
-                                    (API.SingleColumnAggregateFunction [G.name|max|])
-                                    (API.ColumnName "AlbumId")
-                                    (API.ScalarType "number")
-                              )
-                              API.Ascending
-                          ]
-                      )
-              )
-              & API.qrRelationships
-                .~ Set.fromList
-                  [ API.RTable
-                      API.TableRelationships
-                        { _trelSourceTable = mkTableName "Artist",
-                          _trelRelationships =
-                            HashMap.fromList
-                              [ ( API.RelationshipName "Albums",
-                                  API.Relationship
-                                    { _rTargetTable = mkTableName "Album",
-                                      _rRelationshipType = API.ArrayRelationship,
-                                      _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                    }
-                                )
-                              ]
-                        }
-                  ]
+                    }
+              ]
         )
 
 rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse

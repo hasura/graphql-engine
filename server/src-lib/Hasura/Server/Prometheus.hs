@@ -314,9 +314,9 @@ data DynamicSubscriptionLabel = DynamicSubscriptionLabel
 
 instance ToLabels DynamicSubscriptionLabel where
   toLabels (DynamicSubscriptionLabel hash opName) =
-    Map.fromList $
-      [("parameterized_query_hash", bsToTxt $ unParamQueryHash hash)]
-        <> maybe [] (\op -> [("operation_name", G.unName $ _unOperationName op)]) opName
+    Map.fromList
+      $ [("parameterized_query_hash", bsToTxt $ unParamQueryHash hash)]
+      <> maybe [] (\op -> [("operation_name", G.unName $ _unOperationName op)]) opName
 
 data SubscriptionLabel = SubscriptionLabel
   { _slKind :: SubscriptionKindLabel,
@@ -346,9 +346,9 @@ recordMetricWithLabel getMetricState alwaysObserve metricActionWithLabel metricA
     -- Some metrics do not make sense without a dynamic label, hence only record the
     -- metric when alwaysObserve is set to true else do not record the metric
     GranularMetricsOff -> do
-      when alwaysObserve $
-        liftIO $
-          metricActionWithoutLabel
+      when alwaysObserve
+        $ liftIO
+        $ metricActionWithoutLabel
 
 -- | Observe a histogram metric with a label.
 --

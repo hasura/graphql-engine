@@ -95,9 +95,9 @@ runMutation ::
   Mutation ('Postgres pgKind) ->
   m EncJSON
 runMutation mut =
-  bool (mutateAndReturn mut) (mutateAndSel mut) $
-    hasNestedFld $
-      _mOutput mut
+  bool (mutateAndReturn mut) (mutateAndSel mut)
+    $ hasNestedFld
+    $ _mOutput mut
 
 mutateAndReturn ::
   ( MonadTx m,
@@ -211,9 +211,9 @@ mutateAndSel (Mutation qt q mutationOutput allCols strfyNum tCase) = do
 withCheckPermission :: (MonadError QErr m) => m (a, Bool) -> m a
 withCheckPermission sqlTx = do
   (rawResponse, checkConstraint) <- sqlTx
-  unless checkConstraint $
-    throw400 PermissionError $
-      "check constraint of an insert/update permission has failed"
+  unless checkConstraint
+    $ throw400 PermissionError
+    $ "check constraint of an insert/update permission has failed"
   pure rawResponse
 
 executeMutationOutputQuery ::
@@ -270,8 +270,8 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
     rawIdentifier = S.tableAliasToIdentifier rawAlias
     tabFrom = FromIdentifier $ FIIdentifier (unTableIdentifier rawIdentifier)
     tabPerm = TablePerm annBoolExpTrue Nothing
-    selFlds = flip map cols $
-      \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
+    selFlds = flip map cols
+      $ \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
 
     sqlText = toQuery selectWith
 
@@ -299,16 +299,16 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
         ]
 
     affRowsSel =
-      S.SESelect $
-        S.mkSelect
+      S.SESelect
+        $ S.mkSelect
           { S.selExtr = [S.Extractor S.countStar Nothing],
             S.selFrom = Just $ S.FromExp [S.FIIdentifier rawIdentifier]
           }
 
     (colSel, customSQLCTEs) =
-      runWriter $
-        S.SESelect
-          <$> mkSQLSelect
-            JASMultipleRows
-            ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
-            )
+      runWriter
+        $ S.SESelect
+        <$> mkSQLSelect
+          JASMultipleRows
+          ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
+          )

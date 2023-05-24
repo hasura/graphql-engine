@@ -630,7 +630,7 @@ fromDataLength = \case
   DataLengthInt len -> "(" <> tshow len <> ")"
   DataLengthMax -> "(max)"
 
-mkMSSQLScalarTypeName :: MonadError QErr m => ScalarType -> m G.Name
+mkMSSQLScalarTypeName :: (MonadError QErr m) => ScalarType -> m G.Name
 mkMSSQLScalarTypeName = \case
   CharType -> pure GName._String
   WcharType -> pure GName._String
@@ -730,7 +730,8 @@ parseScalarValue scalarType jValue = case scalarType of
     parseGeoJSONAsWKT :: J.Value -> Either QErr Text
     parseGeoJSONAsWKT jv =
       runAesonParser (J.parseJSON @Geo.GeometryWithCRS) jv
-        >>= fmap WKT.getWKT . WKT.toWKT
+        >>= fmap WKT.getWKT
+        . WKT.toWKT
 
 isComparableType, isNumType :: ScalarType -> Bool
 isComparableType = \case
@@ -753,16 +754,20 @@ isNumType = \case
 getGQLTableName :: TableName -> Either QErr G.Name
 getGQLTableName tn = do
   let textName = snakeCaseName (tableName tn) (tableSchema tn)
-  onNothing (G.mkName textName) $
-    throw400 ValidationFailed $
-      "cannot include " <> textName <> " in the GraphQL schema because it is not a valid GraphQL identifier"
+  onNothing (G.mkName textName)
+    $ throw400 ValidationFailed
+    $ "cannot include "
+    <> textName
+    <> " in the GraphQL schema because it is not a valid GraphQL identifier"
 
 getGQLFunctionName :: FunctionName -> Either QErr G.Name
 getGQLFunctionName fn = do
   let textName = snakeCaseName (functionName fn) (functionSchema fn)
-  onNothing (G.mkName textName) $
-    throw400 ValidationFailed $
-      "cannot include " <> textName <> " in the GraphQL schema because it is not a valid GraphQL identifier"
+  onNothing (G.mkName textName)
+    $ throw400 ValidationFailed
+    $ "cannot include "
+    <> textName
+    <> " in the GraphQL schema because it is not a valid GraphQL identifier"
 
 snakeCaseName :: Text -> SchemaName -> Text
 snakeCaseName tableName (SchemaName tableSchema) =

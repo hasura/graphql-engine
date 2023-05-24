@@ -77,7 +77,9 @@ Following is the precise behaviour -
 -- TODO: Move into a dedicated Metadata module (ala Pro).
 getDbId :: Query.TxE Error.QErr Types.MetadataDbId
 getDbId =
-  Types.MetadataDbId . runIdentity . Query.getRow
+  Types.MetadataDbId
+    . runIdentity
+    . Query.getRow
     <$> Query.withQE
       Connection.defaultTxErrorHandler
       [Query.sql|
@@ -96,7 +98,7 @@ getPgVersion = Types.PGVersion <$> Query.serverVersion
 -- command parser, then process the subcommand raw values if
 -- necessary.
 mkHGEOptions ::
-  Logging.EnabledLogTypes impl => HGEOptionsRaw (ServeOptionsRaw impl) -> WithEnv (HGEOptions (ServeOptions impl))
+  (Logging.EnabledLogTypes impl) => HGEOptionsRaw (ServeOptionsRaw impl) -> WithEnv (HGEOptions (ServeOptions impl))
 mkHGEOptions (HGEOptionsRaw rawDbUrl rawMetadataDbUrl rawCmd) = do
   dbUrl <- processPostgresConnInfo rawDbUrl
   metadataDbUrl <- withOption rawMetadataDbUrl metadataDbUrlOption
@@ -147,7 +149,7 @@ rawConnInfoToUrlConf maybeRawConnInfo = do
 
 -- | Merge the results of the serve subcommmand arg parser with
 -- corresponding values from the 'WithEnv' context.
-mkServeOptions :: forall impl. Logging.EnabledLogTypes impl => ServeOptionsRaw impl -> WithEnv (ServeOptions impl)
+mkServeOptions :: forall impl. (Logging.EnabledLogTypes impl) => ServeOptionsRaw impl -> WithEnv (ServeOptions impl)
 mkServeOptions sor@ServeOptionsRaw {..} = do
   soPort <- withOptionDefault rsoPort servePortOption
   soHost <- withOptionDefault rsoHost serveHostOption
@@ -217,7 +219,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
 -- | Fetch Postgres 'Query.ConnParams' components from the environment
 -- and merge with the values consumed by the arg parser in
 -- 'ConnParamsRaw'.
-mkConnParams :: Monad m => ConnParamsRaw -> WithEnvT m Query.ConnParams
+mkConnParams :: (Monad m) => ConnParamsRaw -> WithEnvT m Query.ConnParams
 mkConnParams ConnParamsRaw {..} = do
   cpStripes <- unrefine <$> withOptionDefault rcpStripes pgStripesOption
   -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
@@ -233,12 +235,12 @@ mkConnParams ConnParamsRaw {..} = do
       else pure (Just lifetime)
   cpTimeout <- fmap unrefine <$> withOption rcpPoolTimeout pgPoolTimeoutOption
   let cpCancel = True
-  return $
-    Query.ConnParams {..}
+  return
+    $ Query.ConnParams {..}
 
 -- | Fetch 'Auth.AuthHook' components from the environment and merge
 -- with the values consumed by the arg parser in 'AuthHookRaw'.
-mkAuthHook :: Monad m => AuthHookRaw -> WithEnvT m (Maybe Auth.AuthHook)
+mkAuthHook :: (Monad m) => AuthHookRaw -> WithEnvT m (Maybe Auth.AuthHook)
 mkAuthHook (AuthHookRaw mUrl mType mSendRequestBody) = do
   mUrlEnv <- withOption mUrl authHookOption
   -- Also support HASURA_GRAPHQL_AUTH_HOOK_TYPE
@@ -265,7 +267,7 @@ mkAuthHook (AuthHookRaw mUrl mType mSendRequestBody) = do
 
 -- | Fetch 'Cors.CorsConfig' settings from the environment and merge
 -- with the settings consumed by the arg parser.
-mkCorsConfig :: Monad m => ServeOptionsRaw imp -> Maybe Cors.CorsConfig -> WithEnvT m Cors.CorsConfig
+mkCorsConfig :: (Monad m) => ServeOptionsRaw imp -> Maybe Cors.CorsConfig -> WithEnvT m Cors.CorsConfig
 mkCorsConfig ServeOptionsRaw {..} mCfg = do
   corsCfg <- do
     corsDisabled <- withOptionDefault Nothing disableCorsOption
@@ -279,9 +281,9 @@ mkCorsConfig ServeOptionsRaw {..} mCfg = do
   wsReadCookie <- case (Cors.isCorsDisabled corsCfg, readCookVal) of
     (True, _) -> pure readCookVal
     (False, WsReadCookieEnabled) ->
-      throwError $
-        _envVar wsReadCookieOption
-          <> " can only be used when CORS is disabled"
+      throwError
+        $ _envVar wsReadCookieOption
+        <> " can only be used when CORS is disabled"
     (False, WsReadCookieDisabled) -> pure WsReadCookieDisabled
   pure $ case corsCfg of
     Cors.CCDisabled _ -> Cors.CCDisabled $ isWsReadCookieEnabled wsReadCookie

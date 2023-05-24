@@ -54,7 +54,8 @@ instance HasCodec RemoteRelationship where
 instance FromJSON RemoteRelationship where
   parseJSON = withObject "RemoteRelationship" $ \obj ->
     RemoteRelationship
-      <$> obj .: "name"
+      <$> obj
+      .: "name"
       <*> (parseRemoteRelationshipDefinition RRPLenient =<< obj .: "definition")
 
 -- | Represents the format of the metadata a remote relationship was read from
@@ -82,11 +83,12 @@ data RemoteRelationshipDefinition
 -- See documentation for 'parseRemoteRelationshipDefinition' for why
 -- this is necessary.
 instance
-  TypeError
-    ( 'ShowType RemoteRelationshipDefinition
-        ':<>: 'Text " has different JSON representations depending on context;"
-        ':$$: 'Text "call ‘parseRemoteRelationshipDefinition’ directly instead of relying on ‘FromJSON’"
-    ) =>
+  ( TypeError
+      ( 'ShowType RemoteRelationshipDefinition
+          ':<>: 'Text " has different JSON representations depending on context;"
+          ':$$: 'Text "call ‘parseRemoteRelationshipDefinition’ directly instead of relying on ‘FromJSON’"
+      )
+  ) =>
   FromJSON RemoteRelationshipDefinition
   where
   parseJSON = error "impossible"
@@ -131,11 +133,14 @@ remoteRelationshipDefinitionCodec mode =
 
     toSchemaOldDBFormat :: JSONCodec ToSchemaRelationshipDef
     toSchemaOldDBFormat =
-      AC.object "ToSchemaRelationshipDefLegacyFormat" $
-        ToSchemaRelationshipDef
-          <$> requiredField' "remote_schema" AC..= _trrdRemoteSchema
-          <*> requiredFieldWith' "hasura_fields" hashSetCodec AC..= _trrdLhsFields
-          <*> requiredField' "remote_field" AC..= _trrdRemoteField
+      AC.object "ToSchemaRelationshipDefLegacyFormat"
+        $ ToSchemaRelationshipDef
+        <$> requiredField' "remote_schema"
+        AC..= _trrdRemoteSchema
+          <*> requiredFieldWith' "hasura_fields" hashSetCodec
+        AC..= _trrdLhsFields
+          <*> requiredField' "remote_field"
+        AC..= _trrdRemoteField
 
 -- | Parse 'RemoteRelationshipDefinition' letting the caller decide how lenient to be.
 --
@@ -223,8 +228,8 @@ parseRemoteRelationshipDefinition mode = withObject ("RemoteRelationshipDefiniti
       RRPStrict -> ("(strict format)", "to_source, to_remote_schema")
 
     invalid =
-      fail $
-        mconcat
+      fail
+        $ mconcat
           [ "remote relationship definition ",
             suffix,
             " expects exactly one of: ",
@@ -273,11 +278,11 @@ data DBJoinField (b :: BackendType)
   | JoinComputedField (ScalarComputedField b)
   deriving (Generic)
 
-deriving instance Backend b => Eq (DBJoinField b)
+deriving instance (Backend b) => Eq (DBJoinField b)
 
-deriving instance Backend b => Show (DBJoinField b)
+deriving instance (Backend b) => Show (DBJoinField b)
 
-instance Backend b => Hashable (DBJoinField b)
+instance (Backend b) => Hashable (DBJoinField b)
 
 instance (Backend b) => ToJSON (DBJoinField b) where
   toJSON = \case
@@ -295,13 +300,13 @@ data ScalarComputedField (b :: BackendType) = ScalarComputedField
   }
   deriving (Generic)
 
-deriving instance Backend b => Eq (ScalarComputedField b)
+deriving instance (Backend b) => Eq (ScalarComputedField b)
 
-deriving instance Backend b => Show (ScalarComputedField b)
+deriving instance (Backend b) => Show (ScalarComputedField b)
 
-instance Backend b => Hashable (ScalarComputedField b)
+instance (Backend b) => Hashable (ScalarComputedField b)
 
-instance Backend b => ToJSON (ScalarComputedField b) where
+instance (Backend b) => ToJSON (ScalarComputedField b) where
   toJSON ScalarComputedField {..} =
     object
       [ "name" .= _scfName,

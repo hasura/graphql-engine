@@ -63,7 +63,7 @@ backendTypeMetadata =
 --------------------------------------------------------------------------------
 
 -- | Check that the SQLServer service is live and ready to accept connections.
-livenessCheck :: HasCallStack => IO ()
+livenessCheck :: (HasCallStack) => IO ()
 livenessCheck = loop Constants.sqlserverLivenessCheckAttempts
   where
     loop 0 = error ("Liveness check failed for SQLServer.")
@@ -80,19 +80,19 @@ livenessCheck = loop Constants.sqlserverLivenessCheckAttempts
         )
 
 -- | run SQL with the currently created DB for this test
-run_ :: HasCallStack => TestEnvironment -> String -> IO ()
+run_ :: (HasCallStack) => TestEnvironment -> String -> IO ()
 run_ testEnvironment =
   runInternal testEnvironment (Constants.sqlserverConnectInfo (uniqueTestId testEnvironment))
 
 -- | when we are creating databases, we want to connect with the 'original' DB
 -- we started with
-runWithInitialDb_ :: HasCallStack => TestEnvironment -> String -> IO ()
+runWithInitialDb_ :: (HasCallStack) => TestEnvironment -> String -> IO ()
 runWithInitialDb_ testEnvironment =
   runInternal testEnvironment Constants.sqlserverAdminConnectInfo
 
 -- | Run a plain SQL string against the server, ignore the
 -- result. Just checks for errors.
-runInternal :: HasCallStack => TestEnvironment -> Text -> String -> IO ()
+runInternal :: (HasCallStack) => TestEnvironment -> Text -> String -> IO ()
 runInternal testEnvironment connectionString query' = do
   startTime <- getCurrentTime
   catch
@@ -143,20 +143,20 @@ createTable _ Schema.Table {tableUniqueIndexes = _ : _} = error "Not Implemented
 createTable _ Schema.Table {tableConstraints = _ : _} = error "Not Implemented: SqlServer test harness support for constraints"
 createTable testEnvironment Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences} = do
   let schemaName = Schema.getSchemaName testEnvironment
-  run_ testEnvironment $
-    T.unpack $
-      T.unwords
-        [ "CREATE TABLE",
-          Schema.unSchemaName schemaName <> "." <> tableName,
-          "(",
-          commaSeparated $
-            (mkColumn <$> tableColumns)
-              <> (bool [mkPrimaryKey pk] [] (null pk))
-              <> (mkReference <$> tableReferences),
-          ");"
-        ]
+  run_ testEnvironment
+    $ T.unpack
+    $ T.unwords
+      [ "CREATE TABLE",
+        Schema.unSchemaName schemaName <> "." <> tableName,
+        "(",
+        commaSeparated
+          $ (mkColumn <$> tableColumns)
+          <> (bool [mkPrimaryKey pk] [] (null pk))
+          <> (mkReference <$> tableReferences),
+        ");"
+      ]
 
-scalarType :: HasCallStack => Schema.ScalarType -> Text
+scalarType :: (HasCallStack) => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "int"
   Schema.TStr -> "nvarchar(127)"
@@ -211,23 +211,23 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
         <> referenceLocalColumn
 
 -- | Serialize tableData into a T-SQL insert statement and execute it.
-insertTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
+insertTable :: (HasCallStack) => TestEnvironment -> Schema.Table -> IO ()
 insertTable testEnvironment Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
       let schemaName = Schema.getSchemaName testEnvironment
-      run_ testEnvironment $
-        T.unpack $
-          T.unwords
-            [ "INSERT INTO",
-              Schema.unSchemaName schemaName <> "." <> wrapIdentifier tableName,
-              "(",
-              commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
-              ")",
-              "VALUES",
-              commaSeparated $ mkRow <$> tableData,
-              ";"
-            ]
+      run_ testEnvironment
+        $ T.unpack
+        $ T.unwords
+          [ "INSERT INTO",
+            Schema.unSchemaName schemaName <> "." <> wrapIdentifier tableName,
+            "(",
+            commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
+            ")",
+            "VALUES",
+            commaSeparated $ mkRow <$> tableData,
+            ";"
+          ]
 
 -- | MSSQL identifiers which may contain spaces or be case-sensitive needs to be wrapped in @[]@.
 --
@@ -256,23 +256,23 @@ mkRow row =
     ]
 
 -- | Serialize Table into a T-SQL DROP statement and execute it
-dropTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
+dropTable :: (HasCallStack) => TestEnvironment -> Schema.Table -> IO ()
 dropTable testEnvironment Schema.Table {tableName} = do
-  run_ testEnvironment $
-    T.unpack $
-      T.unwords
-        [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
-          T.pack Constants.sqlserverDb <> "." <> tableName,
-          ";"
-        ]
+  run_ testEnvironment
+    $ T.unpack
+    $ T.unwords
+      [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
+        T.pack Constants.sqlserverDb <> "." <> tableName,
+        ";"
+      ]
 
 -- | Post an http request to start tracking the table
-trackTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
+trackTable :: (HasCallStack) => TestEnvironment -> Schema.Table -> IO ()
 trackTable testEnvironment table =
   Schema.trackTable (backendSourceName backendTypeMetadata) table testEnvironment
 
 -- | Post an http request to stop tracking the table
-untrackTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
+untrackTable :: (HasCallStack) => TestEnvironment -> Schema.Table -> IO ()
 untrackTable testEnvironment table =
   Schema.untrackTable (backendSourceName backendTypeMetadata) table testEnvironment
 
@@ -311,7 +311,7 @@ createSchema testEnvironment schemaName = do
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
-setup :: HasCallStack => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+setup :: (HasCallStack) => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 setup tables (testEnvironment, _) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource testEnvironment (defaultSourceMetadata testEnvironment) Nothing
@@ -327,7 +327,7 @@ setup tables (testEnvironment, _) = do
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
-teardown :: HasCallStack => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+teardown :: (HasCallStack) => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 teardown _ (testEnvironment, _) =
   GraphqlEngine.setSources testEnvironment mempty Nothing
 

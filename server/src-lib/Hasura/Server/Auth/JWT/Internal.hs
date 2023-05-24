@@ -84,9 +84,9 @@ fromX509Pem s = do
   pem <- getAtleastOne "No pem found" pems
   -- decode the bytestring to a certificate
   signedExactCert <-
-    fmapL T.pack $
-      X509.decodeSignedCertificate $
-        PEM.pemContent pem
+    fmapL T.pack
+      $ X509.decodeSignedCertificate
+      $ PEM.pemContent pem
   let cert = X509.signedObject $ X509.getSigned signedExactCert
       pubKey = X509.certPubKey cert
   case pubKey of

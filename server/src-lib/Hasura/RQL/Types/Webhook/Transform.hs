@@ -49,17 +49,19 @@ instance HasCodec MetadataResponseTransform where
       $ disjointEitherCodec transformV1 transformV2
     where
       transformV1 =
-        AC.object "ResponseTransformV1" $
-          MetadataResponseTransform
-            <$> (V1 <$ optionalVersionField 1)
-            <*> bodyV1 AC..= mrtBodyTransform
+        AC.object "ResponseTransformV1"
+          $ MetadataResponseTransform
+          <$> (V1 <$ optionalVersionField 1)
+          <*> bodyV1
+          AC..= mrtBodyTransform
             <*> transformCommon
 
       transformV2 =
-        AC.object "ResponseTransformV2" $
-          MetadataResponseTransform
-            <$> (V2 <$ versionField 2)
-            <*> bodyV2 AC..= mrtBodyTransform
+        AC.object "ResponseTransformV2"
+          $ MetadataResponseTransform
+          <$> (V2 <$ versionField 2)
+          <*> bodyV2
+          AC..= mrtBodyTransform
             <*> transformCommon
 
       transformCommon = optionalFieldWithDefault' "template_engine" Kriti AC..= mrtTemplatingEngine
@@ -91,11 +93,11 @@ instance ToJSON MetadataResponseTransform where
             Just (Body.ModifyAsJSON template) -> Just ("body", J.toJSON template)
             _ -> Nothing
           V2 -> "body" .=? mrtBodyTransform
-     in J.object $
-          [ "template_engine" .= mrtTemplatingEngine,
-            "version" .= mrtVersion
-          ]
-            <> maybeToList body
+     in J.object
+          $ [ "template_engine" .= mrtTemplatingEngine,
+              "version" .= mrtVersion
+            ]
+          <> maybeToList body
 
 -------------------------------------------------------------------------------
 
@@ -121,28 +123,35 @@ instance HasCodec RequestTransform where
       $ disjointEitherCodec transformV1 transformV2
     where
       transformV1 =
-        AC.object "RequestTransformV1" $
-          RequestTransform
-            <$> (V1 <$ optionalVersionField 1)
-            <*> requestFieldsCodec bodyV1 AC..= requestFields
+        AC.object "RequestTransformV1"
+          $ RequestTransform
+          <$> (V1 <$ optionalVersionField 1)
+          <*> requestFieldsCodec bodyV1
+          AC..= requestFields
             <*> transformCommon
 
       transformV2 =
-        AC.object "RequestTransformV2" $
-          RequestTransform
-            <$> (V2 <$ versionField 2)
-            <*> requestFieldsCodec bodyV2 AC..= requestFields
+        AC.object "RequestTransformV2"
+          $ RequestTransform
+          <$> (V2 <$ versionField 2)
+          <*> requestFieldsCodec bodyV2
+          AC..= requestFields
             <*> transformCommon
 
       transformCommon = optionalFieldWithDefault' "template_engine" Kriti AC..= templateEngine
 
       requestFieldsCodec bodyCodec =
         RequestFields
-          <$> withOptionalField' @MethodTransformFn "method" AC..= method
-          <*> withOptionalField' @UrlTransformFn "url" AC..= url
-          <*> bodyCodec AC..= body
-          <*> withOptionalField' @QueryParamsTransformFn "query_params" AC..= queryParams
-          <*> withOptionalField' @HeadersTransformFn "request_headers" AC..= requestHeaders
+          <$> withOptionalField' @MethodTransformFn "method"
+          AC..= method
+            <*> withOptionalField' @UrlTransformFn "url"
+          AC..= url
+            <*> bodyCodec
+          AC..= body
+            <*> withOptionalField' @QueryParamsTransformFn "query_params"
+          AC..= queryParams
+            <*> withOptionalField' @HeadersTransformFn "request_headers"
+          AC..= requestHeaders
 
       bodyV1 = dimapCodec dec enc $ optionalField' @Template "body"
         where
@@ -185,17 +194,17 @@ instance ToJSON RequestTransform where
               Just ("body", J.toJSON template)
             _ -> Nothing
           V2 -> "body" .=? getOptional body
-     in J.object $
-          [ "version" .= version,
-            "template_engine" .= templateEngine
-          ]
-            <> catMaybes
-              [ "method" .=? getOptional method,
-                "url" .=? getOptional url,
-                "query_params" .=? getOptional queryParams,
-                "request_headers" .=? getOptional requestHeaders,
-                body'
-              ]
+     in J.object
+          $ [ "version" .= version,
+              "template_engine" .= templateEngine
+            ]
+          <> catMaybes
+            [ "method" .=? getOptional method,
+              "url" .=? getOptional url,
+              "query_params" .=? getOptional queryParams,
+              "request_headers" .=? getOptional requestHeaders,
+              body'
+            ]
 
 -------------------------------------------------------------------------------
 
@@ -227,15 +236,15 @@ data RequestFields f = RequestFields
   deriving anyclass (FunctorB, ApplicativeB, TraversableB, ConstraintsB)
 
 deriving stock instance
-  AllBF Show f RequestFields =>
+  (AllBF Show f RequestFields) =>
   Show (RequestFields f)
 
 deriving stock instance
-  AllBF Eq f RequestFields =>
+  (AllBF Eq f RequestFields) =>
   Eq (RequestFields f)
 
 deriving anyclass instance
-  AllBF NFData f RequestFields =>
+  (AllBF NFData f RequestFields) =>
   NFData (RequestFields f)
 
 -- NOTE: It is likely that we can derive these instances. Possibly if
@@ -247,8 +256,8 @@ instance FromJSON RequestTransformFns where
     body <- o .:? "body"
     queryParams <- o .:? "query_params"
     headers <- o .:? "request_headers"
-    pure $
-      RequestFields
+    pure
+      $ RequestFields
         { method = withOptional @MethodTransformFn method,
           url = withOptional @UrlTransformFn url,
           body = withOptional @BodyTransformFn body,
@@ -258,13 +267,14 @@ instance FromJSON RequestTransformFns where
 
 instance ToJSON RequestTransformFns where
   toJSON RequestFields {..} =
-    J.object . catMaybes $
-      [ "method" .=? getOptional method,
-        "url" .=? getOptional url,
-        "body" .=? getOptional body,
-        "query_params" .=? getOptional queryParams,
-        "request_headers" .=? getOptional requestHeaders
-      ]
+    J.object
+      . catMaybes
+      $ [ "method" .=? getOptional method,
+          "url" .=? getOptional url,
+          "body" .=? getOptional body,
+          "query_params" .=? getOptional queryParams,
+          "request_headers" .=? getOptional requestHeaders
+        ]
 
 type RequestContext = RequestFields TransformCtx
 

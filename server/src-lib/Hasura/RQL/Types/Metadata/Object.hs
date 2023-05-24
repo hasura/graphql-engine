@@ -202,7 +202,7 @@ moiName objectId =
   where
     handleSourceObj ::
       forall b.
-      Backend b =>
+      (Backend b) =>
       SourceName ->
       SourceMetadataObjId b ->
       Text
@@ -228,9 +228,9 @@ moiName objectId =
 
             sourceObjectId :: MetadataObjId
             sourceObjectId =
-              MOSourceObjId source $
-                AB.mkAnyBackend $
-                  SMOLogicalModel @b logicalModelName
+              MOSourceObjId source
+                $ AB.mkAnyBackend
+                $ SMOLogicalModel @b logicalModelName
 
         objectName <> " in " <> moiName sourceObjectId
       SMOTableObj tableName tableObjectId ->
@@ -243,9 +243,9 @@ moiName objectId =
          in tableObjectName
               <> " in "
               <> moiName
-                ( MOSourceObjId source $
-                    AB.mkAnyBackend $
-                      SMOTable @b tableName
+                ( MOSourceObjId source
+                    $ AB.mkAnyBackend
+                    $ SMOTable @b tableName
                 )
 
 data MetadataObject = MetadataObject
@@ -261,10 +261,10 @@ $(makeLenses ''MetadataObject)
 data InconsistentRoleEntity
   = InconsistentTablePermission
       SourceName
-      Text
-      -- ^ Table name -- using `Text` here instead of `TableName b` for simplification,
+      -- | Table name -- using `Text` here instead of `TableName b` for simplification,
       -- Otherwise, we'll have to create a newtype wrapper around `TableName b` and then
       -- use it with `AB.AnyBackend`
+      Text
       PermType
   | InconsistentRemoteSchemaPermission RemoteSchemaName
   deriving stock (Show, Eq, Ord, Generic)

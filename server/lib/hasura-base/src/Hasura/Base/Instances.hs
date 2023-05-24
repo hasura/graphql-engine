@@ -101,9 +101,9 @@ deriving instance TH.Lift Seconds
 
 instance AC.HasCodec C.CronSchedule where
   codec =
-    AC.named "CronSchedule" $
-      AC.bimapCodec C.parseCronSchedule C.serializeCronSchedule $
-        AC.codec @Text
+    AC.named "CronSchedule"
+      $ AC.bimapCodec C.parseCronSchedule C.serializeCronSchedule
+      $ AC.codec @Text
 
 --------------------------------------------------------------------------------
 -- JSON

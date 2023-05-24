@@ -43,10 +43,10 @@ checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
       Left ex -> ignoreHttpErr ex
       Right bs -> do
         UpdateInfo latestVersion <- decodeResp $ bs ^. Wreq.responseBody
-        when (latestVersion /= currentVersion) $
-          FL.pushLogStrLn loggerSet $
-            FL.toLogStr $
-              updateMsg latestVersion
+        when (latestVersion /= currentVersion)
+          $ FL.pushLogStrLn loggerSet
+          $ FL.toLogStr
+          $ updateMsg latestVersion
 
     C.sleep $ days 1
   where

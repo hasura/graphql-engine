@@ -66,7 +66,7 @@ ppInterpolatedQuery (InterpolatedQuery parts) = foldMap ppInterpolatedItem parts
 
 -- | We store the interpolated query as the user text and parse it back
 --   when converting back to Haskell code.
-instance v ~ ArgumentName => HasCodec (InterpolatedQuery v) where
+instance (v ~ ArgumentName) => HasCodec (InterpolatedQuery v) where
   codec =
     CommentCodec
       ("An interpolated query expressed in native code (SQL)")
@@ -78,7 +78,7 @@ instance v ~ ArgumentName => HasCodec (InterpolatedQuery v) where
 deriving via
   (Autodocodec (InterpolatedQuery ArgumentName))
   instance
-    v ~ ArgumentName =>
+    (v ~ ArgumentName) =>
     ToJSON (InterpolatedQuery v)
 
 ---------------------------------------

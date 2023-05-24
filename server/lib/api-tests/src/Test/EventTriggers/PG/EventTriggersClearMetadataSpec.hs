@@ -76,8 +76,8 @@ authorsTable tableName =
 tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests =
   describe "doing clear_metadata with an event trigger containing auto cleanup config should succeed" do
-    it "remove source via replace_metadata, check that the event_log table is removed as well" $
-      \(testEnvironment, (_, _)) -> do
+    it "remove source via replace_metadata, check that the event_log table is removed as well"
+      $ \(testEnvironment, (_, _)) -> do
         -- remove the source using replace_meatadata API
         let clearMetadata =
               [yaml|
@@ -105,8 +105,8 @@ postgresSetup testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger

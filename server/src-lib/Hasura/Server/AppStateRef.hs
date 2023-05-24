@@ -87,7 +87,7 @@ data AppState impl = AppState
 -- This function also updates the 'TLSAllowListRef' to make it point to the
 -- newly minted 'SchemaCacheRef'.
 initialiseAppStateRef ::
-  MonadIO m =>
+  (MonadIO m) =>
   TLSAllowListRef ->
   Maybe MetricsConfigRef ->
   ServerMetrics ->
@@ -258,15 +258,15 @@ getAppContext asRef = lastBuiltAppContext <$> readAppContextRef asRef
 -- | Formats and logs a list of inconsistent metadata objects.
 logInconsistentMetadata :: L.Logger L.Hasura -> [InconsistentMetadata] -> IO ()
 logInconsistentMetadata logger objs =
-  unless (null objs) $
-    L.unLogger logger $
-      mkInconsMetadataLog objs
+  unless (null objs)
+    $ L.unLogger logger
+    $ mkInconsMetadataLog objs
 
 --------------------------------------------------------------------------------
 -- Local helpers
 
 -- | Set the gauge metric to the metadata version of the schema cache, if it exists.
-updateMetadataVersionGauge :: MonadIO m => Gauge -> RebuildableSchemaCache -> m ()
+updateMetadataVersionGauge :: (MonadIO m) => Gauge -> RebuildableSchemaCache -> m ()
 updateMetadataVersionGauge metadataVersionGauge schemaCache = do
   let metadataVersion = scMetadataResourceVersion . lastBuiltSchemaCache $ schemaCache
   liftIO $ Gauge.set metadataVersionGauge $ getMetadataResourceVersion metadataVersion

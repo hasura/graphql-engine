@@ -63,7 +63,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- Returns the transformed selection set, in which remote fields have been
 -- inserted, and for which the @r@ type is now 'Void'.
 getRemoteJoinsQueryDB ::
-  Backend b =>
+  (Backend b) =>
   QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
   (QueryDB b Void (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsQueryDB =
@@ -85,7 +85,7 @@ getRemoteJoinsQueryDB =
 -- Returns the transformed selection set, in which remote fields have been
 -- inserted, and for which the @r@ type is now 'Void'.
 getRemoteJoinsMutationDB ::
-  Backend b =>
+  (Backend b) =>
   MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
   (MutationDB b Void (UnpreparedValue b), Maybe RemoteJoins)
 getRemoteJoinsMutationDB =
@@ -118,7 +118,7 @@ getRemoteJoinsActionMutation =
     AMSync sync -> AMSync <$> transformSyncAction sync
 
 getRemoteJoinsSourceRelation ::
-  Backend b =>
+  (Backend b) =>
   SourceRelationshipSelection b (RemoteRelationshipField UnpreparedValue) UnpreparedValue ->
   (SourceRelationshipSelection b Void UnpreparedValue, Maybe RemoteJoins)
 getRemoteJoinsSourceRelation =
@@ -190,7 +190,7 @@ transformAsyncFields ::
 transformAsyncFields = traverseOf _AsyncOutput transformActionFields
 
 transformMutationOutput ::
-  Backend b =>
+  (Backend b) =>
   MutationOutputG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
   Collector (MutationOutputG b Void (UnpreparedValue b))
 transformMutationOutput = \case
@@ -207,13 +207,13 @@ transformSyncAction ::
 transformSyncAction = traverseOf aaeFields transformActionFields
 
 transformSelect ::
-  Backend b =>
+  (Backend b) =>
   AnnSimpleSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
   Collector (AnnSimpleSelectG b Void (UnpreparedValue b))
 transformSelect = traverseOf asnFields transformAnnFields
 
 transformStreamSelect ::
-  Backend b =>
+  (Backend b) =>
   AnnSimpleStreamSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
   Collector (AnnSimpleStreamSelectG b Void (UnpreparedValue b))
 transformStreamSelect select@AnnSelectStreamG {_assnFields = fields} = do
@@ -222,36 +222,36 @@ transformStreamSelect select@AnnSelectStreamG {_assnFields = fields} = do
   pure select {_assnFields = transformedFields}
 
 transformAggregateSelect ::
-  Backend b =>
+  (Backend b) =>
   AnnAggregateSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
   Collector (AnnAggregateSelectG b Void (UnpreparedValue b))
 transformAggregateSelect =
-  traverseOf asnFields $
-    traverseFields $
-      traverseOf (_TAFNodes . _2) transformAnnFields
+  traverseOf asnFields
+    $ traverseFields
+    $ traverseOf (_TAFNodes . _2) transformAnnFields
 
 -- Relay doesn't support remote relationships: we can drill down directly to the
 -- inner non-relay selection sets.
 transformConnectionSelect ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   ConnectionSelect b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
   Collector (ConnectionSelect b Void (UnpreparedValue b))
 transformConnectionSelect =
-  traverseOf (csSelect . asnFields) $
-    traverseFields $
-      traverseOf _ConnectionEdges $
-        traverseFields $
-          traverseOf _EdgeNode transformAnnFields
+  traverseOf (csSelect . asnFields)
+    $ traverseFields
+    $ traverseOf _ConnectionEdges
+    $ traverseFields
+    $ traverseOf _EdgeNode transformAnnFields
 
 transformObjectSelect ::
-  Backend b =>
+  (Backend b) =>
   AnnObjectSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
   Collector (AnnObjectSelectG b Void (UnpreparedValue b))
 transformObjectSelect = traverseOf aosFields transformAnnFields
 
 transformNestedObjectSelect ::
-  Backend b =>
+  (Backend b) =>
   AnnNestedObjectSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
   Collector (AnnNestedObjectSelectG b Void (UnpreparedValue b))
 transformNestedObjectSelect = traverseOf anosFields transformAnnFields
@@ -286,7 +286,7 @@ transformGraphQLSelectionSet = \case
 -- 'RemoteJoin'.
 transformAnnFields ::
   forall src.
-  Backend src =>
+  (Backend src) =>
   AnnFieldsG src (RemoteRelationshipField UnpreparedValue) (UnpreparedValue src) ->
   Collector (AnnFieldsG src Void (UnpreparedValue src))
 transformAnnFields fields = do
@@ -362,22 +362,22 @@ transformAnnFields fields = do
     -- selection set.
     columnFields :: HashMap (Column src) FieldName
     columnFields =
-      HashMap.fromList $
-        [ (_acfColumn annColumn, alias)
-          | (alias, annColumn) <- getFields _AFColumn fields
-        ]
+      HashMap.fromList
+        $ [ (_acfColumn annColumn, alias)
+            | (alias, annColumn) <- getFields _AFColumn fields
+          ]
 
     -- This is a map of computed field name to its alias of all computed fields
     -- in the selection set.
     computedFields :: HashMap.HashMap ComputedFieldName FieldName
     computedFields =
-      HashMap.fromList $
-        [ (fieldName, alias)
-          | -- Note that we do not currently care about input arguments to a computed
-            -- field because only computed fields which do not accept input arguments
-            -- are currently allowed.
-            (alias, fieldName) <- getFields (_AFComputedField . _2) fields
-        ]
+      HashMap.fromList
+        $ [ (fieldName, alias)
+            | -- Note that we do not currently care about input arguments to a computed
+              -- field because only computed fields which do not accept input arguments
+              -- are currently allowed.
+              (alias, fieldName) <- getFields (_AFComputedField . _2) fields
+          ]
 
     -- Annotate a 'DBJoinField' with its field name and an alias so that it may
     -- be used to construct a remote join.
@@ -423,8 +423,8 @@ transformAnnFields fields = do
       let functionArgs =
             flip FunctionArgsExp mempty $ fromComputedFieldImplicitArguments @b UVSession _scfComputedFieldImplicitArgs
           fieldSelect =
-            flip CFSScalar Nothing $
-              ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing
+            flip CFSScalar Nothing
+              $ ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing
        in AFComputedField _scfXField _scfName fieldSelect
 
 -- | Transforms an action's selection set.
@@ -477,10 +477,10 @@ transformActionFields fields = do
     -- selection set.
     scalarFields :: HashMap G.Name FieldName
     scalarFields =
-      HashMap.fromList $
-        [ (name, alias)
-          | (alias, name) <- getFields _ACFScalar fields
-        ]
+      HashMap.fromList
+        $ [ (name, alias)
+            | (alias, name) <- getFields _ACFScalar fields
+          ]
 
     -- Annotate a join field with its field name and an alias so that it may
     -- be used to construct a remote join.
@@ -530,8 +530,8 @@ transformObjectSelectionSet ::
 transformObjectSelectionSet typename selectionSet = do
   -- we need to keep track of whether any subfield contained a remote join
   (annotatedFields, subfieldsContainRemoteJoins) <-
-    listens isJust $
-      flip InsOrdHashMap.traverseWithKey selectionSet \alias field ->
+    listens isJust
+      $ flip InsOrdHashMap.traverseWithKey selectionSet \alias field ->
         withField (G.unName <$> typename) (G.unName alias) do
           case field of
             FieldGraphQL f -> (,Nothing) <$> transformGraphQLField f
@@ -544,29 +544,29 @@ transformObjectSelectionSet typename selectionSet = do
       remoteJoins = InsOrdHashMap.mapMaybe snd annotatedFields
       additionalFields =
         if
-            | isJust typename && (not (null remoteJoins) || subfieldsContainRemoteJoins) ->
-                -- We are in a situation in which the type name matters, and we know
-                -- that there is at least one remote join in this part of tree, meaning
-                -- we might need to branch on the typename when traversing the join
-                -- tree: we insert a custom field that will return the type name.
-                InsOrdHashMap.singleton internalTypeAlias $
-                  mkGraphQLField
-                    (Just internalTypeAlias)
-                    GName.___typename
-                    mempty
-                    mempty
-                    SelectionSetNone
-            | otherwise ->
-                -- Either the typename doesn't matter, or this tree doesn't have remote
-                -- joins; this selection set isn't "ambiguous".
-                mempty
+          | isJust typename && (not (null remoteJoins) || subfieldsContainRemoteJoins) ->
+              -- We are in a situation in which the type name matters, and we know
+              -- that there is at least one remote join in this part of tree, meaning
+              -- we might need to branch on the typename when traversing the join
+              -- tree: we insert a custom field that will return the type name.
+              InsOrdHashMap.singleton internalTypeAlias
+                $ mkGraphQLField
+                  (Just internalTypeAlias)
+                  GName.___typename
+                  mempty
+                  mempty
+                  SelectionSetNone
+          | otherwise ->
+              -- Either the typename doesn't matter, or this tree doesn't have remote
+              -- joins; this selection set isn't "ambiguous".
+              mempty
       transformedFields = fmap fst annotatedFields <> additionalFields
   case NEMap.fromList $ InsOrdHashMap.toList remoteJoins of
     Nothing -> pure $ fmap FieldGraphQL transformedFields
     Just neRemoteJoins -> do
       collect $ NEMap.mapKeys (\fieldGName -> QualifiedFieldName (G.unName <$> typename) (G.unName fieldGName)) neRemoteJoins
-      pure $
-        fmap
+      pure
+        $ fmap
           FieldGraphQL
           (transformedFields <> InsOrdHashMap.fromList [(_fAlias fld, fld) | fld <- toList phantomFields])
   where
@@ -580,8 +580,8 @@ transformObjectSelectionSet typename selectionSet = do
     -- in the selection set. We do not yet support lhs join fields which take
     -- arguments. To be consistent with that, we ignore fields with arguments
     noArgsGraphQLFields =
-      HashMap.fromList $
-        flip mapMaybe (InsOrdHashMap.toList selectionSet) \(alias, field) -> case field of
+      HashMap.fromList
+        $ flip mapMaybe (InsOrdHashMap.toList selectionSet) \(alias, field) -> case field of
           FieldGraphQL f ->
             if null (_fArguments f)
               then Just (_fName f, FieldName $ G.unName alias)
@@ -653,8 +653,8 @@ createRemoteJoin joinColumnAliases = \case
                 (,(rhsColumn, rhsColumnType))
                   <$> HashMap.lookup joinFieldName joinColumnAliases
           anySourceJoin =
-            AB.mkAnyBackend $
-              RemoteSourceJoin
+            AB.mkAnyBackend
+              $ RemoteSourceJoin
                 _rssName
                 _rssConfig
                 transformedSourceRelationship
@@ -672,7 +672,7 @@ createRemoteJoin joinColumnAliases = \case
 -- NOTE: if the @fieldName@ argument is a valid GraphQL name, then the
 -- constructed alias MUST also be a valid GraphQL name.
 getJoinColumnAlias ::
-  Hashable field =>
+  (Hashable field) =>
   FieldName ->
   field ->
   HashMap field FieldName ->

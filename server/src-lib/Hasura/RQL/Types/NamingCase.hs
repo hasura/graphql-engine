@@ -17,8 +17,8 @@ data NamingCase = HasuraCase | GraphqlCase
 
 instance AC.HasCodec NamingCase where
   codec =
-    AC.named "NamingCase" $
-      AC.stringConstCodec [(HasuraCase, "hasura-default"), (GraphqlCase, "graphql-default")]
+    AC.named "NamingCase"
+      $ AC.stringConstCodec [(HasuraCase, "hasura-default"), (GraphqlCase, "graphql-default")]
 
 instance J.ToJSON NamingCase where
   toJSON HasuraCase = J.String "hasura-default"

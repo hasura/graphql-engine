@@ -146,8 +146,8 @@ mkLocalTestEnvironment' mockConfig _ = mkTestResource do
   maeRecordedRequest <- I.newIORef Nothing
   maeRecordedRequestConfig <- I.newIORef Nothing
   maeThread <- Async.async $ runMockServer maeConfig maeRecordedRequest maeRecordedRequestConfig
-  pure $
-    AcquiredResource
+  pure
+    $ AcquiredResource
       { resourceValue = MockAgentEnvironment {..},
         waitForResource = healthCheck $ "http://127.0.0.1:" <> show mockAgentPort <> "/health",
         teardownResource = Async.cancel maeThread
@@ -167,19 +167,19 @@ mockMutationResponse :: API.MutationResponse -> MockRequestConfig
 mockMutationResponse mutationResponse =
   defaultMockRequestConfig {_mutationResponse = \_ -> Right mutationResponse}
 
-mockAgentGraphqlTest :: HasCallStack => String -> (TestEnvironment -> (MockRequestConfig -> RequestHeaders -> J.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
+mockAgentGraphqlTest :: (HasCallStack) => String -> (TestEnvironment -> (MockRequestConfig -> RequestHeaders -> J.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
 mockAgentGraphqlTest name testBody =
   it name $ \(env, agentEnv) ->
     let performGraphqlRequest mockRequestConfig requestHeaders graphqlRequest = performRecordedRequest agentEnv mockRequestConfig (GraphqlEngine.postGraphqlWithHeaders env requestHeaders graphqlRequest)
      in testBody env performGraphqlRequest
 
-mockAgentMetadataTest :: HasCallStack => String -> (TestEnvironment -> (MockRequestConfig -> Int -> J.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
+mockAgentMetadataTest :: (HasCallStack) => String -> (TestEnvironment -> (MockRequestConfig -> Int -> J.Value -> IO MockRequestResults) -> Expectation) -> SpecWith (Arg ((TestEnvironment, MockAgentEnvironment) -> Expectation))
 mockAgentMetadataTest name testBody =
   it name $ \(env, agentEnv) ->
     let performMetadataRequest mockRequestConfig status metadataRequest = performRecordedRequest agentEnv mockRequestConfig (GraphqlEngine.postMetadataWithStatus status env metadataRequest)
      in testBody env performMetadataRequest
 
-performRecordedRequest :: HasCallStack => MockAgentEnvironment -> MockRequestConfig -> IO J.Value -> IO MockRequestResults
+performRecordedRequest :: (HasCallStack) => MockAgentEnvironment -> MockRequestConfig -> IO J.Value -> IO MockRequestResults
 performRecordedRequest MockAgentEnvironment {..} mockRequestConfig performRequest = do
   -- Set the Agent with the 'MockConfig'
   I.modifyIORef maeConfig (\mockConfig -> mockConfig {_requestConfig = mockRequestConfig})

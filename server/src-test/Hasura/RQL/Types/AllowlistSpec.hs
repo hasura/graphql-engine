@@ -116,13 +116,14 @@ spec = do
 
     it "round-trips roles when serializing via codecs" do
       let expected =
-            maybeToEither "nonempty" $
-              AllowlistScopeRoles <$> traverse mkRoleName ["viewer", "admin"]
+            maybeToEither "nonempty"
+              $ AllowlistScopeRoles
+              <$> traverse mkRoleName ["viewer", "admin"]
       let json = toJSONViaCodec <$> expected
       let actual = parseEither parseJSONViaCodec =<< json
       actual `shouldBe` expected
 
-mustJSON :: J.FromJSON a => J.Value -> a
+mustJSON :: (J.FromJSON a) => J.Value -> a
 mustJSON v = case J.parseEither J.parseJSON v of
   Left err -> error err
   Right x -> x

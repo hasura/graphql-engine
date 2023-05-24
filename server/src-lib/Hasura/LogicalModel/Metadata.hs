@@ -45,14 +45,14 @@ instance (Backend b) => HasCodec (LogicalModelMetadata b) where
       ("A return type.")
       $ AC.object (backendPrefix @b <> "LogicalModelMetadata")
       $ LogicalModelMetadata
-        <$> AC.requiredField "name" nameDoc
-          AC..= _lmmName
+      <$> AC.requiredField "name" nameDoc
+      AC..= _lmmName
         <*> AC.requiredFieldWith "fields" logicalModelFieldMapCodec fieldsDoc
-          AC..= _lmmFields
+      AC..= _lmmFields
         <*> AC.optionalField "description" descriptionDoc
-          AC..= _lmmDescription
+      AC..= _lmmDescription
         <*> optSortedList "select_permissions" _pdRole
-          AC..= _lmmSelectPermissions
+      AC..= _lmmSelectPermissions
     where
       nameDoc = "A name for a logical model"
       fieldsDoc = "Return types for the logical model"
@@ -64,12 +64,12 @@ instance (Backend b) => HasCodec (LogicalModelMetadata b) where
 deriving via
   (Autodocodec (LogicalModelMetadata b))
   instance
-    Backend b => FromJSON (LogicalModelMetadata b)
+    (Backend b) => FromJSON (LogicalModelMetadata b)
 
 deriving via
   (Autodocodec (LogicalModelMetadata b))
   instance
-    Backend b => ToJSON (LogicalModelMetadata b)
+    (Backend b) => ToJSON (LogicalModelMetadata b)
 
 deriving stock instance (Backend b) => Eq (LogicalModelMetadata b)
 

@@ -63,8 +63,11 @@ considerEnv envVar = do
     Just val -> either throwErr (pure . Just) $ fromEnv val
   where
     throwErr s =
-      throwError $
-        "Fatal Error:- Environment variable " ++ envVar ++ ": " ++ s
+      throwError
+        $ "Fatal Error:- Environment variable "
+        ++ envVar
+        ++ ": "
+        ++ s
 
 -- | Lookup a list of keys with 'considerEnv' and return the first
 -- value to parse successfully.
@@ -286,9 +289,9 @@ instance FromEnv (HashSet Server.Types.ExperimentalFeature) where
       readAPI si = case Text.toLower $ Text.strip si of
         key | Just (_, ef) <- find ((== key) . fst) experimentalFeatures -> Right ef
         _ ->
-          Left $
-            "Only expecting list of comma separated experimental features, options are:"
-              ++ intercalate ", " (map (Text.unpack . fst) experimentalFeatures)
+          Left
+            $ "Only expecting list of comma separated experimental features, options are:"
+            ++ intercalate ", " (map (Text.unpack . fst) experimentalFeatures)
 
       experimentalFeatures :: [(Text, Server.Types.ExperimentalFeature)]
       experimentalFeatures = [(Server.Types.experimentalFeatureKey ef, ef) | ef <- [minBound .. maxBound]]

@@ -96,17 +96,17 @@ spec = do
     it "Handles multiple occurences of variables " do
       let Right code = parseInterpolatedQuery "SELECT {{hey}}, {{hey}}"
       let actual :: Either QErr Text =
-            fmap snd $
-              runExcept $
-                nativeQueryToPreparedStatement
-                  lmm
-                  nqm
-                    { _nqmCode = code,
-                      _nqmArguments =
-                        HashMap.fromList
-                          [ (ArgumentName "hey", NullableScalarType PGVarchar False Nothing)
-                          ]
-                    }
+            fmap snd
+              $ runExcept
+              $ nativeQueryToPreparedStatement
+                lmm
+                nqm
+                  { _nqmCode = code,
+                    _nqmArguments =
+                      HashMap.fromList
+                        [ (ArgumentName "hey", NullableScalarType PGVarchar False Nothing)
+                        ]
+                  }
 
       (first showQErr actual) `shouldSatisfy` isRight
       let Right rendered = actual
@@ -116,18 +116,18 @@ spec = do
     it "Handles multiple variables " do
       let Right code = parseInterpolatedQuery "SELECT {{hey}}, {{ho}}"
       let actual :: Either QErr Text =
-            fmap snd $
-              runExcept $
-                nativeQueryToPreparedStatement
-                  lmm
-                  nqm
-                    { _nqmCode = code,
-                      _nqmArguments =
-                        HashMap.fromList
-                          [ (ArgumentName "hey", NullableScalarType PGVarchar False Nothing),
-                            (ArgumentName "ho", NullableScalarType PGInteger False Nothing)
-                          ]
-                    }
+            fmap snd
+              $ runExcept
+              $ nativeQueryToPreparedStatement
+                lmm
+                nqm
+                  { _nqmCode = code,
+                    _nqmArguments =
+                      HashMap.fromList
+                        [ (ArgumentName "hey", NullableScalarType PGVarchar False Nothing),
+                          (ArgumentName "ho", NullableScalarType PGInteger False Nothing)
+                        ]
+                  }
 
       (first showQErr actual) `shouldSatisfy` isRight
       let Right rendered = actual

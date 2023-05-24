@@ -44,7 +44,7 @@ class Transform a where
   --   ReqTransformCtx -> a -> m a
   -- @
   transform ::
-    MonadError TransformErrorBundle m =>
+    (MonadError TransformErrorBundle m) =>
     TransformFn a ->
     TransformCtx a ->
     a ->
@@ -60,7 +60,7 @@ class Transform a where
 
 -- | A helper function for serializing transformation errors to JSON.
 throwErrorBundle ::
-  MonadError TransformErrorBundle m =>
+  (MonadError TransformErrorBundle m) =>
   Text ->
   Maybe J.Value ->
   m a
@@ -87,7 +87,7 @@ wrapUnescapedTemplate (UnescapedTemplate txt) = Template $ "\"" <> txt <> "\""
 -- | Encode a JSON Scalar Value as a 'ByteString'.
 -- If a non-Scalar value is provided, will return a 'TrnasformErrorBundle'
 encodeScalar ::
-  MonadError TransformErrorBundle m =>
+  (MonadError TransformErrorBundle m) =>
   J.Value ->
   m ByteString
 encodeScalar = \case

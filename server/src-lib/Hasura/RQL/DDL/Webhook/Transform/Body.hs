@@ -57,7 +57,7 @@ instance Transform Body where
 -- transformations, this can be seen as an implementation of these
 -- transformations as normal Haskell functions.
 applyBodyTransformFn ::
-  MonadError TransformErrorBundle m =>
+  (MonadError TransformErrorBundle m) =>
   BodyTransformFn ->
   RequestTransformCtx ->
   Body ->
@@ -70,8 +70,10 @@ applyBodyTransformFn fn context _originalBody = case fn of
     pure . JSONBody . Just $ result
   ModifyAsFormURLEncoded formTemplates -> do
     result <-
-      liftEither . V.toEither . for formTemplates $
-        runUnescapedRequestTemplateTransform' context
+      liftEither
+        . V.toEither
+        . for formTemplates
+        $ runUnescapedRequestTemplateTransform' context
     pure . RawBody $ foldFormEncoded result
 
 -- | Validate that the provided 'BodyTransformFn' is correct in the context of
@@ -100,10 +102,10 @@ foldFormEncoded =
     . L.intersperse "&"
     . M.foldMapWithKey @[LBS.ByteString]
       \k v ->
-        [ LBS.fromStrict $
-            TE.encodeUtf8 (escapeURIText k)
-              <> "="
-              <> escapeURIBS v
+        [ LBS.fromStrict
+            $ TE.encodeUtf8 (escapeURIText k)
+            <> "="
+            <> escapeURIBS v
           | v /= "null"
         ]
 

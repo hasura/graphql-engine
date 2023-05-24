@@ -37,8 +37,9 @@ resolveVariables definitions jsonValues directives selSet = do
       case variableDefinitions of
         a :| [] -> return a
         _ ->
-          throw400 ParseFailed $
-            "multiple definitions for variable " <>> variableName
+          throw400 ParseFailed
+            $ "multiple definitions for variable "
+            <>> variableName
   ((directives', selSet'), usedVariables) <- flip runStateT mempty $ do
     d <- traverse (traverse (resolveVariable uniqueVariables)) directives
     s <- traverse (traverse (resolveVariable uniqueVariables)) selSet
@@ -51,29 +52,29 @@ resolveVariables definitions jsonValues directives selSet = do
       -- TODO: Do this check using a feature flag
       isVariableValidationEnabled = False
 
-  when (isVariableValidationEnabled && usedVariables /= variablesByNameSet) $
-    throw400 ValidationFailed $
-      "following variable(s) have been defined, but have not been used in the query - "
-        <> T.concat
-          ( L.intersperse ", " $
-              map G.unName $
-                HS.toList $
-                  HS.difference variablesByNameSet usedVariables
-          )
+  when (isVariableValidationEnabled && usedVariables /= variablesByNameSet)
+    $ throw400 ValidationFailed
+    $ "following variable(s) have been defined, but have not been used in the query - "
+    <> T.concat
+      ( L.intersperse ", "
+          $ map G.unName
+          $ HS.toList
+          $ HS.difference variablesByNameSet usedVariables
+      )
 
   -- There may be variables which have a default value and may not be
   -- included in the variables JSON Map. So, we should only see, if a
   -- variable is inlcuded in the JSON Map, then it must be used in the
   -- query
-  when (HS.difference jsonVariableNames usedVariables /= HS.empty) $
-    throw400 ValidationFailed $
-      "unexpected variables in variableValues: "
-        <> T.concat
-          ( L.intersperse ", " $
-              map G.unName $
-                HS.toList $
-                  HS.difference jsonVariableNames usedVariables
-          )
+  when (HS.difference jsonVariableNames usedVariables /= HS.empty)
+    $ throw400 ValidationFailed
+    $ "unexpected variables in variableValues: "
+    <> T.concat
+      ( L.intersperse ", "
+          $ map G.unName
+          $ HS.toList
+          $ HS.difference jsonVariableNames usedVariables
+      )
 
   return (directives', selSet')
   where
@@ -86,10 +87,11 @@ resolveVariables definitions jsonValues directives selSet = do
         Nothing
           | isOptional -> pure $ GraphQLValue $ absurd <$> defaultValue
           | otherwise ->
-              throw400 ValidationFailed $
-                "expecting a value for non-nullable variable: " <>> _vdName
-      pure $!
-        Variable
+              throw400 ValidationFailed
+                $ "expecting a value for non-nullable variable: "
+                <>> _vdName
+      pure
+        $! Variable
           { vInfo =
               if isOptional
                 then VIOptional _vdName defaultValue

@@ -445,7 +445,7 @@ tryTakeResource pool@Pool {..} = do
             return $
               Just
                 <$> create
-                `onException` atomically (modifyTVar_ inUse (subtract 1))
+                  `onException` atomically (modifyTVar_ inUse (subtract 1))
   return $ (,local) <$> resource
 {-# INLINEABLE tryTakeResource #-}
 

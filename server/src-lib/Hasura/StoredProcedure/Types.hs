@@ -30,16 +30,20 @@ instance NFData StoredProcedureConfig
 
 instance HasCodec StoredProcedureConfig where
   codec =
-    AC.object "StoredProcedureConfig" $
-      StoredProcedureConfig
-        <$> AC.requiredField' "exposed_as" AC..= _spcExposedAs
-        <*> AC.optionalFieldWith' "custom_name" graphQLFieldNameCodec AC..= _spcCustomName
+    AC.object "StoredProcedureConfig"
+      $ StoredProcedureConfig
+      <$> AC.requiredField' "exposed_as"
+      AC..= _spcExposedAs
+        <*> AC.optionalFieldWith' "custom_name" graphQLFieldNameCodec
+      AC..= _spcCustomName
 
 instance FromJSON StoredProcedureConfig where
   parseJSON = withObject "StoredProcedureConfig" $ \obj ->
     StoredProcedureConfig
-      <$> obj .: "exposed_as"
-      <*> obj .:? "custom_name"
+      <$> obj
+      .: "exposed_as"
+      <*> obj
+      .:? "custom_name"
 
 instance ToJSON StoredProcedureConfig where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}

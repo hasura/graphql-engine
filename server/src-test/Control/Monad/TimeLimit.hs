@@ -13,7 +13,7 @@ import Hasura.Prelude
 -- | Runs an action with a time limit of approximately 0.1s.
 -- If the time taken to perform the action exceeds this limit,
 -- it returns 'Nothing'.
-runWithTimeLimit :: MonadIO m => IO a -> m (Maybe a)
+runWithTimeLimit :: (MonadIO m) => IO a -> m (Maybe a)
 runWithTimeLimit action = liftIO do
   var <- newEmptyMVar
   thread <- async do

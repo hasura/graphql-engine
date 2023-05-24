@@ -76,5 +76,5 @@ runUnescapedResponseTemplateTransform' ::
   UnescapedTemplate ->
   Validation TransformErrorBundle ByteString
 runUnescapedResponseTemplateTransform' context unescapedTemplate =
-  fromEither $
-    runUnescapedResponseTemplateTransform context unescapedTemplate
+  fromEither
+    $ runUnescapedResponseTemplateTransform context unescapedTemplate

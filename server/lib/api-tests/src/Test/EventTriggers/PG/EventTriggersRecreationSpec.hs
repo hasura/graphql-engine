@@ -165,8 +165,8 @@ postgresTeardown :: TestEnvironment -> IO ()
 postgresTeardown testEnvironment = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
-  GraphqlEngine.postV2Query_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postV2Query_ testEnvironment
+    $ [interpolateYaml|
 type: run_sql
 args:
   source: postgres

@@ -20,6 +20,9 @@ mutableView ::
   Text ->
   m ()
 mutableView qt f mVI operation =
-  unless (isMutable f mVI) $
-    throw400 NotSupported $
-      "view " <> qt <<> " is not " <> operation
+  unless (isMutable f mVI)
+    $ throw400 NotSupported
+    $ "view "
+    <> qt
+    <<> " is not "
+    <> operation

@@ -76,7 +76,7 @@ import Prelude
 -- Directives may be "hidden", in which case they won't advertised in the
 -- schema, but silently accepted. This is un-advisable and should only be used
 -- when there's no other way around it.
-directivesInfo :: forall m origin. MonadParse m => [DirectiveInfo origin]
+directivesInfo :: forall m origin. (MonadParse m) => [DirectiveInfo origin]
 directivesInfo = do
   dir <- inclusionDirectives @m <> customDirectives @m
   guard $ dAdvertised dir
@@ -84,13 +84,13 @@ directivesInfo = do
 
 -- | Not exported, only used internally; identical to 'directivesInfo', but also
 -- contains hidden directives.
-allDirectives :: forall m origin. MonadParse m => [DirectiveInfo origin]
+allDirectives :: forall m origin. (MonadParse m) => [DirectiveInfo origin]
 allDirectives = map dDefinition $ inclusionDirectives @m <> customDirectives @m
 
-inclusionDirectives :: forall m origin. MonadParse m => [Directive origin m]
+inclusionDirectives :: forall m origin. (MonadParse m) => [Directive origin m]
 inclusionDirectives = [includeDirective @m, skipDirective @m]
 
-customDirectives :: forall m origin. MonadParse m => [Directive origin m]
+customDirectives :: forall m origin. (MonadParse m) => [Directive origin m]
 customDirectives = [cachedDirective @m, multipleRootFieldsDirective @m]
 
 -- | Parses directives, given a location. Ensures that all directives are known
@@ -105,7 +105,7 @@ customDirectives = [cachedDirective @m, multipleRootFieldsDirective @m]
 --     withDirective dMap cached $ for_ \_ -> tagAsCached
 parseDirectives ::
   forall origin m.
-  MonadParse m =>
+  (MonadParse m) =>
   [Directive origin m] ->
   G.DirectiveLocation ->
   [G.Directive Variable] ->
@@ -166,7 +166,7 @@ withDirective dmap key callback = callback $ runIdentity <$> DM.lookup key dmap
 
 -- Cached custom directive.
 
-cachedDirective :: forall m origin. MonadParse m => Directive origin m
+cachedDirective :: forall m origin. (MonadParse m) => Directive origin m
 cachedDirective =
   mkDirective
     Name._cached
@@ -190,7 +190,7 @@ cached = DirectiveKey Name._cached
 
 -- Subscription tests custom directive.
 
-multipleRootFieldsDirective :: MonadParse m => Directive origin m
+multipleRootFieldsDirective :: (MonadParse m) => Directive origin m
 multipleRootFieldsDirective =
   mkDirective
     Name.__multiple_top_level_fields
@@ -204,7 +204,7 @@ multipleRootFields = DirectiveKey Name.__multiple_top_level_fields
 
 -- Built-in inclusion directives
 
-skipDirective :: MonadParse m => Directive origin m
+skipDirective :: (MonadParse m) => Directive origin m
 skipDirective =
   mkDirective
     Name._skip
@@ -216,7 +216,7 @@ skipDirective =
     ]
     ifArgument
 
-includeDirective :: MonadParse m => Directive origin m
+includeDirective :: (MonadParse m) => Directive origin m
 includeDirective =
   mkDirective
     Name._include
@@ -234,7 +234,7 @@ skip = DirectiveKey Name._skip
 include :: DirectiveKey Bool
 include = DirectiveKey Name._include
 
-ifArgument :: MonadParse m => InputFieldsParser origin m Bool
+ifArgument :: (MonadParse m) => InputFieldsParser origin m Bool
 ifArgument = field Name._if Nothing boolean
 
 -- Parser type for directives.
@@ -250,7 +250,7 @@ data Directive origin m where
     Directive origin m
 
 data DirectiveKey a where
-  DirectiveKey :: Typeable a => G.Name -> DirectiveKey a
+  DirectiveKey :: (Typeable a) => G.Name -> DirectiveKey a
 
 instance GEq DirectiveKey where
   geq

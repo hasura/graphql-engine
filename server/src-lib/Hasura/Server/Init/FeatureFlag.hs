@@ -53,8 +53,8 @@ newtype FeatureFlags = FeatureFlags {getFeatureFlags :: HashMap Text FeatureFlag
 
 featureFlags :: FeatureFlags
 featureFlags =
-  FeatureFlags $
-    HashMap.fromList
+  FeatureFlags
+    $ HashMap.fromList
       [ ("test-flag", testFlag),
         ("native-query-interface", nativeQueryInterface),
         ("stored-procedures", storedProceduresFlag)
@@ -62,16 +62,16 @@ featureFlags =
 
 --------------------------------------------------------------------------------
 
-class Monad m => HasFeatureFlagChecker m where
+class (Monad m) => HasFeatureFlagChecker m where
   checkFlag :: FeatureFlag -> m Bool
 
-instance HasFeatureFlagChecker m => HasFeatureFlagChecker (ReaderT r m) where
+instance (HasFeatureFlagChecker m) => HasFeatureFlagChecker (ReaderT r m) where
   checkFlag = lift . checkFlag
 
-instance HasFeatureFlagChecker m => HasFeatureFlagChecker (ExceptT e m) where
+instance (HasFeatureFlagChecker m) => HasFeatureFlagChecker (ExceptT e m) where
   checkFlag = lift . checkFlag
 
-instance HasFeatureFlagChecker m => HasFeatureFlagChecker (StateT s m) where
+instance (HasFeatureFlagChecker m) => HasFeatureFlagChecker (StateT s m) where
   checkFlag = lift . checkFlag
 
 --------------------------------------------------------------------------------

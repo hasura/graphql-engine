@@ -65,8 +65,9 @@ fromSelect jsonAggSelect annSimpleSel =
     IR.JASMultipleRows ->
       guardSelectYieldingNull emptyArrayExpression <$> fromSelectRows annSimpleSel
     IR.JASSingleObject ->
-      fmap (guardSelectYieldingNull nullExpression) $
-        fromSelectRows annSimpleSel <&> \sel ->
+      fmap (guardSelectYieldingNull nullExpression)
+        $ fromSelectRows annSimpleSel
+        <&> \sel ->
           sel
             { selectFor =
                 JsonFor
@@ -79,8 +80,8 @@ fromSelect jsonAggSelect annSimpleSel =
       let isNullApplication = FunExpISNULL (SelectExpression select) fallbackExpression
        in emptySelect
             { selectProjections =
-                [ ExpressionProjection $
-                    Aliased
+                [ ExpressionProjection
+                    $ Aliased
                       { aliasedThing = FunctionApplicationExpression isNullApplication,
                         aliasedAlias = "root"
                       }
@@ -124,8 +125,8 @@ fromSourceRelationship lhs lhsSchema argumentId relationshipField = do
       }
   where
     projectArgumentId column =
-      ExpressionProjection $
-        Aliased
+      ExpressionProjection
+        $ Aliased
           { aliasedThing = column,
             aliasedAlias = IR.getFieldNameTxt argumentId
           }
@@ -137,9 +138,9 @@ fromSourceRelationship lhs lhsSchema argumentId relationshipField = do
                 { openJsonExpression =
                     ValueExpression (ODBC.TextValue $ lbsToTxt $ J.encode lhs),
                   openJsonWith =
-                    Just $
-                      toJsonFieldSpec argumentId IntegerType
-                        NE.:| map (uncurry toJsonFieldSpec . second snd) (HashMap.toList lhsSchema)
+                    Just
+                      $ toJsonFieldSpec argumentId IntegerType
+                      NE.:| map (uncurry toJsonFieldSpec . second snd) (HashMap.toList lhsSchema)
                 },
             aliasedAlias = "lhs"
           }
@@ -167,9 +168,9 @@ fromRemoteRelationFieldsG existingJoins joinColumns (IR.FieldName name, field) =
         )
         ( fromObjectRelationSelectG
             existingJoins
-            ( withJoinColumns $
-                runIdentity $
-                  traverse (Identity . getConst) selectionSet
+            ( withJoinColumns
+                $ runIdentity
+                $ traverse (Identity . getConst) selectionSet
             )
         )
     IR.SourceRelationshipArray selectionSet ->
@@ -178,10 +179,10 @@ fromRemoteRelationFieldsG existingJoins joinColumns (IR.FieldName name, field) =
             JoinFieldSource JsonArray (Aliased {aliasedThing, aliasedAlias = name})
         )
         ( fromArraySelectG
-            ( IR.ASSimple $
-                withJoinColumns $
-                  runIdentity $
-                    traverse (Identity . getConst) selectionSet
+            ( IR.ASSimple
+                $ withJoinColumns
+                $ runIdentity
+                $ traverse (Identity . getConst) selectionSet
             )
         )
     IR.SourceRelationshipArrayAggregate selectionSet ->
@@ -190,10 +191,10 @@ fromRemoteRelationFieldsG existingJoins joinColumns (IR.FieldName name, field) =
             JoinFieldSource JsonArray (Aliased {aliasedThing, aliasedAlias = name})
         )
         ( fromArraySelectG
-            ( IR.ASAggregate $
-                withJoinColumns $
-                  runIdentity $
-                    traverse (Identity . getConst) selectionSet
+            ( IR.ASAggregate
+                $ withJoinColumns
+                $ runIdentity
+                $ traverse (Identity . getConst) selectionSet
             )
         )
   where
@@ -233,8 +234,8 @@ fromSelectRows annSelectG = do
     runReaderT (fromGBoolExp permFilter) (fromAlias selectFrom)
   let selectProjections = map fieldSourceProjections fieldSources
 
-  pure $
-    emptySelect
+  pure
+    $ emptySelect
       { selectOrderBy = argsOrderBy,
         selectTop = permissionBasedTop <> argsTop,
         selectProjections,
@@ -260,11 +261,11 @@ fromSelectRows annSelectG = do
 mkNodesSelect :: Args -> Where -> Expression -> Top -> From -> [(Int, (IR.FieldName, [FieldSource]))] -> [(Int, Projection)]
 mkNodesSelect Args {..} foreignKeyConditions filterExpression permissionBasedTop selectFrom nodes =
   [ ( index,
-      ExpressionProjection $
-        Aliased
+      ExpressionProjection
+        $ Aliased
           { aliasedThing =
-              SelectExpression $
-                emptySelect
+              SelectExpression
+                $ emptySelect
                   { selectProjections = map fieldSourceProjections fieldSources,
                     selectTop = permissionBasedTop <> argsTop,
                     selectFrom = pure selectFrom,
@@ -294,42 +295,42 @@ mkNodesSelect Args {..} foreignKeyConditions filterExpression permissionBasedTop
 mkAggregateSelect :: Args -> Where -> Expression -> From -> [(Int, (IR.FieldName, [Projection]))] -> [(Int, Projection)]
 mkAggregateSelect Args {..} foreignKeyConditions filterExpression selectFrom aggregates =
   [ ( index,
-      ExpressionProjection $
-        Aliased
+      ExpressionProjection
+        $ Aliased
           { aliasedThing =
-              safeJsonQueryExpression JsonSingleton $
-                SelectExpression $
-                  emptySelect
-                    { selectProjections = projections,
-                      selectTop = NoTop,
-                      selectFrom =
-                        pure $
-                          FromSelect
-                            Aliased
-                              { aliasedAlias = aggSubselectName,
-                                aliasedThing =
-                                  emptySelect
-                                    { selectProjections = pure StarProjection,
-                                      selectTop = argsTop,
-                                      selectFrom = pure selectFrom,
-                                      selectJoins = argsJoins,
-                                      selectWhere = argsWhere <> Where [filterExpression] <> foreignKeyConditions,
-                                      selectFor = NoFor,
-                                      selectOrderBy = mempty,
-                                      selectOffset = argsOffset
-                                    }
-                              },
-                      selectJoins = mempty,
-                      selectWhere = mempty,
-                      selectFor =
-                        JsonFor
-                          ForJson
-                            { jsonCardinality = JsonSingleton,
-                              jsonRoot = NoRoot
+              safeJsonQueryExpression JsonSingleton
+                $ SelectExpression
+                $ emptySelect
+                  { selectProjections = projections,
+                    selectTop = NoTop,
+                    selectFrom =
+                      pure
+                        $ FromSelect
+                          Aliased
+                            { aliasedAlias = aggSubselectName,
+                              aliasedThing =
+                                emptySelect
+                                  { selectProjections = pure StarProjection,
+                                    selectTop = argsTop,
+                                    selectFrom = pure selectFrom,
+                                    selectJoins = argsJoins,
+                                    selectWhere = argsWhere <> Where [filterExpression] <> foreignKeyConditions,
+                                    selectFor = NoFor,
+                                    selectOrderBy = mempty,
+                                    selectOffset = argsOffset
+                                  }
                             },
-                      selectOrderBy = mempty,
-                      selectOffset = Nothing
-                    },
+                    selectJoins = mempty,
+                    selectWhere = mempty,
+                    selectFor =
+                      JsonFor
+                        ForJson
+                          { jsonCardinality = JsonSingleton,
+                            jsonRoot = NoRoot
+                          },
+                    selectOrderBy = mempty,
+                    selectOffset = Nothing
+                  },
             aliasedAlias = IR.getFieldNameTxt fieldName
           }
     )
@@ -352,21 +353,21 @@ fromStoredProcedure storedProcedure = do
           (\(arg, (typ, val)) -> Declare (getArgumentName arg) typ val)
           (HashMap.toList (IR.spArgs storedProcedure))
       sql =
-        InterpolatedQuery $
-          IIText ("EXECUTE " <> T.toTxt (IR.spStoredProcedure storedProcedure) <> " ")
-            : intercalate
-              [IIText ", "]
-              ( map
-                  ( \(ArgumentName name) ->
-                      [ IIText "@",
-                        IIText (T.toTxt name),
-                        IIText " = ",
-                        IIText "@",
-                        IIText (T.toTxt name)
-                      ]
-                  )
-                  (HashMap.keys (IR.spArgs storedProcedure))
-              )
+        InterpolatedQuery
+          $ IIText ("EXECUTE " <> T.toTxt (IR.spStoredProcedure storedProcedure) <> " ")
+          : intercalate
+            [IIText ", "]
+            ( map
+                ( \(ArgumentName name) ->
+                    [ IIText "@",
+                      IIText (T.toTxt name),
+                      IIText " = ",
+                      IIText "@",
+                      IIText (T.toTxt name)
+                    ]
+                )
+                (HashMap.keys (IR.spArgs storedProcedure))
+            )
       storedProcedureReturnType = IR.spLogicalModel storedProcedure
       rawTempTableName = T.toTxt storedProcedureName
       aliasedTempTableName = Aliased (TempTableName rawTempTableName) rawTempTableName
@@ -415,10 +416,10 @@ fromSelectAggregate
       -- then we'll have a LHS table that we're joining on. So we get the
       -- conditions expressions from the field mappings. The LHS table is
       -- the entityAlias, and the RHS table is selectFrom.
-      mforeignKeyConditions <- fmap (Where . fromMaybe []) $
-        for mparentRelationship $
-          \(entityAlias, mapping) ->
-            runReaderT (fromMapping selectFrom mapping) entityAlias
+      mforeignKeyConditions <- fmap (Where . fromMaybe [])
+        $ for mparentRelationship
+        $ \(entityAlias, mapping) ->
+          runReaderT (fromMapping selectFrom mapping) entityAlias
       filterExpression <- runReaderT (fromGBoolExp permFilter) (fromAlias selectFrom)
       args'@Args {argsExistingJoins} <-
         runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
@@ -431,23 +432,23 @@ fromSelectAggregate
       pure
         emptySelect
           { selectProjections =
-              map snd $
-                sortBy (comparing fst) $
-                  expss
-                    <> mkNodesSelect args' mforeignKeyConditions filterExpression permissionBasedTop selectFrom nodes
-                    <> mkAggregateSelect args' mforeignKeyConditions filterExpression selectFrom aggregates,
+              map snd
+                $ sortBy (comparing fst)
+                $ expss
+                <> mkNodesSelect args' mforeignKeyConditions filterExpression permissionBasedTop selectFrom nodes
+                <> mkAggregateSelect args' mforeignKeyConditions filterExpression selectFrom aggregates,
             selectTop = NoTop,
             selectFrom =
-              pure $
-                FromOpenJson $
-                  Aliased
-                    { aliasedThing =
-                        OpenJson
-                          { openJsonExpression = ValueExpression $ ODBC.TextValue "[0]",
-                            openJsonWith = Nothing
-                          },
-                      aliasedAlias = existsFieldName
-                    },
+              pure
+                $ FromOpenJson
+                $ Aliased
+                  { aliasedThing =
+                      OpenJson
+                        { openJsonExpression = ValueExpression $ ODBC.TextValue "[0]",
+                          openJsonWith = Nothing
+                        },
+                    aliasedAlias = existsFieldName
+                  },
             selectJoins = mempty, -- JOINs and WHEREs are only relevant in subselects
             selectWhere = mempty,
             selectFor = JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot},
@@ -537,11 +538,11 @@ fromTableExpFieldG :: -- TODO: Convert function to be similar to Nodes function
   Maybe (ReaderT EntityAlias FromIr (Int, Projection))
 fromTableExpFieldG = \case
   (index, (IR.FieldName name, IR.TAFExp text)) ->
-    Just $
-      pure $
-        ( index,
-          fieldSourceProjections $
-            ExpressionFieldSource
+    Just
+      $ pure
+      $ ( index,
+          fieldSourceProjections
+            $ ExpressionFieldSource
               Aliased
                 { aliasedThing = TSQL.ValueExpression (ODBC.TextValue text),
                   aliasedAlias = name
@@ -554,11 +555,11 @@ fromTableAggFieldG ::
   Maybe (Int, (IR.FieldName, [Projection]))
 fromTableAggFieldG = \case
   (index, (fieldName, IR.TAFAgg (aggregateFields :: [(IR.FieldName, IR.AggregateField 'MSSQL Expression)]))) ->
-    Just $
-      let aggregates =
-            aggregateFields <&> \(fieldName', aggregateField) ->
-              fromAggregateField (IR.getFieldNameTxt fieldName') aggregateField
-       in (index, (fieldName, aggregates))
+    Just
+      $ let aggregates =
+              aggregateFields <&> \(fieldName', aggregateField) ->
+                fromAggregateField (IR.getFieldNameTxt fieldName') aggregateField
+         in (index, (fieldName, aggregates))
   _ -> Nothing
 
 fromTableNodesFieldG ::
@@ -590,14 +591,14 @@ fromAggregateField alias aggregateField =
                   ExpressionProjection $ Aliased (ValueExpression (ODBC.TextValue text)) (IR.getFieldNameTxt fieldName)
                 -- See Hasura.RQL.Types.Backend.supportsAggregateComputedFields
                 IR.SFComputedField _ _ -> error "Aggregate computed fields aren't currently supported for MSSQL!"
-       in ExpressionProjection $
-            flip Aliased alias $
-              safeJsonQueryExpression JsonSingleton $
-                SelectExpression $
-                  emptySelect
-                    { selectProjections = projections,
-                      selectFor = JsonFor $ ForJson JsonSingleton NoRoot
-                    }
+       in ExpressionProjection
+            $ flip Aliased alias
+            $ safeJsonQueryExpression JsonSingleton
+            $ SelectExpression
+            $ emptySelect
+              { selectProjections = projections,
+                selectFor = JsonFor $ ForJson JsonSingleton NoRoot
+              }
   where
     columnFieldAggEntity col = columnNameToFieldName col $ EntityAlias aggSubselectName
 

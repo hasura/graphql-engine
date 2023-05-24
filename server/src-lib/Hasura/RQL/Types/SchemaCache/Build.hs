@@ -96,8 +96,8 @@ recordInconsistenciesM' metadataObjects reason =
 
 data MetadataDependency
   = MetadataDependency
+      -- | for error reporting on missing dependencies
       MetadataObject
-      -- ^ for error reporting on missing dependencies
       SchemaObjId
       SchemaDependency
   deriving (Eq)
@@ -194,7 +194,7 @@ class (CacheRM m) => CacheRWM m where
   tryBuildSchemaCacheWithOptions :: BuildReason -> CacheInvalidations -> Metadata -> (ValidateNewSchemaCache a) -> m a
   setMetadataResourceVersionInSchemaCache :: MetadataResourceVersion -> m ()
 
-buildSchemaCacheWithOptions :: CacheRWM m => BuildReason -> CacheInvalidations -> Metadata -> m ()
+buildSchemaCacheWithOptions :: (CacheRWM m) => BuildReason -> CacheInvalidations -> Metadata -> m ()
 buildSchemaCacheWithOptions buildReason cacheInvalidation metadata = tryBuildSchemaCacheWithOptions buildReason cacheInvalidation metadata (\_ _ -> (KeepNewSchemaCache, ()))
 
 data BuildReason
@@ -323,8 +323,8 @@ tryBuildSchemaCache ::
 tryBuildSchemaCache MetadataModifier {..} = do
   modifiedMetadata <- runMetadataModifier <$> getMetadata
   newInconsistentObjects <- tryBuildSchemaCacheWithOptions (CatalogUpdate mempty) mempty modifiedMetadata validateNewSchemaCache
-  when (newInconsistentObjects == mempty) $
-    putMetadata modifiedMetadata
+  when (newInconsistentObjects == mempty)
+    $ putMetadata modifiedMetadata
   pure $ newInconsistentObjects
   where
     validateNewSchemaCache :: SchemaCache -> SchemaCache -> (ValidateNewSchemaCacheResult, HashMap MetadataObjId (NonEmpty InconsistentMetadata))
@@ -372,8 +372,8 @@ tryBuildSchemaCacheAndWarnOnFailingObjects mkMetadataModifier warningCode metada
       else -- Otherwise just look at the rest of the errors, if any
         pure metadataInconsistencies
 
-  unless (null finalMetadataInconsistencies) $
-    throwError
+  unless (null finalMetadataInconsistencies)
+    $ throwError
       (err400 Unexpected "cannot continue due to newly found inconsistent metadata")
         { qeInternal = Just $ ExtraInternal $ toJSON (L.nub . concatMap toList $ HashMap.elems finalMetadataInconsistencies)
         }
@@ -394,8 +394,8 @@ buildSchemaCacheFor objectId metadataModifier = do
     let reasons = commaSeparated $ imReason <$> matchingObjects
     throwError (err400 InvalidConfiguration reasons) {qeInternal = Just $ ExtraInternal $ toJSON matchingObjects}
 
-  unless (null newInconsistentObjects) $
-    throwError
+  unless (null newInconsistentObjects)
+    $ throwError
       (err400 Unexpected "cannot continue due to new inconsistent metadata")
         { qeInternal = Just $ ExtraInternal $ toJSON (L.nub . concatMap toList $ HashMap.elems newInconsistentObjects)
         }
@@ -420,8 +420,8 @@ withNewInconsistentObjsCheck action = do
   let diffInconsistentObjects = HashMap.difference `on` groupInconsistentMetadataById
       newInconsistentObjects =
         L.uniques $ concatMap toList $ HashMap.elems (currentObjects `diffInconsistentObjects` originalObjects)
-  unless (null newInconsistentObjects) $
-    throwError
+  unless (null newInconsistentObjects)
+    $ throwError
       (err500 Unexpected "cannot continue due to newly found inconsistent metadata")
         { qeInternal = Just $ ExtraInternal $ toJSON newInconsistentObjects
         }

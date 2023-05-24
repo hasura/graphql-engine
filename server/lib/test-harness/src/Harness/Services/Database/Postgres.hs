@@ -97,23 +97,23 @@ mkFreshPostgresDbIO :: (Has Logger testEnvironment, Has PostgresServerUrl testEn
 mkFreshPostgresDbIO testEnv = do
   freshDbName <- drawFreshDbName
   createDatabase testEnv freshDbName
-  return $
-    ( FreshPostgresDb freshDbName,
-      dropDatabase testEnv freshDbName
-    )
+  return
+    $ ( FreshPostgresDb freshDbName,
+        dropDatabase testEnv freshDbName
+      )
   where
     drawFreshDbName :: IO Text
     drawFreshDbName = do
       uuid <- tshow <$> liftIO UUID.nextRandom
-      return $
-        "freshdb_"
-          <> T.map
-            ( \a ->
-                if Data.Char.isAlphaNum a
-                  then a
-                  else '_'
-            )
-            uuid
+      return
+        $ "freshdb_"
+        <> T.map
+          ( \a ->
+              if Data.Char.isAlphaNum a
+                then a
+                else '_'
+          )
+          uuid
 
 mkFreshDbConnectionString :: PostgresServerUrl -> FreshPostgresDb -> PostgresServerUrl
 mkFreshDbConnectionString (PostgresServerUrl pgUrl) (FreshPostgresDb db) =
@@ -259,7 +259,7 @@ createUniqueIndexSql (SchemaName schemaName) tableName = \case
 wrapIdentifier :: Text -> Text
 wrapIdentifier identifier = "\"" <> identifier <> "\""
 
-scalarType :: HasCallStack => Schema.ScalarType -> Text
+scalarType :: (HasCallStack) => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "integer"
   Schema.TStr -> "varchar"

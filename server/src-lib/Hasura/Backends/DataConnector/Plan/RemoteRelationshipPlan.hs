@@ -33,7 +33,7 @@ import Witch qualified
 
 mkRemoteRelationshipPlan ::
   forall m.
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SessionVariables ->
   SourceConfig ->
   -- | List of join json objects, each of which contains IDs to be laterally-joined against
@@ -84,23 +84,23 @@ mkRemoteRelationshipPlan sessionVariables _sourceConfig joinIds joinIdsSchema ar
         whereClause <- translateBoolExpToExpression sessionVariables (TableNameKey tableName) _aosTargetFilter
         pure (fields, whereClause)
       let apiTableRelationships = Set.fromList $ tableRelationshipsToList tableRelationships
-      pure $
-        API.QRTable $
-          API.TableRequest
-            { _trTable = tableName,
-              _trRelationships = apiTableRelationships,
-              _trQuery =
-                API.Query
-                  { _qFields = Just $ mapFieldNameHashMap fields,
-                    _qAggregates = Nothing,
-                    _qAggregatesLimit = Nothing,
-                    _qLimit = Nothing,
-                    _qOffset = Nothing,
-                    _qWhere = whereClause,
-                    _qOrderBy = Nothing
-                  },
-              _trForeach = Just foreachRowFilter
-            }
+      pure
+        $ API.QRTable
+        $ API.TableRequest
+          { _trTable = tableName,
+            _trRelationships = apiTableRelationships,
+            _trQuery =
+              API.Query
+                { _qFields = Just $ mapFieldNameHashMap fields,
+                  _qAggregates = Nothing,
+                  _qAggregatesLimit = Nothing,
+                  _qLimit = Nothing,
+                  _qOffset = Nothing,
+                  _qWhere = whereClause,
+                  _qOrderBy = Nothing
+                },
+            _trForeach = Just foreachRowFilter
+          }
 
 tableRelationshipsToList :: HashMap TableRelationshipsKey (HashMap API.RelationshipName API.Relationship) -> [API.Relationships]
 tableRelationshipsToList m = map (either (API.RFunction . uncurry API.FunctionRelationships) (API.RTable . uncurry API.TableRelationships) . tableRelationshipsKeyToEither) (HashMap.toList m)
@@ -109,7 +109,7 @@ tableRelationshipsKeyToEither :: (TableRelationshipsKey, c) -> Either (API.Funct
 tableRelationshipsKeyToEither (FunctionNameKey f, x) = Left (f, x)
 tableRelationshipsKeyToEither (TableNameKey t, x) = Right (t, x)
 
-translateForeachRowFilter :: MonadError QErr m => FieldName -> HashMap FieldName (ColumnName, ScalarType) -> J.Object -> m (HashMap API.ColumnName API.ScalarValue)
+translateForeachRowFilter :: (MonadError QErr m) => FieldName -> HashMap FieldName (ColumnName, ScalarType) -> J.Object -> m (HashMap API.ColumnName API.ScalarValue)
 translateForeachRowFilter argumentIdFieldName joinIdsSchema joinIds =
   joinIds
     & KM.toList
@@ -134,7 +134,7 @@ translateForeachRowFilter argumentIdFieldName joinIdsSchema joinIds =
       )
     & fmap HashMap.fromList
 
-extractArgumentIds :: MonadError QErr m => FieldName -> NonEmpty J.Object -> m (NonEmpty J.Value)
+extractArgumentIds :: (MonadError QErr m) => FieldName -> NonEmpty J.Object -> m (NonEmpty J.Value)
 extractArgumentIds argumentIdFieldName joinIds =
   let argumentIdPropertyKey = K.fromText $ getFieldNameTxt argumentIdFieldName
    in joinIds
@@ -147,7 +147,7 @@ extractArgumentIds argumentIdFieldName joinIds =
 --------------------------------------------------------------------------------
 
 reshapeResponseToRemoteRelationshipQueryShape ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   FieldName ->
   NonEmpty J.Value ->
   FieldName ->
@@ -155,8 +155,8 @@ reshapeResponseToRemoteRelationshipQueryShape ::
   API.QueryResponse ->
   m J.Encoding
 reshapeResponseToRemoteRelationshipQueryShape argumentIdFieldName argumentIdValues resultFieldName sourceRelationshipSelection API.QueryResponse {..} = do
-  when (actualRowCount /= expectedRowCount) $
-    throw500 ("Data Connector agent returned " <> tshow actualRowCount <> " foreach query response rows, but " <> tshow expectedRowCount <> " were expected")
+  when (actualRowCount /= expectedRowCount)
+    $ throw500 ("Data Connector agent returned " <> tshow actualRowCount <> " foreach query response rows, but " <> tshow expectedRowCount <> " were expected")
 
   argumentResultObjects <- forM (zip rows (NE.toList argumentIdValues)) $ \(row, argumentId) -> do
     queryFieldValue <-
@@ -182,7 +182,7 @@ reshapeResponseToRemoteRelationshipQueryShape argumentIdFieldName argumentIdValu
     expectedRowCount = length argumentIdValues
 
 reshapeForeachQueryResponse ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SourceRelationshipSelection 'DataConnector Void v ->
   API.QueryResponse ->
   m J.Encoding

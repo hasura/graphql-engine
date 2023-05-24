@@ -31,8 +31,8 @@ spec = do
       (CapabilitiesResponse (defaultCapabilities {_cRelationships = Just RelationshipCapabilities {}}) emptyConfigSchemaResponse Nothing Nothing)
       [aesonQQ|{"capabilities": {"relationships": {}}, "config_schemas": {"config_schema": {}, "other_schemas": {}}}|]
   describe "ScalarTypesCapabilities" $ do
-    describe "Minimal" $
-      testToFromJSONToSchema (ScalarTypesCapabilities (HashMap.singleton (ScalarType "string") (ScalarTypeCapabilities mempty mempty mempty Nothing))) [aesonQQ|{"string": {}}|]
+    describe "Minimal"
+      $ testToFromJSONToSchema (ScalarTypesCapabilities (HashMap.singleton (ScalarType "string") (ScalarTypeCapabilities mempty mempty mempty Nothing))) [aesonQQ|{"string": {}}|]
     describe "Maximal" $ do
       let comparisonOperators = ComparisonOperators $ HashMap.fromList [([G.name|same_day_as|], ScalarType "DateTime")]
       let aggregateFunctions = AggregateFunctions $ HashMap.fromList [([G.name|max|], ScalarType "DateTime")]
@@ -56,24 +56,24 @@ spec = do
       testToFromJSONToSchema (ScalarTypeCapabilities comparisonOperators aggregateFunctions updateColumnOperators graphQLType) json
     jsonOpenApiProperties genScalarTypesCapabilities
 
-genDataSchemaCapabilities :: MonadGen m => m DataSchemaCapabilities
+genDataSchemaCapabilities :: (MonadGen m) => m DataSchemaCapabilities
 genDataSchemaCapabilities =
   DataSchemaCapabilities
     <$> Gen.bool
     <*> Gen.bool
     <*> genColumnNullability
 
-genColumnNullability :: MonadGen m => m ColumnNullability
+genColumnNullability :: (MonadGen m) => m ColumnNullability
 genColumnNullability =
   Gen.element [NullableAndNonNullableColumns, OnlyNullableColumns]
 
-genQueryCapabilities :: MonadGen m => m QueryCapabilities
+genQueryCapabilities :: (MonadGen m) => m QueryCapabilities
 genQueryCapabilities = QueryCapabilities <$> Gen.maybe genForeachCapabilities
 
-genForeachCapabilities :: MonadGen m => m ForeachCapabilities
+genForeachCapabilities :: (MonadGen m) => m ForeachCapabilities
 genForeachCapabilities = pure ForeachCapabilities
 
-genMutationCapabilities :: MonadGen m => m MutationCapabilities
+genMutationCapabilities :: (MonadGen m) => m MutationCapabilities
 genMutationCapabilities =
   MutationCapabilities
     <$> Gen.maybe genInsertCapabilities
@@ -82,22 +82,22 @@ genMutationCapabilities =
     <*> Gen.maybe genAtomicitySupportLevel
     <*> Gen.maybe genReturningCapabilities
 
-genInsertCapabilities :: MonadGen m => m InsertCapabilities
+genInsertCapabilities :: (MonadGen m) => m InsertCapabilities
 genInsertCapabilities = InsertCapabilities <$> Gen.bool
 
-genUpdateCapabilities :: MonadGen m => m UpdateCapabilities
+genUpdateCapabilities :: (MonadGen m) => m UpdateCapabilities
 genUpdateCapabilities = pure UpdateCapabilities
 
-genDeleteCapabilities :: MonadGen m => m DeleteCapabilities
+genDeleteCapabilities :: (MonadGen m) => m DeleteCapabilities
 genDeleteCapabilities = pure DeleteCapabilities
 
-genAtomicitySupportLevel :: MonadGen m => m AtomicitySupportLevel
+genAtomicitySupportLevel :: (MonadGen m) => m AtomicitySupportLevel
 genAtomicitySupportLevel = Gen.enumBounded
 
-genReturningCapabilities :: MonadGen m => m ReturningCapabilities
+genReturningCapabilities :: (MonadGen m) => m ReturningCapabilities
 genReturningCapabilities = pure ReturningCapabilities
 
-genSubscriptionCapabilities :: MonadGen m => m SubscriptionCapabilities
+genSubscriptionCapabilities :: (MonadGen m) => m SubscriptionCapabilities
 genSubscriptionCapabilities = pure SubscriptionCapabilities {}
 
 genComparisonOperators :: (MonadGen m, GenBase m ~ Identity) => m ComparisonOperators
@@ -108,7 +108,7 @@ genAggregateFunctions :: (MonadGen m, GenBase m ~ Identity) => m AggregateFuncti
 genAggregateFunctions =
   AggregateFunctions <$> genHashMap (genGName defaultRange) genScalarType defaultRange
 
-genGraphQLType :: MonadGen m => m GraphQLType
+genGraphQLType :: (MonadGen m) => m GraphQLType
 genGraphQLType = Gen.enumBounded
 
 genScalarTypeCapabilities :: (MonadGen m, GenBase m ~ Identity) => m ScalarTypeCapabilities
@@ -127,41 +127,41 @@ genUpdateColumnOperators :: (MonadGen m, GenBase m ~ Identity) => m UpdateColumn
 genUpdateColumnOperators =
   UpdateColumnOperators <$> genHashMap genUpdateColumnOperatorName genUpdateColumnOperatorDefinition defaultRange
 
-genUpdateColumnOperatorName :: MonadGen m => m UpdateColumnOperatorName
+genUpdateColumnOperatorName :: (MonadGen m) => m UpdateColumnOperatorName
 genUpdateColumnOperatorName = UpdateColumnOperatorName <$> genGName defaultRange
 
 genUpdateColumnOperatorDefinition :: (MonadGen m, GenBase m ~ Identity) => m UpdateColumnOperatorDefinition
 genUpdateColumnOperatorDefinition = UpdateColumnOperatorDefinition <$> genScalarType
 
-genRelationshipCapabilities :: MonadGen m => m RelationshipCapabilities
+genRelationshipCapabilities :: (MonadGen m) => m RelationshipCapabilities
 genRelationshipCapabilities = pure RelationshipCapabilities {}
 
-genComparisonCapabilities :: MonadGen m => m ComparisonCapabilities
+genComparisonCapabilities :: (MonadGen m) => m ComparisonCapabilities
 genComparisonCapabilities =
   ComparisonCapabilities
     <$> Gen.maybe genSubqueryComparisonCapabilities
 
-genSubqueryComparisonCapabilities :: MonadGen m => m SubqueryComparisonCapabilities
+genSubqueryComparisonCapabilities :: (MonadGen m) => m SubqueryComparisonCapabilities
 genSubqueryComparisonCapabilities =
   SubqueryComparisonCapabilities
     <$> Gen.bool
 
-genMetricsCapabilities :: MonadGen m => m MetricsCapabilities
+genMetricsCapabilities :: (MonadGen m) => m MetricsCapabilities
 genMetricsCapabilities = pure MetricsCapabilities {}
 
-genExplainCapabilities :: MonadGen m => m ExplainCapabilities
+genExplainCapabilities :: (MonadGen m) => m ExplainCapabilities
 genExplainCapabilities = pure ExplainCapabilities {}
 
-genRawCapabilities :: MonadGen m => m RawCapabilities
+genRawCapabilities :: (MonadGen m) => m RawCapabilities
 genRawCapabilities = pure RawCapabilities {}
 
-genDatasetCapabilities :: MonadGen m => m DatasetCapabilities
+genDatasetCapabilities :: (MonadGen m) => m DatasetCapabilities
 genDatasetCapabilities = pure DatasetCapabilities {}
 
-genUserDefinedFunctionCapabilities :: MonadGen m => m UserDefinedFunctionCapabilities
+genUserDefinedFunctionCapabilities :: (MonadGen m) => m UserDefinedFunctionCapabilities
 genUserDefinedFunctionCapabilities = pure UserDefinedFunctionCapabilities {}
 
-genLicensing :: MonadGen m => m Licensing
+genLicensing :: (MonadGen m) => m Licensing
 genLicensing = pure Licensing {}
 
 genCapabilities :: Gen Capabilities

@@ -24,7 +24,7 @@ import Language.GraphQL.Draft.Syntax.QQ qualified as G
 -- | Schema parser for native query or stored procedure arguments.
 argumentsSchema ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   -- | The resolver description, such as "Stored Procedure" or "Native Query".
   Text ->
   -- | The resolver name.
@@ -37,8 +37,8 @@ argumentsSchema resolverDesc resolverName argsSignature = do
   -- This lets us use 'foldMap' + monoid structure of hashmaps to avoid awkwardly
   -- traversing the arguments and building the resulting parser.
   argsParser <-
-    getAp $
-      foldMap
+    getAp
+      $ foldMap
         ( \(name, NullableScalarType {nstType, nstNullable, nstDescription}) -> Ap do
             argValueParser <-
               fmap (HashMap.singleton name . openValueOrigin)
@@ -49,8 +49,8 @@ argumentsSchema resolverDesc resolverName argsSignature = do
             let description = case nstDescription of
                   Just desc -> G.Description desc
                   Nothing -> G.Description (resolverDesc <> " argument " <> getArgumentName name)
-            pure $
-              P.field
+            pure
+              $ P.field
                 argName
                 (Just description)
                 argValueParser
@@ -59,8 +59,8 @@ argumentsSchema resolverDesc resolverName argsSignature = do
 
   let desc = Just $ G.Description $ G.unName resolverName <> resolverDesc <> " Arguments"
 
-  pure $
-    if null argsSignature
+  pure
+    $ if null argsSignature
       then mempty
       else
         P.field

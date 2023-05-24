@@ -165,7 +165,7 @@ data Cardinality
 --------------------------------------------------------------------------------
 
 prepareLiteral ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SessionVariables ->
   UnpreparedValue 'DataConnector ->
   m Literal
@@ -181,7 +181,7 @@ prepareLiteral sessionVariables = \case
 
 parseSessionVariable ::
   forall m.
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SessionVariable ->
   SessionVarType 'DataConnector ->
   Text ->
@@ -280,7 +280,7 @@ removeAlwaysFalseExpression = \case
   other -> Just other
 
 translateOp ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SessionVariables ->
   API.ColumnName ->
   API.ScalarType ->

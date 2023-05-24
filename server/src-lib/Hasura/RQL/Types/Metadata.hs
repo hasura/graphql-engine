@@ -163,9 +163,10 @@ $(makeLenses ''Metadata)
 instance FromJSON Metadata where
   parseJSON = withObject "Metadata" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
-    when (version /= MVVersion3) $
-      fail $
-        "unexpected metadata version from storage: " <> show version
+    when (version /= MVVersion3)
+      $ fail
+      $ "unexpected metadata version from storage: "
+      <> show version
     rawSources <- o .: "sources"
     backendConfigs <- o .:? "backend_configs" .!= mempty
     sources <- oMapFromL getSourceName <$> mapWithJSONPath parseSourceMetadata rawSources <?> Key "sources"
@@ -184,8 +185,8 @@ instance FromJSON Metadata where
       disabledSchemaIntrospectionRoles
       ) <-
       parseNonSourcesMetadata o
-    pure $
-      Metadata
+    pure
+      $ Metadata
         sources
         remoteSchemas
         queryCollections
@@ -364,9 +365,9 @@ instance FromJSON MetadataNoSources where
         MVVersion1 -> do
           tables <- oMapFromL _tmTable <$> o .: "tables"
           functionList <- o .:? "functions" .!= []
-          let functions = InsOrdHashMap.fromList $
-                flip map functionList $
-                  \function -> (function, FunctionMetadata function emptyFunctionConfig mempty Nothing)
+          let functions = InsOrdHashMap.fromList
+                $ flip map functionList
+                $ \function -> (function, FunctionMetadata function emptyFunctionConfig mempty Nothing)
           pure (tables, functions)
         MVVersion2 -> do
           tables <- oMapFromL _tmTable <$> o .: "tables"
@@ -385,8 +386,8 @@ instance FromJSON MetadataNoSources where
       _
       ) <-
       parseNonSourcesMetadata o
-    pure $
-      MetadataNoSources
+    pure
+      $ MetadataNoSources
         tables
         functions
         remoteSchemas
@@ -450,8 +451,12 @@ dropRemoteRelationshipInMetadata name =
 dropFunctionInMetadata ::
   forall b. (Backend b) => SourceName -> FunctionName b -> MetadataModifier
 dropFunctionInMetadata source function =
-  MetadataModifier $
-    metaSources . ix source . toSourceMetadata . (smFunctions @b) %~ InsOrdHashMap.delete function
+  MetadataModifier
+    $ metaSources
+    . ix source
+    . toSourceMetadata
+    . (smFunctions @b)
+    %~ InsOrdHashMap.delete function
 
 dropRemoteSchemaInMetadata :: RemoteSchemaName -> MetadataModifier
 dropRemoteSchemaInMetadata name =
@@ -463,13 +468,13 @@ dropRemoteSchemaPermissionInMetadata remoteSchemaName roleName =
 
 dropRemoteSchemaRemoteRelationshipInMetadata :: RemoteSchemaName -> G.Name -> RelName -> MetadataModifier
 dropRemoteSchemaRemoteRelationshipInMetadata remoteSchemaName typeName relationshipName =
-  MetadataModifier $
-    metaRemoteSchemas
-      . ix remoteSchemaName
-      . rsmRemoteRelationships
-      . ix typeName
-      . rstrsRelationships
-      %~ InsOrdHashMap.delete relationshipName
+  MetadataModifier
+    $ metaRemoteSchemas
+    . ix remoteSchemaName
+    . rsmRemoteRelationships
+    . ix typeName
+    . rstrsRelationships
+    %~ InsOrdHashMap.delete relationshipName
 
 -- | Encode 'Metadata' to JSON with deterministic ordering (e.g. "version" being at the top).
 -- The CLI system stores metadata in files and has option to show changes in git diff style.
@@ -503,24 +508,24 @@ metadataToOrdJSON
       backendConfigs
       openTelemetryConfig
     ) =
-    AO.object $
-      [versionPair, sourcesPair]
-        <> catMaybes
-          [ remoteSchemasPair,
-            queryCollectionsPair,
-            allowlistPair,
-            actionsPair,
-            customTypesPair,
-            cronTriggersPair,
-            endpointsPair,
-            apiLimitsPair,
-            metricsConfigPair,
-            inheritedRolesPair,
-            introspectionDisabledRolesPair,
-            networkPair,
-            backendConfigsPair,
-            openTelemetryConfigPair
-          ]
+    AO.object
+      $ [versionPair, sourcesPair]
+      <> catMaybes
+        [ remoteSchemasPair,
+          queryCollectionsPair,
+          allowlistPair,
+          actionsPair,
+          customTypesPair,
+          cronTriggersPair,
+          endpointsPair,
+          apiLimitsPair,
+          metricsConfigPair,
+          inheritedRolesPair,
+          introspectionDisabledRolesPair,
+          networkPair,
+          backendConfigsPair,
+          openTelemetryConfigPair
+        ]
     where
       versionPair = ("version", AO.toOrdered currentMetadataVersion)
       sourcesPair = ("sources", AO.Array $ sourcesToOrdJSONList sources)

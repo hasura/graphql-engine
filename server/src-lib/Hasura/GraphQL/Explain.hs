@@ -80,8 +80,8 @@ explainQueryField agentLicenseKey userInfo reqHeaders operationName fieldName ro
         exists
         \(SourceConfigWith sourceConfig _ (QDBR db)) -> do
           let (newDB, remoteJoins) = RJ.getRemoteJoinsQueryDB db
-          unless (isNothing remoteJoins) $
-            throw400 InvalidParams "queries with remote relationships cannot be explained"
+          unless (isNothing remoteJoins)
+            $ throw400 InvalidParams "queries with remote relationships cannot be explained"
           mkDBQueryExplain fieldName userInfo sourceName sourceConfig newDB reqHeaders operationName
       AB.dispatchAnyBackend @BackendTransport step (runDBQueryExplain agentLicenseKey)
 

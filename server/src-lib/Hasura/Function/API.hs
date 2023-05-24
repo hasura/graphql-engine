@@ -61,16 +61,22 @@ trackFunctionP1 ::
   m ()
 trackFunctionP1 sourceName qf = do
   rawSchemaCache <- askSchemaCache
-  unless (isJust $ AB.unpackAnyBackend @b =<< HashMap.lookup sourceName (scSources rawSchemaCache)) $
-    throw400 NotExists $
-      sourceName <<> " is not a known " <> reify (backendTag @b) <<> " source"
-  when (isJust $ unsafeFunctionInfo @b sourceName qf $ scSources rawSchemaCache) $
-    throw400 AlreadyTracked $
-      "function already tracked: " <>> qf
+  unless (isJust $ AB.unpackAnyBackend @b =<< HashMap.lookup sourceName (scSources rawSchemaCache))
+    $ throw400 NotExists
+    $ sourceName
+    <<> " is not a known "
+    <> reify (backendTag @b)
+    <<> " source"
+  when (isJust $ unsafeFunctionInfo @b sourceName qf $ scSources rawSchemaCache)
+    $ throw400 AlreadyTracked
+    $ "function already tracked: "
+    <>> qf
   let qt = functionToTable @b qf
-  when (isJust $ unsafeTableInfo @b sourceName qt $ scSources rawSchemaCache) $
-    throw400 NotSupported $
-      "table with name " <> qf <<> " already exists"
+  when (isJust $ unsafeTableInfo @b sourceName qt $ scSources rawSchemaCache)
+    $ throw400 NotSupported
+    $ "table with name "
+    <> qf
+    <<> " already exists"
 
 trackFunctionP2 ::
   forall b m.
@@ -84,8 +90,11 @@ trackFunctionP2 sourceName qf config comment = do
   buildSchemaCacheFor
     (MOSourceObjId sourceName $ AB.mkAnyBackend $ SMOFunction @b qf)
     $ MetadataModifier
-    $ metaSources . ix sourceName . toSourceMetadata . (smFunctions @b)
-      %~ InsOrdHashMap.insert qf (FunctionMetadata qf config mempty comment)
+    $ metaSources
+    . ix sourceName
+    . toSourceMetadata
+    . (smFunctions @b)
+    %~ InsOrdHashMap.insert qf (FunctionMetadata qf config mempty comment)
   pure successMsg
 
 getSingleUniqueFunctionOverload ::
@@ -118,13 +127,19 @@ data TrackFunctionV2 (b :: BackendType) = TrackFunctionV2
     _tfv2Comment :: Maybe Text
   }
 
-instance Backend b => FromJSON (TrackFunctionV2 b) where
+instance (Backend b) => FromJSON (TrackFunctionV2 b) where
   parseJSON = withObject "TrackFunctionV2" $ \o ->
     TrackFunctionV2
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "function"
-      <*> o .:? "configuration" .!= emptyFunctionConfig
-      <*> o .:? "comment"
+      <$> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "function"
+      <*> o
+      .:? "configuration"
+      .!= emptyFunctionConfig
+      <*> o
+      .:? "comment"
 
 runTrackFunctionV2 ::
   forall b m.
@@ -182,9 +197,9 @@ runUntrackFunc ::
   m EncJSON
 runUntrackFunc (UnTrackFunction functionName sourceName) = do
   void $ askFunctionInfo @b sourceName functionName
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      dropFunctionInMetadata @b sourceName functionName
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ dropFunctionInMetadata @b sourceName functionName
   pure successMsg
 
 {- Note [Function Permissions]
@@ -217,9 +232,13 @@ instance (Backend b) => FromJSON (FunctionPermissionArgument b) where
   parseJSON v =
     flip (withObject "FunctionPermissionArgument") v $ \o ->
       FunctionPermissionArgument
-        <$> o .: "function"
-        <*> o .:? "source" .!= defaultSource
-        <*> o .: "role"
+        <$> o
+        .: "function"
+        <*> o
+        .:? "source"
+        .!= defaultSource
+        <*> o
+        .: "role"
 
 runCreateFunctionPermission ::
   forall b m.
@@ -234,33 +253,38 @@ runCreateFunctionPermission (FunctionPermissionArgument functionName source role
   metadata <- getMetadata
   sourceCache <- scSources <$> askSchemaCache
   functionInfo <- askFunctionInfo @b source functionName
-  when (doesFunctionPermissionExist @b metadata source functionName role) $
-    throw400 AlreadyExists $
-      "permission of role "
-        <> role <<> " already exists for function "
-        <> functionName <<> " in source: " <>> source
+  when (doesFunctionPermissionExist @b metadata source functionName role)
+    $ throw400 AlreadyExists
+    $ "permission of role "
+    <> role
+    <<> " already exists for function "
+    <> functionName
+    <<> " in source: "
+    <>> source
   (functionTableName, functionTableInfo) <- do
     let tn = _fiReturnType functionInfo
     case unsafeTableInfo @b source tn sourceCache of
       Nothing -> throw400 NotExists ("function's return table " <> tn <<> " not found in the cache")
       Just info -> pure (tn, info)
-  unless (role `HashMap.member` _tiRolePermInfoMap functionTableInfo) $
-    throw400 NotSupported $
-      "function permission can only be added when the function's return table "
-        <> functionTableName <<> " has select permission configured for role: " <>> role
+  unless (role `HashMap.member` _tiRolePermInfoMap functionTableInfo)
+    $ throw400 NotSupported
+    $ "function permission can only be added when the function's return table "
+    <> functionTableName
+    <<> " has select permission configured for role: "
+    <>> role
   buildSchemaCacheFor
-    ( MOSourceObjId source $
-        AB.mkAnyBackend (SMOFunctionPermission @b functionName role)
+    ( MOSourceObjId source
+        $ AB.mkAnyBackend (SMOFunctionPermission @b functionName role)
     )
     $ MetadataModifier
     $ metaSources
-      . ix
-        source
-      . toSourceMetadata
-      . (smFunctions @b)
-      . ix functionName
-      . fmPermissions
-      %~ (:) (FunctionPermissionInfo role)
+    . ix
+      source
+    . toSourceMetadata
+    . (smFunctions @b)
+    . ix functionName
+    . fmPermissions
+    %~ (:) (FunctionPermissionInfo role)
   pure successMsg
 
 dropFunctionPermissionInMetadata ::
@@ -271,8 +295,14 @@ dropFunctionPermissionInMetadata ::
   RoleName ->
   MetadataModifier
 dropFunctionPermissionInMetadata source function role =
-  MetadataModifier $
-    metaSources . ix source . toSourceMetadata . (smFunctions @b) . ix function . fmPermissions %~ filter ((/=) role . _fpmRole)
+  MetadataModifier
+    $ metaSources
+    . ix source
+    . toSourceMetadata
+    . (smFunctions @b)
+    . ix function
+    . fmPermissions
+    %~ filter ((/=) role . _fpmRole)
 
 doesFunctionPermissionExist :: forall b. (BackendMetadata b) => Metadata -> SourceName -> FunctionName b -> RoleName -> Bool
 doesFunctionPermissionExist metadata sourceName functionName roleName =
@@ -289,15 +319,18 @@ runDropFunctionPermission ::
   m EncJSON
 runDropFunctionPermission (FunctionPermissionArgument functionName source role) = do
   metadata <- getMetadata
-  unless (doesFunctionPermissionExist @b metadata source functionName role) $
-    throw400 NotExists $
-      "permission of role "
-        <> role <<> " does not exist for function "
-        <> functionName <<> " in source: " <>> source
+  unless (doesFunctionPermissionExist @b metadata source functionName role)
+    $ throw400 NotExists
+    $ "permission of role "
+    <> role
+    <<> " does not exist for function "
+    <> functionName
+    <<> " in source: "
+    <>> source
   buildSchemaCacheFor
-    ( MOSourceObjId source $
-        AB.mkAnyBackend $
-          SMOFunctionPermission @b functionName role
+    ( MOSourceObjId source
+        $ AB.mkAnyBackend
+        $ SMOFunctionPermission @b functionName role
     )
     $ dropFunctionPermissionInMetadata @b source functionName role
   pure successMsg
@@ -311,16 +344,20 @@ data SetFunctionCustomization b = SetFunctionCustomization
     _sfcConfiguration :: FunctionConfig b
   }
 
-deriving instance Backend b => Show (SetFunctionCustomization b)
+deriving instance (Backend b) => Show (SetFunctionCustomization b)
 
-deriving instance Backend b => Eq (SetFunctionCustomization b)
+deriving instance (Backend b) => Eq (SetFunctionCustomization b)
 
 instance (Backend b) => FromJSON (SetFunctionCustomization b) where
   parseJSON = withObject "set function customization" $ \o ->
     SetFunctionCustomization
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "function"
-      <*> o .: "configuration"
+      <$> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "function"
+      <*> o
+      .: "configuration"
 
 -- | Changes the custom names of a function. Used in the API command 'pg_set_function_customization'.
 runSetFunctionCustomization ::
@@ -333,5 +370,6 @@ runSetFunctionCustomization (SetFunctionCustomization source function config) = 
   buildSchemaCacheFor
     (MOSourceObjId source $ AB.mkAnyBackend $ SMOFunction @b function)
     $ MetadataModifier
-    $ ((functionMetadataSetter @b source function) . fmConfiguration) .~ config
+    $ ((functionMetadataSetter @b source function) . fmConfiguration)
+    .~ config
   return successMsg

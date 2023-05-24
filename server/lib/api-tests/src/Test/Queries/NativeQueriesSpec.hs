@@ -21,8 +21,8 @@ featureFlagForNativeQueries = "HASURA_FF_NATIVE_QUERY_INTERFACE"
 
 spec :: SpecWith GlobalTestEnvironment
 spec =
-  Fixture.hgeWithEnv [(featureFlagForNativeQueries, "True")] $
-    Fixture.runClean -- re-run fixture setup on every test
+  Fixture.hgeWithEnv [(featureFlagForNativeQueries, "True")]
+    $ Fixture.runClean -- re-run fixture setup on every test
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnvironment, _) ->
@@ -66,8 +66,8 @@ tests = do
         (Schema.trackLogicalModelCommand source backendTypeMetadata helloWorldLogicalModel)
 
       -- we expect this to fail
-      void $
-        GraphqlEngine.postMetadataWithStatus
+      void
+        $ GraphqlEngine.postMetadataWithStatus
           400
           testEnvironment
           (Schema.trackNativeQueryCommand source backendTypeMetadata helloWorldNativeQuery)

@@ -188,7 +188,7 @@ data RemoteSchemaSelect r = RemoteSchemaSelect
 -- set.
 convertSelectionSet ::
   forall var.
-  Eq var =>
+  (Eq var) =>
   SelectionSet Void var ->
   G.SelectionSet G.NoFragments var
 convertSelectionSet = \case
@@ -219,7 +219,7 @@ convertSelectionSet = \case
           -- inline with the strategy used in `mkAbstractTypeSelectionSet`
           commonFields <> map G.SelectionInlineFragment concreteTypeSelectionSets
 
-convertGraphQLField :: Eq var => GraphQLField Void var -> G.Field G.NoFragments var
+convertGraphQLField :: (Eq var) => GraphQLField Void var -> G.Field G.NoFragments var
 convertGraphQLField GraphQLField {..} =
   G.Field
     { -- add the alias only if it is different from the field name. This
@@ -334,10 +334,11 @@ reduceAbstractTypeSelectionSet (DeduplicatedSelectionSet baseMemberFields select
 
     memberSelectionSets =
       -- remove member selection sets that are subsumed by base selection set
-      filter (not . null . snd) $
+      filter (not . null . snd)
+        $
         -- remove the common prefix from member selection sets
-        map (second (InsOrdHashMap.fromList . drop (InsOrdHashMap.size baseSelectionSet) . InsOrdHashMap.toList)) $
-          HashMap.toList selectionSets
+        map (second (InsOrdHashMap.fromList . drop (InsOrdHashMap.size baseSelectionSet) . InsOrdHashMap.toList))
+        $ HashMap.toList selectionSets
 
 -------------------------------------------------------------------------------
 -- TH lens generation

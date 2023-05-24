@@ -73,9 +73,10 @@ runAddRemoteSchema ::
 runAddRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
   addRemoteSchemaP1 name
   void $ addRemoteSchemaP2Setup env defn
-  buildSchemaCacheFor (MORemoteSchema name) $
-    MetadataModifier $
-      metaRemoteSchemas %~ InsOrdHashMap.insert name remoteSchemaMeta
+  buildSchemaCacheFor (MORemoteSchema name)
+    $ MetadataModifier
+    $ metaRemoteSchemas
+    %~ InsOrdHashMap.insert name remoteSchemaMeta
   pure successMsg
   where
     -- NOTE: permissions here are empty, manipulated via a separate API with
@@ -88,10 +89,11 @@ addRemoteSchemaP1 ::
   m ()
 addRemoteSchemaP1 name = do
   remoteSchemaNames <- getAllRemoteSchemas <$> askSchemaCache
-  when (name `elem` remoteSchemaNames) $
-    throw400 AlreadyExists $
-      "remote schema with name "
-        <> name <<> " already exists"
+  when (name `elem` remoteSchemaNames)
+    $ throw400 AlreadyExists
+    $ "remote schema with name "
+    <> name
+    <<> " already exists"
 
 runRemoveRemoteSchema ::
   (QErrM m, UserInfoM m, CacheRWM m, MetadataM m) =>
@@ -99,9 +101,9 @@ runRemoveRemoteSchema ::
   m EncJSON
 runRemoveRemoteSchema (RemoteSchemaNameQuery rsn) = do
   void $ removeRemoteSchemaP1 rsn
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      dropRemoteSchemaInMetadata rsn
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ dropRemoteSchemaInMetadata rsn
   pure successMsg
 
 removeRemoteSchemaP1 ::
@@ -111,9 +113,9 @@ removeRemoteSchemaP1 ::
 removeRemoteSchemaP1 rsn = do
   sc <- askSchemaCache
   let rmSchemas = scRemoteSchemas sc
-  void $
-    onNothing (HashMap.lookup rsn rmSchemas) $
-      throw400 NotExists "no such remote schema"
+  void
+    $ onNothing (HashMap.lookup rsn rmSchemas)
+    $ throw400 NotExists "no such remote schema"
   let depObjs = getDependentObjs sc remoteSchemaDepId
       roles = mapMaybe getRole depObjs
       nonPermDependentObjs = filter nonPermDependentObjPredicate depObjs
@@ -142,14 +144,16 @@ runReloadRemoteSchema ::
   m EncJSON
 runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   remoteSchemas <- getAllRemoteSchemas <$> askSchemaCache
-  unless (name `elem` remoteSchemas) $
-    throw400 NotExists $
-      "remote schema with name " <> name <<> " does not exist"
+  unless (name `elem` remoteSchemas)
+    $ throw400 NotExists
+    $ "remote schema with name "
+    <> name
+    <<> " does not exist"
 
   let invalidations = mempty {ciRemoteSchemas = S.singleton name}
   metadata <- getMetadata
-  withNewInconsistentObjsCheck $
-    buildSchemaCacheWithOptions (CatalogUpdate Nothing) invalidations metadata
+  withNewInconsistentObjsCheck
+    $ buildSchemaCacheWithOptions (CatalogUpdate Nothing) invalidations metadata
   pure successMsg
 
 runIntrospectRemoteSchema ::
@@ -186,9 +190,11 @@ runUpdateRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
       currentRMSchemaURL = _rsdUrl defn
       currentRMSchemaURLFromEnv = _rsdUrlFromEnv defn
 
-  unless (name `elem` remoteSchemaNames) $
-    throw400 NotExists $
-      "remote schema with name " <> name <<> " doesn't exist"
+  unless (name `elem` remoteSchemaNames)
+    $ throw400 NotExists
+    $ "remote schema with name "
+    <> name
+    <<> " doesn't exist"
 
   rsi <- validateRemoteSchemaDef env defn
 
@@ -202,10 +208,11 @@ runUpdateRemoteSchema env (AddRemoteSchemaQuery name defn comment) = do
 
   -- This will throw an error if the new schema fetched in incompatible
   -- with the existing permissions and relations
-  withNewInconsistentObjsCheck $
-    buildSchemaCacheFor (MORemoteSchema name) $
-      MetadataModifier $
-        metaRemoteSchemas %~ InsOrdHashMap.insert name (remoteSchemaMeta metadataRMSchemaPerms)
+  withNewInconsistentObjsCheck
+    $ buildSchemaCacheFor (MORemoteSchema name)
+    $ MetadataModifier
+    $ metaRemoteSchemas
+    %~ InsOrdHashMap.insert name (remoteSchemaMeta metadataRMSchemaPerms)
 
   pure successMsg
   where

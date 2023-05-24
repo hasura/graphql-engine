@@ -119,7 +119,7 @@ instance (Backend b) => ToJSON (ColumnType b) where
 
 $(makePrisms ''ColumnType)
 
-instance Backend b => ToTxt (ColumnType b) where
+instance (Backend b) => ToTxt (ColumnType b) where
   toTxt = \case
     ColumnScalar scalar -> toTxt scalar
     ColumnEnumReference (EnumReference tableName _ tableCustomName) ->
@@ -165,12 +165,14 @@ parseScalarValueColumnType columnType value = case columnType of
       parseEnumValue enumValueName = do
         for_ enumValueName \evn -> do
           let enums = map getEnumValue $ HashMap.keys enumValues
-          unless (evn `elem` enums) $
-            throw400 UnexpectedPayload $
-              "expected one of the values "
-                <> dquoteList enums
-                <> " for type "
-                <> snakeCaseTableName @b tableName <<> ", given " <>> evn
+          unless (evn `elem` enums)
+            $ throw400 UnexpectedPayload
+            $ "expected one of the values "
+            <> dquoteList enums
+            <> " for type "
+            <> snakeCaseTableName @b tableName
+            <<> ", given "
+            <>> evn
         pure $ textToScalarValue @b $ G.unName <$> enumValueName
 
 parseScalarValuesColumnType ::
@@ -187,30 +189,30 @@ data RawColumnType (b :: BackendType)
   | RawColumnTypeArray (XNestedArrays b) (RawColumnType b) Bool
   deriving stock (Generic)
 
-deriving instance Backend b => Eq (RawColumnType b)
+deriving instance (Backend b) => Eq (RawColumnType b)
 
-deriving instance Backend b => Ord (RawColumnType b)
+deriving instance (Backend b) => Ord (RawColumnType b)
 
-deriving anyclass instance Backend b => Hashable (RawColumnType b)
+deriving anyclass instance (Backend b) => Hashable (RawColumnType b)
 
-deriving instance Backend b => Show (RawColumnType b)
+deriving instance (Backend b) => Show (RawColumnType b)
 
-instance Backend b => NFData (RawColumnType b)
+instance (Backend b) => NFData (RawColumnType b)
 
 -- For backwards compatibility we want to serialize and deserialize
 -- RawColumnTypeScalar as a ScalarType
-instance Backend b => ToJSON (RawColumnType b) where
+instance (Backend b) => ToJSON (RawColumnType b) where
   toJSON = \case
     RawColumnTypeScalar scalar -> toJSON scalar
     other -> genericToJSON hasuraJSON other
 
-instance Backend b => FromJSON (RawColumnType b) where
+instance (Backend b) => FromJSON (RawColumnType b) where
   parseJSON v = (RawColumnTypeScalar <$> parseJSON v) <|> genericParseJSON hasuraJSON v
 
 -- Ideally we'd derive ToJSON and FromJSON instances from the HasCodec instance, rather than the other way around.
 -- Unfortunately, I'm not sure if it's possible to write a proper HasCodec instance in the presence
 -- of the (XNestedObjects b) and (XNestedArrays b) type families, which may be Void.
-instance Backend b => HasCodec (RawColumnType b) where
+instance (Backend b) => HasCodec (RawColumnType b) where
   codec = codecViaAeson "RawColumnType"
 
 -- | “Raw” column info, as stored in the catalog (but not in the schema cache). Instead of
@@ -229,16 +231,16 @@ data RawColumnInfo (b :: BackendType) = RawColumnInfo
   }
   deriving (Generic)
 
-deriving instance Backend b => Eq (RawColumnInfo b)
+deriving instance (Backend b) => Eq (RawColumnInfo b)
 
-deriving instance Backend b => Show (RawColumnInfo b)
+deriving instance (Backend b) => Show (RawColumnInfo b)
 
-instance Backend b => NFData (RawColumnInfo b)
+instance (Backend b) => NFData (RawColumnInfo b)
 
-instance Backend b => ToJSON (RawColumnInfo b) where
+instance (Backend b) => ToJSON (RawColumnInfo b) where
   toJSON = genericToJSON hasuraJSON
 
-instance Backend b => FromJSON (RawColumnInfo b) where
+instance (Backend b) => FromJSON (RawColumnInfo b) where
   parseJSON = genericParseJSON hasuraJSON
 
 -- | Indicates whether a column may participate in certain mutations.
@@ -282,17 +284,17 @@ data ColumnInfo (b :: BackendType) = ColumnInfo
   }
   deriving (Generic)
 
-deriving instance Backend b => Eq (ColumnInfo b)
+deriving instance (Backend b) => Eq (ColumnInfo b)
 
-deriving instance Backend b => Ord (ColumnInfo b)
+deriving instance (Backend b) => Ord (ColumnInfo b)
 
-deriving instance Backend b => Show (ColumnInfo b)
+deriving instance (Backend b) => Show (ColumnInfo b)
 
-instance Backend b => NFData (ColumnInfo b)
+instance (Backend b) => NFData (ColumnInfo b)
 
-instance Backend b => Hashable (ColumnInfo b)
+instance (Backend b) => Hashable (ColumnInfo b)
 
-instance Backend b => ToJSON (ColumnInfo b) where
+instance (Backend b) => ToJSON (ColumnInfo b) where
   toJSON = genericToJSON hasuraJSON
   toEncoding = genericToEncoding hasuraJSON
 
@@ -389,20 +391,20 @@ $(makePrisms ''StructuredColumnInfo)
 
 type PrimaryKeyColumns b = NESeq (ColumnInfo b)
 
-onlyNumCols :: forall b. Backend b => [ColumnInfo b] -> [ColumnInfo b]
+onlyNumCols :: forall b. (Backend b) => [ColumnInfo b] -> [ColumnInfo b]
 onlyNumCols = filter isNumCol
 
-isNumCol :: forall b. Backend b => ColumnInfo b -> Bool
+isNumCol :: forall b. (Backend b) => ColumnInfo b -> Bool
 isNumCol = isScalarColumnWhere (isNumType @b) . ciType
 
-onlyComparableCols :: forall b. Backend b => [ColumnInfo b] -> [ColumnInfo b]
+onlyComparableCols :: forall b. (Backend b) => [ColumnInfo b] -> [ColumnInfo b]
 onlyComparableCols = filter (isScalarColumnWhere (isComparableType @b) . ciType)
 
-getColInfos :: Backend b => [Column b] -> [ColumnInfo b] -> [ColumnInfo b]
+getColInfos :: (Backend b) => [Column b] -> [ColumnInfo b] -> [ColumnInfo b]
 getColInfos cols allColInfos =
   flip filter allColInfos $ \ci -> ciColumn ci `elem` cols
 
-fromCol :: Backend b => Column b -> FieldName
+fromCol :: (Backend b) => Column b -> FieldName
 fromCol = FieldName . toTxt
 
 type ColumnValues b a = HashMap (Column b) a
@@ -420,7 +422,7 @@ columnReferenceType = \case
   ColumnReferenceComputedField _ scalarType -> ColumnScalar scalarType
   ColumnReferenceCast _ targetType -> targetType
 
-instance Backend b => ToTxt (ColumnReference b) where
+instance (Backend b) => ToTxt (ColumnReference b) where
   toTxt = \case
     ColumnReferenceColumn column -> toTxt $ ciColumn column
     ColumnReferenceComputedField name _ -> toTxt name

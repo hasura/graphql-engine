@@ -190,7 +190,7 @@ instance FromJSON RestType where
 
 -- | Get all tables from all specified data sets.
 getTables ::
-  MonadIO m =>
+  (MonadIO m) =>
   BigQuerySourceConfig ->
   m (Either RestProblem [RestTable])
 getTables BigQuerySourceConfig {..} =
@@ -199,7 +199,7 @@ getTables BigQuerySourceConfig {..} =
 
 -- | Get tables in the dataset.
 getTablesForDataSet ::
-  MonadIO m =>
+  (MonadIO m) =>
   BigQueryConnection ->
   BigQueryDataset ->
   m (Either RestProblem [RestTable])
@@ -220,8 +220,8 @@ getTablesForDataSet conn dataSet = do
   where
     run pageToken acc = do
       let req =
-            setRequestHeader "Content-Type" ["application/json"] $
-              parseRequest_ url
+            setRequestHeader "Content-Type" ["application/json"]
+              $ parseRequest_ url
       eResp <- runBigQuery conn req
       case eResp of
         Left e -> pure (Left (GetTablesBigQueryProblem e))
@@ -237,13 +237,13 @@ getTablesForDataSet conn dataSet = do
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
         url =
-          T.unpack $
-            "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-              <> getBigQueryProjectId (_bqProjectId conn)
-              <> "/datasets/"
-              <> getBigQueryDataset dataSet
-              <> "/tables?alt=json&"
-              <> encodeParams extraParameters
+          T.unpack
+            $ "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
+            <> getBigQueryProjectId (_bqProjectId conn)
+            <> "/datasets/"
+            <> getBigQueryDataset dataSet
+            <> "/tables?alt=json&"
+            <> encodeParams extraParameters
         extraParameters = pageTokenParam
           where
             pageTokenParam =
@@ -253,7 +253,7 @@ getTablesForDataSet conn dataSet = do
 
 -- | Get tables in the schema.
 getTable ::
-  MonadIO m =>
+  (MonadIO m) =>
   BigQueryConnection ->
   BigQueryDataset ->
   Text ->
@@ -263,8 +263,8 @@ getTable conn dataSet tableId = do
   where
     run = do
       let req =
-            setRequestHeader "Content-Type" ["application/json"] $
-              parseRequest_ url
+            setRequestHeader "Content-Type" ["application/json"]
+              $ parseRequest_ url
       eResp <- runBigQuery conn req
       case eResp of
         Left e -> pure (Left (GetTablesBigQueryProblem e))
@@ -277,15 +277,15 @@ getTable conn dataSet tableId = do
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
         url =
-          T.unpack $
-            "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-              <> getBigQueryProjectId (_bqProjectId conn)
-              <> "/datasets/"
-              <> getBigQueryDataset dataSet
-              <> "/tables/"
-              <> tableId
-              <> "?alt=json&"
-              <> encodeParams extraParameters
+          T.unpack
+            $ "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
+            <> getBigQueryProjectId (_bqProjectId conn)
+            <> "/datasets/"
+            <> getBigQueryDataset dataSet
+            <> "/tables/"
+            <> tableId
+            <> "?alt=json&"
+            <> encodeParams extraParameters
         extraParameters = []
 
 encodeParams :: [(Text, Text)] -> Text
@@ -410,12 +410,15 @@ data RestRoutineList = RestRoutineList
 instance FromJSON RestRoutineList where
   parseJSON = withObject "Object" $ \o ->
     RestRoutineList
-      <$> o .:? "routines" .!= [] -- "routine" field is absent when there are no routines defined
-      <*> o .:? "nextPageToken"
+      <$> o
+      .:? "routines"
+      .!= [] -- "routine" field is absent when there are no routines defined
+      <*> o
+      .:? "nextPageToken"
 
 -- | Get all routines from all specified data sets.
 getRoutines ::
-  MonadIO m =>
+  (MonadIO m) =>
   BigQuerySourceConfig ->
   m (Either RestProblem [RestRoutine])
 getRoutines BigQuerySourceConfig {..} =
@@ -424,7 +427,7 @@ getRoutines BigQuerySourceConfig {..} =
 
 -- | Get routines in the dataset.
 getRoutinesForDataSet ::
-  MonadIO m =>
+  (MonadIO m) =>
   BigQueryConnection ->
   BigQueryDataset ->
   m (Either RestProblem [RestRoutine])
@@ -433,8 +436,8 @@ getRoutinesForDataSet conn dataSet = do
   where
     run pageToken acc = do
       let req =
-            setRequestHeader "Content-Type" ["application/json"] $
-              parseRequest_ url
+            setRequestHeader "Content-Type" ["application/json"]
+              $ parseRequest_ url
       eResp <- runBigQuery conn req
       case eResp of
         Left e -> pure (Left (GetRoutinesBigQueryProblem e))
@@ -450,13 +453,13 @@ getRoutinesForDataSet conn dataSet = do
             _ -> pure (Left (RESTRequestNonOK (getResponseStatus resp)))
       where
         url =
-          T.unpack $
-            "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
-              <> getBigQueryProjectId (_bqProjectId conn)
-              <> "/datasets/"
-              <> getBigQueryDataset dataSet
-              <> "/routines?alt=json&"
-              <> encodeParams extraParameters
+          T.unpack
+            $ "GET https://bigquery.googleapis.com/bigquery/v2/projects/"
+            <> getBigQueryProjectId (_bqProjectId conn)
+            <> "/datasets/"
+            <> getBigQueryDataset dataSet
+            <> "/routines?alt=json&"
+            <> encodeParams extraParameters
         extraParameters = pageTokenParam <> readMaskParam
           where
             pageTokenParam =

@@ -257,8 +257,8 @@ initMetadataConnectionInfo ::
   PostgresConnInfo (Maybe UrlConf) ->
   m PG.ConnInfo
 initMetadataConnectionInfo env metadataDbURL dbURL =
-  fmap bciMetadataConnInfo $
-    initBasicConnectionInfo
+  fmap bciMetadataConnInfo
+    $ initBasicConnectionInfo
       env
       metadataDbURL
       dbURL
@@ -385,8 +385,8 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
   loggers@(Loggers _loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
 
   -- SIDE EFFECT: print a warning if no admin secret is set.
-  when (null soAdminSecret) $
-    unLogger
+  when (null soAdminSecret)
+    $ unLogger
       logger
       StartupLog
         { slLogLevel = LevelWarn,
@@ -411,8 +411,8 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
 
   -- Migrate the catalog and fetch the metdata.
   metadataWithVersion <-
-    lift $
-      migrateCatalogAndFetchMetadata
+    lift
+      $ migrateCatalogAndFetchMetadata
         logger
         metadataDbPool
         bciDefaultPostgres
@@ -553,13 +553,13 @@ migrateCatalogAndFetchMetadata
     -- DB has been set correctly
     currentTime <- liftIO Clock.getCurrentTime
     result <-
-      runExceptT $
-        PG.runTx pool (PG.Serializable, Just PG.ReadWrite) $
-          migrateCatalog
-            defaultSourceConfig
-            extensionsSchema
-            maintenanceMode
-            currentTime
+      runExceptT
+        $ PG.runTx pool (PG.Serializable, Just PG.ReadWrite)
+        $ migrateCatalog
+          defaultSourceConfig
+          extensionsSchema
+          maintenanceMode
+          currentTime
     case result of
       Left err -> do
         unLogger
@@ -604,9 +604,9 @@ buildFirstSchemaCache
     let cacheBuildParams = CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver cacheStaticConfig
         buildReason = CatalogSync
     result <-
-      runExceptT $
-        runCacheBuild cacheBuildParams $
-          buildRebuildableSchemaCacheWithReason buildReason logger env metadataWithVersion cacheDynamicConfig mSchemaRegistryContext
+      runExceptT
+        $ runCacheBuild cacheBuildParams
+        $ buildRebuildableSchemaCacheWithReason buildReason logger env metadataWithVersion cacheDynamicConfig mSchemaRegistryContext
     result `onLeft` \err -> do
       -- TODO: we used to bundle the first schema cache build with the catalog
       -- migration, using the same error handler for both, meaning that an
@@ -692,14 +692,14 @@ instance HttpLog AppM where
   buildExtraHttpLogMetadata _ _ = ()
 
   logHttpError logger loggingSettings userInfoM reqId waiReq req qErr headers _ =
-    unLogger logger $
-      mkHttpLog $
-        mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr Nothing Nothing headers
+    unLogger logger
+      $ mkHttpLog
+      $ mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr Nothing Nothing headers
 
   logHttpSuccess logger loggingSettings userInfoM reqId waiReq reqBody response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) =
-    unLogger logger $
-      mkHttpLog $
-        mkHttpAccessLogContext userInfoM loggingSettings reqId waiReq reqBody (BL.length response) compressedResponse qTime cType headers rb batchQueryOpLogs
+    unLogger logger
+      $ mkHttpLog
+      $ mkHttpAccessLogContext userInfoM loggingSettings reqId waiReq reqBody (BL.length response) compressedResponse qTime cType headers rb batchQueryOpLogs
 
 instance MonadExecuteQuery AppM where
   cacheLookup _ _ _ _ _ _ = pure $ Right ([], ResponseUncached Nothing)
@@ -713,21 +713,21 @@ instance UserAuthentication AppM where
 instance MonadMetadataApiAuthorization AppM where
   authorizeV1QueryApi query handlerCtx = runExceptT do
     let currRole = _uiRole $ hcUser handlerCtx
-    when (requiresAdmin query && currRole /= adminRoleName) $
-      withPathK "args" $
-        throw400 AccessDenied accessDeniedErrMsg
+    when (requiresAdmin query && currRole /= adminRoleName)
+      $ withPathK "args"
+      $ throw400 AccessDenied accessDeniedErrMsg
 
   authorizeV1MetadataApi _ handlerCtx = runExceptT do
     let currRole = _uiRole $ hcUser handlerCtx
-    when (currRole /= adminRoleName) $
-      withPathK "args" $
-        throw400 AccessDenied accessDeniedErrMsg
+    when (currRole /= adminRoleName)
+      $ withPathK "args"
+      $ throw400 AccessDenied accessDeniedErrMsg
 
   authorizeV2QueryApi _ handlerCtx = runExceptT do
     let currRole = _uiRole $ hcUser handlerCtx
-    when (currRole /= adminRoleName) $
-      withPathK "args" $
-        throw400 AccessDenied accessDeniedErrMsg
+    when (currRole /= adminRoleName)
+      $ withPathK "args"
+      $ throw400 AccessDenied accessDeniedErrMsg
 
 instance ConsoleRenderer AppM where
   type ConsoleType AppM = CEConsoleType
@@ -826,7 +826,7 @@ instance MonadEECredentialsStorage AppM where
 -- currently due `throwErrExit`.
 
 -- | Parse cli arguments to graphql-engine executable.
-parseArgs :: EnabledLogTypes impl => Env.Environment -> IO (HGEOptions (ServeOptions impl))
+parseArgs :: (EnabledLogTypes impl) => Env.Environment -> IO (HGEOptions (ServeOptions impl))
 parseArgs env = do
   rawHGEOpts <- execParser opts
   let eitherOpts = runWithEnv (Env.toList env) $ mkHGEOptions rawHGEOpts
@@ -942,8 +942,8 @@ runHGEServer setupHook appStateRef initTime startupStatusHook consoleType ekgSto
 
       setForkIOWithMetrics :: Warp.Settings -> Warp.Settings
       setForkIOWithMetrics = Warp.setFork \f -> do
-        void $
-          C.forkIOWithUnmask
+        void
+          $ C.forkIOWithUnmask
             ( \unmask ->
                 bracket_
                   ( do
@@ -966,9 +966,9 @@ runHGEServer setupHook appStateRef initTime startupStatusHook consoleType ekgSto
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
-  unLogger logger $
-    mkGenericLog LevelInfo "server" $
-      StartupTimeInfo "starting API server" apiInitTime
+  unLogger logger
+    $ mkGenericLog LevelInfo "server"
+    $ StartupTimeInfo "starting API server" apiInitTime
 
   -- Here we block until the shutdown latch 'MVar' is filled, and then
   -- shut down the server. Once this blocking call returns, we'll tidy up
@@ -1028,8 +1028,8 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
   wsServerEnv <- lift $ WS.createWSServerEnv appStateRef
 
   HasuraApp app actionSubState stopWsServer <-
-    lift $
-      mkWaiApp
+    lift
+      $ mkWaiApp
         setupHook
         appStateRef
         consoleType
@@ -1066,8 +1066,8 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
 
       -- start a background thread to create new cron events
       _cronEventsThread <-
-        C.forkManagedT "runCronEventsGenerator" logger $
-          runCronEventsGenerator logger fetchedCronTriggerStatsLogger (getSchemaCache appStateRef)
+        C.forkManagedT "runCronEventsGenerator" logger
+          $ runCronEventsGenerator logger fetchedCronTriggerStatsLogger (getSchemaCache appStateRef)
 
       startScheduledEventsPollerThread logger appEnvLockedEventsCtx
     EventingDisabled ->
@@ -1075,9 +1075,9 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
 
   -- start a background thread to check for updates
   _updateThread <-
-    C.forkManagedT "checkForUpdates" logger $
-      liftIO $
-        checkForUpdates loggerCtx appEnvManager
+    C.forkManagedT "checkForUpdates" logger
+      $ liftIO
+      $ checkForUpdates loggerCtx appEnvManager
 
   -- Start a background thread for source pings
   _sourcePingPoller <-
@@ -1093,9 +1093,9 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
 
   -- initialise the websocket connection reaper thread
   _websocketConnectionReaperThread <-
-    C.forkManagedT "websocket connection reaper thread" logger $
-      liftIO $
-        WS.websocketConnectionReaper getLatestConfigForWSServer getSchemaCache' (_wseServer wsServerEnv)
+    C.forkManagedT "websocket connection reaper thread" logger
+      $ liftIO
+      $ WS.websocketConnectionReaper getLatestConfigForWSServer getSchemaCache' (_wseServer wsServerEnv)
 
   dbUid <-
     getMetadataDbUid `onLeftM` throwErrJExit DatabaseMigrationError
@@ -1109,15 +1109,15 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
 
   -- start a background thread for telemetry
   _telemetryThread <-
-    C.forkManagedT "runTelemetry" logger $
-      runTelemetry logger appStateRef dbUid pgVersion computeResources
+    C.forkManagedT "runTelemetry" logger
+      $ runTelemetry logger appStateRef dbUid pgVersion computeResources
 
   -- forking a dedicated polling thread to dynamically get the latest JWK settings
   -- set by the user and update the JWK accordingly. This will help in applying the
   -- updates without restarting HGE.
   _ <-
-    C.forkManagedT "update JWK" logger $
-      updateJwkCtxThread (getAppContext appStateRef) appEnvManager logger
+    C.forkManagedT "update JWK" logger
+      $ updateJwkCtxThread (getAppContext appStateRef) appEnvManager logger
 
   -- These cleanup actions are not directly associated with any
   -- resource, but we still need to make sure we clean them up here.
@@ -1166,13 +1166,19 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
               res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return $ unlockEventsInSource @b _siConfiguration nonEmptyLockedEvents)
               case res of
                 Left err ->
-                  logger $
-                    mkGenericLog LevelWarn "event_trigger" $
-                      "Error while unlocking event trigger events of source: " <> sourceNameText <> " error:" <> showQErr err
+                  logger
+                    $ mkGenericLog LevelWarn "event_trigger"
+                    $ "Error while unlocking event trigger events of source: "
+                    <> sourceNameText
+                    <> " error:"
+                    <> showQErr err
                 Right count ->
-                  logger $
-                    mkGenericLog LevelInfo "event_trigger" $
-                      tshow count <> " events of source " <> sourceNameText <> " were successfully unlocked"
+                  logger
+                    $ mkGenericLog LevelInfo "event_trigger"
+                    $ tshow count
+                    <> " events of source "
+                    <> sourceNameText
+                    <> " were successfully unlocked"
 
     shutdownAsyncActions ::
       LockedEventsCtx ->
@@ -1208,20 +1214,20 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
             MetadataDBShutdownAction metadataDBShutdownAction ->
               runExceptT metadataDBShutdownAction >>= \case
                 Left err ->
-                  logger $
-                    mkGenericLog LevelWarn (T.pack actionType) $
-                      "Error while unlocking the processing  "
-                        <> tshow actionType
-                        <> " err - "
-                        <> showQErr err
+                  logger
+                    $ mkGenericLog LevelWarn (T.pack actionType)
+                    $ "Error while unlocking the processing  "
+                    <> tshow actionType
+                    <> " err - "
+                    <> showQErr err
                 Right () -> pure ()
       | otherwise = do
           processingEventsCount <- processingEventsCountAction'
           if (processingEventsCount == 0)
             then
-              logger $
-                mkGenericLog @Text LevelInfo (T.pack actionType) $
-                  "All in-flight events have finished processing"
+              logger
+                $ mkGenericLog @Text LevelInfo (T.pack actionType)
+                $ "All in-flight events have finished processing"
             else unless (processingEventsCount == 0) $ do
               C.sleep (5) -- sleep for 5 seconds and then repeat
               waitForProcessingAction l actionType processingEventsCountAction' shutdownAction (maxTimeout - (Seconds 5))
@@ -1294,9 +1300,9 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
           Nothing
 
       -- start a background thread to handle async action live queries
-      void $
-        C.forkManagedT "asyncActionSubscriptionsProcessor" logger $
-          asyncActionSubscriptionsProcessor actionSubState
+      void
+        $ C.forkManagedT "asyncActionSubscriptionsProcessor" logger
+        $ asyncActionSubscriptionsProcessor actionSubState
 
     startScheduledEventsPollerThread logger lockedEventsCtx = do
       AppEnv {..} <- lift askAppEnv
@@ -1362,7 +1368,8 @@ notifySchemaCacheSyncTx (MetadataResourceVersion resourceVersion) instanceId inv
 
 getCatalogStateTx :: PG.TxE QErr CatalogState
 getCatalogStateTx =
-  mkCatalogState . PG.getRow
+  mkCatalogState
+    . PG.getRow
     <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|
@@ -1408,7 +1415,8 @@ mkConsoleHTML ::
   CEConsoleType ->
   Either String Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn ceConsoleType =
-  renderHtmlTemplate consoleTmplt $
+  renderHtmlTemplate consoleTmplt
+    $
     -- variables required to render the template
     J.object
       [ "isAdminSecretSet" J..= isAdminSecretSet authMode,

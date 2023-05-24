@@ -104,9 +104,9 @@ instance FromJSON ExperimentalFeature where
   parseJSON = withText "ExperimentalFeature" $ \case
     k | Just (_, ef) <- find ((== k) . fst) experimentalFeatures -> return $ ef
     _ ->
-      fail $
-        "ExperimentalFeature can only be one of these values: "
-          <> unpack (intercalate "," (map fst experimentalFeatures))
+      fail
+        $ "ExperimentalFeature can only be one of these values: "
+        <> unpack (intercalate "," (map fst experimentalFeatures))
     where
       experimentalFeatures :: [(Text, ExperimentalFeature)]
       experimentalFeatures =
@@ -122,8 +122,9 @@ data MaintenanceMode a = MaintenanceModeEnabled a | MaintenanceModeDisabled
 
 instance FromJSON (MaintenanceMode ()) where
   parseJSON =
-    withBool "MaintenanceMode" $
-      pure . bool MaintenanceModeDisabled (MaintenanceModeEnabled ())
+    withBool "MaintenanceMode"
+      $ pure
+      . bool MaintenanceModeDisabled (MaintenanceModeEnabled ())
 
 instance ToJSON (MaintenanceMode ()) where
   toJSON = Bool . (== MaintenanceModeEnabled ())
@@ -179,7 +180,7 @@ instance ToJSON GranularPrometheusMetricsState where
     GranularMetricsOff -> Bool False
     GranularMetricsOn -> Bool True
 
-class Monad m => MonadGetPolicies m where
+class (Monad m) => MonadGetPolicies m where
   runGetApiTimeLimit ::
     m (Maybe MaxTime)
 

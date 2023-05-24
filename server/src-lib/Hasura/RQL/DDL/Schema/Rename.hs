@@ -71,11 +71,11 @@ data Rename b
 
 otherDeps :: (QErrM m) => Text -> SchemaObjId -> m ()
 otherDeps errMsg d =
-  throw500 $
-    "unexpected dependency "
-      <> reportSchemaObj d
-      <> "; "
-      <> errMsg
+  throw500
+    $ "unexpected dependency "
+    <> reportSchemaObj d
+    <> "; "
+    <> errMsg
 
 -- | Replace all references to a given table name by its new name across the entire metadata.
 --
@@ -102,10 +102,10 @@ renameTableInMetadata ::
 renameTableInMetadata source newQT oldQT = do
   sc <- askSchemaCache
   let allDeps =
-        getDependentObjs sc $
-          SOSourceObj source $
-            AB.mkAnyBackend $
-              SOITable @b oldQT
+        getDependentObjs sc
+          $ SOSourceObj source
+          $ AB.mkAnyBackend
+          $ SOITable @b oldQT
 
   -- update all dependant schema objects
   forM_ allDeps $ \case
@@ -134,11 +134,15 @@ renameTableInMetadata source newQT oldQT = do
     -- any other kind of dependent object (erroneous)
     d -> otherDeps errMsg d
   -- Update table name in metadata
-  tell $
-    MetadataModifier $
-      metaSources . ix source . (toSourceMetadata @b) . smTables %~ \tables ->
-        flip (maybe tables) (InsOrdHashMap.lookup oldQT tables) $
-          \tableMeta -> InsOrdHashMap.delete oldQT $ InsOrdHashMap.insert newQT tableMeta {_tmTable = newQT} tables
+  tell
+    $ MetadataModifier
+    $ metaSources
+    . ix source
+    . (toSourceMetadata @b)
+    . smTables
+    %~ \tables ->
+      flip (maybe tables) (InsOrdHashMap.lookup oldQT tables)
+        $ \tableMeta -> InsOrdHashMap.delete oldQT $ InsOrdHashMap.insert newQT tableMeta {_tmTable = newQT} tables
   where
     errMsg = "cannot rename table " <> oldQT <<> " to " <>> newQT
 
@@ -172,11 +176,11 @@ renameColumnInMetadata oCol nCol source qt fieldInfo = do
   assertFldNotExists
   -- Fetch dependent objects
   let depObjs =
-        getDependentObjs sc $
-          SOSourceObj source $
-            AB.mkAnyBackend $
-              SOITableObj @b qt $
-                TOCol @b oCol
+        getDependentObjs sc
+          $ SOSourceObj source
+          $ AB.mkAnyBackend
+          $ SOITableObj @b qt
+          $ TOCol @b oCol
       renameItem = RenameItem @b qt oCol nCol
       renameFld = RFCol renameItem
   -- Update dependent objects
@@ -191,10 +195,12 @@ renameColumnInMetadata oCol nCol source qt fieldInfo = do
             SOITableObj refQT (TORel rn) ->
               updateColInRel @b source refQT rn renameItem
             SOITableObj refQT (TOTrigger triggerName) ->
-              tell $
-                MetadataModifier $
-                  tableMetadataSetter @b source refQT . tmEventTriggers . ix triggerName
-                    %~ updateColumnInEventTrigger @b refQT oCol nCol qt
+              tell
+                $ MetadataModifier
+                $ tableMetadataSetter @b source refQT
+                . tmEventTriggers
+                . ix triggerName
+                %~ updateColumnInEventTrigger @b refQT oCol nCol qt
             SOITableObj _ (TORemoteRel remoteRelName) ->
               updateColInRemoteRelationshipLHS source remoteRelName renameItem
             _ -> otherDeps errMsg sobj
@@ -215,14 +221,14 @@ renameColumnInMetadata oCol nCol source qt fieldInfo = do
     assertFldNotExists =
       case HashMap.lookup (fromCol @b oCol) fieldInfo of
         Just (FIRelationship _) ->
-          throw400 AlreadyExists $
-            "cannot rename column "
-              <> oCol
-                <<> " to "
-              <> nCol
-                <<> " in table "
-              <> qt
-                <<> " as a relationship with the name already exists"
+          throw400 AlreadyExists
+            $ "cannot rename column "
+            <> oCol
+            <<> " to "
+            <> nCol
+            <<> " in table "
+            <> qt
+            <<> " as a relationship with the name already exists"
         _ -> pure ()
 
 renameRelationshipInMetadata ::
@@ -241,11 +247,11 @@ renameRelationshipInMetadata ::
 renameRelationshipInMetadata source qt oldRN relType newRN = do
   sc <- askSchemaCache
   let depObjs =
-        getDependentObjs sc $
-          SOSourceObj source $
-            AB.mkAnyBackend $
-              SOITableObj @b qt $
-                TORel oldRN
+        getDependentObjs sc
+          $ SOSourceObj source
+          $ AB.mkAnyBackend
+          $ SOITableObj @b qt
+          $ TORel oldRN
       renameFld = RFRel $ RenameItem @b qt oldRN newRN
 
   forM_ depObjs $ \case
@@ -254,18 +260,19 @@ renameRelationshipInMetadata source qt oldRN relType newRN = do
         updatePermFlds @b source refQT role pt $ RField renameFld
       _ -> otherDeps errMsg sobj
     d -> otherDeps errMsg d
-  tell $
-    MetadataModifier $
-      tableMetadataSetter @b source qt %~ case relType of
-        ObjRel -> tmObjectRelationships %~ rewriteRelationships
-        ArrRel -> tmArrayRelationships %~ rewriteRelationships
+  tell
+    $ MetadataModifier
+    $ tableMetadataSetter @b source qt
+    %~ case relType of
+      ObjRel -> tmObjectRelationships %~ rewriteRelationships
+      ArrRel -> tmArrayRelationships %~ rewriteRelationships
   where
     errMsg = "cannot rename relationship " <> oldRN <<> " to " <>> newRN
     rewriteRelationships ::
       Relationships (RelDef a) -> Relationships (RelDef a)
     rewriteRelationships relationsMap =
-      flip (maybe relationsMap) (InsOrdHashMap.lookup oldRN relationsMap) $
-        \rd -> InsOrdHashMap.insert newRN rd {_rdName = newRN} $ InsOrdHashMap.delete oldRN relationsMap
+      flip (maybe relationsMap) (InsOrdHashMap.lookup oldRN relationsMap)
+        $ \rd -> InsOrdHashMap.insert newRN rd {_rdName = newRN} $ InsOrdHashMap.delete oldRN relationsMap
 
 -- update table names in relationship definition
 updateRelDefs ::
@@ -283,11 +290,12 @@ updateRelDefs ::
 updateRelDefs source qt rn renameTable = do
   fim <- askTableFieldInfoMap @b source qt
   ri <- askRelType fim rn ""
-  tell $
-    MetadataModifier $
-      tableMetadataSetter source qt %~ case riType ri of
-        ObjRel -> tmObjectRelationships . ix rn %~ updateObjRelDef renameTable
-        ArrRel -> tmArrayRelationships . ix rn %~ updateArrRelDef renameTable
+  tell
+    $ MetadataModifier
+    $ tableMetadataSetter source qt
+    %~ case riType ri of
+      ObjRel -> tmObjectRelationships . ix rn %~ updateObjRelDef renameTable
+      ArrRel -> tmArrayRelationships . ix rn %~ updateArrRelDef renameTable
   where
     updateObjRelDef :: RenameTable b -> ObjRelDef b -> ObjRelDef b
     updateObjRelDef (oldQT, newQT) =
@@ -327,21 +335,22 @@ updatePermFlds source refQT rn pt rename = do
   tables <- fold <$> askTableCache source
   let withTables :: Reader (TableCache b) a -> a
       withTables = flip runReader tables
-  tell $
-    MetadataModifier $
-      tableMetadataSetter source refQT %~ case pt of
-        PTInsert ->
-          tmInsertPermissions . ix rn . pdPermission %~ \insPerm ->
-            withTables $ updateInsPermFlds refQT rename insPerm
-        PTSelect ->
-          tmSelectPermissions . ix rn . pdPermission %~ \selPerm ->
-            withTables $ updateSelPermFlds refQT rename selPerm
-        PTUpdate ->
-          tmUpdatePermissions . ix rn . pdPermission %~ \updPerm ->
-            withTables $ updateUpdPermFlds refQT rename updPerm
-        PTDelete ->
-          tmDeletePermissions . ix rn . pdPermission %~ \delPerm ->
-            withTables $ updateDelPermFlds refQT rename delPerm
+  tell
+    $ MetadataModifier
+    $ tableMetadataSetter source refQT
+    %~ case pt of
+      PTInsert ->
+        tmInsertPermissions . ix rn . pdPermission %~ \insPerm ->
+          withTables $ updateInsPermFlds refQT rename insPerm
+      PTSelect ->
+        tmSelectPermissions . ix rn . pdPermission %~ \selPerm ->
+          withTables $ updateSelPermFlds refQT rename selPerm
+      PTUpdate ->
+        tmUpdatePermissions . ix rn . pdPermission %~ \updPerm ->
+          withTables $ updateUpdPermFlds refQT rename updPerm
+      PTDelete ->
+        tmDeletePermissions . ix rn . pdPermission %~ \delPerm ->
+          withTables $ updateDelPermFlds refQT rename delPerm
 
 updateInsPermFlds ::
   (MonadReader (TableCache b) m, Backend b) =>
@@ -445,14 +454,16 @@ updateCols qt rf permSpec =
   where
     updateCols' oCol nCol cols = case cols of
       PCStar -> cols
-      PCCols c -> PCCols $
-        flip map c $
-          \col -> if col == oCol then nCol else col
+      PCCols c -> PCCols
+        $ flip map c
+        $ \col -> if col == oCol then nCol else col
 
 updateTableInBoolExp :: (Backend b) => RenameTable b -> BoolExp b -> BoolExp b
 updateTableInBoolExp (oldQT, newQT) =
-  over _Wrapped . transform $
-    (_BoolExists . geTable) %~ \rqfQT ->
+  over _Wrapped
+    . transform
+    $ (_BoolExists . geTable)
+    %~ \rqfQT ->
       if rqfQT == oldQT then newQT else rqfQT
 
 updateFieldInBoolExp ::
@@ -468,7 +479,9 @@ updateFieldInBoolExp qt rf be =
       BoolOr exps -> BoolOr <$> procExps exps
       BoolNot e -> BoolNot <$> updateBoolExp' e
       BoolExists (GExists refqt wh) ->
-        BoolExists . GExists refqt . unBoolExp
+        BoolExists
+          . GExists refqt
+          . unBoolExp
           <$> updateFieldInBoolExp refqt rf (BoolExp wh)
       BoolField fld -> BoolField <$> updateColExp qt rf fld
   where
@@ -491,7 +504,9 @@ updateColExp qt rf (ColExp fld val) =
       tables <- ask
       let maybeFieldInfo =
             HashMap.lookup qt tables
-              >>= HashMap.lookup fld . _tciFieldInfoMap . _tiCoreInfo
+              >>= HashMap.lookup fld
+              . _tciFieldInfoMap
+              . _tiCoreInfo
       case maybeFieldInfo of
         Nothing -> pure val
         Just fi -> case fi of
@@ -527,16 +542,16 @@ updateColInRel source fromQT rn rnCol = do
     case riTarget relInfo of
       RelTargetNativeQuery _ -> error "updateColInRel RelTargetNativeQuery"
       RelTargetTable relTableName ->
-        tell $
-          MetadataModifier $
-            tableMetadataSetter source fromQT
-              %~ case riType relInfo of
-                ObjRel ->
-                  tmObjectRelationships . ix rn . rdUsing
-                    %~ updateColInObjRel fromQT relTableName rnCol
-                ArrRel ->
-                  tmArrayRelationships . ix rn . rdUsing
-                    %~ updateColInArrRel fromQT relTableName rnCol
+        tell
+          $ MetadataModifier
+          $ tableMetadataSetter source fromQT
+          %~ case riType relInfo of
+            ObjRel ->
+              tmObjectRelationships . ix rn . rdUsing
+                %~ updateColInObjRel fromQT relTableName rnCol
+            ArrRel ->
+              tmArrayRelationships . ix rn . rdUsing
+                %~ updateColInArrRel fromQT relTableName rnCol
 
 -- | Local helper: update a column's name in the left-hand side of a remote relationship.
 --
@@ -570,8 +585,9 @@ updateColInRemoteRelationshipLHS source remoteRelationshipName (RenameItem qt ol
         HashMap.fromList . map (\(key, value) -> (if key == oldFieldName then newFieldName else key, value)) . HashMap.toList
 
       updateFieldCalls (RemoteFields fields) =
-        RemoteFields $
-          fields <&> \(FieldCall name (RemoteArguments args)) ->
+        RemoteFields
+          $ fields
+          <&> \(FieldCall name (RemoteArguments args)) ->
             FieldCall name $ RemoteArguments $ updateVariableName <$> args
 
       updateVariableName =
@@ -614,15 +630,15 @@ updateColInRemoteRelationshipRHS ::
   RenameCol target ->
   m ()
 updateColInRemoteRelationshipRHS source tableName remoteRelationshipName (RenameItem _ oldCol newCol) =
-  tell $
-    MetadataModifier $
-      tableMetadataSetter @source source tableName
-        . tmRemoteRelationships
-        . ix remoteRelationshipName
-        . rrDefinition
-        . _RelationshipToSource
-        . tsrdFieldMapping
-        %~ updateMapValue
+  tell
+    $ MetadataModifier
+    $ tableMetadataSetter @source source tableName
+    . tmRemoteRelationships
+    . ix remoteRelationshipName
+    . rrDefinition
+    . _RelationshipToSource
+    . tsrdFieldMapping
+    %~ updateMapValue
   where
     oldFieldName = fromCol @target oldCol
     newFieldName = fromCol @target newCol
@@ -650,15 +666,15 @@ updateTableInRemoteRelationshipRHS ::
   RenameTable target ->
   m ()
 updateTableInRemoteRelationshipRHS source tableName remoteRelationshipName (_, newTableName) =
-  tell $
-    MetadataModifier $
-      tableMetadataSetter @source source tableName
-        . tmRemoteRelationships
-        . ix remoteRelationshipName
-        . rrDefinition
-        . _RelationshipToSource
-        . tsrdTable
-        .~ toJSON newTableName
+  tell
+    $ MetadataModifier
+    $ tableMetadataSetter @source source tableName
+    . tmRemoteRelationships
+    . ix remoteRelationshipName
+    . rrDefinition
+    . _RelationshipToSource
+    . tsrdTable
+    .~ toJSON newTableName
 
 updateColInObjRel ::
   (Backend b) =>
@@ -753,9 +769,12 @@ possiblyUpdateCustomColumnNames ::
   Column b ->
   m ()
 possiblyUpdateCustomColumnNames source tableName oldColumn newColumn = do
-  tell $
-    MetadataModifier $
-      tableMetadataSetter @b source tableName . tmConfiguration . tcColumnConfig %~ swapOldColumnForNewColumn
+  tell
+    $ MetadataModifier
+    $ tableMetadataSetter @b source tableName
+    . tmConfiguration
+    . tcColumnConfig
+    %~ swapOldColumnForNewColumn
   where
     swapOldColumnForNewColumn :: HashMap (Column b) columnData -> HashMap (Column b) columnData
     swapOldColumnForNewColumn customColumns =

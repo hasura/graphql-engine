@@ -67,9 +67,9 @@ errorToText = \case
             Just allowedFields -> ", the allowed fields are " <> englishList "or" allowedFields
      in "field with name "
           <> fieldName
-            <<> "is not provided by the lhs entity"
-            <>> lhs
-            <<> "for defining a join condition"
+          <<> "is not provided by the lhs entity"
+          <>> lhs
+          <<> "for defining a join condition"
           <> helpText
   ExpectedTypeButGot expTy actualTy ->
     "expected type " <> G.getBaseType expTy <<> " but got " <>> G.getBaseType actualTy
@@ -107,38 +107,38 @@ validateToSchemaRelationship ::
 validateToSchemaRelationship schema lhsIdentifier name (remoteSchemaInfo, introspectionResult) lhsJoinFields = do
   let remoteSchemaName = _trrdRemoteSchema schema
   requiredLHSJoinFields <- forM (toList $ _trrdLhsFields schema) $ \fieldName -> do
-    fmap (fieldName,) $
-      onNothing (HashMap.lookup fieldName lhsJoinFields) $
-        throwError $
-          JoinFieldNonExistent lhsIdentifier fieldName $
-            HashMap.keysSet lhsJoinFields
+    fmap (fieldName,)
+      $ onNothing (HashMap.lookup fieldName lhsJoinFields)
+      $ throwError
+      $ JoinFieldNonExistent lhsIdentifier fieldName
+      $ HashMap.keysSet lhsJoinFields
   hasuraFieldsVariablesMap <-
     fmap HashMap.fromList $ for requiredLHSJoinFields $ \(fieldName, field) -> (,field) <$> hasuraFieldToVariable fieldName
   let schemaDoc = irDoc introspectionResult
       queryRootName = irQueryRoot introspectionResult
   queryRoot <-
-    onNothing (lookupObject schemaDoc queryRootName) $
-      throwError $
-        FieldNotFoundInRemoteSchema queryRootName
+    onNothing (lookupObject schemaDoc queryRootName)
+      $ throwError
+      $ FieldNotFoundInRemoteSchema queryRootName
   (_, (leafParamMap, leafTypeMap)) <-
     foldlM
       (buildRelationshipTypeInfo hasuraFieldsVariablesMap schemaDoc)
       (queryRoot, (mempty, mempty))
       (unRemoteFields $ _trrdRemoteField schema)
-  pure $
-    ( HashMap.fromList requiredLHSJoinFields,
-      RemoteSchemaFieldInfo
-        { _rrfiName = name,
-          _rrfiParamMap = leafParamMap,
-          _rrfiRemoteFields = _trrdRemoteField schema,
-          _rrfiRemoteSchema = remoteSchemaInfo,
-          -- adding the new input types after stripping the values of the
-          -- schema document
-          _rrfiInputValueDefinitions = HashMap.elems leafTypeMap,
-          _rrfiRemoteSchemaName = remoteSchemaName,
-          _rrfiLHSIdentifier = lhsIdentifier
-        }
-    )
+  pure
+    $ ( HashMap.fromList requiredLHSJoinFields,
+        RemoteSchemaFieldInfo
+          { _rrfiName = name,
+            _rrfiParamMap = leafParamMap,
+            _rrfiRemoteFields = _trrdRemoteField schema,
+            _rrfiRemoteSchema = remoteSchemaInfo,
+            -- adding the new input types after stripping the values of the
+            -- schema document
+            _rrfiInputValueDefinitions = HashMap.elems leafTypeMap,
+            _rrfiRemoteSchemaName = remoteSchemaName,
+            _rrfiLHSIdentifier = lhsIdentifier
+          }
+      )
   where
     getObjTyInfoFromField ::
       RemoteSchemaIntrospection ->
@@ -193,10 +193,10 @@ validateToSchemaRelationship schema lhsIdentifier name (remoteSchemaInfo, intros
               typeMap
       (newParamMap, newTypeMap) <- onLeft eitherParamAndTypeMap throwError
       innerObjTyInfo <-
-        onNothing (getObjTyInfoFromField schemaDoc objFldDefinition) $
-          bool
-            ( throwError $
-                InvalidType (G._fldType objFldDefinition) "only output type is expected"
+        onNothing (getObjTyInfoFromField schemaDoc objFldDefinition)
+          $ bool
+            ( throwError
+                $ InvalidType (G._fldType objFldDefinition) "only output type is expected"
             )
             (pure objTyInfo)
             (isValidType schemaDoc objFldDefinition)
@@ -224,15 +224,15 @@ stripInMap ::
     (Either ValidationError)
     (HashMap.HashMap G.Name RemoteSchemaInputValueDefinition)
 stripInMap relName lhsIdentifier types schemaArguments providedArguments =
-  fmap catMaybes $
-    HashMap.traverseWithKey
+  fmap catMaybes
+    $ HashMap.traverseWithKey
       ( \name remoteInpValDef@(RemoteSchemaInputValueDefinition inpValInfo _preset) ->
           case HashMap.lookup name providedArguments of
             Nothing -> pure $ Just remoteInpValDef
             Just value -> do
               maybeNewGType <- stripValue relName lhsIdentifier types (G._ivdType inpValInfo) value
-              pure $
-                fmap
+              pure
+                $ fmap
                   ( \newGType ->
                       let newInpValInfo = inpValInfo {G._ivdType = newGType}
                        in RemoteSchemaInputValueDefinition newInpValInfo Nothing
@@ -332,7 +332,7 @@ stripObject name lhsIdentifier schemaDoc originalGtype templateArguments =
 -- types for a remote relationship.
 -- TODO: Consider a separator character to avoid conflicts.
 renameTypeForRelationship ::
-  MonadError ValidationError m =>
+  (MonadError ValidationError m) =>
   RelName ->
   LHSIdentifier ->
   G.Name ->
@@ -344,8 +344,11 @@ renameTypeForRelationship (relNameToTxt -> relTxt) lhsIdentifier name = do
   relName <-
     G.mkName relTxt
       `onNothing` throwError (InvalidGraphQLName relTxt)
-  pure $
-    name <> Name.__remote_rel_ <> lhsName <> relName
+  pure
+    $ name
+    <> Name.__remote_rel_
+    <> lhsName
+    <> relName
 
 -- | Convert a field name to a variable name.
 hasuraFieldToVariable ::
@@ -472,22 +475,22 @@ isTypeCoercible actualType expectedType =
   let (actualBaseType, actualNestingLevel) = getBaseTyWithNestedLevelsCount actualType
       (expectedBaseType, expectedNestingLevel) = getBaseTyWithNestedLevelsCount expectedType
    in if
-          | expectedBaseType == GName._ID ->
-              bool
-                (throwError $ IDTypeJoin actualBaseType)
-                (pure ())
-                -- Check under `Input Coercion` https://spec.graphql.org/June2018/#sec-ID
-                -- We can also include the `ID` type in the below list but it will be
-                -- extraneous because at the time of writing this, we don't generate
-                -- the `ID` type in the DB schema
-                ( G.unName actualBaseType
-                    `elem` ["ID", "Int", "String", "bigint", "smallint", "uuid"]
-                )
-          | actualBaseType /= expectedBaseType -> raiseValidationError
-          -- we cannot coerce two types with different nesting levels,
-          -- for example, we cannot coerce [Int] to [[Int]]
-          | (actualNestingLevel == expectedNestingLevel || actualNestingLevel == 0) -> pure ()
-          | otherwise -> raiseValidationError
+        | expectedBaseType == GName._ID ->
+            bool
+              (throwError $ IDTypeJoin actualBaseType)
+              (pure ())
+              -- Check under `Input Coercion` https://spec.graphql.org/June2018/#sec-ID
+              -- We can also include the `ID` type in the below list but it will be
+              -- extraneous because at the time of writing this, we don't generate
+              -- the `ID` type in the DB schema
+              ( G.unName actualBaseType
+                  `elem` ["ID", "Int", "String", "bigint", "smallint", "uuid"]
+              )
+        | actualBaseType /= expectedBaseType -> raiseValidationError
+        -- we cannot coerce two types with different nesting levels,
+        -- for example, we cannot coerce [Int] to [[Int]]
+        | (actualNestingLevel == expectedNestingLevel || actualNestingLevel == 0) -> pure ()
+        | otherwise -> raiseValidationError
   where
     raiseValidationError = throwError $ ExpectedTypeButGot expectedType actualType
 

@@ -89,8 +89,8 @@ tests = describe "drop-source-metadata-tests" do
       let remoteSchemas = key "remote_schemas" . values
           -- Extract the 'source' remote schema and check if any remote relationships exists
           sourceRemoteSchema =
-            Unsafe.fromJust $
-              findOf
+            Unsafe.fromJust
+              $ findOf
                 remoteSchemas
                 (has $ key "name" . _String . only "source")
                 metadata

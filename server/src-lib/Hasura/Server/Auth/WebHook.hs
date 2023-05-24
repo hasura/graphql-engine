@@ -90,20 +90,20 @@ userInfoFromAuthHook logger manager hook reqHeaders reqs = do
                     & set HTTP.headers (addDefaultHeaders [contentType])
                     & set
                       HTTP.body
-                      ( HTTP.RequestBodyLBS $
-                          J.encode $
-                            object
-                              ( ["headers" J..= headersPayload]
-                                  -- We will only send the request if `ahSendRequestBody` is set to true
-                                  <> ["request" J..= reqs | ahSendRequestBody hook]
-                              )
+                      ( HTTP.RequestBodyLBS
+                          $ J.encode
+                          $ object
+                            ( ["headers" J..= headersPayload]
+                                -- We will only send the request if `ahSendRequestBody` is set to true
+                                <> ["request" J..= reqs | ahSendRequestBody hook]
+                            )
                       )
             HTTP.httpLbs req' manager
 
     logAndThrow :: HTTP.HttpException -> m a
     logAndThrow err = do
-      unLogger logger $
-        WebHookLog
+      unLogger logger
+        $ WebHookLog
           LevelError
           Nothing
           (ahUrl hook)
@@ -138,16 +138,16 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody respHdrs
   where
     getUserInfoFromHdrs rawHeaders responseHdrs = do
       userInfo <-
-        mkUserInfo URBFromSessionVariables UAdminSecretNotSent $
-          mkSessionVariablesText rawHeaders
+        mkUserInfo URBFromSessionVariables UAdminSecretNotSent
+          $ mkSessionVariablesText rawHeaders
       logWebHookResp LevelInfo Nothing Nothing
       expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
       pure (userInfo, expiration, responseHdrs)
 
-    logWebHookResp :: MonadIO m => LogLevel -> Maybe BL.ByteString -> Maybe Text -> m ()
+    logWebHookResp :: (MonadIO m) => LogLevel -> Maybe BL.ByteString -> Maybe Text -> m ()
     logWebHookResp logLevel mResp message =
-      logger $
-        WebHookLog
+      logger
+        $ WebHookLog
           logLevel
           (Just statusCode)
           url

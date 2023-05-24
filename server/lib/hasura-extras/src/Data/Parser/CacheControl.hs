@@ -31,13 +31,13 @@ data CacheControlDirective
   deriving (Show, Eq)
 
 -- | Tries to parse the @max-age@ or @s-maxage@ present in the value of @Cache-Control@ header
-parseMaxAge :: Integral a => Text -> Either String a
+parseMaxAge :: (Integral a) => Text -> Either String a
 parseMaxAge t =
   parseCacheControl t >>= findMaxAge >>= maybe (Left notFoundErr) Right
   where
     notFoundErr = "could not find max-age/s-maxage"
 
-findMaxAge :: Integral a => CacheControl -> Either String (Maybe a)
+findMaxAge :: (Integral a) => CacheControl -> Either String (Maybe a)
 findMaxAge cacheControl = do
   case findCCDTokenWithVal checkMaxAgeToken cacheControl of
     Just (_, val) -> Just <$> first parseErr (AT.parseOnly AT.decimal val)

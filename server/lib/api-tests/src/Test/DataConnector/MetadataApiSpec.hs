@@ -223,7 +223,8 @@ schemaInspectionTests = describe "Schema and Source Inspection" $ do
                 args:
                   name: *backendString
               |]
-              ) -- Note: These fields are backend specific so we ignore their values and just verify their shapes:
+              )
+                -- Note: These fields are backend specific so we ignore their values and just verify their shapes:
                 <&> Lens.set (key "config_schema_response" . key "other_schemas") J.Null
                 <&> Lens.set (key "config_schema_response" . key "config_schema") J.Null
                 <&> Lens.set (key "capabilities" . _Object . Lens.at "datasets") Nothing
@@ -403,10 +404,10 @@ schemaCrudTests = describe "A series of actions to setup and teardown a source w
       let capabilities = getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities
       let foreignKeySupport = fromMaybe False $ capabilities ^? _Just . API.cDataSchema . API.dscSupportsForeignKeys
       let relationshipsSupport = isJust $ capabilities ^? _Just . API.cRelationships . _Just
-      unless relationshipsSupport $
-        pendingWith "Backend does not support local relationships"
-      unless foreignKeySupport $
-        pendingWith "Backend does not support Foreign Key constraints"
+      unless relationshipsSupport
+        $ pendingWith "Backend does not support local relationships"
+      unless foreignKeySupport
+        $ pendingWith "Backend does not support Foreign Key constraints"
 
       case (backendTypeString &&& backendSourceName) <$> getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
@@ -439,10 +440,10 @@ schemaCrudTests = describe "A series of actions to setup and teardown a source w
       let capabilities = getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities
       let foreignKeySupport = fromMaybe False $ capabilities ^? _Just . API.cDataSchema . API.dscSupportsForeignKeys
       let relationshipsSupport = isJust $ capabilities ^? _Just . API.cRelationships . _Just
-      unless relationshipsSupport $
-        pendingWith "Backend does not support local relationships"
-      unless foreignKeySupport $
-        pendingWith "Backend does not support Foreign Key constraints"
+      unless relationshipsSupport
+        $ pendingWith "Backend does not support local relationships"
+      unless foreignKeySupport
+        $ pendingWith "Backend does not support Foreign Key constraints"
 
       case (backendTypeString &&& backendSourceName) <$> TestEnvironment.getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
@@ -539,10 +540,10 @@ schemaCrudTests = describe "A series of actions to setup and teardown a source w
       let capabilities = getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities
       let foreignKeySupport = fromMaybe False $ capabilities ^? _Just . API.cDataSchema . API.dscSupportsForeignKeys
       let relationshipsSupport = isJust $ capabilities ^? _Just . API.cRelationships . _Just
-      unless relationshipsSupport $
-        pendingWith "Backend does not support local relationships"
-      unless foreignKeySupport $
-        pendingWith "Backend does not support Foreign Key constraints"
+      unless relationshipsSupport
+        $ pendingWith "Backend does not support local relationships"
+      unless foreignKeySupport
+        $ pendingWith "Backend does not support Foreign Key constraints"
 
       case (backendTypeString &&& backendSourceName) <$> TestEnvironment.getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"

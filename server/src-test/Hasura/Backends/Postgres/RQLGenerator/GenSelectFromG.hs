@@ -17,7 +17,7 @@ import Hedgehog.Gen qualified as Gen
 -- | @genA@ is a generator for some type @a@ which is threaded through
 -- the 'SelectFromG' AST. At the leaf nodes this is in an 'ArgumentExp
 -- a' term.
-genSelectFromG :: MonadGen m => m a -> m (SelectFromG ('Postgres 'Vanilla) a)
+genSelectFromG :: (MonadGen m) => m a -> m (SelectFromG ('Postgres 'Vanilla) a)
 genSelectFromG genA = Gen.choice [fromTable, fromIdentifier, fromFunction]
   where
     fromTable = FromTable <$> genTableName

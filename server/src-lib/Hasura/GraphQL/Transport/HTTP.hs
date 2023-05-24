@@ -115,7 +115,7 @@ data CacheResult
     -- store the response in the cache after a fresh execution.
     ResponseUncached (Maybe ResponseCacher)
 
-class Monad m => MonadExecuteQuery m where
+class (Monad m) => MonadExecuteQuery m where
   -- | This method does two things: it looks up a query result in the
   -- server-side cache, if a cache is used, and it additionally returns HTTP
   -- headers that can instruct a client how long a response can be cached
@@ -150,9 +150,9 @@ class Monad m => MonadExecuteQuery m where
     m (Either QErr (HTTP.ResponseHeaders, CacheResult))
   cacheLookup a b c d e f = lift $ cacheLookup a b c d e f
 
-instance MonadExecuteQuery m => MonadExecuteQuery (ReaderT r m)
+instance (MonadExecuteQuery m) => MonadExecuteQuery (ReaderT r m)
 
-instance MonadExecuteQuery m => MonadExecuteQuery (ExceptT e m)
+instance (MonadExecuteQuery m) => MonadExecuteQuery (ExceptT e m)
 
 -- | A partial response, e.g. from a remote schema call or postgres
 -- postgres query, which we'll assemble into the final response for
@@ -201,8 +201,8 @@ buildResponse telemType res f = case res of
   Right a -> pure $ f a
   Left (Right err) -> throwError err
   Left (Left err) ->
-    pure $
-      AnnotatedResponse
+    pure
+      $ AnnotatedResponse
         { arQueryType = telemType,
           arTimeIO = 0,
           arLocality = Telem.Remote,
@@ -387,8 +387,8 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
           -- If we get a cache hit, annotate the response with metadata and return it.
           ResponseCached cachedResponseData -> do
             logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindCached
-            pure $
-              AnnotatedResponse
+            pure
+              $ AnnotatedResponse
                 { arQueryType = Telem.Query,
                   arTimeIO = 0,
                   arLocality = Telem.Local,
@@ -438,9 +438,9 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
           Just (sourceConfig, resolvedConnectionTemplate, pgMutations) -> do
             res <-
               -- TODO: can this be a `catch` rather than a `runExceptT`?
-              runExceptT $
-                doQErr $
-                  runPGMutationTransaction reqId reqUnparsed userInfo logger sourceConfig resolvedConnectionTemplate pgMutations
+              runExceptT
+                $ doQErr
+                $ runPGMutationTransaction reqId reqUnparsed userInfo logger sourceConfig resolvedConnectionTemplate pgMutations
             -- we do not construct response parts since we have only one part
             buildResponse Telem.Mutation res \(telemTimeIO_DT, parts) ->
               let responseData = Right $ encJToLBS $ encodeEncJSONResults parts
@@ -533,8 +533,8 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
         doQErr $ E.execRemoteGQ env userInfo reqHeaders (rsDef rsi) gqlReq
       value <- extractFieldFromResponse fieldName resultCustomizer resp
       finalResponse <-
-        doQErr $
-          RJ.processRemoteJoins
+        doQErr
+          $ RJ.processRemoteJoins
             reqId
             logger
             agentLicenseKey
@@ -626,10 +626,12 @@ coalescePostgresMutations plan = do
   mutations <- for plan \case
     E.ExecStepDB _ exists remoteJoins -> do
       dbStepInfo <- AB.unpackAnyBackend @('Postgres 'Vanilla) exists
-      guard $
-        oneSourceName == EB.dbsiSourceName dbStepInfo
-          && isNothing remoteJoins
-          && oneResolvedConnectionTemplate == EB.dbsiResolvedConnectionTemplate dbStepInfo
+      guard
+        $ oneSourceName
+        == EB.dbsiSourceName dbStepInfo
+        && isNothing remoteJoins
+        && oneResolvedConnectionTemplate
+        == EB.dbsiResolvedConnectionTemplate dbStepInfo
       Just dbStepInfo
     _ -> Nothing
   Just (oneSourceConfig, oneResolvedConnectionTemplate, mutations)
@@ -651,7 +653,7 @@ decodeGraphQLResponse bs = do
 
 extractFieldFromResponse ::
   forall m.
-  Monad m =>
+  (Monad m) =>
   RootFieldAlias ->
   ResultCustomizer ->
   LBS.ByteString ->
@@ -667,15 +669,16 @@ extractFieldFromResponse fieldName resultCustomizer resp = do
           GraphQLResponseData d -> pure d
   dataObj <- onLeft (JO.asObject dataVal) do400
   fieldVal <-
-    onNothing (JO.lookup fieldName' dataObj) $
-      do400 $
-        "expecting key " <> fieldName'
+    onNothing (JO.lookup fieldName' dataObj)
+      $ do400
+      $ "expecting key "
+      <> fieldName'
   return fieldVal
   where
     do400 = withExceptT Right . throw400 RemoteSchemaError
     doGQExecError = withExceptT Left . throwError . GQExecError
 
-buildRaw :: Applicative m => JO.Value -> m AnnotatedResponsePart
+buildRaw :: (Applicative m) => JO.Value -> m AnnotatedResponsePart
 buildRaw json = do
   let obj = encJFromOrderedValue json
       telemTimeIO_DT = 0

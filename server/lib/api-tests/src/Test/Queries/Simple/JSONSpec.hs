@@ -28,8 +28,8 @@ import Test.Hspec (SpecWith, it)
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
-  withEachProtocol $
-    Fixture.run
+  withEachProtocol
+    $ Fixture.run
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnvironment, _) ->
@@ -51,8 +51,8 @@ spec = do
                   [ BigQuery.setupTablesAction schema testEnvironment
                   ],
                 Fixture.customOptions =
-                  Just $
-                    Fixture.defaultOptions
+                  Just
+                    $ Fixture.defaultOptions
                       { Fixture.stringifyNumbers = True
                       }
               }
@@ -69,8 +69,8 @@ schema =
       { tableColumns =
           [ Schema.column "id" Schema.TInt,
             Schema.column "name" Schema.TStr,
-            Schema.column "address" $
-              Schema.TCustomType
+            Schema.column "address"
+              $ Schema.TCustomType
                 Schema.defaultBackendScalarType
                   { Schema.bstCitus = Just "JSON",
                     Schema.bstCockroach = Just "JSON",
@@ -82,8 +82,8 @@ schema =
         tableData =
           [ [ Schema.VInt 1,
               Schema.VStr "Justin",
-              Schema.VCustomValue $
-                Schema.defaultBackendScalarValue
+              Schema.VCustomValue
+                $ Schema.defaultBackendScalarValue
                   { Schema.bsvCitus = Just (Schema.Quoted "{ \"city\": \"Bristol\" }"),
                     Schema.bsvCockroach = Just (Schema.Quoted "{ \"city\": \"Bristol\" }"),
                     Schema.bsvPostgres = Just (Schema.Quoted "{ \"city\": \"Bristol\" }"),

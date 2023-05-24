@@ -63,8 +63,8 @@ capabilities =
                   { _qcForeach = Just API.ForeachCapabilities
                   },
             API._cMutations =
-              Just $
-                API.MutationCapabilities
+              Just
+                $ API.MutationCapabilities
                   { API._mcInsertCapabilities = Just API.InsertCapabilities {API._icSupportsNestedInserts = False},
                     API._mcUpdateCapabilities = Just API.UpdateCapabilities,
                     API._mcDeleteCapabilities = Just API.DeleteCapabilities,
@@ -110,8 +110,8 @@ capabilities =
     }
   where
     scalarTypesCapabilities =
-      API.ScalarTypesCapabilities $
-        HashMap.fromList
+      API.ScalarTypesCapabilities
+        $ HashMap.fromList
           [ mkScalarTypeCapability "number" minMaxFunctions numericUpdateOperators $ Just API.GraphQLFloat,
             mkScalarTypeCapability "string" minMaxFunctions mempty $ Just API.GraphQLString,
             mkScalarTypeCapability "MyInt" mempty numericUpdateOperators $ Just API.GraphQLInt,
@@ -134,16 +134,16 @@ capabilities =
 
     minMaxFunctions :: API.ScalarType -> API.AggregateFunctions
     minMaxFunctions resultType =
-      API.AggregateFunctions $
-        HashMap.fromList $
-          (,resultType)
-            <$> [[G.name|min|], [G.name|max|]]
+      API.AggregateFunctions
+        $ HashMap.fromList
+        $ (,resultType)
+        <$> [[G.name|min|], [G.name|max|]]
 
     numericUpdateOperators :: API.ScalarType -> API.UpdateColumnOperators
     numericUpdateOperators scalarType =
-      API.UpdateColumnOperators $
-        HashMap.fromList $
-          [(API.UpdateColumnOperatorName [G.name|inc|], API.UpdateColumnOperatorDefinition scalarType)]
+      API.UpdateColumnOperators
+        $ HashMap.fromList
+        $ [(API.UpdateColumnOperatorName [G.name|inc|], API.UpdateColumnOperatorDefinition scalarType)]
 
 -- | Stock Schema for a Chinook Agent
 schema :: API.SchemaResponse
@@ -216,8 +216,8 @@ schema =
               API._tiPrimaryKey = Just $ API.ColumnName "AlbumId" :| [],
               API._tiDescription = Just "Collection of music albums created by artists",
               API._tiForeignKeys =
-                API.ForeignKeys $
-                  HashMap.singleton (API.ConstraintName "Artist") (API.Constraint (mkTableName "Artist") (HashMap.singleton (API.ColumnName "ArtistId") (API.ColumnName "ArtistId"))),
+                API.ForeignKeys
+                  $ HashMap.singleton (API.ConstraintName "Artist") (API.Constraint (mkTableName "Artist") (HashMap.singleton (API.ColumnName "ArtistId") (API.ColumnName "ArtistId"))),
               API._tiInsertable = True,
               API._tiUpdatable = True,
               API._tiDeletable = True
@@ -347,8 +347,8 @@ schema =
               API._tiPrimaryKey = Just $ API.ColumnName "CustomerId" :| [],
               API._tiDescription = Just "Collection of customers who can buy tracks",
               API._tiForeignKeys =
-                API.ForeignKeys $
-                  HashMap.singleton (API.ConstraintName "CustomerSupportRep") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "SupportRepId") (API.ColumnName "EmployeeId"))),
+                API.ForeignKeys
+                  $ HashMap.singleton (API.ConstraintName "CustomerSupportRep") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "SupportRepId") (API.ColumnName "EmployeeId"))),
               API._tiInsertable = True,
               API._tiUpdatable = True,
               API._tiDeletable = True
@@ -496,8 +496,8 @@ schema =
               API._tiPrimaryKey = Just $ API.ColumnName "EmployeeId" :| [],
               API._tiDescription = Just "Collection of employees who work for the business",
               API._tiForeignKeys =
-                API.ForeignKeys $
-                  HashMap.singleton (API.ConstraintName "EmployeeReportsTo") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "ReportsTo") (API.ColumnName "EmployeeId"))),
+                API.ForeignKeys
+                  $ HashMap.singleton (API.ConstraintName "EmployeeReportsTo") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "ReportsTo") (API.ColumnName "EmployeeId"))),
               API._tiInsertable = True,
               API._tiUpdatable = True,
               API._tiDeletable = True
@@ -621,9 +621,9 @@ schema =
               API._tiPrimaryKey = Just $ API.ColumnName "InvoiceId" :| [],
               API._tiDescription = Just "Collection of invoices of music purchases by a customer",
               API._tiForeignKeys =
-                API.ForeignKeys $
-                  HashMap.singleton (API.ConstraintName "InvoiceCustomer") $
-                    API.Constraint (mkTableName "Customer") (HashMap.singleton (API.ColumnName "CustomerId") (API.ColumnName "CustomerId")),
+                API.ForeignKeys
+                  $ HashMap.singleton (API.ConstraintName "InvoiceCustomer")
+                  $ API.Constraint (mkTableName "Customer") (HashMap.singleton (API.ColumnName "CustomerId") (API.ColumnName "CustomerId")),
               API._tiInsertable = True,
               API._tiUpdatable = True,
               API._tiDeletable = True
@@ -681,8 +681,8 @@ schema =
               API._tiPrimaryKey = Just $ API.ColumnName "InvoiceLineId" :| [],
               API._tiDescription = Just "Collection of track purchasing line items of invoices",
               API._tiForeignKeys =
-                API.ForeignKeys $
-                  HashMap.fromList
+                API.ForeignKeys
+                  $ HashMap.fromList
                     [ (API.ConstraintName "Invoice", API.Constraint (mkTableName "Invoice") (HashMap.singleton (API.ColumnName "InvoiceId") (API.ColumnName "InvoiceId"))),
                       (API.ConstraintName "Track", API.Constraint (mkTableName "Track") (HashMap.singleton (API.ColumnName "TrackId") (API.ColumnName "TrackId")))
                     ],
@@ -809,8 +809,8 @@ schema =
               API._tiPrimaryKey = Just $ API.ColumnName "TrackId" :| [],
               API._tiDescription = Just "Collection of music tracks",
               API._tiForeignKeys =
-                API.ForeignKeys $
-                  HashMap.fromList
+                API.ForeignKeys
+                  $ HashMap.fromList
                     [ (API.ConstraintName "Album", API.Constraint (mkTableName "Album") (HashMap.singleton (API.ColumnName "AlbumId") (API.ColumnName "AlbumId"))),
                       (API.ConstraintName "Genre", API.Constraint (mkTableName "Genre") (HashMap.singleton (API.ColumnName "GenreId") (API.ColumnName "GenreId"))),
                       (API.ConstraintName "MediaType", API.Constraint (mkTableName "MediaType") (HashMap.singleton (API.ColumnName "MediaTypeId") (API.ColumnName "MediaTypeId")))

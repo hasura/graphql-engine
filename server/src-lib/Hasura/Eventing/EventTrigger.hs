@@ -168,11 +168,11 @@ data EventPayload (b :: BackendType) = EventPayload
   }
   deriving (Generic)
 
-deriving instance Backend b => Show (EventPayload b)
+deriving instance (Backend b) => Show (EventPayload b)
 
-deriving instance Backend b => Eq (EventPayload b)
+deriving instance (Backend b) => Eq (EventPayload b)
 
-instance Backend b => J.ToJSON (EventPayload b) where
+instance (Backend b) => J.ToJSON (EventPayload b) where
   toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
 
 defaultMaxEventThreads :: Refined Positive Int
@@ -181,26 +181,28 @@ defaultMaxEventThreads = unsafeRefine 100
 defaultFetchInterval :: DiffTime
 defaultFetchInterval = seconds 1
 
-initEventEngineCtx :: MonadIO m => Refined Positive Int -> Refined NonNegative Milliseconds -> Refined NonNegative Int -> m EventEngineCtx
+initEventEngineCtx :: (MonadIO m) => Refined Positive Int -> Refined NonNegative Milliseconds -> Refined NonNegative Int -> m EventEngineCtx
 initEventEngineCtx maxThreads fetchInterval _eeCtxFetchSize = do
   _eeCtxEventThreadsCapacity <- liftIO $ newTVarIO $ unrefine maxThreads
   let _eeCtxFetchInterval = milliseconds $ unrefine fetchInterval
   return EventEngineCtx {..}
 
-saveLockedEventTriggerEvents :: MonadIO m => SourceName -> [EventId] -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()
+saveLockedEventTriggerEvents :: (MonadIO m) => SourceName -> [EventId] -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()
 saveLockedEventTriggerEvents sourceName eventIds lockedEvents =
-  liftIO $
-    atomically $ do
+  liftIO
+    $ atomically
+    $ do
       lockedEventsVals <- readTVar lockedEvents
       case HashMap.lookup sourceName lockedEventsVals of
         Nothing -> writeTVar lockedEvents $! HashMap.singleton sourceName (Set.fromList eventIds)
         Just _ -> writeTVar lockedEvents $! HashMap.insertWith Set.union sourceName (Set.fromList eventIds) lockedEventsVals
 
 removeEventTriggerEventFromLockedEvents ::
-  MonadIO m => SourceName -> EventId -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()
+  (MonadIO m) => SourceName -> EventId -> TVar (HashMap SourceName (Set.Set EventId)) -> m ()
 removeEventTriggerEventFromLockedEvents sourceName eventId lockedEvents =
-  liftIO $
-    atomically $ do
+  liftIO
+    $ atomically
+    $ do
       lockedEventsVals <- readTVar lockedEvents
       writeTVar lockedEvents $! HashMap.adjust (Set.delete eventId) sourceName lockedEventsVals
 
@@ -267,8 +269,8 @@ logFetchedEventsStatistics logger backendEvents =
   L.logStats logger (FetchedEventsStats numEventsFetchedPerSource 1)
   where
     numEventsFetchedPerSource =
-      let sourceNames = flip map backendEvents $
-            \backendEvent -> AB.dispatchAnyBackend @Backend backendEvent _ewsSourceName
+      let sourceNames = flip map backendEvents
+            $ \backendEvent -> AB.dispatchAnyBackend @Backend backendEvent _ewsSourceName
        in NumEventsFetchedPerSource $ HashMap.fromListWith (+) [(sourceName, 1) | sourceName <- sourceNames]
 
 {-# ANN processEventQueue ("HLint: ignore Use withAsync" :: String) #-}
@@ -326,7 +328,9 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
       -}
       allSources <- scSources <$> liftIO getSchemaCache
       fetchBatchSize <- unrefine . _eeCtxFetchSize <$> liftIO getEventEngineCtx
-      events <- liftIO . fmap concat $
+      events <- liftIO
+        . fmap concat
+        $
         -- fetch pending events across all the sources asynchronously
         LA.forConcurrently (HashMap.toList allSources) \(sourceName, sourceCache) ->
           AB.dispatchAnyBackend @BackendEventTrigger sourceCache \(SourceInfo {..} :: SourceInfo b) -> do
@@ -387,8 +391,9 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
           -- depends on not putting anything that can throw in the body here:
           AB.dispatchAnyBackend @BackendEventTrigger eventWithSource \(eventWithSource' :: EventWithSource b) ->
             mask_ $ do
-              liftIO $
-                atomically $ do
+              liftIO
+                $ atomically
+                $ do
                   -- block until < HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE threads:
                   maxCapacity <- readTVar _eeCtxEventThreadsCapacity
                   activeThreadCount <- readTVar activeEventProcessingThreads
@@ -396,12 +401,12 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                   modifyTVar' activeEventProcessingThreads (+ 1)
               -- since there is some capacity in our worker threads, we can launch another:
               t <-
-                LA.async $
-                  flip runReaderT (logger, httpMgr) $
-                    processEvent eventWithSource'
-                      `finally`
-                      -- NOTE!: this needs to happen IN THE FORKED THREAD:
-                      decrementActiveThreadCount
+                LA.async
+                  $ flip runReaderT (logger, httpMgr)
+                  $ processEvent eventWithSource'
+                  `finally`
+                  -- NOTE!: this needs to happen IN THE FORKED THREAD:
+                  decrementActiveThreadCount
               LA.link t
 
         -- return when next batch ready; some 'processEvent' threads may be running.
@@ -409,47 +414,53 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
 
       let lenEvents = length events
       if
-          | lenEvents == fetchBatchSize -> do
-              -- If we've seen N fetches in a row from the DB come back full (i.e. only limited
-              -- by our LIMIT clause), then we say we're clearly falling behind:
-              let clearlyBehind = fullFetchCount >= 3
-              unless alreadyWarned $
-                when clearlyBehind $
-                  L.unLogger logger $
-                    L.UnstructuredLog L.LevelWarn $
-                      fromString $
-                        "Events processor may not be keeping up with events generated in postgres, "
-                          <> "or we're working on a backlog of events. Consider increasing "
-                          <> "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-              return (eventsNext, (fullFetchCount + 1), (alreadyWarned || clearlyBehind))
-          | otherwise -> do
-              when (lenEvents /= fetchBatchSize && alreadyWarned) $
-                -- emit as warning in case users are only logging warning severity and saw above
-                L.unLogger logger $
-                  L.UnstructuredLog L.LevelWarn $
-                    fromString $
-                      "It looks like the events processor is keeping up again."
-              return (eventsNext, 0, False)
+        | lenEvents == fetchBatchSize -> do
+            -- If we've seen N fetches in a row from the DB come back full (i.e. only limited
+            -- by our LIMIT clause), then we say we're clearly falling behind:
+            let clearlyBehind = fullFetchCount >= 3
+            unless alreadyWarned
+              $ when clearlyBehind
+              $ L.unLogger logger
+              $ L.UnstructuredLog L.LevelWarn
+              $ fromString
+              $ "Events processor may not be keeping up with events generated in postgres, "
+              <> "or we're working on a backlog of events. Consider increasing "
+              <> "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+            return (eventsNext, (fullFetchCount + 1), (alreadyWarned || clearlyBehind))
+        | otherwise -> do
+            when (lenEvents /= fetchBatchSize && alreadyWarned)
+              $
+              -- emit as warning in case users are only logging warning severity and saw above
+              L.unLogger logger
+              $ L.UnstructuredLog L.LevelWarn
+              $ fromString
+              $ "It looks like the events processor is keeping up again."
+            return (eventsNext, 0, False)
 
     decrementActiveThreadCount =
-      liftIO $
-        atomically $
-          modifyTVar' activeEventProcessingThreads (subtract 1)
+      liftIO
+        $ atomically
+        $ modifyTVar' activeEventProcessingThreads (subtract 1)
 
     -- \| Extract a trace context from an event trigger payload.
-    extractEventContext :: forall io. MonadIO io => J.Value -> io (Maybe Tracing.TraceContext)
+    extractEventContext :: forall io. (MonadIO io) => J.Value -> io (Maybe Tracing.TraceContext)
     extractEventContext e = do
       let traceIdMaybe =
-            Tracing.traceIdFromHex . txtToBs
-              =<< e ^? JL.key "trace_context" . JL.key "trace_id" . JL._String
+            Tracing.traceIdFromHex
+              . txtToBs
+              =<< e
+              ^? JL.key "trace_context" . JL.key "trace_id" . JL._String
       for traceIdMaybe $ \traceId -> do
         freshSpanId <- Tracing.randomSpanId
         let parentSpanId =
-              Tracing.spanIdFromHex . txtToBs
-                =<< e ^? JL.key "trace_context" . JL.key "span_id" . JL._String
+              Tracing.spanIdFromHex
+                . txtToBs
+                =<< e
+                ^? JL.key "trace_context" . JL.key "span_id" . JL._String
             samplingState =
-              Tracing.samplingStateFromHeader $
-                e ^? JL.key "trace_context" . JL.key "sampling_state" . JL._String
+              Tracing.samplingStateFromHeader
+                $ e
+                ^? JL.key "trace_context" . JL.key "sampling_state" . JL._String
         pure $ Tracing.TraceContext traceId freshSpanId parentSpanId samplingState
 
     processEvent ::
@@ -474,8 +485,8 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
       eventProcessTime <- liftIO getCurrentTime
       let eventQueueTime = realToFrac $ diffUTCTime eventProcessTime eventFetchedTime
       _ <- liftIO $ EKG.Distribution.add (smEventQueueTime serverMetrics) eventQueueTime
-      liftIO $
-        observeHistogramWithLabel
+      liftIO
+        $ observeHistogramWithLabel
           getPrometheusMetricsGranularity
           True
           (eventQueueTimeSeconds eventTriggerMetrics)
@@ -526,8 +537,9 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                   eventTriggerProcessAction = do
                     eventExecutionStartTime <- liftIO getCurrentTime
                     eitherReqRes <-
-                      runExceptT $
-                        mkRequest headers httpTimeout payload requestTransform (_envVarValue webhook) >>= \reqDetails -> do
+                      runExceptT
+                        $ mkRequest headers httpTimeout payload requestTransform (_envVarValue webhook)
+                        >>= \reqDetails -> do
                           let request = extractRequest reqDetails
                               logger' res details = do
                                 logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders
@@ -601,8 +613,8 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                             (EventStatusWithTriggerLabel eventSuccessLabel (Just (DynamicEventTriggerLabel (etiName eti) sourceName)))
                       Left eventError -> do
                         -- TODO (paritosh): We can also add a label to the metric to indicate the type of error
-                        liftIO $
-                          incEventTriggerCounterWithLabel
+                        liftIO
+                          $ incEventTriggerCounterWithLabel
                             getPrometheusMetricsGranularity
                             True
                             (eventInvocationTotal eventTriggerMetrics)
@@ -711,8 +723,8 @@ retryOrSetError e retryConf eventTriggerMetrics err = do
   -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
   if triesExhausted && noRetryHeader
     then do
-      liftIO $
-        incEventTriggerCounterWithLabel
+      liftIO
+        $ incEventTriggerCounterWithLabel
           getPrometheusMetricsGranularity
           True
           (eventProcessedTotal eventTriggerMetrics)
@@ -758,19 +770,20 @@ logQErr err = do
   L.unLogger logger $ EventInternalErr err
 
 getEventTriggerInfoFromEvent ::
-  forall b. Backend b => SchemaCache -> Event b -> Either Text (EventTriggerInfo b)
+  forall b. (Backend b) => SchemaCache -> Event b -> Either Text (EventTriggerInfo b)
 getEventTriggerInfoFromEvent sc e = do
   let table = eTable e
       mTableInfo = unsafeTableInfo @b (eSource e) table $ scSources sc
   tableInfo <- onNothing mTableInfo $ Left ("table '" <> table <<> "' not found")
   let triggerName = tmName $ eTrigger e
       mEventTriggerInfo = HashMap.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
-  onNothing mEventTriggerInfo $
-    Left
+  onNothing mEventTriggerInfo
+    $ Left
       ( "event trigger '"
           <> triggerNameToTxt triggerName
           <> "' on table '"
-          <> table <<> "' not found"
+          <> table
+          <<> "' not found"
       )
 
 incEventTriggerCounterWithLabel ::

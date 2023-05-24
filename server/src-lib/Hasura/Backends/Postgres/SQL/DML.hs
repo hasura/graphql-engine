@@ -281,8 +281,8 @@ mkRowExp extrs =
         mkSelect
           { selExtr = [Extractor (SERowIdentifier $ toIdentifier innerSelName) Nothing],
             selFrom =
-              Just $
-                FromExp
+              Just
+                $ FromExp
                   [mkSelFromExp False innerSel innerSelName]
           }
    in SESelect outerSel
@@ -349,7 +349,7 @@ mkQIdentifier q t = QIdentifier (QualifiedIdentifier q Nothing) (toIdentifier t)
 mkQIdentifierTable :: (IsIdentifier a) => QualifiedTable -> a -> QIdentifier
 mkQIdentifierTable q = QIdentifier (mkQual q) . toIdentifier
 
-mkIdentifierSQLExp :: forall a. IsIdentifier a => Qual -> a -> SQLExp
+mkIdentifierSQLExp :: forall a. (IsIdentifier a) => Qual -> a -> SQLExp
 mkIdentifierSQLExp q = SEQIdentifier . QIdentifier q . toIdentifier
 
 data QIdentifier
@@ -686,8 +686,8 @@ instance Hashable FunctionArgs
 
 instance ToSQL FunctionArgs where
   toSQL (FunctionArgs positionalArgs namedArgsMap) =
-    let namedArgs = flip map (HashMap.toList namedArgsMap) $
-          \(argName, argVal) -> SENamedArg (Identifier argName) argVal
+    let namedArgs = flip map (HashMap.toList namedArgsMap)
+          $ \(argName, argVal) -> SENamedArg (Identifier argName) argVal
      in parenB $ ", " <+> (positionalArgs <> namedArgs)
 
 data FunctionDefinitionListItem = FunctionDefinitionListItem
@@ -729,8 +729,8 @@ functionNameToTableAlias = mkTableAlias . qualifiedObjectToText
 --   Using the function name as the relation name, and the columns as the relation schema.
 mkFunctionAlias :: QualifiedObject FunctionName -> Maybe [(ColumnAlias, PGScalarType)] -> FunctionAlias
 mkFunctionAlias alias listM =
-  FunctionAlias (functionNameToTableAlias alias) $
-    fmap (map (uncurry FunctionDefinitionListItem)) listM
+  FunctionAlias (functionNameToTableAlias alias)
+    $ fmap (map (uncurry FunctionDefinitionListItem)) listM
 
 instance ToSQL FunctionAlias where
   toSQL (FunctionAlias tableAlias (Just definitionList)) =
@@ -899,16 +899,16 @@ simplifyBoolExp be = case be of
     let e1s = simplifyBoolExp e1
         e2s = simplifyBoolExp e2
      in if
-            | e1s == BELit True -> e2s
-            | e2s == BELit True -> e1s
-            | otherwise -> BEBin AndOp e1s e2s
+          | e1s == BELit True -> e2s
+          | e2s == BELit True -> e1s
+          | otherwise -> BEBin AndOp e1s e2s
   BEBin OrOp e1 e2 ->
     let e1s = simplifyBoolExp e1
         e2s = simplifyBoolExp e2
      in if
-            | e1s == BELit False -> e2s
-            | e2s == BELit False -> e1s
-            | otherwise -> BEBin OrOp e1s e2s
+          | e1s == BELit False -> e2s
+          | e2s == BELit False -> e1s
+          | otherwise -> BEBin OrOp e1s e2s
   e -> e
 
 mkExists :: FromItem -> BoolExp -> BoolExp
@@ -1045,10 +1045,11 @@ buildUpsertSetExp ::
 buildUpsertSetExp cols preSet =
   SetExp $ map SetExpItem $ HashMap.toList setExps
   where
-    setExps = HashMap.union preSet $
-      HashMap.fromList $
-        flip map cols $ \col ->
-          (col, SEExcluded $ toIdentifier col)
+    setExps = HashMap.union preSet
+      $ HashMap.fromList
+      $ flip map cols
+      $ \col ->
+        (col, SEExcluded $ toIdentifier col)
 
 newtype UsingExp = UsingExp [TableName]
   deriving (Show, Eq)

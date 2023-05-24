@@ -170,8 +170,8 @@ buildRebuildableSchemaCacheWithReason ::
   CacheBuild RebuildableSchemaCache
 buildRebuildableSchemaCacheWithReason reason logger env metadataWithVersion dynamicConfig mSchemaRegistryContext = do
   result <-
-    flip runReaderT reason $
-      Inc.build (buildSchemaCacheRule logger env mSchemaRegistryContext) (metadataWithVersion, dynamicConfig, initialInvalidationKeys, Nothing)
+    flip runReaderT reason
+      $ Inc.build (buildSchemaCacheRule logger env mSchemaRegistryContext) (metadataWithVersion, dynamicConfig, initialInvalidationKeys, Nothing)
 
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
@@ -250,9 +250,9 @@ instance
         newInvalidationKeys = invalidateKeys invalidations invalidationKeys
     storedIntrospection <- onLeftM (fetchSourceIntrospection metadataVersion) (\_ -> pure Nothing)
     result <-
-      runCacheBuildM $
-        flip runReaderT buildReason $
-          Inc.build rule (metadataWithVersion, dynamicConfig, newInvalidationKeys, storedIntrospection)
+      runCacheBuildM
+        $ flip runReaderT buildReason
+        $ Inc.build rule (metadataWithVersion, dynamicConfig, newInvalidationKeys, storedIntrospection)
     let schemaCache = Inc.result result
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
@@ -505,8 +505,8 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       (BackendConfigWrapper b, Inc.Dependency (BackendMap BackendInvalidationKeysWrapper)) `arr` BackendCache
     resolveBackendInfo' = proc (backendConfigWrapper, backendInvalidationMap) -> do
       let backendInvalidationKeys =
-            Inc.selectMaybeD #unBackendInvalidationKeysWrapper $
-              BackendMap.lookupD @b backendInvalidationMap
+            Inc.selectMaybeD #unBackendInvalidationKeysWrapper
+              $ BackendMap.lookupD @b backendInvalidationMap
       backendInfo <- resolveBackendInfo @b logger -< (backendInvalidationKeys, unBackendConfigWrapper backendConfigWrapper)
       returnA -< BackendMap.singleton (BackendInfoWrapper @b backendInfo)
 
@@ -561,7 +561,8 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
         withRecordInconsistency
           ( bindErrorA -< ExceptT $ resolveSourceConfig @b sourceName sourceConfig backendKind backendInfo env httpMgr
           )
-        |) metadataObj
+        |)
+        metadataObj
 
     tryResolveSource ::
       forall b arr m.
@@ -647,32 +648,33 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                           readOnlyMode = _cscReadOnlyMode cacheStaticConfig
 
                       if
-                          -- when safe mode is enabled, don't perform any migrations
-                          | readOnlyMode == ReadOnlyModeEnabled -> pure (RETDoNothing, SCMSMigrationOnHold "read-only mode enabled")
-                          -- when eventing mode is disabled, don't perform any migrations
-                          | eventingMode == EventingDisabled -> pure (RETDoNothing, SCMSMigrationOnHold "eventing mode disabled")
-                          -- when maintenance mode is enabled, don't perform any migrations
-                          | maintenanceMode == (MaintenanceModeEnabled ()) -> pure (RETDoNothing, SCMSMigrationOnHold "maintenance mode enabled")
-                          | otherwise -> do
-                              -- The `initCatalogForSource` action is retried here because
-                              -- in cloud there will be multiple workers (graphql-engine instances)
-                              -- trying to migrate the source catalog, when needed. This introduces
-                              -- a race condition as both the workers try to migrate the source catalog
-                              -- concurrently and when one of them succeeds the other ones will fail
-                              -- and be in an inconsistent state. To avoid the inconsistency, we retry
-                              -- migrating the catalog on error and in the retry `initCatalogForSource`
-                              -- will see that the catalog is already migrated, so it won't attempt the
-                              -- migration again
-                              liftEither
-                                =<< Retry.retrying
-                                  ( Retry.constantDelay (fromIntegral $ diffTimeToMicroSeconds $ seconds $ Seconds 10)
-                                      <> Retry.limitRetries 3
-                                  )
-                                  (const $ return . isLeft)
-                                  (const $ runExceptT $ prepareCatalog @b sourceConfig)
+                        -- when safe mode is enabled, don't perform any migrations
+                        | readOnlyMode == ReadOnlyModeEnabled -> pure (RETDoNothing, SCMSMigrationOnHold "read-only mode enabled")
+                        -- when eventing mode is disabled, don't perform any migrations
+                        | eventingMode == EventingDisabled -> pure (RETDoNothing, SCMSMigrationOnHold "eventing mode disabled")
+                        -- when maintenance mode is enabled, don't perform any migrations
+                        | maintenanceMode == (MaintenanceModeEnabled ()) -> pure (RETDoNothing, SCMSMigrationOnHold "maintenance mode enabled")
+                        | otherwise -> do
+                            -- The `initCatalogForSource` action is retried here because
+                            -- in cloud there will be multiple workers (graphql-engine instances)
+                            -- trying to migrate the source catalog, when needed. This introduces
+                            -- a race condition as both the workers try to migrate the source catalog
+                            -- concurrently and when one of them succeeds the other ones will fail
+                            -- and be in an inconsistent state. To avoid the inconsistency, we retry
+                            -- migrating the catalog on error and in the retry `initCatalogForSource`
+                            -- will see that the catalog is already migrated, so it won't attempt the
+                            -- migration again
+                            liftEither
+                              =<< Retry.retrying
+                                ( Retry.constantDelay (fromIntegral $ diffTimeToMicroSeconds $ seconds $ Seconds 10)
+                                    <> Retry.limitRetries 3
+                                )
+                                (const $ return . isLeft)
+                                (const $ runExceptT $ prepareCatalog @b sourceConfig)
                     else pure (RETDoNothing, SCMSUninitializedSource)
             )
-          |) (concatMap (\(tableName, events) -> map (mkEventTriggerMetadataObject' sourceName tableName) events) eventTriggers)
+          |)
+          (concatMap (\(tableName, events) -> map (mkEventTriggerMetadataObject' sourceName tableName) events) eventTriggers)
 
       case res of
         Nothing ->
@@ -720,8 +722,8 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       -- permissions
       result <-
         interpretWriter
-          -< runExceptT $
-            for
+          -< runExceptT
+            $ for
               (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` eventTriggerInfoMaps)
               \((tableCoreInfo, permissionInputs), eventTriggerInfos) -> do
                 let tableFields = _tciFieldInfoMap tableCoreInfo
@@ -759,15 +761,15 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                     definition = TrackFunction @b qf
                     metadataObject =
                       MetadataObject
-                        ( MOSourceObjId sourceName $
-                            AB.mkAnyBackend $
-                              SMOFunction @b qf
+                        ( MOSourceObjId sourceName
+                            $ AB.mkAnyBackend
+                            $ SMOFunction @b qf
                         )
                         (toJSON definition)
                     schemaObject =
-                      SOSourceObj sourceName $
-                        AB.mkAnyBackend $
-                          SOIFunction @b qf
+                      SOSourceObj sourceName
+                        $ AB.mkAnyBackend
+                        $ SOIFunction @b qf
                     addFunctionContext e = "in function " <> qf <<> ": " <> e
                     metadataPermissions = mapFromL _fpmRole functionPermissions
                     permissionsMap = mkBooleanPermissionMap FunctionPermissionInfo metadataPermissions orderedRoles
@@ -787,9 +789,9 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       let mkLogicalModelMetadataObject :: LogicalModelMetadata b -> MetadataObject
           mkLogicalModelMetadataObject lmm =
             ( MetadataObject
-                ( MOSourceObjId sourceName $
-                    AB.mkAnyBackend $
-                      SMOLogicalModel @b (_lmmName lmm)
+                ( MOSourceObjId sourceName
+                    $ AB.mkAnyBackend
+                    $ SMOLogicalModel @b (_lmmName lmm)
                 )
                 (toJSON lmm)
             )
@@ -825,39 +827,39 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
               let metadataObject :: MetadataObject
                   metadataObject =
                     MetadataObject
-                      ( MOSourceObjId sourceName $
-                          AB.mkAnyBackend $
-                            SMONativeQuery @b _nqmRootFieldName
+                      ( MOSourceObjId sourceName
+                          $ AB.mkAnyBackend
+                          $ SMONativeQuery @b _nqmRootFieldName
                       )
                       (toJSON nqm)
 
                   schemaObjId :: SchemaObjId
                   schemaObjId =
-                    SOSourceObj sourceName $
-                      AB.mkAnyBackend $
-                        SOINativeQuery @b _nqmRootFieldName
+                    SOSourceObj sourceName
+                      $ AB.mkAnyBackend
+                      $ SOINativeQuery @b _nqmRootFieldName
 
                   dependency :: SchemaDependency
                   dependency =
                     SchemaDependency
                       { sdObjId =
-                          SOSourceObj sourceName $
-                            AB.mkAnyBackend $
-                              SOILogicalModel @b _nqmReturns,
+                          SOSourceObj sourceName
+                            $ AB.mkAnyBackend
+                            $ SOILogicalModel @b _nqmReturns,
                         sdReason = DRLogicalModel
                       }
 
               withRecordInconsistencyM metadataObject $ do
-                unless (_cscAreNativeQueriesEnabled cacheStaticConfig) $
-                  throw400 InvalidConfiguration "The Native Queries feature is disabled"
+                unless (_cscAreNativeQueriesEnabled cacheStaticConfig)
+                  $ throw400 InvalidConfiguration "The Native Queries feature is disabled"
 
                 logicalModel <-
                   onNothing
                     (HashMap.lookup _nqmReturns logicalModelsCache)
                     (throw400 InvalidConfiguration ("The logical model " <> toTxt _nqmReturns <> " could not be found"))
 
-                recordDependenciesM metadataObject schemaObjId $
-                  Seq.singleton dependency
+                recordDependenciesM metadataObject schemaObjId
+                  $ Seq.singleton dependency
 
                 arrayRelationships <-
                   traverse
@@ -870,9 +872,9 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                     _nqmObjectRelationships
 
                 let sourceObject =
-                      SOSourceObj sourceName $
-                        AB.mkAnyBackend $
-                          SOINativeQuery @b _nqmRootFieldName
+                      SOSourceObj sourceName
+                        $ AB.mkAnyBackend
+                        $ SOINativeQuery @b _nqmRootFieldName
 
                 let dependencies =
                       mconcat (snd <$> InsOrdHashMap.elems arrayRelationships)
@@ -901,39 +903,39 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
               let metadataObject :: MetadataObject
                   metadataObject =
                     MetadataObject
-                      ( MOSourceObjId sourceName $
-                          AB.mkAnyBackend $
-                            SMOStoredProcedure @b _spmStoredProcedure
+                      ( MOSourceObjId sourceName
+                          $ AB.mkAnyBackend
+                          $ SMOStoredProcedure @b _spmStoredProcedure
                       )
                       (toJSON spm)
 
                   schemaObjId :: SchemaObjId
                   schemaObjId =
-                    SOSourceObj sourceName $
-                      AB.mkAnyBackend $
-                        SOIStoredProcedure @b _spmStoredProcedure
+                    SOSourceObj sourceName
+                      $ AB.mkAnyBackend
+                      $ SOIStoredProcedure @b _spmStoredProcedure
 
                   dependency :: SchemaDependency
                   dependency =
                     SchemaDependency
                       { sdObjId =
-                          SOSourceObj sourceName $
-                            AB.mkAnyBackend $
-                              SOILogicalModel @b _spmReturns,
+                          SOSourceObj sourceName
+                            $ AB.mkAnyBackend
+                            $ SOILogicalModel @b _spmReturns,
                         sdReason = DRLogicalModel
                       }
 
               withRecordInconsistencyM metadataObject $ do
-                unless (_cscAreStoredProceduresEnabled cacheStaticConfig) $
-                  throw400 InvalidConfiguration "The Stored Procedure feature is disabled"
+                unless (_cscAreStoredProceduresEnabled cacheStaticConfig)
+                  $ throw400 InvalidConfiguration "The Stored Procedure feature is disabled"
 
                 logicalModel <-
                   onNothing
                     (HashMap.lookup _spmReturns logicalModelsCache)
                     (throw400 InvalidConfiguration ("The logical model " <> toTxt _spmReturns <> " could not be found"))
 
-                recordDependenciesM metadataObject schemaObjId $
-                  Seq.singleton dependency
+                recordDependenciesM metadataObject schemaObjId
+                  $ Seq.singleton dependency
 
                 graphqlName <- getStoredProcedureGraphqlName @b _spmStoredProcedure _spmConfig
 
@@ -977,16 +979,17 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       let actionRoles = map _apmRole . _amPermissions =<< InsOrdHashMap.elems actions
           remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< InsOrdHashMap.elems remoteSchemas
           sourceRoles =
-            HS.fromList $
-              concat $
-                InsOrdHashMap.elems sources >>= \(BackendSourceMetadata e) ->
-                  AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _nativeQueries _storedProcedures _logicalModels _ _ _ _) -> do
-                    table <- InsOrdHashMap.elems tables
-                    pure $
-                      InsOrdHashMap.keys (_tmInsertPermissions table)
-                        <> InsOrdHashMap.keys (_tmSelectPermissions table)
-                        <> InsOrdHashMap.keys (_tmUpdatePermissions table)
-                        <> InsOrdHashMap.keys (_tmDeletePermissions table)
+            HS.fromList
+              $ concat
+              $ InsOrdHashMap.elems sources
+              >>= \(BackendSourceMetadata e) ->
+                AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _nativeQueries _storedProcedures _logicalModels _ _ _ _) -> do
+                  table <- InsOrdHashMap.elems tables
+                  pure
+                    $ InsOrdHashMap.keys (_tmInsertPermissions table)
+                    <> InsOrdHashMap.keys (_tmSelectPermissions table)
+                    <> InsOrdHashMap.keys (_tmUpdatePermissions table)
+                    <> InsOrdHashMap.keys (_tmDeletePermissions table)
           inheritedRoleNames = InsOrdHashMap.keys inheritedRoles
           allRoleNames = sourceRoles <> HS.fromList (remoteSchemaRoles <> actionRoles <> inheritedRoleNames)
 
@@ -1058,18 +1061,20 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                                 ( \_ (tableCoreInfo, (_, eventTriggerConfs)) ->
                                     buildTableEventTriggers -< (dynamicConfig, sourceName, sourceConfig, tableCoreInfo, eventTriggerConfs, metadataInvalidationKey, recreateEventTriggers)
                                 )
-                              |) (tablesCoreInfo `alignTableMap` mapFromL fst eventTriggers)
+                              |)
+                              (tablesCoreInfo `alignTableMap` mapFromL fst eventTriggers)
 
                           returnA
                             -<
-                              Just $
-                                AB.mkAnyBackend @b $
-                                  PartiallyResolvedSource sourceMetadata sourceConfig source tablesCoreInfo eventTriggerInfoMaps
+                              Just
+                                $ AB.mkAnyBackend @b
+                                $ PartiallyResolvedSource sourceMetadata sourceConfig source tablesCoreInfo eventTriggerInfoMaps
                   )
                   -<
                     (exists, (dynamicConfig, invalidationKeys, storedIntrospection, defaultNC, isNamingConventionEnabled))
             )
-          |) (HashMap.fromList $ InsOrdHashMap.toList backendInfoAndSourceMetadata)
+          |)
+          (HashMap.fromList $ InsOrdHashMap.toList backendInfoAndSourceMetadata)
       let partiallyResolvedSources = catMaybes partiallyResolvedSourcesMaybes
 
       -- then we can build the entire source output
@@ -1111,7 +1116,8 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                       (dynamicConfig, partiallyResolvedSources, remoteSchemaCtxMap, orderedRoles)
                     )
             )
-          |) partiallyResolvedSources
+          |)
+          partiallyResolvedSources
 
       remoteSchemaCache <-
         interpretWriter
@@ -1130,8 +1136,8 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                 sourcesCache = HashMap.map fst sourcesOutput
                 actionList = InsOrdHashMap.elems actions
             maybeResolvedCustomTypes <-
-              withRecordInconsistencyM (MetadataObject MOCustomTypes $ toJSON customTypes) $
-                resolveCustomTypes sourcesCache customTypes scalarsMap
+              withRecordInconsistencyM (MetadataObject MOCustomTypes $ toJSON customTypes)
+                $ resolveCustomTypes sourcesCache customTypes scalarsMap
             case maybeResolvedCustomTypes of
               Just resolvedCustomTypes -> do
                 actionCache' <- buildActions resolvedCustomTypes scalarsMap orderedRoles actionList
@@ -1162,16 +1168,16 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
     buildOpenTelemetry OpenTelemetryConfig {..} = do
       -- Always perform validation, even if OpenTelemetry is disabled
       mOtelExporterInfo <-
-        fmap join $
-          withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectExporterOtlp) (toJSON _ocExporterOtlp)) $
-            liftEither $
-              parseOtelExporterConfig _ocStatus env _ocExporterOtlp
+        fmap join
+          $ withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectExporterOtlp) (toJSON _ocExporterOtlp))
+          $ liftEither
+          $ parseOtelExporterConfig _ocStatus env _ocExporterOtlp
       mOtelBatchSpanProcessorInfo <-
-        withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectBatchSpanProcessor) (toJSON _ocBatchSpanProcessor)) $
-          liftEither $
-            parseOtelBatchSpanProcessorConfig _ocBatchSpanProcessor
-      pure $
-        case _ocStatus of
+        withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectBatchSpanProcessor) (toJSON _ocBatchSpanProcessor))
+          $ liftEither
+          $ parseOtelBatchSpanProcessorConfig _ocBatchSpanProcessor
+      pure
+        $ case _ocStatus of
           OtelDisabled ->
             -- Disable all components if OpenTelemetry export not enabled
             OpenTelemetryInfo Nothing Nothing
@@ -1213,11 +1219,11 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       listedQuery <-
         flip
           onNothing
-          ( throw400 NotExists $
-              "query with name "
-                <> toTxt queryName
-                <> " does not exist in collection "
-                <> toTxt collName
+          ( throw400 NotExists
+              $ "query with name "
+              <> toTxt queryName
+              <> " does not exist in collection "
+              <> toTxt collName
           )
           $ find ((== queryName) . _lqName) (_cdQueries (_ccDefinition collection))
 
@@ -1251,11 +1257,11 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       MetadataObject
     mkEventTriggerMetadataObject' source table eventTriggerConf =
       let objectId =
-            MOSourceObjId source $
-              AB.mkAnyBackend $
-                SMOTableObj @b table $
-                  MTOTrigger $
-                    etcName eventTriggerConf
+            MOSourceObjId source
+              $ AB.mkAnyBackend
+              $ SMOTableObj @b table
+              $ MTOTrigger
+              $ etcName eventTriggerConf
           definition = object ["table" .= table, "configuration" .= eventTriggerConf]
        in MetadataObject objectId definition
 
@@ -1303,10 +1309,10 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
               triggerOnReplication = etcTriggerOnReplication eventTriggerConf
               metadataObject = mkEventTriggerMetadataObject' @b source table eventTriggerConf
               schemaObjectId =
-                SOSourceObj source $
-                  AB.mkAnyBackend $
-                    SOITableObj @b table $
-                      TOTrigger triggerName
+                SOSourceObj source
+                  $ AB.mkAnyBackend
+                  $ SOITableObj @b table
+                  $ TOTrigger triggerName
               addTriggerContext e = "in event trigger " <> triggerName <<> ": " <> e
           buildReason <- bindA -< ask
           let reloadMetadataRecreateEventTrigger =
@@ -1324,28 +1330,31 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                           CatalogUpdate _ -> True
                           CatalogSync -> False
                       tableColumns = HashMap.elems $ _tciFieldInfoMap tableInfo
-                  if ( _cscMaintenanceMode staticConfig == MaintenanceModeDisabled
-                         && _cscReadOnlyMode staticConfig == ReadOnlyModeDisabled
+                  if ( _cscMaintenanceMode staticConfig
+                         == MaintenanceModeDisabled
+                         && _cscReadOnlyMode staticConfig
+                         == ReadOnlyModeDisabled
                      )
                     then do
                       bindErrorA
                         -<
-                          when (reloadMetadataRecreateEventTrigger == RETRecreate) $
+                          when (reloadMetadataRecreateEventTrigger == RETRecreate)
+                            $
                             -- This is the case when the user sets `recreate_event_triggers`
                             -- to `true` in `reload_metadata`, in this case, we recreate
                             -- the SQL trigger by force, even if it may not be necessary
                             -- TODO: Should we also mark the event trigger as inconsistent here?
-                            liftEitherM $
-                              createTableEventTrigger
-                                @b
-                                (_cdcSQLGenCtx dynamicConfig)
-                                sourceConfig
-                                table
-                                tableColumns
-                                triggerName
-                                triggerOnReplication
-                                (etcDefinition eventTriggerConf)
-                                (_tciPrimaryKey tableInfo)
+                            liftEitherM
+                            $ createTableEventTrigger
+                              @b
+                              (_cdcSQLGenCtx dynamicConfig)
+                              sourceConfig
+                              table
+                              tableColumns
+                              triggerName
+                              triggerOnReplication
+                              (etcDefinition eventTriggerConf)
+                              (_tciPrimaryKey tableInfo)
                       if isCatalogUpdate || migrationRecreateEventTriggers == RETRecreate
                         then do
                           recreateTriggerIfNeeded
@@ -1377,7 +1386,8 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                   recordDependencies -< (metadataObject, schemaObjectId, dependencies)
                   returnA -< info
               )
-            |) metadataObject
+            |)
+            metadataObject
 
         recreateTriggerIfNeeded =
           -- using `Inc.cache` here means that the response will be cached for the given output and the
@@ -1397,8 +1407,8 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
             -> do
               bindErrorA
                 -< do
-                  liftEitherM $
-                    createTableEventTrigger @b
+                  liftEitherM
+                    $ createTableEventTrigger @b
                       (_cdcSQLGenCtx dynamicConfig)
                       sourceConfig
                       tableName
@@ -1417,9 +1427,9 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
         buildCronTrigger cronTrigger = do
           let triggerName = triggerNameToTxt $ ctName cronTrigger
               addCronTriggerContext e = "in cron trigger " <> triggerName <> ": " <> e
-          withRecordInconsistencyM (mkCronTriggerMetadataObject cronTrigger) $
-            modifyErr addCronTriggerContext $
-              resolveCronTrigger env cronTrigger
+          withRecordInconsistencyM (mkCronTriggerMetadataObject cronTrigger)
+            $ modifyErr addCronTriggerContext
+            $ resolveCronTrigger env cronTrigger
 
     buildInheritedRoles ::
       (MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m) =>
@@ -1468,9 +1478,9 @@ buildRemoteSchemaRemoteRelationship ::
   m (Maybe (RemoteFieldInfo G.Name))
 buildRemoteSchemaRemoteRelationship allSources remoteSchemaMap remoteSchema remoteSchemaIntrospection typeName rr@RemoteRelationship {..} = do
   let metadataObject =
-        MetadataObject (MORemoteSchemaRemoteRelationship remoteSchema typeName _rrName) $
-          toJSON $
-            CreateRemoteSchemaRemoteRelationship remoteSchema typeName _rrName _rrDefinition
+        MetadataObject (MORemoteSchemaRemoteRelationship remoteSchema typeName _rrName)
+          $ toJSON
+          $ CreateRemoteSchemaRemoteRelationship remoteSchema typeName _rrName _rrDefinition
       schemaObj = SORemoteSchemaRemoteRelationship remoteSchema typeName _rrName
       addRemoteRelationshipContext e = "in remote relationship " <> _rrName <<> ": " <> e
       -- buildRemoteFieldInfo only knows how to construct dependencies on the RHS of the join condition,

@@ -122,8 +122,8 @@ instance ToEngineLog MetadataLog Hasura where
 
 mkInconsMetadataLog :: [InconsistentMetadata] -> MetadataLog
 mkInconsMetadataLog objs =
-  MetadataLog LevelWarn "Inconsistent Metadata!" $
-    object ["objects" .= objs]
+  MetadataLog LevelWarn "Inconsistent Metadata!"
+    $ object ["objects" .= objs]
 
 data WebHookLog = WebHookLog
   { whlLogLevel :: !LogLevel,
@@ -224,7 +224,7 @@ type HttpLogMetadata m = (CommonHttpLogMetadata, ExtraHttpLogMetadata m)
 
 buildHttpLogMetadata ::
   forall m.
-  HttpLog m =>
+  (HttpLog m) =>
   HttpLogGraphQLInfo ->
   ExtraUserInfo ->
   HttpLogMetadata m
@@ -232,7 +232,7 @@ buildHttpLogMetadata (commonHttpLogMetadata, paramQueryHashList) extraUserInfo =
   (commonHttpLogMetadata, buildExtraHttpLogMetadata @m paramQueryHashList extraUserInfo)
 
 -- | synonym for clarity, writing `emptyHttpLogMetadata @m` instead of `def @(HttpLogMetadata m)`
-emptyHttpLogMetadata :: forall m. HttpLog m => HttpLogMetadata m
+emptyHttpLogMetadata :: forall m. (HttpLog m) => HttpLogMetadata m
 emptyHttpLogMetadata = (CommonHttpLogMetadata RequestModeNonBatchable Nothing, emptyExtraHttpLogMetadata @m)
 
 -- See Note [Disable query printing for metadata queries]
@@ -241,8 +241,9 @@ data MetadataQueryLoggingMode = MetadataQueryLoggingEnabled | MetadataQueryLoggi
 
 instance FromJSON MetadataQueryLoggingMode where
   parseJSON =
-    withBool "MetadataQueryLoggingMode" $
-      pure . bool MetadataQueryLoggingDisabled MetadataQueryLoggingEnabled
+    withBool "MetadataQueryLoggingMode"
+      $ pure
+      . bool MetadataQueryLoggingDisabled MetadataQueryLoggingEnabled
 
 instance ToJSON MetadataQueryLoggingMode where
   toJSON = \case
@@ -279,7 +280,7 @@ HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING envirnoment variables is not set, t
 we disable the 'query' field in HTTP logs.
 -}
 
-class Monad m => HttpLog m where
+class (Monad m) => HttpLog m where
   -- | Extra http-log metadata that we attach when operating in 'm'.
   type ExtraHttpLogMetadata m
 
@@ -334,7 +335,7 @@ class Monad m => HttpLog m where
     HttpLogMetadata m ->
     m ()
 
-instance HttpLog m => HttpLog (TraceT m) where
+instance (HttpLog m) => HttpLog (TraceT m) where
   type ExtraHttpLogMetadata (TraceT m) = ExtraHttpLogMetadata m
 
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
@@ -344,7 +345,7 @@ instance HttpLog m => HttpLog (TraceT m) where
 
   logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
-instance HttpLog m => HttpLog (ReaderT r m) where
+instance (HttpLog m) => HttpLog (ReaderT r m) where
   type ExtraHttpLogMetadata (ReaderT r m) = ExtraHttpLogMetadata m
 
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
@@ -354,7 +355,7 @@ instance HttpLog m => HttpLog (ReaderT r m) where
 
   logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
 
-instance HttpLog m => HttpLog (ExceptT e m) where
+instance (HttpLog m) => HttpLog (ExceptT e m) where
   type ExtraHttpLogMetadata (ExceptT e m) = ExtraHttpLogMetadata m
 
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
@@ -515,18 +516,18 @@ mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) uncomp
           >>= ( \case
                   GH.GQLSingleRequest _ -> Nothing -- This case is aleady handled in the `OperationLog`
                   GH.GQLBatchedReqs opLogs ->
-                    NE.nonEmpty $
-                      map
+                    NE.nonEmpty
+                      $ map
                         ( \case
                             GQLQueryOperationSuccess (GQLQueryOperationSuccessLog {..}) ->
-                              BatchOperationSuccess $
-                                BatchOperationSuccessLog
+                              BatchOperationSuccess
+                                $ BatchOperationSuccessLog
                                   (addQuery parsedReq (hlPath http) loggingSettings)
                                   gqolResponseSize
                                   (convertDuration gqolQueryExecutionTime)
                             GQLQueryOperationError (GQLQueryOperationErrorLog {..}) ->
-                              BatchOperationError $
-                                BatchOperationErrorLog
+                              BatchOperationError
+                                $ BatchOperationErrorLog
                                   (addQuery parsedReq (hlPath http) loggingSettings)
                                   gqelError
                         )
@@ -612,21 +613,21 @@ logDeprecatedEnvVars logger env sources = do
   -- to the metadata
   for_ (HashMap.lookup SNDefault sources) $ \_defSource -> do
     let deprecated = checkDeprecatedEnvVars (unEnvVarsMovedToMetadata envVarsMovedToMetadata)
-    unless (null deprecated) $
-      unLogger logger $
-        UnstructuredLog LevelWarn $
-          SB.fromText $
-            "The following environment variables are deprecated and moved to metadata: "
-              <> toText deprecated
+    unless (null deprecated)
+      $ unLogger logger
+      $ UnstructuredLog LevelWarn
+      $ SB.fromText
+      $ "The following environment variables are deprecated and moved to metadata: "
+      <> toText deprecated
 
   -- Log when completely deprecated environment variables are present
   let deprecated = checkDeprecatedEnvVars (unDeprecatedEnvVars deprecatedEnvVars)
-  unless (null deprecated) $
-    unLogger logger $
-      UnstructuredLog LevelWarn $
-        SB.fromText $
-          "The following environment variables are deprecated: "
-            <> toText deprecated
+  unless (null deprecated)
+    $ unLogger logger
+    $ UnstructuredLog LevelWarn
+    $ SB.fromText
+    $ "The following environment variables are deprecated: "
+    <> toText deprecated
 
 data SchemaSyncThreadType
   = TTListener

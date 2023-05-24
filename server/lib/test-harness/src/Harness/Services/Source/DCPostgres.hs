@@ -222,9 +222,9 @@ dc_pg_track_table testEnvironment (Schema.Table {tableName, tableColumns}) = do
     columnConfig :: Schema.Column -> Maybe J.Pair
     columnConfig col = do
       alias <- Schema.columnGqlAlias col
-      return $
-        ( K.fromText $ Schema.columnName col,
-          [yaml|
+      return
+        $ ( K.fromText $ Schema.columnName col,
+            [yaml|
         custom_name: *alias
         |]
-        )
+          )

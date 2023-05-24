@@ -62,7 +62,7 @@ transformFns = lens getter setter
 
 -- | Validate all 'TransformFn a' fields in the 'RequestTransform'.
 validateRequestTransform ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   RequestTransform ->
   m RequestTransform
 validateRequestTransform reqTransform =

@@ -96,7 +96,7 @@ import Test.Hspec
 -- See 'postWithHeaders' to issue a request with 'Http.RequestHeaders'.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
-post :: HasCallStack => TestEnvironment -> String -> Value -> IO Value
+post :: (HasCallStack) => TestEnvironment -> String -> Value -> IO Value
 post testEnvironment path v = withFrozenCallStack $ postWithHeaders testEnvironment path mempty v
 
 -- | Same as 'post', but ignores the value.
@@ -104,7 +104,7 @@ post testEnvironment path v = withFrozenCallStack $ postWithHeaders testEnvironm
 -- See 'postWithHeaders_' to issue a request with 'Http.RequestHeaders'.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
-post_ :: HasCallStack => TestEnvironment -> String -> Value -> IO ()
+post_ :: (HasCallStack) => TestEnvironment -> String -> Value -> IO ()
 post_ testEnvironment path v = void $ withFrozenCallStack $ postWithHeaders_ testEnvironment path mempty v
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
@@ -114,7 +114,7 @@ post_ testEnvironment path v = void $ withFrozenCallStack $ postWithHeaders_ tes
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postWithHeaders ::
-  HasCallStack => TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
+  (HasCallStack) => TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
 postWithHeaders =
   withFrozenCallStack $ postWithHeadersStatus 200
 
@@ -125,7 +125,7 @@ postWithHeaders =
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postWithHeadersStatus ::
-  HasCallStack => Int -> TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
+  (HasCallStack) => Int -> TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
 postWithHeadersStatus statusCode testEnv@(getServer -> Server {urlPrefix, port}) path headers requestBody = do
   testLogMessage testEnv $ LogHGERequest (T.pack path) requestBody
 
@@ -159,13 +159,13 @@ postWithHeadersStatusViaWebSocket connection headers requestBody = do
 
   WS.sendTextDatas
     connection
-    [ encode $
-        object
+    [ encode
+        $ object
           [ "type" .= String "connection_init",
             "payload" .= object ["headers" .= preparedHeaders]
           ],
-      encode $
-        object
+      encode
+        $ object
           [ "id" .= String "some-request-id",
             "type" .= String "start",
             "payload" .= requestBody
@@ -181,7 +181,7 @@ postWithHeadersStatusViaWebSocket connection headers requestBody = do
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postWithHeaders_ ::
-  HasCallStack => TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO ()
+  (HasCallStack) => TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO ()
 postWithHeaders_ testEnvironment path headers v =
   void $ withFrozenCallStack $ postWithHeaders testEnvironment path headers v
 
@@ -189,32 +189,32 @@ postWithHeaders_ testEnvironment path headers v =
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postGraphqlYaml ::
-  HasCallStack => TestEnvironment -> Value -> IO Value
+  (HasCallStack) => TestEnvironment -> Value -> IO Value
 postGraphqlYaml testEnvironment v = withFrozenCallStack $ postGraphqlYamlWithHeaders testEnvironment mempty v
 
 -- | Same as 'postWithHeaders', but defaults to the graphql end-point.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postGraphqlYamlWithHeaders ::
-  HasCallStack => TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
+  (HasCallStack) => TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
 postGraphqlYamlWithHeaders testEnvironment headers =
   withFrozenCallStack $ postWithHeaders testEnvironment "/v1/graphql" headers
 
-postGraphql :: Has PostGraphql testEnvironment => testEnvironment -> Value -> IO Value
+postGraphql :: (Has PostGraphql testEnvironment) => testEnvironment -> Value -> IO Value
 postGraphql = getPostGraphql . getter
 
 -- | Same as 'postGraphqlYaml', but adds the @{query:..}@ wrapper.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
-postGraphqlInternal :: HasCallStack => TestEnvironment -> Value -> IO Value
+postGraphqlInternal :: (HasCallStack) => TestEnvironment -> Value -> IO Value
 postGraphqlInternal testEnvironment value =
   withFrozenCallStack $ postGraphqlYaml testEnvironment (object ["query" .= value])
 
 -- | Same as 'postGraphql', but accepts variables to the GraphQL query as well.
-postGraphqlWithVariables :: HasCallStack => TestEnvironment -> Value -> Value -> IO Value
+postGraphqlWithVariables :: (HasCallStack) => TestEnvironment -> Value -> Value -> IO Value
 postGraphqlWithVariables testEnvironment query variables =
-  withFrozenCallStack $
-    postGraphqlYaml
+  withFrozenCallStack
+    $ postGraphqlYaml
       testEnvironment
       ( object
           [ "query" .= query,
@@ -224,7 +224,7 @@ postGraphqlWithVariables testEnvironment query variables =
 
 -- | Same as postGraphql but accepts a list of 'Pair' to pass
 -- additional parameters to the endpoint.
-postGraphqlWithPair :: HasCallStack => TestEnvironment -> Value -> [Pair] -> IO Value
+postGraphqlWithPair :: (HasCallStack) => TestEnvironment -> Value -> [Pair] -> IO Value
 postGraphqlWithPair testEnvironment value pair =
   withFrozenCallStack $ postGraphqlYaml testEnvironment (object $ ["query" .= value] <> pair)
 
@@ -232,15 +232,15 @@ postGraphqlWithPair testEnvironment value pair =
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postGraphqlWithHeaders ::
-  HasCallStack => TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
+  (HasCallStack) => TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
 postGraphqlWithHeaders testEnvironment headers value =
   withFrozenCallStack $ postGraphqlYamlWithHeaders testEnvironment headers (object ["query" .= value])
 
 -- | post to /v1/graphql/explain endpoint
-postExplain :: HasCallStack => TestEnvironment -> Value -> IO Value
+postExplain :: (HasCallStack) => TestEnvironment -> Value -> IO Value
 postExplain testEnvironment value =
-  withFrozenCallStack $
-    postWithHeaders
+  withFrozenCallStack
+    $ postWithHeaders
       testEnvironment
       "/v1/graphql/explain"
       mempty
@@ -265,27 +265,27 @@ withHTTP testEnvironment =
 -- @headers@ are mostly irrelevant for the admin endpoint @v1/metadata@.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
-postMetadata_ :: HasCallStack => TestEnvironment -> Value -> IO ()
+postMetadata_ :: (HasCallStack) => TestEnvironment -> Value -> IO ()
 postMetadata_ testEnvironment = withFrozenCallStack $ post_ (withHTTP testEnvironment) "/v1/metadata"
 
-postMetadata :: HasCallStack => TestEnvironment -> Value -> IO Value
+postMetadata :: (HasCallStack) => TestEnvironment -> Value -> IO Value
 postMetadata testEnvironment = withFrozenCallStack $ post (withHTTP testEnvironment) "/v1/metadata"
 
-postMetadataWithStatus :: HasCallStack => Int -> TestEnvironment -> Value -> IO Value
+postMetadataWithStatus :: (HasCallStack) => Int -> TestEnvironment -> Value -> IO Value
 postMetadataWithStatus statusCode testEnvironment v =
   withFrozenCallStack $ postWithHeadersStatus statusCode (withHTTP testEnvironment) "/v1/metadata" mempty v
 
-postMetadataWithStatusAndHeaders :: HasCallStack => Int -> TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
+postMetadataWithStatusAndHeaders :: (HasCallStack) => Int -> TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
 postMetadataWithStatusAndHeaders statusCode testEnvironment =
   withFrozenCallStack $ postWithHeadersStatus statusCode (withHTTP testEnvironment) "/v1/metadata"
 
 -- | Resets metadata, removing all sources or remote schemas.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
-clearMetadata :: HasCallStack => TestEnvironment -> IO ()
+clearMetadata :: (HasCallStack) => TestEnvironment -> IO ()
 clearMetadata s = withFrozenCallStack $ postMetadata_ s [yaml|{type: clear_metadata, args: {}}|]
 
-exportMetadata :: HasCallStack => TestEnvironment -> IO Value
+exportMetadata :: (HasCallStack) => TestEnvironment -> IO Value
 exportMetadata s = withFrozenCallStack $ postMetadata s [yaml|{type: export_metadata, args: {}}|]
 
 -- | Reload metadata
@@ -303,15 +303,15 @@ args: {}
 -- @headers@ are mostly irrelevant for the admin endpoint @v2/query@.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
-postV2Query :: HasCallStack => Int -> TestEnvironment -> Value -> IO Value
+postV2Query :: (HasCallStack) => Int -> TestEnvironment -> Value -> IO Value
 postV2Query statusCode testEnvironment =
   withFrozenCallStack $ postWithHeadersStatus statusCode testEnvironment "/v2/query" mempty
 
-postV2Query_ :: HasCallStack => TestEnvironment -> Value -> IO ()
+postV2Query_ :: (HasCallStack) => TestEnvironment -> Value -> IO ()
 postV2Query_ testEnvironment =
   withFrozenCallStack $ post_ testEnvironment "/v2/query"
 
-postV1Query :: HasCallStack => Int -> TestEnvironment -> Value -> IO Value
+postV1Query :: (HasCallStack) => Int -> TestEnvironment -> Value -> IO Value
 postV1Query statusCode testEnvironment =
   withFrozenCallStack $ postWithHeadersStatus statusCode testEnvironment "/v1/query" mempty
 
@@ -418,8 +418,8 @@ runApp metadataDbUrl serveOptions = do
   runManagedT managedServerCtx \(appInit, appEnv) ->
     App.runAppM appEnv do
       appCtx <- App.initialiseAppContext env serveOptions appInit
-      lowerManagedT $
-        App.runHGEServer
+      lowerManagedT
+        $ App.runHGEServer
           (const $ pure ())
           appCtx
           initTime
