@@ -1,9 +1,9 @@
 This note is in [Hasura.Function.API](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Function/API.hs#L190).
 It is referenced at:
-  - line 844 of [Hasura.GraphQL.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema.hs#L844)
-  - line 847 of [Hasura.GraphQL.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema.hs#L847)
-  - line 850 of [Hasura.GraphQL.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema.hs#L850)
-  - line 853 of [Hasura.GraphQL.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema.hs#L853)
+  - line 886 of [Hasura.GraphQL.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema.hs#L886)
+  - line 889 of [Hasura.GraphQL.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema.hs#L889)
+  - line 892 of [Hasura.GraphQL.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema.hs#L892)
+  - line 895 of [Hasura.GraphQL.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema.hs#L895)
 
 # Function Permissions
 
