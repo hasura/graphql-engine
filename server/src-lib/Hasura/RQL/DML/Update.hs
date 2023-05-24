@@ -3,6 +3,7 @@ module Hasura.RQL.DML.Update
   )
 where
 
+import Control.Lens ((^?))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Types
 import Data.HashMap.Strict qualified as HashMap
@@ -130,7 +131,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
       askSelPermInfo tableInfo
 
   let fieldInfoMap = _tciFieldInfoMap coreInfo
-      allCols = getCols fieldInfoMap
+      allCols = mapMaybe (^? _SCIScalarColumn) $ getCols fieldInfoMap
       preSetObj = upiSet updPerm
       preSetCols = HashMap.keys preSetObj
 

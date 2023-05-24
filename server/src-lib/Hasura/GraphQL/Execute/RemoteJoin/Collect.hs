@@ -290,50 +290,58 @@ transformAnnFields ::
   AnnFieldsG src (RemoteRelationshipField UnpreparedValue) (UnpreparedValue src) ->
   Collector (AnnFieldsG src Void (UnpreparedValue src))
 transformAnnFields fields = do
+  let transformAnnField :: AnnFieldG src (RemoteRelationshipField UnpreparedValue) (UnpreparedValue src) -> Collector (AnnFieldG src Void (UnpreparedValue src), Maybe RemoteJoin)
+      transformAnnField = \case
+        -- AnnFields which do not need to be transformed.
+        AFNodeId x sn qt pkeys ->
+          pure (AFNodeId x sn qt pkeys, Nothing)
+        AFColumn c ->
+          pure (AFColumn c, Nothing)
+        AFExpression t ->
+          pure (AFExpression t, Nothing)
+        -- AnnFields with no associated remote joins and whose transformations are
+        -- relatively straightforward.
+        AFObjectRelation annRel -> do
+          transformed <- traverseOf aarAnnSelect transformObjectSelect annRel
+          pure (AFObjectRelation transformed, Nothing)
+        AFArrayRelation (ASSimple annRel) -> do
+          transformed <- traverseOf aarAnnSelect transformSelect annRel
+          pure (AFArrayRelation . ASSimple $ transformed, Nothing)
+        AFArrayRelation (ASAggregate aggRel) -> do
+          transformed <- traverseOf aarAnnSelect transformAggregateSelect aggRel
+          pure (AFArrayRelation . ASAggregate $ transformed, Nothing)
+        AFArrayRelation (ASConnection annRel) -> do
+          transformed <- traverseOf aarAnnSelect transformConnectionSelect annRel
+          pure (AFArrayRelation . ASConnection $ transformed, Nothing)
+        AFComputedField computedField computedFieldName computedFieldSelect -> do
+          transformed <- case computedFieldSelect of
+            CFSScalar cfss cbe -> pure $ CFSScalar cfss cbe
+            CFSTable jsonAggSel annSel -> do
+              transformed <- transformSelect annSel
+              pure $ CFSTable jsonAggSel transformed
+          pure (AFComputedField computedField computedFieldName transformed, Nothing)
+        -- Remote AnnFields, whose elements require annotation so that they can be
+        -- used to construct a remote join.
+        AFRemote RemoteRelationshipSelect {..} ->
+          pure
+            ( -- We generate this so that the response has a key with the relationship,
+              -- without which preserving the order of fields in the final response
+              -- would require a lot of bookkeeping.
+              remoteAnnPlaceholder,
+              Just $ createRemoteJoin (HashMap.intersection joinColumnAliases _rrsLHSJoinFields) _rrsRelationship
+            )
+        AFNestedObject nestedObj ->
+          (,Nothing) . AFNestedObject <$> transformNestedObjectSelect nestedObj
+        AFNestedArray supportsNestedArray (ANASSimple nestedArrayField) -> do
+          (,Nothing) . AFNestedArray supportsNestedArray . ANASSimple . fst <$> transformAnnField nestedArrayField
+        AFNestedArray supportsNestedArray (ANASAggregate agg) -> do
+          transformed <- transformAggregateSelect agg
+          pure (AFNestedArray supportsNestedArray (ANASAggregate transformed), Nothing)
+
   -- Produces a list of transformed fields that may or may not have an
   -- associated remote join.
   annotatedFields <-
-    fields & traverseFields \case
-      -- AnnFields which do not need to be transformed.
-      AFNodeId x sn qt pkeys ->
-        pure (AFNodeId x sn qt pkeys, Nothing)
-      AFColumn c ->
-        pure (AFColumn c, Nothing)
-      AFExpression t ->
-        pure (AFExpression t, Nothing)
-      -- AnnFields with no associated remote joins and whose transformations are
-      -- relatively straightforward.
-      AFObjectRelation annRel -> do
-        transformed <- traverseOf aarAnnSelect transformObjectSelect annRel
-        pure (AFObjectRelation transformed, Nothing)
-      AFArrayRelation (ASSimple annRel) -> do
-        transformed <- traverseOf aarAnnSelect transformSelect annRel
-        pure (AFArrayRelation . ASSimple $ transformed, Nothing)
-      AFArrayRelation (ASAggregate aggRel) -> do
-        transformed <- traverseOf aarAnnSelect transformAggregateSelect aggRel
-        pure (AFArrayRelation . ASAggregate $ transformed, Nothing)
-      AFArrayRelation (ASConnection annRel) -> do
-        transformed <- traverseOf aarAnnSelect transformConnectionSelect annRel
-        pure (AFArrayRelation . ASConnection $ transformed, Nothing)
-      AFComputedField computedField computedFieldName computedFieldSelect -> do
-        transformed <- case computedFieldSelect of
-          CFSScalar cfss cbe -> pure $ CFSScalar cfss cbe
-          CFSTable jsonAggSel annSel -> do
-            transformed <- transformSelect annSel
-            pure $ CFSTable jsonAggSel transformed
-        pure (AFComputedField computedField computedFieldName transformed, Nothing)
-      -- Remote AnnFields, whose elements require annotation so that they can be
-      -- used to construct a remote join.
-      AFRemote RemoteRelationshipSelect {..} ->
-        pure
-          ( -- We generate this so that the response has a key with the relationship,
-            -- without which preserving the order of fields in the final response
-            -- would require a lot of bookkeeping.
-            remoteAnnPlaceholder,
-            Just $ createRemoteJoin (HashMap.intersection joinColumnAliases _rrsLHSJoinFields) _rrsRelationship
-          )
-      AFNestedObject nestedObj ->
-        (,Nothing) . AFNestedObject <$> transformNestedObjectSelect nestedObj
+    fields & traverseFields transformAnnField
 
   let transformedFields = (fmap . fmap) fst annotatedFields
       remoteJoins =

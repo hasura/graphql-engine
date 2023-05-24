@@ -364,7 +364,7 @@ buildInsPermInfo source tn fieldInfoMap (InsPerm checkCond set mCols backendOnly
 
     return (InsPermInfo insColsWithoutPresets be setColsSQL backendOnly reqHdrs, deps)
   where
-    allInsCols = map ciColumn $ filter (_cmIsInsertable . ciMutability) $ getCols fieldInfoMap
+    allInsCols = map structuredColumnInfoColumn $ filter (_cmIsInsertable . structuredColumnInfoMutability) $ getCols fieldInfoMap
     insCols = interpColSpec allInsCols (fromMaybe PCStar mCols)
     relInInsErr = "Only table columns can have insert permissions defined, not relationships or other field types"
 
@@ -517,7 +517,7 @@ buildSelPermInfo ::
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
 buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permission" $ do
-  let pgCols = interpColSpec (ciColumn <$> getCols fieldInfoMap) $ spColumns sp
+  let pgCols = interpColSpec (structuredColumnInfoColumn <$> getCols fieldInfoMap) $ spColumns sp
 
   (spiFilter, boolExpDeps) <-
     withPathK "filter" $
@@ -614,7 +614,7 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check backendO
 
   return (UpdPermInfo updColsWithoutPreSets tn be (fst <$> checkExpr) setColsSQL backendOnly reqHeaders, deps)
   where
-    allUpdCols = map ciColumn $ filter (_cmIsUpdatable . ciMutability) $ getCols fieldInfoMap
+    allUpdCols = map structuredColumnInfoColumn $ filter (_cmIsUpdatable . structuredColumnInfoMutability) $ getCols fieldInfoMap
     updCols = interpColSpec allUpdCols colSpec
     relInUpdErr = "Only table columns can have update permissions defined, not relationships or other field types"
 

@@ -27,13 +27,14 @@ import Data.OpenApi (ToSchema)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Hasura.RQL.Types.Backend (Backend (..))
+import Hasura.RQL.Types.Column (RawColumnType (..))
 import Prelude
 
 --------------------------------------------------------------------------------
 
 data SourceColumnInfo b = SourceColumnInfo
   { _sciName :: Column b,
-    _sciType :: ScalarType b,
+    _sciType :: RawColumnType b,
     _sciNullable :: Bool,
     _sciDescription :: Maybe Text,
     _sciInsertable :: Bool,

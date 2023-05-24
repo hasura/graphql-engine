@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -17,6 +18,7 @@ module Hasura.RQL.Types.Column
     ColumnMutability (..),
     ColumnInfo (..),
     NestedObjectInfo (..),
+    RawColumnType (..),
     RawColumnInfo (..),
     PrimaryKeyColumns,
     getColInfos,
@@ -28,11 +30,21 @@ module Hasura.RQL.Types.Column
     ColumnValues,
     ColumnReference (..),
     columnReferenceType,
+    NestedArrayInfo (..),
+    StructuredColumnInfo (..),
+    _SCIScalarColumn,
+    _SCIObjectColumn,
+    _SCIArrayColumn,
+    structuredColumnInfoName,
+    structuredColumnInfoColumn,
+    structuredColumnInfoMutability,
+    toScalarColumnInfo,
   )
 where
 
+import Autodocodec
 import Control.Lens.TH
-import Data.Aeson
+import Data.Aeson hiding ((.=))
 import Data.Aeson.TH
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
@@ -46,12 +58,14 @@ import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
 newtype EnumValue = EnumValue {getEnumValue :: G.Name}
-  deriving (Show, Eq, Ord, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey)
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving newtype (NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey)
 
 newtype EnumValueInfo = EnumValueInfo
   { evComment :: Maybe Text
   }
-  deriving (Show, Eq, Ord, NFData, Hashable)
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving newtype (NFData, Hashable)
 
 $(deriveJSON hasuraJSON ''EnumValueInfo)
 
@@ -167,6 +181,38 @@ parseScalarValuesColumnType ::
 parseScalarValuesColumnType columnType =
   indexedMapM (parseScalarValueColumnType columnType)
 
+data RawColumnType (b :: BackendType)
+  = RawColumnTypeScalar (ScalarType b)
+  | RawColumnTypeObject (XNestedObjects b) G.Name
+  | RawColumnTypeArray (XNestedArrays b) (RawColumnType b) Bool
+  deriving stock (Generic)
+
+deriving instance Backend b => Eq (RawColumnType b)
+
+deriving instance Backend b => Ord (RawColumnType b)
+
+deriving anyclass instance Backend b => Hashable (RawColumnType b)
+
+deriving instance Backend b => Show (RawColumnType b)
+
+instance Backend b => NFData (RawColumnType b)
+
+-- For backwards compatibility we want to serialize and deserialize
+-- RawColumnTypeScalar as a ScalarType
+instance Backend b => ToJSON (RawColumnType b) where
+  toJSON = \case
+    RawColumnTypeScalar scalar -> toJSON scalar
+    other -> genericToJSON hasuraJSON other
+
+instance Backend b => FromJSON (RawColumnType b) where
+  parseJSON v = (RawColumnTypeScalar <$> parseJSON v) <|> genericParseJSON hasuraJSON v
+
+-- Ideally we'd derive ToJSON and FromJSON instances from the HasCodec instance, rather than the other way around.
+-- Unfortunately, I'm not sure if it's possible to write a proper HasCodec instance in the presence
+-- of the (XNestedObjects b) and (XNestedArrays b) type families, which may be Void.
+instance Backend b => HasCodec (RawColumnType b) where
+  codec = codecViaAeson "RawColumnType"
+
 -- | “Raw” column info, as stored in the catalog (but not in the schema cache). Instead of
 -- containing a 'PGColumnType', it only contains a 'PGScalarType', which is combined with the
 -- 'pcirReferences' field and other table data to eventually resolve the type to a 'PGColumnType'.
@@ -176,7 +222,7 @@ data RawColumnInfo (b :: BackendType) = RawColumnInfo
     -- increases. Dropping a column does /not/ cause the columns to be renumbered, so a column can be
     -- consistently identified by its position.
     rciPosition :: Int,
-    rciType :: ScalarType b,
+    rciType :: RawColumnType b,
     rciIsNullable :: Bool,
     rciDescription :: Maybe G.Description,
     rciMutability :: ColumnMutability
@@ -274,6 +320,72 @@ instance (Backend b) => Hashable (NestedObjectInfo b)
 instance (Backend b) => ToJSON (NestedObjectInfo b) where
   toJSON = genericToJSON hasuraJSON
   toEncoding = genericToEncoding hasuraJSON
+
+data NestedArrayInfo b = NestedArrayInfo
+  { _naiSupportsNestedArrays :: XNestedArrays b,
+    _naiIsNullable :: Bool,
+    _naiColumnInfo :: StructuredColumnInfo b
+  }
+  deriving (Generic)
+
+deriving instance (Backend b) => Eq (NestedArrayInfo b)
+
+deriving instance (Backend b) => Ord (NestedArrayInfo b)
+
+deriving instance (Backend b) => Show (NestedArrayInfo b)
+
+instance (Backend b) => NFData (NestedArrayInfo b)
+
+instance (Backend b) => Hashable (NestedArrayInfo b)
+
+instance (Backend b) => ToJSON (NestedArrayInfo b) where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
+
+data StructuredColumnInfo b
+  = SCIScalarColumn (ColumnInfo b)
+  | SCIObjectColumn (NestedObjectInfo b)
+  | SCIArrayColumn (NestedArrayInfo b)
+  deriving (Generic)
+
+deriving instance (Backend b) => Eq (StructuredColumnInfo b)
+
+deriving instance (Backend b) => Ord (StructuredColumnInfo b)
+
+deriving instance (Backend b) => Show (StructuredColumnInfo b)
+
+instance (Backend b) => NFData (StructuredColumnInfo b)
+
+instance (Backend b) => Hashable (StructuredColumnInfo b)
+
+instance (Backend b) => ToJSON (StructuredColumnInfo b) where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
+
+structuredColumnInfoName :: StructuredColumnInfo b -> G.Name
+structuredColumnInfoName = \case
+  SCIScalarColumn ColumnInfo {..} -> ciName
+  SCIObjectColumn NestedObjectInfo {..} -> _noiName
+  SCIArrayColumn NestedArrayInfo {..} -> structuredColumnInfoName _naiColumnInfo
+
+structuredColumnInfoColumn :: StructuredColumnInfo b -> Column b
+structuredColumnInfoColumn = \case
+  SCIScalarColumn ColumnInfo {..} -> ciColumn
+  SCIObjectColumn NestedObjectInfo {..} -> _noiColumn
+  SCIArrayColumn NestedArrayInfo {..} -> structuredColumnInfoColumn _naiColumnInfo
+
+structuredColumnInfoMutability :: StructuredColumnInfo b -> ColumnMutability
+structuredColumnInfoMutability = \case
+  SCIScalarColumn ColumnInfo {..} -> ciMutability
+  SCIObjectColumn NestedObjectInfo {..} -> _noiMutability
+  SCIArrayColumn NestedArrayInfo {..} -> structuredColumnInfoMutability _naiColumnInfo
+
+toScalarColumnInfo :: StructuredColumnInfo b -> Maybe (ColumnInfo b)
+toScalarColumnInfo = \case
+  SCIScalarColumn ci -> Just ci
+  _ -> Nothing
+
+$(makePrisms ''StructuredColumnInfo)
 
 type PrimaryKeyColumns b = NESeq (ColumnInfo b)
 

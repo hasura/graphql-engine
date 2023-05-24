@@ -7,6 +7,7 @@ module Hasura.GraphQL.Schema.OrderBy
   )
 where
 
+import Control.Lens ((^?))
 import Data.Has
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text.Casing qualified as C
@@ -119,7 +120,7 @@ orderByExpInternal gqlName description tableFields memoizeKey = do
     mkField sourceInfo tCase fieldInfo = runMaybeT $ do
       roleName <- retrieve scRole
       case fieldInfo of
-        FIColumn columnInfo -> do
+        FIColumn (SCIScalarColumn columnInfo) -> do
           let !fieldName = ciName columnInfo
           pure $
             P.fieldOptional
@@ -127,6 +128,8 @@ orderByExpInternal gqlName description tableFields memoizeKey = do
               Nothing
               (orderByOperator @b tCase sourceInfo)
               <&> fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo)) . join
+        FIColumn (SCIObjectColumn _) -> empty -- TODO(dmoverton)
+        FIColumn (SCIArrayColumn _) -> empty -- TODO(dmoverton)
         FIRelationship relationshipInfo -> do
           case riTarget relationshipInfo of
             RelTargetNativeQuery _ -> error "mkField RelTargetNativeQuery"
@@ -184,7 +187,6 @@ orderByExpInternal gqlName description tableFields memoizeKey = do
                     aggregationOrderBy
             ReturnsOthers -> empty
         FIRemoteRelationship _ -> empty
-        FINestedObject _ -> empty -- TODO(dmoverton)
 
 -- | Corresponds to an object type for an order by.
 --
@@ -230,7 +232,7 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
       tCase = _rscNamingConvention customization
       mkTypename = _rscTypeNames customization
   tableIdentifierName <- getTableIdentifierName @b tableInfo
-  allColumns <- tableSelectColumns tableInfo
+  allColumns <- mapMaybe (^? _SCIScalarColumn) <$> tableSelectColumns tableInfo
   let numColumns = stdAggOpColumns tCase $ onlyNumCols allColumns
       compColumns = stdAggOpColumns tCase $ onlyComparableCols allColumns
       numOperatorsAndColumns = HashMap.fromList $ (,numColumns) <$> numericAggOperators

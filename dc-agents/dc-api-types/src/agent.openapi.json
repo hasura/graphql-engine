@@ -1081,6 +1081,74 @@
         ],
         "type": "string"
       },
+      "ColumnTypeObject": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "object"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ColumnType": {
+        "additionalProperties": true,
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/ScalarType"
+          },
+          {
+            "$ref": "#/components/schemas/ColumnTypeNonScalar"
+          }
+        ]
+      },
+      "ColumnTypeArray": {
+        "properties": {
+          "element_type": {
+            "$ref": "#/components/schemas/ColumnType"
+          },
+          "nullable": {
+            "type": "boolean"
+          },
+          "type": {
+            "enum": [
+              "array"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "element_type",
+          "nullable",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ColumnTypeNonScalar": {
+        "discriminator": {
+          "mapping": {
+            "array": "ColumnTypeArray",
+            "object": "ColumnTypeObject"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ColumnTypeObject"
+          },
+          {
+            "$ref": "#/components/schemas/ColumnTypeArray"
+          }
+        ]
+      },
       "DefaultValueGenerationStrategy": {
         "properties": {
           "type": {
@@ -1165,7 +1233,7 @@
             "type": "boolean"
           },
           "type": {
-            "$ref": "#/components/schemas/ScalarType"
+            "$ref": "#/components/schemas/ColumnType"
           },
           "updatable": {
             "default": false,
@@ -1685,7 +1753,7 @@
         },
         "type": "object"
       },
-      "NestedObjectField": {
+      "NestedObjField": {
         "properties": {
           "column": {
             "type": "string"
@@ -1730,136 +1798,28 @@
         ],
         "type": "object"
       },
-      "ColumnField": {
-        "properties": {
-          "column": {
-            "type": "string"
-          },
-          "column_type": {
-            "$ref": "#/components/schemas/ScalarType"
-          },
-          "type": {
-            "enum": [
-              "column"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "column",
-          "column_type",
-          "type"
-        ],
-        "type": "object"
-      },
       "Field": {
         "discriminator": {
           "mapping": {
+            "array": "NestedArrayField",
             "column": "ColumnField",
-            "object": "NestedObjectField",
+            "object": "NestedObjField",
             "relationship": "RelationshipField"
           },
           "propertyName": "type"
         },
         "oneOf": [
           {
-            "$ref": "#/components/schemas/NestedObjectField"
+            "$ref": "#/components/schemas/NestedObjField"
           },
           {
             "$ref": "#/components/schemas/RelationshipField"
           },
           {
+            "$ref": "#/components/schemas/NestedArrayField"
+          },
+          {
             "$ref": "#/components/schemas/ColumnField"
-          }
-        ]
-      },
-      "ColumnCountAggregate": {
-        "properties": {
-          "column": {
-            "description": "The column to apply the count aggregate function to",
-            "type": "string"
-          },
-          "distinct": {
-            "description": "Whether or not only distinct items should be counted",
-            "type": "boolean"
-          },
-          "type": {
-            "enum": [
-              "column_count"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "column",
-          "distinct",
-          "type"
-        ],
-        "type": "object"
-      },
-      "SingleColumnAggregateFunction": {
-        "description": "Single column aggregate function name.\nA valid GraphQL name",
-        "type": "string"
-      },
-      "SingleColumnAggregate": {
-        "properties": {
-          "column": {
-            "description": "The column to apply the aggregation function to",
-            "type": "string"
-          },
-          "function": {
-            "$ref": "#/components/schemas/SingleColumnAggregateFunction"
-          },
-          "result_type": {
-            "$ref": "#/components/schemas/ScalarType"
-          },
-          "type": {
-            "enum": [
-              "single_column"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "function",
-          "column",
-          "result_type",
-          "type"
-        ],
-        "type": "object"
-      },
-      "StarCountAggregate": {
-        "properties": {
-          "type": {
-            "enum": [
-              "star_count"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "type"
-        ],
-        "type": "object"
-      },
-      "Aggregate": {
-        "discriminator": {
-          "mapping": {
-            "column_count": "ColumnCountAggregate",
-            "single_column": "SingleColumnAggregate",
-            "star_count": "StarCountAggregate"
-          },
-          "propertyName": "type"
-        },
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/ColumnCountAggregate"
-          },
-          {
-            "$ref": "#/components/schemas/SingleColumnAggregate"
-          },
-          {
-            "$ref": "#/components/schemas/StarCountAggregate"
           }
         ]
       },
@@ -2275,6 +2235,10 @@
         ],
         "type": "object"
       },
+      "SingleColumnAggregateFunction": {
+        "description": "Single column aggregate function name.\nA valid GraphQL name",
+        "type": "string"
+      },
       "OrderBySingleColumnAggregate": {
         "properties": {
           "column": {
@@ -2394,6 +2358,152 @@
           "elements"
         ],
         "type": "object"
+      },
+      "NestedArrayField": {
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/Field"
+          },
+          "limit": {
+            "description": "Optionally limit the maximum number of returned elements of the array",
+            "maximum": 9223372036854776000,
+            "minimum": -9223372036854776000,
+            "nullable": true,
+            "type": "number"
+          },
+          "offset": {
+            "description": "Optionally skip the first n elements of the array",
+            "maximum": 9223372036854776000,
+            "minimum": -9223372036854776000,
+            "nullable": true,
+            "type": "number"
+          },
+          "order_by": {
+            "$ref": "#/components/schemas/OrderBy"
+          },
+          "type": {
+            "enum": [
+              "array"
+            ],
+            "type": "string"
+          },
+          "where": {
+            "$ref": "#/components/schemas/Expression"
+          }
+        },
+        "required": [
+          "field",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ColumnField": {
+        "properties": {
+          "column": {
+            "type": "string"
+          },
+          "column_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
+          "type": {
+            "enum": [
+              "column"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "column",
+          "column_type",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ColumnCountAggregate": {
+        "properties": {
+          "column": {
+            "description": "The column to apply the count aggregate function to",
+            "type": "string"
+          },
+          "distinct": {
+            "description": "Whether or not only distinct items should be counted",
+            "type": "boolean"
+          },
+          "type": {
+            "enum": [
+              "column_count"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "column",
+          "distinct",
+          "type"
+        ],
+        "type": "object"
+      },
+      "SingleColumnAggregate": {
+        "properties": {
+          "column": {
+            "description": "The column to apply the aggregation function to",
+            "type": "string"
+          },
+          "function": {
+            "$ref": "#/components/schemas/SingleColumnAggregateFunction"
+          },
+          "result_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
+          "type": {
+            "enum": [
+              "single_column"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "function",
+          "column",
+          "result_type",
+          "type"
+        ],
+        "type": "object"
+      },
+      "StarCountAggregate": {
+        "properties": {
+          "type": {
+            "enum": [
+              "star_count"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "Aggregate": {
+        "discriminator": {
+          "mapping": {
+            "column_count": "ColumnCountAggregate",
+            "single_column": "SingleColumnAggregate",
+            "star_count": "StarCountAggregate"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ColumnCountAggregate"
+          },
+          {
+            "$ref": "#/components/schemas/SingleColumnAggregate"
+          },
+          {
+            "$ref": "#/components/schemas/StarCountAggregate"
+          }
+        ]
       },
       "FunctionRequest": {
         "properties": {
@@ -2647,7 +2757,7 @@
             "type": "string"
           },
           "column_type": {
-            "$ref": "#/components/schemas/ScalarType"
+            "$ref": "#/components/schemas/ColumnType"
           },
           "nullable": {
             "description": "Is the column nullable",

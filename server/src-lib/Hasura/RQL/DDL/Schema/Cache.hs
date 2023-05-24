@@ -679,7 +679,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
         HashMap SourceName (AB.AnyBackend PartiallyResolvedSource),
         SourceMetadata b,
         SourceConfig b,
-        HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)),
+        HashMap (TableName b) (TableCoreInfoG b (StructuredColumnInfo b) (ColumnInfo b)),
         HashMap (TableName b) (EventTriggerInfoMap b),
         DBObjectsIntrospection b,
         PartiallyResolvedRemoteSchemaMap,
@@ -700,8 +700,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
         interpretWriter
           -< for (tablesRawInfo `alignTableMap` nonColumnsByTable) \(tableRawInfo, nonColumnInput) -> do
             let columns = _tciFieldInfoMap tableRawInfo
-                customObjectTypes = _tciCustomObjectTypes tableRawInfo
-            allFields :: FieldInfoMap (FieldInfo b) <- addNonColumnFields allSources sourceName sourceConfig customObjectTypes tablesRawInfo columns remoteSchemaMap dbFunctions nonColumnInput
+            allFields :: FieldInfoMap (FieldInfo b) <- addNonColumnFields allSources sourceName sourceConfig tablesRawInfo columns remoteSchemaMap dbFunctions nonColumnInput
             pure $ tableRawInfo {_tciFieldInfoMap = allFields}
 
       -- permissions
@@ -1274,7 +1273,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
       ( CacheDynamicConfig,
         SourceName,
         SourceConfig b,
-        TableCoreInfoG b (ColumnInfo b) (ColumnInfo b),
+        TableCoreInfoG b (StructuredColumnInfo b) (ColumnInfo b),
         [EventTriggerConf b],
         Inc.Dependency Inc.InvalidationKey,
         RecreateEventTriggers
@@ -1283,7 +1282,7 @@ buildSchemaCacheRule logger env = proc (MetadataWithResourceVersion metadataNoDe
     buildTableEventTriggers = proc (dynamicConfig, sourceName, sourceConfig, tableInfo, eventTriggerConfs, metadataInvalidationKey, migrationRecreateEventTriggers) ->
       buildInfoMap (etcName . (^. _7)) (mkEventTriggerMetadataObject @b) buildEventTrigger
         -<
-          (tableInfo, map (dynamicConfig,metadataInvalidationKey,sourceName,sourceConfig,_tciName tableInfo,migrationRecreateEventTriggers,) eventTriggerConfs)
+          (tableInfo & tciFieldInfoMap %~ HashMap.mapMaybe toScalarColumnInfo, map (dynamicConfig,metadataInvalidationKey,sourceName,sourceConfig,_tciName tableInfo,migrationRecreateEventTriggers,) eventTriggerConfs)
       where
         buildEventTrigger = proc (tableInfo, (dynamicConfig, _metadataInvalidationKey, source, sourceConfig, table, migrationRecreateEventTriggers, eventTriggerConf)) -> do
           let triggerName = etcName eventTriggerConf

@@ -80,7 +80,7 @@ convWildcard fieldInfoMap selPermInfo wildcard =
     (StarDot wc) -> (simpleCols ++) <$> (catMaybes <$> relExtCols wc)
   where
     cols = spiCols selPermInfo
-    pgCols = map ciColumn $ getCols fieldInfoMap
+    pgCols = map structuredColumnInfoColumn $ getCols fieldInfoMap
     relColInfos = getRels fieldInfoMap
 
     simpleCols = map ECSimple $ filter (`HashMap.member` cols) pgCols
@@ -136,7 +136,7 @@ convOrderByElem sessVarBldr (flds, spi) = \case
   OCPG fldName -> do
     fldInfo <- askFieldInfo flds fldName
     case fldInfo of
-      FIColumn colInfo -> do
+      FIColumn (SCIScalarColumn colInfo) -> do
         checkSelOnCol spi (ciColumn colInfo)
         let ty = ciType colInfo
         if isScalarColumnWhere isGeoType ty

@@ -1124,7 +1124,7 @@ tableAggregationFields tableInfo = do
       mkTypename = _rscTypeNames customization
   P.memoizeOn 'tableAggregationFields (sourceName, tableName) do
     tableGQLName <- getTableIdentifierName tableInfo
-    allColumns <- tableSelectColumns tableInfo
+    allColumns <- mapMaybe (^? _SCIScalarColumn) <$> tableSelectColumns tableInfo
     allComputedFields <-
       if supportsAggregateComputedFields @b -- See 'supportsAggregateComputedFields' for an explanation
         then tableSelectComputedFields tableInfo
@@ -1362,7 +1362,7 @@ fieldSelection ::
   FieldInfo b ->
   SchemaT r m [FieldParser n (AnnotatedField b)]
 fieldSelection table tableInfo = \case
-  FIColumn columnInfo ->
+  FIColumn (SCIScalarColumn columnInfo) ->
     maybeToList <$> runMaybeT do
       roleName <- retrieve scRole
       schemaKind <- retrieve scSchemaKind
@@ -1402,8 +1402,10 @@ fieldSelection table tableInfo = \case
       pure $!
         P.selection fieldName (ciDescription columnInfo) pathArg field
           <&> IR.mkAnnColumnField (ciColumn columnInfo) (ciType columnInfo) caseBoolExpUnpreparedValue
-  FINestedObject nestedObjectInfo ->
+  FIColumn (SCIObjectColumn nestedObjectInfo) ->
     pure . fmap IR.AFNestedObject <$> nestedObjectFieldParser tableInfo nestedObjectInfo
+  FIColumn (SCIArrayColumn NestedArrayInfo {..}) ->
+    fmap (nestedArrayFieldParser _naiSupportsNestedArrays _naiIsNullable) <$> fieldSelection table tableInfo (FIColumn _naiColumnInfo)
   FIRelationship relationshipInfo ->
     concat . maybeToList <$> relationshipField table relationshipInfo
   FIComputedField computedFieldInfo ->
@@ -1433,6 +1435,16 @@ fieldSelection table tableInfo = \case
           pure $ P.subselection_ _noiName _noiDescription parser
         _ -> throw500 $ "fieldSelection: object type " <> _noiType <<> " not found"
 
+outputParserModifier :: Bool -> IP.Parser origin 'Output m a -> IP.Parser origin 'Output m a
+outputParserModifier True = P.nullableParser
+outputParserModifier False = P.nonNullableParser
+
+nestedArrayFieldParser :: forall origin m b r v. Functor m => XNestedArrays b -> Bool -> IP.FieldParser origin m (IR.AnnFieldG b r v) -> IP.FieldParser origin m (IR.AnnFieldG b r v)
+nestedArrayFieldParser supportsNestedArrays isNullable =
+  wrapNullable . IP.multipleField . fmap (IR.AFNestedArray @b supportsNestedArrays . IR.ANASSimple)
+  where
+    wrapNullable = if isNullable then IP.nullableField else IP.nonNullableField
+
 nestedObjectParser ::
   forall b r m n.
   (MonadBuildSchema b r m n) =>
@@ -1449,21 +1461,22 @@ nestedObjectParser supportsNestedObjects objectTypes objectType column isNullabl
       P.selectionSet (_totName objectType) (_totDescription objectType) allFieldParsers
         <&> IR.AnnNestedObjectSelectG supportsNestedObjects column . parsedSelectionsToFields IR.AFExpression
   where
-    outputParserModifier True = P.nullableParser
-    outputParserModifier False = P.nonNullableParser
-
     outputFieldParser ::
       TableObjectFieldDefinition b ->
       SchemaT r m (IP.FieldParser MetadataObjId n (IR.AnnFieldG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)))
     outputFieldParser (TableObjectFieldDefinition column' name description (GraphQLType gType) objectFieldType) =
       P.memoizeOn 'nestedObjectParser (_totName objectType, name) do
-        case objectFieldType of
-          TOFTScalar fieldTypeName scalarType ->
-            wrapScalar scalarType $ customScalarParser fieldTypeName
-          TOFTObject objectName -> do
-            objectType' <- HashMap.lookup objectName objectTypes `onNothing` throw500 ("Custom type " <> objectName <<> " not found")
-            parser <- fmap (IR.AFNestedObject @b) <$> nestedObjectParser supportsNestedObjects objectTypes objectType' column' (G.isNullable gType)
-            pure $ P.subselection_ name description parser
+        let go objectFieldType' =
+              case objectFieldType' of
+                TOFTScalar fieldTypeName scalarType ->
+                  wrapScalar scalarType $ customScalarParser fieldTypeName
+                TOFTObject objectName -> do
+                  objectType' <- HashMap.lookup objectName objectTypes `onNothing` throw500 ("Custom type " <> objectName <<> " not found")
+                  parser <- fmap (IR.AFNestedObject @b) <$> nestedObjectParser supportsNestedObjects objectTypes objectType' column' (G.isNullable gType)
+                  pure $ P.subselection_ name description parser
+                TOFTArray supportsNestedArrays nestedFieldType isNullable' -> do
+                  nestedArrayFieldParser supportsNestedArrays isNullable' <$> go nestedFieldType
+        go objectFieldType
       where
         wrapScalar scalarType parser =
           pure $
@@ -1657,7 +1670,7 @@ relationshipField table ri = runMaybeT do
         (False, BeforeParent) -> do
           let columns = HashMap.keys $ riMapping ri
               fieldInfoMap = _tciFieldInfoMap $ _tiCoreInfo tableInfo
-              findColumn col = HashMap.lookup (fromCol @b col) fieldInfoMap ^? _Just . _FIColumn
+              findColumn col = HashMap.lookup (fromCol @b col) fieldInfoMap ^? _Just . _FIColumn . _SCIScalarColumn
           -- Fetch information about the referencing columns of the foreign key
           -- constraint
           colInfo <-

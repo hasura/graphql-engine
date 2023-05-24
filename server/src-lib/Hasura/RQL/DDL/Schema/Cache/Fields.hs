@@ -38,14 +38,13 @@ addNonColumnFields ::
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
   SourceName ->
   SourceConfig b ->
-  HashMap G.Name (TableObjectType b) ->
-  HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)) ->
-  FieldInfoMap (ColumnInfo b) ->
+  HashMap (TableName b) (TableCoreInfoG b (StructuredColumnInfo b) (ColumnInfo b)) ->
+  FieldInfoMap (StructuredColumnInfo b) ->
   PartiallyResolvedRemoteSchemaMap ->
   DBFunctionsMetadata b ->
   NonColumnTableInputs b ->
   m (FieldInfoMap (FieldInfo b))
-addNonColumnFields allSources sourceName sourceConfig customObjectTypes rawTableInfos columns remoteSchemaMap pgFunctions NonColumnTableInputs {..} = do
+addNonColumnFields allSources sourceName sourceConfig rawTableInfos columns remoteSchemaMap pgFunctions NonColumnTableInputs {..} = do
   objectRelationshipInfos <-
     buildInfoMapPreservingMetadataM
       _rdName
@@ -61,18 +60,19 @@ addNonColumnFields allSources sourceName sourceConfig customObjectTypes rawTable
       _nctiArrayRelationships
 
   let relationshipInfos = objectRelationshipInfos <> arrayRelationshipInfos
+      scalarColumns = HashMap.mapMaybe toScalarColumnInfo columns
 
   computedFieldInfos <-
     buildInfoMapPreservingMetadataM
       _cfmName
       (mkComputedFieldMetadataObject sourceName _nctiTable)
-      (buildComputedField (HS.fromList $ HashMap.keys rawTableInfos) (HS.fromList $ map ciColumn $ HashMap.elems columns) sourceName pgFunctions _nctiTable)
+      (buildComputedField (HS.fromList $ HashMap.keys rawTableInfos) (HS.fromList $ map ciColumn $ HashMap.elems scalarColumns) sourceName pgFunctions _nctiTable)
       _nctiComputedFields
   -- the fields that can be used for defining join conditions to other sources/remote schemas:
   -- 1. all columns
   -- 2. computed fields which don't expect arguments other than the table row and user session
   let lhsJoinFields =
-        let columnFields = columns <&> \columnInfo -> JoinColumn (ciColumn columnInfo) (ciType columnInfo)
+        let columnFields = scalarColumns <&> \columnInfo -> JoinColumn (ciColumn columnInfo) (ciType columnInfo)
             computedFields = HashMap.fromList $
               flip mapMaybe (HashMap.toList computedFieldInfos) $
                 \(cfName, (ComputedFieldInfo {..}, _)) -> do
@@ -136,7 +136,7 @@ addNonColumnFields allSources sourceName sourceConfig customObjectTypes rawTable
         pure Nothing
 
     noCustomFieldConflicts nonColumnFields = do
-      let columnsByGQLName = mapFromL ciName $ HashMap.elems columns
+      let columnsByGQLName = mapFromL structuredColumnInfoName $ HashMap.elems columns
       for nonColumnFields \(fieldInfo, metadata) -> withRecordInconsistencyM metadata do
         for_ (fieldInfoGraphQLNames fieldInfo) \fieldGQLName ->
           case HashMap.lookup fieldGQLName columnsByGQLName of
@@ -144,15 +144,15 @@ addNonColumnFields allSources sourceName sourceConfig customObjectTypes rawTable
             -- If they are the same, `noColumnConflicts` will catch it, and it will produce a
             -- more useful error message.
             Just columnInfo
-              | toTxt (ciColumn columnInfo) /= G.unName fieldGQLName ->
+              | toTxt (structuredColumnInfoColumn columnInfo) /= G.unName fieldGQLName ->
                   throw400 AlreadyExists $
                     "field definition conflicts with custom field name for postgres column "
-                      <>> ciColumn columnInfo
+                      <>> structuredColumnInfoColumn columnInfo
             _ -> return ()
         return (fieldInfo, metadata)
 
     noColumnConflicts = \case
-      This columnInfo -> pure $ columnInfoToFieldInfo customObjectTypes columnInfo
+      This columnInfo -> pure $ FIColumn columnInfo
       That (fieldInfo, _) -> pure $ fieldInfo
       These columnInfo (_, fieldMetadata) -> do
         recordInconsistencyM Nothing fieldMetadata "field definition conflicts with postgres column"

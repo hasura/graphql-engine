@@ -211,11 +211,12 @@ tableFieldsInput tableInfo = do
     mkFieldParser = \case
       FIComputedField _ -> pure Nothing
       FIRemoteRelationship _ -> pure Nothing
-      FINestedObject _ -> pure Nothing -- TODO(dmoverton)
-      FIColumn columnInfo -> do
+      FIColumn (SCIScalarColumn columnInfo) -> do
         if (_cmIsInsertable $ ciMutability columnInfo)
           then mkColumnParser columnInfo
           else pure Nothing
+      FIColumn (SCIObjectColumn _) -> pure Nothing -- TODO(dmoverton)
+      FIColumn (SCIArrayColumn _) -> pure Nothing -- TODO(dmoverton)
       FIRelationship relInfo -> mkRelationshipParser relInfo
 
     mkColumnParser ::

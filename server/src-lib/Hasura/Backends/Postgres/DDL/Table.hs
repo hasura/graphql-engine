@@ -74,7 +74,7 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
           Nothing -> refute [EnumTableMissingPrimaryKey]
           Just primaryKey -> case _pkColumns primaryKey of
             column NESeq.:<|| Seq.Empty -> case rciType column of
-              PGText -> pure column
+              RawColumnTypeScalar PGText -> pure column
               _ -> refute [EnumTableNonTextualPrimaryKey column]
             columns -> refute [EnumTableMultiColumnPrimaryKey $ map rciName (toList columns)]
 
@@ -83,7 +83,7 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
           case nonPrimaryKeyColumns of
             [] -> pure Nothing
             [column] -> case rciType column of
-              PGText -> pure $ Just column
+              RawColumnTypeScalar PGText -> pure $ Just column
               _ -> dispute [EnumTableNonTextualCommentColumn column] $> Nothing
             columns -> dispute [EnumTableTooManyColumns $ map rciName columns] $> Nothing
 
@@ -123,11 +123,12 @@ fetchAndValidateEnumValues pgSourceConfig tableName maybePrimaryKey columnInfos 
               <> ")"
           where
             typeMismatch description colInfo expected =
-              "the table’s "
-                <> description
-                <> " ("
-                <> rciName colInfo <<> ") must have type "
-                <> expected <<> ", not type " <>> rciType colInfo
+              let RawColumnTypeScalar scalarType = rciType @('Postgres pgKind) colInfo
+               in "the table’s "
+                    <> description
+                    <> " ("
+                    <> rciName colInfo <<> ") must have type "
+                    <> expected <<> ", not type " <>> scalarType
 
 fetchEnumValuesFromDb ::
   forall pgKind m.

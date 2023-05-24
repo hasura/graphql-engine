@@ -131,8 +131,10 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
       fieldName <- hoistMaybe $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp
-        FIColumn columnInfo ->
+        FIColumn (SCIScalarColumn columnInfo) ->
           lift $ fmap (AVColumn columnInfo) <$> comparisonExps @b (ciType columnInfo)
+        FIColumn (SCIObjectColumn _) -> empty -- TODO(dmoverton)
+        FIColumn (SCIArrayColumn _) -> empty -- TODO(dmoverton)
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
           case riTarget relationshipInfo of
@@ -165,7 +167,6 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
 
         -- Using remote relationship fields in boolean expressions is not supported.
         FIRemoteRelationship _ -> empty
-        FINestedObject _ -> empty -- TODO(dmoverton)
 
 -- |
 -- > input type_bool_exp {

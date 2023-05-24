@@ -69,7 +69,7 @@ formatDateColumnsInRow dateTimeFormatString TableInfo {..} row =
             else fieldValue
       )
   where
-    dateFields = fmap (\ColumnInfo {..} -> FieldName $ unColumnName _ciName) $ filter (\ColumnInfo {..} -> _ciType == dateTimeScalarType) _tiColumns
+    dateFields = fmap (\ColumnInfo {..} -> FieldName $ unColumnName _ciName) $ filter (\ColumnInfo {..} -> _ciType == ColumnTypeScalar dateTimeScalarType) _tiColumns
     dateTimeScalarType = ScalarType "DateTime"
     tryFormatDate fieldValue = case deserializeAsColumnFieldValue fieldValue of
       J.String value -> do

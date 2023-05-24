@@ -34,6 +34,7 @@ module Hasura.Backends.DataConnector.API.V0.Query
     qOrderBy,
     Field (..),
     RelationshipField (..),
+    ArrayField (..),
     QueryResponse (..),
     qrRows,
     qrAggregates,
@@ -42,6 +43,7 @@ module Hasura.Backends.DataConnector.API.V0.Query
     mkRelationshipFieldValue,
     mkNestedObjFieldValue,
     mkNestedArrayFieldValue,
+    isNullFieldValue,
     deserializeAsColumnFieldValue,
     deserializeAsRelationshipFieldValue,
     deserializeAsNestedObjFieldValue,
@@ -283,16 +285,37 @@ relationshipFieldObjectCodec =
     <*> requiredField "query" "Relationship query"
       .= _rfQuery
 
+data ArrayField = ArrayField
+  { _afField :: Field,
+    _afLimit :: Maybe Int,
+    _afOffset :: Maybe Int,
+    _afWhere :: Maybe API.V0.Expression,
+    _afOrderBy :: Maybe API.V0.OrderBy
+  }
+  deriving stock (Eq, Ord, Show, Generic)
+
+arrayFieldObjectCodec :: JSONObjectCodec ArrayField
+arrayFieldObjectCodec =
+  ArrayField
+    <$> requiredField "field" "The nested field for array elements" .= _afField
+    <*> optionalFieldOrNull "limit" "Optionally limit the maximum number of returned elements of the array" .= _afLimit
+    <*> optionalFieldOrNull "offset" "Optionally skip the first n elements of the array" .= _afOffset
+    <*> optionalFieldOrNull "where" "Optionally constrain the returned elements of the array to satisfy some predicate" .= _afWhere
+    <*> optionalFieldOrNull "order_by" "Optionally order the returned elements of the array" .= _afOrderBy
+
 -- | The specific fields that are targeted by a 'Query'.
 --
--- A field conceptually falls under one of the two following categories:
+-- A field conceptually falls under one of the following categories:
 --   1. a "column" within the data store that the query is being issued against
 --   2. a "relationship", which indicates that the field is the result of
 --      a subquery
+--   3. an "object", which indicates that the field contains a nested object
+--   4. an "array", which indicates that the field contains a nested array
 data Field
   = ColumnField API.V0.ColumnName API.V0.ScalarType
   | RelField RelationshipField
   | NestedObjField API.V0.ColumnName Query
+  | NestedArrayField ArrayField
   deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Field
 
@@ -318,11 +341,13 @@ instance HasCodec Field where
         ColumnField columnName scalarType -> ("column", mapToEncoder (columnName, scalarType) columnCodec)
         RelField relField -> ("relationship", mapToEncoder relField relationshipFieldObjectCodec)
         NestedObjField columnName nestedObjQuery -> ("object", mapToEncoder (columnName, nestedObjQuery) nestedObjCodec)
+        NestedArrayField arrayField -> ("array", mapToEncoder arrayField arrayFieldObjectCodec)
       dec =
         HashMap.fromList
           [ ("column", ("ColumnField", mapToDecoder (uncurry ColumnField) columnCodec)),
             ("relationship", ("RelationshipField", mapToDecoder RelField relationshipFieldObjectCodec)),
-            ("object", ("NestedObjectField", mapToDecoder (uncurry NestedObjField) nestedObjCodec))
+            ("object", ("NestedObjField", mapToDecoder (uncurry NestedObjField) nestedObjCodec)),
+            ("array", ("NestedArrayField", mapToDecoder NestedArrayField arrayFieldObjectCodec))
           ]
 
 -- | The resolved query response provided by the 'POST /query'
@@ -395,6 +420,10 @@ mkNestedObjFieldValue = FieldValue . J.toJSON
 
 mkNestedArrayFieldValue :: [FieldValue] -> FieldValue
 mkNestedArrayFieldValue = FieldValue . J.toJSON
+
+isNullFieldValue :: FieldValue -> Bool
+isNullFieldValue (FieldValue J.Null) = True
+isNullFieldValue _ = False
 
 deserializeAsColumnFieldValue :: FieldValue -> J.Value
 deserializeAsColumnFieldValue (FieldValue value) = value

@@ -27,7 +27,7 @@ import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
 import Hasura.RQL.Types.BackendType (BackendType (Postgres), PostgresKind (Vanilla))
-import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..))
+import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..), StructuredColumnInfo (..))
 import Hasura.RQL.Types.Common (Comment (..), FieldName (..), OID (..))
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Permission (AllowedRootFields (..))
@@ -181,7 +181,7 @@ buildTableInfo TableInfoBuilder {..} = tableInfo
         $ columns
 
     toCIHashPair :: ColumnInfoBuilder -> (FieldName, FieldInfo PG)
-    toCIHashPair cib = (coerce $ cibName cib, FIColumn $ mkColumnInfo cib)
+    toCIHashPair cib = (coerce $ cibName cib, FIColumn $ SCIScalarColumn $ mkColumnInfo cib)
 
     toRelHashPair :: RelInfo PG -> (FieldName, FieldInfo PG)
     toRelHashPair ri = (fromRel $ riName ri, FIRelationship ri)

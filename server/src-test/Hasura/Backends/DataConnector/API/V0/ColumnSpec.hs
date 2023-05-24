@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Hasura.Backends.DataConnector.API.V0.ColumnSpec (spec, genColumnName, genColumnInfo, genColumnValueGenerationStrategy) where
+module Hasura.Backends.DataConnector.API.V0.ColumnSpec (spec, genColumnName, genColumnType, genColumnInfo, genColumnValueGenerationStrategy) where
 
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
@@ -10,6 +10,7 @@ import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
+import Language.GraphQL.Draft.Generator (genName)
 import Test.Aeson.Utils
 import Test.Hspec
 
@@ -21,7 +22,7 @@ spec = do
   describe "ColumnInfo" $ do
     describe "minimal" $
       testFromJSON
-        (ColumnInfo (ColumnName "my_column_name") (ScalarType "string") False Nothing False False Nothing)
+        (ColumnInfo (ColumnName "my_column_name") (ColumnTypeScalar $ ScalarType "string") False Nothing False False Nothing)
         [aesonQQ|
           { "name": "my_column_name",
             "type": "string",
@@ -30,7 +31,7 @@ spec = do
         |]
     describe "non-minimal" $
       testToFromJSONToSchema
-        (ColumnInfo (ColumnName "my_column_name") (ScalarType "number") True (Just "My column description") True True (Just AutoIncrement))
+        (ColumnInfo (ColumnName "my_column_name") (ColumnTypeScalar $ ScalarType "number") True (Just "My column description") True True (Just AutoIncrement))
         [aesonQQ|
           { "name": "my_column_name",
             "type": "number",
@@ -55,11 +56,19 @@ spec = do
 genColumnName :: MonadGen m => m ColumnName
 genColumnName = ColumnName <$> genArbitraryAlphaNumText defaultRange
 
-genColumnInfo :: (MonadGen m, GenBase m ~ Identity) => m ColumnInfo
+genColumnType :: Gen ColumnType
+genColumnType =
+  Gen.choice
+    [ ColumnTypeScalar <$> genScalarType,
+      ColumnTypeObject <$> genName,
+      ColumnTypeArray <$> genColumnType <*> Gen.bool
+    ]
+
+genColumnInfo :: Gen ColumnInfo
 genColumnInfo =
   ColumnInfo
     <$> genColumnName
-    <*> genScalarType
+    <*> genColumnType
     <*> Gen.bool
     <*> Gen.maybe (genArbitraryAlphaNumText defaultRange)
     <*> Gen.bool

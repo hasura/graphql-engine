@@ -167,7 +167,7 @@ transformColumn sysCol =
 
       rciIsNullable = scIsNullable sysCol
       rciDescription = Nothing
-      rciType = parseScalarType $ styName $ scJoinedSysType sysCol
+      rciType = RawColumnTypeScalar $ parseScalarType $ styName $ scJoinedSysType sysCol
       foreignKeys =
         scJoinedForeignKeyColumns sysCol <&> \foreignKeyColumn ->
           let _fkConstraint = Constraint (ConstraintName "fk_mssql") $ OID $ sfkcConstraintObjectId foreignKeyColumn

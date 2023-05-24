@@ -34,7 +34,7 @@ spec = do
         ( TableInfo
             (TableName ["my_table_name"])
             View
-            [ColumnInfo (ColumnName "id") (ScalarType "string") False Nothing False False Nothing]
+            [ColumnInfo (ColumnName "id") (ColumnTypeScalar $ ScalarType "string") False Nothing False False Nothing]
             (Just $ ColumnName "id" :| [])
             (ForeignKeys mempty)
             (Just "my description")
@@ -58,7 +58,7 @@ spec = do
         ( TableInfo
             (TableName ["my_table_name"])
             Table
-            [ColumnInfo (ColumnName "id") (ScalarType "string") False Nothing False False Nothing]
+            [ColumnInfo (ColumnName "id") (ColumnTypeScalar $ ScalarType "string") False Nothing False False Nothing]
             (Just $ ColumnName "id" :| [])
             (ForeignKeys $ HashMap.singleton (ConstraintName "Artist") (Constraint (TableName ["artist_table"]) (HashMap.singleton (ColumnName "ArtistId") (ColumnName "ArtistId"))))
             (Just "my description")
@@ -105,7 +105,7 @@ genTableType :: MonadGen m => m TableType
 genTableType = Gen.enumBounded
 
 -- | Note: this generator is intended for serialization tests only and does not ensure valid Foreign Key Constraints.
-genTableInfo :: (MonadGen m, GenBase m ~ Identity) => m TableInfo
+genTableInfo :: Gen TableInfo
 genTableInfo =
   TableInfo
     <$> genTableName

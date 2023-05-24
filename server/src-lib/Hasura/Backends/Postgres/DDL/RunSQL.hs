@@ -45,6 +45,7 @@ import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Diff qualified as Diff
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Column (StructuredColumnInfo (..))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
@@ -281,7 +282,7 @@ withMetadataCheck sqlGen source cascade txAccess runSQLQuery = do
         runPgSourceWriteTx sourceConfig RunSQLQuery $
           forM_ (HashMap.elems tables) $ \(TableInfo coreInfo _ eventTriggers _) -> do
             let table = _tciName coreInfo
-                columns = getCols $ _tciFieldInfoMap coreInfo
+                columns = fmap (\(SCIScalarColumn col) -> col) $ getCols $ _tciFieldInfoMap coreInfo
             forM_ (HashMap.toList eventTriggers) $ \(triggerName, EventTriggerInfo {etiOpsDef, etiTriggerOnReplication}) -> do
               flip runReaderT sqlGen $
                 mkAllTriggersQ triggerName table etiTriggerOnReplication columns etiOpsDef

@@ -182,7 +182,16 @@ class
     NFData (XNestedObjects b),
     Hashable (XNestedObjects b),
     ToJSON (XNestedObjects b),
+    FromJSON (XNestedObjects b),
     ToTxt (XNestedObjects b),
+    Eq (XNestedArrays b),
+    Ord (XNestedArrays b),
+    Show (XNestedArrays b),
+    NFData (XNestedArrays b),
+    Hashable (XNestedArrays b),
+    ToJSON (XNestedArrays b),
+    FromJSON (XNestedArrays b),
+    ToTxt (XNestedArrays b),
     -- Intermediate Representations
     Traversable (BooleanOperators b),
     Traversable (UpdateVariant b),
@@ -329,6 +338,9 @@ class
 
   type XNestedObjects b :: Type
   type XNestedObjects b = XDisable
+
+  type XNestedArrays b :: Type
+  type XNestedArrays b = XDisable
 
   -- The result of dynamic connection template resolution
   type ResolvedConnectionTemplate b :: Type

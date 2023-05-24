@@ -325,6 +325,14 @@ translateAnnField sessionVariables sourceTableName = \case
   AFNestedObject nestedObj ->
     Just . API.NestedObjField (Witch.from $ _anosColumn nestedObj)
       <$> translateNestedObjectSelect sessionVariables sourceTableName nestedObj
+  AFNestedArray _ (ANASSimple field) ->
+    fmap mkArrayField <$> translateAnnField sessionVariables sourceTableName field
+    where
+      mkArrayField nestedField =
+        API.NestedArrayField (API.ArrayField nestedField Nothing Nothing Nothing Nothing)
+  -- TODO(dmoverton): support limit, offset, where and order_by in ArrayField
+  AFNestedArray _ (ANASAggregate _) ->
+    pure Nothing -- TODO(dmoverton): support nested array aggregates
   AFColumn colField ->
     -- TODO: make sure certain fields in colField are not in use, since we don't support them
     pure . Just $ API.ColumnField (Witch.from $ _acfColumn colField) (Witch.from . columnTypeToScalarType $ _acfType colField)
@@ -623,6 +631,18 @@ reshapeField field responseFieldValue =
         Left err -> throw500 $ "Expected object in field returned by Data Connector agent: " <> err -- TODO(dmoverton): Add pathing information for error clarity
         Right nestedResponse ->
           reshapeAnnFields noPrefix (_anosFields nestedObj) nestedResponse
+    AFNestedArray _ (ANASSimple arrayField) -> do
+      fv <- responseFieldValue
+      if API.isNullFieldValue fv
+        then pure JE.null_
+        else do
+          let nestedArrayFieldValue = API.deserializeAsNestedArrayFieldValue fv
+          case nestedArrayFieldValue of
+            Left err -> throw500 $ "Expected array in field returned by Data Connector agent: " <> err -- TODO(dmoverton): Add pathing information for error clarity
+            Right arrayResponse ->
+              JE.list id <$> traverse (reshapeField arrayField) (pure <$> arrayResponse)
+    AFNestedArray _ (ANASAggregate _) ->
+      throw400 NotSupported "Nested array aggregate not supported"
     AFColumn _columnField -> do
       columnFieldValue <- API.deserializeAsColumnFieldValue <$> responseFieldValue
       pure $ J.toEncoding columnFieldValue

@@ -3,8 +3,9 @@
 /* eslint-disable */
 
 import type { ColumnField } from './ColumnField';
-import type { NestedObjectField } from './NestedObjectField';
+import type { NestedArrayField } from './NestedArrayField';
+import type { NestedObjField } from './NestedObjField';
 import type { RelationshipField } from './RelationshipField';
 
-export type Field = (NestedObjectField | RelationshipField | ColumnField);
+export type Field = (NestedObjField | RelationshipField | NestedArrayField | ColumnField);
 

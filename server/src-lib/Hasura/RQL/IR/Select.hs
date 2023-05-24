@@ -37,6 +37,8 @@ module Hasura.RQL.IR.Select
     AnnFieldsG,
     AnnNestedObjectSelectG (..),
     AnnNestedObjectSelect,
+    AnnNestedArraySelectG (..),
+    AnnNestedArraySelect,
     AnnObjectSelect,
     AnnObjectSelectG (..),
     AnnSimpleSelect,
@@ -243,8 +245,9 @@ data AnnFieldG (b :: BackendType) (r :: Type) v
   | AFNodeId (XRelay b) SourceName (TableName b) (PrimaryKeyColumns b)
   | AFExpression Text
   | -- | Nested object.
-    AFNestedObject (AnnNestedObjectSelectG b r v)
-  -- TODO (dmoverton): add AFNestedArray
+    AFNestedObject (AnnNestedObjectSelectG b r v) -- TODO(dmoverton): move XNestedObject to a field in AFNestedObject constructor for consistency with AFNestedArray
+  | -- | Nested array
+    AFNestedArray (XNestedArrays b) (AnnNestedArraySelectG b r v)
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
@@ -254,7 +257,8 @@ deriving stock instance
     Eq (ComputedFieldSelect b r v),
     Eq (ObjectRelationSelectG b r v),
     Eq (RemoteRelationshipSelect b r),
-    Eq (AnnNestedObjectSelectG b r v)
+    Eq (AnnNestedObjectSelectG b r v),
+    Eq (AnnNestedArraySelectG b r v)
   ) =>
   Eq (AnnFieldG b r v)
 
@@ -265,7 +269,8 @@ deriving stock instance
     Show (ComputedFieldSelect b r v),
     Show (ObjectRelationSelectG b r v),
     Show (RemoteRelationshipSelect b r),
-    Show (AnnNestedObjectSelectG b r v)
+    Show (AnnNestedObjectSelectG b r v),
+    Show (AnnNestedArraySelectG b r v)
   ) =>
   Show (AnnFieldG b r v)
 
@@ -279,6 +284,7 @@ instance Backend b => Bifoldable (AnnFieldG b) where
     AFNodeId {} -> mempty
     AFExpression {} -> mempty
     AFNestedObject no -> bifoldMap f g no
+    AFNestedArray _ na -> bifoldMap f g na
 
 type AnnField b = AnnFieldG b Void (SQLExpression b)
 
@@ -699,6 +705,26 @@ instance Backend b => Bifoldable (AnnNestedObjectSelectG b) where
     foldMap (foldMap $ bifoldMap f g) _anosFields
 
 type AnnNestedObjectSelect b r = AnnNestedObjectSelectG b r (SQLExpression b)
+
+-- Nested arrays
+
+data AnnNestedArraySelectG (b :: BackendType) (r :: Type) v
+  = ANASSimple (AnnFieldG b r v)
+  | ANASAggregate (AnnAggregateSelectG b r v)
+  deriving stock (Functor, Foldable, Traversable)
+
+deriving stock instance
+  (Backend b, Eq (AnnFieldG b r v), Eq (AnnAggregateSelectG b r v)) => Eq (AnnNestedArraySelectG b r v)
+
+deriving stock instance
+  (Backend b, Show (AnnFieldG b r v), Show (AnnAggregateSelectG b r v)) => Show (AnnNestedArraySelectG b r v)
+
+instance Backend b => Bifoldable (AnnNestedArraySelectG b) where
+  bifoldMap f g = \case
+    ANASSimple field -> bifoldMap f g field
+    ANASAggregate agg -> bifoldMapAnnSelectG f g agg
+
+type AnnNestedArraySelect b r = AnnNestedArraySelectG b r (SQLExpression b)
 
 -- | If argument positional index is less than or equal to length of
 -- 'positional' arguments then insert the value in 'positional' arguments else

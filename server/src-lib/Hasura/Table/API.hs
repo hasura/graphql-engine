@@ -91,10 +91,16 @@ instance (Backend b) => FromJSON (TrackTable b) where
     where
       withOptions = withObject "TrackTable" \o ->
         TrackTable
-          <$> o .:? "source" .!= defaultSource
-          <*> o .: "table"
-          <*> o .:? "is_enum" .!= False
-          <*> o .:? "apollo_federation_config"
+          <$> o
+            .:? "source"
+            .!= defaultSource
+          <*> o
+            .: "table"
+          <*> o
+            .:? "is_enum"
+            .!= False
+          <*> o
+            .:? "apollo_federation_config"
       withoutOptions = TrackTable defaultSource <$> parseJSON v <*> pure False <*> pure Nothing
 
 data SetTableIsEnum b = SetTableIsEnum
@@ -110,9 +116,13 @@ deriving instance (Show (TableName b)) => Show (SetTableIsEnum b)
 instance (Backend b) => FromJSON (SetTableIsEnum b) where
   parseJSON = withObject "SetTableIsEnum" $ \o ->
     SetTableIsEnum
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .: "is_enum"
+      <$> o
+        .:? "source"
+        .!= defaultSource
+      <*> o
+        .: "table"
+      <*> o
+        .: "is_enum"
 
 data UntrackTable b = UntrackTable
   { utSource :: SourceName,
@@ -127,9 +137,14 @@ deriving instance (Backend b) => Eq (UntrackTable b)
 instance (Backend b) => FromJSON (UntrackTable b) where
   parseJSON = withObject "UntrackTable" $ \o ->
     UntrackTable
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .:? "cascade" .!= False
+      <$> o
+        .:? "source"
+        .!= defaultSource
+      <*> o
+        .: "table"
+      <*> o
+        .:? "cascade"
+        .!= False
 
 isTableTracked :: forall b. (Backend b) => SourceInfo b -> TableName b -> Bool
 isTableTracked sourceInfo tableName =
@@ -512,9 +527,13 @@ data SetTableCustomization b = SetTableCustomization
 instance (Backend b) => FromJSON (SetTableCustomization b) where
   parseJSON = withObject "SetTableCustomization" $ \o ->
     SetTableCustomization
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .: "configuration"
+      <$> o
+        .:? "source"
+        .!= defaultSource
+      <*> o
+        .: "table"
+      <*> o
+        .: "configuration"
 
 data SetTableCustomFields = SetTableCustomFields
   { _stcfSource :: SourceName,
@@ -527,10 +546,17 @@ data SetTableCustomFields = SetTableCustomFields
 instance FromJSON SetTableCustomFields where
   parseJSON = withObject "SetTableCustomFields" $ \o ->
     SetTableCustomFields
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .:? "custom_root_fields" .!= emptyCustomRootFields
-      <*> o .:? "custom_column_names" .!= HashMap.empty
+      <$> o
+        .:? "source"
+        .!= defaultSource
+      <*> o
+        .: "table"
+      <*> o
+        .:? "custom_root_fields"
+        .!= emptyCustomRootFields
+      <*> o
+        .:? "custom_column_names"
+        .!= HashMap.empty
 
 runSetTableCustomFieldsQV2 ::
   (QErrM m, CacheRWM m, MetadataM m) => SetTableCustomFields -> m EncJSON
@@ -662,7 +688,7 @@ buildTableCache ::
     Inc.Dependency Inc.InvalidationKey,
     NamingCase
   )
-    `arr` HashMap.HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
+    `arr` HashMap.HashMap (TableName b) (TableCoreInfoG b (StructuredColumnInfo b) (ColumnInfo b))
 buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuildInputs, reloadMetadataInvalidationKey, tCase) -> do
   rawTableInfos <-
     (|
@@ -756,7 +782,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       HashMap.HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues) ->
       TableCoreInfoG b (RawColumnInfo b) (Column b) ->
       NamingCase ->
-      n (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
+      n (TableCoreInfoG b (StructuredColumnInfo b) (ColumnInfo b))
     processTableInfo enumTables rawInfo tCase = do
       let columns = _tciFieldInfoMap rawInfo
           enumReferences = resolveEnumReferences enumTables (_tciForeignKeys rawInfo)
@@ -765,7 +791,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
           >>= traverse (processColumnInfo tCase enumReferences (_tciName rawInfo))
       assertNoDuplicateFieldNames (HashMap.elems columnInfoMap)
 
-      primaryKey <- traverse (resolvePrimaryKeyColumns columnInfoMap) (_tciPrimaryKey rawInfo)
+      primaryKey <- traverse (resolvePrimaryKeyColumns $ HashMap.mapMaybe toScalarColumnInfo columnInfoMap) (_tciPrimaryKey rawInfo)
       pure
         rawInfo
           { _tciFieldInfoMap = columnInfoMap,
@@ -821,25 +847,50 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       HashMap.HashMap (Column b) (NonEmpty (EnumReference b)) ->
       TableName b ->
       (RawColumnInfo b, GQLNameIdentifier, Maybe G.Description) ->
-      n (ColumnInfo b)
-    processColumnInfo tCase tableEnumReferences tableName (rawInfo, name, description) = do
-      resolvedType <- resolveColumnType
-      pure
-        ColumnInfo
-          { ciColumn = pgCol,
-            ciName = (applyFieldNameCaseIdentifier tCase name),
-            ciPosition = rciPosition rawInfo,
-            ciType = resolvedType,
-            ciIsNullable = rciIsNullable rawInfo,
-            ciDescription = description,
-            ciMutability = rciMutability rawInfo
-          }
+      n (StructuredColumnInfo b)
+    processColumnInfo tCase tableEnumReferences tableName (rawInfo, name, description) =
+      processRawColumnType (rciIsNullable rawInfo) $ rciType rawInfo
       where
+        processRawColumnType isNullable = \case
+          RawColumnTypeScalar scalarType -> do
+            resolvedType <- resolveColumnType scalarType
+            pure $
+              SCIScalarColumn
+                ColumnInfo
+                  { ciColumn = pgCol,
+                    ciName = applyFieldNameCaseIdentifier tCase name,
+                    ciPosition = rciPosition rawInfo,
+                    ciType = resolvedType,
+                    ciIsNullable = isNullable,
+                    ciDescription = description,
+                    ciMutability = rciMutability rawInfo
+                  }
+          RawColumnTypeObject supportsNestedObjects objectTypeName ->
+            pure $
+              SCIObjectColumn @b
+                NestedObjectInfo
+                  { _noiSupportsNestedObjects = supportsNestedObjects,
+                    _noiColumn = pgCol,
+                    _noiName = applyFieldNameCaseIdentifier tCase name,
+                    _noiType = objectTypeName,
+                    _noiIsNullable = isNullable,
+                    _noiDescription = description,
+                    _noiMutability = rciMutability rawInfo
+                  }
+          RawColumnTypeArray supportsNestedArrays rawColumnType isNullable' -> do
+            nestedColumnInfo <- processRawColumnType isNullable' rawColumnType
+            pure $
+              SCIArrayColumn @b
+                NestedArrayInfo
+                  { _naiSupportsNestedArrays = supportsNestedArrays,
+                    _naiIsNullable = isNullable,
+                    _naiColumnInfo = nestedColumnInfo
+                  }
         pgCol = rciName rawInfo
-        resolveColumnType =
+        resolveColumnType scalarType =
           case HashMap.lookup pgCol tableEnumReferences of
             -- no references? not an enum
-            Nothing -> pure $ ColumnScalar (rciType rawInfo)
+            Nothing -> pure $ ColumnScalar scalarType
             -- one reference? is an enum
             Just (enumReference :| []) -> pure $ ColumnEnumReference enumReference
             -- multiple referenced enums? the schema is strange, so let’s reject it
@@ -853,12 +904,12 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
                   <> ")"
 
     assertNoDuplicateFieldNames columns =
-      void $ flip HashMap.traverseWithKey (HashMap.groupOn ciName columns) \name columnsWithName ->
+      void $ flip HashMap.traverseWithKey (HashMap.groupOn structuredColumnInfoName columns) \name columnsWithName ->
         case columnsWithName of
           one : two : more ->
             throw400 AlreadyExists $
               "the definitions of columns "
-                <> englishList "and" (dquote . ciColumn <$> (one :| two : more))
+                <> englishList "and" (dquote . structuredColumnInfoColumn <$> (one :| two : more))
                 <> " are in conflict: they are mapped to the same field name, " <>> name
           _ -> pure ()
 
@@ -882,9 +933,13 @@ data SetApolloFederationConfig b = SetApolloFederationConfig
 instance (Backend b) => FromJSON (SetApolloFederationConfig b) where
   parseJSON = withObject "SetApolloFederationConfig" $ \o ->
     SetApolloFederationConfig
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .:? "apollo_federation_config"
+      <$> o
+        .:? "source"
+        .!= defaultSource
+      <*> o
+        .: "table"
+      <*> o
+        .:? "apollo_federation_config"
 
 runSetApolloFederationConfig ::
   forall b m.

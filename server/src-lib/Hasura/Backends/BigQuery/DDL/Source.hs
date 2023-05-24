@@ -114,7 +114,7 @@ resolveSource sourceConfig =
                               [ RawColumnInfo
                                   { rciName = ColumnName name,
                                     rciPosition = position,
-                                    rciType = restTypeToScalarType type',
+                                    rciType = RawColumnTypeScalar $ restTypeToScalarType type',
                                     rciIsNullable =
                                       case mode of
                                         Nullable -> True

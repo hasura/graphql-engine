@@ -482,6 +482,9 @@ const projectRow = (fields: Record<string, Field>, findRelationship: (relationsh
       case "object":
         throw new Error('Unsupported field type "object"');
 
+      case "array":
+        throw new Error('Unsupported field type "array"');
+
       default:
         return unreachable(field["type"]);
     }

@@ -349,8 +349,7 @@ getAllCustomRootFields TableCustomRootFields {..} =
   ]
 
 data FieldInfo (b :: BackendType)
-  = FIColumn (ColumnInfo b)
-  | FINestedObject (NestedObjectInfo b)
+  = FIColumn (StructuredColumnInfo b)
   | FIRelationship (RelInfo b)
   | FIComputedField (ComputedFieldInfo b)
   | FIRemoteRelationship (RemoteFieldInfo (DBJoinField b))
@@ -372,16 +371,14 @@ type FieldInfoMap = HashMap.HashMap FieldName
 
 fieldInfoName :: forall b. (Backend b) => FieldInfo b -> FieldName
 fieldInfoName = \case
-  FIColumn info -> fromCol @b $ ciColumn info
-  FINestedObject info -> fromCol @b $ _noiColumn info
+  FIColumn info -> fromCol @b $ structuredColumnInfoColumn info
   FIRelationship info -> fromRel $ riName info
   FIComputedField info -> fromComputedField $ _cfiName info
   FIRemoteRelationship info -> fromRemoteRelationship $ getRemoteFieldInfoName info
 
 fieldInfoGraphQLName :: FieldInfo b -> Maybe G.Name
 fieldInfoGraphQLName = \case
-  FIColumn info -> Just $ ciName info
-  FINestedObject info -> Just $ _noiName info
+  FIColumn info -> Just $ structuredColumnInfoName info
   FIRelationship info -> G.mkName $ relNameToTxt $ riName info
   FIComputedField info -> G.mkName $ computedFieldNameToText $ _cfiName info
   FIRemoteRelationship info -> G.mkName $ relNameToTxt $ getRemoteFieldInfoName info
@@ -397,16 +394,20 @@ getRemoteFieldInfoName RemoteFieldInfo {_rfiRHS} = case _rfiRHS of
 fieldInfoGraphQLNames :: FieldInfo b -> [G.Name]
 fieldInfoGraphQLNames info = case info of
   FIColumn _ -> maybeToList $ fieldInfoGraphQLName info
-  FINestedObject _ -> maybeToList $ fieldInfoGraphQLName info
   FIRelationship relationshipInfo -> fold do
     name <- fieldInfoGraphQLName info
     pure $ case riType relationshipInfo of
       ObjRel -> [name]
-      ArrRel -> [name, name <> Name.__aggregate]
+      ArrRel -> addAggregateFields [name]
   FIComputedField _ -> maybeToList $ fieldInfoGraphQLName info
   FIRemoteRelationship _ -> maybeToList $ fieldInfoGraphQLName info
+  where
+    addAggregateFields :: [G.Name] -> [G.Name]
+    addAggregateFields names = do
+      name <- names
+      [name, name <> Name.__aggregate]
 
-getCols :: FieldInfoMap (FieldInfo backend) -> [ColumnInfo backend]
+getCols :: FieldInfoMap (FieldInfo backend) -> [StructuredColumnInfo backend]
 getCols = mapMaybe (^? _FIColumn) . HashMap.elems
 
 -- | Sort columns based on their ordinal position
@@ -1010,6 +1011,7 @@ instance (Backend b) => FromJSON (TableObjectFieldDefinition b) where
 data TableObjectFieldType (b :: BackendType)
   = TOFTScalar G.Name (ScalarType b)
   | TOFTObject G.Name
+  | TOFTArray (XNestedArrays b) (TableObjectFieldType b) Bool -- isNullable
   deriving stock (Generic)
 
 deriving stock instance (Backend b) => Eq (TableObjectFieldType b)
@@ -1180,7 +1182,7 @@ getFieldInfoM tableInfo fieldName =
 getColumnInfoM ::
   TableInfo b -> FieldName -> Maybe (ColumnInfo b)
 getColumnInfoM tableInfo fieldName =
-  (^? _FIColumn) =<< getFieldInfoM tableInfo fieldName
+  (^? _FIColumn . _SCIScalarColumn) =<< getFieldInfoM tableInfo fieldName
 
 askFieldInfo ::
   (MonadError QErr m) =>
@@ -1211,8 +1213,9 @@ askColInfo m c msg = do
     modifyErr ("column " <>) $
       askFieldInfo m (fromCol @backend c)
   case fieldInfo of
-    (FIColumn colInfo) -> pure colInfo
-    (FINestedObject _) -> throwErr "nested object"
+    (FIColumn (SCIScalarColumn colInfo)) -> pure colInfo
+    (FIColumn (SCIObjectColumn _)) -> throwErr "object"
+    (FIColumn (SCIArrayColumn _)) -> throwErr "array"
     (FIRelationship _) -> throwErr "relationship"
     (FIComputedField _) -> throwErr "computed field"
     (FIRemoteRelationship _) -> throwErr "remote relationship"
@@ -1238,7 +1241,6 @@ askComputedFieldInfo fields computedField = do
         fromComputedField computedField
   case fieldInfo of
     (FIColumn _) -> throwErr "column"
-    (FINestedObject _) -> throwErr "nested object"
     (FIRelationship _) -> throwErr "relationship"
     (FIRemoteRelationship _) -> throwErr "remote relationship"
     (FIComputedField cci) -> pure cci
@@ -1296,7 +1298,7 @@ mkAdminRolePermInfo tableInfo =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where
     fields = _tciFieldInfoMap tableInfo
-    pgCols = map ciColumn $ getCols fields
+    pgCols = map structuredColumnInfoColumn $ getCols fields
     pgColsWithFilter = HashMap.fromList $ map (,Nothing) pgCols
     computedFields =
       -- Fetch the list of computed fields not returning rows of existing table.

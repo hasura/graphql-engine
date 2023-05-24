@@ -10,7 +10,7 @@ import Data.Aeson
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec (genUpdateColumnOperatorName)
-import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName, genColumnValueGenerationStrategy)
+import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName, genColumnType, genColumnValueGenerationStrategy)
 import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
 import Hasura.Backends.DataConnector.API.V0.QuerySpec (genField, genFieldMap, genFieldValue)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genTableRelationships)
@@ -58,7 +58,7 @@ spec = do
     describe "ColumnInsert" $ do
       describe "minimal" $ do
         testToFromJSONToSchema
-          (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") (ScalarType "number") True Nothing))
+          (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") (ColumnTypeScalar $ ScalarType "number") True Nothing))
           [aesonQQ|
             { "type": "column",
               "column": "my_column",
@@ -67,7 +67,7 @@ spec = do
           |]
       describe "non-minimal" $ do
         testToFromJSONToSchema
-          (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") (ScalarType "number") True (Just UniqueIdentifier)))
+          (ColumnInsert (ColumnInsertSchema (ColumnName "my_column") (ColumnTypeScalar $ ScalarType "number") True (Just UniqueIdentifier)))
           [aesonQQ|
             { "type": "column",
               "column": "my_column",
@@ -260,7 +260,7 @@ genTableInsertSchema =
     <*> Gen.maybe (Gen.nonEmpty defaultRange genColumnName)
     <*> genFieldMap genInsertFieldSchema
 
-genInsertFieldSchema :: (MonadGen m, GenBase m ~ Identity) => m InsertFieldSchema
+genInsertFieldSchema :: Gen InsertFieldSchema
 genInsertFieldSchema =
   Gen.choice
     [ ColumnInsert <$> genColumnInsertSchema,
@@ -268,11 +268,11 @@ genInsertFieldSchema =
       ArrayRelationInsert <$> genArrayRelationInsertSchema
     ]
 
-genColumnInsertSchema :: (MonadGen m, GenBase m ~ Identity) => m ColumnInsertSchema
+genColumnInsertSchema :: Gen ColumnInsertSchema
 genColumnInsertSchema =
   ColumnInsertSchema
     <$> genColumnName
-    <*> genScalarType
+    <*> genColumnType
     <*> Gen.bool
     <*> Gen.maybe genColumnValueGenerationStrategy
 

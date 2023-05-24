@@ -139,7 +139,7 @@ tableInsertMatchColumnsEnum tableInfo = do
         [ ( define $ ciName column,
             ciColumn column
           )
-          | column <- columns,
+          | SCIScalarColumn column <- columns,
             isMatchColumnValid column
         ]
   where

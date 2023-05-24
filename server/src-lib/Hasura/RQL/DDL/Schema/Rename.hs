@@ -496,7 +496,6 @@ updateColExp qt rf (ColExp fld val) =
         Nothing -> pure val
         Just fi -> case fi of
           FIColumn _ -> pure val
-          FINestedObject _ -> pure val
           FIComputedField _ -> pure val
           FIRelationship ri -> do
             case riTarget ri of

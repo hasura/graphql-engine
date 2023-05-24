@@ -173,7 +173,7 @@ captureTableInsertSchema tableName tableColumns primaryKey ExtraTableMetadata {.
                     scalarType = columnTypeToScalarType ciType
                     valueGenerated = extraColumnMetadata >>= _ecmValueGenerated
                     fieldName = API.FieldName $ G.unName ciName
-                    columnInsertSchema = API.ColumnInsert $ API.ColumnInsertSchema (Witch.from ciColumn) (Witch.from scalarType) ciIsNullable valueGenerated
+                    columnInsertSchema = API.ColumnInsert $ API.ColumnInsertSchema (Witch.from ciColumn) (API.ColumnTypeScalar $ Witch.from scalarType) ciIsNullable valueGenerated
                  in (fieldName, columnInsertSchema)
             )
           & HashMap.fromList

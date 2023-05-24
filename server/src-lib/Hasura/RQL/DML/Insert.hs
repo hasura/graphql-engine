@@ -3,6 +3,7 @@ module Hasura.RQL.DML.Insert
   )
 where
 
+import Control.Lens ((^?))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Types
 import Data.HashMap.Strict qualified as HashMap
@@ -181,11 +182,11 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mR
 
   let defInsVals =
         HashMap.fromList
-          [ (ciColumn column, S.columnDefaultValue)
+          [ (structuredColumnInfoColumn column, S.columnDefaultValue)
             | column <- getCols fieldInfoMap,
-              _cmIsInsertable (ciMutability column)
+              _cmIsInsertable (structuredColumnInfoMutability column)
           ]
-      allCols = getCols fieldInfoMap
+      allCols = mapMaybe (^? _SCIScalarColumn) $ getCols fieldInfoMap
       insCols = HashMap.keys defInsVals
 
   resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) setInsVals

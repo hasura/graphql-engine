@@ -32,6 +32,7 @@ import Hasura.Base.Error
     QErrM,
     runAesonParser,
     throw400,
+    throw500,
   )
 import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
@@ -301,7 +302,7 @@ data PartiallyResolvedSource b = PartiallyResolvedSource
   { _prsSourceMetadata :: SourceMetadata b,
     _prsConfig :: SourceConfig b,
     _prsIntrospection :: DBObjectsIntrospection b,
-    _tableCoreInfoMap :: HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)),
+    _tableCoreInfoMap :: HashMap (TableName b) (TableCoreInfoG b (StructuredColumnInfo b) (ColumnInfo b)),
     _eventTriggerInfoMap :: HashMap (TableName b) (EventTriggerInfoMap b)
   }
   deriving (Eq)
@@ -346,8 +347,9 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
         -- TODO: rhs fields should also ideally be DBJoinFields
         columnPairs <- for (HashMap.toList _tsrdFieldMapping) \(srcFieldName, tgtFieldName) -> do
           lhsJoinField <- askFieldInfo lhsJoinFields srcFieldName
-          tgtField <- askFieldInfo targetColumns tgtFieldName
-          pure (srcFieldName, lhsJoinField, tgtField)
+          tgtField <- toScalarColumnInfo <$> askFieldInfo targetColumns tgtFieldName
+          tgtFieldScalarColumn <- tgtField `onNothing` throw500 ("Target field " <> tgtFieldName <<> "is not a scalar column")
+          pure (srcFieldName, lhsJoinField, tgtFieldScalarColumn)
         columnMapping <- for columnPairs \(srcFieldName, srcColumn, tgtColumn) -> do
           tgtScalar <- case ciType tgtColumn of
             ColumnScalar scalarType -> pure scalarType

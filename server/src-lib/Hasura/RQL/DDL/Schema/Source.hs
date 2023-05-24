@@ -63,7 +63,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Backend qualified as RQL.Types
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.BackendType qualified as Backend
-import Hasura.RQL.Types.Column (ColumnMutability (..), RawColumnInfo (..))
+import Hasura.RQL.Types.Column (ColumnMutability (..), RawColumnInfo (..), RawColumnType (..))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.HealthCheck (HealthCheckConfig)
@@ -482,11 +482,17 @@ convertTableMetadataToTableInfo tableName DBTableMetadata {..} =
       _tiDeletable = all viIsDeletable _ptmiViewInfo
     }
   where
+    convertRawColumnType :: RawColumnType 'DataConnector -> API.ColumnType
+    convertRawColumnType = \case
+      RawColumnTypeScalar scalarType -> API.ColumnTypeScalar $ Witch.from scalarType
+      RawColumnTypeObject _ name -> API.ColumnTypeObject name
+      RawColumnTypeArray _ columnType isNullable -> API.ColumnTypeArray (convertRawColumnType columnType) isNullable
+
     convertColumn :: RawColumnInfo 'DataConnector -> API.ColumnInfo
     convertColumn RawColumnInfo {..} =
       API.ColumnInfo
         { _ciName = Witch.from rciName,
-          _ciType = Witch.from rciType,
+          _ciType = convertRawColumnType rciType,
           _ciNullable = rciIsNullable,
           _ciDescription = G.unDescription <$> rciDescription,
           _ciInsertable = _cmIsInsertable rciMutability,

@@ -4,7 +4,7 @@
 
 import type { Query } from './Query';
 
-export type NestedObjectField = {
+export type NestedObjField = {
   column: string;
   query: Query;
   type: 'object';

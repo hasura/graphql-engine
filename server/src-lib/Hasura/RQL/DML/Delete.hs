@@ -8,6 +8,7 @@ module Hasura.RQL.DML.Delete
   )
 where
 
+import Control.Lens ((^?))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Sequence qualified as DS
@@ -64,7 +65,7 @@ validateDeleteQWith
         askSelPermInfo tableInfo
 
     let fieldInfoMap = _tciFieldInfoMap coreInfo
-        allCols = getCols fieldInfoMap
+        allCols = mapMaybe (^? _SCIScalarColumn) $ getCols fieldInfoMap
 
     -- convert the returning cols into sql returing exp
     mAnnRetCols <- forM mRetCols $ \retCols ->

@@ -186,7 +186,7 @@ instance HasCodec InsertFieldSchema where
 -- | Describes a field in a row to be inserted that represents a column in the table
 data ColumnInsertSchema = ColumnInsertSchema
   { _cisColumn :: API.V0.ColumnName,
-    _cisColumnType :: API.V0.ScalarType,
+    _cisColumnType :: API.V0.ColumnType,
     _cisNullable :: Bool,
     _cisValueGenerated :: Maybe API.V0.ColumnValueGenerationStrategy
   }

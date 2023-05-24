@@ -7,6 +7,7 @@ module Hasura.GraphQL.Schema.SubscriptionStream
   )
 where
 
+import Control.Lens ((^?))
 import Control.Monad.Memoize
 import Data.Has
 import Data.List.NonEmpty qualified as NE
@@ -191,7 +192,7 @@ tableStreamCursorExp tableInfo = do
   memoizeOn 'tableStreamCursorExp (sourceName, tableName) $ do
     tableGQLName <- getTableGQLName tableInfo
     tableGQLIdentifier <- getTableIdentifierName tableInfo
-    columnInfos <- tableSelectColumns tableInfo
+    columnInfos <- mapMaybe (^? _SCIScalarColumn) <$> tableSelectColumns tableInfo
     let objName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkStreamCursorInputTypeName tableGQLIdentifier
         description = G.Description $ "Streaming cursor of the table " <>> tableGQLName
     columnParsers <- tableStreamColumnArg tableGQLIdentifier columnInfos

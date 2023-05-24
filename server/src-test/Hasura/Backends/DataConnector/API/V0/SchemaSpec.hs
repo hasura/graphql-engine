@@ -19,7 +19,7 @@ spec = do
     testToFromJSONToSchema (SchemaResponse [] [] Nothing) [aesonQQ|{"tables": []}|]
     jsonOpenApiProperties genSchemaResponse
 
-genSchemaResponse :: (MonadGen m, GenBase m ~ Identity) => m SchemaResponse
+genSchemaResponse :: Gen SchemaResponse
 genSchemaResponse = do
   tables <- Gen.list defaultRange genTableInfo
   pure $ SchemaResponse tables [] Nothing

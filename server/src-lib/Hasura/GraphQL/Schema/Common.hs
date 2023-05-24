@@ -24,6 +24,7 @@ module Hasura.GraphQL.Schema.Common
     AnnotatedActionField,
     AnnotatedActionFields,
     AnnotatedNestedObjectSelect,
+    AnnotatedNestedArraySelect,
     EdgeFields,
     Scenario (..),
     SelectArgs,
@@ -319,6 +320,8 @@ type AnnotatedActionFields = IR.ActionFieldsG (IR.RemoteRelationshipField IR.Unp
 type AnnotatedActionField = IR.ActionFieldG (IR.RemoteRelationshipField IR.UnpreparedValue)
 
 type AnnotatedNestedObjectSelect b = IR.AnnNestedObjectSelectG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
+
+type AnnotatedNestedArraySelect b = IR.AnnNestedArraySelectG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
 
 -------------------------------------------------------------------------------
 

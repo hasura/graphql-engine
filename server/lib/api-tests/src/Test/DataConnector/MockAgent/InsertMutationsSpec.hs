@@ -193,9 +193,9 @@ tests = do
                       API._tisPrimaryKey = Just $ API.ColumnName "AlbumId" :| [],
                       API._tisFields =
                         mkFieldsMap
-                          [ ("AlbumId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "AlbumId") (API.ScalarType "number") False (Just API.AutoIncrement)),
-                            ("ArtistId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "ArtistId") (API.ScalarType "number") False Nothing),
-                            ("Title", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "Title") (API.ScalarType "string") False Nothing)
+                          [ ("AlbumId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "AlbumId") (API.ColumnTypeScalar $ API.ScalarType "number") False (Just API.AutoIncrement)),
+                            ("ArtistId", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "ArtistId") (API.ColumnTypeScalar $ API.ScalarType "number") False Nothing),
+                            ("Title", API.ColumnInsert $ API.ColumnInsertSchema (API.ColumnName "Title") (API.ColumnTypeScalar $ API.ScalarType "string") False Nothing)
                           ]
                     }
                 ]
