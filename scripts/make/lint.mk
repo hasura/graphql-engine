@@ -1,7 +1,5 @@
-# skip contrib with its generated .hs file because it doesn't
-# come with a cabal file, which can trigger a bug in ormolu
-HS_FILES = $(shell git ls-files '*.hs' '*.hs-boot' | grep -v '^contrib/')
-CHANGED_HS_FILES = $(shell git diff --diff-filter=d --name-only `git merge-base HEAD origin/main` | grep '.*\(\.hs\|hs-boot\)$$' | grep -v '^contrib/')
+HS_FILES = $(shell git ls-files '*.hs' '*.hs-boot')
+CHANGED_HS_FILES = $(shell git diff --diff-filter=d --name-only `git merge-base HEAD origin/main` | grep '.*\(\.hs\|hs-boot\)$$')
 
 NIX_FILES = $(shell git ls-files '*.nix' 'nix/*.nix')
 
