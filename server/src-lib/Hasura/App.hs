@@ -149,6 +149,7 @@ import Hasura.Server.Prometheus
     decWarpThreads,
     incWarpThreads,
   )
+import Hasura.Server.ResourceChecker (getServerResources)
 import Hasura.Server.SchemaUpdate
 import Hasura.Server.Telemetry
 import Hasura.Server.Types
@@ -1100,10 +1101,12 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
 
   lift . unLogger logger $ mkGenericLog @Text LevelInfo "telemetry" telemetryNotice
 
+  computeResources <- getServerResources
+
   -- start a background thread for telemetry
   _telemetryThread <-
     C.forkManagedT "runTelemetry" logger $
-      runTelemetry logger appStateRef dbUid pgVersion
+      runTelemetry logger appStateRef dbUid pgVersion computeResources
 
   -- forking a dedicated polling thread to dynamically get the latest JWK settings
   -- set by the user and update the JWK accordingly. This will help in applying the

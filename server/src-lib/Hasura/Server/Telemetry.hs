@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- |
 --  Send anonymized metrics to the telemetry server regarding usage of various
@@ -30,8 +31,10 @@ import Control.Concurrent.Extended qualified as C
 import Control.Exception (try)
 import Control.Lens
 import Data.Aeson qualified as J
+import Data.Aeson.TH qualified as Aeson
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as HashMap
+import Data.Int (Int64)
 import Data.List qualified as L
 import Data.List.Extended qualified as L
 import Data.Text qualified as T
@@ -56,6 +59,7 @@ import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as Any
 import Hasura.Server.AppStateRef qualified as HGE
 import Hasura.Server.Init.Config
+import Hasura.Server.ResourceChecker
 import Hasura.Server.Telemetry.Counters (dumpServiceTimingMetrics)
 import Hasura.Server.Telemetry.Types
 import Hasura.Server.Types
@@ -105,6 +109,19 @@ instance J.ToJSON TelemetryHttpError where
 instance ToEngineLog TelemetryLog Hasura where
   toEngineLog tl = (_tlLogLevel tl, ELTInternal ILTTelemetry, J.toJSON tl)
 
+newtype ServerTelemetryRow = ServerTelemetryRow
+  { _strServerMetrics :: ServerTelemetry
+  }
+
+data ServerTelemetry = ServerTelemetry
+  { _stResourceCpu :: Maybe Int,
+    _stResourceMemory :: Maybe Int64,
+    _stResourceCheckerErrorCode :: Maybe ResourceCheckerError
+  }
+
+$(Aeson.deriveToJSON hasuraJSON ''ServerTelemetry)
+$(Aeson.deriveToJSON hasuraJSON ''ServerTelemetryRow)
+
 mkHttpError ::
   Text ->
   Maybe (Wreq.Response BL.ByteString) ->
@@ -141,8 +158,9 @@ runTelemetry ::
   HGE.AppStateRef impl ->
   MetadataDbId ->
   PGVersion ->
+  ComputeResourcesResponse ->
   m Void
-runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion = do
+runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion computeResources = do
   State.AppEnv {..} <- State.askAppEnv
   let options = wreqOptions appEnvManager []
   forever $ liftIO $ do
@@ -172,7 +190,15 @@ runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion = do
                 (HashMap.elems (scSources schemaCache))
             payloads = J.encode <$> telemetries
 
-        for_ payloads $ \payload -> do
+            serverTelemetry =
+              J.encode $
+                ServerTelemetryRow $
+                  ServerTelemetry
+                    (_rcrCpu computeResources)
+                    (_rcrMemory computeResources)
+                    (_rcrErrorCode computeResources)
+
+        for_ (serverTelemetry : payloads) $ \payload -> do
           logger $ debugLBS $ "metrics_info: " <> payload
           resp <- try $ Wreq.postWith options (T.unpack telemetryUrl) payload
           either logHttpEx handleHttpResp resp
