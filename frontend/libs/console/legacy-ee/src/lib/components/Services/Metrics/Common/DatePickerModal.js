@@ -44,7 +44,6 @@ const DatePickerModal = props => {
   return (
     <Dialog
       hasBackdrop
-      size="xxl"
       id="dateModal"
       onClose={onHide}
       title="Custom Date"
@@ -73,6 +72,7 @@ const DatePickerModal = props => {
               ranges={[rangeState]}
               onChange={date => setRangeState(date.selection)}
               dateFormat="MMMM d, yyyy h:mm aa"
+              rangeColors={['var(--tw-color-amber-500-hex)']}
             />
           </div>
           {/*
