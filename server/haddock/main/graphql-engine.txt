@@ -136,7 +136,7 @@ instance Control.Monad.Trans.Class.MonadTrans (Control.Monad.Circular.CircularT 
 instance Control.Monad.State.Class.MonadState s m => Control.Monad.State.Class.MonadState s (Control.Monad.Circular.CircularT k v m)
 
 module Control.Monad.Memoize
-class Monad m => MonadMemoize m
+class (Monad m) => MonadMemoize m
 
 -- | Memoizes a parser constructor function for the extent of a single
 --   schema construction process. This is mostly useful for recursive
@@ -850,7 +850,7 @@ EngineLog :: !FormattedTime -> !LogLevel -> !EngineLogType impl -> !Value -> Eng
 
 -- | Typeclass representing any data type that can be converted to
 --   <tt>EngineLog</tt> for the purpose of logging
-class EnabledLogTypes impl => ToEngineLog a impl
+class (EnabledLogTypes impl) => ToEngineLog a impl
 toEngineLog :: ToEngineLog a impl => a -> (LogLevel, EngineLogType impl, Value)
 data UnstructuredLog
 UnstructuredLog :: !LogLevel -> !SerializableBlob -> UnstructuredLog
@@ -2572,7 +2572,7 @@ instance GHC.Classes.Eq Hasura.RQL.Types.ResizePool.SourceResizePoolSummary
 --   defines the connection string, connection pool, default settings, and
 --   conversion functions between MSSQL and graphql-engine.
 module Hasura.Backends.MSSQL.Connection
-class MonadError QErr m => MonadMSSQLTx m
+class (MonadError QErr m) => MonadMSSQLTx m
 liftMSSQLTx :: MonadMSSQLTx m => TxE QErr a -> m a
 data MSSQLPoolSettings
 MSSQLPoolSettings :: Maybe Int -> Maybe Int -> Int -> MSSQLPoolSettings
@@ -4385,7 +4385,7 @@ newtype FeatureFlags
 FeatureFlags :: HashMap Text FeatureFlag -> FeatureFlags
 [getFeatureFlags] :: FeatureFlags -> HashMap Text FeatureFlag
 featureFlags :: FeatureFlags
-class Monad m => HasFeatureFlagChecker m
+class (Monad m) => HasFeatureFlagChecker m
 checkFlag :: HasFeatureFlagChecker m => FeatureFlag -> m Bool
 nativeQueryInterface :: FeatureFlag
 storedProceduresFlag :: FeatureFlag
@@ -4818,7 +4818,7 @@ isApolloFederationEnabled :: ApolloFederationStatus -> Bool
 data GranularPrometheusMetricsState
 GranularMetricsOff :: GranularPrometheusMetricsState
 GranularMetricsOn :: GranularPrometheusMetricsState
-class Monad m => MonadGetPolicies m
+class (Monad m) => MonadGetPolicies m
 runGetApiTimeLimit :: MonadGetPolicies m => m (Maybe MaxTime)
 runGetPrometheusMetricsGranularity :: MonadGetPolicies m => m (IO GranularPrometheusMetricsState)
 instance Data.Hashable.Class.Hashable Hasura.Server.Types.RequestId
@@ -5111,7 +5111,7 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.ParameterizedQueryHash.Pa
 --   <a>Hasura.GraphQL.Execute.Resolve</a>, but for fragment definitions
 --   rather than variables.
 module Hasura.GraphQL.Execute.Inline
-type InlineMT m a = MonadError QErr m => (StateT InlineState (ReaderT InlineEnv m)) a
+type InlineMT m a = (MonadError QErr m) => (StateT InlineState (ReaderT InlineEnv m)) a
 type InlineM a = InlineMT (Except QErr) a
 runInlineMT :: forall m a. MonadError QErr m => HashMap Name FragmentDefinition -> InlineMT m a -> m a
 runInlineM :: forall a. HashMap Name FragmentDefinition -> InlineM a -> Either QErr a
@@ -14409,7 +14409,7 @@ noReporter :: Reporter
 --   The <a>MonadTrace</a> class defines the "public API" of this
 --   component.
 module Hasura.Tracing.Class
-class Monad m => MonadTrace m
+class (Monad m) => MonadTrace m
 
 -- | Trace the execution of a block of code, attaching a human-readable
 --   name. This starts a new trace and its corresponding root span, to
@@ -14513,7 +14513,7 @@ module Hasura.Tracing
 --   useful. Alternatively this could be removed altogether if all network
 --   calls were to be hidden behind more specific services.
 module Hasura.Services.Network
-class Monad m => ProvidesNetwork m
+class (Monad m) => ProvidesNetwork m
 askHTTPManager :: ProvidesNetwork m => m Manager
 instance Hasura.Services.Network.ProvidesNetwork m => Hasura.Services.Network.ProvidesNetwork (Control.Monad.Trans.Reader.ReaderT r m)
 instance (GHC.Base.Monoid w, Hasura.Services.Network.ProvidesNetwork m) => Hasura.Services.Network.ProvidesNetwork (Control.Monad.Trans.Writer.Strict.WriterT w m)
@@ -14536,7 +14536,7 @@ ResourceLimits :: (forall m a. (MonadBaseControl IO m, MonadError QErr m) => m a
 [runResourceLimits] :: ResourceLimits -> forall m a. (MonadBaseControl IO m, MonadError QErr m) => m a -> m a
 
 -- | Monads which support resource (memory, CPU time, etc.) limiting
-class Monad m => HasResourceLimits m
+class (Monad m) => HasResourceLimits m
 askHTTPHandlerLimit :: HasResourceLimits m => m ResourceLimits
 askGraphqlOperationLimit :: HasResourceLimits m => RequestId -> UserInfo -> ApiLimit -> m ResourceLimits
 askHTTPHandlerLimit :: (HasResourceLimits m, m ~ t n, MonadTrans t, HasResourceLimits n) => m ResourceLimits
@@ -17393,7 +17393,7 @@ LoggingSettings :: HashSet (EngineLogType Hasura) -> MetadataQueryLoggingMode ->
 --   Note [Disable query printing when query-log is disabled]
 [_lsEnabledLogTypes] :: LoggingSettings -> HashSet (EngineLogType Hasura)
 [_lsMetadataQueryLoggingMode] :: LoggingSettings -> MetadataQueryLoggingMode
-class Monad m => HttpLog m where {
+class (Monad m) => HttpLog m where {
     
     -- | Extra http-log metadata that we attach when operating in <tt>m</tt>.
     type ExtraHttpLogMetadata m;
@@ -17622,7 +17622,7 @@ module Hasura.Server.Auth
 
 -- | Typeclass representing the <tt>UserInfo</tt> authorization and
 --   resolving effect
-class Monad m => UserAuthentication m
+class (Monad m) => UserAuthentication m
 resolveUserInfo :: UserAuthentication m => Logger Hasura -> Manager -> [Header] -> AuthMode -> Maybe ReqsText -> m (Either QErr (UserInfo, Maybe UTCTime, [Header], ExtraUserInfo))
 
 -- | The hashed admin password. <a>hashAdminSecret</a> is our public
@@ -19819,7 +19819,7 @@ purgeDependentObject :: forall b m. (MonadError QErr m, Backend b) => SourceName
 
 -- | Type class to collect schema dependencies from backend-specific
 --   aggregation predicates.
-class Backend b => GetAggregationPredicatesDeps b
+class (Backend b) => GetAggregationPredicatesDeps b
 getAggregationPredicateDeps :: GetAggregationPredicatesDeps b => AggregationPredicates b (PartialSQLExp b) -> BoolExpM b [SchemaDependency]
 getAggregationPredicateDeps :: (GetAggregationPredicatesDeps b, AggregationPredicates b ~ Const Void) => AggregationPredicates b (PartialSQLExp b) -> BoolExpM b [SchemaDependency]
 
@@ -22239,7 +22239,7 @@ data GeneratedQuery
 GeneratedQuery :: Text -> Value -> GeneratedQuery
 [_gqQueryString] :: GeneratedQuery -> Text
 [_gqPreparedArgs] :: GeneratedQuery -> Value
-class Monad m => MonadQueryLog m
+class (Monad m) => MonadQueryLog m
 logQueryLog :: MonadQueryLog m => Logger Hasura -> QueryLog -> m ()
 instance Hasura.GraphQL.Logging.QueryLog.MonadQueryLog m => Hasura.GraphQL.Logging.QueryLog.MonadQueryLog (Control.Monad.Trans.Except.ExceptT e m)
 instance Hasura.GraphQL.Logging.QueryLog.MonadQueryLog m => Hasura.GraphQL.Logging.QueryLog.MonadQueryLog (Control.Monad.Trans.Reader.ReaderT r m)
@@ -25274,7 +25274,7 @@ ExecutionStats :: ExecutionStatistics b -> ExecutionStats b
 --   <a>AnyBackend</a> statistics. This is fine in practice because all we
 --   do with it is log it as JSON.
 statsToAnyBackend :: forall b. HasTag b => ActionResult b -> (Maybe (AnyBackend ExecutionStats), EncJSON)
-class Monad m => MonadExecutionLog m
+class (Monad m) => MonadExecutionLog m
 logExecutionLog :: MonadExecutionLog m => Logger Hasura -> ExecutionLog -> m ()
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.GraphQL.Logging.ExecutionLog.ExecutionStats b)
 instance Hasura.GraphQL.Logging.ExecutionLog.MonadExecutionLog m => Hasura.GraphQL.Logging.ExecutionLog.MonadExecutionLog (Control.Monad.Trans.Except.ExceptT e m)
@@ -25293,7 +25293,7 @@ module Hasura.GraphQL.Transport.Backend
 -- | This typeclass enacapsulates how a given backend sends queries and
 --   mutations over the network. Each backend is currently responsible for
 --   both logging and tracing, for now.
-class BackendExecute b => BackendTransport (b :: BackendType)
+class (BackendExecute b) => BackendTransport (b :: BackendType)
 runDBQuery :: forall m. (BackendTransport b, MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadQueryLog m, MonadExecutionLog m, MonadTrace m) => RequestId -> GQLReqUnparsed -> RootFieldAlias -> UserInfo -> Logger Hasura -> Maybe (CredentialCache AgentLicenseKey) -> SourceConfig b -> OnBaseMonad (ExecutionMonad b) (Maybe (AnyBackend ExecutionStats), EncJSON) -> Maybe (PreparedQuery b) -> ResolvedConnectionTemplate b -> m (DiffTime, EncJSON)
 runDBMutation :: forall m. (BackendTransport b, MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadQueryLog m, MonadTrace m) => RequestId -> GQLReqUnparsed -> RootFieldAlias -> UserInfo -> Logger Hasura -> Maybe (CredentialCache AgentLicenseKey) -> SourceConfig b -> OnBaseMonad (ExecutionMonad b) EncJSON -> Maybe (PreparedQuery b) -> ResolvedConnectionTemplate b -> m (DiffTime, EncJSON)
 runDBSubscription :: forall m. (BackendTransport b, MonadIO m, MonadBaseControl IO m) => SourceConfig b -> MultiplexedQuery b -> [(CohortId, CohortVariables)] -> ResolvedConnectionTemplate b -> m (DiffTime, Either QErr [(CohortId, ByteString)])
@@ -25528,7 +25528,7 @@ module Hasura.GraphQL.Execute.Common
 --   ideal if we already have the query cached. The parsing happens
 --   unnecessary. But getting this to either return a plan or parse was
 --   tricky and complicated.
-class Monad m => MonadGQLExecutionCheck m
+class (Monad m) => MonadGQLExecutionCheck m
 checkGQLExecution :: MonadGQLExecutionCheck m => UserInfo -> ([Header], IpAddress) -> AllowListStatus -> SchemaCache -> GQLReqUnparsed -> RequestId -> m (Either QErr GQLReqParsed)
 executeIntrospection :: MonadGQLExecutionCheck m => UserInfo -> Value -> SetGraphqlIntrospectionOptions -> m (Either QErr ExecutionStep)
 checkGQLBatchedReqs :: MonadGQLExecutionCheck m => UserInfo -> RequestId -> [GQLReq GQLQueryText] -> SchemaCache -> m (Either QErr ())
@@ -25743,7 +25743,7 @@ SchemaSyncEventProcessResult :: !Bool -> !CacheInvalidations -> SchemaSyncEventP
 --   storage system (ex: a Postgres database). We can split the functions
 --   into appropriate and specific type classes in future iterations if
 --   required.
-class Monad m => MonadMetadataStorage m
+class (Monad m) => MonadMetadataStorage m
 fetchMetadataResourceVersion :: MonadMetadataStorage m => m (Either QErr MetadataResourceVersion)
 fetchMetadata :: MonadMetadataStorage m => m (Either QErr MetadataWithResourceVersion)
 fetchMetadataNotifications :: MonadMetadataStorage m => MetadataResourceVersion -> InstanceId -> m (Either QErr [(MetadataResourceVersion, CacheInvalidations)])
@@ -27197,7 +27197,7 @@ ResponseCached :: EncJSON -> CacheResult
 -- | We don't have a cached response. The <a>ResponseCacher</a> can be used
 --   to store the response in the cache after a fresh execution.
 ResponseUncached :: Maybe ResponseCacher -> CacheResult
-class Monad m => MonadExecuteQuery m
+class (Monad m) => MonadExecuteQuery m
 
 -- | This method does two things: it looks up a query result in the
 --   server-side cache, if a cache is used, and it additionally returns
@@ -27326,7 +27326,7 @@ authorizeV1MetadataApi :: MonadMetadataApiAuthorization m => RQLMetadata -> Hand
 authorizeV2QueryApi :: MonadMetadataApiAuthorization m => RQLQuery -> HandlerCtx -> m (Either QErr ())
 
 -- | The config API (<i>v1alpha1</i>config) handler
-class Monad m => MonadConfigApiHandler m
+class (Monad m) => MonadConfigApiHandler m
 runConfigApiHandler :: MonadConfigApiHandler m => AppStateRef impl -> SpockCtxT () m ()
 mkSpockAction :: forall m a impl. (MonadIO m, MonadBaseControl IO m, HasAppEnv m, FromJSON a, UserAuthentication m, HttpLog m, HasResourceLimits m, MonadTrace m) => AppStateRef impl -> (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler m a -> ActionT m ()
 class (Monad m) => ConsoleRenderer m where {

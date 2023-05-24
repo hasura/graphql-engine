@@ -396,49 +396,49 @@ HTTPRespExtra a -&gt; Either (HTTPErr a) (HTTPResp a)
 </span><span id="line-175"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span id="local-6989586621691210953"><span class="annot"><span class="annottext">HTTPErr a
 </span><a href="#local-6989586621691210953"><span class="hs-identifier hs-var">errResp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-176"></span><span>        </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-177"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
+</span><span id="line-177"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;response&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">HTTPErr a
 </span><a href="#local-6989586621691210953"><span class="hs-identifier hs-var">errResp</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-178"></span><span>            </span><span class="annot"><span class="annottext">Key
+</span><span id="line-178"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;request&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">RequestDetails -&gt; Value
 </span><a href="#local-6989586621691210952"><span class="hs-identifier hs-var">sanitiseReqJSON</span></a></span><span> </span><span class="annot"><span class="annottext">RequestDetails
 </span><a href="#local-6989586621691210956"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-179"></span><span>            </span><span class="annot"><span class="annottext">Key
+</span><span id="line-179"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;event_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">ExtraLogContext -&gt; EventId
 </span><a href="Hasura.Eventing.HTTP.html#elEventId"><span class="hs-identifier hs-var">elEventId</span></a></span><span> </span><span class="annot"><span class="annottext">ExtraLogContext
 </span><a href="#local-6989586621691210957"><span class="hs-identifier hs-var">ctxt</span></a></span><span>
-</span><span id="line-180"></span><span>          </span><span class="hs-special">]</span><span>
-</span><span id="line-181"></span><span>            </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [a] -&gt; [a]
+</span><span id="line-180"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-181"></span><span>          </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">++</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair]
 </span><a href="#local-6989586621691210951"><span class="hs-identifier hs-var">eventName</span></a></span><span>
 </span><span id="line-182"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span id="local-6989586621691210950"><span class="annot"><span class="annottext">HTTPResp a
 </span><a href="#local-6989586621691210950"><span class="hs-identifier hs-var">okResp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-183"></span><span>        </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-184"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
+</span><span id="line-184"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;response&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">HTTPResp a
 </span><a href="#local-6989586621691210950"><span class="hs-identifier hs-var">okResp</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-185"></span><span>            </span><span class="annot"><span class="annottext">Key
+</span><span id="line-185"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;request&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">RequestDetails
 </span><a href="#local-6989586621691210956"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-186"></span><span>            </span><span class="annot"><span class="annottext">Key
+</span><span id="line-186"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;event_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">ExtraLogContext -&gt; EventId
 </span><a href="Hasura.Eventing.HTTP.html#elEventId"><span class="hs-identifier hs-var">elEventId</span></a></span><span> </span><span class="annot"><span class="annottext">ExtraLogContext
 </span><a href="#local-6989586621691210957"><span class="hs-identifier hs-var">ctxt</span></a></span><span>
-</span><span id="line-187"></span><span>          </span><span class="hs-special">]</span><span>
-</span><span id="line-188"></span><span>            </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [a] -&gt; [a]
+</span><span id="line-187"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-188"></span><span>          </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">++</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair]
 </span><a href="#local-6989586621691210951"><span class="hs-identifier hs-var">eventName</span></a></span><span>
 </span><span id="line-189"></span><span>    </span><span class="hs-keyword">where</span><span>
@@ -468,9 +468,9 @@ HTTPRespExtra a -&gt; Either (HTTPErr a) (HTTPResp a)
 </span><span id="line-196"></span><span>      </span><span id="local-6989586621691210942"><span class="annot"><span class="annottext">getRedactedHeaders :: Value
 </span><a href="#local-6989586621691210942"><span class="hs-identifier hs-var hs-var">getRedactedHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-197"></span><span>        </span><span class="annot"><span class="annottext">Object -&gt; Value
-</span><span class="hs-identifier hs-var">J.Object</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-198"></span><span>          </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a b.
+</span><span class="hs-identifier hs-var">J.Object</span></span><span>
+</span><span id="line-198"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a b.
 Foldable t =&gt;
 (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621691210939"><span class="annot"><span class="annottext">HeaderName
@@ -827,7 +827,7 @@ Int -&gt; TransformableRequestError a -&gt; ShowS
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-292"></span><span>
 </span><span id="line-293"></span><span id="local-6989586621691211871"><span id="local-6989586621691211872"><span class="annot"><a href="Hasura.Eventing.HTTP.html#mkRequest"><span class="hs-identifier hs-type">mkRequest</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-294"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.HTTP.html#TransformableRequestError"><span class="hs-identifier hs-type">TransformableRequestError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691211872"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621691211871"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-294"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.HTTP.html#TransformableRequestError"><span class="hs-identifier hs-type">TransformableRequestError</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691211872"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621691211871"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-295"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-296"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HTTP.ResponseTimeout</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-297"></span><span>  </span><span class="hs-comment">-- | the request body. It is passed as a 'BL.Bytestring' because we need to</span><span>

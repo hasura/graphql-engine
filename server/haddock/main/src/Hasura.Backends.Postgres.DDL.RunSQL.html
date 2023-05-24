@@ -516,21 +516,21 @@ SQLGenCtx -&gt; SourceName -&gt; Bool -&gt; TxAccess -&gt; TxET QErr m a -&gt; m
 </span><a href="#local-6989586621691430138"><span class="hs-identifier hs-var">sqlGen</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691430135"><span class="hs-identifier hs-var">rSource</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691430134"><span class="hs-identifier hs-var">rCascade</span></a></span><span> </span><span class="annot"><span class="annottext">TxAccess
-</span><a href="#local-6989586621691430132"><span class="hs-identifier hs-var">rTxAccessMode</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-226"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+</span><a href="#local-6989586621691430132"><span class="hs-identifier hs-var">rTxAccessMode</span></a></span><span>
+</span><span id="line-226"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 MonadIO m =&gt;
 Maybe TraceContext -&gt; TxET QErr m a -&gt; TxET QErr m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#withTraceContext"><span class="hs-identifier hs-var">withTraceContext</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe TraceContext
-</span><a href="#local-6989586621691430129"><span class="hs-identifier hs-var">traceCtx</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-227"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+</span><a href="#local-6989586621691430129"><span class="hs-identifier hs-var">traceCtx</span></a></span><span>
+</span><span id="line-227"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 MonadIO m =&gt;
 UserInfo -&gt; TxET QErr m a -&gt; TxET QErr m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#withUserInfo"><span class="hs-identifier hs-var">withUserInfo</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621691430127"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-228"></span><span>            </span><span class="annot"><span class="annottext">forall (n :: * -&gt; *). MonadTx n =&gt; Text -&gt; n EncJSON
+</span><a href="#local-6989586621691430127"><span class="hs-identifier hs-var">userInfo</span></a></span><span>
+</span><span id="line-228"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (n :: * -&gt; *). MonadTx n =&gt; Text -&gt; n EncJSON
 </span><a href="#local-6989586621691430120"><span class="hs-identifier hs-var">execRawSQL</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691430136"><span class="hs-identifier hs-var">rSql</span></a></span><span>
 </span><span id="line-229"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
@@ -679,9 +679,9 @@ SourceName
 </span><span id="line-266"></span><span>
 </span><span id="line-267"></span><span>  </span><span class="hs-comment">-- Build schema cache with updated metadata</span><span>
 </span><span id="line-268"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
-</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">withNewInconsistentObjsCheck</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-269"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">withNewInconsistentObjsCheck</span></a></span><span>
+</span><span id="line-269"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (MetadataM m, CacheRWM m) =&gt;
 CacheInvalidations -&gt; MetadataModifier -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheWithInvalidations"><span class="hs-identifier hs-var">buildSchemaCacheWithInvalidations</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
@@ -723,32 +723,33 @@ SourceName -&gt; SourceCache -&gt; Maybe (TableCache b)
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scSources"><span class="hs-identifier hs-var">scSources</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
 </span><a href="#local-6989586621691429980"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
 </span><span id="line-281"></span><span>      </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-282"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span>
+</span><span id="line-282"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 (MonadIO m, MonadBaseControl IO m) =&gt;
 PGSourceConfig -&gt; PGExecFrom -&gt; TxET QErr m a -&gt; m (Either QErr a)
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#runPgSourceWriteTx"><span class="hs-identifier hs-var">runPgSourceWriteTx</span></a></span><span> </span><span class="annot"><span class="annottext">PGSourceConfig
 </span><a href="#local-6989586621691429981"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">PGExecFrom
-</span><a href="Hasura.Backends.Postgres.Execute.Types.html#RunSQLQuery"><span class="hs-identifier hs-var">RunSQLQuery</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-283"></span><span>          </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#RunSQLQuery"><span class="hs-identifier hs-var">RunSQLQuery</span></a></span><span>
+</span><span id="line-283"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Foldable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">forM_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">HashMap QualifiedTable (TableInfo ('Postgres pgKind))
-</span><a href="#local-6989586621691429979"><span class="hs-identifier hs-var">tables</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621691429979"><span class="hs-identifier hs-var">tables</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-284"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span id="local-6989586621691429971"><span class="annot"><span class="annottext">TableCoreInfo ('Postgres pgKind)
 </span><a href="#local-6989586621691429971"><span class="hs-identifier hs-var">coreInfo</span></a></span></span><span> </span><span class="annot"><span class="annottext">RolePermInfoMap ('Postgres pgKind)
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621691429970"><span class="annot"><span class="annottext">EventTriggerInfoMap ('Postgres pgKind)
 </span><a href="#local-6989586621691429970"><span class="hs-identifier hs-var">eventTriggers</span></a></span></span><span> </span><span class="annot"><span class="annottext">RolePermInfo ('Postgres pgKind)
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-284"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691429969"><span class="annot"><span class="annottext">table :: TableName ('Postgres pgKind)
+</span><span id="line-285"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691429969"><span class="annot"><span class="annottext">table :: TableName ('Postgres pgKind)
 </span><a href="#local-6989586621691429969"><span class="hs-identifier hs-var hs-var">table</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; TableName b
 </span><a href="Hasura.Table.Cache.html#_tciName"><span class="hs-identifier hs-var">_tciName</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo ('Postgres pgKind)
 </span><a href="#local-6989586621691429971"><span class="hs-identifier hs-var">coreInfo</span></a></span><span>
-</span><span id="line-285"></span><span>                </span><span id="local-6989586621691429967"><span class="annot"><span class="annottext">columns :: [ColumnInfo ('Postgres pgKind)]
+</span><span id="line-286"></span><span>              </span><span id="local-6989586621691429967"><span class="annot"><span class="annottext">columns :: [ColumnInfo ('Postgres pgKind)]
 </span><a href="#local-6989586621691429967"><span class="hs-identifier hs-var hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#SCIScalarColumn"><span class="hs-identifier hs-type">SCIScalarColumn</span></a></span><span> </span><span id="local-6989586621691429965"><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
 </span><a href="#local-6989586621691429965"><span class="hs-identifier hs-var">col</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
@@ -760,7 +761,7 @@ FieldInfoMap (FieldInfo backend) -&gt; [StructuredColumnInfo backend]
 TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
 </span><a href="Hasura.Table.Cache.html#_tciFieldInfoMap"><span class="hs-identifier hs-var">_tciFieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo ('Postgres pgKind)
 </span><a href="#local-6989586621691429971"><span class="hs-identifier hs-var">coreInfo</span></a></span><span>
-</span><span id="line-286"></span><span>            </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+</span><span id="line-287"></span><span>          </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Foldable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">forM_</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
@@ -775,12 +776,12 @@ etiTriggerOnReplication :: forall (b :: BackendType).
 EventTriggerInfo b -&gt; TriggerOnReplication
 etiTriggerOnReplication :: TriggerOnReplication
 </span><a href="Hasura.RQL.Types.EventTrigger.html#etiTriggerOnReplication"><span class="hs-identifier hs-var hs-var">etiTriggerOnReplication</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-287"></span><span>              </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span id="line-288"></span><span>            </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runReaderT</span></a></span><span> </span><span class="annot"><span class="annottext">SQLGenCtx
-</span><a href="#local-6989586621691430020"><span class="hs-identifier hs-var">sqlGen</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-288"></span><span>                </span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind) (m :: * -&gt; *).
+</span><a href="#local-6989586621691430020"><span class="hs-identifier hs-var">sqlGen</span></a></span><span>
+</span><span id="line-289"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (Backend ('Postgres pgKind), MonadTx m, MonadReader SQLGenCtx m) =&gt;
 TriggerName
 -&gt; QualifiedTable
@@ -794,31 +795,31 @@ TriggerName
 </span><a href="#local-6989586621691429958"><span class="hs-identifier hs-var">etiTriggerOnReplication</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo ('Postgres pgKind)]
 </span><a href="#local-6989586621691429967"><span class="hs-identifier hs-var">columns</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerOpsDef ('Postgres pgKind)
 </span><a href="#local-6989586621691429960"><span class="hs-identifier hs-var">etiOpsDef</span></a></span><span>
-</span><span id="line-289"></span><span>
-</span><span id="line-290"></span><span class="hs-comment">-- | @'runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascadeDependencies tx' checks for</span><span>
-</span><span id="line-291"></span><span class="hs-comment">-- changes in GraphQL Engine metadata when a @'tx' is executed on the database alters Postgres</span><span>
-</span><span id="line-292"></span><span class="hs-comment">-- schema of tables and functions. If any indirect dependencies (Eg. remote table dependence of a relationship) are</span><span>
-</span><span id="line-293"></span><span class="hs-comment">-- found and @'cascadeDependencies' is False, then an exception is raised.</span><span>
-</span><span id="line-294"></span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#runTxWithMetadataCheck"><span class="hs-identifier hs-type">runTxWithMetadataCheck</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-295"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691430632"><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621691430631"><span class="annot"><a href="#local-6989586621691430631"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691430633"><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#PostgresKind"><span class="hs-identifier hs-type">PostgresKind</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span>
-</span><span id="line-296"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-297"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#ToMetadataFetchQuery"><span class="hs-identifier hs-type">ToMetadataFetchQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-298"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#FetchTableMetadata"><span class="hs-identifier hs-type">FetchTableMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-299"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#FetchFunctionMetadata"><span class="hs-identifier hs-type">FetchFunctionMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-300"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-301"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-302"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-303"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span><span>
-</span><span id="line-304"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-305"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-306"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-307"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.TxAccess</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-308"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#TableCache"><span class="hs-identifier hs-type">TableCache</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-309"></span><span>  </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionCache"><span class="hs-identifier hs-type">FunctionCache</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-310"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-311"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.TxET</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430631"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-312"></span><span>  </span><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691430631"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-type">MetadataModifier</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-313"></span><span id="runTxWithMetadataCheck"><span class="annot"><span class="annottext">runTxWithMetadataCheck :: forall (m :: * -&gt; *) a (pgKind :: PostgresKind).
+</span><span id="line-290"></span><span>
+</span><span id="line-291"></span><span class="hs-comment">-- | @'runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascadeDependencies tx' checks for</span><span>
+</span><span id="line-292"></span><span class="hs-comment">-- changes in GraphQL Engine metadata when a @'tx' is executed on the database alters Postgres</span><span>
+</span><span id="line-293"></span><span class="hs-comment">-- schema of tables and functions. If any indirect dependencies (Eg. remote table dependence of a relationship) are</span><span>
+</span><span id="line-294"></span><span class="hs-comment">-- found and @'cascadeDependencies' is False, then an exception is raised.</span><span>
+</span><span id="line-295"></span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#runTxWithMetadataCheck"><span class="hs-identifier hs-type">runTxWithMetadataCheck</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-296"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691430632"><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621691430631"><span class="annot"><a href="#local-6989586621691430631"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691430633"><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#PostgresKind"><span class="hs-identifier hs-type">PostgresKind</span></a></span><span class="hs-special">)</span><span class="hs-operator">.</span><span>
+</span><span id="line-297"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-298"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#ToMetadataFetchQuery"><span class="hs-identifier hs-type">ToMetadataFetchQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-299"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#FetchTableMetadata"><span class="hs-identifier hs-type">FetchTableMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-300"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#FetchFunctionMetadata"><span class="hs-identifier hs-type">FetchFunctionMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-301"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-302"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-303"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-304"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-305"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-306"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-307"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-308"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.TxAccess</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-309"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#TableCache"><span class="hs-identifier hs-type">TableCache</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-310"></span><span>  </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionCache"><span class="hs-identifier hs-type">FunctionCache</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-311"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-312"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.TxET</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430631"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-313"></span><span>  </span><span class="annot"><a href="#local-6989586621691430632"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691430631"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-type">MetadataModifier</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-314"></span><span id="runTxWithMetadataCheck"><span class="annot"><span class="annottext">runTxWithMetadataCheck :: forall (m :: * -&gt; *) a (pgKind :: PostgresKind).
 (BackendMetadata ('Postgres pgKind), ToMetadataFetchQuery pgKind,
  FetchTableMetadata pgKind, FetchFunctionMetadata pgKind,
  CacheRWM m, MonadIO m, MonadBaseControl IO m, MonadError QErr m) =&gt;
@@ -838,13 +839,13 @@ SourceName
 </span><a href="#local-6989586621691429854"><span class="hs-identifier hs-var">functionCache</span></a></span></span><span> </span><span id="local-6989586621691429853"><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691429853"><span class="hs-identifier hs-var">cascadeDependencies</span></a></span></span><span> </span><span id="local-6989586621691429852"><span class="annot"><span class="annottext">TxET QErr m a
 </span><a href="#local-6989586621691429852"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-314"></span><span>  </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-315"></span><span>    </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runExceptT</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-316"></span><span>      </span><span class="annot"><span class="annottext">PGExecCtx -&gt; PGExecCtxInfo -&gt; RunTx
+</span><span id="line-315"></span><span>  </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span>
+</span><span id="line-316"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runExceptT</span></a></span><span>
+</span><span id="line-317"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">PGExecCtx -&gt; PGExecCtxInfo -&gt; RunTx
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pecRunTx"><span class="hs-identifier hs-var">_pecRunTx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGSourceConfig -&gt; PGExecCtx
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pscExecCtx"><span class="hs-identifier hs-var">_pscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
 </span><a href="#local-6989586621691429857"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGExecTxType -&gt; PGExecFrom -&gt; PGExecCtxInfo
@@ -852,16 +853,17 @@ SourceName
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#Tx"><span class="hs-identifier hs-var">Tx</span></a></span><span> </span><span class="annot"><span class="annottext">TxAccess
 </span><a href="#local-6989586621691429856"><span class="hs-identifier hs-var">txAccess</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PGExecFrom
-</span><a href="Hasura.Backends.Postgres.Execute.Types.html#RunSQLQuery"><span class="hs-identifier hs-var">RunSQLQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#RunSQLQuery"><span class="hs-identifier hs-var">RunSQLQuery</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-318"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-317"></span><span>        </span><span class="hs-comment">-- Running in a transaction helps to rollback the @'tx' execution in case of any exceptions</span><span>
-</span><span id="line-318"></span><span>
-</span><span id="line-319"></span><span>        </span><span class="hs-comment">-- Before running the @'tx', fetch metadata of existing tables and functions from Postgres.</span><span>
-</span><span id="line-320"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691429848"><span class="annot"><span class="annottext">tableNames :: HashSet QualifiedTable
+</span><span id="line-319"></span><span>      </span><span class="hs-comment">-- Running in a transaction helps to rollback the @'tx' execution in case of any exceptions</span><span>
+</span><span id="line-320"></span><span>
+</span><span id="line-321"></span><span>      </span><span class="hs-comment">-- Before running the @'tx', fetch metadata of existing tables and functions from Postgres.</span><span>
+</span><span id="line-322"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691429848"><span class="annot"><span class="annottext">tableNames :: HashSet QualifiedTable
 </span><a href="#local-6989586621691429848"><span class="hs-identifier hs-var hs-var">tableNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k a. HashMap k a -&gt; HashSet k
 </span><span class="hs-identifier hs-var">HashMap.keysSet</span></span><span> </span><span class="annot"><span class="annottext">TableCache ('Postgres pgKind)
 </span><a href="#local-6989586621691429855"><span class="hs-identifier hs-var">tableCache</span></a></span><span>
-</span><span id="line-321"></span><span>            </span><span id="local-6989586621691429846"><span class="annot"><span class="annottext">computedFieldFunctions :: HashSet QualifiedFunction
+</span><span id="line-323"></span><span>          </span><span id="local-6989586621691429846"><span class="annot"><span class="annottext">computedFieldFunctions :: HashSet QualifiedFunction
 </span><a href="#local-6989586621691429846"><span class="hs-identifier hs-var hs-var">computedFieldFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; [a] -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mconcat</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
@@ -871,13 +873,13 @@ TableInfo ('Postgres pgKind)
 </span><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#getComputedFieldFunctions"><span class="hs-identifier hs-var">getComputedFieldFunctions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">HashMap.elems</span></span><span> </span><span class="annot"><span class="annottext">TableCache ('Postgres pgKind)
 </span><a href="#local-6989586621691429855"><span class="hs-identifier hs-var">tableCache</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-322"></span><span>            </span><span id="local-6989586621691429844"><span class="annot"><span class="annottext">functionNames :: HashSet QualifiedFunction
+</span><span id="line-324"></span><span>          </span><span id="local-6989586621691429844"><span class="annot"><span class="annottext">functionNames :: HashSet QualifiedFunction
 </span><a href="#local-6989586621691429844"><span class="hs-identifier hs-var hs-var">functionNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k a. HashMap k a -&gt; HashSet k
 </span><span class="hs-identifier hs-var">HashMap.keysSet</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache ('Postgres pgKind)
 </span><a href="#local-6989586621691429854"><span class="hs-identifier hs-var">functionCache</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet QualifiedFunction
 </span><a href="#local-6989586621691429846"><span class="hs-identifier hs-var">computedFieldFunctions</span></a></span><span>
-</span><span id="line-323"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621691429843"><span class="annot"><span class="annottext">[TableMeta ('Postgres pgKind)]
+</span><span id="line-325"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621691429843"><span class="annot"><span class="annottext">[TableMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429843"><span class="hs-identifier hs-var">preTxTablesMeta</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691429842"><span class="annot"><span class="annottext">[FunctionMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429842"><span class="hs-identifier hs-var">preTxFunctionsMeta</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (ToMetadataFetchQuery pgKind, FetchTableMetadata pgKind,
@@ -892,11 +894,11 @@ TableCache ('Postgres pgKind)
 </span><a href="#local-6989586621691429855"><span class="hs-identifier hs-var">tableCache</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet QualifiedTable
 </span><a href="#local-6989586621691429848"><span class="hs-identifier hs-var">tableNames</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet QualifiedFunction
 </span><a href="#local-6989586621691429844"><span class="hs-identifier hs-var">functionNames</span></a></span><span>
-</span><span id="line-324"></span><span>
-</span><span id="line-325"></span><span>        </span><span class="hs-comment">-- Since the @'tx' may alter table/function names we use the OIDs of underlying tables</span><span>
-</span><span id="line-326"></span><span>        </span><span class="hs-comment">-- (sourced from 'pg_class' for tables and 'pg_proc' for functions), which remain unchanged in the</span><span>
-</span><span id="line-327"></span><span>        </span><span class="hs-comment">-- case if a table/function is renamed.</span><span>
-</span><span id="line-328"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691429841"><span class="annot"><span class="annottext">tableOids :: HashSet OID
+</span><span id="line-326"></span><span>
+</span><span id="line-327"></span><span>      </span><span class="hs-comment">-- Since the @'tx' may alter table/function names we use the OIDs of underlying tables</span><span>
+</span><span id="line-328"></span><span>      </span><span class="hs-comment">-- (sourced from 'pg_class' for tables and 'pg_proc' for functions), which remain unchanged in the</span><span>
+</span><span id="line-329"></span><span>      </span><span class="hs-comment">-- case if a table/function is renamed.</span><span>
+</span><span id="line-330"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691429841"><span class="annot"><span class="annottext">tableOids :: HashSet OID
 </span><a href="#local-6989586621691429841"><span class="hs-identifier hs-var hs-var">tableOids</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
@@ -905,23 +907,23 @@ TableCache ('Postgres pgKind)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TableMeta b -&gt; DBTableMetadata b
 </span><a href="Hasura.RQL.DDL.Schema.Diff.html#tmInfo"><span class="hs-identifier hs-var">Diff.tmInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[TableMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429843"><span class="hs-identifier hs-var">preTxTablesMeta</span></a></span><span>
-</span><span id="line-329"></span><span>            </span><span id="local-6989586621691429837"><span class="annot"><span class="annottext">functionOids :: HashSet OID
+</span><span id="line-331"></span><span>          </span><span id="local-6989586621691429837"><span class="annot"><span class="annottext">functionOids :: HashSet OID
 </span><a href="#local-6989586621691429837"><span class="hs-identifier hs-var hs-var">functionOids</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). FunctionMeta b -&gt; OID
 </span><a href="Hasura.RQL.DDL.Schema.Diff.html#fmOid"><span class="hs-identifier hs-var">Diff.fmOid</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429842"><span class="hs-identifier hs-var">preTxFunctionsMeta</span></a></span><span>
-</span><span id="line-330"></span><span>
-</span><span id="line-331"></span><span>        </span><span class="hs-comment">-- Run the transaction</span><span>
-</span><span id="line-332"></span><span>        </span><span id="local-6989586621691429835"><span class="annot"><span class="annottext">a
+</span><span id="line-332"></span><span>
+</span><span id="line-333"></span><span>      </span><span class="hs-comment">-- Run the transaction</span><span>
+</span><span id="line-334"></span><span>      </span><span id="local-6989586621691429835"><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621691429835"><span class="hs-identifier hs-var">txResult</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TxET QErr m a
 </span><a href="#local-6989586621691429852"><span class="hs-identifier hs-var">tx</span></a></span><span>
-</span><span id="line-333"></span><span>
-</span><span id="line-334"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621691429834"><span class="annot"><span class="annottext">[TableMeta ('Postgres pgKind)]
+</span><span id="line-335"></span><span>
+</span><span id="line-336"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621691429834"><span class="annot"><span class="annottext">[TableMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429834"><span class="hs-identifier hs-var">postTxTablesMeta</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691429833"><span class="annot"><span class="annottext">[FunctionMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429833"><span class="hs-identifier hs-var">postTxFunctionMeta</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-335"></span><span>          </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; (a, b) -&gt; c
+</span><span id="line-337"></span><span>        </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; (a, b) -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">uncurry</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (ToMetadataFetchQuery pgKind, FetchTableMetadata pgKind,
  FetchFunctionMetadata pgKind, BackendMetadata ('Postgres pgKind),
@@ -933,8 +935,8 @@ TableCache ('Postgres pgKind)
       [FunctionMeta ('Postgres pgKind)])
 </span><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#fetchTablesFunctionsMetadata"><span class="hs-identifier hs-var">fetchTablesFunctionsMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">TableCache ('Postgres pgKind)
 </span><a href="#local-6989586621691429855"><span class="hs-identifier hs-var">tableCache</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-336"></span><span>            </span><span class="hs-comment">-- Fetch names of tables and functions using OIDs which also contains renamed items</span><span>
-</span><span id="line-337"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span id="line-338"></span><span>          </span><span class="hs-comment">-- Fetch names of tables and functions using OIDs which also contains renamed items</span><span>
+</span><span id="line-339"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">=&lt;&lt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 MonadIO m =&gt;
 HashSet OID
@@ -947,20 +949,20 @@ HashSet OID
 </span><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#fetchTablesFunctionsFromOids"><span class="hs-identifier hs-var">fetchTablesFunctionsFromOids</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet OID
 </span><a href="#local-6989586621691429841"><span class="hs-identifier hs-var">tableOids</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet OID
 </span><a href="#local-6989586621691429837"><span class="hs-identifier hs-var">functionOids</span></a></span><span>
-</span><span id="line-338"></span><span>
-</span><span id="line-339"></span><span>        </span><span class="hs-comment">-- Calculate the tables diff (dropped &amp; altered tables)</span><span>
-</span><span id="line-340"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691429829"><span class="annot"><span class="annottext">tablesDiff :: TablesDiff ('Postgres pgKind)
+</span><span id="line-340"></span><span>
+</span><span id="line-341"></span><span>      </span><span class="hs-comment">-- Calculate the tables diff (dropped &amp; altered tables)</span><span>
+</span><span id="line-342"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691429829"><span class="annot"><span class="annottext">tablesDiff :: TablesDiff ('Postgres pgKind)
 </span><a href="#local-6989586621691429829"><span class="hs-identifier hs-var hs-var">tablesDiff</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Backend b =&gt;
 [TableMeta b] -&gt; [TableMeta b] -&gt; TablesDiff b
 </span><a href="Hasura.RQL.DDL.Schema.Diff.html#getTablesDiff"><span class="hs-identifier hs-var">Diff.getTablesDiff</span></a></span><span> </span><span class="annot"><span class="annottext">[TableMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429843"><span class="hs-identifier hs-var">preTxTablesMeta</span></a></span><span> </span><span class="annot"><span class="annottext">[TableMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429834"><span class="hs-identifier hs-var">postTxTablesMeta</span></a></span><span>
-</span><span id="line-341"></span><span>            </span><span class="hs-comment">-- Calculate the functions diff. For calculating diff for functions, only consider</span><span>
-</span><span id="line-342"></span><span>            </span><span class="hs-comment">-- query/mutation functions and exclude functions underpinning computed fields.</span><span>
-</span><span id="line-343"></span><span>            </span><span class="hs-comment">-- Computed field functions are being processed under each table diff.</span><span>
-</span><span id="line-344"></span><span>            </span><span class="hs-comment">-- See @'getTablesDiff' and @'Diff.processTablesDiff'</span><span>
-</span><span id="line-345"></span><span>            </span><span id="local-6989586621691429827"><span class="annot"><span class="annottext">excludeComputedFieldFunctions :: [FunctionMeta ('Postgres pgKind)]
+</span><span id="line-343"></span><span>          </span><span class="hs-comment">-- Calculate the functions diff. For calculating diff for functions, only consider</span><span>
+</span><span id="line-344"></span><span>          </span><span class="hs-comment">-- query/mutation functions and exclude functions underpinning computed fields.</span><span>
+</span><span id="line-345"></span><span>          </span><span class="hs-comment">-- Computed field functions are being processed under each table diff.</span><span>
+</span><span id="line-346"></span><span>          </span><span class="hs-comment">-- See @'getTablesDiff' and @'Diff.processTablesDiff'</span><span>
+</span><span id="line-347"></span><span>          </span><span id="local-6989586621691429827"><span class="annot"><span class="annottext">excludeComputedFieldFunctions :: [FunctionMeta ('Postgres pgKind)]
 -&gt; [FunctionMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429827"><span class="hs-identifier hs-var hs-var">excludeComputedFieldFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
@@ -968,52 +970,52 @@ Backend b =&gt;
 </span><a href="#local-6989586621691429854"><span class="hs-identifier hs-var">functionCache</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). FunctionMeta b -&gt; FunctionName b
 </span><a href="Hasura.RQL.DDL.Schema.Diff.html#fmFunction"><span class="hs-identifier hs-var">Diff.fmFunction</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-346"></span><span>            </span><span id="local-6989586621691429824"><span class="annot"><span class="annottext">functionsDiff :: FunctionsDiff ('Postgres pgKind)
+</span><span id="line-348"></span><span>          </span><span id="local-6989586621691429824"><span class="annot"><span class="annottext">functionsDiff :: FunctionsDiff ('Postgres pgKind)
 </span><a href="#local-6989586621691429824"><span class="hs-identifier hs-var hs-var">functionsDiff</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-347"></span><span>              </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><span id="line-349"></span><span>            </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 [FunctionMeta b] -&gt; [FunctionMeta b] -&gt; FunctionsDiff b
 </span><a href="Hasura.RQL.DDL.Schema.Diff.html#getFunctionsDiff"><span class="hs-identifier hs-var">Diff.getFunctionsDiff</span></a></span><span>
-</span><span id="line-348"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[FunctionMeta ('Postgres pgKind)]
+</span><span id="line-350"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[FunctionMeta ('Postgres pgKind)]
 -&gt; [FunctionMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429827"><span class="hs-identifier hs-var">excludeComputedFieldFunctions</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429842"><span class="hs-identifier hs-var">preTxFunctionsMeta</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-349"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[FunctionMeta ('Postgres pgKind)]
+</span><span id="line-351"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[FunctionMeta ('Postgres pgKind)]
 -&gt; [FunctionMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429827"><span class="hs-identifier hs-var">excludeComputedFieldFunctions</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429833"><span class="hs-identifier hs-var">postTxFunctionMeta</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-350"></span><span>
-</span><span id="line-351"></span><span>        </span><span class="annot"><span class="annottext">forall (n :: * -&gt; *).
+</span><span id="line-352"></span><span>
+</span><span id="line-353"></span><span>      </span><span class="annot"><span class="annottext">forall (n :: * -&gt; *).
 MonadError QErr n =&gt;
 [FunctionName ('Postgres pgKind)] -&gt; n ()
-</span><a href="#local-6989586621691429822"><span class="hs-identifier hs-var">dontAllowFunctionOverloading</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-352"></span><span>          </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><a href="#local-6989586621691429822"><span class="hs-identifier hs-var">dontAllowFunctionOverloading</span></a></span><span>
+</span><span id="line-354"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Backend b =&gt;
 [FunctionName b] -&gt; [FunctionMeta b] -&gt; [FunctionName b]
 </span><a href="Hasura.RQL.DDL.Schema.Diff.html#getOverloadedFunctions"><span class="hs-identifier hs-var">Diff.getOverloadedFunctions</span></a></span><span>
-</span><span id="line-353"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [k]
+</span><span id="line-355"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [k]
 </span><span class="hs-identifier hs-var">HashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">FunctionCache ('Postgres pgKind)
 </span><a href="#local-6989586621691429854"><span class="hs-identifier hs-var">functionCache</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-354"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[FunctionMeta ('Postgres pgKind)]
+</span><span id="line-356"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[FunctionMeta ('Postgres pgKind)]
 -&gt; [FunctionMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429827"><span class="hs-identifier hs-var">excludeComputedFieldFunctions</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionMeta ('Postgres pgKind)]
 </span><a href="#local-6989586621691429833"><span class="hs-identifier hs-var">postTxFunctionMeta</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-355"></span><span>
-</span><span id="line-356"></span><span>        </span><span class="hs-comment">-- Update metadata with schema change caused by @'tx'</span><span>
-</span><span id="line-357"></span><span>        </span><span id="local-6989586621691429819"><span class="annot"><span class="annottext">MetadataModifier
+</span><span id="line-357"></span><span>
+</span><span id="line-358"></span><span>      </span><span class="hs-comment">-- Update metadata with schema change caused by @'tx'</span><span>
+</span><span id="line-359"></span><span>      </span><span id="local-6989586621691429819"><span class="annot"><span class="annottext">MetadataModifier
 </span><a href="#local-6989586621691429819"><span class="hs-identifier hs-var">metadataUpdater</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) w a. Monad m =&gt; WriterT w m a -&gt; m w
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">execWriterT</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-358"></span><span>          </span><span class="hs-comment">-- Collect indirect dependencies of altered tables</span><span>
-</span><span id="line-359"></span><span>          </span><span id="local-6989586621691429817"><span class="annot"><span class="annottext">[SchemaObjId]
+</span><span id="line-360"></span><span>        </span><span class="hs-comment">-- Collect indirect dependencies of altered tables</span><span>
+</span><span id="line-361"></span><span>        </span><span id="local-6989586621691429817"><span class="annot"><span class="annottext">[SchemaObjId]
 </span><a href="#local-6989586621691429817"><span class="hs-identifier hs-var">tableIndirectDeps</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
 (QErrM m, CacheRM m, Backend b) =&gt;
 SourceName -&gt; TablesDiff b -&gt; m [SchemaObjId]
 </span><a href="Hasura.RQL.DDL.Schema.Diff.html#getIndirectDependenciesFromTableDiff"><span class="hs-identifier hs-var">Diff.getIndirectDependenciesFromTableDiff</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691429858"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TablesDiff ('Postgres pgKind)
 </span><a href="#local-6989586621691429829"><span class="hs-identifier hs-var">tablesDiff</span></a></span><span>
-</span><span id="line-360"></span><span>
-</span><span id="line-361"></span><span>          </span><span class="hs-comment">-- If table indirect dependencies exist and cascading is not enabled then report an exception</span><span>
-</span><span id="line-362"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span id="line-362"></span><span>
+</span><span id="line-363"></span><span>        </span><span class="hs-comment">-- If table indirect dependencies exist and cascading is not enabled then report an exception</span><span>
+</span><span id="line-364"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId]
 </span><a href="#local-6989586621691429817"><span class="hs-identifier hs-var">tableIndirectDeps</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
@@ -1022,9 +1024,9 @@ SourceName -&gt; TablesDiff b -&gt; m [SchemaObjId]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadError QErr m =&gt; [SchemaObjId] -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#reportDependentObjectsExist"><span class="hs-identifier hs-var">reportDependentObjectsExist</span></a></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId]
 </span><a href="#local-6989586621691429817"><span class="hs-identifier hs-var">tableIndirectDeps</span></a></span><span>
-</span><span id="line-363"></span><span>
-</span><span id="line-364"></span><span>          </span><span class="hs-comment">-- Purge all the table dependents</span><span>
-</span><span id="line-365"></span><span>          </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+</span><span id="line-365"></span><span>
+</span><span id="line-366"></span><span>        </span><span class="hs-comment">-- Purge all the table dependents</span><span>
+</span><span id="line-367"></span><span>        </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Foldable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">traverse_</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
@@ -1032,19 +1034,19 @@ MonadError QErr m =&gt;
 SchemaObjId -&gt; WriterT MetadataModifier m ()
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#purgeSourceAndSchemaDependencies"><span class="hs-identifier hs-var">purgeSourceAndSchemaDependencies</span></a></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId]
 </span><a href="#local-6989586621691429817"><span class="hs-identifier hs-var">tableIndirectDeps</span></a></span><span>
-</span><span id="line-366"></span><span>
-</span><span id="line-367"></span><span>          </span><span class="hs-comment">-- Collect function names from purged table dependencies</span><span>
-</span><span id="line-368"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691429809"><span class="annot"><span class="annottext">purgedFunctions :: [FunctionName ('Postgres pgKind)]
+</span><span id="line-368"></span><span>
+</span><span id="line-369"></span><span>        </span><span class="hs-comment">-- Collect function names from purged table dependencies</span><span>
+</span><span id="line-370"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691429809"><span class="annot"><span class="annottext">purgedFunctions :: [FunctionName ('Postgres pgKind)]
 </span><a href="#local-6989586621691429809"><span class="hs-identifier hs-var hs-var">purgedFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[SchemaObjId] -&gt; [FunctionName ('Postgres pgKind)]
 </span><a href="#local-6989586621691429808"><span class="hs-identifier hs-var">collectFunctionsInDeps</span></a></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId]
 </span><a href="#local-6989586621691429817"><span class="hs-identifier hs-var">tableIndirectDeps</span></a></span><span>
-</span><span id="line-369"></span><span>              </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Diff.html#FunctionsDiff"><span class="hs-identifier hs-type">Diff.FunctionsDiff</span></a></span><span> </span><span id="local-6989586621691429806"><span class="annot"><span class="annottext">[FunctionName ('Postgres pgKind)]
+</span><span id="line-371"></span><span>            </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Diff.html#FunctionsDiff"><span class="hs-identifier hs-type">Diff.FunctionsDiff</span></a></span><span> </span><span id="local-6989586621691429806"><span class="annot"><span class="annottext">[FunctionName ('Postgres pgKind)]
 </span><a href="#local-6989586621691429806"><span class="hs-identifier hs-var">droppedFunctions</span></a></span></span><span> </span><span id="local-6989586621691429805"><span class="annot"><span class="annottext">[(FunctionName ('Postgres pgKind), FunctionVolatility)]
 </span><a href="#local-6989586621691429805"><span class="hs-identifier hs-var">alteredFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FunctionsDiff ('Postgres pgKind)
 </span><a href="#local-6989586621691429824"><span class="hs-identifier hs-var">functionsDiff</span></a></span><span>
-</span><span id="line-370"></span><span>
-</span><span id="line-371"></span><span>          </span><span class="hs-comment">-- Drop functions in metadata. Exclude functions that were already dropped as part of table indirect dependencies</span><span>
-</span><span id="line-372"></span><span>          </span><span class="annot"><span class="annottext">forall (n :: * -&gt; *).
+</span><span id="line-372"></span><span>
+</span><span id="line-373"></span><span>        </span><span class="hs-comment">-- Drop functions in metadata. Exclude functions that were already dropped as part of table indirect dependencies</span><span>
+</span><span id="line-374"></span><span>        </span><span class="annot"><span class="annottext">forall (n :: * -&gt; *).
 Monad n =&gt;
 [FunctionName ('Postgres pgKind)] -&gt; WriterT MetadataModifier n ()
 </span><a href="#local-6989586621691429804"><span class="hs-identifier hs-var">purgeFunctionsFromMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1052,16 +1054,16 @@ Monad n =&gt;
 </span><a href="#local-6989586621691429806"><span class="hs-identifier hs-var">droppedFunctions</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; [a] -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">\\</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionName ('Postgres pgKind)]
 </span><a href="#local-6989586621691429809"><span class="hs-identifier hs-var">purgedFunctions</span></a></span><span>
-</span><span id="line-373"></span><span>
-</span><span id="line-374"></span><span>          </span><span class="hs-comment">-- If any function type is altered to VOLATILE then raise an exception</span><span>
-</span><span id="line-375"></span><span>          </span><span class="annot"><span class="annottext">forall (n :: * -&gt; *).
+</span><span id="line-375"></span><span>
+</span><span id="line-376"></span><span>        </span><span class="hs-comment">-- If any function type is altered to VOLATILE then raise an exception</span><span>
+</span><span id="line-377"></span><span>        </span><span class="annot"><span class="annottext">forall (n :: * -&gt; *).
 MonadError QErr n =&gt;
 [(FunctionName ('Postgres pgKind), FunctionVolatility)] -&gt; n ()
 </span><a href="#local-6989586621691429802"><span class="hs-identifier hs-var">dontAllowFunctionAlteredVolatile</span></a></span><span> </span><span class="annot"><span class="annottext">[(FunctionName ('Postgres pgKind), FunctionVolatility)]
 </span><a href="#local-6989586621691429805"><span class="hs-identifier hs-var">alteredFunctions</span></a></span><span>
-</span><span id="line-376"></span><span>
-</span><span id="line-377"></span><span>          </span><span class="hs-comment">-- Propagate table changes to metadata</span><span>
-</span><span id="line-378"></span><span>          </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
+</span><span id="line-378"></span><span>
+</span><span id="line-379"></span><span>        </span><span class="hs-comment">-- Propagate table changes to metadata</span><span>
+</span><span id="line-380"></span><span>        </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
 (MonadError QErr m, CacheRM m, MonadWriter MetadataModifier m,
  BackendMetadata b) =&gt;
 SourceName -&gt; TableCache b -&gt; TablesDiff b -&gt; m ()
@@ -1069,47 +1071,47 @@ SourceName -&gt; TableCache b -&gt; TablesDiff b -&gt; m ()
 </span><a href="#local-6989586621691429858"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableCache ('Postgres pgKind)
 </span><a href="#local-6989586621691429855"><span class="hs-identifier hs-var">tableCache</span></a></span><span> </span><span class="annot"><span class="annottext">TablesDiff ('Postgres pgKind)
 </span><a href="#local-6989586621691429829"><span class="hs-identifier hs-var">tablesDiff</span></a></span><span>
-</span><span id="line-379"></span><span>
-</span><span id="line-380"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-381"></span><span>
+</span><span id="line-382"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621691429835"><span class="hs-identifier hs-var">txResult</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MetadataModifier
 </span><a href="#local-6989586621691429819"><span class="hs-identifier hs-var">metadataUpdater</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-381"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-382"></span><span>    </span><span id="local-6989586621691430520"><span class="annot"><a href="#local-6989586621691429822"><span class="hs-identifier hs-type">dontAllowFunctionOverloading</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-383"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691430520"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-384"></span><span>      </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-385"></span><span>      </span><span class="annot"><a href="#local-6989586621691430520"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
-</span><span id="line-386"></span><span>    </span><span id="local-6989586621691429822"><span class="annot"><span class="annottext">dontAllowFunctionOverloading :: forall (n :: * -&gt; *).
+</span><span id="line-383"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-384"></span><span>    </span><span id="local-6989586621691430520"><span class="annot"><a href="#local-6989586621691429822"><span class="hs-identifier hs-type">dontAllowFunctionOverloading</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-385"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691430520"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-386"></span><span>      </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-387"></span><span>      </span><span class="annot"><a href="#local-6989586621691430520"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-388"></span><span>    </span><span id="local-6989586621691429822"><span class="annot"><span class="annottext">dontAllowFunctionOverloading :: forall (n :: * -&gt; *).
 MonadError QErr n =&gt;
 [FunctionName ('Postgres pgKind)] -&gt; n ()
 </span><a href="#local-6989586621691429822"><span class="hs-identifier hs-var hs-var">dontAllowFunctionOverloading</span></a></span></span><span> </span><span id="local-6989586621691429789"><span class="annot"><span class="annottext">[FunctionName ('Postgres pgKind)]
 </span><a href="#local-6989586621691429789"><span class="hs-identifier hs-var">overloadedFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-387"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span id="line-389"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionName ('Postgres pgKind)]
-</span><a href="#local-6989586621691429789"><span class="hs-identifier hs-var">overloadedFunctions</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-388"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="#local-6989586621691429789"><span class="hs-identifier hs-var">overloadedFunctions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-390"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw400</span></span><span> </span><span class="annot"><span class="annottext">Code
-</span><span class="hs-identifier hs-var">NotSupported</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-389"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">NotSupported</span></span><span>
+</span><span id="line-391"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;the following tracked function(s) cannot be overloaded: &quot;</span></span><span>
-</span><span id="line-390"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-392"></span><span>        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
 </span><span class="hs-identifier hs-var">commaSeparated</span></span><span> </span><span class="annot"><span class="annottext">[FunctionName ('Postgres pgKind)]
 </span><a href="#local-6989586621691429789"><span class="hs-identifier hs-var">overloadedFunctions</span></a></span><span>
-</span><span id="line-391"></span><span>
-</span><span id="line-392"></span><span>    </span><span id="local-6989586621691430499"><span class="annot"><a href="#local-6989586621691429802"><span class="hs-identifier hs-type">dontAllowFunctionAlteredVolatile</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-393"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691430499"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-394"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionVolatility"><span class="hs-identifier hs-type">FunctionVolatility</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-395"></span><span>      </span><span class="annot"><a href="#local-6989586621691430499"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
-</span><span id="line-396"></span><span>    </span><span id="local-6989586621691429802"><span class="annot"><span class="annottext">dontAllowFunctionAlteredVolatile :: forall (n :: * -&gt; *).
+</span><span id="line-393"></span><span>
+</span><span id="line-394"></span><span>    </span><span id="local-6989586621691430499"><span class="annot"><a href="#local-6989586621691429802"><span class="hs-identifier hs-type">dontAllowFunctionAlteredVolatile</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-395"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691430499"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-396"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionVolatility"><span class="hs-identifier hs-type">FunctionVolatility</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-397"></span><span>      </span><span class="annot"><a href="#local-6989586621691430499"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-398"></span><span>    </span><span id="local-6989586621691429802"><span class="annot"><span class="annottext">dontAllowFunctionAlteredVolatile :: forall (n :: * -&gt; *).
 MonadError QErr n =&gt;
 [(FunctionName ('Postgres pgKind), FunctionVolatility)] -&gt; n ()
 </span><a href="#local-6989586621691429802"><span class="hs-identifier hs-var hs-var">dontAllowFunctionAlteredVolatile</span></a></span></span><span> </span><span id="local-6989586621691429772"><span class="annot"><span class="annottext">[(FunctionName ('Postgres pgKind), FunctionVolatility)]
 </span><a href="#local-6989586621691429772"><span class="hs-identifier hs-var">alteredFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-397"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+</span><span id="line-399"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Foldable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">forM_</span></a></span><span> </span><span class="annot"><span class="annottext">[(FunctionName ('Postgres pgKind), FunctionVolatility)]
@@ -1117,33 +1119,35 @@ t a -&gt; (a -&gt; m b) -&gt; m ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621691429771"><span class="annot"><span class="annottext">QualifiedFunction
 </span><a href="#local-6989586621691429771"><span class="hs-identifier hs-var">qf</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691429770"><span class="annot"><span class="annottext">FunctionVolatility
 </span><a href="#local-6989586621691429770"><span class="hs-identifier hs-var">newTy</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-398"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span id="line-400"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FunctionVolatility
 </span><a href="#local-6989586621691429770"><span class="hs-identifier hs-var">newTy</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionVolatility
-</span><a href="Hasura.Function.Cache.html#FTVOLATILE"><span class="hs-identifier hs-var">FTVOLATILE</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-399"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.Function.Cache.html#FTVOLATILE"><span class="hs-identifier hs-var">FTVOLATILE</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-401"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw400</span></span><span> </span><span class="annot"><span class="annottext">Code
-</span><span class="hs-identifier hs-var">NotSupported</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-400"></span><span>            </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;type of function &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">NotSupported</span></span><span>
+</span><span id="line-402"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;type of function &quot;</span></span><span>
+</span><span id="line-403"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedFunction
-</span><a href="#local-6989586621691429771"><span class="hs-identifier hs-var">qf</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="#local-6989586621691429771"><span class="hs-identifier hs-var">qf</span></a></span><span>
+</span><span id="line-404"></span><span>          </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><span class="hs-operator hs-var">&lt;&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is altered to \&quot;VOLATILE\&quot; which is not supported now&quot;</span></span><span>
-</span><span id="line-401"></span><span>
-</span><span id="line-402"></span><span>    </span><span id="local-6989586621691430501"><span class="annot"><a href="#local-6989586621691429804"><span class="hs-identifier hs-type">purgeFunctionsFromMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-403"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Monad</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430501"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-404"></span><span>      </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-405"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">WriterT</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-type">MetadataModifier</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430501"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
-</span><span id="line-406"></span><span>    </span><span id="local-6989586621691429804"><span class="annot"><span class="annottext">purgeFunctionsFromMetadata :: forall (n :: * -&gt; *).
+</span><span id="line-405"></span><span>
+</span><span id="line-406"></span><span>    </span><span id="local-6989586621691430501"><span class="annot"><a href="#local-6989586621691429804"><span class="hs-identifier hs-type">purgeFunctionsFromMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-407"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Monad</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430501"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-408"></span><span>      </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-409"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">WriterT</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-type">MetadataModifier</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430501"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-410"></span><span>    </span><span id="local-6989586621691429804"><span class="annot"><span class="annottext">purgeFunctionsFromMetadata :: forall (n :: * -&gt; *).
 Monad n =&gt;
 [FunctionName ('Postgres pgKind)] -&gt; WriterT MetadataModifier n ()
 </span><a href="#local-6989586621691429804"><span class="hs-identifier hs-var hs-var">purgeFunctionsFromMetadata</span></a></span></span><span> </span><span id="local-6989586621691429760"><span class="annot"><span class="annottext">[FunctionName ('Postgres pgKind)]
 </span><a href="#local-6989586621691429760"><span class="hs-identifier hs-var">functions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-407"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+</span><span id="line-411"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for_</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionName ('Postgres pgKind)]
@@ -1155,45 +1159,45 @@ Backend b =&gt;
 SourceName -&gt; FunctionName b -&gt; MetadataModifier
 </span><a href="Hasura.RQL.Types.Metadata.html#dropFunctionInMetadata"><span class="hs-identifier hs-var">dropFunctionInMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691429858"><span class="hs-identifier hs-var">source</span></a></span><span>
-</span><span id="line-408"></span><span>
-</span><span id="line-409"></span><span>    </span><span class="annot"><a href="#local-6989586621691429808"><span class="hs-identifier hs-type">collectFunctionsInDeps</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaObjId"><span class="hs-identifier hs-type">SchemaObjId</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-410"></span><span>    </span><span id="local-6989586621691429808"><span class="annot"><span class="annottext">collectFunctionsInDeps :: [SchemaObjId] -&gt; [FunctionName ('Postgres pgKind)]
+</span><span id="line-412"></span><span>
+</span><span id="line-413"></span><span>    </span><span class="annot"><a href="#local-6989586621691429808"><span class="hs-identifier hs-type">collectFunctionsInDeps</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaObjId"><span class="hs-identifier hs-type">SchemaObjId</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-414"></span><span>    </span><span id="local-6989586621691429808"><span class="annot"><span class="annottext">collectFunctionsInDeps :: [SchemaObjId] -&gt; [FunctionName ('Postgres pgKind)]
 </span><a href="#local-6989586621691429808"><span class="hs-identifier hs-var hs-var">collectFunctionsInDeps</span></a></span></span><span> </span><span id="local-6989586621691429756"><span class="annot"><span class="annottext">[SchemaObjId]
 </span><a href="#local-6989586621691429756"><span class="hs-identifier hs-var">deps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-411"></span><span>      </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span id="line-415"></span><span>      </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="annot"><span class="annottext">[SchemaObjId]
 </span><a href="#local-6989586621691429756"><span class="hs-identifier hs-var">deps</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-412"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOSourceObj"><span class="hs-identifier hs-type">SOSourceObj</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span id="line-416"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOSourceObj"><span class="hs-identifier hs-type">SOSourceObj</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621691429753"><span class="annot"><span class="annottext">AnyBackend SourceObjId
 </span><a href="#local-6989586621691429753"><span class="hs-identifier hs-var">objectID</span></a></span></span><span>
-</span><span id="line-413"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOIFunction"><span class="hs-identifier hs-type">SOIFunction</span></a></span><span> </span><span id="local-6989586621691429751"><span class="annot"><span class="annottext">FunctionName ('Postgres pgKind)
+</span><span id="line-417"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOIFunction"><span class="hs-identifier hs-type">SOIFunction</span></a></span><span> </span><span id="local-6989586621691429751"><span class="annot"><span class="annottext">FunctionName ('Postgres pgKind)
 </span><a href="#local-6989586621691429751"><span class="hs-identifier hs-var">qf</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 AnyBackend i -&gt; Maybe (i b)
 </span><a href="Hasura.SQL.AnyBackend.html#unpackAnyBackend"><span class="hs-identifier hs-var">AB.unpackAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430633"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceObjId
 </span><a href="#local-6989586621691429753"><span class="hs-identifier hs-var">objectID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-414"></span><span>              </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><span id="line-418"></span><span>              </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionName ('Postgres pgKind)
 </span><a href="#local-6989586621691429751"><span class="hs-identifier hs-var">qf</span></a></span><span>
-</span><span id="line-415"></span><span>        </span><span class="annot"><span class="annottext">SchemaObjId
+</span><span id="line-419"></span><span>        </span><span class="annot"><span class="annottext">SchemaObjId
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-416"></span><span>
-</span><span id="line-417"></span><span class="hs-comment">-- | Fetch list of tables and functions with provided oids</span><span>
-</span><span id="line-418"></span><span id="local-6989586621691430529"><span id="local-6989586621691430530"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#fetchTablesFunctionsFromOids"><span class="hs-identifier hs-type">fetchTablesFunctionsFromOids</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-419"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430530"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-420"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#OID"><span class="hs-identifier hs-type">OID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-421"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#OID"><span class="hs-identifier hs-type">OID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-422"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.TxET</span></a></span><span>
-</span><span id="line-423"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span>
-</span><span id="line-424"></span><span>    </span><span class="annot"><a href="#local-6989586621691430530"><span class="hs-identifier hs-type">m</span></a></span><span>
-</span><span id="line-425"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HS.HashSet</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430529"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-426"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">HS.HashSet</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430529"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-427"></span><span>    </span><span class="hs-special">)</span></span></span><span>
-</span><span id="line-428"></span><span id="fetchTablesFunctionsFromOids"><span class="annot"><span class="annottext">fetchTablesFunctionsFromOids :: forall (m :: * -&gt; *) (pgKind :: PostgresKind).
+</span><span id="line-420"></span><span>
+</span><span id="line-421"></span><span class="hs-comment">-- | Fetch list of tables and functions with provided oids</span><span>
+</span><span id="line-422"></span><span id="local-6989586621691430529"><span id="local-6989586621691430530"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#fetchTablesFunctionsFromOids"><span class="hs-identifier hs-type">fetchTablesFunctionsFromOids</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-423"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430530"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-424"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#OID"><span class="hs-identifier hs-type">OID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-425"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#OID"><span class="hs-identifier hs-type">OID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-426"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.TxET</span></a></span><span>
+</span><span id="line-427"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span>
+</span><span id="line-428"></span><span>    </span><span class="annot"><a href="#local-6989586621691430530"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-429"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HS.HashSet</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430529"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-430"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">HS.HashSet</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430529"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-431"></span><span>    </span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-432"></span><span id="fetchTablesFunctionsFromOids"><span class="annot"><span class="annottext">fetchTablesFunctionsFromOids :: forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 MonadIO m =&gt;
 HashSet OID
 -&gt; HashSet OID
@@ -1205,7 +1209,7 @@ HashSet OID
 </span><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#fetchTablesFunctionsFromOids"><span class="hs-identifier hs-var hs-var">fetchTablesFunctionsFromOids</span></a></span></span><span> </span><span id="local-6989586621691429695"><span class="annot"><span class="annottext">HashSet OID
 </span><a href="#local-6989586621691429695"><span class="hs-identifier hs-var">tableOids</span></a></span></span><span> </span><span id="local-6989586621691429694"><span class="annot"><span class="annottext">HashSet OID
 </span><a href="#local-6989586621691429694"><span class="hs-identifier hs-var">functionOids</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-429"></span><span>  </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ViaJSON a -&gt; a
+</span><span id="line-433"></span><span>  </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ViaJSON a -&gt; a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.getViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: * -&gt; * -&gt; *) b c b' c'.
 Arrow a =&gt;
 a b c -&gt; a b' c' -&gt; a (b, b') (c, c')
@@ -1213,14 +1217,14 @@ a b c -&gt; a b' c' -&gt; a (b, b') (c, c')
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.getViaJSON</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. SingleRow a -&gt; a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.getRow</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-430"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-434"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRes a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.withQE</span></a></span><span>
-</span><span id="line-431"></span><span>      </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
+</span><span id="line-435"></span><span>      </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span>
-</span><span id="line-432"></span><span>      </span><span class="annot"><span class="">[PG.sql|
+</span><span id="line-436"></span><span>      </span><span class="annot"><span class="">[PG.sql|
     SELECT
       COALESCE(
         ( SELECT
@@ -1260,7 +1264,7 @@ a b c -&gt; a b' c' -&gt; a (b, b') (c, c')
         '[]'
       ) AS &quot;functions&quot;
   |]</span></span><span>
-</span><span id="line-472"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; ViaJSON a
+</span><span id="line-476"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; ViaJSON a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
@@ -1276,21 +1280,21 @@ a b c -&gt; a b' c' -&gt; a (b, b') (c, c')
 </span><span class="hs-identifier hs-var">HS.toList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet OID
 </span><a href="#local-6989586621691429694"><span class="hs-identifier hs-var">functionOids</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-473"></span><span>      </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-477"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
-</span><span id="line-474"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-475"></span><span>    </span><span id="local-6989586621691429686"><span class="annot"><span class="annottext">mkOidObject :: v -&gt; Value
+</span><span id="line-478"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-479"></span><span>    </span><span id="local-6989586621691429686"><span class="annot"><span class="annottext">mkOidObject :: v -&gt; Value
 </span><a href="#local-6989586621691429686"><span class="hs-identifier hs-var hs-var">mkOidObject</span></a></span></span><span> </span><span id="local-6989586621691429679"><span class="annot"><span class="annottext">v
 </span><a href="#local-6989586621691429679"><span class="hs-identifier hs-var">oid</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;oid&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">v
 </span><a href="#local-6989586621691429679"><span class="hs-identifier hs-var">oid</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-476"></span><span>
-</span><span id="line-477"></span><span class="hs-comment">------ helpers ------------</span><span>
-</span><span id="line-478"></span><span>
-</span><span id="line-479"></span><span id="local-6989586621691430743"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#getComputedFields"><span class="hs-identifier hs-type">getComputedFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430743"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430743"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span><span>
-</span><span id="line-480"></span><span id="getComputedFields"><span class="annot"><span class="annottext">getComputedFields :: forall (pgKind :: PostgresKind).
+</span><span id="line-480"></span><span>
+</span><span id="line-481"></span><span class="hs-comment">------ helpers ------------</span><span>
+</span><span id="line-482"></span><span>
+</span><span id="line-483"></span><span id="local-6989586621691430743"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#getComputedFields"><span class="hs-identifier hs-type">getComputedFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430743"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430743"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span><span>
+</span><span id="line-484"></span><span id="getComputedFields"><span class="annot"><span class="annottext">getComputedFields :: forall (pgKind :: PostgresKind).
 TableInfo ('Postgres pgKind)
 -&gt; [ComputedFieldInfo ('Postgres pgKind)]
 </span><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#getComputedFields"><span class="hs-identifier hs-var hs-var">getComputedFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (backend :: BackendType).
@@ -1301,9 +1305,9 @@ TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
 </span><a href="Hasura.Table.Cache.html#_tciFieldInfoMap"><span class="hs-identifier hs-var">_tciFieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 </span><a href="Hasura.Table.Cache.html#_tiCoreInfo"><span class="hs-identifier hs-var">_tiCoreInfo</span></a></span><span>
-</span><span id="line-481"></span><span>
-</span><span id="line-482"></span><span id="local-6989586621691430542"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#getComputedFieldFunctions"><span class="hs-identifier hs-type">getComputedFieldFunctions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430542"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430542"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
-</span><span id="line-483"></span><span id="getComputedFieldFunctions"><span class="annot"><span class="annottext">getComputedFieldFunctions :: forall (pgKind :: PostgresKind).
+</span><span id="line-485"></span><span>
+</span><span id="line-486"></span><span id="local-6989586621691430542"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#getComputedFieldFunctions"><span class="hs-identifier hs-type">getComputedFieldFunctions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430542"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691430542"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-487"></span><span id="getComputedFieldFunctions"><span class="annot"><span class="annottext">getComputedFieldFunctions :: forall (pgKind :: PostgresKind).
 TableInfo ('Postgres pgKind)
 -&gt; HashSet (FunctionName ('Postgres pgKind))
 </span><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#getComputedFieldFunctions"><span class="hs-identifier hs-var hs-var">getComputedFieldFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
@@ -1319,4 +1323,4 @@ ComputedFieldInfo b -&gt; ComputedFieldFunction b
 TableInfo ('Postgres pgKind)
 -&gt; [ComputedFieldInfo ('Postgres pgKind)]
 </span><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#getComputedFields"><span class="hs-identifier hs-var">getComputedFields</span></a></span><span>
-</span><span id="line-484"></span></pre></body></html>
+</span><span id="line-488"></span></pre></body></html>

@@ -108,9 +108,9 @@ HashSet Text -&gt; m ()
 </span><span id="line-64"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; (Text -&gt; Text) -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">modifyErr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621691366819"><span class="hs-identifier hs-var">selNecessaryMsg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-65"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><a href="#local-6989586621691366819"><span class="hs-identifier hs-var">selNecessaryMsg</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (UserInfoM m, QErrM m) =&gt;
 TableInfo ('Postgres 'Vanilla)
 -&gt; m (SelPermInfo ('Postgres 'Vanilla))
@@ -163,9 +163,9 @@ FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
 </span><a href="#local-6989586621691366806"><span class="hs-identifier hs-var">annSQLBoolExp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-76"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">withPathK</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;where&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-77"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span class="hs-string">&quot;where&quot;</span></span><span>
+</span><span id="line-77"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =&gt;
 FieldInfoMap (FieldInfo ('Postgres 'Vanilla))
 -&gt; SelPermInfo ('Postgres 'Vanilla)
@@ -197,16 +197,16 @@ SessionVariableBuilder f
 -&gt; AnnBoolExpPartialSQL ('Postgres 'Vanilla)
 -&gt; f (AnnBoolExpSQL ('Postgres 'Vanilla))
 </span><a href="Hasura.RQL.DML.Internal.html#convAnnBoolExpPartialSQL"><span class="hs-identifier hs-var">convAnnBoolExpPartialSQL</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableBuilder m
-</span><a href="#local-6989586621691366838"><span class="hs-identifier hs-var">sessVarBldr</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-81"></span><span>        </span><span class="annot"><span class="annottext">forall (b :: BackendType). DelPermInfo b -&gt; AnnBoolExpPartialSQL b
+</span><a href="#local-6989586621691366838"><span class="hs-identifier hs-var">sessVarBldr</span></a></span><span>
+</span><span id="line-81"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). DelPermInfo b -&gt; AnnBoolExpPartialSQL b
 </span><a href="Hasura.Table.Cache.html#dpiFilter"><span class="hs-identifier hs-var">dpiFilter</span></a></span><span> </span><span class="annot"><span class="annottext">DelPermInfo ('Postgres 'Vanilla)
 </span><a href="#local-6989586621691366825"><span class="hs-identifier hs-var">delPerm</span></a></span><span>
 </span><span id="line-82"></span><span>
 </span><span id="line-83"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">return</span></a></span><span>
+</span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 TableName b
 -&gt; (AnnBoolExp b v, AnnBoolExp b v)
 -&gt; MutationOutputG b r v
@@ -268,12 +268,12 @@ SourceName -&gt; m (Maybe (TableCache b))
 TableCacheRT b m a -&gt; TableCache b -&gt; m a
 </span><a href="Hasura.RQL.Types.SchemaCache.html#runTableCacheRT"><span class="hs-identifier hs-var">runTableCacheRT</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap
   (TableName ('Postgres 'Vanilla)) (TableInfo ('Postgres 'Vanilla))
-</span><a href="#local-6989586621691366741"><span class="hs-identifier hs-var">tableCache</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-104"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. DMLP1T m a -&gt; m (a, Seq PrepArg)
-</span><a href="Hasura.RQL.DML.Internal.html#runDMLP1T"><span class="hs-identifier hs-var">runDMLP1T</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-105"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><a href="#local-6989586621691366741"><span class="hs-identifier hs-var">tableCache</span></a></span><span>
+</span><span id="line-104"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. DMLP1T m a -&gt; m (a, Seq PrepArg)
+</span><a href="Hasura.RQL.DML.Internal.html#runDMLP1T"><span class="hs-identifier hs-var">runDMLP1T</span></a></span><span>
+</span><span id="line-105"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =&gt;
 SessionVariableBuilder m
 -&gt; (ColumnType ('Postgres 'Vanilla) -&gt; Value -&gt; m SQLExp)
@@ -337,12 +337,12 @@ PGExecCtx -&gt; PGExecTxType -&gt; PGExecFrom -&gt; TxET QErr m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ReadWrite</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PGExecFrom
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#LegacyRQLQuery"><span class="hs-identifier hs-var">LegacyRQLQuery</span></a></span><span>
-</span><span id="line-126"></span><span>      </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span id="line-126"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runReaderT</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsComment
 </span><a href="Hasura.QueryTags.html#emptyQueryTagsComment"><span class="hs-identifier hs-var">emptyQueryTagsComment</span></a></span><span>
-</span><span id="line-127"></span><span>      </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span id="line-127"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (MonadTx m, Backend ('Postgres pgKind),
  PostgresAnnotatedFieldJSON pgKind,

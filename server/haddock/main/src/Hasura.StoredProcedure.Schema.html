@@ -130,22 +130,23 @@ SourceInfo b -&gt; ResolvedSourceCustomization
 </span><span id="line-62"></span><span>  </span><span id="local-6989586621691332893"><span class="annot"><span class="annottext">TablePermG b (UnpreparedValue b)
 </span><a href="#local-6989586621691332893"><span class="hs-identifier hs-var">logicalModelPermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. m (Maybe a) -&gt; MaybeT m a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">MaybeT</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">MaybeT</span></a></span><span>
+</span><span id="line-64"></span><span>      </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-64"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span>
+</span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
 LogicalModelInfo b
 -&gt; SchemaT r m (TablePermG b (UnpreparedValue b))
 </span><a href="Hasura.LogicalModel.Schema.html#buildLogicalModelPermissions"><span class="hs-identifier hs-var">buildLogicalModelPermissions</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691333173"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691333172"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691333171"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691333170"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelInfo b
 </span><a href="#local-6989586621691332915"><span class="hs-identifier hs-var">_spiReturns</span></a></span><span>
-</span><span id="line-65"></span><span>
-</span><span id="line-66"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621691332889"><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields b)
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621691332889"><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields b)
 </span><a href="#local-6989586621691332889"><span class="hs-identifier hs-var">selectionSetParser</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691332888"><span class="annot"><span class="annottext">InputFieldsParser n (SelectArgsG b (UnpreparedValue b))
 </span><a href="#local-6989586621691332888"><span class="hs-identifier hs-var">logicalModelsArgsParser</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-67"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. m (Maybe a) -&gt; MaybeT m a
+</span><span id="line-68"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. m (Maybe a) -&gt; MaybeT m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">MaybeT</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) =&gt;
@@ -160,60 +161,60 @@ InsOrdHashMap RelName (RelInfo b)
 </span><a href="Hasura.LogicalModel.Schema.html#buildLogicalModelFields"><span class="hs-identifier hs-var">buildLogicalModelFields</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelInfo b
 </span><a href="#local-6989586621691332915"><span class="hs-identifier hs-var">_spiReturns</span></a></span><span>
-</span><span id="line-68"></span><span>
-</span><span id="line-69"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691332884"><span class="annot"><span class="annottext">arguments :: HashMap ArgumentName (ColumnValue b)
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691332884"><span class="annot"><span class="annottext">arguments :: HashMap ArgumentName (ColumnValue b)
 -&gt; HashMap ArgumentName (ScalarType b, UnpreparedValue b)
 </span><a href="#local-6989586621691332884"><span class="hs-identifier hs-var hs-var">arguments</span></a></span></span><span> </span><span id="local-6989586621691332883"><span class="annot"><span class="annottext">HashMap ArgumentName (ColumnValue b)
 </span><a href="#local-6989586621691332883"><span class="hs-identifier hs-var">spArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">forall k v1 v2. (k -&gt; v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
+</span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">forall k v1 v2. (k -&gt; v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
 </span><span class="hs-identifier hs-var">HashMap.mapWithKey</span></span><span>
-</span><span id="line-71"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span id="local-6989586621691332880"><span class="annot"><span class="annottext">Text
+</span><span id="line-72"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span id="local-6989586621691332880"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691332880"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621691332879"><span class="annot"><span class="annottext">ColumnValue b
 </span><a href="#local-6989586621691332879"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-72"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnValue b -&gt; ColumnType b
+</span><span id="line-73"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnValue b -&gt; ColumnType b
 </span><a href="Hasura.RQL.Types.Column.html#cvType"><span class="hs-identifier hs-var">Column.cvType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnValue b
 </span><a href="#local-6989586621691332879"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-73"></span><span>                </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">Column.ColumnScalar</span></a></span><span> </span><span id="local-6989586621691332876"><span class="annot"><span class="annottext">ScalarType b
+</span><span id="line-74"></span><span>                </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">Column.ColumnScalar</span></a></span><span> </span><span id="local-6989586621691332876"><span class="annot"><span class="annottext">ScalarType b
 </span><a href="#local-6989586621691332876"><span class="hs-identifier hs-var">st</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-74"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarType b
+</span><span id="line-75"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarType b
 </span><a href="#local-6989586621691332876"><span class="hs-identifier hs-var">st</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Provenance -&gt; ColumnValue b -&gt; UnpreparedValue b
 </span><a href="Hasura.RQL.IR.Value.html#UVParameter"><span class="hs-identifier hs-var">UVParameter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Provenance
 </span><a href="Hasura.RQL.IR.Value.html#FromInternal"><span class="hs-identifier hs-var">FromInternal</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691332880"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ColumnValue b
 </span><a href="#local-6989586621691332879"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-75"></span><span>                </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-type">Column.ColumnEnumReference</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-76"></span><span>                  </span><span class="hs-comment">-- should not happen</span><span>
-</span><span id="line-77"></span><span>                  </span><span class="annot"><span class="annottext">forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span id="line-76"></span><span>                </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-type">Column.ColumnEnumReference</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-77"></span><span>                  </span><span class="hs-comment">-- should not happen</span><span>
+</span><span id="line-78"></span><span>                  </span><span class="annot"><span class="annottext">forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">error</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;Enums are unsupported in stored procedures.&quot;</span></span><span>
-</span><span id="line-78"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-79"></span><span>          </span><span class="annot"><span class="annottext">HashMap ArgumentName (ColumnValue b)
+</span><span id="line-79"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span>          </span><span class="annot"><span class="annottext">HashMap ArgumentName (ColumnValue b)
 </span><a href="#local-6989586621691332883"><span class="hs-identifier hs-var">spArgs</span></a></span><span>
-</span><span id="line-80"></span><span>
-</span><span id="line-81"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691332873"><span class="annot"><span class="annottext">sourceObj :: MetadataObjId
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691332873"><span class="annot"><span class="annottext">sourceObj :: MetadataObjId
 </span><a href="#local-6989586621691332873"><span class="hs-identifier hs-var hs-var">sourceObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-82"></span><span>        </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
+</span><span id="line-83"></span><span>        </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOSourceObjId"><span class="hs-identifier hs-var">MO.MOSourceObjId</span></a></span><span>
-</span><span id="line-83"></span><span>          </span><span class="annot"><span class="annottext">SourceName
+</span><span id="line-84"></span><span>          </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691332900"><span class="hs-identifier hs-var">sourceName</span></a></span><span>
-</span><span id="line-84"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
+</span><span id="line-85"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
 </span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). FunctionName b -&gt; SourceMetadataObjId b
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#SMOStoredProcedure"><span class="hs-identifier hs-var">MO.SMOStoredProcedure</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691333173"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionName b
 </span><a href="#local-6989586621691332918"><span class="hs-identifier hs-var">_spiStoredProcedure</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-85"></span><span>
-</span><span id="line-86"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-87"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
+</span><span id="line-88"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 origin -&gt; FieldParser origin m a -&gt; FieldParser origin m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.setFieldParserOrigin</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataObjId
-</span><a href="#local-6989586621691332873"><span class="hs-identifier hs-var">sourceObj</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a b.
+</span><a href="#local-6989586621691332873"><span class="hs-identifier hs-var">sourceObj</span></a></span><span>
+</span><span id="line-89"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a b.
 MonadParse m =&gt;
 Name
 -&gt; Maybe Description
@@ -221,77 +222,77 @@ Name
 -&gt; Parser origin 'Output m b
 -&gt; FieldParser origin m (a, b)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.subselection</span></a></span><span>
-</span><span id="line-89"></span><span>        </span><span class="annot"><span class="annottext">Name
+</span><span id="line-90"></span><span>      </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691332905"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
-</span><span id="line-90"></span><span>        </span><span class="annot"><span class="annottext">Maybe Description
+</span><span id="line-91"></span><span>      </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621691332898"><span class="hs-identifier hs-var">description</span></a></span><span>
-</span><span id="line-91"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span>
-</span><span id="line-92"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-92"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (SelectArgsG b (UnpreparedValue b))
 </span><a href="#local-6989586621691332888"><span class="hs-identifier hs-var">logicalModelsArgsParser</span></a></span><span>
-</span><span id="line-93"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-94"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (HashMap ArgumentName (ColumnValue b))
 </span><a href="#local-6989586621691332904"><span class="hs-identifier hs-var">storedProcedureArgsParser</span></a></span><span>
-</span><span id="line-94"></span><span>        </span><span class="hs-special">)</span><span>
-</span><span id="line-95"></span><span>        </span><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields b)
+</span><span id="line-95"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span>      </span><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields b)
 </span><a href="#local-6989586621691332889"><span class="hs-identifier hs-var">selectionSetParser</span></a></span><span>
-</span><span id="line-96"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span id="line-97"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&amp;&gt;</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621691332867"><span class="annot"><span class="annottext">SelectArgsG b (UnpreparedValue b)
 </span><a href="#local-6989586621691332867"><span class="hs-identifier hs-var">lmArgs</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691332866"><span class="annot"><span class="annottext">HashMap ArgumentName (ColumnValue b)
 </span><a href="#local-6989586621691332866"><span class="hs-identifier hs-var">spArgs</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621691332865"><span class="annot"><span class="annottext">AnnotatedFields b
 </span><a href="#local-6989586621691332865"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-97"></span><span>          </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
+</span><span id="line-98"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 AnnSimpleSelectG b r v -&gt; QueryDB b r v
-</span><a href="Hasura.RQL.IR.Select.html#QDBMultipleRows"><span class="hs-identifier hs-var">QDBMultipleRows</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-98"></span><span>            </span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-type">IR.AnnSelectG</span></a></span><span>
-</span><span id="line-99"></span><span>              </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:_asnFields:AnnSelectG :: AnnotatedFields b
+</span><a href="Hasura.RQL.IR.Select.html#QDBMultipleRows"><span class="hs-identifier hs-var">QDBMultipleRows</span></a></span><span>
+</span><span id="line-99"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-type">IR.AnnSelectG</span></a></span><span>
+</span><span id="line-100"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:_asnFields:AnnSelectG :: AnnotatedFields b
 </span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnFields%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnotatedFields b
 </span><a href="#local-6989586621691332865"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-100"></span><span>                </span><span class="annot"><span class="annottext">$sel:_asnFrom:AnnSelectG :: SelectFromG b (UnpreparedValue b)
+</span><span id="line-101"></span><span>            </span><span class="annot"><span class="annottext">$sel:_asnFrom:AnnSelectG :: SelectFromG b (UnpreparedValue b)
 </span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnFrom%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-101"></span><span>                  </span><span class="annot"><span class="annottext">forall (b :: BackendType) v. StoredProcedure b v -&gt; SelectFromG b v
+</span><span id="line-102"></span><span>              </span><span class="annot"><span class="annottext">forall (b :: BackendType) v. StoredProcedure b v -&gt; SelectFromG b v
 </span><a href="Hasura.RQL.IR.Select.From.html#FromStoredProcedure"><span class="hs-identifier hs-var">IR.FromStoredProcedure</span></a></span><span>
-</span><span id="line-102"></span><span>                    </span><span class="annot"><a href="Hasura.StoredProcedure.IR.html#StoredProcedure"><span class="hs-identifier hs-type">StoredProcedure</span></a></span><span>
-</span><span id="line-103"></span><span>                      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">spStoredProcedure :: FunctionName b
+</span><span id="line-103"></span><span>                </span><span class="annot"><a href="Hasura.StoredProcedure.IR.html#StoredProcedure"><span class="hs-identifier hs-type">StoredProcedure</span></a></span><span>
+</span><span id="line-104"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">spStoredProcedure :: FunctionName b
 </span><a href="Hasura.StoredProcedure.IR.html#spStoredProcedure"><span class="hs-identifier hs-var">spStoredProcedure</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FunctionName b
 </span><a href="#local-6989586621691332918"><span class="hs-identifier hs-var">_spiStoredProcedure</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-104"></span><span>                        </span><span class="annot"><span class="annottext">spGraphqlName :: Name
+</span><span id="line-105"></span><span>                    </span><span class="annot"><span class="annottext">spGraphqlName :: Name
 </span><a href="Hasura.StoredProcedure.IR.html#spGraphqlName"><span class="hs-identifier hs-var">spGraphqlName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691332917"><span class="hs-identifier hs-var">_spiGraphqlName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-105"></span><span>                        </span><span class="annot"><span class="annottext">spArgs :: HashMap ArgumentName (ScalarType b, UnpreparedValue b)
+</span><span id="line-106"></span><span>                    </span><span class="annot"><span class="annottext">spArgs :: HashMap ArgumentName (ScalarType b, UnpreparedValue b)
 </span><a href="Hasura.StoredProcedure.IR.html#spArgs"><span class="hs-identifier hs-var">spArgs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall {b :: BackendType}.
 HashMap ArgumentName (ColumnValue b)
 -&gt; HashMap ArgumentName (ScalarType b, UnpreparedValue b)
 </span><a href="#local-6989586621691332884"><span class="hs-identifier hs-var">arguments</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap ArgumentName (ColumnValue b)
 </span><a href="#local-6989586621691332866"><span class="hs-identifier hs-var">spArgs</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-106"></span><span>                        </span><span class="annot"><span class="annottext">spLogicalModel :: LogicalModel b
+</span><span id="line-107"></span><span>                    </span><span class="annot"><span class="annottext">spLogicalModel :: LogicalModel b
 </span><a href="Hasura.StoredProcedure.IR.html#spLogicalModel"><span class="hs-identifier hs-var">spLogicalModel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelInfo b -&gt; LogicalModel b
 </span><a href="Hasura.LogicalModel.Schema.html#buildLogicalModelIR"><span class="hs-identifier hs-var">buildLogicalModelIR</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelInfo b
 </span><a href="#local-6989586621691332915"><span class="hs-identifier hs-var">_spiReturns</span></a></span><span>
-</span><span id="line-107"></span><span>                      </span><span class="hs-special">}</span><span class="hs-special">,</span><span>
-</span><span id="line-108"></span><span>                </span><span class="annot"><span class="annottext">$sel:_asnPerm:AnnSelectG :: TablePermG b (UnpreparedValue b)
+</span><span id="line-108"></span><span>                  </span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><span id="line-109"></span><span>            </span><span class="annot"><span class="annottext">$sel:_asnPerm:AnnSelectG :: TablePermG b (UnpreparedValue b)
 </span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnPerm%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnPerm</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TablePermG b (UnpreparedValue b)
 </span><a href="#local-6989586621691332893"><span class="hs-identifier hs-var">logicalModelPermissions</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-109"></span><span>                </span><span class="annot"><span class="annottext">$sel:_asnArgs:AnnSelectG :: SelectArgsG b (UnpreparedValue b)
+</span><span id="line-110"></span><span>            </span><span class="annot"><span class="annottext">$sel:_asnArgs:AnnSelectG :: SelectArgsG b (UnpreparedValue b)
 </span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnArgs%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnArgs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectArgsG b (UnpreparedValue b)
 </span><a href="#local-6989586621691332867"><span class="hs-identifier hs-var">lmArgs</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-110"></span><span>                </span><span class="annot"><span class="annottext">$sel:_asnStrfyNum:AnnSelectG :: StringifyNumbers
+</span><span id="line-111"></span><span>            </span><span class="annot"><span class="annottext">$sel:_asnStrfyNum:AnnSelectG :: StringifyNumbers
 </span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnStrfyNum%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnStrfyNum</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="#local-6989586621691332895"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-111"></span><span>                </span><span class="annot"><span class="annottext">$sel:_asnNamingConvention:AnnSelectG :: Maybe NamingCase
+</span><span id="line-112"></span><span>            </span><span class="annot"><span class="annottext">$sel:_asnNamingConvention:AnnSelectG :: Maybe NamingCase
 </span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnNamingConvention%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnNamingConvention</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">NamingCase
 </span><a href="#local-6989586621691332899"><span class="hs-identifier hs-var">tCase</span></a></span><span>
-</span><span id="line-112"></span><span>              </span><span class="hs-special">}</span><span>
-</span><span id="line-113"></span><span>
-</span><span id="line-114"></span><span class="annot"><a href="Hasura.StoredProcedure.Schema.html#storedProcedureArgumentsSchema"><span class="hs-identifier hs-type">storedProcedureArgumentsSchema</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-115"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691333087"><span class="annot"><a href="#local-6989586621691333087"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621691333086"><span class="annot"><a href="#local-6989586621691333086"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621691333085"><span class="annot"><a href="#local-6989586621691333085"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621691333084"><span class="annot"><a href="#local-6989586621691333084"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-116"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333087"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333086"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333085"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333084"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-117"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-118"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333087"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-119"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">MaybeT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333086"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333085"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">P.InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333084"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">Column.ColumnValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333087"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-120"></span><span id="storedProcedureArgumentsSchema"><span class="annot"><span class="annottext">storedProcedureArgumentsSchema :: forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-113"></span><span>          </span><span class="hs-special">}</span><span>
+</span><span id="line-114"></span><span>
+</span><span id="line-115"></span><span class="annot"><a href="Hasura.StoredProcedure.Schema.html#storedProcedureArgumentsSchema"><span class="hs-identifier hs-type">storedProcedureArgumentsSchema</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691333087"><span class="annot"><a href="#local-6989586621691333087"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621691333086"><span class="annot"><a href="#local-6989586621691333086"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621691333085"><span class="annot"><a href="#local-6989586621691333085"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621691333084"><span class="annot"><a href="#local-6989586621691333084"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-117"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333087"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333086"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333085"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333084"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-118"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-119"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333087"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-120"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">MaybeT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333086"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333085"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">P.InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333084"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">Column.ColumnValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691333087"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-121"></span><span id="storedProcedureArgumentsSchema"><span class="annot"><span class="annottext">storedProcedureArgumentsSchema :: forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
 Name
 -&gt; HashMap ArgumentName (NullableScalarType b)
@@ -308,4 +309,4 @@ Text
      (InputFieldsParser n (HashMap ArgumentName (ColumnValue b)))
 </span><a href="Hasura.LogicalModelResolver.Schema.html#argumentsSchema"><span class="hs-identifier hs-var">argumentsSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Stored Procedure&quot;</span></span><span>
-</span><span id="line-121"></span></pre></body></html>
+</span><span id="line-122"></span></pre></body></html>

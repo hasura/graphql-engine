@@ -201,9 +201,9 @@ t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.html#doesSchemaExist"><span class="hs-identifier hs-var hs-var">doesSchemaExist</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#SchemaName"><span class="hs-identifier hs-type">SchemaName</span></a></span><span> </span><span id="local-6989586621691376256"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691376256"><span class="hs-identifier hs-var">schemaName</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-100"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadMSSQLTx m =&gt; TxE QErr a -&gt; m a
-</span><a href="Hasura.Backends.MSSQL.Connection.html#liftMSSQLTx"><span class="hs-identifier hs-var">liftMSSQLTx</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-101"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a e.
+</span><a href="Hasura.Backends.MSSQL.Connection.html#liftMSSQLTx"><span class="hs-identifier hs-var">liftMSSQLTx</span></a></span><span>
+</span><span id="line-101"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a e.
 (MonadIO m, FromRow a) =&gt;
 (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m a
 </span><a href="Database.MSSQL.Transaction.html#singleRowQueryE"><span class="hs-identifier hs-var">Tx.singleRowQueryE</span></a></span><span>
@@ -224,9 +224,9 @@ t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.html#doesTableExist"><span class="hs-identifier hs-var hs-var">doesTableExist</span></a></span></span><span> </span><span id="local-6989586621691376241"><span class="annot"><span class="annottext">TableName
 </span><a href="#local-6989586621691376241"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-115"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadMSSQLTx m =&gt; TxE QErr a -&gt; m a
-</span><a href="Hasura.Backends.MSSQL.Connection.html#liftMSSQLTx"><span class="hs-identifier hs-var">liftMSSQLTx</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-116"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a e.
+</span><a href="Hasura.Backends.MSSQL.Connection.html#liftMSSQLTx"><span class="hs-identifier hs-var">liftMSSQLTx</span></a></span><span>
+</span><span id="line-116"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a e.
 (MonadIO m, FromRow a) =&gt;
 (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m a
 </span><a href="Database.MSSQL.Transaction.html#singleRowQueryE"><span class="hs-identifier hs-var">Tx.singleRowQueryE</span></a></span><span>
@@ -281,20 +281,20 @@ MSSQLSourceConfig
 </span><span class="hs-string">&quot;hdb_source_catalog_version&quot;</span></span><span> </span><span class="annot"><span class="annottext">SchemaName
 </span><span class="hs-string">&quot;hdb_catalog&quot;</span></span><span>
 </span><span id="line-139"></span><span>  </span><span class="hs-keyword">if</span><span>
-</span><span id="line-140"></span><span>      </span><span class="hs-comment">-- Fresh database</span><span>
-</span><span id="line-141"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span id="line-140"></span><span>    </span><span class="hs-comment">-- Fresh database</span><span>
+</span><span id="line-141"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691376202"><span class="hs-identifier hs-var">hdbCatalogExist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadMSSQLTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.MSSQL.Connection.html#liftMSSQLTx"><span class="hs-identifier hs-var">liftMSSQLTx</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-142"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e.
+</span><span id="line-142"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e.
 MonadIO m =&gt;
 (MSSQLTxError -&gt; e) -&gt; Query -&gt; TxET e m ()
 </span><a href="Database.MSSQL.Transaction.html#unitQueryE"><span class="hs-identifier hs-var">unitQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#defaultMSSQLTxErrorHandler"><span class="hs-identifier hs-var">HGE.defaultMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
 </span><span class="hs-string">&quot;CREATE SCHEMA hdb_catalog&quot;</span></span><span>
-</span><span id="line-143"></span><span>          </span><span class="annot"><span class="annottext">TxE QErr ()
+</span><span id="line-143"></span><span>        </span><span class="annot"><span class="annottext">TxE QErr ()
 </span><a href="#local-6989586621691376197"><span class="hs-identifier hs-var">initSourceCatalog</span></a></span><span>
-</span><span id="line-144"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span id="line-144"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RecreateEventTriggers
 </span><a href="Hasura.RQL.Types.EventTrigger.html#RETDoNothing"><span class="hs-identifier hs-var">RETDoNothing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; SourceCatalogMigrationState
 </span><a href="Hasura.Server.Migrate.Version.html#SCMSInitialized"><span class="hs-identifier hs-var">Version.SCMSInitialized</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -302,16 +302,16 @@ MonadIO m =&gt;
 SourceCatalogVersion backend -&gt; Int
 </span><a href="Hasura.Server.Migrate.Version.html#unSourceCatalogVersion"><span class="hs-identifier hs-var">Version.unSourceCatalogVersion</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCatalogVersion
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier hs-var">latestSourceCatalogVersion</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-145"></span><span>      </span><span class="hs-comment">-- Only 'hdb_catalog' schema defined</span><span>
-</span><span id="line-146"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span id="line-145"></span><span>    </span><span class="hs-comment">-- Only 'hdb_catalog' schema defined</span><span>
+</span><span id="line-146"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691376200"><span class="hs-identifier hs-var">sourceVersionTableExist</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691376201"><span class="hs-identifier hs-var">eventLogTableExist</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-147"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadMSSQLTx m =&gt; TxE QErr a -&gt; m a
+</span><span id="line-147"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadMSSQLTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.MSSQL.Connection.html#liftMSSQLTx"><span class="hs-identifier hs-var">liftMSSQLTx</span></a></span><span> </span><span class="annot"><span class="annottext">TxE QErr ()
 </span><a href="#local-6989586621691376197"><span class="hs-identifier hs-var">initSourceCatalog</span></a></span><span>
-</span><span id="line-148"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span id="line-148"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RecreateEventTriggers
 </span><a href="Hasura.RQL.Types.EventTrigger.html#RETDoNothing"><span class="hs-identifier hs-var">RETDoNothing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; SourceCatalogMigrationState
 </span><a href="Hasura.Server.Migrate.Version.html#SCMSInitialized"><span class="hs-identifier hs-var">Version.SCMSInitialized</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -319,7 +319,7 @@ SourceCatalogVersion backend -&gt; Int
 SourceCatalogVersion backend -&gt; Int
 </span><a href="Hasura.Server.Migrate.Version.html#unSourceCatalogVersion"><span class="hs-identifier hs-var">Version.unSourceCatalogVersion</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCatalogVersion
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier hs-var">latestSourceCatalogVersion</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-149"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-149"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadMSSQLTx m =&gt;
 m (RecreateEventTriggers, SourceCatalogMigrationState)
@@ -387,18 +387,18 @@ SourceCatalogVersion backend -&gt; Int
 </span><a href="#local-6989586621691376139"><span class="hs-identifier hs-var">neededMigrations</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-168"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw400</span></span><span> </span><span class="annot"><span class="annottext">Code
-</span><span class="hs-identifier hs-var">NotSupported</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-169"></span><span>        </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">NotSupported</span></span><span>
+</span><span id="line-169"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Expected source catalog version &lt;= &quot;</span></span><span>
-</span><span id="line-170"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-170"></span><span>        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCatalogVersion
 </span><a href="Hasura.Backends.MSSQL.DDL.Source.Version.html#latestSourceCatalogVersion"><span class="hs-identifier hs-var">latestSourceCatalogVersion</span></a></span><span>
-</span><span id="line-171"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-171"></span><span>        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;, but the current version is &quot;</span></span><span>
-</span><span id="line-172"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-172"></span><span>        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">SourceCatalogVersion
 </span><a href="#local-6989586621691376141"><span class="hs-identifier hs-var">prevVersion</span></a></span><span>

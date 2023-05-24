@@ -400,33 +400,33 @@ Text
 </span><span id="line-177"></span><span>            </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">qeInternal :: Maybe QErrExtra
 </span><span class="hs-identifier hs-var">Error.qeInternal</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-178"></span><span>                </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-179"></span><span>                  </span><span class="annot"><span class="annottext">Value -&gt; QErrExtra
-</span><span class="hs-identifier hs-var">Error.ExtraInternal</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-180"></span><span>                    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span>
+</span><span id="line-179"></span><span>                  </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; QErrExtra
+</span><span class="hs-identifier hs-var">Error.ExtraInternal</span></span><span>
+</span><span id="line-180"></span><span>                  </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span>
-</span><span id="line-181"></span><span>                      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span id="line-181"></span><span>                    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;query&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Query -&gt; Text
 </span><span class="hs-identifier hs-var">ODBC.renderQuery</span></span><span> </span><span class="annot"><span class="annottext">Query
 </span><a href="#local-6989586621691029389"><span class="hs-identifier hs-var">query</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-182"></span><span>                        </span><span class="annot"><span class="annottext">Key
+</span><span id="line-182"></span><span>                      </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;exception&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">ODBCException -&gt; Value
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#odbcExceptionToJSONValue"><span class="hs-identifier hs-var">odbcExceptionToJSONValue</span></a></span><span> </span><span class="annot"><span class="annottext">ODBCException
 </span><a href="#local-6989586621691029388"><span class="hs-identifier hs-var">exception</span></a></span><span>
-</span><span id="line-183"></span><span>                      </span><span class="hs-special">]</span><span>
+</span><span id="line-183"></span><span>                    </span><span class="hs-special">]</span><span>
 </span><span id="line-184"></span><span>            </span><span class="hs-special">}</span><span>
 </span><span id="line-185"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621691029387"><span class="hs-identifier hs-var">unexpectedQueryError</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-186"></span><span>          </span><span class="annot"><span class="annottext">ODBCException -&gt; Maybe QErr
+</span><a href="#local-6989586621691029387"><span class="hs-identifier hs-var">unexpectedQueryError</span></a></span><span>
+</span><span id="line-186"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ODBCException -&gt; Maybe QErr
 </span><a href="#local-6989586621691029378"><span class="hs-identifier hs-var">asExpectedError</span></a></span><span> </span><span class="annot"><span class="annottext">ODBCException
 </span><a href="#local-6989586621691029388"><span class="hs-identifier hs-var">exception</span></a></span><span>
-</span><span id="line-187"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span id="line-187"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&amp;&gt;</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691029376"><span class="annot"><span class="annottext">QErr
 </span><a href="#local-6989586621691029376"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">QErr
 </span><a href="#local-6989586621691029376"><span class="hs-identifier hs-var">err</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">qeInternal :: Maybe QErrExtra
@@ -450,12 +450,12 @@ Text
 </span><span id="line-191"></span><span>            </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">qeInternal :: Maybe QErrExtra
 </span><span class="hs-identifier hs-var">Error.qeInternal</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-192"></span><span>                </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-193"></span><span>                  </span><span class="annot"><span class="annottext">Value -&gt; QErrExtra
-</span><span class="hs-identifier hs-var">Error.ExtraInternal</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-194"></span><span>                    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span>
+</span><span id="line-193"></span><span>                  </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; QErrExtra
+</span><span class="hs-identifier hs-var">Error.ExtraInternal</span></span><span>
+</span><span id="line-194"></span><span>                  </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;exception&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">ODBCException -&gt; Value

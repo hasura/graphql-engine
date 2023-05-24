@@ -139,29 +139,29 @@ _skiDisplayName :: SourceKindInfo -&gt; Maybe Text
 _skiSourceKind :: SourceKindInfo -&gt; Text
 </span><a href="#local-6989586621691314794"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-73"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
+</span><span id="line-73"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;kind&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691314798"><span class="hs-identifier hs-var">_skiSourceKind</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-74"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span id="line-74"></span><span>          </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;builtin&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">SourceType
 </span><a href="#local-6989586621691314795"><span class="hs-identifier hs-var">_skiBuiltin</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-75"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span id="line-75"></span><span>          </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;available&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691314794"><span class="hs-identifier hs-var">_skiAvailable</span></a></span><span>
-</span><span id="line-76"></span><span>      </span><span class="hs-special">]</span><span>
-</span><span id="line-77"></span><span>        </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [a] -&gt; [a]
+</span><span id="line-76"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">++</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;display_name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="#local-6989586621691314797"><span class="hs-identifier hs-var">_skiDisplayName</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; Bool
 </span><a href="#local-6989586621691314793"><span class="hs-identifier hs-var">has</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="#local-6989586621691314797"><span class="hs-identifier hs-var">_skiDisplayName</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-78"></span><span>        </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [a] -&gt; [a]
+</span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">++</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;release_name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
@@ -363,7 +363,7 @@ Filterable f =&gt;
 </span><a href="Hasura.RQL.Types.BackendType.html#supportedBackends"><span class="hs-identifier hs-var">Backend.supportedBackends</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-138"></span><span>
 </span><span id="line-139"></span><span class="hs-comment">-- | Collect 'SourceKindInfo' from Native and GDC backend types.</span><span>
-</span><span id="line-140"></span><span id="local-6989586621691314673"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#collectSourceKinds"><span class="hs-identifier hs-type">collectSourceKinds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">Metadata.MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691314673"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691314673"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKinds"><span class="hs-identifier hs-type">SourceKinds</span></a></span></span><span>
+</span><span id="line-140"></span><span id="local-6989586621691314673"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#collectSourceKinds"><span class="hs-identifier hs-type">collectSourceKinds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">Metadata.MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691314673"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691314673"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKinds"><span class="hs-identifier hs-type">SourceKinds</span></a></span></span><span>
 </span><span id="line-141"></span><span id="collectSourceKinds"><span class="annot"><span class="annottext">collectSourceKinds :: forall (m :: * -&gt; *). MetadataM m =&gt; m SourceKinds
 </span><a href="Hasura.RQL.DDL.SourceKinds.html#collectSourceKinds"><span class="hs-identifier hs-var hs-var">collectSourceKinds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceKinds

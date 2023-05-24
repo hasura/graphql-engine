@@ -108,50 +108,51 @@ $c== :: Version -&gt; Version -&gt; Bool
 </span><span id="line-50"></span><span id="currentVersion"><span class="annot"><span class="annottext">currentVersion :: Version
 </span><a href="Hasura.Server.Version.html#currentVersion"><span class="hs-identifier hs-var hs-var">currentVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-51"></span><span>  </span><span class="annot"><span class="annottext">forall a. FromText a =&gt; Text -&gt; a
-</span><span class="hs-identifier hs-var">fromText</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-52"></span><span>    </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Text -&gt; Text
+</span><span class="hs-identifier hs-var">fromText</span></span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.dropWhileEnd</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Char
-</span><span class="hs-char">'\n'</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-char">'\n'</span></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">T.pack</span></span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; Text
-</span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-54"></span><span>        </span><span class="hs-comment">-- NOTE: This must work correctly in the presence of a caching! See</span><span>
-</span><span id="line-55"></span><span>        </span><span class="hs-comment">-- graphql-engine.cabal (search for &#8220;CURRENT_VERSION&#8221;) for details</span><span>
-</span><span id="line-56"></span><span>        </span><span class="hs-comment">-- about our approach here. We could use embedFile but want a nice</span><span>
-</span><span id="line-57"></span><span>        </span><span class="hs-comment">-- error message</span><span>
-</span><span id="line-58"></span><span>        </span><span class="hs-special">$</span><span class="hs-special">(</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-59"></span><span>             </span><span class="hs-identifier">versionFileName</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;CURRENT_VERSION&quot;</span><span>
-</span><span id="line-60"></span><span>             </span><span class="hs-identifier">addDependentFile</span><span> </span><span class="hs-identifier">versionFileName</span><span>
-</span><span id="line-61"></span><span>             </span><span class="hs-keyword">let</span><span> </span><span class="hs-identifier">noFileErr</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-62"></span><span>                   </span><span class="hs-string">&quot;\n===========================================================================&quot;</span><span>
-</span><span id="line-63"></span><span>                     </span><span class="hs-operator">&lt;&gt;</span><span> </span><span class="hs-string">&quot;\n&gt;&gt;&gt; DEAR HASURIAN: The way we bake versions into the server has &quot;</span><span>
-</span><span id="line-64"></span><span>                     </span><span class="hs-operator">&lt;&gt;</span><span> </span><span class="hs-string">&quot;\n&gt;&gt;&gt; changed; You'll need to run the following once in your repo to proceed: &quot;</span><span>
-</span><span id="line-65"></span><span>                     </span><span class="hs-operator">&lt;&gt;</span><span> </span><span class="hs-string">&quot;\n&gt;&gt;&gt;  $ echo 12345 &gt; \&quot;$(git rev-parse --show-toplevel)/server/CURRENT_VERSION\&quot;&quot;</span><span>
-</span><span id="line-66"></span><span>                     </span><span class="hs-operator">&lt;&gt;</span><span> </span><span class="hs-string">&quot;\n===========================================================================\n&quot;</span><span>
-</span><span id="line-67"></span><span>             </span><span class="hs-identifier">runIO</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">readFile</span><span> </span><span class="hs-identifier">versionFileName</span><span> </span><span class="hs-special">`</span><span class="hs-identifier">onException</span><span class="hs-special">`</span><span> </span><span class="hs-identifier">error</span><span> </span><span class="hs-identifier">noFileErr</span><span class="hs-special">)</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">stringE</span><span>
-</span><span id="line-68"></span><span>         </span><span class="hs-special">)</span><span>
-</span><span id="line-69"></span><span>
-</span><span id="line-70"></span><span class="annot"><a href="Hasura.Server.Version.html#versionToAssetsVersion"><span class="hs-identifier hs-type">versionToAssetsVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-71"></span><span id="versionToAssetsVersion"><span class="annot"><span class="annottext">versionToAssetsVersion :: Version -&gt; Text
+</span><span id="line-55"></span><span>    </span><span class="hs-comment">-- NOTE: This must work correctly in the presence of a caching! See</span><span>
+</span><span id="line-56"></span><span>    </span><span class="hs-comment">-- graphql-engine.cabal (search for &#8220;CURRENT_VERSION&#8221;) for details</span><span>
+</span><span id="line-57"></span><span>    </span><span class="hs-comment">-- about our approach here. We could use embedFile but want a nice</span><span>
+</span><span id="line-58"></span><span>    </span><span class="hs-comment">-- error message</span><span>
+</span><span id="line-59"></span><span>    </span><span class="hs-special">$</span><span class="hs-special">(</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-60"></span><span>         </span><span class="hs-identifier">versionFileName</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;CURRENT_VERSION&quot;</span><span>
+</span><span id="line-61"></span><span>         </span><span class="hs-identifier">addDependentFile</span><span> </span><span class="hs-identifier">versionFileName</span><span>
+</span><span id="line-62"></span><span>         </span><span class="hs-keyword">let</span><span> </span><span class="hs-identifier">noFileErr</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-63"></span><span>               </span><span class="hs-string">&quot;\n===========================================================================&quot;</span><span>
+</span><span id="line-64"></span><span>                 </span><span class="hs-operator">&lt;&gt;</span><span> </span><span class="hs-string">&quot;\n&gt;&gt;&gt; DEAR HASURIAN: The way we bake versions into the server has &quot;</span><span>
+</span><span id="line-65"></span><span>                 </span><span class="hs-operator">&lt;&gt;</span><span> </span><span class="hs-string">&quot;\n&gt;&gt;&gt; changed; You'll need to run the following once in your repo to proceed: &quot;</span><span>
+</span><span id="line-66"></span><span>                 </span><span class="hs-operator">&lt;&gt;</span><span> </span><span class="hs-string">&quot;\n&gt;&gt;&gt;  $ echo 12345 &gt; \&quot;$(git rev-parse --show-toplevel)/server/CURRENT_VERSION\&quot;&quot;</span><span>
+</span><span id="line-67"></span><span>                 </span><span class="hs-operator">&lt;&gt;</span><span> </span><span class="hs-string">&quot;\n===========================================================================\n&quot;</span><span>
+</span><span id="line-68"></span><span>         </span><span class="hs-identifier">runIO</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">readFile</span><span> </span><span class="hs-identifier">versionFileName</span><span> </span><span class="hs-special">`</span><span class="hs-identifier">onException</span><span class="hs-special">`</span><span> </span><span class="hs-identifier">error</span><span> </span><span class="hs-identifier">noFileErr</span><span class="hs-special">)</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">stringE</span><span>
+</span><span id="line-69"></span><span>     </span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span class="annot"><a href="Hasura.Server.Version.html#versionToAssetsVersion"><span class="hs-identifier hs-type">versionToAssetsVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-72"></span><span id="versionToAssetsVersion"><span class="annot"><span class="annottext">versionToAssetsVersion :: Version -&gt; Text
 </span><a href="Hasura.Server.Version.html#versionToAssetsVersion"><span class="hs-identifier hs-var hs-var">versionToAssetsVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-72"></span><span>  </span><span class="annot"><a href="Hasura.Server.Version.html#VersionDev"><span class="hs-identifier hs-type">VersionDev</span></a></span><span> </span><span id="local-6989586621691135071"><span class="annot"><span class="annottext">Text
+</span><span id="line-73"></span><span>  </span><span class="annot"><a href="Hasura.Server.Version.html#VersionDev"><span class="hs-identifier hs-type">VersionDev</span></a></span><span> </span><span id="local-6989586621691135071"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691135071"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;versioned/&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691135071"><span class="hs-identifier hs-var">txt</span></a></span><span>
-</span><span id="line-73"></span><span>  </span><span class="annot"><a href="Hasura.Server.Version.html#VersionRelease"><span class="hs-identifier hs-type">VersionRelease</span></a></span><span> </span><span id="local-6989586621691135070"><span class="annot"><span class="annottext">Version
+</span><span id="line-74"></span><span>  </span><span class="annot"><a href="Hasura.Server.Version.html#VersionRelease"><span class="hs-identifier hs-type">VersionRelease</span></a></span><span> </span><span id="local-6989586621691135070"><span class="annot"><span class="annottext">Version
 </span><a href="#local-6989586621691135070"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Version -&gt; Maybe Text
 </span><a href="#local-6989586621691135069"><span class="hs-identifier hs-var">getReleaseChannel</span></a></span><span> </span><span class="annot"><span class="annottext">Version
 </span><a href="#local-6989586621691135070"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-74"></span><span>    </span><span class="annot"><span class="annottext">Maybe Text
+</span><span id="line-75"></span><span>    </span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;versioned/&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691135068"><span class="hs-identifier hs-var">vMajMin</span></a></span><span>
-</span><span id="line-75"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691135067"><span class="annot"><span class="annottext">Text
+</span><span id="line-76"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691135067"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691135067"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;channel/&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -160,8 +161,8 @@ $c== :: Version -&gt; Version -&gt; Bool
 </span><span class="hs-string">&quot;/&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691135068"><span class="hs-identifier hs-var">vMajMin</span></a></span><span>
-</span><span id="line-76"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-77"></span><span>      </span><span id="local-6989586621691135068"><span class="annot"><span class="annottext">vMajMin :: Text
+</span><span id="line-77"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-78"></span><span>      </span><span id="local-6989586621691135068"><span class="annot"><span class="annottext">vMajMin :: Text
 </span><a href="#local-6989586621691135068"><span class="hs-identifier hs-var hs-var">vMajMin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;v&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -181,14 +182,14 @@ Functor f =&gt;
 Functor f =&gt;
 (Int -&gt; f Int) -&gt; Version -&gt; f Version
 </span><span class="hs-identifier hs-var">V.minor</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-78"></span><span>  </span><span class="annot"><a href="Hasura.Server.Version.html#VersionCE"><span class="hs-identifier hs-type">VersionCE</span></a></span><span> </span><span id="local-6989586621691135063"><span class="annot"><span class="annottext">Text
+</span><span id="line-79"></span><span>  </span><span class="annot"><a href="Hasura.Server.Version.html#VersionCE"><span class="hs-identifier hs-type">VersionCE</span></a></span><span> </span><span id="local-6989586621691135063"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691135063"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;channel/versioned/&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691135063"><span class="hs-identifier hs-var">txt</span></a></span><span>
-</span><span id="line-79"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-80"></span><span>    </span><span class="annot"><a href="#local-6989586621691135069"><span class="hs-identifier hs-type">getReleaseChannel</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">V.Version</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-81"></span><span>    </span><span id="local-6989586621691135069"><span class="annot"><span class="annottext">getReleaseChannel :: Version -&gt; Maybe Text
+</span><span id="line-80"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><a href="#local-6989586621691135069"><span class="hs-identifier hs-type">getReleaseChannel</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">V.Version</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-82"></span><span>    </span><span id="local-6989586621691135069"><span class="annot"><span class="annottext">getReleaseChannel :: Version -&gt; Maybe Text
 </span><a href="#local-6989586621691135069"><span class="hs-identifier hs-var hs-var">getReleaseChannel</span></a></span></span><span> </span><span id="local-6989586621691135062"><span class="annot"><span class="annottext">Version
 </span><a href="#local-6989586621691135062"><span class="hs-identifier hs-var">sv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Version
 </span><a href="#local-6989586621691135062"><span class="hs-identifier hs-var">sv</span></a></span><span> </span><span class="annot"><span class="annottext">forall s a. s -&gt; Getting a s a -&gt; a
@@ -196,34 +197,34 @@ Functor f =&gt;
 Functor f =&gt;
 ([Identifier] -&gt; f [Identifier]) -&gt; Version -&gt; f Version
 </span><span class="hs-identifier hs-var">V.release</span></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-82"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><span id="line-83"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;stable&quot;</span></span><span>
-</span><span id="line-83"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621691135060"><span class="annot"><span class="annottext">Identifier
+</span><span id="line-84"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621691135060"><span class="annot"><span class="annottext">Identifier
 </span><a href="#local-6989586621691135060"><span class="hs-identifier hs-var">mr</span></a></span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-type">:</span></a></span><span> </span><span class="annot"><span class="annottext">[Identifier]
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; Maybe Text
 </span><a href="#local-6989586621691135059"><span class="hs-identifier hs-var">getTextFromId</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
 </span><a href="#local-6989586621691135060"><span class="hs-identifier hs-var">mr</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-84"></span><span>        </span><span class="annot"><span class="annottext">Maybe Text
+</span><span id="line-85"></span><span>        </span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-85"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691135058"><span class="annot"><span class="annottext">Text
+</span><span id="line-86"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691135058"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691135058"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-86"></span><span>          </span><span class="hs-keyword">if</span><span>
-</span><span id="line-87"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
+</span><span id="line-87"></span><span>          </span><span class="hs-keyword">if</span><span>
+</span><span id="line-88"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
 </span><span class="hs-identifier hs-var">T.null</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691135058"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-88"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-89"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe String
 </span><a href="#local-6989586621691135055"><span class="hs-identifier hs-var">getChannelFromPreRelease</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691135058"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-89"></span><span>
-</span><span id="line-90"></span><span>    </span><span class="annot"><a href="#local-6989586621691135055"><span class="hs-identifier hs-type">getChannelFromPreRelease</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">String</span></a></span><span>
-</span><span id="line-91"></span><span>    </span><span id="local-6989586621691135055"><span class="annot"><span class="annottext">getChannelFromPreRelease :: String -&gt; Maybe String
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span>    </span><span class="annot"><a href="#local-6989586621691135055"><span class="hs-identifier hs-type">getChannelFromPreRelease</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">String</span></a></span><span>
+</span><span id="line-92"></span><span>    </span><span id="local-6989586621691135055"><span class="annot"><span class="annottext">getChannelFromPreRelease :: String -&gt; Maybe String
 </span><a href="#local-6989586621691135055"><span class="hs-identifier hs-var hs-var">getChannelFromPreRelease</span></a></span></span><span> </span><span id="local-6989586621691135053"><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621691135053"><span class="hs-identifier hs-var">sv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621691135053"><span class="hs-identifier hs-var">sv</span></a></span><span> </span><span class="annot"><span class="annottext">forall source source1 target (m :: * -&gt; *).
@@ -232,9 +233,9 @@ Functor f =&gt;
 source1 -&gt; source -&gt; m target
 </span><span class="hs-operator hs-var">=~~</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;^([a-z]+)&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">String</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-92"></span><span>
-</span><span id="line-93"></span><span>    </span><span class="annot"><a href="#local-6989586621691135059"><span class="hs-identifier hs-type">getTextFromId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">V.Identifier</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-94"></span><span>    </span><span id="local-6989586621691135059"><span class="annot"><span class="annottext">getTextFromId :: Identifier -&gt; Maybe Text
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span>    </span><span class="annot"><a href="#local-6989586621691135059"><span class="hs-identifier hs-type">getTextFromId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">V.Identifier</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-95"></span><span>    </span><span id="local-6989586621691135059"><span class="annot"><span class="annottext">getTextFromId :: Identifier -&gt; Maybe Text
 </span><a href="#local-6989586621691135059"><span class="hs-identifier hs-var hs-var">getTextFromId</span></a></span></span><span> </span><span id="local-6989586621691135052"><span class="annot"><span class="annottext">Identifier
 </span><a href="#local-6989586621691135052"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
@@ -247,23 +248,23 @@ Applicative f =&gt;
 Applicative f =&gt;
 (Text -&gt; f Text) -&gt; Identifier -&gt; f (Maybe Identifier)
 </span><span class="hs-identifier hs-var">V._Textual</span></span><span class="hs-special">)</span><span>
-</span><span id="line-95"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-96"></span><span>        </span><span id="local-6989586621691135051"><span class="annot"><span class="annottext">toTextualM :: (t -&gt; f (Maybe a)) -&gt; Maybe t -&gt; f (Maybe a)
+</span><span id="line-96"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-97"></span><span>        </span><span id="local-6989586621691135051"><span class="annot"><span class="annottext">toTextualM :: (t -&gt; f (Maybe a)) -&gt; Maybe t -&gt; f (Maybe a)
 </span><a href="#local-6989586621691135051"><span class="hs-identifier hs-var hs-var">toTextualM</span></a></span></span><span> </span><span class="annot"><span class="annottext">t -&gt; f (Maybe a)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe t
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-97"></span><span>        </span><span class="annot"><a href="#local-6989586621691135051"><span class="hs-identifier hs-var">toTextualM</span></a></span><span> </span><span id="local-6989586621691135047"><span class="annot"><span class="annottext">t -&gt; f (Maybe a)
+</span><span id="line-98"></span><span>        </span><span class="annot"><a href="#local-6989586621691135051"><span class="hs-identifier hs-var">toTextualM</span></a></span><span> </span><span id="local-6989586621691135047"><span class="annot"><span class="annottext">t -&gt; f (Maybe a)
 </span><a href="#local-6989586621691135047"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691135046"><span class="annot"><span class="annottext">t
 </span><a href="#local-6989586621691135046"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">t -&gt; f (Maybe a)
 </span><a href="#local-6989586621691135047"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">t
 </span><a href="#local-6989586621691135046"><span class="hs-identifier hs-var">a</span></a></span><span>
-</span><span id="line-98"></span><span>
-</span><span id="line-99"></span><span class="hs-comment">-- | A version-based string used to form the CDN URL for fetching console assets.</span><span>
-</span><span id="line-100"></span><span class="annot"><a href="Hasura.Server.Version.html#consoleAssetsVersion"><span class="hs-identifier hs-type">consoleAssetsVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-101"></span><span id="consoleAssetsVersion"><span class="annot"><span class="annottext">consoleAssetsVersion :: Text
+</span><span id="line-99"></span><span>
+</span><span id="line-100"></span><span class="hs-comment">-- | A version-based string used to form the CDN URL for fetching console assets.</span><span>
+</span><span id="line-101"></span><span class="annot"><a href="Hasura.Server.Version.html#consoleAssetsVersion"><span class="hs-identifier hs-type">consoleAssetsVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-102"></span><span id="consoleAssetsVersion"><span class="annot"><span class="annottext">consoleAssetsVersion :: Text
 </span><a href="Hasura.Server.Version.html#consoleAssetsVersion"><span class="hs-identifier hs-var hs-var">consoleAssetsVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Version -&gt; Text
 </span><a href="Hasura.Server.Version.html#versionToAssetsVersion"><span class="hs-identifier hs-var">versionToAssetsVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Version
 </span><a href="Hasura.Server.Version.html#currentVersion"><span class="hs-identifier hs-var">currentVersion</span></a></span><span>
-</span><span id="line-102"></span></pre></body></html>
+</span><span id="line-103"></span></pre></body></html>

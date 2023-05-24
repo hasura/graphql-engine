@@ -80,14 +80,14 @@ LogicalModelName
 -&gt; InsOrdHashMap RoleName (SelPermDef b)
 -&gt; LogicalModelMetadata b
 </span><a href="Hasura.LogicalModel.Metadata.html#LogicalModelMetadata"><span class="hs-identifier hs-var">LogicalModelMetadata</span></a></span><span>
-</span><span id="line-48"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-48"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">AC.requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691166832"><span class="hs-identifier hs-var">nameDoc</span></a></span><span>
-</span><span id="line-49"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-49"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
@@ -105,7 +105,7 @@ Codec
   (InsOrdHashMap (Column b) (LogicalModelField b))
 </span><a href="Hasura.LogicalModel.Types.html#logicalModelFieldMapCodec"><span class="hs-identifier hs-var">logicalModelFieldMapCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691166828"><span class="hs-identifier hs-var">fieldsDoc</span></a></span><span>
-</span><span id="line-51"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-51"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
@@ -119,7 +119,7 @@ Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><span class="hs-identifier hs-var">AC.optionalField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;description&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691166826"><span class="hs-identifier hs-var">descriptionDoc</span></a></span><span>
-</span><span id="line-53"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelMetadata b -&gt; Maybe Text
@@ -133,7 +133,7 @@ Text
 </span><span class="hs-string">&quot;select_permissions&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
 PermDef b perm -&gt; RoleName
 </span><a href="Hasura.RQL.Types.Permission.html#_pdRole"><span class="hs-identifier hs-var">_pdRole</span></a></span><span>
-</span><span id="line-55"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-55"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
@@ -169,12 +169,12 @@ Text -&gt; JSONCodec output -&gt; output -&gt; ObjectCodec output output
 </span><span id="line-64"></span><span id="local-6989586621691166793"><span id="local-6989586621691166799"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span>
 </span><span id="line-65"></span><span>  </span><span id="local-6989586621691167011"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#LogicalModelMetadata"><span class="hs-identifier hs-type">LogicalModelMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691167011"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-66"></span><span>  </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-67"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691167011"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#LogicalModelMetadata"><span class="hs-identifier hs-type">LogicalModelMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691167011"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-67"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691167011"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#LogicalModelMetadata"><span class="hs-identifier hs-type">LogicalModelMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691167011"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-68"></span><span>
 </span><span id="line-69"></span><span id="local-6989586621691166769"><span id="local-6989586621691166774"><span id="local-6989586621691166779"><span id="local-6989586621691166785"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span>
 </span><span id="line-70"></span><span>  </span><span id="local-6989586621691167006"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#LogicalModelMetadata"><span class="hs-identifier hs-type">LogicalModelMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691167006"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-71"></span><span>  </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-72"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691167006"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#LogicalModelMetadata"><span class="hs-identifier hs-type">LogicalModelMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691167006"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-72"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691167006"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#LogicalModelMetadata"><span class="hs-identifier hs-type">LogicalModelMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691167006"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-73"></span><span>
 </span><span id="line-74"></span><span id="local-6989586621691166750"><span id="local-6989586621691166762"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621691166998"><span class="annot"><a href="#local-6989586621691166998"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691166998"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#LogicalModelMetadata"><span class="hs-identifier hs-type">LogicalModelMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691166998"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-75"></span><span>

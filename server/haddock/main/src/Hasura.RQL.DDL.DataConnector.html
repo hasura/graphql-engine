@@ -185,23 +185,23 @@ _gdcaUrl :: DCAddAgent -&gt; BaseUrl
 _gdcaName :: DCAddAgent -&gt; DataConnectorName
 </span><a href="#local-6989586621691379698"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-72"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
+</span><span id="line-72"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
 </span><a href="#local-6989586621691379701"><span class="hs-identifier hs-var">_gdcaName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span id="line-73"></span><span>          </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;url&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; String
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">BaseUrl
 </span><a href="#local-6989586621691379700"><span class="hs-identifier hs-var">_gdcaUrl</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-74"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span id="line-74"></span><span>          </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;skip_check&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">SkipCheck
 </span><a href="#local-6989586621691379698"><span class="hs-identifier hs-var">_gdcaSkipCheck</span></a></span><span>
-</span><span id="line-75"></span><span>      </span><span class="hs-special">]</span><span>
-</span><span id="line-76"></span><span>        </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [a] -&gt; [a]
+</span><span id="line-75"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-76"></span><span>      </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">++</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;display_name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
@@ -257,7 +257,7 @@ _gdcaName :: DCAddAgent -&gt; DataConnectorName
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MetadataM m =&gt; m SourceKinds
 </span><a href="Hasura.RQL.DDL.SourceKinds.html#agentSourceKinds"><span class="hs-identifier hs-var">agentSourceKinds</span></a></span><span>
 </span><span id="line-95"></span><span>  </span><span class="hs-keyword">if</span><span>
-</span><span id="line-96"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">forall a. ToTxt a =&gt; a -&gt; Text
+</span><span id="line-96"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">forall a. ToTxt a =&gt; a -&gt; Text
 </span><span class="hs-identifier hs-var">toTxt</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
 </span><a href="#local-6989586621691379634"><span class="hs-identifier hs-var">_gdcaName</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">`elem`</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
@@ -271,7 +271,7 @@ _gdcaName :: DCAddAgent -&gt; DataConnectorName
 </span><a href="#local-6989586621691379634"><span class="hs-identifier hs-var">_gdcaName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;' already exists.&quot;</span></span><span>
-</span><span id="line-97"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">SkipCheck
+</span><span id="line-97"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">SkipCheck
 </span><a href="#local-6989586621691379631"><span class="hs-identifier hs-var">_gdcaSkipCheck</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; SkipCheck
 </span><a href="Hasura.RQL.DDL.DataConnector.html#SkipCheck"><span class="hs-identifier hs-var">SkipCheck</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
@@ -281,36 +281,36 @@ DataConnectorName -&gt; DataConnectorOptions -&gt; m EncJSON
 </span><a href="Hasura.RQL.DDL.DataConnector.html#addAgent"><span class="hs-identifier hs-var">addAgent</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
 </span><a href="#local-6989586621691379634"><span class="hs-identifier hs-var">_gdcaName</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorOptions
 </span><a href="#local-6989586621691379630"><span class="hs-identifier hs-var">agent</span></a></span><span>
-</span><span id="line-98"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-98"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-99"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) r.
+</span><span id="line-99"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) r.
 (ProvidesNetwork m, Has (Logger Hasura) r, MonadReader r m,
  MonadIO m, MonadBaseControl IO m) =&gt;
 BaseUrl -&gt; m Availability
 </span><a href="Hasura.RQL.DDL.DataConnector.html#checkAgentAvailability"><span class="hs-identifier hs-var">checkAgentAvailability</span></a></span><span> </span><span class="annot"><span class="annottext">BaseUrl
 </span><a href="#local-6989586621691379633"><span class="hs-identifier hs-var">_gdcaUrl</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-100"></span><span>            </span><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#NotAvailable"><span class="hs-identifier hs-type">NotAvailable</span></a></span><span> </span><span id="local-6989586621691379615"><span class="annot"><span class="annottext">QErr
+</span><span id="line-100"></span><span>          </span><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#NotAvailable"><span class="hs-identifier hs-type">NotAvailable</span></a></span><span> </span><span id="local-6989586621691379615"><span class="annot"><span class="annottext">QErr
 </span><a href="#local-6989586621691379615"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-101"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-102"></span><span>                </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
-</span><span class="hs-identifier hs-var">EncJSON.encJFromJValue</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-103"></span><span>                  </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span id="line-101"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
+</span><span id="line-102"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
+</span><span class="hs-identifier hs-var">EncJSON.encJFromJValue</span></span><span>
+</span><span id="line-103"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span>
-</span><span id="line-104"></span><span>                    </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span id="line-104"></span><span>                </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Agent is not available&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-105"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
+</span><span id="line-105"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;details&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">QErr
 </span><a href="#local-6989586621691379615"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-106"></span><span>                    </span><span class="hs-special">]</span><span>
-</span><span id="line-107"></span><span>            </span><span class="annot"><span class="annottext">Availability
+</span><span id="line-106"></span><span>                </span><span class="hs-special">]</span><span>
+</span><span id="line-107"></span><span>          </span><span class="annot"><span class="annottext">Availability
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (MonadError QErr m, MetadataM m, CacheRWM m) =&gt;
 DataConnectorName -&gt; DataConnectorOptions -&gt; m EncJSON
@@ -328,16 +328,17 @@ DataConnectorName -&gt; DataConnectorOptions -&gt; m EncJSON
 </span><span id="line-111"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691379583"><span class="annot"><span class="annottext">modifier' :: MetadataModifier
 </span><a href="#local-6989586621691379583"><span class="hs-identifier hs-var hs-var">modifier'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-112"></span><span>        </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
-</span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">Metadata.MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-113"></span><span>          </span><span class="annot"><span class="annottext">Lens' Metadata (BackendMap BackendConfigWrapper)
-</span><a href="Hasura.RQL.Types.Metadata.html#metaBackendConfigs"><span class="hs-identifier hs-var">Metadata.metaBackendConfigs</span></a></span><span> </span><span class="annot"><span class="annottext">forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">Metadata.MetadataModifier</span></a></span><span>
+</span><span id="line-113"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Lens' Metadata (BackendMap BackendConfigWrapper)
+</span><a href="Hasura.RQL.Types.Metadata.html#metaBackendConfigs"><span class="hs-identifier hs-var">Metadata.metaBackendConfigs</span></a></span><span>
+</span><span id="line-114"></span><span>          </span><span class="annot"><span class="annottext">forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
 </span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 (HasTag b, Monoid (i b)) =&gt;
 (i b -&gt; i b) -&gt; BackendMap i -&gt; BackendMap i
 </span><a href="Hasura.SQL.BackendMap.html#modify"><span class="hs-identifier hs-var">BackendMap.modify</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">Backend.DataConnector</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691379578"><span class="annot"><span class="annottext">BackendConfigWrapper 'DataConnector
 </span><a href="#local-6989586621691379578"><span class="hs-identifier hs-var">oldMap</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-114"></span><span>            </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><span id="line-115"></span><span>            </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 BackendConfig b -&gt; BackendConfigWrapper b
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#BackendConfigWrapper"><span class="hs-identifier hs-var">Metadata.BackendConfigWrapper</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k a. Ord k =&gt; k -&gt; a -&gt; Map k a -&gt; Map k a
@@ -346,44 +347,44 @@ BackendConfig b -&gt; BackendConfigWrapper b
 </span><a href="#local-6989586621691379584"><span class="hs-identifier hs-var">agent</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">coerce :: forall a b. Coercible a b =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">coerce</span></a></span><span> </span><span class="annot"><span class="annottext">BackendConfigWrapper 'DataConnector
 </span><a href="#local-6989586621691379578"><span class="hs-identifier hs-var">oldMap</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-115"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
+</span><span id="line-116"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">SC.Build.withNewInconsistentObjsCheck</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (MetadataM m, CacheRWM m) =&gt;
 MetadataModifier -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCache"><span class="hs-identifier hs-var">SC.Build.buildSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataModifier
 </span><a href="#local-6989586621691379583"><span class="hs-identifier hs-var">modifier'</span></a></span><span>
-</span><span id="line-116"></span><span>
-</span><span id="line-117"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">Common.successMsg</span></a></span><span>
-</span><span id="line-118"></span><span>
-</span><span id="line-119"></span><span class="hs-keyword">data</span><span> </span><span id="Availability"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#Availability"><span class="hs-identifier hs-var">Availability</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Available"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#Available"><span class="hs-identifier hs-var">Available</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="NotAvailable"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#NotAvailable"><span class="hs-identifier hs-var">NotAvailable</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Error.QErr</span></span><span>
-</span><span id="line-120"></span><span>
-</span><span id="line-121"></span><span class="hs-comment">-- | Check DC Agent availability by checking its Capabilities endpoint.</span><span>
-</span><span id="line-122"></span><span id="local-6989586621691379965"><span id="local-6989586621691379966"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#checkAgentAvailability"><span class="hs-identifier hs-type">checkAgentAvailability</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-123"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379966"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-124"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621691379965"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-125"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadReader</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379965"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379966"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-126"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379966"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-127"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379966"><span class="hs-identifier hs-type">m</span></a></span><span>
-</span><span id="line-128"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-129"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Servant.BaseUrl</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-130"></span><span>  </span><span class="annot"><a href="#local-6989586621691379966"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#Availability"><span class="hs-identifier hs-type">Availability</span></a></span></span></span><span>
-</span><span id="line-131"></span><span id="checkAgentAvailability"><span class="annot"><span class="annottext">checkAgentAvailability :: forall (m :: * -&gt; *) r.
+</span><span id="line-119"></span><span>
+</span><span id="line-120"></span><span class="hs-keyword">data</span><span> </span><span id="Availability"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#Availability"><span class="hs-identifier hs-var">Availability</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Available"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#Available"><span class="hs-identifier hs-var">Available</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="NotAvailable"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#NotAvailable"><span class="hs-identifier hs-var">NotAvailable</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Error.QErr</span></span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span class="hs-comment">-- | Check DC Agent availability by checking its Capabilities endpoint.</span><span>
+</span><span id="line-123"></span><span id="local-6989586621691379965"><span id="local-6989586621691379966"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#checkAgentAvailability"><span class="hs-identifier hs-type">checkAgentAvailability</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-124"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379966"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-125"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621691379965"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadReader</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379965"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379966"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-127"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379966"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-128"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379966"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-130"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Servant.BaseUrl</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><a href="#local-6989586621691379966"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#Availability"><span class="hs-identifier hs-type">Availability</span></a></span></span></span><span>
+</span><span id="line-132"></span><span id="checkAgentAvailability"><span class="annot"><span class="annottext">checkAgentAvailability :: forall (m :: * -&gt; *) r.
 (ProvidesNetwork m, Has (Logger Hasura) r, MonadReader r m,
  MonadIO m, MonadBaseControl IO m) =&gt;
 BaseUrl -&gt; m Availability
 </span><a href="Hasura.RQL.DDL.DataConnector.html#checkAgentAvailability"><span class="hs-identifier hs-var hs-var">checkAgentAvailability</span></a></span></span><span> </span><span id="local-6989586621691379544"><span class="annot"><span class="annottext">BaseUrl
 </span><a href="#local-6989586621691379544"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-132"></span><span>  </span><span id="local-6989586621691379543"><span class="annot"><span class="annottext">Manager
+</span><span id="line-133"></span><span>  </span><span id="local-6989586621691379543"><span class="annot"><span class="annottext">Manager
 </span><a href="#local-6989586621691379543"><span class="hs-identifier hs-var">manager</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). ProvidesNetwork m =&gt; m Manager
 </span><a href="Hasura.Services.Network.html#askHTTPManager"><span class="hs-identifier hs-var">askHTTPManager</span></a></span><span>
-</span><span id="line-133"></span><span>  </span><span id="local-6989586621691379541"><span class="annot"><span class="annottext">Logger Hasura
+</span><span id="line-134"></span><span>  </span><span id="local-6989586621691379541"><span class="annot"><span class="annottext">Logger Hasura
 </span><a href="#local-6989586621691379541"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">asks</span></a></span><span> </span><span class="annot"><span class="annottext">forall a t. Has a t =&gt; t -&gt; a
 </span><span class="hs-identifier hs-var">getter</span></span><span>
-</span><span id="line-134"></span><span>  </span><span id="local-6989586621691379538"><span class="annot"><span class="annottext">Either QErr CapabilitiesResponse
+</span><span id="line-135"></span><span>  </span><span id="local-6989586621691379538"><span class="annot"><span class="annottext">Either QErr CapabilitiesResponse
 </span><a href="#local-6989586621691379538"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runExceptT</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. TraceT m a -&gt; m a
@@ -407,40 +408,40 @@ AgentClientT m a -&gt; AgentClientContext -&gt; m a
 (MonadIO m, MonadTrace m, MonadError QErr m) =&gt;
 AgentClientT m CapabilitiesResponse
 </span><a href="Hasura.Backends.DataConnector.Agent.Client.html#capabilities"><span class="hs-identifier hs-var">Client.capabilities</span></a></span><span>
-</span><span id="line-135"></span><span>  </span><span class="hs-comment">-- NOTE: 'capabilitiesCase' does not handle the 'no connection to host' scenario so we must handle it explicitly here:</span><span>
-</span><span id="line-136"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-136"></span><span>  </span><span class="hs-comment">-- NOTE: 'capabilitiesCase' does not handle the 'no connection to host' scenario so we must handle it explicitly here:</span><span>
+</span><span id="line-137"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">either</span></a></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; Availability
 </span><a href="Hasura.RQL.DDL.DataConnector.html#NotAvailable"><span class="hs-identifier hs-var">NotAvailable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. a -&gt; b -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="annot"><span class="annottext">Availability
 </span><a href="Hasura.RQL.DDL.DataConnector.html#Available"><span class="hs-identifier hs-var">Available</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Either QErr CapabilitiesResponse
 </span><a href="#local-6989586621691379538"><span class="hs-identifier hs-var">res</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-137"></span><span>
-</span><span id="line-138"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
-</span><span id="line-139"></span><span>
-</span><span id="line-140"></span><span class="hs-keyword">newtype</span><span> </span><span id="DCDeleteAgent"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#DCDeleteAgent"><span class="hs-identifier hs-var">DCDeleteAgent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DCDeleteAgent"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#DCDeleteAgent"><span class="hs-identifier hs-var">DCDeleteAgent</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_dcdaName"><span class="annot"><span class="annottext">DCDeleteAgent -&gt; DataConnectorName
+</span><span id="line-138"></span><span>
+</span><span id="line-139"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span class="hs-keyword">newtype</span><span> </span><span id="DCDeleteAgent"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#DCDeleteAgent"><span class="hs-identifier hs-var">DCDeleteAgent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DCDeleteAgent"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#DCDeleteAgent"><span class="hs-identifier hs-var">DCDeleteAgent</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_dcdaName"><span class="annot"><span class="annottext">DCDeleteAgent -&gt; DataConnectorName
 </span><a href="Hasura.RQL.DDL.DataConnector.html#_dcdaName"><span class="hs-identifier hs-var hs-var">_dcdaName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-type">DC.Types.DataConnectorName</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-141"></span><span>
-</span><span id="line-142"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691379527"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#DCDeleteAgent"><span class="hs-identifier hs-type">DCDeleteAgent</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-143"></span><span>  </span><span id="local-6989586621691379522"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DCDeleteAgent
+</span><span id="line-142"></span><span>
+</span><span id="line-143"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691379527"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#DCDeleteAgent"><span class="hs-identifier hs-type">DCDeleteAgent</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-144"></span><span>  </span><span id="local-6989586621691379522"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DCDeleteAgent
 </span><a href="#local-6989586621691379522"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;DCDeleteAgent&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691379521"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621691379521"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-144"></span><span>    </span><span id="local-6989586621691379520"><span class="annot"><span class="annottext">DataConnectorName
+</span><span id="line-145"></span><span>    </span><span id="local-6989586621691379520"><span class="annot"><span class="annottext">DataConnectorName
 </span><a href="#local-6989586621691379520"><span class="hs-identifier hs-var">_dcdaName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621691379521"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span>
-</span><span id="line-145"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-146"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#DCDeleteAgent"><span class="hs-identifier hs-type">DCDeleteAgent</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">DataConnectorName
 _dcdaName :: DataConnectorName
 _dcdaName :: DataConnectorName
 </span><a href="#local-6989586621691379520"><span class="hs-glyph hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-146"></span><span>
-</span><span id="line-147"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691379513"><span id="local-6989586621691379515"><span id="local-6989586621691379517"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#DCDeleteAgent"><span class="hs-identifier hs-type">DCDeleteAgent</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-148"></span><span>  </span><span id="local-6989586621691379507"><span class="annot"><span class="annottext">toJSON :: DCDeleteAgent -&gt; Value
+</span><span id="line-147"></span><span>
+</span><span id="line-148"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691379513"><span id="local-6989586621691379515"><span id="local-6989586621691379517"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#DCDeleteAgent"><span class="hs-identifier hs-type">DCDeleteAgent</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-149"></span><span>  </span><span id="local-6989586621691379507"><span class="annot"><span class="annottext">toJSON :: DCDeleteAgent -&gt; Value
 </span><a href="#local-6989586621691379507"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#DCDeleteAgent"><span class="hs-identifier hs-type">DCDeleteAgent</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691379506"><span class="annot"><span class="annottext">DataConnectorName
 _dcdaName :: DataConnectorName
 _dcdaName :: DCDeleteAgent -&gt; DataConnectorName
@@ -449,29 +450,29 @@ _dcdaName :: DCDeleteAgent -&gt; DataConnectorName
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
 </span><a href="#local-6989586621691379506"><span class="hs-identifier hs-var">_dcdaName</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-149"></span><span>
-</span><span id="line-150"></span><span class="hs-comment">-- | Delete a Data Connector Agent from the Metadata.</span><span>
-</span><span id="line-151"></span><span id="local-6989586621691379883"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#runDeleteDataConnectorAgent"><span class="hs-identifier hs-type">runDeleteDataConnectorAgent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-152"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">SC.Build.CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379883"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-153"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">Metadata.MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379883"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-154"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Error.QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691379883"><span class="hs-identifier hs-type">m</span></a></span><span>
-</span><span id="line-155"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-156"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#DCDeleteAgent"><span class="hs-identifier hs-type">DCDeleteAgent</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-157"></span><span>  </span><span class="annot"><a href="#local-6989586621691379883"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">EncJSON</span></span></span><span>
-</span><span id="line-158"></span><span id="runDeleteDataConnectorAgent"><span class="annot"><span class="annottext">runDeleteDataConnectorAgent :: forall (m :: * -&gt; *).
+</span><span id="line-150"></span><span>
+</span><span id="line-151"></span><span class="hs-comment">-- | Delete a Data Connector Agent from the Metadata.</span><span>
+</span><span id="line-152"></span><span id="local-6989586621691379883"><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#runDeleteDataConnectorAgent"><span class="hs-identifier hs-type">runDeleteDataConnectorAgent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-153"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">SC.Build.CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379883"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-154"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">Metadata.MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691379883"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-155"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Error.QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691379883"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-156"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-157"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#DCDeleteAgent"><span class="hs-identifier hs-type">DCDeleteAgent</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-158"></span><span>  </span><span class="annot"><a href="#local-6989586621691379883"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">EncJSON</span></span></span><span>
+</span><span id="line-159"></span><span id="runDeleteDataConnectorAgent"><span class="annot"><span class="annottext">runDeleteDataConnectorAgent :: forall (m :: * -&gt; *).
 (CacheRWM m, MetadataM m, MonadError QErr m) =&gt;
 DCDeleteAgent -&gt; m EncJSON
 </span><a href="Hasura.RQL.DDL.DataConnector.html#runDeleteDataConnectorAgent"><span class="hs-identifier hs-var hs-var">runDeleteDataConnectorAgent</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.DataConnector.html#DCDeleteAgent"><span class="hs-identifier hs-type">DCDeleteAgent</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691379475"><span class="annot"><span class="annottext">DataConnectorName
 _dcdaName :: DataConnectorName
 _dcdaName :: DCDeleteAgent -&gt; DataConnectorName
 </span><a href="#local-6989586621691379475"><span class="hs-glyph hs-var hs-var">..</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-159"></span><span>  </span><span id="local-6989586621691379474"><span class="annot"><span class="annottext">Metadata
+</span><span id="line-160"></span><span>  </span><span id="local-6989586621691379474"><span class="annot"><span class="annottext">Metadata
 </span><a href="#local-6989586621691379474"><span class="hs-identifier hs-var">oldMetadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MetadataM m =&gt; m Metadata
 </span><a href="Hasura.RQL.Types.Metadata.html#getMetadata"><span class="hs-identifier hs-var">Metadata.getMetadata</span></a></span><span>
-</span><span id="line-160"></span><span>
-</span><span id="line-161"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691379472"><span class="annot"><span class="annottext">kindExists :: Maybe DataConnectorOptions
+</span><span id="line-161"></span><span>
+</span><span id="line-162"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691379472"><span class="annot"><span class="annottext">kindExists :: Maybe DataConnectorOptions
 </span><a href="#local-6989586621691379472"><span class="hs-identifier hs-var hs-var">kindExists</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-162"></span><span>        </span><span id="local-6989586621691379471"><span class="annot"><span class="annottext">BackendConfigWrapper 'DataConnector
+</span><span id="line-163"></span><span>        </span><span id="local-6989586621691379471"><span class="annot"><span class="annottext">BackendConfigWrapper 'DataConnector
 </span><a href="#local-6989586621691379471"><span class="hs-identifier hs-var">agentMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 BackendMap i -&gt; Maybe (i b)
@@ -479,16 +480,16 @@ BackendMap i -&gt; Maybe (i b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; BackendMap BackendConfigWrapper
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaBackendConfigs"><span class="hs-identifier hs-var">Metadata._metaBackendConfigs</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
 </span><a href="#local-6989586621691379474"><span class="hs-identifier hs-var">oldMetadata</span></a></span><span>
-</span><span id="line-163"></span><span>        </span><span class="annot"><span class="annottext">forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><span id="line-164"></span><span>        </span><span class="annot"><span class="annottext">forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-var">Map.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
 </span><a href="#local-6989586621691379475"><span class="hs-identifier hs-var">_dcdaName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 BackendConfigWrapper b -&gt; BackendConfig b
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#unBackendConfigWrapper"><span class="hs-identifier hs-var">Metadata.unBackendConfigWrapper</span></a></span><span> </span><span class="annot"><span class="annottext">BackendConfigWrapper 'DataConnector
 </span><a href="#local-6989586621691379471"><span class="hs-identifier hs-var">agentMap</span></a></span><span>
-</span><span id="line-164"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe DataConnectorOptions
+</span><span id="line-165"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe DataConnectorOptions
 </span><a href="#local-6989586621691379472"><span class="hs-identifier hs-var">kindExists</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-165"></span><span>    </span><span class="annot"><span class="annottext">Maybe DataConnectorOptions
+</span><span id="line-166"></span><span>    </span><span class="annot"><span class="annottext">Maybe DataConnectorOptions
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">Error.throw400</span></span><span> </span><span class="annot"><span class="annottext">Code
 </span><span class="hs-identifier hs-var">Error.NotFound</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -499,21 +500,21 @@ BackendConfigWrapper b -&gt; BackendConfig b
 </span><a href="#local-6989586621691379475"><span class="hs-identifier hs-var">_dcdaName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;' not found&quot;</span></span><span>
-</span><span id="line-166"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorOptions
+</span><span id="line-167"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorOptions
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-167"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691379465"><span class="annot"><span class="annottext">modifier' :: MetadataModifier
+</span><span id="line-168"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691379465"><span class="annot"><span class="annottext">modifier' :: MetadataModifier
 </span><a href="#local-6989586621691379465"><span class="hs-identifier hs-var hs-var">modifier'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-168"></span><span>            </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
-</span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">Metadata.MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-169"></span><span>              </span><span class="annot"><span class="annottext">Lens' Metadata (BackendMap BackendConfigWrapper)
+</span><span id="line-169"></span><span>            </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
+</span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">Metadata.MetadataModifier</span></a></span><span>
+</span><span id="line-170"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Lens' Metadata (BackendMap BackendConfigWrapper)
 </span><a href="Hasura.RQL.Types.Metadata.html#metaBackendConfigs"><span class="hs-identifier hs-var">Metadata.metaBackendConfigs</span></a></span><span>
-</span><span id="line-170"></span><span>                </span><span class="annot"><span class="annottext">forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span id="line-171"></span><span>              </span><span class="annot"><span class="annottext">forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
 </span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 (Maybe (i b) -&gt; Maybe (i b)) -&gt; BackendMap i -&gt; BackendMap i
 </span><a href="Hasura.SQL.BackendMap.html#alter"><span class="hs-identifier hs-var">BackendMap.alter</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">Backend.DataConnector</span></a></span><span>
-</span><span id="line-171"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-172"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">coerce :: forall a b. Coercible a b =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">coerce</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Map k a
@@ -522,15 +523,15 @@ HasTag b =&gt;
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 BackendConfigWrapper b -&gt; BackendConfig b
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#unBackendConfigWrapper"><span class="hs-identifier hs-var">Metadata.unBackendConfigWrapper</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-172"></span><span>
-</span><span id="line-173"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
+</span><span id="line-173"></span><span>
+</span><span id="line-174"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">SC.Build.withNewInconsistentObjsCheck</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (MetadataM m, CacheRWM m) =&gt;
 MetadataModifier -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCache"><span class="hs-identifier hs-var">SC.Build.buildSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataModifier
 </span><a href="#local-6989586621691379465"><span class="hs-identifier hs-var">modifier'</span></a></span><span>
-</span><span id="line-174"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-175"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">Common.successMsg</span></a></span><span>
-</span><span id="line-175"></span></pre></body></html>
+</span><span id="line-176"></span></pre></body></html>

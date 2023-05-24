@@ -68,21 +68,21 @@ RemoteSchemaPermissionDefinition
 </span><span id="line-30"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;RemoteSchemaPermissionDefinition&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-31"></span><span>      </span><span class="annot"><span class="annottext">SchemaDocument -&gt; RemoteSchemaPermissionDefinition
+</span><span class="hs-string">&quot;RemoteSchemaPermissionDefinition&quot;</span></span><span>
+</span><span id="line-31"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaDocument -&gt; RemoteSchemaPermissionDefinition
 </span><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionDefinition"><span class="hs-identifier hs-var">RemoteSchemaPermissionDefinition</span></a></span><span>
-</span><span id="line-32"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-32"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ValueCodec input output -&gt; Text -&gt; ObjectCodec input output
 </span><span class="hs-identifier hs-var">requiredFieldWith</span></span><span>
-</span><span id="line-33"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-33"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;schema&quot;</span></span><span>
-</span><span id="line-34"></span><span>          </span><span class="annot"><span class="annottext">JSONCodec SchemaDocument
+</span><span id="line-34"></span><span>        </span><span class="annot"><span class="annottext">JSONCodec SchemaDocument
 </span><span class="hs-identifier hs-var">graphQLSchemaDocumentCodec</span></span><span>
-</span><span id="line-35"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-35"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;GraphQL schema document, e.g. the content of schema.gql&quot;</span></span><span>
-</span><span id="line-36"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-36"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition -&gt; SchemaDocument
@@ -171,39 +171,42 @@ RemoteSchemaPermissionMetadata
 </span><span id="line-55"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;RemoteSchemaPermissionMetadata&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-56"></span><span>      </span><span class="annot"><span class="annottext">RoleName
+</span><span class="hs-string">&quot;RemoteSchemaPermissionMetadata&quot;</span></span><span>
+</span><span id="line-56"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 -&gt; RemoteSchemaPermissionDefinition
 -&gt; Maybe Text
 -&gt; RemoteSchemaPermissionMetadata
 </span><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-var">RemoteSchemaPermissionMetadata</span></a></span><span>
-</span><span id="line-57"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-57"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;role&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span class="hs-string">&quot;role&quot;</span></span><span>
+</span><span id="line-58"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionMetadata -&gt; RoleName
 </span><a href="Hasura.RemoteSchema.Metadata.Permission.html#_rspmRole"><span class="hs-identifier hs-var">_rspmRole</span></a></span><span>
-</span><span id="line-58"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;definition&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span class="hs-string">&quot;definition&quot;</span></span><span>
+</span><span id="line-60"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionMetadata -&gt; RemoteSchemaPermissionDefinition
 </span><a href="Hasura.RemoteSchema.Metadata.Permission.html#_rspmDefinition"><span class="hs-identifier hs-var">_rspmDefinition</span></a></span><span>
-</span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-61"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><span class="hs-identifier hs-var">optionalField'</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;comment&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span class="hs-string">&quot;comment&quot;</span></span><span>
+</span><span id="line-62"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionMetadata -&gt; Maybe Text
 </span><a href="Hasura.RemoteSchema.Metadata.Permission.html#_rspmComment"><span class="hs-identifier hs-var">_rspmComment</span></a></span><span>
-</span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span class="hs-special">$</span><span id="local-6989586621691063841"><span id="local-6989586621691063843"><span id="local-6989586621691063856"><span id="local-6989586621691063875"><span id="local-6989586621691063877"><span id="local-6989586621691063894"><span class="hs-special">(</span><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RemoteSchemaPermissionMetadata</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
-</span><span id="line-62"></span></pre></body></html>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="hs-special">$</span><span id="local-6989586621691063841"><span id="local-6989586621691063843"><span id="local-6989586621691063856"><span id="local-6989586621691063875"><span id="local-6989586621691063877"><span id="local-6989586621691063894"><span class="hs-special">(</span><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RemoteSchemaPermissionMetadata</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-65"></span></pre></body></html>

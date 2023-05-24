@@ -221,8 +221,8 @@ TableInfo b
 -&gt; SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 </span><a href="Hasura.GraphQL.Schema.BoolExp.html#tableBoolExp"><span class="hs-identifier hs-var">tableBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
 </span><a href="#local-6989586621691311940"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-98"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
-</span><span id="line-99"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
+</span><span id="line-98"></span><span>    </span><span class="hs-identifier">pure</span><span>
+</span><span id="line-99"></span><span>      </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 MonadParse m =&gt;
 Name
 -&gt; Maybe Description
@@ -378,20 +378,21 @@ TableInfo b -&gt; m [StructuredColumnInfo b]
 </span><span id="line-132"></span><span>      </span><span id="local-6989586621691311835"><span class="annot"><span class="annottext">description :: Maybe Description
 </span><a href="#local-6989586621691311835"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-133"></span><span>        </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-134"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Description
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.Description</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-135"></span><span>            </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;select match_columns of table &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span>
+</span><span id="line-134"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.Description</span></a></span><span>
+</span><span id="line-135"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;select match_columns of table &quot;</span></span><span>
+</span><span id="line-136"></span><span>          </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><span class="hs-operator hs-var">&lt;&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TableInfo b -&gt; TableName b
 </span><a href="Hasura.Table.Cache.html#tableInfoName"><span class="hs-identifier hs-var">tableInfoName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MSSQL
 </span><a href="#local-6989586621691311844"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-136"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-137"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
+</span><span id="line-137"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
+</span><span id="line-138"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 MonadParse m =&gt;
 Name
 -&gt; Maybe Description
@@ -400,30 +401,30 @@ Name
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.enum</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691311837"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 </span><a href="#local-6989586621691311835"><span class="hs-identifier hs-var">description</span></a></span><span>
-</span><span id="line-138"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-139"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">nonEmpty</span></a></span><span>
-</span><span id="line-139"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall {origin}. Name -&gt; Definition origin EnumValueInfo
+</span><span id="line-140"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall {origin}. Name -&gt; Definition origin EnumValueInfo
 </span><a href="#local-6989586621691311832"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Name
 </span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var">ciName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
 </span><a href="#local-6989586621691311830"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-140"></span><span>            </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Column b
+</span><span id="line-141"></span><span>          </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
 </span><a href="#local-6989586621691311830"><span class="hs-identifier hs-var">column</span></a></span><span>
-</span><span id="line-141"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-142"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#SCIScalarColumn"><span class="hs-identifier hs-type">SCIScalarColumn</span></a></span><span> </span><span id="local-6989586621691311830"><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
+</span><span id="line-142"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-143"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#SCIScalarColumn"><span class="hs-identifier hs-type">SCIScalarColumn</span></a></span><span> </span><span id="local-6989586621691311830"><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
 </span><a href="#local-6989586621691311830"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[StructuredColumnInfo 'MSSQL]
 </span><a href="#local-6989586621691311839"><span class="hs-identifier hs-var">columns</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-143"></span><span>            </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Bool
+</span><span id="line-144"></span><span>          </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; Bool
 </span><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#isMatchColumnValid"><span class="hs-identifier hs-var">isMatchColumnValid</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
 </span><a href="#local-6989586621691311830"><span class="hs-identifier hs-var">column</span></a></span><span>
-</span><span id="line-144"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-145"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-146"></span><span>    </span><span id="local-6989586621691311832"><span class="annot"><span class="annottext">define :: Name -&gt; Definition origin EnumValueInfo
+</span><span id="line-145"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-146"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-147"></span><span>    </span><span id="local-6989586621691311832"><span class="annot"><span class="annottext">define :: Name -&gt; Definition origin EnumValueInfo
 </span><a href="#local-6989586621691311832"><span class="hs-identifier hs-var hs-var">define</span></a></span></span><span> </span><span id="local-6989586621691311825"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691311825"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-147"></span><span>      </span><span class="annot"><span class="annottext">forall origin a.
+</span><span id="line-148"></span><span>      </span><span class="annot"><span class="annottext">forall origin a.
 Name
 -&gt; Maybe Description
 -&gt; Maybe origin
@@ -438,18 +439,18 @@ Name
 </span><span class="hs-string">&quot;column name&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">EnumValueInfo
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-var">P.EnumValueInfo</span></a></span><span>
-</span><span id="line-148"></span><span>
-</span><span id="line-149"></span><span class="hs-comment">-- | Check whether a column can be used for match_columns.</span><span>
-</span><span id="line-150"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#isMatchColumnValid"><span class="hs-identifier hs-type">isMatchColumnValid</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span>
-</span><span id="line-151"></span><span id="isMatchColumnValid"><span class="annot"><span class="annottext">isMatchColumnValid :: ColumnInfo 'MSSQL -&gt; Bool
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span class="hs-comment">-- | Check whether a column can be used for match_columns.</span><span>
+</span><span id="line-151"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#isMatchColumnValid"><span class="hs-identifier hs-type">isMatchColumnValid</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span>
+</span><span id="line-152"></span><span id="isMatchColumnValid"><span class="annot"><span class="annottext">isMatchColumnValid :: ColumnInfo 'MSSQL -&gt; Bool
 </span><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html#isMatchColumnValid"><span class="hs-identifier hs-var hs-var">isMatchColumnValid</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-152"></span><span>  </span><span class="hs-comment">-- Unfortunately MSSQL does not support comparison for TEXT types.</span><span>
-</span><span id="line-153"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ciType :: forall (b :: BackendType). ColumnInfo b -&gt; ColumnType b
+</span><span id="line-153"></span><span>  </span><span class="hs-comment">-- Unfortunately MSSQL does not support comparison for TEXT types.</span><span>
+</span><span id="line-154"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ciType :: forall (b :: BackendType). ColumnInfo b -&gt; ColumnType b
 </span><a href="Hasura.RQL.Types.Column.html#ciType"><span class="hs-identifier hs-var">ciType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">ColumnScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType 'MSSQL
 ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TextType"><span class="hs-identifier hs-var">TextType</span></a></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
-</span><span id="line-154"></span><span>  </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
+</span><span id="line-155"></span><span>  </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
-</span><span id="line-155"></span></pre></body></html>
+</span><span id="line-156"></span></pre></body></html>

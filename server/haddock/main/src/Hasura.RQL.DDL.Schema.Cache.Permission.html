@@ -285,9 +285,9 @@ CheckPermission p
 </span><a href="#local-6989586621691394025"><span class="hs-identifier hs-var hs-var">inconsistentObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-159"></span><span>            </span><span class="hs-comment">-- check `Conflicts while inheriting permissions` in `rfcs/inherited-roles-improvements.md`</span><span>
 </span><span id="line-160"></span><span>            </span><span class="annot"><span class="annottext">forall a b. a -&gt; Either a b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-161"></span><span>              </span><span class="annot"><span class="annottext">RoleName -&gt; InconsistentRoleEntity -&gt; InconsistentMetadata
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span>
+</span><span id="line-161"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; InconsistentRoleEntity -&gt; InconsistentMetadata
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#ConflictingInheritedPermission"><span class="hs-identifier hs-var">ConflictingInheritedPermission</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691394028"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">InconsistentRoleEntity
 </span><a href="#local-6989586621691394027"><span class="hs-identifier hs-var">inconsistentEntity</span></a></span><span>
@@ -428,28 +428,31 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691393878"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfoMap b
-</span><a href="#local-6989586621691393883"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621691393883"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-205"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><span class="hs-identifier hs-var">throw500</span></span><span>
+</span><span id="line-206"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-205"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-206"></span><span>                </span><span class="hs-comment">-- this error will ideally never be thrown, but if it's thrown then</span><span>
-</span><span id="line-207"></span><span>                </span><span class="hs-comment">-- it's possible that the permissions for the role do exist, but it's</span><span>
-</span><span id="line-208"></span><span>                </span><span class="hs-comment">-- not yet built due to wrong ordering of the roles, check `orderRoles`</span><span>
-</span><span id="line-209"></span><span>                </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;buildTablePermissions: table role permissions for role: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-207"></span><span>              </span><span class="hs-comment">-- this error will ideally never be thrown, but if it's thrown then</span><span>
+</span><span id="line-208"></span><span>              </span><span class="hs-comment">-- it's possible that the permissions for the role do exist, but it's</span><span>
+</span><span id="line-209"></span><span>              </span><span class="hs-comment">-- not yet built due to wrong ordering of the roles, check `orderRoles`</span><span>
+</span><span id="line-210"></span><span>              </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;buildTablePermissions: table role permissions for role: &quot;</span></span><span>
+</span><span id="line-211"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621691393878"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="#local-6989586621691393878"><span class="hs-keyword hs-var">role</span></a></span><span>
+</span><span id="line-212"></span><span>              </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><span class="hs-operator hs-var">&lt;&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; not found&quot;</span></span><span>
-</span><span id="line-210"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691393874"><span class="annot"><span class="annottext">combinedParentRolePermInfo :: CombineRolePermInfo b
+</span><span id="line-213"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691393874"><span class="annot"><span class="annottext">combinedParentRolePermInfo :: CombineRolePermInfo b
 </span><a href="#local-6989586621691393874"><span class="hs-identifier hs-var hs-var">combinedParentRolePermInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; [a] -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mconcat</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). RolePermInfo b -&gt; CombineRolePermInfo b
 </span><a href="Hasura.RQL.Types.Roles.Internal.html#rolePermInfoToCombineRolePermInfo"><span class="hs-identifier hs-var">rolePermInfoToCombineRolePermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">[RolePermInfo b]
 </span><a href="#local-6989586621691393880"><span class="hs-identifier hs-var">parentRolePermissions</span></a></span><span>
-</span><span id="line-211"></span><span>            </span><span id="local-6989586621691393873"><span class="annot"><span class="annottext">selectPermissionsCount :: Int
+</span><span id="line-214"></span><span>            </span><span id="local-6989586621691393873"><span class="annot"><span class="annottext">selectPermissionsCount :: Int
 </span><a href="#local-6989586621691393873"><span class="hs-identifier hs-var hs-var">selectPermissionsCount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">length</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
@@ -458,29 +461,30 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). RolePermInfo b -&gt; Maybe (SelPermInfo b)
 </span><a href="Hasura.Table.Cache.html#_permSel"><span class="hs-identifier hs-var">_permSel</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[RolePermInfo b]
 </span><a href="#local-6989586621691393880"><span class="hs-identifier hs-var">parentRolePermissions</span></a></span><span>
-</span><span id="line-212"></span><span>            </span><span id="local-6989586621691393869"><span class="annot"><span class="annottext">accumulatedRolePermission :: Maybe (RolePermInfo b)
+</span><span id="line-215"></span><span>            </span><span id="local-6989586621691393869"><span class="annot"><span class="annottext">accumulatedRolePermission :: Maybe (RolePermInfo b)
 </span><a href="#local-6989586621691393869"><span class="hs-identifier hs-var hs-var">accumulatedRolePermission</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691393882"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfoMap b
 </span><a href="#local-6989586621691393883"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span><span>
-</span><span id="line-213"></span><span>            </span><span id="local-6989586621691393868"><span class="annot"><span class="annottext">roleSelectPermission :: Maybe (SelPermInfo b)
+</span><span id="line-216"></span><span>            </span><span id="local-6989586621691393868"><span class="annot"><span class="annottext">roleSelectPermission :: Maybe (SelPermInfo b)
 </span><a href="#local-6989586621691393868"><span class="hs-identifier hs-var hs-var">roleSelectPermission</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-214"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><span id="line-217"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). RolePermInfo b -&gt; Maybe (SelPermInfo b)
 </span><a href="Hasura.Table.Cache.html#_permSel"><span class="hs-identifier hs-var">_permSel</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">=&lt;&lt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (RolePermInfo b)
-</span><a href="#local-6989586621691393869"><span class="hs-identifier hs-var">accumulatedRolePermission</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-215"></span><span>                </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><a href="#local-6989586621691393869"><span class="hs-identifier hs-var">accumulatedRolePermission</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-218"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Backend b =&gt;
 Int -&gt; CombinedSelPermInfo b -&gt; SelPermInfo b
 </span><a href="Hasura.Table.Cache.html#combinedSelPermInfoToSelPermInfo"><span class="hs-identifier hs-var">combinedSelPermInfoToSelPermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621691393873"><span class="hs-identifier hs-var">selectPermissionsCount</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="#local-6989586621691393873"><span class="hs-identifier hs-var">selectPermissionsCount</span></a></span><span>
+</span><span id="line-219"></span><span>                </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
 CombineRolePermInfo b -&gt; Maybe (CombinedSelPermInfo b)
 </span><a href="Hasura.RQL.Types.Roles.Internal.html#crpiSelPerm"><span class="hs-identifier hs-var">crpiSelPerm</span></a></span><span> </span><span class="annot"><span class="annottext">CombineRolePermInfo b
 </span><a href="#local-6989586621691393874"><span class="hs-identifier hs-var">combinedParentRolePermInfo</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-216"></span><span>        </span><span id="local-6989586621691393864"><span class="annot"><span class="annottext">Maybe (InsPermInfo b)
+</span><span id="line-220"></span><span>        </span><span id="local-6989586621691393864"><span class="annot"><span class="annottext">Maybe (InsPermInfo b)
 </span><a href="#local-6989586621691393864"><span class="hs-identifier hs-var">roleInsertPermission</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall md (m :: * -&gt; *) (b :: BackendType) perm.
 (MonadWriter (Seq (Either InconsistentMetadata md)) m,
  BackendMetadata b) =&gt;
@@ -502,7 +506,7 @@ CombineRolePermInfo b -&gt; CheckPermission (InsPermInfo b)
 </span><a href="#local-6989586621691393891"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621691393861"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">PermType
 </span><a href="Hasura.RQL.Types.Permission.html#PTInsert"><span class="hs-identifier hs-var">PTInsert</span></a></span><span>
-</span><span id="line-217"></span><span>        </span><span id="local-6989586621691393859"><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
+</span><span id="line-221"></span><span>        </span><span id="local-6989586621691393859"><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
 </span><a href="#local-6989586621691393859"><span class="hs-identifier hs-var">roleUpdatePermission</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall md (m :: * -&gt; *) (b :: BackendType) perm.
 (MonadWriter (Seq (Either InconsistentMetadata md)) m,
  BackendMetadata b) =&gt;
@@ -524,7 +528,7 @@ CombineRolePermInfo b -&gt; CheckPermission (UpdPermInfo b)
 </span><a href="#local-6989586621691393891"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621691393861"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">PermType
 </span><a href="Hasura.RQL.Types.Permission.html#PTUpdate"><span class="hs-identifier hs-var">PTUpdate</span></a></span><span>
-</span><span id="line-218"></span><span>        </span><span id="local-6989586621691393855"><span class="annot"><span class="annottext">Maybe (DelPermInfo b)
+</span><span id="line-222"></span><span>        </span><span id="local-6989586621691393855"><span class="annot"><span class="annottext">Maybe (DelPermInfo b)
 </span><a href="#local-6989586621691393855"><span class="hs-identifier hs-var">roleDeletePermission</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall md (m :: * -&gt; *) (b :: BackendType) perm.
 (MonadWriter (Seq (Either InconsistentMetadata md)) m,
  BackendMetadata b) =&gt;
@@ -546,7 +550,7 @@ CombineRolePermInfo b -&gt; CheckPermission (DelPermInfo b)
 </span><a href="#local-6989586621691393891"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621691393861"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">PermType
 </span><a href="Hasura.RQL.Types.Permission.html#PTDelete"><span class="hs-identifier hs-var">PTDelete</span></a></span><span>
-</span><span id="line-219"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691393851"><span class="annot"><span class="annottext">rolePermInfo :: RolePermInfo b
+</span><span id="line-223"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691393851"><span class="annot"><span class="annottext">rolePermInfo :: RolePermInfo b
 </span><a href="#local-6989586621691393851"><span class="hs-identifier hs-var hs-var">rolePermInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Maybe (InsPermInfo b)
 -&gt; Maybe (SelPermInfo b)
@@ -558,7 +562,7 @@ Maybe (InsPermInfo b)
 </span><a href="#local-6989586621691393868"><span class="hs-identifier hs-var">roleSelectPermission</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
 </span><a href="#local-6989586621691393859"><span class="hs-identifier hs-var">roleUpdatePermission</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (DelPermInfo b)
 </span><a href="#local-6989586621691393855"><span class="hs-identifier hs-var">roleDeletePermission</span></a></span><span>
-</span><span id="line-220"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-224"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
@@ -567,10 +571,10 @@ k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
 </span><a href="#local-6989586621691393882"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo b
 </span><a href="#local-6989586621691393851"><span class="hs-identifier hs-var">rolePermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfoMap b
 </span><a href="#local-6989586621691393883"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span><span>
-</span><span id="line-221"></span><span>
-</span><span id="line-222"></span><span>  </span><span id="local-6989586621691393849"><span class="annot"><span class="annottext">RolePermInfoMap b
+</span><span id="line-225"></span><span>
+</span><span id="line-226"></span><span>  </span><span id="local-6989586621691393849"><span class="annot"><span class="annottext">RolePermInfoMap b
 </span><a href="#local-6989586621691393849"><span class="hs-identifier hs-var">metadataRolePermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-223"></span><span>    </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+</span><span id="line-227"></span><span>    </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap
@@ -582,27 +586,27 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="#local-6989586621691393847"><span class="hs-identifier hs-var">selectPermission</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691393846"><span class="annot"><span class="annottext">Maybe (PermDef b UpdPerm)
 </span><a href="#local-6989586621691393846"><span class="hs-identifier hs-var">updatePermission</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691393845"><span class="annot"><span class="annottext">Maybe (PermDef b DelPerm)
 </span><a href="#local-6989586621691393845"><span class="hs-identifier hs-var">deletePermission</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-224"></span><span>      </span><span id="local-6989586621691393844"><span class="annot"><span class="annottext">Maybe (InsPermInfo b)
+</span><span id="line-228"></span><span>      </span><span id="local-6989586621691393844"><span class="annot"><span class="annottext">Maybe (InsPermInfo b)
 </span><a href="#local-6989586621691393844"><span class="hs-identifier hs-var">insert</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (a :: BackendType -&gt; *).
 Maybe (PermDef b a) -&gt; m (Maybe (PermInfo a b))
 </span><a href="#local-6989586621691393843"><span class="hs-identifier hs-var">buildPermission</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (PermDef b InsPerm)
 </span><a href="#local-6989586621691393848"><span class="hs-identifier hs-var">insertPermission</span></a></span><span>
-</span><span id="line-225"></span><span>      </span><span id="local-6989586621691393842"><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
+</span><span id="line-229"></span><span>      </span><span id="local-6989586621691393842"><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
 </span><a href="#local-6989586621691393842"><span class="hs-identifier hs-var">select</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (a :: BackendType -&gt; *).
 Maybe (PermDef b a) -&gt; m (Maybe (PermInfo a b))
 </span><a href="#local-6989586621691393843"><span class="hs-identifier hs-var">buildPermission</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (PermDef b SelPerm)
 </span><a href="#local-6989586621691393847"><span class="hs-identifier hs-var">selectPermission</span></a></span><span>
-</span><span id="line-226"></span><span>      </span><span id="local-6989586621691393841"><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
+</span><span id="line-230"></span><span>      </span><span id="local-6989586621691393841"><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
 </span><a href="#local-6989586621691393841"><span class="hs-identifier hs-var">update</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (a :: BackendType -&gt; *).
 Maybe (PermDef b a) -&gt; m (Maybe (PermInfo a b))
 </span><a href="#local-6989586621691393843"><span class="hs-identifier hs-var">buildPermission</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (PermDef b UpdPerm)
 </span><a href="#local-6989586621691393846"><span class="hs-identifier hs-var">updatePermission</span></a></span><span>
-</span><span id="line-227"></span><span>      </span><span id="local-6989586621691393840"><span class="annot"><span class="annottext">Maybe (DelPermInfo b)
+</span><span id="line-231"></span><span>      </span><span id="local-6989586621691393840"><span class="annot"><span class="annottext">Maybe (DelPermInfo b)
 </span><a href="#local-6989586621691393840"><span class="hs-identifier hs-var">delete</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (a :: BackendType -&gt; *).
 Maybe (PermDef b a) -&gt; m (Maybe (PermInfo a b))
 </span><a href="#local-6989586621691393843"><span class="hs-identifier hs-var">buildPermission</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (PermDef b DelPerm)
 </span><a href="#local-6989586621691393845"><span class="hs-identifier hs-var">deletePermission</span></a></span><span>
-</span><span id="line-228"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-232"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Maybe (InsPermInfo b)
@@ -615,7 +619,7 @@ Maybe (InsPermInfo b)
 </span><a href="#local-6989586621691393842"><span class="hs-identifier hs-var">select</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
 </span><a href="#local-6989586621691393841"><span class="hs-identifier hs-var">update</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (DelPermInfo b)
 </span><a href="#local-6989586621691393840"><span class="hs-identifier hs-var">delete</span></a></span><span>
-</span><span id="line-229"></span><span>  </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (m :: * -&gt; *) b a.
+</span><span id="line-233"></span><span>  </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (m :: * -&gt; *) b a.
 (Foldable t, Monad m) =&gt;
 (b -&gt; a -&gt; m b) -&gt; b -&gt; t a -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldlM</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfoMap b -&gt; Role -&gt; m (RolePermInfoMap b)
@@ -623,21 +627,21 @@ Maybe (InsPermInfo b)
 </span><a href="#local-6989586621691393849"><span class="hs-identifier hs-var">metadataRolePermissions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderedRoles -&gt; [Role]
 </span><a href="Hasura.RQL.DDL.Schema.Cache.Permission.html#_unOrderedRoles"><span class="hs-identifier hs-var">_unOrderedRoles</span></a></span><span> </span><span class="annot"><span class="annottext">OrderedRoles
 </span><a href="#local-6989586621691393887"><span class="hs-identifier hs-var">orderedRoles</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-230"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-231"></span><span>    </span><span id="local-6989586621691393861"><span class="annot"><span class="annottext">table :: TableName b
+</span><span id="line-234"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-235"></span><span>    </span><span id="local-6989586621691393861"><span class="annot"><span class="annottext">table :: TableName b
 </span><a href="#local-6989586621691393861"><span class="hs-identifier hs-var hs-var">table</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TablePermissionInputs b -&gt; TableName b
 </span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_tpiTable"><span class="hs-identifier hs-var">_tpiTable</span></a></span><span> </span><span class="annot"><span class="annottext">TablePermissionInputs b
 </span><a href="#local-6989586621691393888"><span class="hs-identifier hs-var">tablePermissions</span></a></span><span>
-</span><span id="line-232"></span><span>
-</span><span id="line-233"></span><span>    </span><span id="local-6989586621691394263"><span class="annot"><a href="#local-6989586621691393837"><span class="hs-identifier hs-type">mkMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermDef"><span class="hs-identifier hs-type">PermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394263"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermDef"><span class="hs-identifier hs-type">PermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394263"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span></span><span>
-</span><span id="line-234"></span><span>    </span><span id="local-6989586621691393837"><span class="annot"><span class="annottext">mkMap :: forall (e :: BackendType -&gt; *).
+</span><span id="line-236"></span><span>
+</span><span id="line-237"></span><span>    </span><span id="local-6989586621691394263"><span class="annot"><a href="#local-6989586621691393837"><span class="hs-identifier hs-type">mkMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermDef"><span class="hs-identifier hs-type">PermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394263"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermDef"><span class="hs-identifier hs-type">PermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394263"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-238"></span><span>    </span><span id="local-6989586621691393837"><span class="annot"><span class="annottext">mkMap :: forall (e :: BackendType -&gt; *).
 [PermDef b e] -&gt; HashMap RoleName (PermDef b e)
 </span><a href="#local-6989586621691393837"><span class="hs-identifier hs-var hs-var">mkMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k a. Hashable k =&gt; (a -&gt; k) -&gt; [a] -&gt; HashMap k a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">mapFromL</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
 PermDef b perm -&gt; RoleName
 </span><a href="Hasura.RQL.Types.Permission.html#_pdRole"><span class="hs-identifier hs-var">_pdRole</span></a></span><span>
-</span><span id="line-235"></span><span>
-</span><span id="line-236"></span><span>    </span><span id="local-6989586621691393885"><span class="annot"><span class="annottext">alignPermissions :: TablePermissionInputs b
+</span><span id="line-239"></span><span>
+</span><span id="line-240"></span><span>    </span><span id="local-6989586621691393885"><span class="annot"><span class="annottext">alignPermissions :: TablePermissionInputs b
 -&gt; HashMap
      RoleName
      (Maybe (PermDef b InsPerm), Maybe (PermDef b SelPerm),
@@ -662,7 +666,7 @@ _tpiInsert :: [PermDef b InsPerm]
 _tpiTable :: TableName b
 _tpiTable :: forall (b :: BackendType). TablePermissionInputs b -&gt; TableName b
 </span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#_tpiDelete"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-237"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691393823"><span class="annot"><span class="annottext">insertsMap :: HashMap
+</span><span id="line-241"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691393823"><span class="annot"><span class="annottext">insertsMap :: HashMap
   RoleName
   (Maybe (PermDef b InsPerm), Maybe (PermDef b SelPerm),
    Maybe (PermDef b UpdPerm), Maybe (PermDef b DelPerm))
@@ -677,7 +681,7 @@ _tpiTable :: forall (b :: BackendType). TablePermissionInputs b -&gt; TableName 
 [PermDef b e] -&gt; HashMap RoleName (PermDef b e)
 </span><a href="#local-6989586621691393837"><span class="hs-identifier hs-var">mkMap</span></a></span><span> </span><span class="annot"><span class="annottext">[PermDef b InsPerm]
 </span><a href="#local-6989586621691393831"><span class="hs-identifier hs-var">_tpiInsert</span></a></span><span>
-</span><span id="line-238"></span><span>          </span><span id="local-6989586621691393821"><span class="annot"><span class="annottext">selectsMap :: HashMap
+</span><span id="line-242"></span><span>          </span><span id="local-6989586621691393821"><span class="annot"><span class="annottext">selectsMap :: HashMap
   RoleName
   (Maybe (PermDef b InsPerm), Maybe (PermDef b SelPerm),
    Maybe (PermDef b UpdPerm), Maybe (PermDef b DelPerm))
@@ -692,7 +696,7 @@ _tpiTable :: forall (b :: BackendType). TablePermissionInputs b -&gt; TableName 
 [PermDef b e] -&gt; HashMap RoleName (PermDef b e)
 </span><a href="#local-6989586621691393837"><span class="hs-identifier hs-var">mkMap</span></a></span><span> </span><span class="annot"><span class="annottext">[PermDef b SelPerm]
 </span><a href="#local-6989586621691393830"><span class="hs-identifier hs-var">_tpiSelect</span></a></span><span>
-</span><span id="line-239"></span><span>          </span><span id="local-6989586621691393819"><span class="annot"><span class="annottext">updatesMap :: HashMap
+</span><span id="line-243"></span><span>          </span><span id="local-6989586621691393819"><span class="annot"><span class="annottext">updatesMap :: HashMap
   RoleName
   (Maybe (PermDef b InsPerm), Maybe (PermDef b SelPerm),
    Maybe (PermDef b UpdPerm), Maybe (PermDef b DelPerm))
@@ -707,7 +711,7 @@ _tpiTable :: forall (b :: BackendType). TablePermissionInputs b -&gt; TableName 
 [PermDef b e] -&gt; HashMap RoleName (PermDef b e)
 </span><a href="#local-6989586621691393837"><span class="hs-identifier hs-var">mkMap</span></a></span><span> </span><span class="annot"><span class="annottext">[PermDef b UpdPerm]
 </span><a href="#local-6989586621691393829"><span class="hs-identifier hs-var">_tpiUpdate</span></a></span><span>
-</span><span id="line-240"></span><span>          </span><span id="local-6989586621691393817"><span class="annot"><span class="annottext">deletesMap :: HashMap
+</span><span id="line-244"></span><span>          </span><span id="local-6989586621691393817"><span class="annot"><span class="annottext">deletesMap :: HashMap
   RoleName
   (Maybe (PermDef b InsPerm), Maybe (PermDef b SelPerm),
    Maybe (PermDef b UpdPerm), Maybe (PermDef b DelPerm))
@@ -722,7 +726,7 @@ _tpiTable :: forall (b :: BackendType). TablePermissionInputs b -&gt; TableName 
 [PermDef b e] -&gt; HashMap RoleName (PermDef b e)
 </span><a href="#local-6989586621691393837"><span class="hs-identifier hs-var">mkMap</span></a></span><span> </span><span class="annot"><span class="annottext">[PermDef b DelPerm]
 </span><a href="#local-6989586621691393828"><span class="hs-identifier hs-var">_tpiDelete</span></a></span><span>
-</span><span id="line-241"></span><span>          </span><span id="local-6989586621691393808"><span class="annot"><span class="annottext">unionMap :: HashMap RoleName (Maybe a, Maybe a, Maybe a, Maybe a)
+</span><span id="line-245"></span><span>          </span><span id="local-6989586621691393808"><span class="annot"><span class="annottext">unionMap :: HashMap RoleName (Maybe a, Maybe a, Maybe a, Maybe a)
 -&gt; HashMap RoleName (Maybe a, Maybe a, Maybe a, Maybe a)
 -&gt; HashMap RoleName (Maybe a, Maybe a, Maybe a, Maybe a)
 </span><a href="#local-6989586621691393808"><span class="hs-identifier hs-var hs-var">unionMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v.
@@ -749,7 +753,7 @@ _tpiTable :: forall (b :: BackendType). TablePermissionInputs b -&gt; TableName 
 </span><a href="#local-6989586621691393803"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a
 </span><a href="#local-6989586621691393799"><span class="hs-identifier hs-var">d'</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-242"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">HashMap
+</span><span id="line-246"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">HashMap
   RoleName
   (Maybe (PermDef b InsPerm), Maybe (PermDef b SelPerm),
    Maybe (PermDef b UpdPerm), Maybe (PermDef b DelPerm))
@@ -778,53 +782,53 @@ HashMap RoleName (Maybe a, Maybe a, Maybe a, Maybe a)
   (Maybe (PermDef b InsPerm), Maybe (PermDef b SelPerm),
    Maybe (PermDef b UpdPerm), Maybe (PermDef b DelPerm))
 </span><a href="#local-6989586621691393817"><span class="hs-identifier hs-var">deletesMap</span></a></span><span>
-</span><span id="line-243"></span><span>
-</span><span id="line-244"></span><span>    </span><span id="local-6989586621691394270"><span class="annot"><a href="#local-6989586621691393843"><span class="hs-identifier hs-type">buildPermission</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermDef"><span class="hs-identifier hs-type">PermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394270"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691394359"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#PermInfo"><span class="hs-identifier hs-type">PermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394270"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394357"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
-</span><span id="line-245"></span><span>    </span><span id="local-6989586621691393843"><span class="annot"><span class="annottext">buildPermission :: forall (a :: BackendType -&gt; *).
+</span><span id="line-247"></span><span>
+</span><span id="line-248"></span><span>    </span><span id="local-6989586621691394270"><span class="annot"><a href="#local-6989586621691393843"><span class="hs-identifier hs-type">buildPermission</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermDef"><span class="hs-identifier hs-type">PermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394270"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691394359"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Permission.html#PermInfo"><span class="hs-identifier hs-type">PermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394270"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394357"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-249"></span><span>    </span><span id="local-6989586621691393843"><span class="annot"><span class="annottext">buildPermission :: forall (a :: BackendType -&gt; *).
 Maybe (PermDef b a) -&gt; m (Maybe (PermInfo a b))
 </span><a href="#local-6989586621691393843"><span class="hs-identifier hs-var hs-var">buildPermission</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe (PermDef b a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-246"></span><span>    </span><span class="annot"><a href="#local-6989586621691393843"><span class="hs-identifier hs-var">buildPermission</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691393767"><span class="annot"><span class="annottext">PermDef b a
+</span><span id="line-250"></span><span>    </span><span class="annot"><a href="#local-6989586621691393843"><span class="hs-identifier hs-var">buildPermission</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691393767"><span class="annot"><span class="annottext">PermDef b a
 </span><a href="#local-6989586621691393767"><span class="hs-identifier hs-var">permission</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-247"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691393766"><span class="annot"><span class="annottext">metadataObject :: MetadataObject
+</span><span id="line-251"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691393766"><span class="annot"><span class="annottext">metadataObject :: MetadataObject
 </span><a href="#local-6989586621691393766"><span class="hs-identifier hs-var hs-var">metadataObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (a :: BackendType -&gt; *). PermDef b a -&gt; MetadataObject
 </span><a href="#local-6989586621691393765"><span class="hs-identifier hs-var">mkPermissionMetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">PermDef b a
 </span><a href="#local-6989586621691393767"><span class="hs-identifier hs-var">permission</span></a></span><span>
-</span><span id="line-248"></span><span>          </span><span id="local-6989586621691393764"><span class="annot"><span class="annottext">permType :: PermType
+</span><span id="line-252"></span><span>          </span><span id="local-6989586621691393764"><span class="annot"><span class="annottext">permType :: PermType
 </span><a href="#local-6989586621691393764"><span class="hs-identifier hs-var hs-var">permType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (a :: BackendType -&gt; *).
 PermDefPermission b a -&gt; PermType
 </span><a href="Hasura.RQL.Types.Permission.html#reflectPermDefPermission"><span class="hs-identifier hs-var">reflectPermDefPermission</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
 PermDef b perm -&gt; PermDefPermission b perm
 </span><a href="Hasura.RQL.Types.Permission.html#_pdPermission"><span class="hs-identifier hs-var">_pdPermission</span></a></span><span> </span><span class="annot"><span class="annottext">PermDef b a
 </span><a href="#local-6989586621691393767"><span class="hs-identifier hs-var">permission</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-249"></span><span>          </span><span id="local-6989586621691393761"><span class="annot"><span class="annottext">roleName :: RoleName
+</span><span id="line-253"></span><span>          </span><span id="local-6989586621691393761"><span class="annot"><span class="annottext">roleName :: RoleName
 </span><a href="#local-6989586621691393761"><span class="hs-identifier hs-var hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
 PermDef b perm -&gt; RoleName
 </span><a href="Hasura.RQL.Types.Permission.html#_pdRole"><span class="hs-identifier hs-var">_pdRole</span></a></span><span> </span><span class="annot"><span class="annottext">PermDef b a
 </span><a href="#local-6989586621691393767"><span class="hs-identifier hs-var">permission</span></a></span><span>
-</span><span id="line-250"></span><span>          </span><span id="local-6989586621691393760"><span class="annot"><span class="annottext">schemaObject :: SchemaObjId
+</span><span id="line-254"></span><span>          </span><span id="local-6989586621691393760"><span class="annot"><span class="annottext">schemaObject :: SchemaObjId
 </span><a href="#local-6989586621691393760"><span class="hs-identifier hs-var hs-var">schemaObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-251"></span><span>            </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceObjId -&gt; SchemaObjId
+</span><span id="line-255"></span><span>            </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceObjId -&gt; SchemaObjId
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOSourceObj"><span class="hs-identifier hs-var">SOSourceObj</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621691393891"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-252"></span><span>              </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
+</span><a href="#local-6989586621691393891"><span class="hs-identifier hs-var">source</span></a></span><span>
+</span><span id="line-256"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-253"></span><span>                </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span>
+</span><span id="line-257"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 TableName b -&gt; TableObjId b -&gt; SourceObjId b
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOITableObj"><span class="hs-identifier hs-var">SOITableObj</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691394357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621691393861"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-254"></span><span>                  </span><span class="annot"><span class="annottext">forall (b :: BackendType). RoleName -&gt; PermType -&gt; TableObjId b
+</span><a href="#local-6989586621691393861"><span class="hs-identifier hs-var">table</span></a></span><span>
+</span><span id="line-258"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). RoleName -&gt; PermType -&gt; TableObjId b
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#TOPerm"><span class="hs-identifier hs-var">TOPerm</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691393761"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">PermType
 </span><a href="#local-6989586621691393764"><span class="hs-identifier hs-var">permType</span></a></span><span>
-</span><span id="line-255"></span><span>          </span><span id="local-6989586621691393755"><span class="annot"><span class="annottext">addPermContext :: Text -&gt; Text
+</span><span id="line-259"></span><span>          </span><span id="local-6989586621691393755"><span class="annot"><span class="annottext">addPermContext :: Text -&gt; Text
 </span><a href="#local-6989586621691393755"><span class="hs-identifier hs-var hs-var">addPermContext</span></a></span></span><span> </span><span id="local-6989586621691393754"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691393754"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;in permission for role &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -834,7 +838,7 @@ TableName b -&gt; TableObjId b -&gt; SourceObjId b
 </span><span class="hs-string">&quot;: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691393754"><span class="hs-identifier hs-var">err</span></a></span><span>
-</span><span id="line-256"></span><span>      </span><span class="annot"><span class="annottext">forall md (m :: * -&gt; *) a.
+</span><span id="line-260"></span><span>      </span><span class="annot"><span class="annottext">forall md (m :: * -&gt; *) a.
 MonadWriter (Seq (Either InconsistentMetadata md)) m =&gt;
 MetadataObject -&gt; ExceptT QErr m a -&gt; m (Maybe a)
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withRecordInconsistencyM"><span class="hs-identifier hs-var">withRecordInconsistencyM</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataObject
@@ -845,25 +849,25 @@ MetadataObject -&gt; ExceptT QErr m a -&gt; m (Maybe a)
 </span><a href="#local-6989586621691393861"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><a href="#local-6989586621691393755"><span class="hs-identifier hs-var">addPermContext</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-257"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span id="line-261"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
 PermDef b perm -&gt; RoleName
 </span><a href="Hasura.RQL.Types.Permission.html#_pdRole"><span class="hs-identifier hs-var">_pdRole</span></a></span><span> </span><span class="annot"><span class="annottext">PermDef b a
 </span><a href="#local-6989586621691393767"><span class="hs-identifier hs-var">permission</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="Hasura.RQL.Types.Roles.html#adminRoleName"><span class="hs-identifier hs-var">adminRoleName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-258"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.RQL.Types.Roles.html#adminRoleName"><span class="hs-identifier hs-var">adminRoleName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-262"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw400</span></span><span> </span><span class="annot"><span class="annottext">Code
 </span><span class="hs-identifier hs-var">ConstraintViolation</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;cannot define permission for admin role&quot;</span></span><span>
-</span><span id="line-259"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621691393747"><span class="annot"><span class="annottext">PermInfo a b
+</span><span id="line-263"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621691393747"><span class="annot"><span class="annottext">PermInfo a b
 </span><a href="#local-6989586621691393747"><span class="hs-identifier hs-var">info</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691393746"><span class="annot"><span class="annottext">Seq SchemaDependency
 </span><a href="#local-6989586621691393746"><span class="hs-identifier hs-var">dependencies</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-260"></span><span>          </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *) a.
+</span><span id="line-264"></span><span>          </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *) a.
 TableCoreCacheRT b m a -&gt; TableCoreCache b -&gt; m a
 </span><a href="Hasura.RQL.Types.SchemaCache.html#runTableCoreCacheRT"><span class="hs-identifier hs-var">runTableCoreCacheRT</span></a></span><span>
-</span><span id="line-261"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *) (perm :: BackendType -&gt; *).
+</span><span id="line-265"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *) (perm :: BackendType -&gt; *).
 (BackendMetadata b, QErrM m, TableCoreInfoRM b m,
  GetAggregationPredicatesDeps b) =&gt;
 SourceName
@@ -873,68 +877,68 @@ SourceName
 -&gt; PermDefPermission b perm
 -&gt; m (WithDeps (PermInfo perm b))
 </span><a href="Hasura.RQL.DDL.Permission.html#buildPermInfo"><span class="hs-identifier hs-var">buildPermInfo</span></a></span><span>
-</span><span id="line-262"></span><span>                </span><span class="annot"><span class="annottext">SourceName
+</span><span id="line-266"></span><span>                </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691393891"><span class="hs-identifier hs-var">source</span></a></span><span>
-</span><span id="line-263"></span><span>                </span><span class="annot"><span class="annottext">TableName b
+</span><span id="line-267"></span><span>                </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621691393861"><span class="hs-identifier hs-var">table</span></a></span><span>
-</span><span id="line-264"></span><span>                </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
+</span><span id="line-268"></span><span>                </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
 </span><a href="#local-6989586621691393889"><span class="hs-identifier hs-var">tableFields</span></a></span><span>
-</span><span id="line-265"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
+</span><span id="line-269"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
 PermDef b perm -&gt; RoleName
 </span><a href="Hasura.RQL.Types.Permission.html#_pdRole"><span class="hs-identifier hs-var">_pdRole</span></a></span><span> </span><span class="annot"><span class="annottext">PermDef b a
 </span><a href="#local-6989586621691393767"><span class="hs-identifier hs-var">permission</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-266"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
+</span><span id="line-270"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
 PermDef b perm -&gt; PermDefPermission b perm
 </span><a href="Hasura.RQL.Types.Permission.html#_pdPermission"><span class="hs-identifier hs-var">_pdPermission</span></a></span><span> </span><span class="annot"><span class="annottext">PermDef b a
 </span><a href="#local-6989586621691393767"><span class="hs-identifier hs-var">permission</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-267"></span><span>            </span><span class="hs-special">)</span><span>
-</span><span id="line-268"></span><span>            </span><span class="annot"><span class="annottext">TableCoreCache b
+</span><span id="line-271"></span><span>            </span><span class="hs-special">)</span><span>
+</span><span id="line-272"></span><span>            </span><span class="annot"><span class="annottext">TableCoreCache b
 </span><a href="#local-6989586621691393890"><span class="hs-identifier hs-var">tableCache</span></a></span><span>
-</span><span id="line-269"></span><span>        </span><span class="annot"><span class="annottext">forall im (m :: * -&gt; *).
+</span><span id="line-273"></span><span>        </span><span class="annot"><span class="annottext">forall im (m :: * -&gt; *).
 MonadWriter (Seq (Either im MetadataDependency)) m =&gt;
 MetadataObject -&gt; SchemaObjId -&gt; Seq SchemaDependency -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#recordDependenciesM"><span class="hs-identifier hs-var">recordDependenciesM</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataObject
 </span><a href="#local-6989586621691393766"><span class="hs-identifier hs-var">metadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaObjId
 </span><a href="#local-6989586621691393760"><span class="hs-identifier hs-var">schemaObject</span></a></span><span> </span><span class="annot"><span class="annottext">Seq SchemaDependency
 </span><a href="#local-6989586621691393746"><span class="hs-identifier hs-var">dependencies</span></a></span><span>
-</span><span id="line-270"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-274"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">PermInfo a b
 </span><a href="#local-6989586621691393747"><span class="hs-identifier hs-var">info</span></a></span><span>
-</span><span id="line-271"></span><span>
-</span><span id="line-272"></span><span>    </span><span id="local-6989586621691394222"><span class="annot"><a href="#local-6989586621691393765"><span class="hs-identifier hs-type">mkPermissionMetadataObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermDef"><span class="hs-identifier hs-type">PermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394222"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span></span><span>
-</span><span id="line-273"></span><span>    </span><span id="local-6989586621691393765"><span class="annot"><span class="annottext">mkPermissionMetadataObject :: forall (a :: BackendType -&gt; *). PermDef b a -&gt; MetadataObject
+</span><span id="line-275"></span><span>
+</span><span id="line-276"></span><span>    </span><span id="local-6989586621691394222"><span class="annot"><a href="#local-6989586621691393765"><span class="hs-identifier hs-type">mkPermissionMetadataObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#PermDef"><span class="hs-identifier hs-type">PermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394222"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span></span><span>
+</span><span id="line-277"></span><span>    </span><span id="local-6989586621691393765"><span class="annot"><span class="annottext">mkPermissionMetadataObject :: forall (a :: BackendType -&gt; *). PermDef b a -&gt; MetadataObject
 </span><a href="#local-6989586621691393765"><span class="hs-identifier hs-var hs-var">mkPermissionMetadataObject</span></a></span></span><span> </span><span id="local-6989586621691393737"><span class="annot"><span class="annottext">PermDef b a
 </span><a href="#local-6989586621691393737"><span class="hs-identifier hs-var">permDef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-274"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691393736"><span class="annot"><span class="annottext">permType :: PermType
+</span><span id="line-278"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691393736"><span class="annot"><span class="annottext">permType :: PermType
 </span><a href="#local-6989586621691393736"><span class="hs-identifier hs-var hs-var">permType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (a :: BackendType -&gt; *).
 PermDefPermission b a -&gt; PermType
 </span><a href="Hasura.RQL.Types.Permission.html#reflectPermDefPermission"><span class="hs-identifier hs-var">reflectPermDefPermission</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
 PermDef b perm -&gt; PermDefPermission b perm
 </span><a href="Hasura.RQL.Types.Permission.html#_pdPermission"><span class="hs-identifier hs-var">_pdPermission</span></a></span><span> </span><span class="annot"><span class="annottext">PermDef b a
 </span><a href="#local-6989586621691393737"><span class="hs-identifier hs-var">permDef</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-275"></span><span>          </span><span id="local-6989586621691393735"><span class="annot"><span class="annottext">objectId :: MetadataObjId
+</span><span id="line-279"></span><span>          </span><span id="local-6989586621691393735"><span class="annot"><span class="annottext">objectId :: MetadataObjId
 </span><a href="#local-6989586621691393735"><span class="hs-identifier hs-var hs-var">objectId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-276"></span><span>            </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
+</span><span id="line-280"></span><span>            </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOSourceObjId"><span class="hs-identifier hs-var">MOSourceObjId</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621691393891"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-277"></span><span>              </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
+</span><a href="#local-6989586621691393891"><span class="hs-identifier hs-var">source</span></a></span><span>
+</span><span id="line-281"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-278"></span><span>                </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span>
+</span><span id="line-282"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 TableName b -&gt; TableMetadataObjId -&gt; SourceMetadataObjId b
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#SMOTableObj"><span class="hs-identifier hs-var">SMOTableObj</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691394357"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621691393861"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-279"></span><span>                  </span><span class="annot"><span class="annottext">RoleName -&gt; PermType -&gt; TableMetadataObjId
+</span><a href="#local-6989586621691393861"><span class="hs-identifier hs-var">table</span></a></span><span>
+</span><span id="line-283"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; PermType -&gt; TableMetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MTOPerm"><span class="hs-identifier hs-var">MTOPerm</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
 PermDef b perm -&gt; RoleName
 </span><a href="Hasura.RQL.Types.Permission.html#_pdRole"><span class="hs-identifier hs-var">_pdRole</span></a></span><span> </span><span class="annot"><span class="annottext">PermDef b a
 </span><a href="#local-6989586621691393737"><span class="hs-identifier hs-var">permDef</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PermType
 </span><a href="#local-6989586621691393736"><span class="hs-identifier hs-var">permType</span></a></span><span>
-</span><span id="line-280"></span><span>          </span><span id="local-6989586621691393731"><span class="annot"><span class="annottext">definition :: Value
+</span><span id="line-284"></span><span>          </span><span id="local-6989586621691393731"><span class="annot"><span class="annottext">definition :: Value
 </span><a href="#local-6989586621691393731"><span class="hs-identifier hs-var hs-var">definition</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) a.
@@ -943,28 +947,28 @@ SourceName -&gt; TableName b -&gt; a -&gt; WithTable b a
 </span><a href="#local-6989586621691393891"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621691393861"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">PermDef b a
 </span><a href="#local-6989586621691393737"><span class="hs-identifier hs-var">permDef</span></a></span><span>
-</span><span id="line-281"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">MetadataObjId -&gt; Value -&gt; MetadataObject
+</span><span id="line-285"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">MetadataObjId -&gt; Value -&gt; MetadataObject
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-var">MetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataObjId
 </span><a href="#local-6989586621691393735"><span class="hs-identifier hs-var">objectId</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621691393731"><span class="hs-identifier hs-var">definition</span></a></span><span>
-</span><span id="line-282"></span><span>
-</span><span id="line-283"></span><span class="hs-comment">-- | Create the permission map for a native query based on the select</span><span>
-</span><span id="line-284"></span><span class="hs-comment">-- permissions given in metadata. Compare with 'buildTablePermissions'.</span><span>
-</span><span id="line-285"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Permission.html#buildLogicalModelPermissions"><span class="hs-identifier hs-type">buildLogicalModelPermissions</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-286"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691394175"><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621691394176"><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-287"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-288"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadWriter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-type">Seq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#InconsistentMetadata"><span class="hs-identifier hs-type">InconsistentMetadata</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#MetadataDependency"><span class="hs-identifier hs-type">MetadataDependency</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-289"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-290"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#GetAggregationPredicatesDeps"><span class="hs-identifier hs-type">GetAggregationPredicatesDeps</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-291"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-292"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-293"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#TableCoreCache"><span class="hs-identifier hs-type">TableCoreCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-294"></span><span>  </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-295"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelField"><span class="hs-identifier hs-type">LogicalModelField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-296"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#SelPermDef"><span class="hs-identifier hs-type">SelPermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-297"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Permission.html#OrderedRoles"><span class="hs-identifier hs-type">OrderedRoles</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-298"></span><span>  </span><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#RolePermInfoMap"><span class="hs-identifier hs-type">RolePermInfoMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-299"></span><span id="buildLogicalModelPermissions"><span class="annot"><span class="annottext">buildLogicalModelPermissions :: forall (b :: BackendType) (m :: * -&gt; *).
+</span><span id="line-286"></span><span>
+</span><span id="line-287"></span><span class="hs-comment">-- | Create the permission map for a native query based on the select</span><span>
+</span><span id="line-288"></span><span class="hs-comment">-- permissions given in metadata. Compare with 'buildTablePermissions'.</span><span>
+</span><span id="line-289"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Permission.html#buildLogicalModelPermissions"><span class="hs-identifier hs-type">buildLogicalModelPermissions</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-290"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691394175"><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621691394176"><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-291"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-292"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadWriter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-type">Seq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#InconsistentMetadata"><span class="hs-identifier hs-type">InconsistentMetadata</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#MetadataDependency"><span class="hs-identifier hs-type">MetadataDependency</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-293"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-294"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#GetAggregationPredicatesDeps"><span class="hs-identifier hs-type">GetAggregationPredicatesDeps</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-295"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-296"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-297"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#TableCoreCache"><span class="hs-identifier hs-type">TableCoreCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-298"></span><span>  </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-299"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelField"><span class="hs-identifier hs-type">LogicalModelField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-300"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Permission.html#SelPermDef"><span class="hs-identifier hs-type">SelPermDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-301"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Permission.html#OrderedRoles"><span class="hs-identifier hs-type">OrderedRoles</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-302"></span><span>  </span><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#RolePermInfoMap"><span class="hs-identifier hs-type">RolePermInfoMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-303"></span><span id="buildLogicalModelPermissions"><span class="annot"><span class="annottext">buildLogicalModelPermissions :: forall (b :: BackendType) (m :: * -&gt; *).
 (MonadError QErr m,
  MonadWriter
    (Seq (Either InconsistentMetadata MetadataDependency)) m,
@@ -983,29 +987,29 @@ SourceName
 </span><a href="#local-6989586621691393642"><span class="hs-identifier hs-var">logicalModelFields</span></a></span></span><span> </span><span id="local-6989586621691393641"><span class="annot"><span class="annottext">InsOrdHashMap RoleName (SelPermDef b)
 </span><a href="#local-6989586621691393641"><span class="hs-identifier hs-var">selectPermissions</span></a></span></span><span> </span><span id="local-6989586621691393640"><span class="annot"><span class="annottext">OrderedRoles
 </span><a href="#local-6989586621691393640"><span class="hs-identifier hs-var">orderedRoles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-300"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621691393639"><span class="hs-identifier hs-type">combineRolePermissions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#RolePermInfoMap"><span class="hs-identifier hs-type">RolePermInfoMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#RolePermInfoMap"><span class="hs-identifier hs-type">RolePermInfoMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-301"></span><span>      </span><span id="local-6989586621691393639"><span class="annot"><span class="annottext">combineRolePermissions :: RolePermInfoMap b -&gt; Role -&gt; m (RolePermInfoMap b)
+</span><span id="line-304"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621691393639"><span class="hs-identifier hs-type">combineRolePermissions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#RolePermInfoMap"><span class="hs-identifier hs-type">RolePermInfoMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#RolePermInfoMap"><span class="hs-identifier hs-type">RolePermInfoMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-305"></span><span>      </span><span id="local-6989586621691393639"><span class="annot"><span class="annottext">combineRolePermissions :: RolePermInfoMap b -&gt; Role -&gt; m (RolePermInfoMap b)
 </span><a href="#local-6989586621691393639"><span class="hs-identifier hs-var hs-var">combineRolePermissions</span></a></span></span><span> </span><span id="local-6989586621691393638"><span class="annot"><span class="annottext">RolePermInfoMap b
 </span><a href="#local-6989586621691393638"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span><span> </span><span id="local-6989586621691393637"><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691393637"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-type">ParentRoles</span></a></span><span> </span><span id="local-6989586621691393636"><span class="annot"><span class="annottext">HashSet RoleName
 </span><a href="#local-6989586621691393636"><span class="hs-identifier hs-var">parentRoles</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-302"></span><span>        </span><span class="hs-comment">-- This error will ideally never be thrown, but if it's thrown then</span><span>
-</span><span id="line-303"></span><span>        </span><span class="hs-comment">-- it's possible that the permissions for the role do exist, but it's</span><span>
-</span><span id="line-304"></span><span>        </span><span class="hs-comment">-- not yet built due to wrong ordering of the roles, check `orderRoles`.</span><span>
-</span><span id="line-305"></span><span>        </span><span id="local-6989586621691393635"><span class="annot"><span class="annottext">[RolePermInfo b]
+</span><span id="line-306"></span><span>        </span><span class="hs-comment">-- This error will ideally never be thrown, but if it's thrown then</span><span>
+</span><span id="line-307"></span><span>        </span><span class="hs-comment">-- it's possible that the permissions for the role do exist, but it's</span><span>
+</span><span id="line-308"></span><span>        </span><span class="hs-comment">-- not yet built due to wrong ordering of the roles, check `orderRoles`.</span><span>
+</span><span id="line-309"></span><span>        </span><span id="local-6989586621691393635"><span class="annot"><span class="annottext">[RolePermInfo b]
 </span><a href="#local-6989586621691393635"><span class="hs-identifier hs-var">parentRolePermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-306"></span><span>          </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+</span><span id="line-310"></span><span>          </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">toList</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet RoleName
 </span><a href="#local-6989586621691393636"><span class="hs-identifier hs-var">parentRoles</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691393634"><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691393634"><span class="hs-keyword hs-var">role</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-307"></span><span>            </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><span id="line-311"></span><span>            </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691393634"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfoMap b
 </span><a href="#local-6989586621691393638"><span class="hs-identifier hs-var">acc</span></a></span><span>
-</span><span id="line-308"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><span id="line-312"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;buildTablePermissions: table role permissions for role: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -1013,22 +1017,22 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="#local-6989586621691393634"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><span class="hs-operator hs-var">&lt;&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; not found&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-309"></span><span>
-</span><span id="line-310"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span class="hs-comment">-- What permissions are we inheriting?</span><span>
-</span><span id="line-311"></span><span>            </span><span class="annot"><a href="#local-6989586621691393633"><span class="hs-identifier hs-type">combinedParentRolePermInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.Internal.html#CombineRolePermInfo"><span class="hs-identifier hs-type">CombineRolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-312"></span><span>            </span><span id="local-6989586621691393633"><span class="annot"><span class="annottext">combinedParentRolePermInfo :: CombineRolePermInfo b
+</span><span id="line-313"></span><span>
+</span><span id="line-314"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span class="hs-comment">-- What permissions are we inheriting?</span><span>
+</span><span id="line-315"></span><span>            </span><span class="annot"><a href="#local-6989586621691393633"><span class="hs-identifier hs-type">combinedParentRolePermInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.Internal.html#CombineRolePermInfo"><span class="hs-identifier hs-type">CombineRolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-316"></span><span>            </span><span id="local-6989586621691393633"><span class="annot"><span class="annottext">combinedParentRolePermInfo :: CombineRolePermInfo b
 </span><a href="#local-6989586621691393633"><span class="hs-identifier hs-var hs-var">combinedParentRolePermInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). RolePermInfo b -&gt; CombineRolePermInfo b
 </span><a href="Hasura.RQL.Types.Roles.Internal.html#rolePermInfoToCombineRolePermInfo"><span class="hs-identifier hs-var">rolePermInfoToCombineRolePermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">[RolePermInfo b]
 </span><a href="#local-6989586621691393635"><span class="hs-identifier hs-var">parentRolePermissions</span></a></span><span>
-</span><span id="line-313"></span><span>
-</span><span id="line-314"></span><span>            </span><span class="hs-comment">-- How many select permissions are we inheriting? See</span><span>
-</span><span id="line-315"></span><span>            </span><span class="hs-comment">-- 'combinedSelPermInfoToSelPermInfo' for information on the</span><span>
-</span><span id="line-316"></span><span>            </span><span class="hs-comment">-- optimisation this count enables.</span><span>
-</span><span id="line-317"></span><span>            </span><span class="annot"><a href="#local-6989586621691393631"><span class="hs-identifier hs-type">selectPermissionsCount</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
-</span><span id="line-318"></span><span>            </span><span id="local-6989586621691393631"><span class="annot"><span class="annottext">selectPermissionsCount :: Int
+</span><span id="line-317"></span><span>
+</span><span id="line-318"></span><span>            </span><span class="hs-comment">-- How many select permissions are we inheriting? See</span><span>
+</span><span id="line-319"></span><span>            </span><span class="hs-comment">-- 'combinedSelPermInfoToSelPermInfo' for information on the</span><span>
+</span><span id="line-320"></span><span>            </span><span class="hs-comment">-- optimisation this count enables.</span><span>
+</span><span id="line-321"></span><span>            </span><span class="annot"><a href="#local-6989586621691393631"><span class="hs-identifier hs-type">selectPermissionsCount</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-322"></span><span>            </span><span id="local-6989586621691393631"><span class="annot"><span class="annottext">selectPermissionsCount :: Int
 </span><a href="#local-6989586621691393631"><span class="hs-identifier hs-var hs-var">selectPermissionsCount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">length</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
@@ -1036,40 +1040,40 @@ Filterable f =&gt;
 </span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). RolePermInfo b -&gt; Maybe (SelPermInfo b)
 </span><a href="Hasura.Table.Cache.html#_permSel"><span class="hs-identifier hs-var">_permSel</span></a></span><span> </span><span class="annot"><span class="annottext">[RolePermInfo b]
 </span><a href="#local-6989586621691393635"><span class="hs-identifier hs-var">parentRolePermissions</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-319"></span><span>
-</span><span id="line-320"></span><span>            </span><span class="hs-comment">-- Does our specific role have any permissions?</span><span>
-</span><span id="line-321"></span><span>            </span><span class="annot"><a href="#local-6989586621691393629"><span class="hs-identifier hs-type">accumulatedRolePermission</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-322"></span><span>            </span><span id="local-6989586621691393629"><span class="annot"><span class="annottext">accumulatedRolePermission :: Maybe (RolePermInfo b)
+</span><span id="line-323"></span><span>
+</span><span id="line-324"></span><span>            </span><span class="hs-comment">-- Does our specific role have any permissions?</span><span>
+</span><span id="line-325"></span><span>            </span><span class="annot"><a href="#local-6989586621691393629"><span class="hs-identifier hs-type">accumulatedRolePermission</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-326"></span><span>            </span><span id="local-6989586621691393629"><span class="annot"><span class="annottext">accumulatedRolePermission :: Maybe (RolePermInfo b)
 </span><a href="#local-6989586621691393629"><span class="hs-identifier hs-var hs-var">accumulatedRolePermission</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691393637"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfoMap b
 </span><a href="#local-6989586621691393638"><span class="hs-identifier hs-var">acc</span></a></span><span>
-</span><span id="line-323"></span><span>
-</span><span id="line-324"></span><span>            </span><span class="hs-comment">-- If we have a permission, we'll use it. Otherwise, we'll fall</span><span>
-</span><span id="line-325"></span><span>            </span><span class="hs-comment">-- back to the inherited permission.</span><span>
-</span><span id="line-326"></span><span>            </span><span class="annot"><a href="#local-6989586621691393628"><span class="hs-identifier hs-type">roleSelectPermission</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#SelPermInfo"><span class="hs-identifier hs-type">SelPermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-327"></span><span>            </span><span id="local-6989586621691393628"><span class="annot"><span class="annottext">roleSelectPermission :: Maybe (SelPermInfo b)
+</span><span id="line-327"></span><span>
+</span><span id="line-328"></span><span>            </span><span class="hs-comment">-- If we have a permission, we'll use it. Otherwise, we'll fall</span><span>
+</span><span id="line-329"></span><span>            </span><span class="hs-comment">-- back to the inherited permission.</span><span>
+</span><span id="line-330"></span><span>            </span><span class="annot"><a href="#local-6989586621691393628"><span class="hs-identifier hs-type">roleSelectPermission</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#SelPermInfo"><span class="hs-identifier hs-type">SelPermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-331"></span><span>            </span><span id="local-6989586621691393628"><span class="annot"><span class="annottext">roleSelectPermission :: Maybe (SelPermInfo b)
 </span><a href="#local-6989586621691393628"><span class="hs-identifier hs-var hs-var">roleSelectPermission</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-328"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><span id="line-332"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe (RolePermInfo b)
 </span><a href="#local-6989586621691393629"><span class="hs-identifier hs-var">accumulatedRolePermission</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). RolePermInfo b -&gt; Maybe (SelPermInfo b)
-</span><a href="Hasura.Table.Cache.html#_permSel"><span class="hs-identifier hs-var">_permSel</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-329"></span><span>                </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="Hasura.Table.Cache.html#_permSel"><span class="hs-identifier hs-var">_permSel</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-333"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Backend b =&gt;
 Int -&gt; CombinedSelPermInfo b -&gt; SelPermInfo b
 </span><a href="Hasura.Table.Cache.html#combinedSelPermInfoToSelPermInfo"><span class="hs-identifier hs-var">combinedSelPermInfoToSelPermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621691393631"><span class="hs-identifier hs-var">selectPermissionsCount</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-330"></span><span>                  </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><a href="#local-6989586621691393631"><span class="hs-identifier hs-var">selectPermissionsCount</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-334"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 CombineRolePermInfo b -&gt; Maybe (CombinedSelPermInfo b)
 </span><a href="Hasura.RQL.Types.Roles.Internal.html#crpiSelPerm"><span class="hs-identifier hs-var">crpiSelPerm</span></a></span><span> </span><span class="annot"><span class="annottext">CombineRolePermInfo b
 </span><a href="#local-6989586621691393633"><span class="hs-identifier hs-var">combinedParentRolePermInfo</span></a></span><span>
-</span><span id="line-331"></span><span>
-</span><span id="line-332"></span><span>            </span><span class="annot"><a href="#local-6989586621691393627"><span class="hs-identifier hs-type">rolePermInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span>
-</span><span id="line-333"></span><span>            </span><span id="local-6989586621691393627"><span class="annot"><span class="annottext">rolePermInfo :: RolePermInfo b
+</span><span id="line-335"></span><span>
+</span><span id="line-336"></span><span>            </span><span class="annot"><a href="#local-6989586621691393627"><span class="hs-identifier hs-type">rolePermInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-337"></span><span>            </span><span id="local-6989586621691393627"><span class="annot"><span class="annottext">rolePermInfo :: RolePermInfo b
 </span><a href="#local-6989586621691393627"><span class="hs-identifier hs-var hs-var">rolePermInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Maybe (InsPermInfo b)
 -&gt; Maybe (SelPermInfo b)
@@ -1081,8 +1085,8 @@ Maybe (InsPermInfo b)
 </span><a href="#local-6989586621691393628"><span class="hs-identifier hs-var">roleSelectPermission</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-334"></span><span>
-</span><span id="line-335"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-338"></span><span>
+</span><span id="line-339"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
@@ -1090,115 +1094,118 @@ k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
 </span><a href="#local-6989586621691393637"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfo b
 </span><a href="#local-6989586621691393627"><span class="hs-identifier hs-var">rolePermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfoMap b
 </span><a href="#local-6989586621691393638"><span class="hs-identifier hs-var">acc</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-336"></span><span>
-</span><span id="line-337"></span><span>  </span><span class="hs-comment">-- At the moment, we only support select permissions for logical models</span><span>
-</span><span id="line-338"></span><span>  </span><span id="local-6989586621691393626"><span class="annot"><span class="annottext">RolePermInfoMap b
+</span><span id="line-340"></span><span>
+</span><span id="line-341"></span><span>  </span><span class="hs-comment">-- At the moment, we only support select permissions for logical models</span><span>
+</span><span id="line-342"></span><span>  </span><span id="local-6989586621691393626"><span class="annot"><span class="annottext">RolePermInfoMap b
 </span><a href="#local-6989586621691393626"><span class="hs-identifier hs-var">metadataRolePermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-339"></span><span>    </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+</span><span id="line-343"></span><span>    </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">InsOrdHashMap.toHashMap</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap RoleName (SelPermDef b)
 </span><a href="#local-6989586621691393641"><span class="hs-identifier hs-var">selectPermissions</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691393624"><span class="annot"><span class="annottext">SelPermDef b
 </span><a href="#local-6989586621691393624"><span class="hs-identifier hs-var">selectPermission</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-340"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621691393623"><span class="hs-keyword hs-type">role</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span>
-</span><span id="line-341"></span><span>          </span><span id="local-6989586621691393623"><span class="annot"><span class="annottext">role :: RoleName
+</span><span id="line-344"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621691393623"><span class="hs-keyword hs-type">role</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span>
+</span><span id="line-345"></span><span>          </span><span id="local-6989586621691393623"><span class="annot"><span class="annottext">role :: RoleName
 </span><a href="#local-6989586621691393623"><span class="hs-keyword hs-var hs-var">role</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
 PermDef b perm -&gt; RoleName
 </span><a href="Hasura.RQL.Types.Permission.html#_pdRole"><span class="hs-identifier hs-var">_pdRole</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermDef b
 </span><a href="#local-6989586621691393624"><span class="hs-identifier hs-var">selectPermission</span></a></span><span>
-</span><span id="line-342"></span><span>
-</span><span id="line-343"></span><span>          </span><span class="hs-comment">-- An identifier for the object on we're going to need to depend to</span><span>
-</span><span id="line-344"></span><span>          </span><span class="hs-comment">-- generate this permission.</span><span>
-</span><span id="line-345"></span><span>          </span><span class="annot"><a href="#local-6989586621691393622"><span class="hs-identifier hs-type">sourceObjId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObjId"><span class="hs-identifier hs-type">MetadataObjId</span></a></span><span>
-</span><span id="line-346"></span><span>          </span><span id="local-6989586621691393622"><span class="annot"><span class="annottext">sourceObjId :: MetadataObjId
+</span><span id="line-346"></span><span>
+</span><span id="line-347"></span><span>          </span><span class="hs-comment">-- An identifier for the object on we're going to need to depend to</span><span>
+</span><span id="line-348"></span><span>          </span><span class="hs-comment">-- generate this permission.</span><span>
+</span><span id="line-349"></span><span>          </span><span class="annot"><a href="#local-6989586621691393622"><span class="hs-identifier hs-type">sourceObjId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObjId"><span class="hs-identifier hs-type">MetadataObjId</span></a></span><span>
+</span><span id="line-350"></span><span>          </span><span id="local-6989586621691393622"><span class="annot"><span class="annottext">sourceObjId :: MetadataObjId
 </span><a href="#local-6989586621691393622"><span class="hs-identifier hs-var hs-var">sourceObjId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-347"></span><span>            </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
+</span><span id="line-351"></span><span>            </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOSourceObjId"><span class="hs-identifier hs-var">MOSourceObjId</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621691393645"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-348"></span><span>              </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
+</span><a href="#local-6989586621691393645"><span class="hs-identifier hs-var">sourceName</span></a></span><span>
+</span><span id="line-352"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-349"></span><span>                </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span>
+</span><span id="line-353"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 LogicalModelName
 -&gt; LogicalModelMetadataObjId -&gt; SourceMetadataObjId b
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#SMOLogicalModelObj"><span class="hs-identifier hs-var">SMOLogicalModelObj</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
-</span><a href="#local-6989586621691393643"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-350"></span><span>                  </span><span class="annot"><span class="annottext">RoleName -&gt; PermType -&gt; LogicalModelMetadataObjId
+</span><a href="#local-6989586621691393643"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span>
+</span><span id="line-354"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; PermType -&gt; LogicalModelMetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#LMMOPerm"><span class="hs-identifier hs-var">LMMOPerm</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691393623"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">PermType
 </span><a href="Hasura.RQL.Types.Permission.html#PTSelect"><span class="hs-identifier hs-var">PTSelect</span></a></span><span>
-</span><span id="line-351"></span><span>
-</span><span id="line-352"></span><span>          </span><span class="hs-comment">-- The object we're going to use to track the dependency and any</span><span>
-</span><span id="line-353"></span><span>          </span><span class="hs-comment">-- potential cache inconsistencies.</span><span>
-</span><span id="line-354"></span><span>          </span><span class="annot"><a href="#local-6989586621691393618"><span class="hs-identifier hs-type">metadataObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span>
-</span><span id="line-355"></span><span>          </span><span id="local-6989586621691393618"><span class="annot"><span class="annottext">metadataObject :: MetadataObject
+</span><span id="line-355"></span><span>
+</span><span id="line-356"></span><span>          </span><span class="hs-comment">-- The object we're going to use to track the dependency and any</span><span>
+</span><span id="line-357"></span><span>          </span><span class="hs-comment">-- potential cache inconsistencies.</span><span>
+</span><span id="line-358"></span><span>          </span><span class="annot"><a href="#local-6989586621691393618"><span class="hs-identifier hs-type">metadataObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span>
+</span><span id="line-359"></span><span>          </span><span id="local-6989586621691393618"><span class="annot"><span class="annottext">metadataObject :: MetadataObject
 </span><a href="#local-6989586621691393618"><span class="hs-identifier hs-var hs-var">metadataObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-356"></span><span>            </span><span class="annot"><span class="annottext">MetadataObjId -&gt; Value -&gt; MetadataObject
+</span><span id="line-360"></span><span>            </span><span class="annot"><span class="annottext">MetadataObjId -&gt; Value -&gt; MetadataObject
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-var">MetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataObjId
-</span><a href="#local-6989586621691393622"><span class="hs-identifier hs-var">sourceObjId</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-357"></span><span>              </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="#local-6989586621691393622"><span class="hs-identifier hs-var">sourceObjId</span></a></span><span>
+</span><span id="line-361"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span>
-</span><span id="line-358"></span><span>                </span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#WithLogicalModel"><span class="hs-identifier hs-type">WithLogicalModel</span></a></span><span>
-</span><span id="line-359"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_wlmSource :: SourceName
+</span><span id="line-362"></span><span>                </span><span class="annot"><a href="Hasura.LogicalModel.Metadata.html#WithLogicalModel"><span class="hs-identifier hs-type">WithLogicalModel</span></a></span><span>
+</span><span id="line-363"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_wlmSource :: SourceName
 </span><a href="Hasura.LogicalModel.Metadata.html#_wlmSource"><span class="hs-identifier hs-var">_wlmSource</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691393645"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-360"></span><span>                    </span><span class="annot"><span class="annottext">_wlmName :: LogicalModelName
+</span><span id="line-364"></span><span>                    </span><span class="annot"><span class="annottext">_wlmName :: LogicalModelName
 </span><a href="Hasura.LogicalModel.Metadata.html#_wlmName"><span class="hs-identifier hs-var">_wlmName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogicalModelName
 </span><a href="#local-6989586621691393643"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-361"></span><span>                    </span><span class="annot"><span class="annottext">_wlmInfo :: SelPermDef b
+</span><span id="line-365"></span><span>                    </span><span class="annot"><span class="annottext">_wlmInfo :: SelPermDef b
 </span><a href="Hasura.LogicalModel.Metadata.html#_wlmInfo"><span class="hs-identifier hs-var">_wlmInfo</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelPermDef b
 </span><a href="#local-6989586621691393624"><span class="hs-identifier hs-var">selectPermission</span></a></span><span>
-</span><span id="line-362"></span><span>                  </span><span class="hs-special">}</span><span>
-</span><span id="line-363"></span><span>
-</span><span id="line-364"></span><span>          </span><span class="hs-comment">-- An identifier for this permission within the metadata structure.</span><span>
-</span><span id="line-365"></span><span>          </span><span class="annot"><a href="#local-6989586621691393613"><span class="hs-identifier hs-type">schemaObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaObjId"><span class="hs-identifier hs-type">SchemaObjId</span></a></span><span>
-</span><span id="line-366"></span><span>          </span><span id="local-6989586621691393613"><span class="annot"><span class="annottext">schemaObject :: SchemaObjId
+</span><span id="line-366"></span><span>                  </span><span class="hs-special">}</span><span>
+</span><span id="line-367"></span><span>
+</span><span id="line-368"></span><span>          </span><span class="hs-comment">-- An identifier for this permission within the metadata structure.</span><span>
+</span><span id="line-369"></span><span>          </span><span class="annot"><a href="#local-6989586621691393613"><span class="hs-identifier hs-type">schemaObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaObjId"><span class="hs-identifier hs-type">SchemaObjId</span></a></span><span>
+</span><span id="line-370"></span><span>          </span><span id="local-6989586621691393613"><span class="annot"><span class="annottext">schemaObject :: SchemaObjId
 </span><a href="#local-6989586621691393613"><span class="hs-identifier hs-var hs-var">schemaObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-367"></span><span>            </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceObjId -&gt; SchemaObjId
+</span><span id="line-371"></span><span>            </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceObjId -&gt; SchemaObjId
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOSourceObj"><span class="hs-identifier hs-var">SOSourceObj</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621691393645"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-368"></span><span>              </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
+</span><a href="#local-6989586621691393645"><span class="hs-identifier hs-var">sourceName</span></a></span><span>
+</span><span id="line-372"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-369"></span><span>                </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span>
+</span><span id="line-373"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 LogicalModelName -&gt; LogicalModelObjId b -&gt; SourceObjId b
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOILogicalModelObj"><span class="hs-identifier hs-var">SOILogicalModelObj</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691394175"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
-</span><a href="#local-6989586621691393643"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-370"></span><span>                  </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><a href="#local-6989586621691393643"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span>
+</span><span id="line-374"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 RoleName -&gt; PermType -&gt; LogicalModelObjId b
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#LMOPerm"><span class="hs-identifier hs-var">LMOPerm</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691393623"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">PermType
 </span><a href="Hasura.RQL.Types.Permission.html#PTSelect"><span class="hs-identifier hs-var">PTSelect</span></a></span><span>
-</span><span id="line-371"></span><span>
-</span><span id="line-372"></span><span>          </span><span id="local-6989586621691394153"><span class="annot"><a href="#local-6989586621691393610"><span class="hs-identifier hs-type">modifyError</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394153"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394153"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-373"></span><span>          </span><span id="local-6989586621691393610"><span class="annot"><span class="annottext">modifyError :: forall a. ExceptT QErr m a -&gt; ExceptT QErr m a
+</span><span id="line-375"></span><span>
+</span><span id="line-376"></span><span>          </span><span id="local-6989586621691394153"><span class="annot"><a href="#local-6989586621691393610"><span class="hs-identifier hs-type">modifyError</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394153"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691394176"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394153"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-377"></span><span>          </span><span id="local-6989586621691393610"><span class="annot"><span class="annottext">modifyError :: forall a. ExceptT QErr m a -&gt; ExceptT QErr m a
 </span><a href="#local-6989586621691393610"><span class="hs-identifier hs-var hs-var">modifyError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; (Text -&gt; Text) -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">modifyErr</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691393603"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691393603"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-374"></span><span>            </span><span class="annot"><span class="annottext">LogicalModelName -&gt; Text -&gt; Text
+</span><span id="line-378"></span><span>            </span><span class="annot"><span class="annottext">LogicalModelName -&gt; Text -&gt; Text
 </span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#addLogicalModelContext"><span class="hs-identifier hs-var">addLogicalModelContext</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
-</span><a href="#local-6989586621691393643"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-375"></span><span>              </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;in permission for role &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621691393643"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span>
+</span><span id="line-379"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;in permission for role &quot;</span></span><span>
+</span><span id="line-380"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621691393623"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="#local-6989586621691393623"><span class="hs-keyword hs-var">role</span></a></span><span>
+</span><span id="line-381"></span><span>              </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><span class="hs-operator hs-var">&lt;&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-string">&quot;: &quot;</span></span><span>
+</span><span id="line-382"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691393603"><span class="hs-identifier hs-var">err</span></a></span><span>
-</span><span id="line-376"></span><span>
-</span><span id="line-377"></span><span>      </span><span id="local-6989586621691393601"><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
+</span><span id="line-383"></span><span>
+</span><span id="line-384"></span><span>      </span><span id="local-6989586621691393601"><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
 </span><a href="#local-6989586621691393601"><span class="hs-identifier hs-var">select</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall md (m :: * -&gt; *) a.
 MonadWriter (Seq (Either InconsistentMetadata md)) m =&gt;
 MetadataObject -&gt; ExceptT QErr m a -&gt; m (Maybe a)
@@ -1206,27 +1213,27 @@ MetadataObject -&gt; ExceptT QErr m a -&gt; m (Maybe a)
 </span><a href="#local-6989586621691393618"><span class="hs-identifier hs-var">metadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ExceptT QErr m a -&gt; ExceptT QErr m a
 </span><a href="#local-6989586621691393610"><span class="hs-identifier hs-var">modifyError</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-378"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span id="line-385"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691393623"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="Hasura.RQL.Types.Roles.html#adminRoleName"><span class="hs-identifier hs-var">adminRoleName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-379"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.RQL.Types.Roles.html#adminRoleName"><span class="hs-identifier hs-var">adminRoleName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-386"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw400</span></span><span> </span><span class="annot"><span class="annottext">Code
 </span><span class="hs-identifier hs-var">ConstraintViolation</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;cannot define permission for admin role&quot;</span></span><span>
-</span><span id="line-380"></span><span>
-</span><span id="line-381"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621691393600"><span class="annot"><span class="annottext">SelPermInfo b
+</span><span id="line-387"></span><span>
+</span><span id="line-388"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621691393600"><span class="annot"><span class="annottext">SelPermInfo b
 </span><a href="#local-6989586621691393600"><span class="hs-identifier hs-var">permissionInformation</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691393599"><span class="annot"><span class="annottext">Seq SchemaDependency
 </span><a href="#local-6989586621691393599"><span class="hs-identifier hs-var">dependencies</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-382"></span><span>          </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span id="line-389"></span><span>          </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *) a.
 TableCoreCacheRT b m a -&gt; TableCoreCache b -&gt; m a
 </span><a href="Hasura.RQL.Types.SchemaCache.html#runTableCoreCacheRT"><span class="hs-identifier hs-var">runTableCoreCacheRT</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreCache b
-</span><a href="#local-6989586621691393644"><span class="hs-identifier hs-var">tableCache</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-383"></span><span>            </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *) (perm :: BackendType -&gt; *).
+</span><a href="#local-6989586621691393644"><span class="hs-identifier hs-var">tableCache</span></a></span><span>
+</span><span id="line-390"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *) (perm :: BackendType -&gt; *).
 (BackendMetadata b, QErrM m, TableCoreInfoRM b m,
  GetAggregationPredicatesDeps b) =&gt;
 SourceName
@@ -1237,25 +1244,25 @@ SourceName
 </span><a href="Hasura.RQL.DDL.Permission.html#buildLogicalModelPermInfo"><span class="hs-identifier hs-var">buildLogicalModelPermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621691393645"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
 </span><a href="#local-6989586621691393643"><span class="hs-identifier hs-var">logicalModelName</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap (Column b) (LogicalModelField b)
-</span><a href="#local-6989586621691393642"><span class="hs-identifier hs-var">logicalModelFields</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-384"></span><span>              </span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
+</span><a href="#local-6989586621691393642"><span class="hs-identifier hs-var">logicalModelFields</span></a></span><span>
+</span><span id="line-391"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (perm :: BackendType -&gt; *).
 PermDef b perm -&gt; PermDefPermission b perm
 </span><a href="Hasura.RQL.Types.Permission.html#_pdPermission"><span class="hs-identifier hs-var">_pdPermission</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermDef b
 </span><a href="#local-6989586621691393624"><span class="hs-identifier hs-var">selectPermission</span></a></span><span>
-</span><span id="line-385"></span><span>
-</span><span id="line-386"></span><span>        </span><span class="annot"><span class="annottext">forall im (m :: * -&gt; *).
+</span><span id="line-392"></span><span>
+</span><span id="line-393"></span><span>        </span><span class="annot"><span class="annottext">forall im (m :: * -&gt; *).
 MonadWriter (Seq (Either im MetadataDependency)) m =&gt;
 MetadataObject -&gt; SchemaObjId -&gt; Seq SchemaDependency -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#recordDependenciesM"><span class="hs-identifier hs-var">recordDependenciesM</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataObject
 </span><a href="#local-6989586621691393618"><span class="hs-identifier hs-var">metadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaObjId
 </span><a href="#local-6989586621691393613"><span class="hs-identifier hs-var">schemaObject</span></a></span><span> </span><span class="annot"><span class="annottext">Seq SchemaDependency
 </span><a href="#local-6989586621691393599"><span class="hs-identifier hs-var">dependencies</span></a></span><span>
-</span><span id="line-387"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-394"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo b
 </span><a href="#local-6989586621691393600"><span class="hs-identifier hs-var">permissionInformation</span></a></span><span>
-</span><span id="line-388"></span><span>
-</span><span id="line-389"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-395"></span><span>
+</span><span id="line-396"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Maybe (InsPermInfo b)
 -&gt; Maybe (SelPermInfo b)
@@ -1267,8 +1274,8 @@ Maybe (InsPermInfo b)
 </span><a href="#local-6989586621691393601"><span class="hs-identifier hs-var">select</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-390"></span><span>
-</span><span id="line-391"></span><span>  </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (m :: * -&gt; *) b a.
+</span><span id="line-397"></span><span>
+</span><span id="line-398"></span><span>  </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (m :: * -&gt; *) b a.
 (Foldable t, Monad m) =&gt;
 (b -&gt; a -&gt; m b) -&gt; b -&gt; t a -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldlM</span></a></span><span> </span><span class="annot"><span class="annottext">RolePermInfoMap b -&gt; Role -&gt; m (RolePermInfoMap b)
@@ -1276,4 +1283,4 @@ Maybe (InsPermInfo b)
 </span><a href="#local-6989586621691393626"><span class="hs-identifier hs-var">metadataRolePermissions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderedRoles -&gt; [Role]
 </span><a href="Hasura.RQL.DDL.Schema.Cache.Permission.html#_unOrderedRoles"><span class="hs-identifier hs-var">_unOrderedRoles</span></a></span><span> </span><span class="annot"><span class="annottext">OrderedRoles
 </span><a href="#local-6989586621691393640"><span class="hs-identifier hs-var">orderedRoles</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-392"></span></pre></body></html>
+</span><span id="line-399"></span></pre></body></html>

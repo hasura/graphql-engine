@@ -111,51 +111,51 @@ From
 </span><a href="Hasura.Backends.MSSQL.FromIr.Expression.html#fromGBoolExp"><span class="hs-identifier hs-var">fromGBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL Expression)
 </span><a href="#local-6989586621691271611"><span class="hs-identifier hs-var">_geWhere</span></a></span><span>
 </span><span id="line-54"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-55"></span><span>          </span><span class="annot"><span class="annottext">Select -&gt; Expression
-</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ExistsExpression"><span class="hs-identifier hs-var">ExistsExpression</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-56"></span><span>            </span><span class="annot"><span class="annottext">Select
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
+</span><span id="line-55"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Select -&gt; Expression
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ExistsExpression"><span class="hs-identifier hs-var">ExistsExpression</span></a></span><span>
+</span><span id="line-56"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Select
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#emptySelect"><span class="hs-identifier hs-var">emptySelect</span></a></span><span>
-</span><span id="line-57"></span><span>              </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:selectOrderBy:Select :: Maybe (NonEmpty OrderBy)
+</span><span id="line-57"></span><span>            </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:selectOrderBy:Select :: Maybe (NonEmpty OrderBy)
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectOrderBy%3ASelect"><span class="hs-identifier hs-var">selectOrderBy</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-58"></span><span>                </span><span class="annot"><span class="annottext">$sel:selectProjections:Select :: [Projection]
+</span><span id="line-58"></span><span>              </span><span class="annot"><span class="annottext">$sel:selectProjections:Select :: [Projection]
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectProjections%3ASelect"><span class="hs-identifier hs-var">selectProjections</span></a></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-59"></span><span>                  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Aliased Expression -&gt; Projection
+</span><span id="line-59"></span><span>                </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Aliased Expression -&gt; Projection
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ExpressionProjection"><span class="hs-identifier hs-var">ExpressionProjection</span></a></span><span>
-</span><span id="line-60"></span><span>                      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-type">Aliased</span></a></span><span>
-</span><span id="line-61"></span><span>                          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:aliasedThing:Aliased :: Expression
+</span><span id="line-60"></span><span>                    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-type">Aliased</span></a></span><span>
+</span><span id="line-61"></span><span>                        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:aliasedThing:Aliased :: Expression
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AaliasedThing%3AAliased"><span class="hs-identifier hs-var">aliasedThing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Expression
 </span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#trueExpression"><span class="hs-identifier hs-var">trueExpression</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-62"></span><span>                            </span><span class="annot"><span class="annottext">$sel:aliasedAlias:Aliased :: Text
+</span><span id="line-62"></span><span>                          </span><span class="annot"><span class="annottext">$sel:aliasedAlias:Aliased :: Text
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AaliasedAlias%3AAliased"><span class="hs-identifier hs-var">aliasedAlias</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#existsFieldName"><span class="hs-identifier hs-var">existsFieldName</span></a></span><span>
-</span><span id="line-63"></span><span>                          </span><span class="hs-special">}</span><span>
-</span><span id="line-64"></span><span>                      </span><span class="hs-special">)</span><span>
-</span><span id="line-65"></span><span>                  </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
-</span><span id="line-66"></span><span>                </span><span class="annot"><span class="annottext">$sel:selectFrom:Select :: Maybe From
+</span><span id="line-63"></span><span>                        </span><span class="hs-special">}</span><span>
+</span><span id="line-64"></span><span>                    </span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>                </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>              </span><span class="annot"><span class="annottext">$sel:selectFrom:Select :: Maybe From
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectFrom%3ASelect"><span class="hs-identifier hs-var">selectFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">From
 </span><a href="#local-6989586621691271609"><span class="hs-identifier hs-var">selectFrom</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-67"></span><span>                </span><span class="annot"><span class="annottext">$sel:selectJoins:Select :: [Join]
+</span><span id="line-67"></span><span>              </span><span class="annot"><span class="annottext">$sel:selectJoins:Select :: [Join]
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectJoins%3ASelect"><span class="hs-identifier hs-var">selectJoins</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-68"></span><span>                </span><span class="annot"><span class="annottext">$sel:selectWhere:Select :: Where
+</span><span id="line-68"></span><span>              </span><span class="annot"><span class="annottext">$sel:selectWhere:Select :: Where
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectWhere%3ASelect"><span class="hs-identifier hs-var">selectWhere</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Expression] -&gt; Where
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Where"><span class="hs-identifier hs-var">Where</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Expression
 </span><a href="#local-6989586621691271605"><span class="hs-identifier hs-var">whereExpression</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
-</span><span id="line-69"></span><span>                </span><span class="annot"><span class="annottext">$sel:selectTop:Select :: Top
+</span><span id="line-69"></span><span>              </span><span class="annot"><span class="annottext">$sel:selectTop:Select :: Top
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectTop%3ASelect"><span class="hs-identifier hs-var">selectTop</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Top
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#NoTop"><span class="hs-identifier hs-var">NoTop</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-70"></span><span>                </span><span class="annot"><span class="annottext">$sel:selectFor:Select :: For
+</span><span id="line-70"></span><span>              </span><span class="annot"><span class="annottext">$sel:selectFor:Select :: For
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectFor%3ASelect"><span class="hs-identifier hs-var">selectFor</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">For
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#NoFor"><span class="hs-identifier hs-var">NoFor</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-71"></span><span>                </span><span class="annot"><span class="annottext">$sel:selectOffset:Select :: Maybe Expression
+</span><span id="line-71"></span><span>              </span><span class="annot"><span class="annottext">$sel:selectOffset:Select :: Maybe Expression
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectOffset%3ASelect"><span class="hs-identifier hs-var">selectOffset</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-72"></span><span>              </span><span class="hs-special">}</span><span>
+</span><span id="line-72"></span><span>            </span><span class="hs-special">}</span><span>
 </span><span id="line-73"></span><span>
 </span><span id="line-74"></span><span class="hs-comment">-- | Translate boolean expressions into TSQL 'Expression's.</span><span>
 </span><span id="line-75"></span><span class="hs-comment">--</span><span>

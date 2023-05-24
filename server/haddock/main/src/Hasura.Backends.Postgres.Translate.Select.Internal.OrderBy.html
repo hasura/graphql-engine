@@ -245,17 +245,17 @@ TableIdentifier
 </span><span id="line-114"></span><span>        </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCColumn"><span class="hs-identifier hs-type">AOCColumn</span></a></span><span> </span><span id="local-6989586621691270051"><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
 </span><a href="#local-6989586621691270051"><span class="hs-identifier hs-var">pgColInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-115"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-116"></span><span>            </span><span class="annot"><span class="annottext">forall b. IsIdentifier b =&gt; TableIdentifier -&gt; b -&gt; SQLExp
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
+</span><span id="line-116"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall b. IsIdentifier b =&gt; TableIdentifier -&gt; b -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkQIdenExp"><span class="hs-identifier hs-var">S.mkQIdenExp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableIdentifier -&gt; TableIdentifier
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkBaseTableIdentifier"><span class="hs-identifier hs-var">mkBaseTableIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621691270056"><span class="hs-identifier hs-var">sourcePrefix</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-117"></span><span>              </span><span class="annot"><span class="annottext">forall a. IsIdentifier a =&gt; a -&gt; Identifier
-</span><a href="Hasura.Backends.Postgres.SQL.Types.html#toIdentifier"><span class="hs-identifier hs-var">toIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-118"></span><span>                </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Column b
+</span><a href="#local-6989586621691270056"><span class="hs-identifier hs-var">sourcePrefix</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsIdentifier a =&gt; a -&gt; Identifier
+</span><a href="Hasura.Backends.Postgres.SQL.Types.html#toIdentifier"><span class="hs-identifier hs-var">toIdentifier</span></a></span><span>
+</span><span id="line-118"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
 </span><a href="#local-6989586621691270051"><span class="hs-identifier hs-var">pgColInfo</span></a></span><span>
 </span><span id="line-119"></span><span>        </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCObjectRelation"><span class="hs-identifier hs-type">AOCObjectRelation</span></a></span><span> </span><span id="local-6989586621691270047"><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind)
@@ -525,9 +525,9 @@ AnnotatedAggregateOrderBy ('Postgres pgKind)
 </span><span id="line-177"></span><span>                    </span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind).
 TableIdentifier -&gt; SelectFrom ('Postgres pgKind) -&gt; FromItem
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Helpers.html#selectFromToFromItem"><span class="hs-identifier hs-var">selectFromToFromItem</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621691270056"><span class="hs-identifier hs-var">sourcePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-178"></span><span>                      </span><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+</span><a href="#local-6989586621691270056"><span class="hs-identifier hs-var">sourcePrefix</span></a></span><span>
+</span><span id="line-178"></span><span>                      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) v.
 FunctionName b
 -&gt; FunctionArgsExp b v
 -&gt; Maybe [(Column b, ScalarType b)]
@@ -836,23 +836,23 @@ OrderByItemG b (ColumnInfo b) -&gt; OrderByItem
     (ColumnAlias, SQLExpression ('Postgres pgKind)))]
 </span><a href="#local-6989586621691269910"><span class="hs-identifier hs-var">orderByItemExps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-244"></span><span>      </span><span class="annot"><span class="annottext">[SQLExp] -&gt; SQLExp
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#applyJsonBuildObj"><span class="hs-identifier hs-var">S.applyJsonBuildObj</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-245"></span><span>        </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#applyJsonBuildObj"><span class="hs-identifier hs-var">S.applyJsonBuildObj</span></a></span><span>
+</span><span id="line-245"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">concatMap</span></a></span><span> </span><span class="annot"><span class="annottext">[OrderByItemG
    ('Postgres pgKind)
    (AnnotatedOrderByElement
       ('Postgres pgKind) (SQLExpression ('Postgres pgKind)),
     (ColumnAlias, SQLExpression ('Postgres pgKind)))]
-</span><a href="#local-6989586621691269910"><span class="hs-identifier hs-var">orderByItemExps</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-246"></span><span>          </span><span class="hs-glyph">\</span><span id="local-6989586621691269906"><span class="annot"><span class="annottext">OrderByItemG
+</span><a href="#local-6989586621691269910"><span class="hs-identifier hs-var">orderByItemExps</span></a></span><span>
+</span><span id="line-246"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691269906"><span class="annot"><span class="annottext">OrderByItemG
   ('Postgres pgKind)
   (AnnotatedOrderByElement ('Postgres pgKind) SQLExp,
    (ColumnAlias, SQLExp))
 </span><a href="#local-6989586621691269906"><span class="hs-identifier hs-var">orderByItemExp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-247"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.OrderBy.html#OrderByItemG"><span class="hs-identifier hs-type">OrderByItemG</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (BasicOrderType ('Postgres pgKind))
+</span><span id="line-247"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.OrderBy.html#OrderByItemG"><span class="hs-identifier hs-type">OrderByItemG</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (BasicOrderType ('Postgres pgKind))
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691269905"><span class="annot"><span class="annottext">AnnotatedOrderByElement ('Postgres pgKind) SQLExp
 </span><a href="#local-6989586621691269905"><span class="hs-identifier hs-var">annObCol</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnAlias
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691269904"><span class="annot"><span class="annottext">SQLExp
@@ -862,7 +862,7 @@ OrderByItemG b (ColumnInfo b) -&gt; OrderByItem
   (AnnotatedOrderByElement ('Postgres pgKind) SQLExp,
    (ColumnAlias, SQLExp))
 </span><a href="#local-6989586621691269906"><span class="hs-identifier hs-var">orderByItemExp</span></a></span><span>
-</span><span id="line-248"></span><span>             </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">forall {b :: BackendType} {v}.
+</span><span id="line-248"></span><span>           </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">forall {b :: BackendType} {v}.
 (Column b ~ PGCol) =&gt;
 SQLExp -&gt; AnnotatedOrderByElement b v -&gt; [SQLExp]
 </span><a href="#local-6989586621691269903"><span class="hs-identifier hs-var">annObColToJSONField</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp

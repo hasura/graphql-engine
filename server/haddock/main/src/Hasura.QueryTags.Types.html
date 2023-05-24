@@ -62,9 +62,9 @@ $cfrom :: forall x. QueryTagsFormat -&gt; Rep QueryTagsFormat x
 </span><span id="line-34"></span><span>  </span><span id="local-6989586621691035293"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser QueryTagsFormat
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withText</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;QueryTagsFormat&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-35"></span><span>    </span><span class="hs-glyph">\</span><span id="local-6989586621691035290"><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;QueryTagsFormat&quot;</span></span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691035290"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691035290"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.toLower</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691035290"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-keyword">of</span><span>
@@ -94,23 +94,23 @@ $cfrom :: forall x. QueryTagsFormat -&gt; Rep QueryTagsFormat x
 </span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ValueCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">named</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;QueryTagsFormat&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-48"></span><span>      </span><span class="annot"><span class="annottext">forall constant.
+</span><span class="hs-string">&quot;QueryTagsFormat&quot;</span></span><span>
+</span><span id="line-48"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall constant.
 Eq constant =&gt;
 NonEmpty (constant, Text) -&gt; JSONCodec constant
-</span><span class="hs-identifier hs-var">stringConstCodec</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-49"></span><span>        </span><span class="annot"><span class="annottext">forall a. [a] -&gt; NonEmpty a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">NonEmpty.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-50"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryTagsFormat
+</span><span class="hs-identifier hs-var">stringConstCodec</span></span><span>
+</span><span id="line-49"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; NonEmpty a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">NonEmpty.fromList</span></a></span><span>
+</span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryTagsFormat
 </span><a href="Hasura.QueryTags.Types.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;standard&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-51"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryTagsFormat
+</span><span id="line-51"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryTagsFormat
 </span><a href="Hasura.QueryTags.Types.html#SQLCommenter"><span class="hs-identifier hs-var">SQLCommenter</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;sqlcommenter&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-52"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-52"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-53"></span><span>
 </span><span id="line-54"></span><span class="hs-comment">-- | QueryTagsConfig is the configuration created by the users to control query tags</span><span>
 </span><span id="line-55"></span><span class="hs-comment">--</span><span>
@@ -187,82 +187,91 @@ $cfrom :: forall x. QueryTagsConfig -&gt; Rep QueryTagsConfig x
 </span><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-var">QueryTagsConfig</span></a></span><span>
 </span><span id="line-95"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691035173"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621691035173"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-96"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><span class="hs-string">&quot;disabled&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
+</span><span class="hs-string">&quot;disabled&quot;</span></span><span>
+</span><span id="line-97"></span><span>      </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
-</span><span id="line-96"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-98"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691035173"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621691035173"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-99"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><span class="hs-string">&quot;format&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
+</span><span class="hs-string">&quot;format&quot;</span></span><span>
+</span><span id="line-100"></span><span>      </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">QueryTagsFormat
 </span><a href="Hasura.QueryTags.Types.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span><span>
-</span><span id="line-97"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-101"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691035173"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621691035173"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-102"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><span class="hs-string">&quot;omit_request_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
+</span><span class="hs-string">&quot;omit_request_id&quot;</span></span><span>
+</span><span id="line-103"></span><span>      </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
-</span><span id="line-98"></span><span>
-</span><span id="line-99"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691035167"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-100"></span><span>  </span><span id="local-6989586621691035153"><span class="annot"><span class="annottext">codec :: JSONCodec QueryTagsConfig
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691035167"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-106"></span><span>  </span><span id="local-6989586621691035153"><span class="annot"><span class="annottext">codec :: JSONCodec QueryTagsConfig
 </span><a href="#local-6989586621691035153"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-101"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;QueryTagsConfig&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-102"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; QueryTagsFormat -&gt; Bool -&gt; QueryTagsConfig
+</span><span class="hs-string">&quot;QueryTagsConfig&quot;</span></span><span>
+</span><span id="line-108"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; QueryTagsFormat -&gt; Bool -&gt; QueryTagsConfig
 </span><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-var">QueryTagsConfig</span></a></span><span>
-</span><span id="line-103"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-109"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; output -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">optionalFieldWithDefault'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;disabled&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">forall {oldInput} {output} {newInput}.
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><span id="line-110"></span><span>      </span><span class="annot"><span class="annottext">forall {oldInput} {output} {newInput}.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><a href="#local-6989586621691035151"><span class="hs-operator hs-var">.==</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsConfig -&gt; Bool
 </span><a href="Hasura.QueryTags.Types.html#_qtcDisabled"><span class="hs-identifier hs-var">_qtcDisabled</span></a></span><span>
-</span><span id="line-104"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-111"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; output -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">optionalFieldWithDefault'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;format&quot;</span></span><span> </span><span class="annot"><span class="annottext">QueryTagsFormat
-</span><a href="Hasura.QueryTags.Types.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span><span> </span><span class="annot"><span class="annottext">forall {oldInput} {output} {newInput}.
+</span><a href="Hasura.QueryTags.Types.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span><span>
+</span><span id="line-112"></span><span>      </span><span class="annot"><span class="annottext">forall {oldInput} {output} {newInput}.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><a href="#local-6989586621691035151"><span class="hs-operator hs-var">.==</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsConfig -&gt; QueryTagsFormat
 </span><a href="Hasura.QueryTags.Types.html#_qtcFormat"><span class="hs-identifier hs-var">_qtcFormat</span></a></span><span>
-</span><span id="line-105"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-113"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; output -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">optionalFieldWithDefault'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;omit_request_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span class="annot"><span class="annottext">forall {oldInput} {output} {newInput}.
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
+</span><span id="line-114"></span><span>      </span><span class="annot"><span class="annottext">forall {oldInput} {output} {newInput}.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><a href="#local-6989586621691035151"><span class="hs-operator hs-var">.==</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsConfig -&gt; Bool
 </span><a href="Hasura.QueryTags.Types.html#_qtcOmitRequestId"><span class="hs-identifier hs-var">_qtcOmitRequestId</span></a></span><span>
-</span><span id="line-106"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-107"></span><span>      </span><span id="local-6989586621691035151"><span class="annot"><span class="annottext">.== :: ObjectCodec oldInput output
+</span><span id="line-115"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-116"></span><span>      </span><span id="local-6989586621691035151"><span class="annot"><span class="annottext">.== :: ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><a href="#local-6989586621691035151"><span class="hs-operator hs-var hs-var">(.==)</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall {oldInput} {output} {newInput}.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">(AC..=)</span></span><span>
-</span><span id="line-108"></span><span>
-</span><span id="line-109"></span><span class="annot"><a href="Hasura.QueryTags.Types.html#defaultQueryTagsConfig"><span class="hs-identifier hs-type">defaultQueryTagsConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span><span>
-</span><span id="line-110"></span><span id="defaultQueryTagsConfig"><span class="annot"><span class="annottext">defaultQueryTagsConfig :: QueryTagsConfig
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span class="annot"><a href="Hasura.QueryTags.Types.html#defaultQueryTagsConfig"><span class="hs-identifier hs-type">defaultQueryTagsConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span><span>
+</span><span id="line-119"></span><span id="defaultQueryTagsConfig"><span class="annot"><span class="annottext">defaultQueryTagsConfig :: QueryTagsConfig
 </span><a href="Hasura.QueryTags.Types.html#defaultQueryTagsConfig"><span class="hs-identifier hs-var hs-var">defaultQueryTagsConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; QueryTagsFormat -&gt; Bool -&gt; QueryTagsConfig
 </span><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-var">QueryTagsConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsFormat
 </span><a href="Hasura.QueryTags.Types.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
-</span><span id="line-111"></span></pre></body></html>
+</span><span id="line-120"></span></pre></body></html>

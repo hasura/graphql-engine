@@ -406,9 +406,9 @@ Logger impl
 </span><a href="#local-6989586621691296204"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. WSConn a -&gt; Logger Hasura
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#_wcLogger"><span class="hs-identifier hs-var">_wcLogger</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">WSConn a
-</span><a href="#local-6989586621691296207"><span class="hs-identifier hs-var">wsConn</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-223"></span><span>    </span><span class="annot"><span class="annottext">WSId -&gt; WSEvent -&gt; Maybe WSEventInfo -&gt; WSLog
+</span><a href="#local-6989586621691296207"><span class="hs-identifier hs-var">wsConn</span></a></span><span>
+</span><span id="line-223"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">WSId -&gt; WSEvent -&gt; Maybe WSEventInfo -&gt; WSLog
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#WSLog"><span class="hs-identifier hs-var">WSLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. WSConn a -&gt; WSId
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#_wcConnId"><span class="hs-identifier hs-var">_wcConnId</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn a
 </span><a href="#local-6989586621691296207"><span class="hs-identifier hs-var">wsConn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SerializableBlob -&gt; WSEvent
@@ -819,15 +819,15 @@ a -&gt; m ()
 </span><span id="line-379"></span><span>      </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621691296074"><span class="hs-identifier hs-var">writeLog</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-380"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; WSReaperThreadLog
-</span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#WSReaperThreadLog"><span class="hs-identifier hs-var">WSReaperThreadLog</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-381"></span><span>          </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; String -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromString</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-382"></span><span>            </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621691296074"><span class="hs-identifier hs-var">writeLog</span></a></span><span>
+</span><span id="line-380"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; WSReaperThreadLog
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#WSReaperThreadLog"><span class="hs-identifier hs-var">WSReaperThreadLog</span></a></span><span>
+</span><span id="line-381"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; String -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromString</span></a></span><span>
+</span><span id="line-382"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621691296051"><span class="hs-identifier hs-var">logMsg</span></a></span><span>
 </span><span id="line-383"></span><span>      </span><span id="local-6989586621691296048"><span class="annot"><span class="annottext">[(WSId, WSConn a)]
 </span><a href="#local-6989586621691296048"><span class="hs-identifier hs-var">conns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. STM a -&gt; IO a
@@ -973,183 +973,183 @@ a -&gt; m ()
 </span><a href="#local-6989586621691295996"><span class="hs-identifier hs-var">currExperimentalFeatures</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NamingCase
 </span><a href="#local-6989586621691295994"><span class="hs-identifier hs-var">currDefaultNamingCase</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-418"></span><span>        </span><span class="hs-keyword">if</span><span>
-</span><span id="line-419"></span><span>            </span><span class="hs-comment">-- if CORS policy has changed, close all connections</span><span>
-</span><span id="line-420"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-419"></span><span>          </span><span class="hs-comment">-- if CORS policy has changed, close all connections</span><span>
+</span><span id="line-420"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691295990"><span class="hs-identifier hs-var">hasCorsPolicyChanged</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-421"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span id="line-421"></span><span>              </span><span class="annot"><span class="annottext">String
 -&gt; ByteString
 -&gt; (SecuritySensitiveUserConfig -&gt; SecuritySensitiveUserConfig)
 -&gt; IO ()
 </span><a href="#local-6989586621691296052"><span class="hs-identifier hs-var">closeAllConnectionsWithReason</span></a></span><span>
-</span><span id="line-422"></span><span>                  </span><span class="annot"><span class="annottext">String
+</span><span id="line-422"></span><span>                </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;closing all websocket connections as the cors policy changed&quot;</span></span><span>
-</span><span id="line-423"></span><span>                  </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-423"></span><span>                </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;cors policy changed&quot;</span></span><span>
-</span><span id="line-424"></span><span>                  </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295971"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
+</span><span id="line-424"></span><span>                </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295971"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295971"><span class="hs-identifier hs-var">conf</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295971"><span class="hs-identifier hs-var">conf</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ssucCorsPolicy :: CorsPolicy
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ssucCorsPolicy"><span class="hs-identifier hs-var">ssucCorsPolicy</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CorsPolicy
 </span><a href="#local-6989586621691296004"><span class="hs-identifier hs-var">currCorsPolicy</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
-</span><span id="line-425"></span><span>            </span><span class="hs-comment">-- if any auth config has changed, close all connections</span><span>
-</span><span id="line-426"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-425"></span><span>          </span><span class="hs-comment">-- if any auth config has changed, close all connections</span><span>
+</span><span id="line-426"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691295992"><span class="hs-identifier hs-var">hasAuthModeChanged</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-427"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span id="line-427"></span><span>              </span><span class="annot"><span class="annottext">String
 -&gt; ByteString
 -&gt; (SecuritySensitiveUserConfig -&gt; SecuritySensitiveUserConfig)
 -&gt; IO ()
 </span><a href="#local-6989586621691296052"><span class="hs-identifier hs-var">closeAllConnectionsWithReason</span></a></span><span>
-</span><span id="line-428"></span><span>                  </span><span class="annot"><span class="annottext">String
+</span><span id="line-428"></span><span>                </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;closing all websocket connections as the auth mode changed&quot;</span></span><span>
-</span><span id="line-429"></span><span>                  </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-429"></span><span>                </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;auth mode changed&quot;</span></span><span>
-</span><span id="line-430"></span><span>                  </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295970"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
+</span><span id="line-430"></span><span>                </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295970"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295970"><span class="hs-identifier hs-var">conf</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295970"><span class="hs-identifier hs-var">conf</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ssucAuthMode :: AuthMode
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ssucAuthMode"><span class="hs-identifier hs-var">ssucAuthMode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AuthMode
 </span><a href="#local-6989586621691296006"><span class="hs-identifier hs-var">currAuthMode</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
-</span><span id="line-431"></span><span>            </span><span class="hs-comment">-- In case of allowlist, we need to check if the allowlist has changed.</span><span>
-</span><span id="line-432"></span><span>            </span><span class="hs-comment">-- If the allowlist is disabled, we keep all the connections as is.</span><span>
-</span><span id="line-433"></span><span>            </span><span class="hs-comment">-- If the allowlist is enabled from a disabled state, we need to close all the</span><span>
-</span><span id="line-434"></span><span>            </span><span class="hs-comment">-- connections.</span><span>
-</span><span id="line-435"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-431"></span><span>          </span><span class="hs-comment">-- In case of allowlist, we need to check if the allowlist has changed.</span><span>
+</span><span id="line-432"></span><span>          </span><span class="hs-comment">-- If the allowlist is disabled, we keep all the connections as is.</span><span>
+</span><span id="line-433"></span><span>          </span><span class="hs-comment">-- If the allowlist is enabled from a disabled state, we need to close all the</span><span>
+</span><span id="line-434"></span><span>          </span><span class="hs-comment">-- connections.</span><span>
+</span><span id="line-435"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691295988"><span class="hs-identifier hs-var">hasAllowlistEnabled</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-436"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span id="line-436"></span><span>              </span><span class="annot"><span class="annottext">String
 -&gt; ByteString
 -&gt; (SecuritySensitiveUserConfig -&gt; SecuritySensitiveUserConfig)
 -&gt; IO ()
 </span><a href="#local-6989586621691296052"><span class="hs-identifier hs-var">closeAllConnectionsWithReason</span></a></span><span>
-</span><span id="line-437"></span><span>                  </span><span class="annot"><span class="annottext">String
+</span><span id="line-437"></span><span>                </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;closing all websocket connections as allow list is enabled&quot;</span></span><span>
-</span><span id="line-438"></span><span>                  </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-438"></span><span>                </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;allow list enabled&quot;</span></span><span>
-</span><span id="line-439"></span><span>                  </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295969"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
+</span><span id="line-439"></span><span>                </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295969"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295969"><span class="hs-identifier hs-var">conf</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295969"><span class="hs-identifier hs-var">conf</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ssucEnableAllowlist :: AllowListStatus
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ssucEnableAllowlist"><span class="hs-identifier hs-var">ssucEnableAllowlist</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AllowListStatus
 </span><a href="#local-6989586621691296002"><span class="hs-identifier hs-var">currEnableAllowlist</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
-</span><span id="line-440"></span><span>            </span><span class="hs-comment">-- If the allowlist is already enabled and there are any changes made to the</span><span>
-</span><span id="line-441"></span><span>            </span><span class="hs-comment">-- allowlist, we need to close all the connections.</span><span>
-</span><span id="line-442"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-440"></span><span>          </span><span class="hs-comment">-- If the allowlist is already enabled and there are any changes made to the</span><span>
+</span><span id="line-441"></span><span>          </span><span class="hs-comment">-- allowlist, we need to close all the connections.</span><span>
+</span><span id="line-442"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691295984"><span class="hs-identifier hs-var">hasAllowlistUpdated</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-443"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span id="line-443"></span><span>              </span><span class="annot"><span class="annottext">String
 -&gt; ByteString
 -&gt; (SecuritySensitiveUserConfig -&gt; SecuritySensitiveUserConfig)
 -&gt; IO ()
 </span><a href="#local-6989586621691296052"><span class="hs-identifier hs-var">closeAllConnectionsWithReason</span></a></span><span>
-</span><span id="line-444"></span><span>                  </span><span class="annot"><span class="annottext">String
+</span><span id="line-444"></span><span>                </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;closing all websocket connections as the allow list has been updated&quot;</span></span><span>
-</span><span id="line-445"></span><span>                  </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-445"></span><span>                </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;allow list updated&quot;</span></span><span>
-</span><span id="line-446"></span><span>                  </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295968"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
+</span><span id="line-446"></span><span>                </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295968"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295968"><span class="hs-identifier hs-var">conf</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295968"><span class="hs-identifier hs-var">conf</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ssucAllowlist :: InlinedAllowlist
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ssucAllowlist"><span class="hs-identifier hs-var">ssucAllowlist</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InlinedAllowlist
 </span><a href="#local-6989586621691296000"><span class="hs-identifier hs-var">currAllowlist</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
-</span><span id="line-447"></span><span>            </span><span class="hs-comment">-- if HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES has changed, close all connections</span><span>
-</span><span id="line-448"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-447"></span><span>          </span><span class="hs-comment">-- if HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES has changed, close all connections</span><span>
+</span><span id="line-448"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691295983"><span class="hs-identifier hs-var">hasStringifyNumChanged</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-449"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span id="line-449"></span><span>              </span><span class="annot"><span class="annottext">String
 -&gt; ByteString
 -&gt; (SecuritySensitiveUserConfig -&gt; SecuritySensitiveUserConfig)
 -&gt; IO ()
 </span><a href="#local-6989586621691296052"><span class="hs-identifier hs-var">closeAllConnectionsWithReason</span></a></span><span>
-</span><span id="line-450"></span><span>                  </span><span class="annot"><span class="annottext">String
+</span><span id="line-450"></span><span>                </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;closing all websocket connections as the HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES setting changed&quot;</span></span><span>
-</span><span id="line-451"></span><span>                  </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-451"></span><span>                </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES env var changed&quot;</span></span><span>
-</span><span id="line-452"></span><span>                  </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295967"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
+</span><span id="line-452"></span><span>                </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295967"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295967"><span class="hs-identifier hs-var">conf</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295967"><span class="hs-identifier hs-var">conf</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ssucSQLGenCtx :: SQLGenCtx
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ssucSQLGenCtx"><span class="hs-identifier hs-var">ssucSQLGenCtx</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLGenCtx
 </span><a href="#local-6989586621691295998"><span class="hs-identifier hs-var">currSqlGenCtx</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
-</span><span id="line-453"></span><span>            </span><span class="hs-comment">-- if HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE has changed, close all connections</span><span>
-</span><span id="line-454"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-453"></span><span>          </span><span class="hs-comment">-- if HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE has changed, close all connections</span><span>
+</span><span id="line-454"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691295981"><span class="hs-identifier hs-var">hasDangerousBooleanCollapseChanged</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-455"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span id="line-455"></span><span>              </span><span class="annot"><span class="annottext">String
 -&gt; ByteString
 -&gt; (SecuritySensitiveUserConfig -&gt; SecuritySensitiveUserConfig)
 -&gt; IO ()
 </span><a href="#local-6989586621691296052"><span class="hs-identifier hs-var">closeAllConnectionsWithReason</span></a></span><span>
-</span><span id="line-456"></span><span>                  </span><span class="annot"><span class="annottext">String
+</span><span id="line-456"></span><span>                </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;closing all websocket connections as the HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE setting changed&quot;</span></span><span>
-</span><span id="line-457"></span><span>                  </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-457"></span><span>                </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE env var changed&quot;</span></span><span>
-</span><span id="line-458"></span><span>                  </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295966"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
+</span><span id="line-458"></span><span>                </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295966"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295966"><span class="hs-identifier hs-var">conf</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295966"><span class="hs-identifier hs-var">conf</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ssucSQLGenCtx :: SQLGenCtx
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ssucSQLGenCtx"><span class="hs-identifier hs-var">ssucSQLGenCtx</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLGenCtx
 </span><a href="#local-6989586621691295998"><span class="hs-identifier hs-var">currSqlGenCtx</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
-</span><span id="line-459"></span><span>            </span><span class="hs-comment">-- if 'bigquery_string_numeric_input' option added/removed from experimental features, close all connections</span><span>
-</span><span id="line-460"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-459"></span><span>          </span><span class="hs-comment">-- if 'bigquery_string_numeric_input' option added/removed from experimental features, close all connections</span><span>
+</span><span id="line-460"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691295979"><span class="hs-identifier hs-var">hasBigqueryStringNumericInputChanged</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-461"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span id="line-461"></span><span>              </span><span class="annot"><span class="annottext">String
 -&gt; ByteString
 -&gt; (SecuritySensitiveUserConfig -&gt; SecuritySensitiveUserConfig)
 -&gt; IO ()
 </span><a href="#local-6989586621691296052"><span class="hs-identifier hs-var">closeAllConnectionsWithReason</span></a></span><span>
-</span><span id="line-462"></span><span>                  </span><span class="annot"><span class="annottext">String
+</span><span id="line-462"></span><span>                </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;closing all websocket connections as the 'bigquery_string_numeric_input' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES&quot;</span></span><span>
-</span><span id="line-463"></span><span>                  </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-463"></span><span>                </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;'bigquery_string_numeric_input' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var&quot;</span></span><span>
-</span><span id="line-464"></span><span>                  </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295965"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
+</span><span id="line-464"></span><span>                </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295965"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295965"><span class="hs-identifier hs-var">conf</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295965"><span class="hs-identifier hs-var">conf</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ssucSQLGenCtx :: SQLGenCtx
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ssucSQLGenCtx"><span class="hs-identifier hs-var">ssucSQLGenCtx</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLGenCtx
 </span><a href="#local-6989586621691295998"><span class="hs-identifier hs-var">currSqlGenCtx</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
-</span><span id="line-465"></span><span>            </span><span class="hs-comment">-- if 'hide_aggregation_predicates' option added/removed from experimental features, close all connections</span><span>
-</span><span id="line-466"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-465"></span><span>          </span><span class="hs-comment">-- if 'hide_aggregation_predicates' option added/removed from experimental features, close all connections</span><span>
+</span><span id="line-466"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691295977"><span class="hs-identifier hs-var">hasHideAggregationPredicatesChanged</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-467"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span id="line-467"></span><span>              </span><span class="annot"><span class="annottext">String
 -&gt; ByteString
 -&gt; (SecuritySensitiveUserConfig -&gt; SecuritySensitiveUserConfig)
 -&gt; IO ()
 </span><a href="#local-6989586621691296052"><span class="hs-identifier hs-var">closeAllConnectionsWithReason</span></a></span><span>
-</span><span id="line-468"></span><span>                  </span><span class="annot"><span class="annottext">String
+</span><span id="line-468"></span><span>                </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;closing all websocket connections as the 'hide-aggregation-predicates' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES&quot;</span></span><span>
-</span><span id="line-469"></span><span>                  </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-469"></span><span>                </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;'hide-aggregation-predicates' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var&quot;</span></span><span>
-</span><span id="line-470"></span><span>                  </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295964"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
+</span><span id="line-470"></span><span>                </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295964"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295964"><span class="hs-identifier hs-var">conf</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295964"><span class="hs-identifier hs-var">conf</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ssucExperimentalFeatures :: HashSet ExperimentalFeature
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ssucExperimentalFeatures"><span class="hs-identifier hs-var">ssucExperimentalFeatures</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
 </span><a href="#local-6989586621691295996"><span class="hs-identifier hs-var">currExperimentalFeatures</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
-</span><span id="line-471"></span><span>            </span><span class="hs-comment">-- if 'hide_stream_fields' option added/removed from experimental features, close all connections</span><span>
-</span><span id="line-472"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-471"></span><span>          </span><span class="hs-comment">-- if 'hide_stream_fields' option added/removed from experimental features, close all connections</span><span>
+</span><span id="line-472"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691295974"><span class="hs-identifier hs-var">hasHideStreamFieldsChanged</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-473"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span id="line-473"></span><span>              </span><span class="annot"><span class="annottext">String
 -&gt; ByteString
 -&gt; (SecuritySensitiveUserConfig -&gt; SecuritySensitiveUserConfig)
 -&gt; IO ()
 </span><a href="#local-6989586621691296052"><span class="hs-identifier hs-var">closeAllConnectionsWithReason</span></a></span><span>
-</span><span id="line-474"></span><span>                  </span><span class="annot"><span class="annottext">String
+</span><span id="line-474"></span><span>                </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;closing all websocket connections as the 'hide-stream-fields' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES&quot;</span></span><span>
-</span><span id="line-475"></span><span>                  </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-475"></span><span>                </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;'hide-stream-fields' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var&quot;</span></span><span>
-</span><span id="line-476"></span><span>                  </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295963"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
+</span><span id="line-476"></span><span>                </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295963"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295963"><span class="hs-identifier hs-var">conf</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295963"><span class="hs-identifier hs-var">conf</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ssucExperimentalFeatures :: HashSet ExperimentalFeature
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ssucExperimentalFeatures"><span class="hs-identifier hs-var">ssucExperimentalFeatures</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
 </span><a href="#local-6989586621691295996"><span class="hs-identifier hs-var">currExperimentalFeatures</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
-</span><span id="line-477"></span><span>            </span><span class="hs-comment">-- if naming convention has been changed, close all connections</span><span>
-</span><span id="line-478"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-477"></span><span>          </span><span class="hs-comment">-- if naming convention has been changed, close all connections</span><span>
+</span><span id="line-478"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691295972"><span class="hs-identifier hs-var">hasDefaultNamingCaseChanged</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-479"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span id="line-479"></span><span>              </span><span class="annot"><span class="annottext">String
 -&gt; ByteString
 -&gt; (SecuritySensitiveUserConfig -&gt; SecuritySensitiveUserConfig)
 -&gt; IO ()
 </span><a href="#local-6989586621691296052"><span class="hs-identifier hs-var">closeAllConnectionsWithReason</span></a></span><span>
-</span><span id="line-480"></span><span>                  </span><span class="annot"><span class="annottext">String
+</span><span id="line-480"></span><span>                </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;closing all websocket connections as the 'naming_convention' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES and the HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION has changed&quot;</span></span><span>
-</span><span id="line-481"></span><span>                  </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-481"></span><span>                </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;naming convention has been changed&quot;</span></span><span>
-</span><span id="line-482"></span><span>                  </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295962"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
+</span><span id="line-482"></span><span>                </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691295962"><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295962"><span class="hs-identifier hs-var">conf</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SecuritySensitiveUserConfig
 </span><a href="#local-6989586621691295962"><span class="hs-identifier hs-var">conf</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ssucExperimentalFeatures :: HashSet ExperimentalFeature
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ssucExperimentalFeatures"><span class="hs-identifier hs-var">ssucExperimentalFeatures</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
 </span><a href="#local-6989586621691295996"><span class="hs-identifier hs-var">currExperimentalFeatures</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ssucDefaultNamingCase :: NamingCase
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ssucDefaultNamingCase"><span class="hs-identifier hs-var">ssucDefaultNamingCase</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamingCase
 </span><a href="#local-6989586621691295994"><span class="hs-identifier hs-var">currDefaultNamingCase</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
-</span><span id="line-483"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-483"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-484"></span><span>
@@ -1339,78 +1339,80 @@ m a -&gt; [Handler m a] -&gt; m a
 </span><span id="line-530"></span><span>              </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621691295805"><span class="hs-identifier hs-var">writeLog</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-531"></span><span>                </span><span class="annot"><span class="annottext">LogLevel -&gt; SerializableBlob -&gt; UnstructuredLog
+</span><a href="#local-6989586621691295805"><span class="hs-identifier hs-var">writeLog</span></a></span><span>
+</span><span id="line-531"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; SerializableBlob -&gt; UnstructuredLog
 </span><a href="Hasura.Logging.html#UnstructuredLog"><span class="hs-identifier hs-var">L.UnstructuredLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
-</span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">L.LevelError</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-532"></span><span>                  </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; String -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromString</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-533"></span><span>                    </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;Client exception: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">L.LevelError</span></a></span><span>
+</span><span id="line-532"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; String -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromString</span></a></span><span>
+</span><span id="line-533"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Client exception: &quot;</span></span><span>
+</span><span id="line-534"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; String
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">InvalidRequest
 </span><a href="#local-6989586621691295760"><span class="hs-identifier hs-var">e</span></a></span><span>
-</span><span id="line-534"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a. (MonadBase IO m, Exception e) =&gt; e -&gt; m a
+</span><span id="line-535"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a. (MonadBase IO m, Exception e) =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">throwIO</span></span><span> </span><span class="annot"><span class="annottext">InvalidRequest
 </span><a href="#local-6989586621691295760"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-535"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a e. Exception e =&gt; (e -&gt; m a) -&gt; Handler m a
+</span><span id="line-536"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a e. Exception e =&gt; (e -&gt; m a) -&gt; Handler m a
 </span><span class="hs-identifier hs-var">Handler</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621691295755"><span class="annot"><span class="annottext">SomeException
 </span><a href="#local-6989586621691295755"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">SomeException</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-536"></span><span>              </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
+</span><span id="line-537"></span><span>              </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621691295805"><span class="hs-identifier hs-var">writeLog</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-537"></span><span>                </span><span class="annot"><span class="annottext">LogLevel -&gt; SerializableBlob -&gt; UnstructuredLog
+</span><a href="#local-6989586621691295805"><span class="hs-identifier hs-var">writeLog</span></a></span><span>
+</span><span id="line-538"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; SerializableBlob -&gt; UnstructuredLog
 </span><a href="Hasura.Logging.html#UnstructuredLog"><span class="hs-identifier hs-var">L.UnstructuredLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
-</span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">L.LevelError</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-538"></span><span>                  </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; String -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromString</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-539"></span><span>                    </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;Unexpected exception raised in websocket. Please report this as a bug: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">L.LevelError</span></a></span><span>
+</span><span id="line-539"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; String -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromString</span></a></span><span>
+</span><span id="line-540"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Unexpected exception raised in websocket. Please report this as a bug: &quot;</span></span><span>
+</span><span id="line-541"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; String
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
 </span><a href="#local-6989586621691295755"><span class="hs-identifier hs-var">e</span></a></span><span>
-</span><span id="line-540"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a. (MonadBase IO m, Exception e) =&gt; e -&gt; m a
+</span><span id="line-542"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a. (MonadBase IO m, Exception e) =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">throwIO</span></span><span> </span><span class="annot"><span class="annottext">SomeException
 </span><a href="#local-6989586621691295755"><span class="hs-identifier hs-var">e</span></a></span><span>
-</span><span id="line-541"></span><span>          </span><span class="hs-special">]</span><span>
-</span><span id="line-542"></span><span>
-</span><span id="line-543"></span><span>    </span><span id="local-6989586621691295785"><span class="annot"><span class="annottext">shuttingDownReject :: RejectRequest
+</span><span id="line-543"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-544"></span><span>
+</span><span id="line-545"></span><span>    </span><span id="local-6989586621691295785"><span class="annot"><span class="annottext">shuttingDownReject :: RejectRequest
 </span><a href="#local-6989586621691295785"><span class="hs-identifier hs-var hs-var">shuttingDownReject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-544"></span><span>      </span><span class="annot"><span class="annottext">Int
+</span><span id="line-546"></span><span>      </span><span class="annot"><span class="annottext">Int
 -&gt; ByteString
 -&gt; [(CI ByteString, ByteString)]
 -&gt; ByteString
 -&gt; RejectRequest
 </span><span class="hs-identifier hs-var">WS.RejectRequest</span></span><span>
-</span><span id="line-545"></span><span>        </span><span class="annot"><span class="annottext">Int
+</span><span id="line-547"></span><span>        </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">503</span></span><span>
-</span><span id="line-546"></span><span>        </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-548"></span><span>        </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;Service Unavailable&quot;</span></span><span>
-</span><span id="line-547"></span><span>        </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">CI ByteString
+</span><span id="line-549"></span><span>        </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">CI ByteString
 </span><span class="hs-string">&quot;Retry-After&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;0&quot;</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-548"></span><span>        </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-550"></span><span>        </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;Server is shutting down&quot;</span></span><span>
-</span><span id="line-549"></span><span>
-</span><span id="line-550"></span><span>    </span><span id="local-6989586621691295787"><span class="annot"><span class="annottext">onReject :: WSId -&gt; RejectRequest -&gt; m ()
+</span><span id="line-551"></span><span>
+</span><span id="line-552"></span><span>    </span><span id="local-6989586621691295787"><span class="annot"><span class="annottext">onReject :: WSId -&gt; RejectRequest -&gt; m ()
 </span><a href="#local-6989586621691295787"><span class="hs-identifier hs-var hs-var">onReject</span></a></span></span><span> </span><span id="local-6989586621691295746"><span class="annot"><span class="annottext">WSId
 </span><a href="#local-6989586621691295746"><span class="hs-identifier hs-var">wsId</span></a></span></span><span> </span><span id="local-6989586621691295745"><span class="annot"><span class="annottext">RejectRequest
 </span><a href="#local-6989586621691295745"><span class="hs-identifier hs-var">rejectRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-551"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span id="line-553"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">PendingConnection -&gt; RejectRequest -&gt; IO ()
 </span><span class="hs-identifier hs-var">WS.rejectRequestWith</span></span><span> </span><span class="annot"><span class="annottext">PendingConnection
 </span><a href="#local-6989586621691295800"><span class="hs-identifier hs-var">pendingConn</span></a></span><span> </span><span class="annot"><span class="annottext">RejectRequest
 </span><a href="#local-6989586621691295745"><span class="hs-identifier hs-var">rejectRequest</span></a></span><span>
-</span><span id="line-552"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-554"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadWSLog m =&gt;
 Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#logWSLog"><span class="hs-identifier hs-var">logWSLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
@@ -1420,8 +1422,8 @@ Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="#local-6989586621691295746"><span class="hs-identifier hs-var">wsId</span></a></span><span> </span><span class="annot"><span class="annottext">WSEvent
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ERejected"><span class="hs-identifier hs-var">ERejected</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-553"></span><span>
-</span><span id="line-554"></span><span>    </span><span id="local-6989586621691295786"><span class="annot"><span class="annottext">onAccept :: WSConnInitTimer -&gt; WSId -&gt; AcceptWith a -&gt; m ()
+</span><span id="line-555"></span><span>
+</span><span id="line-556"></span><span>    </span><span id="local-6989586621691295786"><span class="annot"><span class="annottext">onAccept :: WSConnInitTimer -&gt; WSId -&gt; AcceptWith a -&gt; m ()
 </span><a href="#local-6989586621691295786"><span class="hs-identifier hs-var hs-var">onAccept</span></a></span></span><span> </span><span id="local-6989586621691295743"><span class="annot"><span class="annottext">WSConnInitTimer
 </span><a href="#local-6989586621691295743"><span class="hs-identifier hs-var">wsConnInitTimer</span></a></span></span><span> </span><span id="local-6989586621691295742"><span class="annot"><span class="annottext">WSId
 </span><a href="#local-6989586621691295742"><span class="hs-identifier hs-var">wsId</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#AcceptWith"><span class="hs-identifier hs-type">AcceptWith</span></a></span><span> </span><span id="local-6989586621691295741"><span class="annot"><span class="annottext">a
@@ -1429,14 +1431,14 @@ Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="#local-6989586621691295740"><span class="hs-identifier hs-var">acceptWithParams</span></a></span></span><span> </span><span id="local-6989586621691295739"><span class="annot"><span class="annottext">WSConn a -&gt; IO ()
 </span><a href="#local-6989586621691295739"><span class="hs-identifier hs-var">keepAlive</span></a></span></span><span> </span><span id="local-6989586621691295738"><span class="annot"><span class="annottext">WSConn a -&gt; IO ()
 </span><a href="#local-6989586621691295738"><span class="hs-identifier hs-var">onJwtExpiry</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-555"></span><span>      </span><span id="local-6989586621691295737"><span class="annot"><span class="annottext">Connection
+</span><span id="line-557"></span><span>      </span><span id="local-6989586621691295737"><span class="annot"><span class="annottext">Connection
 </span><a href="#local-6989586621691295737"><span class="hs-identifier hs-var">conn</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">PendingConnection -&gt; AcceptRequest -&gt; IO Connection
 </span><span class="hs-identifier hs-var">WS.acceptRequestWith</span></span><span> </span><span class="annot"><span class="annottext">PendingConnection
 </span><a href="#local-6989586621691295800"><span class="hs-identifier hs-var">pendingConn</span></a></span><span> </span><span class="annot"><span class="annottext">AcceptRequest
 </span><a href="#local-6989586621691295740"><span class="hs-identifier hs-var">acceptWithParams</span></a></span><span>
-</span><span id="line-556"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-558"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadWSLog m =&gt;
 Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#logWSLog"><span class="hs-identifier hs-var">logWSLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
@@ -1446,11 +1448,11 @@ Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="#local-6989586621691295742"><span class="hs-identifier hs-var">wsId</span></a></span><span> </span><span class="annot"><span class="annottext">WSEvent
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#EAccepted"><span class="hs-identifier hs-var">EAccepted</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-557"></span><span>      </span><span id="local-6989586621691295735"><span class="annot"><span class="annottext">TQueue WSQueueResponse
+</span><span id="line-559"></span><span>      </span><span id="local-6989586621691295735"><span class="annot"><span class="annottext">TQueue WSQueueResponse
 </span><a href="#local-6989586621691295735"><span class="hs-identifier hs-var">sendQ</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IO (TQueue a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/stm-2.5.0.2/src"><span class="hs-identifier hs-var">STM.newTQueueIO</span></a></span><span>
-</span><span id="line-558"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621691295733"><span class="annot"><span class="annottext">wsConn :: WSConn a
+</span><span id="line-560"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621691295733"><span class="annot"><span class="annottext">wsConn :: WSConn a
 </span><a href="#local-6989586621691295733"><span class="hs-identifier hs-var hs-var">wsConn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
 WSId
 -&gt; Logger Hasura
@@ -1464,34 +1466,35 @@ WSId
 </span><a href="#local-6989586621691295737"><span class="hs-identifier hs-var">conn</span></a></span><span> </span><span class="annot"><span class="annottext">TQueue WSQueueResponse
 </span><a href="#local-6989586621691295735"><span class="hs-identifier hs-var">sendQ</span></a></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621691295741"><span class="hs-identifier hs-var">a</span></a></span><span>
-</span><span id="line-559"></span><span>      </span><span class="hs-comment">-- TODO there are many thunks here. Difficult to trace how much is retained, and</span><span>
-</span><span id="line-560"></span><span>      </span><span class="hs-comment">--      how much of that would be shared anyway.</span><span>
-</span><span id="line-561"></span><span>      </span><span class="hs-comment">--      Requires a fork of 'wai-websockets' and 'websockets', it looks like.</span><span>
-</span><span id="line-562"></span><span>      </span><span class="hs-comment">--      Adding `package` stanzas with -Xstrict -XStrictData for those two packages</span><span>
-</span><span id="line-563"></span><span>      </span><span class="hs-comment">--      helped, cutting the number of thunks approximately in half.</span><span>
-</span><span id="line-564"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span id="line-561"></span><span>      </span><span class="hs-comment">-- TODO there are many thunks here. Difficult to trace how much is retained, and</span><span>
+</span><span id="line-562"></span><span>      </span><span class="hs-comment">--      how much of that would be shared anyway.</span><span>
+</span><span id="line-563"></span><span>      </span><span class="hs-comment">--      Requires a fork of 'wai-websockets' and 'websockets', it looks like.</span><span>
+</span><span id="line-564"></span><span>      </span><span class="hs-comment">--      Adding `package` stanzas with -Xstrict -XStrictData for those two packages</span><span>
+</span><span id="line-565"></span><span>      </span><span class="hs-comment">--      helped, cutting the number of thunks approximately in half.</span><span>
+</span><span id="line-566"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-special">$</span><span class="annot"><span class="annottext">String
 forall a. String -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">assertNFHere</span></span><span> </span><span class="annot"><span class="annottext">WSConn a
 </span><a href="#local-6989586621691295733"><span class="hs-identifier hs-var">wsConn</span></a></span><span> </span><span class="hs-comment">-- so we don't write thunks to mutable vars</span><span>
-</span><span id="line-565"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691295732"><span class="annot"><span class="annottext">whenAcceptingInsertConn :: m (ServerStatus a)
+</span><span id="line-567"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691295732"><span class="annot"><span class="annottext">whenAcceptingInsertConn :: m (ServerStatus a)
 </span><a href="#local-6989586621691295732"><span class="hs-identifier hs-var hs-var">whenAcceptingInsertConn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-566"></span><span>            </span><span class="annot"><span class="annottext">forall a. STM a -&gt; IO a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">STM.atomically</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span>
+</span><span id="line-568"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. STM a -&gt; IO a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">STM.atomically</span></a></span><span>
+</span><span id="line-569"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-567"></span><span>              </span><span id="local-6989586621691295731"><span class="annot"><span class="annottext">ServerStatus a
+</span><span id="line-570"></span><span>              </span><span id="local-6989586621691295731"><span class="annot"><span class="annottext">ServerStatus a
 </span><a href="#local-6989586621691295731"><span class="hs-identifier hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. TVar a -&gt; STM a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">STM.readTVar</span></a></span><span> </span><span class="annot"><span class="annottext">TVar (ServerStatus a)
 </span><a href="#local-6989586621691295804"><span class="hs-identifier hs-var">serverStatus</span></a></span><span>
-</span><span id="line-568"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ServerStatus a
+</span><span id="line-571"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ServerStatus a
 </span><a href="#local-6989586621691295731"><span class="hs-identifier hs-var">status</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-569"></span><span>                </span><span class="annot"><span class="annottext">ServerStatus a
+</span><span id="line-572"></span><span>                </span><span class="annot"><span class="annottext">ServerStatus a
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ShuttingDown"><span class="hs-identifier hs-var">ShuttingDown</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-570"></span><span>                </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#AcceptingConns"><span class="hs-identifier hs-type">AcceptingConns</span></a></span><span> </span><span id="local-6989586621691295730"><span class="annot"><span class="annottext">ConnMap a
+</span><span id="line-573"></span><span>                </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#AcceptingConns"><span class="hs-identifier hs-type">AcceptingConns</span></a></span><span> </span><span id="local-6989586621691295730"><span class="annot"><span class="annottext">ConnMap a
 </span><a href="#local-6989586621691295730"><span class="hs-identifier hs-var">connMap</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall key value.
 (Eq key, Hashable key) =&gt;
 value -&gt; key -&gt; Map key value -&gt; STM ()
@@ -1499,59 +1502,60 @@ value -&gt; key -&gt; Map key value -&gt; STM ()
 </span><a href="#local-6989586621691295733"><span class="hs-identifier hs-var">wsConn</span></a></span><span> </span><span class="annot"><span class="annottext">WSId
 </span><a href="#local-6989586621691295742"><span class="hs-identifier hs-var">wsId</span></a></span><span> </span><span class="annot"><span class="annottext">ConnMap a
 </span><a href="#local-6989586621691295730"><span class="hs-identifier hs-var">connMap</span></a></span><span>
-</span><span id="line-571"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span id="line-574"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">ServerStatus a
 </span><a href="#local-6989586621691295731"><span class="hs-identifier hs-var">status</span></a></span><span>
-</span><span id="line-572"></span><span>
-</span><span id="line-573"></span><span>      </span><span class="hs-comment">-- ensure we clean up connMap even if an unexpected exception is raised from our worker</span><span>
-</span><span id="line-574"></span><span>      </span><span class="hs-comment">-- threads, or an async exception is raised somewhere in the body here:</span><span>
-</span><span id="line-575"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b c.
+</span><span id="line-575"></span><span>
+</span><span id="line-576"></span><span>      </span><span class="hs-comment">-- ensure we clean up connMap even if an unexpected exception is raised from our worker</span><span>
+</span><span id="line-577"></span><span>      </span><span class="hs-comment">-- threads, or an async exception is raised somewhere in the body here:</span><span>
+</span><span id="line-578"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b c.
 MonadBaseControl IO m =&gt;
 m a -&gt; (a -&gt; m b) -&gt; (a -&gt; m c) -&gt; m c
 </span><span class="hs-identifier hs-var">bracket</span></span><span>
-</span><span id="line-576"></span><span>        </span><span class="annot"><span class="annottext">m (ServerStatus a)
+</span><span id="line-579"></span><span>        </span><span class="annot"><span class="annottext">m (ServerStatus a)
 </span><a href="#local-6989586621691295732"><span class="hs-identifier hs-var">whenAcceptingInsertConn</span></a></span><span>
-</span><span id="line-577"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WSConn a -&gt; ServerStatus a -&gt; m ()
+</span><span id="line-580"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WSConn a -&gt; ServerStatus a -&gt; m ()
 </span><a href="#local-6989586621691295727"><span class="hs-identifier hs-var">onConnClose</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn a
 </span><a href="#local-6989586621691295733"><span class="hs-identifier hs-var">wsConn</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-578"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span id="line-581"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-579"></span><span>          </span><span class="annot"><span class="annottext">ServerStatus a
+</span><span id="line-582"></span><span>          </span><span class="annot"><span class="annottext">ServerStatus a
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ShuttingDown"><span class="hs-identifier hs-var">ShuttingDown</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-580"></span><span>            </span><span class="hs-comment">-- Bad luck, we were in the process of shutting the server down but a new</span><span>
-</span><span id="line-581"></span><span>            </span><span class="hs-comment">-- connection was accepted. Let's just close it politely</span><span>
-</span><span id="line-582"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; WSConn a -&gt; ByteString -&gt; m ()
+</span><span id="line-583"></span><span>            </span><span class="hs-comment">-- Bad luck, we were in the process of shutting the server down but a new</span><span>
+</span><span id="line-584"></span><span>            </span><span class="hs-comment">-- connection was accepted. Let's just close it politely</span><span>
+</span><span id="line-585"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; WSConn a -&gt; ByteString -&gt; m ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#forceConnReconnect"><span class="hs-identifier hs-var">forceConnReconnect</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn a
 </span><a href="#local-6989586621691295733"><span class="hs-identifier hs-var">wsConn</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;shutting server down&quot;</span></span><span>
-</span><span id="line-583"></span><span>            </span><span class="annot"><span class="annottext">OnCloseH m a
+</span><span id="line-586"></span><span>            </span><span class="annot"><span class="annottext">OnCloseH m a
 </span><a href="#local-6989586621691295764"><span class="hs-identifier hs-var">closeHandler</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn a
 </span><a href="#local-6989586621691295733"><span class="hs-identifier hs-var">wsConn</span></a></span><span>
-</span><span id="line-584"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#AcceptingConns"><span class="hs-identifier hs-type">AcceptingConns</span></a></span><span> </span><span class="annot"><span class="annottext">ConnMap a
+</span><span id="line-587"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#AcceptingConns"><span class="hs-identifier hs-type">AcceptingConns</span></a></span><span> </span><span class="annot"><span class="annottext">ConnMap a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-585"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691295726"><span class="annot"><span class="annottext">rcv :: m ()
+</span><span id="line-588"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691295726"><span class="annot"><span class="annottext">rcv :: m ()
 </span><a href="#local-6989586621691295726"><span class="hs-identifier hs-var hs-var">rcv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">forever</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-586"></span><span>                  </span><span id="local-6989586621691295725"><span class="annot"><span class="annottext">Bool
+</span><span id="line-589"></span><span>                  </span><span id="local-6989586621691295725"><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691295725"><span class="hs-identifier hs-var">shouldCaptureVariables</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">MetricsConfig -&gt; Bool
 </span><a href="Hasura.RQL.Types.Common.html#_mcAnalyzeQueryVariables"><span class="hs-identifier hs-var">_mcAnalyzeQueryVariables</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">IO MetricsConfig
 </span><a href="#local-6989586621691295808"><span class="hs-identifier hs-var">getMetricsConfig</span></a></span><span>
-</span><span id="line-587"></span><span>                  </span><span class="hs-comment">-- Process all messages serially (important!), in a separate thread:</span><span>
-</span><span id="line-588"></span><span>                  </span><span id="local-6989586621691295723"><span class="annot"><span class="annottext">ByteString
+</span><span id="line-590"></span><span>                  </span><span class="hs-comment">-- Process all messages serially (important!), in a separate thread:</span><span>
+</span><span id="line-591"></span><span>                  </span><span id="local-6989586621691295723"><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621691295723"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-589"></span><span>                    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span id="line-592"></span><span>                    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span>
+</span><span id="line-593"></span><span>                      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-590"></span><span>                      </span><span class="hs-comment">-- Re-throw &quot;receiveloop: resource vanished (Connection reset by peer)&quot; :</span><span>
-</span><span id="line-591"></span><span>                      </span><span class="hs-comment">--   https://github.com/yesodweb/wai/blob/master/warp/Network/Wai/Handler/Warp/Recv.hs#L112</span><span>
-</span><span id="line-592"></span><span>                      </span><span class="hs-comment">-- as WS exception signaling cleanup below. It's not clear why exactly this gets</span><span>
-</span><span id="line-593"></span><span>                      </span><span class="hs-comment">-- raised occasionally; I suspect an equivalent handler is missing from WS itself.</span><span>
-</span><span id="line-594"></span><span>                      </span><span class="hs-comment">-- Regardless this should be safe:</span><span>
-</span><span id="line-595"></span><span>                      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e b a.
+</span><span id="line-594"></span><span>                      </span><span class="hs-comment">-- Re-throw &quot;receiveloop: resource vanished (Connection reset by peer)&quot; :</span><span>
+</span><span id="line-595"></span><span>                      </span><span class="hs-comment">--   https://github.com/yesodweb/wai/blob/master/warp/Network/Wai/Handler/Warp/Recv.hs#L112</span><span>
+</span><span id="line-596"></span><span>                      </span><span class="hs-comment">-- as WS exception signaling cleanup below. It's not clear why exactly this gets</span><span>
+</span><span id="line-597"></span><span>                      </span><span class="hs-comment">-- raised occasionally; I suspect an equivalent handler is missing from WS itself.</span><span>
+</span><span id="line-598"></span><span>                      </span><span class="hs-comment">-- Regardless this should be safe:</span><span>
+</span><span id="line-599"></span><span>                      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e b a.
 (MonadBaseControl IO m, Exception e) =&gt;
 (e -&gt; Maybe b) -&gt; (b -&gt; m a) -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">handleJust</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
@@ -1559,37 +1563,37 @@ m a -&gt; (a -&gt; m b) -&gt; (a -&gt; m c) -&gt; m c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">IOError -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">E.isResourceVanishedError</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a e. Exception e =&gt; e -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">throw</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionException
-</span><span class="hs-identifier hs-var">WS.ConnectionClosed</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-596"></span><span>                        </span><span class="annot"><span class="annottext">forall a. WebSocketsData a =&gt; Connection -&gt; IO a
+</span><span class="hs-identifier hs-var">WS.ConnectionClosed</span></span><span class="hs-special">)</span><span>
+</span><span id="line-600"></span><span>                      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. WebSocketsData a =&gt; Connection -&gt; IO a
 </span><span class="hs-identifier hs-var">WS.receiveData</span></span><span> </span><span class="annot"><span class="annottext">Connection
 </span><a href="#local-6989586621691295737"><span class="hs-identifier hs-var">conn</span></a></span><span>
-</span><span id="line-597"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691295717"><span class="annot"><span class="annottext">messageLength :: Int64
+</span><span id="line-601"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691295717"><span class="annot"><span class="annottext">messageLength :: Int64
 </span><a href="#local-6989586621691295717"><span class="hs-identifier hs-var hs-var">messageLength</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Int64
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-var">BL.length</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621691295723"><span class="hs-identifier hs-var">msg</span></a></span><span>
-</span><span id="line-598"></span><span>                      </span><span id="local-6989586621691295715"><span class="annot"><span class="annottext">censoredMessage :: MessageDetails
+</span><span id="line-602"></span><span>                      </span><span id="local-6989586621691295715"><span class="annot"><span class="annottext">censoredMessage :: MessageDetails
 </span><a href="#local-6989586621691295715"><span class="hs-identifier hs-var hs-var">censoredMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-599"></span><span>                        </span><span class="annot"><span class="annottext">SerializableBlob -&gt; Int64 -&gt; MessageDetails
+</span><span id="line-603"></span><span>                        </span><span class="annot"><span class="annottext">SerializableBlob -&gt; Int64 -&gt; MessageDetails
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#MessageDetails"><span class="hs-identifier hs-var">MessageDetails</span></a></span><span>
-</span><span id="line-600"></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; SerializableBlob
+</span><span id="line-604"></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; SerializableBlob
 </span><span class="hs-identifier hs-var">SB.fromLBS</span></span><span> </span><span class="hs-special">(</span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691295725"><span class="hs-identifier hs-var">shouldCaptureVariables</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621691295723"><span class="hs-identifier hs-var">msg</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;&lt;censored&gt;&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-601"></span><span>                          </span><span class="annot"><span class="annottext">Int64
+</span><span id="line-605"></span><span>                          </span><span class="annot"><span class="annottext">Int64
 </span><a href="#local-6989586621691295717"><span class="hs-identifier hs-var">messageLength</span></a></span><span>
-</span><span id="line-602"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-603"></span><span>                    </span><span class="annot"><span class="annottext">Counter -&gt; Int64 -&gt; IO ()
+</span><span id="line-606"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span>
+</span><span id="line-607"></span><span>                    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Counter -&gt; Int64 -&gt; IO ()
 </span><span class="hs-identifier hs-var">Prometheus.Counter.add</span></span><span>
-</span><span id="line-604"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PrometheusMetrics -&gt; Counter
+</span><span id="line-608"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PrometheusMetrics -&gt; Counter
 </span><a href="Hasura.Server.Prometheus.html#pmWebSocketBytesReceived"><span class="hs-identifier hs-var">pmWebSocketBytesReceived</span></a></span><span> </span><span class="annot"><span class="annottext">PrometheusMetrics
 </span><a href="#local-6989586621691295803"><span class="hs-identifier hs-var">prometheusMetrics</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-605"></span><span>                      </span><span class="annot"><span class="annottext">Int64
+</span><span id="line-609"></span><span>                      </span><span class="annot"><span class="annottext">Int64
 </span><a href="#local-6989586621691295717"><span class="hs-identifier hs-var">messageLength</span></a></span><span>
-</span><span id="line-606"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-610"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadWSLog m =&gt;
 Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#logWSLog"><span class="hs-identifier hs-var">logWSLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
@@ -1600,17 +1604,17 @@ Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#EMessageReceived"><span class="hs-identifier hs-var">EMessageReceived</span></a></span><span> </span><span class="annot"><span class="annottext">MessageDetails
 </span><a href="#local-6989586621691295715"><span class="hs-identifier hs-var">censoredMessage</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-607"></span><span>                  </span><span class="annot"><span class="annottext">WSConn a -&gt; ByteString -&gt; WSSubProtocol -&gt; m ()
+</span><span id="line-611"></span><span>                  </span><span class="annot"><span class="annottext">WSConn a -&gt; ByteString -&gt; WSSubProtocol -&gt; m ()
 </span><a href="#local-6989586621691295765"><span class="hs-identifier hs-var">messageHandler</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn a
 </span><a href="#local-6989586621691295733"><span class="hs-identifier hs-var">wsConn</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621691295723"><span class="hs-identifier hs-var">msg</span></a></span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
 </span><a href="#local-6989586621691295789"><span class="hs-identifier hs-var">subProtocol</span></a></span><span>
-</span><span id="line-608"></span><span>
-</span><span id="line-609"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691295712"><span class="annot"><span class="annottext">send :: m ()
+</span><span id="line-612"></span><span>
+</span><span id="line-613"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691295712"><span class="annot"><span class="annottext">send :: m ()
 </span><a href="#local-6989586621691295712"><span class="hs-identifier hs-var hs-var">send</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">forever</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-610"></span><span>                  </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#WSQueueResponse"><span class="hs-identifier hs-type">WSQueueResponse</span></a></span><span> </span><span id="local-6989586621691295711"><span class="annot"><span class="annottext">ByteString
+</span><span id="line-614"></span><span>                  </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#WSQueueResponse"><span class="hs-identifier hs-type">WSQueueResponse</span></a></span><span> </span><span id="local-6989586621691295711"><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621691295711"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span id="local-6989586621691295710"><span class="annot"><span class="annottext">Maybe WSEventInfo
 </span><a href="#local-6989586621691295710"><span class="hs-identifier hs-var">wsInfo</span></a></span></span><span> </span><span id="local-6989586621691295709"><span class="annot"><span class="annottext">IO DiffTime
 </span><a href="#local-6989586621691295709"><span class="hs-identifier hs-var">wsTimer</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
@@ -1620,47 +1624,47 @@ Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. TQueue a -&gt; STM a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/stm-2.5.0.2/src"><span class="hs-identifier hs-var">STM.readTQueue</span></a></span><span> </span><span class="annot"><span class="annottext">TQueue WSQueueResponse
 </span><a href="#local-6989586621691295735"><span class="hs-identifier hs-var">sendQ</span></a></span><span>
-</span><span id="line-611"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span id="line-615"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. WebSocketsData a =&gt; Connection -&gt; a -&gt; IO ()
 </span><span class="hs-identifier hs-var">WS.sendTextData</span></span><span> </span><span class="annot"><span class="annottext">Connection
 </span><a href="#local-6989586621691295737"><span class="hs-identifier hs-var">conn</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621691295711"><span class="hs-identifier hs-var">msg</span></a></span><span>
-</span><span id="line-612"></span><span>                  </span><span id="local-6989586621691295707"><span class="annot"><span class="annottext">Double
+</span><span id="line-616"></span><span>                  </span><span id="local-6989586621691295707"><span class="annot"><span class="annottext">Double
 </span><a href="#local-6989586621691295707"><span class="hs-identifier hs-var">messageQueueTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (Real a, Fractional b) =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">realToFrac</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">IO DiffTime
 </span><a href="#local-6989586621691295709"><span class="hs-identifier hs-var">wsTimer</span></a></span><span>
-</span><span id="line-613"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691295706"><span class="annot"><span class="annottext">messageLength :: Int64
+</span><span id="line-617"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691295706"><span class="annot"><span class="annottext">messageLength :: Int64
 </span><a href="#local-6989586621691295706"><span class="hs-identifier hs-var hs-var">messageLength</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Int64
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-var">BL.length</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621691295711"><span class="hs-identifier hs-var">msg</span></a></span><span>
-</span><span id="line-614"></span><span>                      </span><span id="local-6989586621691295705"><span class="annot"><span class="annottext">messageDetails :: MessageDetails
+</span><span id="line-618"></span><span>                      </span><span id="local-6989586621691295705"><span class="annot"><span class="annottext">messageDetails :: MessageDetails
 </span><a href="#local-6989586621691295705"><span class="hs-identifier hs-var hs-var">messageDetails</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SerializableBlob -&gt; Int64 -&gt; MessageDetails
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#MessageDetails"><span class="hs-identifier hs-var">MessageDetails</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; SerializableBlob
 </span><span class="hs-identifier hs-var">SB.fromLBS</span></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621691295711"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int64
 </span><a href="#local-6989586621691295706"><span class="hs-identifier hs-var">messageLength</span></a></span><span>
-</span><span id="line-615"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span id="line-619"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-616"></span><span>                    </span><span class="annot"><span class="annottext">Counter -&gt; Int64 -&gt; IO ()
+</span><span id="line-620"></span><span>                    </span><span class="annot"><span class="annottext">Counter -&gt; Int64 -&gt; IO ()
 </span><span class="hs-identifier hs-var">Prometheus.Counter.add</span></span><span>
-</span><span id="line-617"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PrometheusMetrics -&gt; Counter
+</span><span id="line-621"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PrometheusMetrics -&gt; Counter
 </span><a href="Hasura.Server.Prometheus.html#pmWebSocketBytesSent"><span class="hs-identifier hs-var">pmWebSocketBytesSent</span></a></span><span> </span><span class="annot"><span class="annottext">PrometheusMetrics
 </span><a href="#local-6989586621691295803"><span class="hs-identifier hs-var">prometheusMetrics</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-618"></span><span>                      </span><span class="annot"><span class="annottext">Int64
+</span><span id="line-622"></span><span>                      </span><span class="annot"><span class="annottext">Int64
 </span><a href="#local-6989586621691295706"><span class="hs-identifier hs-var">messageLength</span></a></span><span>
-</span><span id="line-619"></span><span>                    </span><span class="annot"><span class="annottext">Histogram -&gt; Double -&gt; IO ()
+</span><span id="line-623"></span><span>                    </span><span class="annot"><span class="annottext">Histogram -&gt; Double -&gt; IO ()
 </span><span class="hs-identifier hs-var">Prometheus.Histogram.observe</span></span><span>
-</span><span id="line-620"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PrometheusMetrics -&gt; Histogram
+</span><span id="line-624"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PrometheusMetrics -&gt; Histogram
 </span><a href="Hasura.Server.Prometheus.html#pmWebsocketMsgQueueTimeSeconds"><span class="hs-identifier hs-var">pmWebsocketMsgQueueTimeSeconds</span></a></span><span> </span><span class="annot"><span class="annottext">PrometheusMetrics
 </span><a href="#local-6989586621691295803"><span class="hs-identifier hs-var">prometheusMetrics</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-621"></span><span>                      </span><span class="annot"><span class="annottext">Double
+</span><span id="line-625"></span><span>                      </span><span class="annot"><span class="annottext">Double
 </span><a href="#local-6989586621691295707"><span class="hs-identifier hs-var">messageQueueTime</span></a></span><span>
-</span><span id="line-622"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-626"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadWSLog m =&gt;
 Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#logWSLog"><span class="hs-identifier hs-var">logWSLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
@@ -1671,24 +1675,24 @@ Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#EMessageSent"><span class="hs-identifier hs-var">EMessageSent</span></a></span><span> </span><span class="annot"><span class="annottext">MessageDetails
 </span><a href="#local-6989586621691295705"><span class="hs-identifier hs-var">messageDetails</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe WSEventInfo
 </span><a href="#local-6989586621691295710"><span class="hs-identifier hs-var">wsInfo</span></a></span><span>
-</span><span id="line-623"></span><span>
-</span><span id="line-624"></span><span>            </span><span class="hs-comment">-- withAsync lets us be very sure that if e.g. an async exception is raised while we're</span><span>
-</span><span id="line-625"></span><span>            </span><span class="hs-comment">-- forking that the threads we launched will be cleaned up. See also below.</span><span>
-</span><span id="line-626"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b.
+</span><span id="line-627"></span><span>
+</span><span id="line-628"></span><span>            </span><span class="hs-comment">-- withAsync lets us be very sure that if e.g. an async exception is raised while we're</span><span>
+</span><span id="line-629"></span><span>            </span><span class="hs-comment">-- forking that the threads we launched will be cleaned up. See also below.</span><span>
+</span><span id="line-630"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b.
 (MonadBaseControl IO m, Forall (Pure m)) =&gt;
 m a -&gt; (Async a -&gt; m b) -&gt; m b
 </span><span class="hs-identifier hs-var">LA.withAsync</span></span><span> </span><span class="annot"><span class="annottext">m ()
 </span><a href="#local-6989586621691295726"><span class="hs-identifier hs-var">rcv</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691295700"><span class="annot"><span class="annottext">Async ()
 </span><a href="#local-6989586621691295700"><span class="hs-identifier hs-var">rcvRef</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-627"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b.
+</span><span id="line-631"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b.
 (MonadBaseControl IO m, Forall (Pure m)) =&gt;
 m a -&gt; (Async a -&gt; m b) -&gt; m b
 </span><span class="hs-identifier hs-var">LA.withAsync</span></span><span> </span><span class="annot"><span class="annottext">m ()
 </span><a href="#local-6989586621691295712"><span class="hs-identifier hs-var">send</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691295699"><span class="annot"><span class="annottext">Async ()
 </span><a href="#local-6989586621691295699"><span class="hs-identifier hs-var">sendRef</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-628"></span><span>                </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b.
+</span><span id="line-632"></span><span>                </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b.
 (MonadBaseControl IO m, Forall (Pure m)) =&gt;
 m a -&gt; (Async a -&gt; m b) -&gt; m b
 </span><span class="hs-identifier hs-var">LA.withAsync</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
@@ -1698,7 +1702,7 @@ m a -&gt; (Async a -&gt; m b) -&gt; m b
 </span><a href="#local-6989586621691295733"><span class="hs-identifier hs-var">wsConn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691295698"><span class="annot"><span class="annottext">Async ()
 </span><a href="#local-6989586621691295698"><span class="hs-identifier hs-var">keepAliveRef</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-629"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b.
+</span><span id="line-633"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b.
 (MonadBaseControl IO m, Forall (Pure m)) =&gt;
 m a -&gt; (Async a -&gt; m b) -&gt; m b
 </span><span class="hs-identifier hs-var">LA.withAsync</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
@@ -1708,14 +1712,14 @@ m a -&gt; (Async a -&gt; m b) -&gt; m b
 </span><a href="#local-6989586621691295733"><span class="hs-identifier hs-var">wsConn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691295697"><span class="annot"><span class="annottext">Async ()
 </span><a href="#local-6989586621691295697"><span class="hs-identifier hs-var">onJwtExpiryRef</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-630"></span><span>                    </span><span class="hs-comment">-- once connection is accepted, check the status of the timer, and if it's expired, close the connection for `graphql-ws`</span><span>
-</span><span id="line-631"></span><span>                    </span><span id="local-6989586621691295696"><span class="annot"><span class="annottext">WSConnInitTimerStatus
+</span><span id="line-634"></span><span>                    </span><span class="hs-comment">-- once connection is accepted, check the status of the timer, and if it's expired, close the connection for `graphql-ws`</span><span>
+</span><span id="line-635"></span><span>                    </span><span id="local-6989586621691295696"><span class="annot"><span class="annottext">WSConnInitTimerStatus
 </span><a href="#local-6989586621691295696"><span class="hs-identifier hs-var">timeoutStatus</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">WSConnInitTimer -&gt; IO WSConnInitTimerStatus
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getWSTimerState"><span class="hs-identifier hs-var">getWSTimerState</span></a></span><span> </span><span class="annot"><span class="annottext">WSConnInitTimer
 </span><a href="#local-6989586621691295743"><span class="hs-identifier hs-var">wsConnInitTimer</span></a></span><span>
-</span><span id="line-632"></span><span>                    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span id="line-636"></span><span>                    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WSConnInitTimerStatus
 </span><a href="#local-6989586621691295696"><span class="hs-identifier hs-var">timeoutStatus</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
@@ -1723,27 +1727,27 @@ m a -&gt; (Async a -&gt; m b) -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&amp;&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
 </span><a href="#local-6989586621691295789"><span class="hs-identifier hs-var">subProtocol</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
-</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GraphQLWS"><span class="hs-identifier hs-var">GraphQLWS</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-633"></span><span>                      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-634"></span><span>                        </span><span class="annot"><span class="annottext">forall a. WSConn a -&gt; Word16 -&gt; ByteString -&gt; IO ()
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GraphQLWS"><span class="hs-identifier hs-var">GraphQLWS</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-637"></span><span>                      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span>
+</span><span id="line-638"></span><span>                      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. WSConn a -&gt; Word16 -&gt; ByteString -&gt; IO ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#closeConnWithCode"><span class="hs-identifier hs-var">closeConnWithCode</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn a
 </span><a href="#local-6989586621691295733"><span class="hs-identifier hs-var">wsConn</span></a></span><span> </span><span class="annot"><span class="annottext">Word16
 </span><span class="hs-number">4408</span></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;Connection initialisation timed out&quot;</span></span><span>
-</span><span id="line-635"></span><span>
-</span><span id="line-636"></span><span>                    </span><span class="hs-comment">-- terminates on WS.ConnectionException and JWT expiry</span><span>
-</span><span id="line-637"></span><span>                    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691295691"><span class="annot"><span class="annottext">waitOnRefs :: [Async ()]
+</span><span id="line-639"></span><span>
+</span><span id="line-640"></span><span>                    </span><span class="hs-comment">-- terminates on WS.ConnectionException and JWT expiry</span><span>
+</span><span id="line-641"></span><span>                    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691295691"><span class="annot"><span class="annottext">waitOnRefs :: [Async ()]
 </span><a href="#local-6989586621691295691"><span class="hs-identifier hs-var hs-var">waitOnRefs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Async ()
 </span><a href="#local-6989586621691295698"><span class="hs-identifier hs-var">keepAliveRef</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Async ()
 </span><a href="#local-6989586621691295697"><span class="hs-identifier hs-var">onJwtExpiryRef</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Async ()
 </span><a href="#local-6989586621691295700"><span class="hs-identifier hs-var">rcvRef</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Async ()
 </span><a href="#local-6989586621691295699"><span class="hs-identifier hs-var">sendRef</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-638"></span><span>                    </span><span class="hs-comment">-- withAnyCancel re-raises exceptions from forkedThreads, and is guarenteed to cancel in</span><span>
-</span><span id="line-639"></span><span>                    </span><span class="hs-comment">-- case of async exceptions raised while blocking here:</span><span>
-</span><span id="line-640"></span><span>                    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
+</span><span id="line-642"></span><span>                    </span><span class="hs-comment">-- withAnyCancel re-raises exceptions from forkedThreads, and is guarenteed to cancel in</span><span>
+</span><span id="line-643"></span><span>                    </span><span class="hs-comment">-- case of async exceptions raised while blocking here:</span><span>
+</span><span id="line-644"></span><span>                    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
 (MonadBaseControl IO m, Exception e) =&gt;
 m a -&gt; m (Either e a)
 </span><span class="hs-identifier hs-var">try</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
@@ -1752,12 +1756,12 @@ m a -&gt; m (Either e a)
 </span><span class="hs-identifier hs-var">LA.waitAnyCancel</span></span><span> </span><span class="annot"><span class="annottext">[Async ()]
 </span><a href="#local-6989586621691295691"><span class="hs-identifier hs-var">waitOnRefs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-641"></span><span>                      </span><span class="hs-comment">-- NOTE: 'websockets' is a bit of a rat's nest at the moment wrt</span><span>
-</span><span id="line-642"></span><span>                      </span><span class="hs-comment">-- exceptions; for now handle all ConnectionException by closing</span><span>
-</span><span id="line-643"></span><span>                      </span><span class="hs-comment">-- and cleaning up, see: https://github.com/jaspervdj/websockets/issues/48</span><span>
-</span><span id="line-644"></span><span>                      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ConnectionException
+</span><span id="line-645"></span><span>                      </span><span class="hs-comment">-- NOTE: 'websockets' is a bit of a rat's nest at the moment wrt</span><span>
+</span><span id="line-646"></span><span>                      </span><span class="hs-comment">-- exceptions; for now handle all ConnectionException by closing</span><span>
+</span><span id="line-647"></span><span>                      </span><span class="hs-comment">-- and cleaning up, see: https://github.com/jaspervdj/websockets/issues/48</span><span>
+</span><span id="line-648"></span><span>                      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ConnectionException
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">WS.ConnectionException</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-645"></span><span>                        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-649"></span><span>                        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadWSLog m =&gt;
 Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#logWSLog"><span class="hs-identifier hs-var">logWSLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
@@ -1768,10 +1772,10 @@ Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="#local-6989586621691295733"><span class="hs-identifier hs-var">wsConn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">WSEvent
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ECloseReceived"><span class="hs-identifier hs-var">ECloseReceived</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-646"></span><span>                      </span><span class="hs-comment">-- this will happen when jwt is expired</span><span>
-</span><span id="line-647"></span><span>                      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span class="annot"><span class="annottext">(Async (), ())
+</span><span id="line-650"></span><span>                      </span><span class="hs-comment">-- this will happen when jwt is expired</span><span>
+</span><span id="line-651"></span><span>                      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span class="annot"><span class="annottext">(Async (), ())
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-648"></span><span>                        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-652"></span><span>                        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadWSLog m =&gt;
 Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#logWSLog"><span class="hs-identifier hs-var">logWSLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
@@ -1782,16 +1786,16 @@ Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="#local-6989586621691295733"><span class="hs-identifier hs-var">wsConn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">WSEvent
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#EJwtExpired"><span class="hs-identifier hs-var">EJwtExpired</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-649"></span><span>
-</span><span id="line-650"></span><span>    </span><span id="local-6989586621691295727"><span class="annot"><span class="annottext">onConnClose :: WSConn a -&gt; ServerStatus a -&gt; m ()
+</span><span id="line-653"></span><span>
+</span><span id="line-654"></span><span>    </span><span id="local-6989586621691295727"><span class="annot"><span class="annottext">onConnClose :: WSConn a -&gt; ServerStatus a -&gt; m ()
 </span><a href="#local-6989586621691295727"><span class="hs-identifier hs-var hs-var">onConnClose</span></a></span></span><span> </span><span id="local-6989586621691295688"><span class="annot"><span class="annottext">WSConn a
 </span><a href="#local-6989586621691295688"><span class="hs-identifier hs-var">wsConn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-651"></span><span>      </span><span class="annot"><span class="annottext">ServerStatus a
+</span><span id="line-655"></span><span>      </span><span class="annot"><span class="annottext">ServerStatus a
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ShuttingDown"><span class="hs-identifier hs-var">ShuttingDown</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-652"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#AcceptingConns"><span class="hs-identifier hs-type">AcceptingConns</span></a></span><span> </span><span id="local-6989586621691295687"><span class="annot"><span class="annottext">ConnMap a
+</span><span id="line-656"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#AcceptingConns"><span class="hs-identifier hs-type">AcceptingConns</span></a></span><span> </span><span id="local-6989586621691295687"><span class="annot"><span class="annottext">ConnMap a
 </span><a href="#local-6989586621691295687"><span class="hs-identifier hs-var">connMap</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-653"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span id="line-657"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. STM a -&gt; IO a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">STM.atomically</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1802,10 +1806,10 @@ key -&gt; Map key value -&gt; STM ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#_wcConnId"><span class="hs-identifier hs-var">_wcConnId</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn a
 </span><a href="#local-6989586621691295688"><span class="hs-identifier hs-var">wsConn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ConnMap a
 </span><a href="#local-6989586621691295687"><span class="hs-identifier hs-var">connMap</span></a></span><span>
-</span><span id="line-654"></span><span>        </span><span class="annot"><span class="annottext">OnCloseH m a
+</span><span id="line-658"></span><span>        </span><span class="annot"><span class="annottext">OnCloseH m a
 </span><a href="#local-6989586621691295764"><span class="hs-identifier hs-var">closeHandler</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn a
 </span><a href="#local-6989586621691295688"><span class="hs-identifier hs-var">wsConn</span></a></span><span>
-</span><span id="line-655"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-659"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadWSLog m =&gt;
 Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#logWSLog"><span class="hs-identifier hs-var">logWSLog</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
@@ -1816,39 +1820,39 @@ Logger Hasura -&gt; WSLog -&gt; m ()
 </span><a href="#local-6989586621691295688"><span class="hs-identifier hs-var">wsConn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">WSEvent
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#EClosed"><span class="hs-identifier hs-var">EClosed</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-656"></span><span>
-</span><span id="line-657"></span><span id="local-6989586621691296766"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#shutdown"><span class="hs-identifier hs-type">shutdown</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#WSServer"><span class="hs-identifier hs-type">WSServer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691296766"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
-</span><span id="line-658"></span><span id="shutdown"><span class="annot"><span class="annottext">shutdown :: forall a. WSServer a -&gt; IO ()
+</span><span id="line-660"></span><span>
+</span><span id="line-661"></span><span id="local-6989586621691296766"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#shutdown"><span class="hs-identifier hs-type">shutdown</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#WSServer"><span class="hs-identifier hs-type">WSServer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691296766"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-662"></span><span id="shutdown"><span class="annot"><span class="annottext">shutdown :: forall a. WSServer a -&gt; IO ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#shutdown"><span class="hs-identifier hs-var hs-var">shutdown</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#WSServer"><span class="hs-identifier hs-type">WSServer</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span id="local-6989586621691295675"><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
 </span><a href="#local-6989586621691295675"><span class="hs-identifier hs-var">writeLog</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TVar SecuritySensitiveUserConfig
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621691295674"><span class="annot"><span class="annottext">TVar (ServerStatus a)
 </span><a href="#local-6989586621691295674"><span class="hs-identifier hs-var">serverStatus</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-659"></span><span>  </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
+</span><span id="line-663"></span><span>  </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
 </span><a href="#local-6989586621691295675"><span class="hs-identifier hs-var">writeLog</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; UnstructuredLog
 </span><a href="Hasura.Logging.html#debugT"><span class="hs-identifier hs-var">L.debugT</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Shutting websockets server down&quot;</span></span><span>
-</span><span id="line-660"></span><span>  </span><span id="local-6989586621691295672"><span class="annot"><span class="annottext">[(WSId, WSConn a)]
+</span><span id="line-664"></span><span>  </span><span id="local-6989586621691295672"><span class="annot"><span class="annottext">[(WSId, WSConn a)]
 </span><a href="#local-6989586621691295672"><span class="hs-identifier hs-var">conns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. STM a -&gt; IO a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">STM.atomically</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-661"></span><span>    </span><span id="local-6989586621691295671"><span class="annot"><span class="annottext">[(WSId, WSConn a)]
+</span><span id="line-665"></span><span>    </span><span id="local-6989586621691295671"><span class="annot"><span class="annottext">[(WSId, WSConn a)]
 </span><a href="#local-6989586621691295671"><span class="hs-identifier hs-var">conns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. TVar (ServerStatus a) -&gt; STM [(WSId, WSConn a)]
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#flushConnMap"><span class="hs-identifier hs-var">flushConnMap</span></a></span><span> </span><span class="annot"><span class="annottext">TVar (ServerStatus a)
 </span><a href="#local-6989586621691295674"><span class="hs-identifier hs-var">serverStatus</span></a></span><span>
-</span><span id="line-662"></span><span>    </span><span class="annot"><span class="annottext">forall a. TVar a -&gt; a -&gt; STM ()
+</span><span id="line-666"></span><span>    </span><span class="annot"><span class="annottext">forall a. TVar a -&gt; a -&gt; STM ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">STM.writeTVar</span></a></span><span> </span><span class="annot"><span class="annottext">TVar (ServerStatus a)
 </span><a href="#local-6989586621691295674"><span class="hs-identifier hs-var">serverStatus</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ServerStatus a
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#ShuttingDown"><span class="hs-identifier hs-var">ShuttingDown</span></a></span><span>
-</span><span id="line-663"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-667"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">[(WSId, WSConn a)]
 </span><a href="#local-6989586621691295671"><span class="hs-identifier hs-var">conns</span></a></span><span>
-</span><span id="line-664"></span><span>
-</span><span id="line-665"></span><span>  </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-668"></span><span>
+</span><span id="line-669"></span><span>  </span><span class="annot"><span class="annottext">forall a.
 (ByteString -&gt; WSConn a -&gt; IO ())
 -&gt; ByteString -&gt; [(WSId, WSConn a)] -&gt; IO ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#closeAllWith"><span class="hs-identifier hs-var">closeAllWith</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
@@ -1856,4 +1860,4 @@ a -&gt; m ()
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#forceConnReconnect"><span class="hs-identifier hs-var">forceConnReconnect</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;shutting server down&quot;</span></span><span> </span><span class="annot"><span class="annottext">[(WSId, WSConn a)]
 </span><a href="#local-6989586621691295672"><span class="hs-identifier hs-var">conns</span></a></span><span>
-</span><span id="line-666"></span></pre></body></html>
+</span><span id="line-670"></span></pre></body></html>

@@ -96,9 +96,9 @@ $c== :: MigrationResult -&gt; MigrationResult -&gt; Bool
 </span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">forall a impl.
 ToEngineLog a impl =&gt;
 a -&gt; (LogLevel, EngineLogType impl, Value)
-</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var">toEngineLog</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-78"></span><span>      </span><span class="annot"><a href="Hasura.Server.Logging.html#StartupLog"><span class="hs-identifier hs-type">StartupLog</span></a></span><span>
+</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var">toEngineLog</span></a></span><span>
+</span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html#StartupLog"><span class="hs-identifier hs-type">StartupLog</span></a></span><span>
 </span><span id="line-79"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">slLogLevel :: LogLevel
 </span><a href="#local-6989586621691429132"><span class="hs-identifier hs-var">slLogLevel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span class="hs-special">,</span><span>
@@ -209,53 +209,53 @@ SchemaName -&gt; TableName -&gt; m Bool
 </span><span id="line-121"></span><span>  </span><span id="local-6989586621691428989"><span class="annot"><span class="annottext">MigrationResult
 </span><a href="#local-6989586621691428989"><span class="hs-identifier hs-var">migrationResult</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-122"></span><span>    </span><span class="hs-keyword">if</span><span>
-</span><span id="line-123"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">MaintenanceMode ()
+</span><span id="line-123"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">MaintenanceMode ()
 </span><a href="#local-6989586621691428998"><span class="hs-identifier hs-var">maintenanceMode</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; MaintenanceMode a
 </span><a href="Hasura.Server.Types.html#MaintenanceModeEnabled"><span class="hs-identifier hs-var">MaintenanceModeEnabled</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-124"></span><span>            </span><span class="hs-keyword">if</span><span>
-</span><span id="line-125"></span><span>                </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span id="line-124"></span><span>          </span><span class="hs-keyword">if</span><span>
+</span><span id="line-125"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691428996"><span class="hs-identifier hs-var">catalogSchemaExists</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-126"></span><span>                    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><span id="line-126"></span><span>                </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;unexpected: hdb_catalog schema not found in maintenance mode&quot;</span></span><span>
-</span><span id="line-127"></span><span>                </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span id="line-127"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691428993"><span class="hs-identifier hs-var">versionTableExists</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-128"></span><span>                    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><span id="line-128"></span><span>                </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;unexpected: hdb_catalog.hdb_version table not found in maintenance mode&quot;</span></span><span>
-</span><span id="line-129"></span><span>                </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span id="line-129"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691428990"><span class="hs-identifier hs-var">metadataTableExists</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-130"></span><span>                    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-131"></span><span>                      </span><span class="annot"><span class="annottext">Text
+</span><span id="line-130"></span><span>                </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><span class="hs-identifier hs-var">throw500</span></span><span>
+</span><span id="line-131"></span><span>                  </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;the \&quot;hdb_catalog.hdb_metadata\&quot; table is expected to exist and contain&quot;</span></span><span>
-</span><span id="line-132"></span><span>                        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-132"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; the metadata of the graphql-engine&quot;</span></span><span>
-</span><span id="line-133"></span><span>                </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-133"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">MigrationResult
 </span><a href="Hasura.Server.Migrate.html#MRMaintanenceMode"><span class="hs-identifier hs-var">MRMaintanenceMode</span></a></span><span>
-</span><span id="line-134"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-134"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691428996"><span class="hs-identifier hs-var">catalogSchemaExists</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-135"></span><span>            </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-135"></span><span>          </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; m MigrationResult
 </span><a href="#local-6989586621691428985"><span class="hs-identifier hs-var">initialize</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
-</span><span id="line-136"></span><span>            </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-136"></span><span>          </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691428993"><span class="hs-identifier hs-var">versionTableExists</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-137"></span><span>              </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-137"></span><span>            </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; m MigrationResult
 </span><a href="#local-6989586621691428985"><span class="hs-identifier hs-var">initialize</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
-</span><span id="line-138"></span><span>              </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-138"></span><span>            </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataCatalogVersion -&gt; m MigrationResult
 </span><a href="#local-6989586621691428984"><span class="hs-identifier hs-var">migrateFrom</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">=&lt;&lt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
@@ -276,13 +276,13 @@ SchemaName -&gt; TableName -&gt; m Bool
 </span><a href="#local-6989586621691428985"><span class="hs-identifier hs-var hs-var">initialize</span></a></span></span><span> </span><span id="local-6989586621691428978"><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691428978"><span class="hs-identifier hs-var">createSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-145"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
-</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-146"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span>
+</span><span id="line-146"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621691428978"><span class="hs-identifier hs-var">createSchema</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-147"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) r e.
+</span><a href="#local-6989586621691428978"><span class="hs-identifier hs-var">createSchema</span></a></span><span>
+</span><span id="line-147"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) r e.
 (MonadIO m, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m ()
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.unitQE</span></a></span><span> </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
@@ -311,9 +311,9 @@ SchemaName -&gt; TableName -&gt; m Bool
 </span><span id="line-157"></span><span>                    </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-158"></span><span>                      </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span>
+</span><span id="line-158"></span><span>                      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 SourceName
 -&gt; BackendSourceKind b
 -&gt; Tables b
@@ -402,27 +402,27 @@ Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
 </span><span id="line-184"></span><span>            </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-185"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw400</span></span><span> </span><span class="annot"><span class="annottext">Code
-</span><span class="hs-identifier hs-var">NotSupported</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-186"></span><span>                </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">NotSupported</span></span><span>
+</span><span id="line-186"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Cannot use database previously used with a newer version of graphql-engine (expected&quot;</span></span><span>
-</span><span id="line-187"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-187"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; a catalog version &lt;=&quot;</span></span><span>
-</span><span id="line-188"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-188"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="Hasura.Server.Migrate.LatestVersion.html#latestCatalogVersionString"><span class="hs-identifier hs-var">latestCatalogVersionString</span></a></span><span>
-</span><span id="line-189"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-189"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;, but the current version&quot;</span></span><span>
-</span><span id="line-190"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-190"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is &quot;</span></span><span>
-</span><span id="line-191"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-191"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataCatalogVersion
 </span><a href="#local-6989586621691428955"><span class="hs-identifier hs-var">previousVersion</span></a></span><span>
-</span><span id="line-192"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-192"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;).&quot;</span></span><span>
 </span><span id="line-193"></span><span>            </span><span id="local-6989586621691428948"><span class="annot"><span class="annottext">[(MetadataCatalogVersion, MigrationPair m)]
@@ -535,25 +535,25 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="#local-6989586621691428870"><span class="hs-identifier hs-var">reason</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-224"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw400</span></span><span> </span><span class="annot"><span class="annottext">Code
-</span><span class="hs-identifier hs-var">NotSupported</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-225"></span><span>                </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">NotSupported</span></span><span>
+</span><span id="line-225"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;This downgrade path (from &quot;</span></span><span>
-</span><span id="line-226"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-226"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataCatalogVersion
 </span><a href="#local-6989586621691428873"><span class="hs-identifier hs-var">previousVersion</span></a></span><span>
-</span><span id="line-227"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-227"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; to &quot;</span></span><span>
-</span><span id="line-228"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-228"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">DowngradeOptions -&gt; Text
 </span><a href="Hasura.Server.Init.Config.html#dgoTargetVersion"><span class="hs-identifier hs-var">dgoTargetVersion</span></a></span><span> </span><span class="annot"><span class="annottext">DowngradeOptions
 </span><a href="#local-6989586621691428883"><span class="hs-identifier hs-var">opts</span></a></span><span>
-</span><span id="line-229"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-229"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;) is not supported, because &quot;</span></span><span>
-</span><span id="line-230"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-230"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691428870"><span class="hs-identifier hs-var">reason</span></a></span><span>
 </span><span id="line-231"></span><span>            </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span id="local-6989586621691428869"><span class="annot"><span class="annottext">[m ()]
@@ -728,76 +728,76 @@ Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
 </span><span id="line-299"></span><span>                 </span><span class="hs-special">)</span><span>
 </span><span id="line-300"></span><span>                 </span><span class="hs-special">|]</span><span>
 </span><span id="line-301"></span><span>      </span><span class="hs-keyword">in</span><span> </span><span class="hs-identifier">TH.listE</span><span>
-</span><span id="line-302"></span><span>         </span><span class="hs-comment">-- version 0.8 is the only non-integral catalog version</span><span>
-</span><span id="line-303"></span><span>         </span><span class="hs-comment">-- The 40_to_41 migration is consciously omitted from below because its contents</span><span>
-</span><span id="line-304"></span><span>         </span><span class="hs-comment">-- have been moved to the `0_to_1.sql` because the `40_to_41` migration only contained</span><span>
-</span><span id="line-305"></span><span>         </span><span class="hs-comment">-- source catalog changes and we'd like to keep source catalog migrations in a different</span><span>
-</span><span id="line-306"></span><span>         </span><span class="hs-comment">-- path than metadata catalog migrations.</span><span>
-</span><span id="line-307"></span><span>         </span><span class="hs-operator">$</span><span>
-</span><span id="line-308"></span><span>           </span><span class="hs-special">[|</span><span class="hs-special">(</span><span class="hs-identifier">MetadataCatalogVersion08</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">MigrationPair</span><span> </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="hs-identifier">migrationFromFile</span><span> </span><span class="hs-string">&quot;08&quot;</span><span> </span><span class="hs-string">&quot;1&quot;</span><span class="hs-special">)</span><span> </span><span class="hs-identifier">Nothing</span><span class="hs-special">)</span><span class="hs-special">|]</span><span>
-</span><span id="line-309"></span><span>             </span><span class="hs-glyph">:</span><span> </span><span class="hs-identifier">migrationsFromFile</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">2</span><span> </span><span class="hs-glyph">..</span><span> </span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">3</span><span class="hs-special">]</span><span>
-</span><span id="line-310"></span><span>             </span><span class="hs-operator">++</span><span> </span><span class="hs-special">[|</span><span class="hs-special">(</span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">3</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">MigrationPair</span><span> </span><span class="hs-identifier">from3To4</span><span> </span><span class="hs-identifier">Nothing</span><span class="hs-special">)</span><span class="hs-special">|]</span><span>
-</span><span id="line-311"></span><span>             </span><span class="hs-glyph">:</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">migrationsFromFile</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">5</span><span> </span><span class="hs-glyph">..</span><span> </span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">40</span><span class="hs-special">]</span><span> </span><span class="hs-operator">++</span><span> </span><span class="hs-identifier">migrationsFromFile</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">42</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
-</span><span id="line-312"></span><span>             </span><span class="hs-operator">++</span><span> </span><span class="hs-special">[|</span><span class="hs-special">(</span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">42</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">MigrationPair</span><span> </span><span class="hs-identifier">from42To43</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">Just</span><span> </span><span class="hs-identifier">from43To42</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">|]</span><span>
-</span><span id="line-313"></span><span>             </span><span class="hs-glyph">:</span><span> </span><span class="hs-identifier">migrationsFromFile</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">44</span><span> </span><span class="hs-glyph">..</span><span> </span><span class="hs-identifier">latestCatalogVersion</span><span class="hs-special">]</span><span>
-</span><span id="line-314"></span><span>   </span><span class="hs-special">)</span><span>
-</span><span id="line-315"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-316"></span><span>    </span><span class="annot"><a href="#local-6989586621691428755"><span class="hs-identifier hs-type">runTxOrPrint</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.Query</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691429315"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-317"></span><span>    </span><span id="local-6989586621691428755"><span class="annot"><span class="annottext">runTxOrPrint :: Query -&gt; m ()
+</span><span id="line-302"></span><span>           </span><span class="hs-comment">-- version 0.8 is the only non-integral catalog version</span><span>
+</span><span id="line-303"></span><span>           </span><span class="hs-comment">-- The 40_to_41 migration is consciously omitted from below because its contents</span><span>
+</span><span id="line-304"></span><span>           </span><span class="hs-comment">-- have been moved to the `0_to_1.sql` because the `40_to_41` migration only contained</span><span>
+</span><span id="line-305"></span><span>           </span><span class="hs-comment">-- source catalog changes and we'd like to keep source catalog migrations in a different</span><span>
+</span><span id="line-306"></span><span>           </span><span class="hs-comment">-- path than metadata catalog migrations.</span><span>
+</span><span id="line-307"></span><span>           </span><span class="hs-operator">$</span><span> </span><span class="hs-special">[|</span><span class="hs-special">(</span><span class="hs-identifier">MetadataCatalogVersion08</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">MigrationPair</span><span> </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="hs-identifier">migrationFromFile</span><span> </span><span class="hs-string">&quot;08&quot;</span><span> </span><span class="hs-string">&quot;1&quot;</span><span class="hs-special">)</span><span> </span><span class="hs-identifier">Nothing</span><span class="hs-special">)</span><span class="hs-special">|]</span><span>
+</span><span id="line-308"></span><span>           </span><span class="hs-glyph">:</span><span> </span><span class="hs-identifier">migrationsFromFile</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">2</span><span> </span><span class="hs-glyph">..</span><span> </span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">3</span><span class="hs-special">]</span><span>
+</span><span id="line-309"></span><span>             </span><span class="hs-operator">++</span><span> </span><span class="hs-special">[|</span><span class="hs-special">(</span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">3</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">MigrationPair</span><span> </span><span class="hs-identifier">from3To4</span><span> </span><span class="hs-identifier">Nothing</span><span class="hs-special">)</span><span class="hs-special">|]</span><span>
+</span><span id="line-310"></span><span>           </span><span class="hs-glyph">:</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">migrationsFromFile</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">5</span><span> </span><span class="hs-glyph">..</span><span> </span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">40</span><span class="hs-special">]</span><span> </span><span class="hs-operator">++</span><span> </span><span class="hs-identifier">migrationsFromFile</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">42</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-311"></span><span>             </span><span class="hs-operator">++</span><span> </span><span class="hs-special">[|</span><span class="hs-special">(</span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">42</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">MigrationPair</span><span> </span><span class="hs-identifier">from42To43</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">Just</span><span> </span><span class="hs-identifier">from43To42</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">|]</span><span>
+</span><span id="line-312"></span><span>           </span><span class="hs-glyph">:</span><span> </span><span class="hs-identifier">migrationsFromFile</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">MetadataCatalogVersion</span><span> </span><span class="hs-number">44</span><span> </span><span class="hs-glyph">..</span><span> </span><span class="hs-identifier">latestCatalogVersion</span><span class="hs-special">]</span><span>
+</span><span id="line-313"></span><span>   </span><span class="hs-special">)</span><span>
+</span><span id="line-314"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-315"></span><span>    </span><span class="annot"><a href="#local-6989586621691428755"><span class="hs-identifier hs-type">runTxOrPrint</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.Query</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691429315"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-316"></span><span>    </span><span id="local-6989586621691428755"><span class="annot"><span class="annottext">runTxOrPrint :: Query -&gt; m ()
 </span><a href="#local-6989586621691428755"><span class="hs-identifier hs-var hs-var">runTxOrPrint</span></a></span></span><span>
-</span><span id="line-318"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-317"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691428757"><span class="hs-identifier hs-var">dryRun</span></a></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-319"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span id="line-318"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; IO ()
 </span><span class="hs-identifier hs-var">TIO.putStrLn</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Query -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.getQueryText</span></a></span><span>
-</span><span id="line-320"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-319"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadTx m =&gt; Query -&gt; m ()
 </span><a href="Hasura.Server.Migrate.html#multiQ"><span class="hs-identifier hs-var">multiQ</span></a></span><span>
-</span><span id="line-321"></span><span>
-</span><span id="line-322"></span><span>    </span><span id="local-6989586621691428754"><span class="annot"><span class="annottext">from42To43 :: m ()
+</span><span id="line-320"></span><span>
+</span><span id="line-321"></span><span>    </span><span id="local-6989586621691428754"><span class="annot"><span class="annottext">from42To43 :: m ()
 </span><a href="#local-6989586621691428754"><span class="hs-identifier hs-var hs-var">from42To43</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-323"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span id="line-322"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MaintenanceMode ()
 </span><a href="#local-6989586621691428756"><span class="hs-identifier hs-var">maintenanceMode</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; MaintenanceMode a
-</span><a href="Hasura.Server.Types.html#MaintenanceModeEnabled"><span class="hs-identifier hs-var">MaintenanceModeEnabled</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-324"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="Hasura.Server.Types.html#MaintenanceModeEnabled"><span class="hs-identifier hs-var">MaintenanceModeEnabled</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-323"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;cannot migrate to catalog version 43 in maintenance mode&quot;</span></span><span>
-</span><span id="line-325"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691428746"><span class="annot"><span class="annottext">query :: Query
+</span><span id="line-324"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691428746"><span class="annot"><span class="annottext">query :: Query
 </span><a href="#local-6989586621691428746"><span class="hs-identifier hs-var hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/migrations/42_to_43.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">PG.sqlFromFile</span><span class="hs-special">)</span><span>
-</span><span id="line-326"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-325"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691428757"><span class="hs-identifier hs-var">dryRun</span></a></span><span>
-</span><span id="line-327"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span id="line-326"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; IO ()
 </span><span class="hs-identifier hs-var">TIO.putStrLn</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Query -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.getQueryText</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Query
 </span><a href="#local-6989586621691428746"><span class="hs-identifier hs-var">query</span></a></span><span>
-</span><span id="line-328"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-329"></span><span>          </span><span id="local-6989586621691428745"><span class="annot"><span class="annottext">MetadataNoSources
+</span><span id="line-327"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-328"></span><span>          </span><span id="local-6989586621691428745"><span class="annot"><span class="annottext">MetadataNoSources
 </span><a href="#local-6989586621691428745"><span class="hs-identifier hs-var">metadataV2</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadTx m =&gt; m MetadataNoSources
 </span><a href="Hasura.RQL.DDL.Schema.LegacyCatalog.html#fetchMetadataFromHdbTables"><span class="hs-identifier hs-var">fetchMetadataFromHdbTables</span></a></span><span>
-</span><span id="line-330"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadTx m =&gt; Query -&gt; m ()
+</span><span id="line-329"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadTx m =&gt; Query -&gt; m ()
 </span><a href="Hasura.Server.Migrate.html#multiQ"><span class="hs-identifier hs-var">multiQ</span></a></span><span> </span><span class="annot"><span class="annottext">Query
 </span><a href="#local-6989586621691428746"><span class="hs-identifier hs-var">query</span></a></span><span>
-</span><span id="line-331"></span><span>          </span><span id="local-6989586621691428743"><span class="annot"><span class="annottext">PostgresConnConfiguration
+</span><span id="line-330"></span><span>          </span><span id="local-6989586621691428743"><span class="annot"><span class="annottext">PostgresConnConfiguration
 </span><a href="#local-6989586621691428743"><span class="hs-identifier hs-var">defaultSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-332"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><span id="line-331"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (SourceConnConfiguration ('Postgres 'Vanilla))
-</span><a href="#local-6989586621691428758"><span class="hs-identifier hs-var">maybeDefaultSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-333"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="#local-6989586621691428758"><span class="hs-identifier hs-var">maybeDefaultSourceConfig</span></a></span><span>
+</span><span id="line-332"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw400</span></span><span> </span><span class="annot"><span class="annottext">Code
-</span><span class="hs-identifier hs-var">NotSupported</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-334"></span><span>                </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;cannot migrate to catalog version 43 without --database-url or env var &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">NotSupported</span></span><span>
+</span><span id="line-333"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;cannot migrate to catalog version 43 without --database-url or env var &quot;</span></span><span>
+</span><span id="line-334"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Config.html#_envVar"><span class="hs-identifier hs-var">_envVar</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
@@ -833,14 +833,14 @@ _mnsTables :: Tables ('Postgres 'Vanilla)
 </span><span id="line-337"></span><span>                    </span><span id="local-6989586621691428723"><span class="annot"><span class="annottext">defaultSourceMetadata :: BackendSourceMetadata
 </span><a href="#local-6989586621691428723"><span class="hs-identifier hs-var hs-var">defaultSourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-338"></span><span>                      </span><span class="annot"><span class="annottext">AnyBackend SourceMetadata -&gt; BackendSourceMetadata
-</span><a href="Hasura.RQL.Types.Metadata.Common.html#BackendSourceMetadata"><span class="hs-identifier hs-var">BackendSourceMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-339"></span><span>                        </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
+</span><a href="Hasura.RQL.Types.Metadata.Common.html#BackendSourceMetadata"><span class="hs-identifier hs-var">BackendSourceMetadata</span></a></span><span>
+</span><span id="line-339"></span><span>                        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-340"></span><span>                          </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span>
+</span><span id="line-340"></span><span>                        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 SourceName
 -&gt; BackendSourceKind b
 -&gt; Tables b

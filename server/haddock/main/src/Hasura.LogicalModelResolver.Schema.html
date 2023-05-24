@@ -24,7 +24,7 @@
 </span><span id="line-24"></span><span class="hs-comment">-- | Schema parser for native query or stored procedure arguments.</span><span>
 </span><span id="line-25"></span><span class="annot"><a href="Hasura.LogicalModelResolver.Schema.html#argumentsSchema"><span class="hs-identifier hs-type">argumentsSchema</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691305320"><span class="annot"><a href="#local-6989586621691305320"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621691305319"><span class="annot"><a href="#local-6989586621691305319"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621691305318"><span class="annot"><a href="#local-6989586621691305318"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621691305317"><span class="annot"><a href="#local-6989586621691305317"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-27"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691305320"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691305319"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691305318"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691305317"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691305320"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691305319"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691305318"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691305317"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-comment">-- | The resolver description, such as &quot;Stored Procedure&quot; or &quot;Native Query&quot;.</span><span>
 </span><span id="line-29"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-comment">-- | The resolver name.</span><span>
@@ -51,9 +51,9 @@ Text
   MetadataObjId n (HashMap ArgumentName (ColumnValue b))
 </span><a href="#local-6989586621691305117"><span class="hs-identifier hs-var">argsParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-40"></span><span>    </span><span class="annot"><span class="annottext">forall {k} (f :: k -&gt; *) (a :: k). Ap f a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">getAp</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">getAp</span></a></span><span>
+</span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span>
@@ -116,9 +116,9 @@ ColumnType b
 </span><a href="Hasura.LogicalModelResolver.Types.html#getArgumentName"><span class="hs-identifier hs-var">getArgumentName</span></a></span><span> </span><span class="annot"><span class="annottext">ArgumentName
 </span><a href="#local-6989586621691305115"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-52"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-53"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (k :: Kind) origin a.
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
+</span><span id="line-53"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (k :: Kind) origin a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Name
 -&gt; Maybe Description
@@ -151,9 +151,9 @@ Name
 </span><span class="hs-string">&quot; Arguments&quot;</span></span><span>
 </span><span id="line-61"></span><span>
 </span><span id="line-62"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-63"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap ArgumentName (NullableScalarType b)
 </span><a href="#local-6989586621691305118"><span class="hs-identifier hs-var">argsSignature</span></a></span><span>
 </span><span id="line-64"></span><span>      </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a

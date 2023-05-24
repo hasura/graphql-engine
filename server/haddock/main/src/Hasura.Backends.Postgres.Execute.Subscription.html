@@ -409,14 +409,14 @@ InsOrdHashMap Name (QueryDB ('Postgres pgKind) Void SQLExp)
 </span><span id="line-154"></span><span>          </span><span class="annot"><span class="annottext">selFrom :: Maybe FromExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selFrom"><span class="hs-identifier hs-var">S.selFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-155"></span><span>            </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-156"></span><span>              </span><span class="annot"><span class="annottext">[FromItem] -&gt; FromExp
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span>
+</span><span id="line-156"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[FromItem] -&gt; FromExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#FromExp"><span class="hs-identifier hs-var">S.FromExp</span></a></span><span>
 </span><span id="line-157"></span><span>                </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">JoinExpr -&gt; FromItem
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#FIJoin"><span class="hs-identifier hs-var">S.FIJoin</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-158"></span><span>                    </span><span class="annot"><span class="annottext">FromItem -&gt; JoinType -&gt; FromItem -&gt; JoinCond -&gt; JoinExpr
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#FIJoin"><span class="hs-identifier hs-var">S.FIJoin</span></a></span><span>
+</span><span id="line-158"></span><span>                    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">FromItem -&gt; JoinType -&gt; FromItem -&gt; JoinCond -&gt; JoinExpr
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#JoinExpr"><span class="hs-identifier hs-var">S.JoinExpr</span></a></span><span> </span><span class="annot"><span class="annottext">FromItem
 </span><a href="#local-6989586621691360508"><span class="hs-identifier hs-var">subsInputFromItem</span></a></span><span> </span><span class="annot"><span class="annottext">JoinType
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#LeftOuter"><span class="hs-identifier hs-var">S.LeftOuter</span></a></span><span> </span><span class="annot"><span class="annottext">FromItem
@@ -467,9 +467,9 @@ InsOrdHashMap Name (QueryDB ('Postgres pgKind) Void SQLExp)
 </span><a href="#local-6989586621691360492"><span class="hs-identifier hs-var">sqlFrom</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691360491"><span class="annot"><span class="annottext">CustomSQLCTEs
 </span><a href="#local-6989586621691360491"><span class="hs-identifier hs-var">customSQLCTEs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-173"></span><span>      </span><span class="annot"><span class="annottext">forall w a. Writer w a -&gt; (a, w)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runWriter</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-174"></span><span>        </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runWriter</span></a></span><span>
+</span><span id="line-174"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">traverse</span></a></span><span>
@@ -633,14 +633,14 @@ TableAlias -&gt; QueryDB ('Postgres pgKind) Void SQLExp -&gt; m FromItem
 </span><span id="line-219"></span><span>          </span><span class="annot"><span class="annottext">selFrom :: Maybe FromExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selFrom"><span class="hs-identifier hs-var">S.selFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-220"></span><span>            </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-221"></span><span>              </span><span class="annot"><span class="annottext">[FromItem] -&gt; FromExp
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span>
+</span><span id="line-221"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[FromItem] -&gt; FromExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#FromExp"><span class="hs-identifier hs-var">S.FromExp</span></a></span><span>
 </span><span id="line-222"></span><span>                </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">JoinExpr -&gt; FromItem
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#FIJoin"><span class="hs-identifier hs-var">S.FIJoin</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-223"></span><span>                    </span><span class="annot"><span class="annottext">FromItem -&gt; JoinType -&gt; FromItem -&gt; JoinCond -&gt; JoinExpr
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#FIJoin"><span class="hs-identifier hs-var">S.FIJoin</span></a></span><span>
+</span><span id="line-223"></span><span>                    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">FromItem -&gt; JoinType -&gt; FromItem -&gt; JoinCond -&gt; JoinExpr
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#JoinExpr"><span class="hs-identifier hs-var">S.JoinExpr</span></a></span><span> </span><span class="annot"><span class="annottext">FromItem
 </span><a href="#local-6989586621691360441"><span class="hs-identifier hs-var">subsInputFromItem</span></a></span><span> </span><span class="annot"><span class="annottext">JoinType
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#LeftOuter"><span class="hs-identifier hs-var">S.LeftOuter</span></a></span><span> </span><span class="annot"><span class="annottext">FromItem
@@ -928,9 +928,9 @@ Lens' (QueryParametersInfo b) (HashSet SessionVariable)
 </span><a href="#local-6989586621691360333"><span class="hs-identifier hs-var">jPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-297"></span><span>      </span><span class="annot"><span class="annottext">CollectableType PGScalarType -&gt; SQLExp -&gt; SQLExp
 </span><a href="#local-6989586621691360332"><span class="hs-identifier hs-var">addTypeAnnotation</span></a></span><span> </span><span class="annot"><span class="annottext">CollectableType PGScalarType
-</span><a href="#local-6989586621691360334"><span class="hs-identifier hs-var">pgType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-298"></span><span>        </span><span class="annot"><span class="annottext">SQLOp -&gt; [SQLExp] -&gt; SQLExp
+</span><a href="#local-6989586621691360334"><span class="hs-identifier hs-var">pgType</span></a></span><span>
+</span><span id="line-298"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SQLOp -&gt; [SQLExp] -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEOpApp"><span class="hs-identifier hs-var">S.SEOpApp</span></a></span><span>
 </span><span id="line-299"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; SQLOp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLOp"><span class="hs-identifier hs-var">S.SQLOp</span></a></span><span> </span><span class="annot"><span class="annottext">Text

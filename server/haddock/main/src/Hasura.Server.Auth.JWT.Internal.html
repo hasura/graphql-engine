@@ -245,12 +245,12 @@ a -&gt; ByteString -&gt; Either ASN1Error [ASN1]
 </span><a href="#local-6989586621691076174"><span class="hs-identifier hs-var">signedExactCert</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-87"></span><span>    </span><span class="annot"><span class="annottext">forall a a' b. (a -&gt; a') -&gt; Either a b -&gt; Either a' b
 </span><a href="Hasura.Server.Utils.html#fmapL"><span class="hs-identifier hs-var">fmapL</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
-</span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">ByteString -&gt; Either String SignedCertificate
-</span><span class="hs-identifier hs-var">X509.decodeSignedCertificate</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-89"></span><span>        </span><span class="annot"><span class="annottext">PEM -&gt; ByteString
+</span><span class="hs-identifier hs-var">T.pack</span></span><span>
+</span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either String SignedCertificate
+</span><span class="hs-identifier hs-var">X509.decodeSignedCertificate</span></span><span>
+</span><span id="line-89"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">PEM -&gt; ByteString
 </span><span class="hs-identifier hs-var">PEM.pemContent</span></span><span> </span><span class="annot"><span class="annottext">PEM
 </span><a href="#local-6989586621691076175"><span class="hs-identifier hs-var">pem</span></a></span><span>
 </span><span id="line-90"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691076172"><span class="annot"><span class="annottext">cert :: Certificate

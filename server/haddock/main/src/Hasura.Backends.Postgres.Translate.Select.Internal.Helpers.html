@@ -84,9 +84,9 @@
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
 </span><span id="line-69"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; SQLExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEArrayIndex"><span class="hs-identifier hs-var">S.SEArrayIndex</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621691269693"><span class="hs-identifier hs-var">arrayExp</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; [SQLExp] -&gt; Maybe OrderByExp -&gt; SQLExp
+</span><a href="#local-6989586621691269693"><span class="hs-identifier hs-var">arrayExp</span></a></span><span>
+</span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [SQLExp] -&gt; Maybe OrderByExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEFnApp"><span class="hs-identifier hs-var">S.SEFnApp</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;array_length&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SQLExp
 </span><a href="#local-6989586621691269693"><span class="hs-identifier hs-var">arrayExp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; SQLExp
@@ -288,9 +288,9 @@ TableIdentifier -&gt; SelectFrom ('Postgres pgKind) -&gt; FromItem
 </span><a href="#local-6989586621691269636"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span id="local-6989586621691269635"><span class="annot"><span class="annottext">Maybe [(Column ('Postgres pgKind), ScalarType ('Postgres pgKind))]
 </span><a href="#local-6989586621691269635"><span class="hs-identifier hs-var">defListM</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-139"></span><span>    </span><span class="annot"><span class="annottext">FunctionExp -&gt; FromItem
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#FIFunc"><span class="hs-identifier hs-var">S.FIFunc</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-140"></span><span>      </span><span class="annot"><span class="annottext">QualifiedFunction
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#FIFunc"><span class="hs-identifier hs-var">S.FIFunc</span></a></span><span>
+</span><span id="line-140"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedFunction
 -&gt; FunctionArgs -&gt; Maybe FunctionAlias -&gt; FunctionExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#FunctionExp"><span class="hs-identifier hs-var">S.FunctionExp</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionName ('Postgres pgKind)
 </span><a href="#local-6989586621691269637"><span class="hs-identifier hs-var">qf</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableIdentifier
@@ -298,17 +298,17 @@ TableIdentifier -&gt; SelectFrom ('Postgres pgKind) -&gt; FromItem
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Helpers.html#fromTableRowArgs"><span class="hs-identifier hs-var">fromTableRowArgs</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
 </span><a href="#local-6989586621691269647"><span class="hs-identifier hs-var">prefix</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgsExp
   ('Postgres pgKind) (SQLExpression ('Postgres pgKind))
-</span><a href="#local-6989586621691269636"><span class="hs-identifier hs-var">args</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-141"></span><span>        </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-142"></span><span>          </span><span class="annot"><span class="annottext">QualifiedFunction
+</span><a href="#local-6989586621691269636"><span class="hs-identifier hs-var">args</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-141"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span>
+</span><span id="line-142"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedFunction
 -&gt; Maybe [(ColumnAlias, PGScalarType)] -&gt; FunctionAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkFunctionAlias"><span class="hs-identifier hs-var">S.mkFunctionAlias</span></a></span><span>
-</span><span id="line-143"></span><span>            </span><span class="annot"><span class="annottext">FunctionName ('Postgres pgKind)
+</span><span id="line-143"></span><span>        </span><span class="annot"><span class="annottext">FunctionName ('Postgres pgKind)
 </span><a href="#local-6989586621691269637"><span class="hs-identifier hs-var">qf</span></a></span><span>
-</span><span id="line-144"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-144"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (a :: * -&gt; * -&gt; *) b c d.
 Arrow a =&gt;

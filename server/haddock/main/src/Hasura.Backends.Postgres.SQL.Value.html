@@ -378,9 +378,9 @@ $c== :: PGScalarValue -&gt; PGScalarValue -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; TypeAnn -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SETyAnn"><span class="hs-identifier hs-var">S.SETyAnn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CollectableType PGScalarType -&gt; TypeAnn
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkTypeAnn"><span class="hs-identifier hs-var">S.mkTypeAnn</span></a></span><span> </span><span class="annot"><span class="annottext">CollectableType PGScalarType
-</span><a href="#local-6989586621691118849"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-155"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CollectableType PGScalarType
+</span><a href="#local-6989586621691118849"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-155"></span><span>  </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CollectableType PGScalarType
 </span><a href="#local-6989586621691118849"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-156"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableTypeScalar"><span class="hs-identifier hs-type">CollectableTypeScalar</span></a></span><span> </span><span id="local-6989586621691118846"><span class="annot"><span class="annottext">PGScalarType
 </span><a href="#local-6989586621691118846"><span class="hs-identifier hs-var">baseTy</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PGScalarType -&gt; SQLExp -&gt; SQLExp
@@ -837,34 +837,34 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><span id="line-257"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Value.html#PGValJSON"><span class="hs-identifier hs-type">PGValJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.JSON</span></a></span><span> </span><span id="local-6989586621691118739"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621691118739"><span class="hs-identifier hs-var">j</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-258"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; TxtEncodedVal
-</span><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-var">TELit</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-259"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Text
-</span><span class="hs-identifier hs-var">TL.toStrict</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-260"></span><span>        </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Text
+</span><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-var">TELit</span></a></span><span>
+</span><span id="line-259"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><span class="hs-identifier hs-var">TL.toStrict</span></span><span>
+</span><span id="line-260"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Text
 </span><span class="hs-identifier hs-var">AE.encodeToLazyText</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621691118739"><span class="hs-identifier hs-var">j</span></a></span><span>
 </span><span id="line-261"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Value.html#PGValJSONB"><span class="hs-identifier hs-type">PGValJSONB</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.JSONB</span></a></span><span> </span><span id="local-6989586621691118736"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621691118736"><span class="hs-identifier hs-var">j</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-262"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; TxtEncodedVal
-</span><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-var">TELit</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-263"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Text
-</span><span class="hs-identifier hs-var">TL.toStrict</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-264"></span><span>        </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Text
+</span><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-var">TELit</span></a></span><span>
+</span><span id="line-263"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><span class="hs-identifier hs-var">TL.toStrict</span></span><span>
+</span><span id="line-264"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Text
 </span><span class="hs-identifier hs-var">AE.encodeToLazyText</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621691118736"><span class="hs-identifier hs-var">j</span></a></span><span>
 </span><span id="line-265"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Value.html#PGValGeo"><span class="hs-identifier hs-type">PGValGeo</span></a></span><span> </span><span id="local-6989586621691118735"><span class="annot"><span class="annottext">GeometryWithCRS
 </span><a href="#local-6989586621691118735"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-266"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; TxtEncodedVal
-</span><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-var">TELit</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-267"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Text
-</span><span class="hs-identifier hs-var">TL.toStrict</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-268"></span><span>        </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Text
+</span><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-var">TELit</span></a></span><span>
+</span><span id="line-267"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><span class="hs-identifier hs-var">TL.toStrict</span></span><span>
+</span><span id="line-268"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Text
 </span><span class="hs-identifier hs-var">AE.encodeToLazyText</span></span><span> </span><span class="annot"><span class="annottext">GeometryWithCRS
 </span><a href="#local-6989586621691118735"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-269"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Value.html#PGValRaster"><span class="hs-identifier hs-type">PGValRaster</span></a></span><span> </span><span id="local-6989586621691118734"><span class="annot"><span class="annottext">RasterWKB
@@ -1037,7 +1037,7 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="#local-6989586621691118690"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Format
 </span><span class="hs-identifier hs-var">PQ.Text</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-306"></span><span>
-</span><span id="line-307"></span><span id="local-6989586621691119460"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Value.html#formatTimestamp"><span class="hs-identifier hs-type">formatTimestamp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">FormatTime</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691119460"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691119460"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span></span><span>
+</span><span id="line-307"></span><span id="local-6989586621691119460"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Value.html#formatTimestamp"><span class="hs-identifier hs-type">formatTimestamp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">FormatTime</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691119460"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691119460"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span></span><span>
 </span><span id="line-308"></span><span id="formatTimestamp"><span class="annot"><span class="annottext">formatTimestamp :: forall t. FormatTime t =&gt; t -&gt; Text
 </span><a href="Hasura.Backends.Postgres.SQL.Value.html#formatTimestamp"><span class="hs-identifier hs-var hs-var">formatTimestamp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c

@@ -235,9 +235,9 @@ compression level 1:
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">concatMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; [Text]
 </span><a href="#local-6989586621691075953"><span class="hs-identifier hs-var">splitHeaderVal</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">snd</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-122"></span><span>        </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">snd</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691075951"><span class="annot"><span class="annottext">Header
 </span><a href="#local-6989586621691075951"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fst</span></a></span><span> </span><span class="annot"><span class="annottext">Header
@@ -261,72 +261,74 @@ compression level 1:
 </span><a href="#local-6989586621691075944"><span class="hs-identifier hs-var hs-var">identityRejected</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-126"></span><span>      </span><span class="hs-comment">-- ...if we're explicitly rejecting identity, or...</span><span>
 </span><span id="line-127"></span><span>      </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;identity;q=0&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-string">&quot;identity;q=0&quot;</span></span><span>
+</span><span id="line-128"></span><span>        </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">`elem`</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
 </span><a href="#local-6989586621691075955"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span>
-</span><span id="line-128"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span id="line-129"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span>
-</span><span id="line-129"></span><span>        </span><span class="hs-comment">-- ...rejecting anything not listed and identity is not listed</span><span>
-</span><span id="line-130"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;*;q=0&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span id="line-130"></span><span>        </span><span class="hs-comment">-- ...rejecting anything not listed and identity is not listed</span><span>
+</span><span id="line-131"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;*;q=0&quot;</span></span><span>
+</span><span id="line-132"></span><span>            </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">`elem`</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
 </span><a href="#local-6989586621691075955"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span>
-</span><span id="line-131"></span><span>            </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span id="line-133"></span><span>            </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&amp;&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">any</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;identity&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 </span><span class="hs-operator hs-var">`T.isPrefixOf`</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Text]
 </span><a href="#local-6989586621691075955"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-132"></span><span>        </span><span class="hs-special">)</span><span>
-</span><span id="line-133"></span><span>    </span><span id="local-6989586621691075937"><span class="annot"><span class="annottext">gzipAccepted :: Bool
+</span><span id="line-134"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-135"></span><span>    </span><span id="local-6989586621691075937"><span class="annot"><span class="annottext">gzipAccepted :: Bool
 </span><a href="#local-6989586621691075937"><span class="hs-identifier hs-var hs-var">gzipAccepted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-134"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span id="line-136"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">any</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;gzip&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 </span><span class="hs-operator hs-var">`T.isPrefixOf`</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Text]
 </span><a href="#local-6989586621691075955"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span>
-</span><span id="line-135"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span id="line-137"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&amp;&amp;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;gzip;q=0&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">`notElem`</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
 </span><a href="#local-6989586621691075955"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-136"></span><span>    </span><span class="hs-comment">-- AFAICT missing header, or *,  implies &#8220;send whatever you want&#8221;</span><span>
-</span><span id="line-137"></span><span>    </span><span class="hs-comment">-- https://www.rfc-editor.org/rfc/rfc7231#section-5.3.4</span><span>
-</span><span id="line-138"></span><span>    </span><span id="local-6989586621691075935"><span class="annot"><span class="annottext">anyEncodingTechnicallyAcceptable :: Bool
+</span><span id="line-138"></span><span>    </span><span class="hs-comment">-- AFAICT missing header, or *,  implies &#8220;send whatever you want&#8221;</span><span>
+</span><span id="line-139"></span><span>    </span><span class="hs-comment">-- https://www.rfc-editor.org/rfc/rfc7231#section-5.3.4</span><span>
+</span><span id="line-140"></span><span>    </span><span id="local-6989586621691075935"><span class="annot"><span class="annottext">anyEncodingTechnicallyAcceptable :: Bool
 </span><a href="#local-6989586621691075935"><span class="hs-identifier hs-var hs-var">anyEncodingTechnicallyAcceptable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-139"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span id="line-141"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
 </span><a href="#local-6989586621691075955"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
 </span><a href="#local-6989586621691075955"><span class="hs-identifier hs-var">rawHeaderVals</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;*&quot;</span></span><span class="hs-special">]</span><span>
-</span><span id="line-140"></span><span>    </span><span id="local-6989586621691075956"><span class="annot"><span class="annottext">acceptedEncodingTypes :: [EncodingType]
+</span><span id="line-142"></span><span>    </span><span id="local-6989586621691075956"><span class="annot"><span class="annottext">acceptedEncodingTypes :: [EncodingType]
 </span><a href="#local-6989586621691075956"><span class="hs-identifier hs-var hs-var">acceptedEncodingTypes</span></a></span></span><span>
-</span><span id="line-141"></span><span>      </span><span class="hs-comment">-- \| anyEncodingTechnicallyAcceptable = [Just CTGZip, identityEncoding]</span><span>
-</span><span id="line-142"></span><span>      </span><span class="hs-comment">-- NOTE!: For now to be conservative and maintain historical behavior we</span><span>
-</span><span id="line-143"></span><span>      </span><span class="hs-comment">-- will treat this case as &#8220;only identity is acceptable&#8221;:</span><span>
-</span><span id="line-144"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-143"></span><span>      </span><span class="hs-comment">-- \| anyEncodingTechnicallyAcceptable = [Just CTGZip, identityEncoding]</span><span>
+</span><span id="line-144"></span><span>      </span><span class="hs-comment">-- NOTE!: For now to be conservative and maintain historical behavior we</span><span>
+</span><span id="line-145"></span><span>      </span><span class="hs-comment">-- will treat this case as &#8220;only identity is acceptable&#8221;:</span><span>
+</span><span id="line-146"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691075935"><span class="hs-identifier hs-var">anyEncodingTechnicallyAcceptable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">EncodingType
 </span><a href="Hasura.Server.Compression.html#identityEncoding"><span class="hs-identifier hs-var">identityEncoding</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-145"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-147"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-146"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
+</span><span id="line-148"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">guard</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691075937"><span class="hs-identifier hs-var">gzipAccepted</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">CompressionType
 </span><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-147"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-149"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">guard</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691075944"><span class="hs-identifier hs-var">identityRejected</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">EncodingType
 </span><a href="Hasura.Server.Compression.html#identityEncoding"><span class="hs-identifier hs-var">identityEncoding</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-148"></span><span>
-</span><span id="line-149"></span><span class="hs-comment">{-
+</span><span id="line-150"></span><span>
+</span><span id="line-151"></span><span class="hs-comment">{-
 Note [Compression ratios]
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -378,4 +380,4 @@ Aggregate across responses where uncompressed &gt; 17K bytes (90th percentile):
     min:    0.005
 
 -}</span><span>
-</span><span id="line-201"></span></pre></body></html>
+</span><span id="line-203"></span></pre></body></html>

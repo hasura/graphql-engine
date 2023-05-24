@@ -124,55 +124,56 @@ nstType :: forall (b :: BackendType). NullableScalarType b -&gt; ScalarType b
 </span><span class="hs-identifier hs-var">toTxt</span></span><span> </span><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621691227010"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-52"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-53"></span><span>    </span><span class="hs-comment">-- TODO(dmoverton): handle object and array columns</span><span>
-</span><span id="line-54"></span><span>    </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; StructuredColumnInfo b
-</span><a href="Hasura.RQL.Types.Column.html#SCIScalarColumn"><span class="hs-identifier hs-var">SCIScalarColumn</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-55"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span>
-</span><span id="line-56"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">ciColumn :: Column b
+</span><span id="line-54"></span><span>    </span><span class="hs-comment">-- TODO(dmoverton): handle object and array columns</span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; StructuredColumnInfo b
+</span><a href="Hasura.RQL.Types.Column.html#SCIScalarColumn"><span class="hs-identifier hs-var">SCIScalarColumn</span></a></span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span>
+</span><span id="line-57"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">ciColumn :: Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var">ciColumn</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621691227010"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-57"></span><span>          </span><span class="annot"><span class="annottext">ciName :: Name
+</span><span id="line-58"></span><span>        </span><span class="annot"><span class="annottext">ciName :: Name
 </span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var">ciName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691227006"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-58"></span><span>          </span><span class="annot"><span class="annottext">ciPosition :: Int
+</span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">ciPosition :: Int
 </span><a href="Hasura.RQL.Types.Column.html#ciPosition"><span class="hs-identifier hs-var">ciPosition</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621691227011"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-59"></span><span>          </span><span class="annot"><span class="annottext">ciType :: ColumnType b
+</span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">ciType :: ColumnType b
 </span><a href="Hasura.RQL.Types.Column.html#ciType"><span class="hs-identifier hs-var">ciType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). ScalarType b -&gt; ColumnType b
 </span><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-var">ColumnScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType b
 </span><a href="#local-6989586621691227009"><span class="hs-identifier hs-var">nstType</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-60"></span><span>          </span><span class="annot"><span class="annottext">ciIsNullable :: Bool
+</span><span id="line-61"></span><span>        </span><span class="annot"><span class="annottext">ciIsNullable :: Bool
 </span><a href="Hasura.RQL.Types.Column.html#ciIsNullable"><span class="hs-identifier hs-var">ciIsNullable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691227008"><span class="hs-identifier hs-var">nstNullable</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-61"></span><span>          </span><span class="annot"><span class="annottext">ciDescription :: Maybe Description
+</span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">ciDescription :: Maybe Description
 </span><a href="Hasura.RQL.Types.Column.html#ciDescription"><span class="hs-identifier hs-var">ciDescription</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.Description</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="#local-6989586621691227007"><span class="hs-identifier hs-var">nstDescription</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-62"></span><span>          </span><span class="annot"><span class="annottext">ciMutability :: ColumnMutability
+</span><span id="line-63"></span><span>        </span><span class="annot"><span class="annottext">ciMutability :: ColumnMutability
 </span><a href="Hasura.RQL.Types.Column.html#ciMutability"><span class="hs-identifier hs-var">ciMutability</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier hs-type">ColumnMutability</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_cmIsInsertable :: Bool
 </span><a href="Hasura.RQL.Types.Column.html#_cmIsInsertable"><span class="hs-identifier hs-var">_cmIsInsertable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">_cmIsUpdatable :: Bool
 </span><a href="Hasura.RQL.Types.Column.html#_cmIsUpdatable"><span class="hs-identifier hs-var">_cmIsUpdatable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-63"></span><span>        </span><span class="hs-special">}</span><span>
-</span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span class="annot"><a href="Hasura.LogicalModel.Common.html#logicalModelFieldsToFieldInfo"><span class="hs-identifier hs-type">logicalModelFieldsToFieldInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-66"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691227080"><span class="annot"><a href="#local-6989586621691227080"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-67"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691227080"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-68"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap.InsOrdHashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691227080"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelField"><span class="hs-identifier hs-type">LogicalModelField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691227080"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-69"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691227080"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-70"></span><span id="logicalModelFieldsToFieldInfo"><span class="annot"><span class="annottext">logicalModelFieldsToFieldInfo :: forall (b :: BackendType).
+</span><span id="line-64"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="annot"><a href="Hasura.LogicalModel.Common.html#logicalModelFieldsToFieldInfo"><span class="hs-identifier hs-type">logicalModelFieldsToFieldInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691227080"><span class="annot"><a href="#local-6989586621691227080"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691227080"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap.InsOrdHashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691227080"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelField"><span class="hs-identifier hs-type">LogicalModelField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691227080"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691227080"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span id="logicalModelFieldsToFieldInfo"><span class="annot"><span class="annottext">logicalModelFieldsToFieldInfo :: forall (b :: BackendType).
 Backend b =&gt;
 InsOrdHashMap (Column b) (LogicalModelField b)
 -&gt; FieldInfoMap (FieldInfo b)
 </span><a href="Hasura.LogicalModel.Common.html#logicalModelFieldsToFieldInfo"><span class="hs-identifier hs-var hs-var">logicalModelFieldsToFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-71"></span><span>  </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><span id="line-72"></span><span>  </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span>
-</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span id="line-73"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (p :: * -&gt; * -&gt; *) a b c d.
 Bifunctor p =&gt;
@@ -180,16 +181,16 @@ Bifunctor p =&gt;
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">bimap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). Backend b =&gt; Column b -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Column.html#fromCol"><span class="hs-identifier hs-var">fromCol</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621691227080"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). StructuredColumnInfo b -&gt; FieldInfo b
 </span><a href="Hasura.Table.Cache.html#FIColumn"><span class="hs-identifier hs-var">FIColumn</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-73"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span id="line-74"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span>
-</span><span id="line-74"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span id="line-75"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) aa bb.
 Applicative m =&gt;
 (Int -&gt; aa -&gt; m bb) -&gt; [aa] -&gt; m [bb]
 </span><a href="Hasura.LogicalModel.Common.html#traverseWithIndex"><span class="hs-identifier hs-var">traverseWithIndex</span></a></span><span>
-</span><span id="line-75"></span><span>      </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691226972"><span class="annot"><span class="annottext">Int
+</span><span id="line-76"></span><span>      </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621691226972"><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621691226972"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691226971"><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621691226971"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691226970"><span class="annot"><span class="annottext">NullableScalarType b
 </span><a href="#local-6989586621691226970"><span class="hs-identifier hs-var">lmf</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Column b
@@ -203,12 +204,12 @@ Int
 </span><a href="#local-6989586621691226972"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621691226971"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullableScalarType b
 </span><a href="#local-6989586621691226970"><span class="hs-identifier hs-var">lmf</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. InsOrdHashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">InsOrdHashMap.toList</span></span><span>
-</span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span id="line-78"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k (b :: BackendType).
 InsOrdHashMap k (LogicalModelField b)
 -&gt; InsOrdHashMap k (NullableScalarType b)
 </span><a href="Hasura.LogicalModel.Common.html#columnsFromFields"><span class="hs-identifier hs-var">columnsFromFields</span></a></span><span>
-</span><span id="line-78"></span></pre></body></html>
+</span><span id="line-79"></span></pre></body></html>

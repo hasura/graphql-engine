@@ -369,20 +369,20 @@ AppContext
   AppContext
 </span><a href="#local-6989586621691441389"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-226"></span><span>    </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-227"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-228"></span><span>        </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runExceptT</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-229"></span><span>          </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span>
+</span><span id="line-227"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span>
+</span><span id="line-228"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runExceptT</span></a></span><span>
+</span><span id="line-229"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runReaderT</span></a></span><span> </span><span class="annot"><span class="annottext">(Logger Hasura, Manager)
-</span><a href="#local-6989586621691441394"><span class="hs-identifier hs-var">readerCtx</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-230"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b.
+</span><a href="#local-6989586621691441394"><span class="hs-identifier hs-var">readerCtx</span></a></span><span>
+</span><span id="line-230"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b.
 Applicative m =&gt;
 Rule m a b -&gt; a -&gt; m (Result m a b)
 </span><span class="hs-identifier hs-var">Inc.build</span></span><span> </span><span class="annot"><span class="annottext">Rule
@@ -742,9 +742,9 @@ arr (m a) a
 </span><span id="line-288"></span><span>            </span><span id="local-6989586621691441211"><span class="annot"><span class="annottext">Either Text AuthMode
 </span><a href="#local-6989586621691441211"><span class="hs-identifier hs-var">authModeRes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-289"></span><span>              </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runExceptT</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-290"></span><span>                </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runExceptT</span></a></span><span>
+</span><span id="line-290"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (MonadError Text m, MonadIO m, MonadBaseControl IO m) =&gt;
 HashSet AdminSecretHash
 -&gt; Maybe AuthHook
@@ -789,15 +789,15 @@ arr a b -&gt; arr a b
 </span><span id="line-302"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691441205"><span class="annot"><span class="annottext">responseInternalErrorsConfig :: ResponseInternalErrorsConfig
 </span><a href="#local-6989586621691441205"><span class="hs-identifier hs-var hs-var">responseInternalErrorsConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-303"></span><span>            </span><span class="hs-keyword">if</span><span>
-</span><span id="line-304"></span><span>                </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">DevModeStatus -&gt; Bool
+</span><span id="line-304"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">DevModeStatus -&gt; Bool
 </span><a href="Hasura.Server.Init.Config.html#isDevModeEnabled"><span class="hs-identifier hs-var">isDevModeEnabled</span></a></span><span> </span><span class="annot"><span class="annottext">DevModeStatus
 </span><a href="#local-6989586621691441206"><span class="hs-identifier hs-var">devMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
 </span><a href="Hasura.Server.Init.Config.html#InternalErrorsAllRequests"><span class="hs-identifier hs-var">InternalErrorsAllRequests</span></a></span><span>
-</span><span id="line-305"></span><span>                </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">AdminInternalErrorsStatus -&gt; Bool
+</span><span id="line-305"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">AdminInternalErrorsStatus -&gt; Bool
 </span><a href="Hasura.Server.Init.Config.html#isAdminInternalErrorsEnabled"><span class="hs-identifier hs-var">isAdminInternalErrorsEnabled</span></a></span><span> </span><span class="annot"><span class="annottext">AdminInternalErrorsStatus
 </span><a href="#local-6989586621691441207"><span class="hs-identifier hs-var">adminInternalErrors</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
 </span><a href="Hasura.Server.Init.Config.html#InternalErrorsAdminOnly"><span class="hs-identifier hs-var">InternalErrorsAdminOnly</span></a></span><span>
-</span><span id="line-306"></span><span>                </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-306"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
 </span><a href="Hasura.Server.Init.Config.html#InternalErrorsDisabled"><span class="hs-identifier hs-var">InternalErrorsDisabled</span></a></span><span>
 </span><span id="line-307"></span><span>      </span><span class="annot"><span class="annottext">forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b

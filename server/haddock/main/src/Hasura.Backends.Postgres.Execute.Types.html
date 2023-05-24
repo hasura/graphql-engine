@@ -177,9 +177,9 @@ PGPool -&gt; TxMode -&gt; TxET e m a -&gt; ExceptT e m a
 </span><a href="#local-6989586621691202697"><span class="hs-identifier hs-var">serverReplicas</span></a></span><span>
 </span><span id="line-120"></span><span>      </span><span class="hs-comment">-- Return the summary. Only the primary pool is resized</span><span>
 </span><span id="line-121"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-122"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#SourceResizePoolSummary"><span class="hs-identifier hs-type">SourceResizePoolSummary</span></a></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
+</span><span id="line-122"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#SourceResizePoolSummary"><span class="hs-identifier hs-type">SourceResizePoolSummary</span></a></span><span>
 </span><span id="line-123"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_srpsPrimaryResized :: Bool
 </span><a href="Hasura.RQL.Types.ResizePool.html#_srpsPrimaryResized"><span class="hs-identifier hs-var">_srpsPrimaryResized</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">,</span><span>

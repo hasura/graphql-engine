@@ -117,9 +117,9 @@
 </span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">[(ByteString, ByteString)] -&gt; Response -&gt; Response
 </span><a href="#local-6989586621691075833"><span class="hs-identifier hs-var">setHeaders</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {a} {b}. (IsString a, IsString b) =&gt; b -&gt; [(a, b)]
 </span><a href="#local-6989586621691075832"><span class="hs-identifier hs-var">mkPreFlightHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621691075831"><span class="hs-identifier hs-var">requestedHeaders</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-42"></span><span>        </span><span class="annot"><span class="annottext">ByteString -&gt; CorsPolicy -&gt; Response -&gt; Response
+</span><a href="#local-6989586621691075831"><span class="hs-identifier hs-var">requestedHeaders</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; CorsPolicy -&gt; Response -&gt; Response
 </span><a href="#local-6989586621691075836"><span class="hs-identifier hs-var">injectCorsHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621691075835"><span class="hs-identifier hs-var">origin</span></a></span><span> </span><span class="annot"><span class="annottext">CorsPolicy
 </span><a href="#local-6989586621691075834"><span class="hs-identifier hs-var">policy</span></a></span><span> </span><span class="annot"><span class="annottext">Response
@@ -134,13 +134,13 @@
 </span><a href="#local-6989586621691075831"><span class="hs-identifier hs-var hs-var">requestedHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-47"></span><span>        </span><span class="annot"><span class="annottext">HeaderName -&gt; [Header] -&gt; Maybe ByteString
+</span><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-47"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; [Header] -&gt; Maybe ByteString
 </span><a href="Hasura.Server.Utils.html#getRequestHeader"><span class="hs-identifier hs-var">getRequestHeader</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><span class="hs-string">&quot;Access-Control-Request-Headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-48"></span><span>          </span><span class="annot"><span class="annottext">Request -&gt; [Header]
+</span><span class="hs-string">&quot;Access-Control-Request-Headers&quot;</span></span><span>
+</span><span id="line-48"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; [Header]
 </span><span class="hs-identifier hs-var">requestHeaders</span></span><span> </span><span class="annot"><span class="annottext">Request
 </span><a href="#local-6989586621691075861"><span class="hs-identifier hs-var">req</span></a></span><span>
 </span><span id="line-49"></span><span>

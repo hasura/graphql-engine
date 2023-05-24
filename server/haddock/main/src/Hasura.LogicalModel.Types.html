@@ -348,14 +348,14 @@ Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 ScalarType b -&gt; Bool -&gt; LogicalModelTypeScalar b
 </span><a href="Hasura.LogicalModel.Types.html#LogicalModelTypeScalarC"><span class="hs-identifier hs-var">LogicalModelTypeScalarC</span></a></span><span>
-</span><span id="line-64"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-64"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">AC.requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;scalar&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691086383"><span class="hs-identifier hs-var">scalarDoc</span></a></span><span>
-</span><span id="line-65"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelTypeScalar b -&gt; ScalarType b
@@ -368,7 +368,7 @@ Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-string">&quot;nullable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691086380"><span class="hs-identifier hs-var">nullableDoc</span></a></span><span>
-</span><span id="line-67"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelTypeScalar b -&gt; Bool
@@ -439,14 +439,14 @@ Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 LogicalModelType b -&gt; Bool -&gt; LogicalModelTypeArray b
 </span><a href="Hasura.LogicalModel.Types.html#LogicalModelTypeArrayC"><span class="hs-identifier hs-var">LogicalModelTypeArrayC</span></a></span><span>
-</span><span id="line-104"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-104"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">AC.requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;array&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691086297"><span class="hs-identifier hs-var">arrayDoc</span></a></span><span>
-</span><span id="line-105"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-105"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
@@ -460,7 +460,7 @@ Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-string">&quot;nullable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691086296"><span class="hs-identifier hs-var">nullableDoc</span></a></span><span>
-</span><span id="line-107"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-107"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelTypeArray b -&gt; Bool
@@ -549,14 +549,14 @@ Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span id="line-136"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName -&gt; Bool -&gt; LogicalModelTypeReference
 </span><a href="Hasura.LogicalModel.Types.html#LogicalModelTypeReferenceC"><span class="hs-identifier hs-var">LogicalModelTypeReferenceC</span></a></span><span>
-</span><span id="line-137"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-137"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">AC.requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;logical_model&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691086217"><span class="hs-identifier hs-var">referenceDoc</span></a></span><span>
-</span><span id="line-138"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-138"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">LogicalModelTypeReference -&gt; LogicalModelName
@@ -569,7 +569,7 @@ Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-string">&quot;nullable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691086216"><span class="hs-identifier hs-var">nullableDoc</span></a></span><span>
-</span><span id="line-140"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-140"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">LogicalModelTypeReference -&gt; Bool
@@ -834,14 +834,14 @@ Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 Column b
 -&gt; ScalarType b -&gt; Bool -&gt; Maybe Text -&gt; LogicalModelFieldSimple b
 </span><a href="Hasura.LogicalModel.Types.html#LogicalModelFieldSimple"><span class="hs-identifier hs-var">LogicalModelFieldSimple</span></a></span><span>
-</span><span id="line-251"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-251"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">AC.requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691086038"><span class="hs-identifier hs-var">nameDoc</span></a></span><span>
-</span><span id="line-252"></span><span>              </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-252"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelFieldSimple b -&gt; Column b
@@ -853,7 +853,7 @@ Text -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">AC.requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691086037"><span class="hs-identifier hs-var">typeDoc</span></a></span><span>
-</span><span id="line-254"></span><span>              </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-254"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
@@ -867,7 +867,7 @@ Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-string">&quot;nullable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691086036"><span class="hs-identifier hs-var">nullableDoc</span></a></span><span>
-</span><span id="line-256"></span><span>              </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-256"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelFieldSimple b -&gt; Bool
@@ -879,7 +879,7 @@ Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><span class="hs-identifier hs-var">AC.optionalField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;description&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691086034"><span class="hs-identifier hs-var">descriptionDoc</span></a></span><span>
-</span><span id="line-258"></span><span>              </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-258"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelFieldSimple b -&gt; Maybe Text
@@ -918,14 +918,14 @@ Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Column b -&gt; LogicalModelType b -&gt; Maybe Text -&gt; LogicalModelField b
 </span><a href="Hasura.LogicalModel.Types.html#LogicalModelField"><span class="hs-identifier hs-var">LogicalModelField</span></a></span><span>
-</span><span id="line-272"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-272"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">AC.requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691086029"><span class="hs-identifier hs-var">nameDoc</span></a></span><span>
-</span><span id="line-273"></span><span>              </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-273"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelField b -&gt; Column b
@@ -937,7 +937,7 @@ Text -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">AC.requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691086028"><span class="hs-identifier hs-var">typeDoc</span></a></span><span>
-</span><span id="line-275"></span><span>              </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-275"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
@@ -950,7 +950,7 @@ Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><span class="hs-identifier hs-var">AC.optionalField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;description&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691086027"><span class="hs-identifier hs-var">descriptionDoc</span></a></span><span>
-</span><span id="line-277"></span><span>              </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-277"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). LogicalModelField b -&gt; Maybe Text

@@ -177,31 +177,31 @@ rsDef :: ValidatedRemoteSchemaDef
 </span><span id="line-92"></span><span>  </span><span class="hs-comment">-- properly for each role at schema generation time, but this allows us to</span><span>
 </span><span id="line-93"></span><span>  </span><span class="hs-comment">-- quickly reject an invalid schema.</span><span>
 </span><span id="line-94"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">void</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-95"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; MemoizeT m a -&gt; m a
-</span><a href="Control.Monad.Memoize.html#runMemoizeT"><span class="hs-identifier hs-var">runMemoizeT</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-96"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">void</span></a></span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; MemoizeT m a -&gt; m a
+</span><a href="Control.Monad.Memoize.html#runMemoizeT"><span class="hs-identifier hs-var">runMemoizeT</span></a></span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 SchemaContext
 -&gt; SchemaT
      (SchemaContext, MkTypename, CustomizeRemoteFieldName) m a
 -&gt; m a
 </span><a href="Hasura.GraphQL.Schema.Common.html#runRemoteSchema"><span class="hs-identifier hs-var">runRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaContext
-</span><a href="#local-6989586621691302143"><span class="hs-identifier hs-var">minimumValidContext</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-97"></span><span>        </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><a href="#local-6989586621691302143"><span class="hs-identifier hs-var">minimumValidContext</span></a></span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildRemoteSchema r m n =&gt;
 IntrospectionResult
 -&gt; RemoteSchemaRelationships
 -&gt; RemoteSchemaInfo
 -&gt; SchemaT r m (RemoteSchemaParser n)
 </span><a href="Hasura.GraphQL.Schema.Remote.html#buildRemoteParser"><span class="hs-identifier hs-var">buildRemoteParser</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src"><span class="hs-identifier hs-type">Parse</span></a></span><span>
-</span><span id="line-98"></span><span>          </span><span class="annot"><span class="annottext">IntrospectionResult
+</span><span id="line-98"></span><span>      </span><span class="annot"><span class="annottext">IntrospectionResult
 </span><a href="#local-6989586621691302161"><span class="hs-identifier hs-var">_rscIntroOriginal</span></a></span><span>
-</span><span id="line-99"></span><span>          </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><span id="line-99"></span><span>      </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="hs-comment">-- remote relationships</span><span>
-</span><span id="line-100"></span><span>          </span><span class="annot"><span class="annottext">RemoteSchemaInfo
+</span><span id="line-100"></span><span>      </span><span class="annot"><span class="annottext">RemoteSchemaInfo
 </span><a href="#local-6989586621691302150"><span class="hs-identifier hs-var">remoteSchemaInfo</span></a></span><span>
 </span><span id="line-101"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IntrospectionResult
@@ -324,9 +324,9 @@ TypedOperationDefinition frag var -&gt; OperationType
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G._todType</span></a></span><span> </span><span class="annot"><span class="annottext">SingleOperation
 </span><a href="#local-6989586621691302052"><span class="hs-identifier hs-var">_grQuery</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">OperationType
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.OperationTypeSubscription</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-145"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.OperationTypeSubscription</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-145"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.GraphQL.RemoteServer.html#throwRemoteSchema"><span class="hs-identifier hs-var">throwRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;subscription to remote server is not supported&quot;</span></span><span>
 </span><span id="line-146"></span><span>  </span><span id="local-6989586621691302042"><span class="annot"><span class="annottext">[Header]
@@ -480,7 +480,7 @@ Lens (Response body0) (Response body1) body0 body1
 </span><span id="line-177"></span><span>
 </span><span id="line-178"></span><span class="annot"><a href="Hasura.GraphQL.RemoteServer.html#validateSchemaCustomizations"><span class="hs-identifier hs-type">validateSchemaCustomizations</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-179"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691302934"><span class="annot"><a href="#local-6989586621691302934"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-180"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691302934"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-180"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691302934"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-181"></span><span>  </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#RemoteSchemaCustomizer"><span class="hs-identifier hs-type">RemoteSchemaCustomizer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-182"></span><span>  </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#RemoteSchemaIntrospection"><span class="hs-identifier hs-type">RemoteSchemaIntrospection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-183"></span><span>  </span><span class="annot"><a href="#local-6989586621691302934"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
@@ -505,7 +505,7 @@ RemoteSchemaCustomizer -&gt; RemoteSchemaIntrospection -&gt; m ()
 </span><span id="line-187"></span><span>
 </span><span id="line-188"></span><span class="annot"><a href="Hasura.GraphQL.RemoteServer.html#validateSchemaCustomizationsConsistent"><span class="hs-identifier hs-type">validateSchemaCustomizationsConsistent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-189"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691301985"><span class="annot"><a href="#local-6989586621691301985"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-190"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691301985"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-190"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691301985"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-191"></span><span>  </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#RemoteSchemaCustomizer"><span class="hs-identifier hs-type">RemoteSchemaCustomizer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-192"></span><span>  </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#RemoteSchemaIntrospection"><span class="hs-identifier hs-type">RemoteSchemaIntrospection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-193"></span><span>  </span><span class="annot"><a href="#local-6989586621691301985"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
@@ -600,41 +600,41 @@ _fldDescription :: Maybe Description
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691301920"><span class="hs-identifier hs-var">interfaceCustomizedFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">/=</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621691301918"><span class="hs-identifier hs-var">typeCustomizedFieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-207"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><a href="Hasura.GraphQL.RemoteServer.html#throwRemoteSchema"><span class="hs-identifier hs-var">throwRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-208"></span><span>                </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691301918"><span class="hs-identifier hs-var">typeCustomizedFieldName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-207"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="Hasura.GraphQL.RemoteServer.html#throwRemoteSchema"><span class="hs-identifier hs-var">throwRemoteSchema</span></a></span><span>
+</span><span id="line-208"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Remote schema customization inconsistency: field name mapping for field &quot;</span></span><span>
-</span><span id="line-209"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-209"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691301929"><span class="hs-identifier hs-var">_fldName</span></a></span><span>
-</span><span id="line-210"></span><span>                    </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><span id="line-210"></span><span>              </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><span class="hs-operator hs-var">&lt;&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; of interface &quot;</span></span><span>
-</span><span id="line-211"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-211"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691301942"><span class="hs-identifier hs-var">_itdName</span></a></span><span>
-</span><span id="line-212"></span><span>                    </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><span id="line-212"></span><span>              </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><span class="hs-operator hs-var">&lt;&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is inconsistent with mapping for type &quot;</span></span><span>
-</span><span id="line-213"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-213"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691301932"><span class="hs-identifier hs-var">typeName</span></a></span><span>
-</span><span id="line-214"></span><span>                    </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><span id="line-214"></span><span>              </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><span class="hs-operator hs-var">&lt;&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;. Interface field name maps to &quot;</span></span><span>
-</span><span id="line-215"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-215"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691301920"><span class="hs-identifier hs-var">interfaceCustomizedFieldName</span></a></span><span>
-</span><span id="line-216"></span><span>                    </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><span id="line-216"></span><span>              </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><span class="hs-operator hs-var">&lt;&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;. Type field name maps to &quot;</span></span><span>
-</span><span id="line-217"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-217"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691301918"><span class="hs-identifier hs-var">typeCustomizedFieldName</span></a></span><span>
-</span><span id="line-218"></span><span>                    </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><span id="line-218"></span><span>              </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><span class="hs-operator hs-var">&lt;&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;.&quot;</span></span><span>
 </span><span id="line-219"></span><span>      </span><span class="annot"><span class="annottext">TypeDefinition [Name] a
@@ -643,7 +643,7 @@ _fldDescription :: Maybe Description
 </span><span id="line-220"></span><span>
 </span><span id="line-221"></span><span class="annot"><a href="Hasura.GraphQL.RemoteServer.html#validateSchemaCustomizationsDistinct"><span class="hs-identifier hs-type">validateSchemaCustomizationsDistinct</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-222"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621691301916"><span class="annot"><a href="#local-6989586621691301916"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-223"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691301916"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-223"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="#local-6989586621691301916"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-224"></span><span>  </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#RemoteSchemaCustomizer"><span class="hs-identifier hs-type">RemoteSchemaCustomizer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-225"></span><span>  </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#RemoteSchemaIntrospection"><span class="hs-identifier hs-type">RemoteSchemaIntrospection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-226"></span><span>  </span><span class="annot"><a href="#local-6989586621691301916"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
@@ -690,14 +690,14 @@ RemoteSchemaCustomizer -&gt; RemoteSchemaIntrospection -&gt; m ()
 </span><span id="line-237"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. HashSet a -&gt; Bool
 </span><span class="hs-identifier hs-var">Set.null</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621691301892"><span class="hs-identifier hs-var">dups</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-238"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><a href="Hasura.GraphQL.RemoteServer.html#throwRemoteSchema"><span class="hs-identifier hs-var">throwRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-239"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691301892"><span class="hs-identifier hs-var">dups</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-238"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="Hasura.GraphQL.RemoteServer.html#throwRemoteSchema"><span class="hs-identifier hs-var">throwRemoteSchema</span></a></span><span>
+</span><span id="line-239"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Type name mappings are not distinct; the following types appear more than once: &quot;</span></span><span>
-</span><span id="line-240"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-240"></span><span>        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
 </span><span class="hs-identifier hs-var">dquoteList</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
 </span><a href="#local-6989586621691301892"><span class="hs-identifier hs-var">dups</span></a></span><span>
@@ -741,20 +741,20 @@ InterfaceTypeDefinition possibleTypes inputType -&gt; possibleTypes
 </span><span id="line-246"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. HashSet a -&gt; Bool
 </span><span class="hs-identifier hs-var">Set.null</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621691301858"><span class="hs-identifier hs-var">dups</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-247"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><a href="Hasura.GraphQL.RemoteServer.html#throwRemoteSchema"><span class="hs-identifier hs-var">throwRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-248"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691301858"><span class="hs-identifier hs-var">dups</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-247"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="Hasura.GraphQL.RemoteServer.html#throwRemoteSchema"><span class="hs-identifier hs-var">throwRemoteSchema</span></a></span><span>
+</span><span id="line-248"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Field name mappings for interface type &quot;</span></span><span>
-</span><span id="line-249"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-249"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691301862"><span class="hs-identifier hs-var">_itdName</span></a></span><span>
-</span><span id="line-250"></span><span>                </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><span id="line-250"></span><span>          </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><span class="hs-operator hs-var">&lt;&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; are not distinct; the following fields appear more than once: &quot;</span></span><span>
-</span><span id="line-251"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-251"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
 </span><span class="hs-identifier hs-var">dquoteList</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
 </span><a href="#local-6989586621691301858"><span class="hs-identifier hs-var">dups</span></a></span><span>
@@ -790,20 +790,20 @@ _otdDescription :: Maybe Description
 </span><span id="line-254"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. HashSet a -&gt; Bool
 </span><span class="hs-identifier hs-var">Set.null</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621691301845"><span class="hs-identifier hs-var">dups</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-255"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><a href="Hasura.GraphQL.RemoteServer.html#throwRemoteSchema"><span class="hs-identifier hs-var">throwRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-256"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691301845"><span class="hs-identifier hs-var">dups</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-255"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="Hasura.GraphQL.RemoteServer.html#throwRemoteSchema"><span class="hs-identifier hs-var">throwRemoteSchema</span></a></span><span>
+</span><span id="line-256"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Field name mappings for object type &quot;</span></span><span>
-</span><span id="line-257"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-257"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691301854"><span class="hs-identifier hs-var">_otdName</span></a></span><span>
-</span><span id="line-258"></span><span>                </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><span id="line-258"></span><span>          </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><span class="hs-operator hs-var">&lt;&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; are not distinct; the following fields appear more than once: &quot;</span></span><span>
-</span><span id="line-259"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-259"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
 </span><span class="hs-identifier hs-var">dquoteList</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
 </span><a href="#local-6989586621691301845"><span class="hs-identifier hs-var">dups</span></a></span><span>
@@ -1745,9 +1745,9 @@ _rscNamespaceFieldName :: Maybe Name
 </span><span id="line-445"></span><span>      </span><span class="annot"><span class="annottext">Maybe Name -&gt; Maybe Name -&gt; [Name] -&gt; HashMap Name Name
 </span><a href="#local-6989586621691301390"><span class="hs-identifier hs-var">mkPrefixSuffixMap</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
 </span><a href="#local-6989586621691301415"><span class="hs-identifier hs-var">_rscRootFieldsNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-446"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-446"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
 </span><span class="hs-identifier hs-var">catMaybes</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691301419"><span class="hs-identifier hs-var">irQueryRoot</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Name
@@ -1919,14 +1919,14 @@ _rfcParentType :: Name
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span>
 </span><span id="line-482"></span><span>
-</span><span id="line-483"></span><span id="local-6989586621691302939"><span id="local-6989586621691302941"><span class="annot"><a href="Hasura.GraphQL.RemoteServer.html#throwRemoteSchema"><span class="hs-identifier hs-type">throwRemoteSchema</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErrM</span></span><span> </span><span class="annot"><a href="#local-6989586621691302941"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691302941"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691302939"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-483"></span><span id="local-6989586621691302939"><span id="local-6989586621691302941"><span class="annot"><a href="Hasura.GraphQL.RemoteServer.html#throwRemoteSchema"><span class="hs-identifier hs-type">throwRemoteSchema</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">QErrM</span></span><span> </span><span class="annot"><a href="#local-6989586621691302941"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691302941"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691302939"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
 </span><span id="line-484"></span><span id="throwRemoteSchema"><span class="annot"><span class="annottext">throwRemoteSchema :: forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.GraphQL.RemoteServer.html#throwRemoteSchema"><span class="hs-identifier hs-var hs-var">throwRemoteSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw400</span></span><span> </span><span class="annot"><span class="annottext">Code
 </span><span class="hs-identifier hs-var">RemoteSchemaError</span></span><span>
 </span><span id="line-485"></span><span>
 </span><span id="line-486"></span><span id="local-6989586621691302862"><span id="local-6989586621691302863"><span class="annot"><a href="Hasura.GraphQL.RemoteServer.html#throwRemoteSchemaHttp"><span class="hs-identifier hs-type">throwRemoteSchemaHttp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-487"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">QErrM</span></span><span> </span><span class="annot"><a href="#local-6989586621691302863"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-487"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">QErrM</span></span><span> </span><span class="annot"><a href="#local-6989586621691302863"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-488"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#EnvRecord"><span class="hs-identifier hs-type">EnvRecord</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">URI</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-489"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HTTP.HttpException</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-490"></span><span>  </span><span class="annot"><a href="#local-6989586621691302863"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691302862"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
@@ -1937,9 +1937,9 @@ EnvRecord URI -&gt; HttpException -&gt; m a
 </span><a href="#local-6989586621691301326"><span class="hs-identifier hs-var">urlEnvRecord</span></a></span></span><span> </span><span id="local-6989586621691301325"><span class="annot"><span class="annottext">HttpException
 </span><a href="#local-6989586621691301325"><span class="hs-identifier hs-var">exception</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-492"></span><span>  </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">throwError</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-493"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {a}. EnvRecord a -&gt; QErr
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">throwError</span></a></span><span>
+</span><span id="line-493"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {a}. EnvRecord a -&gt; QErr
 </span><a href="#local-6989586621691301323"><span class="hs-identifier hs-var">baseError</span></a></span><span> </span><span class="annot"><span class="annottext">EnvRecord URI
 </span><a href="#local-6989586621691301326"><span class="hs-identifier hs-var">urlEnvRecord</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-494"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">qeInternal :: Maybe QErrExtra

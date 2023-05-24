@@ -705,7 +705,7 @@ insertTable :: TableName
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#%3C%2B%3E"><span class="hs-operator hs-var">&lt;+&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromTableName"><span class="hs-identifier hs-var">fromTableName</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
 </span><a href="#local-6989586621691173860"><span class="hs-identifier hs-var">insertTable</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-246"></span><span>      </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-246"></span><span>    </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Printer
 </span><span class="hs-string">&quot;(&quot;</span></span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Printer -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#%3C%2B%3E"><span class="hs-operator hs-var">&lt;+&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Printer -&gt; [Printer] -&gt; Printer
@@ -718,24 +718,24 @@ insertTable :: TableName
 </span><a href="#local-6989586621691173859"><span class="hs-identifier hs-var">insertColumns</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Printer -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#%3C%2B%3E"><span class="hs-operator hs-var">&lt;+&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Printer
 </span><span class="hs-string">&quot;)&quot;</span></span><span>
-</span><span id="line-247"></span><span>           </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span id="line-247"></span><span>         </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnName]
 </span><a href="#local-6989586621691173859"><span class="hs-identifier hs-var">insertColumns</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-248"></span><span>         </span><span class="hs-special">]</span><span>
-</span><span id="line-249"></span><span>      </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-248"></span><span>       </span><span class="hs-special">]</span><span>
+</span><span id="line-249"></span><span>    </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">InsertOutput -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromInsertOutput"><span class="hs-identifier hs-var">fromInsertOutput</span></a></span><span> </span><span class="annot"><span class="annottext">InsertOutput
 </span><a href="#local-6989586621691173858"><span class="hs-identifier hs-var">insertOutput</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-250"></span><span>           </span><span class="annot"><span class="annottext">Printer
+</span><span id="line-250"></span><span>         </span><span class="annot"><span class="annottext">Printer
 </span><span class="hs-string">&quot;INTO &quot;</span></span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Printer -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#%3C%2B%3E"><span class="hs-operator hs-var">&lt;+&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TempTable -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromTempTable"><span class="hs-identifier hs-var">fromTempTable</span></a></span><span> </span><span class="annot"><span class="annottext">TempTable
 </span><a href="#local-6989586621691173857"><span class="hs-identifier hs-var">insertTempTable</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-251"></span><span>           </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span id="line-251"></span><span>         </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnName]
 </span><a href="#local-6989586621691173859"><span class="hs-identifier hs-var">insertColumns</span></a></span><span>
-</span><span id="line-252"></span><span>             </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Printer
+</span><span id="line-252"></span><span>           </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Printer
 </span><span class="hs-string">&quot;VALUES &quot;</span></span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Printer -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#%3C%2B%3E"><span class="hs-operator hs-var">&lt;+&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Printer -&gt; [Printer] -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#SepByPrinter"><span class="hs-identifier hs-var">SepByPrinter</span></a></span><span> </span><span class="annot"><span class="annottext">Printer
@@ -744,10 +744,10 @@ insertTable :: TableName
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="annot"><span class="annottext">Printer
 </span><span class="hs-string">&quot;(DEFAULT)&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Values]
 </span><a href="#local-6989586621691173856"><span class="hs-identifier hs-var">insertValues</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-253"></span><span>             </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">[Values] -&gt; Printer
+</span><span id="line-253"></span><span>           </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">[Values] -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromValuesList"><span class="hs-identifier hs-var">fromValuesList</span></a></span><span> </span><span class="annot"><span class="annottext">[Values]
 </span><a href="#local-6989586621691173856"><span class="hs-identifier hs-var">insertValues</span></a></span><span>
-</span><span id="line-254"></span><span>         </span><span class="hs-special">]</span><span>
+</span><span id="line-254"></span><span>       </span><span class="hs-special">]</span><span>
 </span><span id="line-255"></span><span>
 </span><span id="line-256"></span><span class="annot"><a href="Hasura.Backends.MSSQL.ToQuery.html#fromSetValue"><span class="hs-identifier hs-type">fromSetValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#SetValue"><span class="hs-identifier hs-type">SetValue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.ToQuery.html#Printer"><span class="hs-identifier hs-type">Printer</span></a></span><span>
 </span><span id="line-257"></span><span id="fromSetValue"><span class="annot"><span class="annottext">fromSetValue :: SetValue -&gt; Printer
@@ -879,9 +879,9 @@ $sel:columnNameText:ColumnName :: ColumnName -&gt; Text
 </span><a href="#local-6989586621691173812"><span class="hs-identifier hs-var hs-var">columnNameText</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-302"></span><span>            </span><span class="hs-comment">-- merge_temptable.column_name AS column_name</span><span>
 </span><span id="line-303"></span><span>            </span><span class="annot"><span class="annottext">Aliased FieldName -&gt; Projection
-</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#FieldNameProjection"><span class="hs-identifier hs-var">FieldNameProjection</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-304"></span><span>              </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-type">Aliased</span></a></span><span>
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#FieldNameProjection"><span class="hs-identifier hs-var">FieldNameProjection</span></a></span><span>
+</span><span id="line-304"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-type">Aliased</span></a></span><span>
 </span><span id="line-305"></span><span>                </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:aliasedThing:Aliased :: FieldName
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AaliasedThing%3AAliased"><span class="hs-identifier hs-var">aliasedThing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; FieldName
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#FieldName"><span class="hs-identifier hs-var">FieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -1004,9 +1004,9 @@ $sel:columnNameText:ColumnName :: ColumnName -&gt; Text
 </span><span id="line-344"></span><span>    </span><span id="local-6989586621691173787"><span class="annot"><span class="annottext">updateSet :: UpdateSet
 </span><a href="#local-6989586621691173787"><span class="hs-identifier hs-var hs-var">updateSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-345"></span><span>      </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-346"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span>
+</span><span id="line-346"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span>
 </span><span id="line-347"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691173783"><span class="annot"><span class="annottext">cn :: ColumnName
 </span><a href="#local-6989586621691173783"><span class="hs-identifier hs-var">cn</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ColumnName"><span class="hs-identifier hs-type">ColumnName</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691173782"><span class="annot"><span class="annottext">Text
@@ -1472,28 +1472,28 @@ sittConstraints :: SITTConstraints
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#%3C%2B%3E"><span class="hs-operator hs-var">&lt;+&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#falsePrinter"><span class="hs-identifier hs-var">falsePrinter</span></a></span><span>
 </span><span id="line-500"></span><span>      </span><span class="hs-special">]</span><span>
-</span><span id="line-501"></span><span>      </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-501"></span><span>    </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SITTConstraints
 </span><a href="#local-6989586621691173694"><span class="hs-identifier hs-var">sittConstraints</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-502"></span><span>        </span><span class="annot"><span class="annottext">SITTConstraints
+</span><span id="line-502"></span><span>      </span><span class="annot"><span class="annottext">SITTConstraints
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#RemoveConstraints"><span class="hs-identifier hs-var">RemoveConstraints</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-503"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Printer
+</span><span id="line-503"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Printer
 </span><span class="hs-string">&quot;UNION ALL SELECT &quot;</span></span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Printer -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#%3C%2B%3E"><span class="hs-operator hs-var">&lt;+&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Printer
 </span><a href="#local-6989586621691173692"><span class="hs-identifier hs-var">columns</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-504"></span><span>            </span><span class="annot"><span class="annottext">Printer
+</span><span id="line-504"></span><span>          </span><span class="annot"><span class="annottext">Printer
 </span><span class="hs-string">&quot;FROM &quot;</span></span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Printer -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#%3C%2B%3E"><span class="hs-operator hs-var">&lt;+&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromTableName"><span class="hs-identifier hs-var">fromTableName</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
 </span><a href="#local-6989586621691173696"><span class="hs-identifier hs-var">sittFromTableName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-505"></span><span>            </span><span class="annot"><span class="annottext">Printer
+</span><span id="line-505"></span><span>          </span><span class="annot"><span class="annottext">Printer
 </span><span class="hs-string">&quot;WHERE &quot;</span></span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Printer -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#%3C%2B%3E"><span class="hs-operator hs-var">&lt;+&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#falsePrinter"><span class="hs-identifier hs-var">falsePrinter</span></a></span><span>
-</span><span id="line-506"></span><span>          </span><span class="hs-special">]</span><span>
-</span><span id="line-507"></span><span>        </span><span class="annot"><span class="annottext">SITTConstraints
+</span><span id="line-506"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-507"></span><span>      </span><span class="annot"><span class="annottext">SITTConstraints
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#KeepConstraints"><span class="hs-identifier hs-var">KeepConstraints</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-508"></span><span>          </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-508"></span><span>        </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-509"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-510"></span><span>    </span><span class="hs-comment">-- column names separated by commas</span><span>
 </span><span id="line-511"></span><span>    </span><span id="local-6989586621691173692"><span class="annot"><span class="annottext">columns :: Printer
@@ -1641,7 +1641,7 @@ $sel:selectProjections:Select :: Select -&gt; [Projection]
 </span><a href="#local-6989586621691173673"><span class="hs-identifier hs-var">selectProjections</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-551"></span><span>                </span><span class="hs-special">)</span><span>
 </span><span id="line-552"></span><span>          </span><span class="hs-special">]</span><span>
-</span><span id="line-553"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-553"></span><span>        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Printer
 </span><span class="hs-string">&quot;FROM &quot;</span></span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Printer -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#%3C%2B%3E"><span class="hs-operator hs-var">&lt;+&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Printer -&gt; Printer
@@ -1651,55 +1651,55 @@ $sel:selectProjections:Select :: Select -&gt; [Projection]
 </span><a href="#local-6989586621691173655"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691173655"><span class="annot"><span class="annottext">From
 </span><a href="#local-6989586621691173655"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Maybe From
 </span><a href="#local-6989586621691173672"><span class="hs-identifier hs-var">selectFrom</span></a></span><span class="hs-special">]</span><span class="hs-special">]</span><span>
-</span><span id="line-554"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-554"></span><span>        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Printer -&gt; [Printer] -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#SepByPrinter"><span class="hs-identifier hs-var">SepByPrinter</span></a></span><span>
-</span><span id="line-555"></span><span>                 </span><span class="annot"><span class="annottext">Printer
+</span><span id="line-555"></span><span>               </span><span class="annot"><span class="annottext">Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#NewlinePrinter"><span class="hs-identifier hs-var">NewlinePrinter</span></a></span><span>
-</span><span id="line-556"></span><span>                 </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span id="line-556"></span><span>               </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span>
-</span><span id="line-557"></span><span>                     </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Join"><span class="hs-identifier hs-type">Join</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691173652"><span id="local-6989586621691173653"><span class="annot"><span class="annottext">JoinAlias
+</span><span id="line-557"></span><span>                   </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Join"><span class="hs-identifier hs-type">Join</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691173652"><span id="local-6989586621691173653"><span class="annot"><span class="annottext">JoinAlias
 JoinSource
 $sel:joinJoinAlias:Join :: Join -&gt; JoinAlias
 $sel:joinSource:Join :: Join -&gt; JoinSource
 joinJoinAlias :: JoinAlias
 joinSource :: JoinSource
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AjoinJoinAlias%3AJoin"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-558"></span><span>                         </span><span class="annot"><span class="annottext">[Printer] -&gt; Printer
+</span><span id="line-558"></span><span>                       </span><span class="annot"><span class="annottext">[Printer] -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#SeqPrinter"><span class="hs-identifier hs-var">SeqPrinter</span></a></span><span>
-</span><span id="line-559"></span><span>                           </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Printer
+</span><span id="line-559"></span><span>                         </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Printer
 </span><span class="hs-string">&quot;OUTER APPLY (&quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-560"></span><span>                             </span><span class="annot"><span class="annottext">Int -&gt; Printer -&gt; Printer
+</span><span id="line-560"></span><span>                           </span><span class="annot"><span class="annottext">Int -&gt; Printer -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#IndentPrinter"><span class="hs-identifier hs-var">IndentPrinter</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">13</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JoinSource -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromJoinSource"><span class="hs-identifier hs-var">fromJoinSource</span></a></span><span> </span><span class="annot"><span class="annottext">JoinSource
 </span><a href="#local-6989586621691173653"><span class="hs-identifier hs-var">joinSource</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-561"></span><span>                             </span><span class="annot"><span class="annottext">Printer
+</span><span id="line-561"></span><span>                           </span><span class="annot"><span class="annottext">Printer
 </span><span class="hs-string">&quot;) &quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-562"></span><span>                             </span><span class="annot"><span class="annottext">Printer
+</span><span id="line-562"></span><span>                           </span><span class="annot"><span class="annottext">Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#NewlinePrinter"><span class="hs-identifier hs-var">NewlinePrinter</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-563"></span><span>                             </span><span class="annot"><span class="annottext">Printer
+</span><span id="line-563"></span><span>                           </span><span class="annot"><span class="annottext">Printer
 </span><span class="hs-string">&quot;AS &quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-564"></span><span>                             </span><span class="annot"><span class="annottext">JoinAlias -&gt; Printer
+</span><span id="line-564"></span><span>                           </span><span class="annot"><span class="annottext">JoinAlias -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromJoinAlias"><span class="hs-identifier hs-var">fromJoinAlias</span></a></span><span> </span><span class="annot"><span class="annottext">JoinAlias
 </span><a href="#local-6989586621691173652"><span class="hs-identifier hs-var">joinJoinAlias</span></a></span><span>
-</span><span id="line-565"></span><span>                           </span><span class="hs-special">]</span><span>
-</span><span id="line-566"></span><span>                     </span><span class="hs-special">)</span><span>
-</span><span id="line-567"></span><span>                     </span><span class="annot"><span class="annottext">[Join]
+</span><span id="line-565"></span><span>                         </span><span class="hs-special">]</span><span>
+</span><span id="line-566"></span><span>                   </span><span class="hs-special">)</span><span>
+</span><span id="line-567"></span><span>                   </span><span class="annot"><span class="annottext">[Join]
 </span><a href="#local-6989586621691173671"><span class="hs-identifier hs-var">selectJoins</span></a></span><span>
-</span><span id="line-568"></span><span>                 </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-569"></span><span>               </span><span class="annot"><span class="annottext">Where -&gt; Printer
+</span><span id="line-568"></span><span>               </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-569"></span><span>             </span><span class="annot"><span class="annottext">Where -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromWhere"><span class="hs-identifier hs-var">fromWhere</span></a></span><span> </span><span class="annot"><span class="annottext">Where
 </span><a href="#local-6989586621691173670"><span class="hs-identifier hs-var">selectWhere</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-570"></span><span>               </span><span class="annot"><span class="annottext">Top -&gt; Maybe Expression -&gt; Maybe (NonEmpty OrderBy) -&gt; Printer
+</span><span id="line-570"></span><span>             </span><span class="annot"><span class="annottext">Top -&gt; Maybe Expression -&gt; Maybe (NonEmpty OrderBy) -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromOrderBys"><span class="hs-identifier hs-var">fromOrderBys</span></a></span><span> </span><span class="annot"><span class="annottext">Top
 </span><a href="#local-6989586621691173674"><span class="hs-identifier hs-var">selectTop</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Expression
 </span><a href="#local-6989586621691173667"><span class="hs-identifier hs-var">selectOffset</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (NonEmpty OrderBy)
 </span><a href="#local-6989586621691173668"><span class="hs-identifier hs-var">selectOrderBy</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-571"></span><span>               </span><span class="annot"><span class="annottext">For -&gt; Printer
+</span><span id="line-571"></span><span>             </span><span class="annot"><span class="annottext">For -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromFor"><span class="hs-identifier hs-var">fromFor</span></a></span><span> </span><span class="annot"><span class="annottext">For
 </span><a href="#local-6989586621691173669"><span class="hs-identifier hs-var">selectFor</span></a></span><span>
-</span><span id="line-572"></span><span>             </span><span class="hs-special">]</span><span>
+</span><span id="line-572"></span><span>           </span><span class="hs-special">]</span><span>
 </span><span id="line-573"></span><span>
 </span><span id="line-574"></span><span class="annot"><a href="Hasura.Backends.MSSQL.ToQuery.html#fromWith"><span class="hs-identifier hs-type">fromWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#With"><span class="hs-identifier hs-type">With</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.ToQuery.html#Printer"><span class="hs-identifier hs-type">Printer</span></a></span><span>
 </span><span id="line-575"></span><span id="fromWith"><span class="annot"><span class="annottext">fromWith :: With -&gt; Printer

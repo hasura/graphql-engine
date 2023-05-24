@@ -453,28 +453,29 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">HashMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691394554"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
-</span><a href="#local-6989586621691394564"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-151"></span><span>                      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-152"></span><span>                        </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;remote schema permissions: bad ordering of roles, could not find the permission of role: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
+</span><a href="#local-6989586621691394564"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-151"></span><span>                      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><span class="hs-identifier hs-var">throw500</span></span><span>
+</span><span id="line-152"></span><span>                      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;remote schema permissions: bad ordering of roles, could not find the permission of role: &quot;</span></span><span>
+</span><span id="line-153"></span><span>                      </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><span class="hs-operator hs-var">&lt;&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691394554"><span class="hs-keyword hs-var">role</span></a></span><span>
-</span><span id="line-153"></span><span>                </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691394552"><span class="annot"><span class="annottext">combinedPermission :: Maybe (CheckPermission IntrospectionResult)
+</span><span id="line-154"></span><span>                </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691394552"><span class="annot"><span class="annottext">combinedPermission :: Maybe (CheckPermission IntrospectionResult)
 </span><a href="#local-6989586621691394552"><span class="hs-identifier hs-var hs-var">combinedPermission</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; NonEmpty a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">sconcat</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">nonEmpty</span></a></span><span> </span><span class="annot"><span class="annottext">[CheckPermission IntrospectionResult]
 </span><a href="#local-6989586621691394557"><span class="hs-identifier hs-var">parentRolePermissions</span></a></span><span>
-</span><span id="line-154"></span><span>                </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-155"></span><span>                </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">forall permissionType. CheckPermission permissionType
 </span><a href="Hasura.RQL.Types.Roles.Internal.html#CPUndefined"><span class="hs-identifier hs-var">CPUndefined</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (CheckPermission IntrospectionResult)
 </span><a href="#local-6989586621691394552"><span class="hs-identifier hs-var">combinedPermission</span></a></span><span>
-</span><span id="line-155"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-156"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
@@ -483,20 +484,20 @@ k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
 </span><a href="#local-6989586621691394562"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">CheckPermission IntrospectionResult
 </span><a href="#local-6989586621691394559"><span class="hs-identifier hs-var">rolePermission</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
 </span><a href="#local-6989586621691394564"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span><span>
-</span><span id="line-156"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-157"></span><span>          </span><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
+</span><span id="line-157"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-158"></span><span>          </span><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
 </span><a href="#local-6989586621691394568"><span class="hs-identifier hs-var">metadataCheckPermissionsMap</span></a></span><span>
-</span><span id="line-158"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderedRoles -&gt; [Role]
+</span><span id="line-159"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderedRoles -&gt; [Role]
 </span><a href="Hasura.RQL.DDL.Schema.Cache.Permission.html#_unOrderedRoles"><span class="hs-identifier hs-var">_unOrderedRoles</span></a></span><span> </span><span class="annot"><span class="annottext">OrderedRoles
 </span><a href="#local-6989586621691394576"><span class="hs-identifier hs-var">orderedRoles</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-159"></span><span>  </span><span class="hs-comment">-- traverse through `allRolesUnresolvedPermissionsMap` to record any inconsistencies (if exists)</span><span>
-</span><span id="line-160"></span><span>  </span><span id="local-6989586621691394545"><span class="annot"><span class="annottext">[(RoleName, Maybe IntrospectionResult)]
+</span><span id="line-160"></span><span>  </span><span class="hs-comment">-- traverse through `allRolesUnresolvedPermissionsMap` to record any inconsistencies (if exists)</span><span>
+</span><span id="line-161"></span><span>  </span><span id="local-6989586621691394545"><span class="annot"><span class="annottext">[(RoleName, Maybe IntrospectionResult)]
 </span><a href="#local-6989586621691394545"><span class="hs-identifier hs-var">resolvedPermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-161"></span><span>    </span><span class="annot"><span class="annottext">forall w (arr :: * -&gt; * -&gt; *) a.
+</span><span id="line-162"></span><span>    </span><span class="annot"><span class="annottext">forall w (arr :: * -&gt; * -&gt; *) a.
 ArrowWriter w arr =&gt;
 arr (Writer w a) a
 </span><span class="hs-identifier hs-var">interpretWriter</span></span><span>
-</span><span id="line-162"></span><span>      </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+</span><span id="line-163"></span><span>      </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
@@ -504,11 +505,11 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="#local-6989586621691394566"><span class="hs-identifier hs-var">allRolesUnresolvedPermissionsMap</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621691394542"><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691394542"><span class="hs-identifier hs-var">roleName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691394541"><span class="annot"><span class="annottext">CheckPermission IntrospectionResult
 </span><a href="#local-6989586621691394541"><span class="hs-identifier hs-var">checkPermission</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-163"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691394540"><span class="annot"><span class="annottext">inconsistentRoleEntity :: InconsistentRoleEntity
+</span><span id="line-164"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691394540"><span class="annot"><span class="annottext">inconsistentRoleEntity :: InconsistentRoleEntity
 </span><a href="#local-6989586621691394540"><span class="hs-identifier hs-var hs-var">inconsistentRoleEntity</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName -&gt; InconsistentRoleEntity
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#InconsistentRemoteSchemaPermission"><span class="hs-identifier hs-var">InconsistentRemoteSchemaPermission</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
 </span><a href="#local-6989586621691394578"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span><span>
-</span><span id="line-164"></span><span>        </span><span id="local-6989586621691394538"><span class="annot"><span class="annottext">Maybe IntrospectionResult
+</span><span id="line-165"></span><span>        </span><span id="local-6989586621691394538"><span class="annot"><span class="annottext">Maybe IntrospectionResult
 </span><a href="#local-6989586621691394538"><span class="hs-identifier hs-var">resolvedCheckPermission</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall md (m :: * -&gt; *) p.
 MonadWriter (Seq (Either InconsistentMetadata md)) m =&gt;
 CheckPermission p
@@ -517,18 +518,18 @@ CheckPermission p
 </span><a href="#local-6989586621691394541"><span class="hs-identifier hs-var">checkPermission</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691394542"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">InconsistentRoleEntity
 </span><a href="#local-6989586621691394540"><span class="hs-identifier hs-var">inconsistentRoleEntity</span></a></span><span>
-</span><span id="line-165"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span id="line-166"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691394542"><span class="hs-identifier hs-var">roleName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe IntrospectionResult
 </span><a href="#local-6989586621691394538"><span class="hs-identifier hs-var">resolvedCheckPermission</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-166"></span><span>  </span><span class="annot"><span class="annottext">forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span id="line-167"></span><span>  </span><span class="annot"><span class="annottext">forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">returnA</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
 </span><span class="hs-identifier hs-var">catMaybes</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span> </span><span class="annot"><span class="annottext">[(RoleName, Maybe IntrospectionResult)]
 </span><a href="#local-6989586621691394545"><span class="hs-identifier hs-var">resolvedPermissions</span></a></span><span>
-</span><span id="line-167"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-168"></span><span>    </span><span id="local-6989586621691394569"><span class="annot"><span class="annottext">buildRemoteSchemaPermission :: arr
+</span><span id="line-168"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-169"></span><span>    </span><span id="local-6989586621691394569"><span class="annot"><span class="annottext">buildRemoteSchemaPermission :: arr
   (IntrospectionResult,
    (RemoteSchemaName, RemoteSchemaPermissionMetadata))
   (Maybe IntrospectionResult)
@@ -536,27 +537,27 @@ CheckPermission p
 </span><a href="#local-6989586621691394507"><span class="hs-identifier hs-var">originalIntrospection</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691394506"><span class="annot"><span class="annottext">RemoteSchemaName
 </span><a href="#local-6989586621691394506"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691394505"><span class="annot"><span class="annottext">RemoteSchemaPermissionMetadata
 </span><a href="#local-6989586621691394505"><span class="hs-identifier hs-var">remoteSchemaPerm</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-169"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-type">RemoteSchemaPermissionMetadata</span></a></span><span> </span><span id="local-6989586621691394503"><span class="annot"><span class="annottext">RoleName
+</span><span id="line-170"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-type">RemoteSchemaPermissionMetadata</span></a></span><span> </span><span id="local-6989586621691394503"><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691394503"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span id="local-6989586621691394502"><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition
 </span><a href="#local-6989586621691394502"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionMetadata
 </span><a href="#local-6989586621691394505"><span class="hs-identifier hs-var">remoteSchemaPerm</span></a></span><span>
-</span><span id="line-170"></span><span>          </span><span id="local-6989586621691394501"><span class="annot"><span class="annottext">metadataObject :: MetadataObject
+</span><span id="line-171"></span><span>          </span><span id="local-6989586621691394501"><span class="annot"><span class="annottext">metadataObject :: MetadataObject
 </span><a href="#local-6989586621691394501"><span class="hs-identifier hs-var hs-var">metadataObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RemoteSchemaName, RemoteSchemaPermissionMetadata)
 -&gt; MetadataObject
 </span><a href="#local-6989586621691394570"><span class="hs-identifier hs-var">mkRemoteSchemaPermissionMetadataObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaName
 </span><a href="#local-6989586621691394506"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionMetadata
 </span><a href="#local-6989586621691394505"><span class="hs-identifier hs-var">remoteSchemaPerm</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-171"></span><span>          </span><span id="local-6989586621691394500"><span class="annot"><span class="annottext">schemaObject :: SchemaObjId
+</span><span id="line-172"></span><span>          </span><span id="local-6989586621691394500"><span class="annot"><span class="annottext">schemaObject :: SchemaObjId
 </span><a href="#local-6989586621691394500"><span class="hs-identifier hs-var hs-var">schemaObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName -&gt; RoleName -&gt; SchemaObjId
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SORemoteSchemaPermission"><span class="hs-identifier hs-var">SORemoteSchemaPermission</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
 </span><a href="#local-6989586621691394506"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691394503"><span class="hs-identifier hs-var">roleName</span></a></span><span>
-</span><span id="line-172"></span><span>          </span><span id="local-6989586621691394498"><span class="annot"><span class="annottext">providedSchemaDoc :: SchemaDocument
+</span><span id="line-173"></span><span>          </span><span id="local-6989586621691394498"><span class="annot"><span class="annottext">providedSchemaDoc :: SchemaDocument
 </span><a href="#local-6989586621691394498"><span class="hs-identifier hs-var hs-var">providedSchemaDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition -&gt; SchemaDocument
 </span><a href="Hasura.RemoteSchema.Metadata.Permission.html#_rspdSchema"><span class="hs-identifier hs-var">_rspdSchema</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition
 </span><a href="#local-6989586621691394502"><span class="hs-identifier hs-var">defn</span></a></span><span>
-</span><span id="line-173"></span><span>          </span><span id="local-6989586621691394496"><span class="annot"><span class="annottext">addPermContext :: Text -&gt; Text
+</span><span id="line-174"></span><span>          </span><span id="local-6989586621691394496"><span class="annot"><span class="annottext">addPermContext :: Text -&gt; Text
 </span><a href="#local-6989586621691394496"><span class="hs-identifier hs-var hs-var">addPermContext</span></a></span></span><span> </span><span id="local-6989586621691394495"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691394495"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;in remote schema permission for role &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -566,22 +567,22 @@ CheckPermission p
 </span><span class="hs-string">&quot;: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691394495"><span class="hs-identifier hs-var">err</span></a></span><span>
-</span><span id="line-174"></span><span>      </span><span class="hs-glyph">(|</span><span>
-</span><span id="line-175"></span><span>        </span><span class="annot"><span class="annottext">forall (arr :: * -&gt; * -&gt; *) md e s a.
+</span><span id="line-175"></span><span>      </span><span class="hs-glyph">(|</span><span>
+</span><span id="line-176"></span><span>        </span><span class="annot"><span class="annottext">forall (arr :: * -&gt; * -&gt; *) md e s a.
 (ArrowChoice arr,
  ArrowWriter (Seq (Either InconsistentMetadata md)) arr) =&gt;
 ErrorA QErr arr (e, s) a -&gt; arr (e, (MetadataObject, s)) (Maybe a)
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withRecordInconsistency"><span class="hs-identifier hs-var">withRecordInconsistency</span></a></span><span>
-</span><span id="line-176"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-177"></span><span>              </span><span class="hs-special">(</span><span id="local-6989586621691394491"><span class="annot"><span class="annottext">IntrospectionResult
+</span><span id="line-177"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-178"></span><span>              </span><span class="hs-special">(</span><span id="local-6989586621691394491"><span class="annot"><span class="annottext">IntrospectionResult
 </span><a href="#local-6989586621691394491"><span class="hs-identifier hs-var">resolvedSchemaIntrospection</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691394490"><span class="annot"><span class="annottext">SchemaDependency
 </span><a href="#local-6989586621691394490"><span class="hs-keyword hs-var">dependency</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-178"></span><span>                </span><span class="annot"><span class="annottext">forall (arr :: * -&gt; * -&gt; *) (m :: * -&gt; *) e a.
+</span><span id="line-179"></span><span>                </span><span class="annot"><span class="annottext">forall (arr :: * -&gt; * -&gt; *) (m :: * -&gt; *) e a.
 (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr) =&gt;
 arr (ExceptT e m a) a
 </span><span class="hs-identifier hs-var">bindErrorA</span></span><span>
-</span><span id="line-179"></span><span>                  </span><span class="hs-glyph">-&lt;</span><span>
-</span><span id="line-180"></span><span>                    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; (Text -&gt; Text) -&gt; m a -&gt; m a
+</span><span id="line-180"></span><span>                  </span><span class="hs-glyph">-&lt;</span><span>
+</span><span id="line-181"></span><span>                    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; (Text -&gt; Text) -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">modifyErr</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><a href="#local-6989586621691394496"><span class="hs-identifier hs-var">addPermContext</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
@@ -596,7 +597,7 @@ RoleName
 </span><a href="#local-6989586621691394506"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">IntrospectionResult
 </span><a href="#local-6989586621691394507"><span class="hs-identifier hs-var">originalIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaDocument
 </span><a href="#local-6989586621691394498"><span class="hs-identifier hs-var">providedSchemaDoc</span></a></span><span>
-</span><span id="line-181"></span><span>              </span><span class="annot"><span class="annottext">forall im (arr :: * -&gt; * -&gt; *).
+</span><span id="line-182"></span><span>              </span><span class="annot"><span class="annottext">forall im (arr :: * -&gt; * -&gt; *).
 ArrowWriter (Seq (Either im MetadataDependency)) arr =&gt;
 arr (MetadataObject, SchemaObjId, Seq SchemaDependency) ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#recordDependencies"><span class="hs-identifier hs-var">recordDependencies</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataObject
@@ -604,41 +605,42 @@ arr (MetadataObject, SchemaObjId, Seq SchemaDependency) ()
 </span><a href="#local-6989586621691394500"><span class="hs-identifier hs-var">schemaObject</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaDependency
 </span><a href="#local-6989586621691394490"><span class="hs-keyword hs-var">dependency</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-182"></span><span>              </span><span class="annot"><span class="annottext">forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span id="line-183"></span><span>              </span><span class="annot"><span class="annottext">forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">returnA</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult
 </span><a href="#local-6989586621691394491"><span class="hs-identifier hs-var">resolvedSchemaIntrospection</span></a></span><span>
-</span><span id="line-183"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-184"></span><span>        </span><span class="hs-glyph">|)</span><span> </span><span class="annot"><span class="annottext">MetadataObject
+</span><span id="line-184"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-185"></span><span>        </span><span class="hs-glyph">|)</span><span>
+</span><span id="line-186"></span><span>        </span><span class="annot"><span class="annottext">MetadataObject
 </span><a href="#local-6989586621691394501"><span class="hs-identifier hs-var">metadataObject</span></a></span><span>
-</span><span id="line-185"></span><span>
-</span><span id="line-186"></span><span>    </span><span class="annot"><a href="#local-6989586621691394570"><span class="hs-identifier hs-type">mkRemoteSchemaPermissionMetadataObject</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-187"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-type">RemoteSchemaPermissionMetadata</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-188"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span>
-</span><span id="line-189"></span><span>    </span><span id="local-6989586621691394570"><span class="annot"><span class="annottext">mkRemoteSchemaPermissionMetadataObject :: (RemoteSchemaName, RemoteSchemaPermissionMetadata)
+</span><span id="line-187"></span><span>
+</span><span id="line-188"></span><span>    </span><span class="annot"><a href="#local-6989586621691394570"><span class="hs-identifier hs-type">mkRemoteSchemaPermissionMetadataObject</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-189"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-type">RemoteSchemaPermissionMetadata</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-190"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span>
+</span><span id="line-191"></span><span>    </span><span id="local-6989586621691394570"><span class="annot"><span class="annottext">mkRemoteSchemaPermissionMetadataObject :: (RemoteSchemaName, RemoteSchemaPermissionMetadata)
 -&gt; MetadataObject
 </span><a href="#local-6989586621691394570"><span class="hs-identifier hs-var hs-var">mkRemoteSchemaPermissionMetadataObject</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691394486"><span class="annot"><span class="annottext">RemoteSchemaName
 </span><a href="#local-6989586621691394486"><span class="hs-identifier hs-var">rsName</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-type">RemoteSchemaPermissionMetadata</span></a></span><span> </span><span id="local-6989586621691394485"><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691394485"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span id="local-6989586621691394484"><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition
 </span><a href="#local-6989586621691394484"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-190"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691394483"><span class="annot"><span class="annottext">objectId :: MetadataObjId
+</span><span id="line-192"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691394483"><span class="annot"><span class="annottext">objectId :: MetadataObjId
 </span><a href="#local-6989586621691394483"><span class="hs-identifier hs-var hs-var">objectId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName -&gt; RoleName -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MORemoteSchemaPermissions"><span class="hs-identifier hs-var">MORemoteSchemaPermissions</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
 </span><a href="#local-6989586621691394486"><span class="hs-identifier hs-var">rsName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621691394485"><span class="hs-identifier hs-var">roleName</span></a></span><span>
-</span><span id="line-191"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">MetadataObjId -&gt; Value -&gt; MetadataObject
+</span><span id="line-193"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">MetadataObjId -&gt; Value -&gt; MetadataObject
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-var">MetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataObjId
 </span><a href="#local-6989586621691394483"><span class="hs-identifier hs-var">objectId</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition
 </span><a href="#local-6989586621691394484"><span class="hs-identifier hs-var">defn</span></a></span><span>
-</span><span id="line-192"></span><span>
-</span><span id="line-193"></span><span id="local-6989586621691394997"><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Build.html#addRemoteSchemaP2Setup"><span class="hs-identifier hs-type">addRemoteSchemaP2Setup</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-194"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">QErrM</span></span><span> </span><span class="annot"><a href="#local-6989586621691394997"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394997"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394997"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394997"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-195"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Env.Environment</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-196"></span><span>  </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaDef"><span class="hs-identifier hs-type">RemoteSchemaDef</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-197"></span><span>  </span><span class="annot"><a href="#local-6989586621691394997"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#IntrospectionResult"><span class="hs-identifier hs-type">IntrospectionResult</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#RemoteSchemaInfo"><span class="hs-identifier hs-type">RemoteSchemaInfo</span></a></span><span class="hs-special">)</span></span><span>
-</span><span id="line-198"></span><span id="addRemoteSchemaP2Setup"><span class="annot"><span class="annottext">addRemoteSchemaP2Setup :: forall (m :: * -&gt; *).
+</span><span id="line-194"></span><span>
+</span><span id="line-195"></span><span id="local-6989586621691394997"><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Build.html#addRemoteSchemaP2Setup"><span class="hs-identifier hs-type">addRemoteSchemaP2Setup</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-196"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">QErrM</span></span><span> </span><span class="annot"><a href="#local-6989586621691394997"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394997"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394997"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691394997"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-197"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Env.Environment</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-198"></span><span>  </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaDef"><span class="hs-identifier hs-type">RemoteSchemaDef</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-199"></span><span>  </span><span class="annot"><a href="#local-6989586621691394997"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#IntrospectionResult"><span class="hs-identifier hs-type">IntrospectionResult</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#RemoteSchemaInfo"><span class="hs-identifier hs-type">RemoteSchemaInfo</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-200"></span><span id="addRemoteSchemaP2Setup"><span class="annot"><span class="annottext">addRemoteSchemaP2Setup :: forall (m :: * -&gt; *).
 (QErrM m, MonadIO m, ProvidesNetwork m, MonadTrace m) =&gt;
 Environment
 -&gt; RemoteSchemaDef
@@ -646,14 +648,14 @@ Environment
 </span><a href="Hasura.RemoteSchema.SchemaCache.Build.html#addRemoteSchemaP2Setup"><span class="hs-identifier hs-var hs-var">addRemoteSchemaP2Setup</span></a></span></span><span> </span><span id="local-6989586621691394469"><span class="annot"><span class="annottext">Environment
 </span><a href="#local-6989586621691394469"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621691394468"><span class="annot"><span class="annottext">RemoteSchemaDef
 </span><a href="#local-6989586621691394468"><span class="hs-identifier hs-var">def</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-199"></span><span>  </span><span id="local-6989586621691394467"><span class="annot"><span class="annottext">ValidatedRemoteSchemaDef
+</span><span id="line-201"></span><span>  </span><span id="local-6989586621691394467"><span class="annot"><span class="annottext">ValidatedRemoteSchemaDef
 </span><a href="#local-6989586621691394467"><span class="hs-identifier hs-var">rsi</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 Environment -&gt; RemoteSchemaDef -&gt; m ValidatedRemoteSchemaDef
 </span><a href="Hasura.RemoteSchema.SchemaCache.Types.html#validateRemoteSchemaDef"><span class="hs-identifier hs-var">validateRemoteSchemaDef</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
 </span><a href="#local-6989586621691394469"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaDef
 </span><a href="#local-6989586621691394468"><span class="hs-identifier hs-var">def</span></a></span><span>
-</span><span id="line-200"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-202"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m, MonadTrace m, ProvidesNetwork m) =&gt;
 Environment
 -&gt; ValidatedRemoteSchemaDef
@@ -661,4 +663,4 @@ Environment
 </span><a href="Hasura.GraphQL.RemoteServer.html#fetchRemoteSchema"><span class="hs-identifier hs-var">fetchRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
 </span><a href="#local-6989586621691394469"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">ValidatedRemoteSchemaDef
 </span><a href="#local-6989586621691394467"><span class="hs-identifier hs-var">rsi</span></a></span><span>
-</span><span id="line-201"></span></pre></body></html>
+</span><span id="line-203"></span></pre></body></html>

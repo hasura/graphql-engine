@@ -100,35 +100,35 @@ $cdeclareNamedSchema :: Proxy MetadataDTO -&gt; Declare (Definitions Schema) Nam
 </span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ValueCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">named</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Metadata&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><span class="hs-string">&quot;Metadata&quot;</span></span><span>
+</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
 -&gt; Codec context newInput newOutput
 </span><span class="hs-identifier hs-var">dimapCodec</span></span><span> </span><span class="annot"><span class="annottext">Either MetadataV1 (Either MetadataV2 MetadataV3) -&gt; MetadataDTO
 </span><a href="#local-6989586621691328411"><span class="hs-identifier hs-var">decode</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataDTO -&gt; Either MetadataV1 (Either MetadataV2 MetadataV3)
-</span><a href="#local-6989586621691328410"><span class="hs-identifier hs-var">encode</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-44"></span><span>        </span><span class="annot"><span class="annottext">forall context input1 output1 input2 output2.
+</span><a href="#local-6989586621691328410"><span class="hs-identifier hs-var">encode</span></a></span><span>
+</span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall context input1 output1 input2 output2.
 Codec context input1 output1
 -&gt; Codec context input2 output2
 -&gt; Codec context (Either input1 input2) (Either output1 output2)
 </span><span class="hs-identifier hs-var">disjointEitherCodec</span></span><span>
-</span><span id="line-45"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
+</span><span id="line-45"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
 </span><span class="hs-identifier hs-var">codec</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV1.html#MetadataV1"><span class="hs-identifier hs-type">MetadataV1</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-46"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall context input1 output1 input2 output2.
+</span><span id="line-46"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall context input1 output1 input2 output2.
 Codec context input1 output1
 -&gt; Codec context input2 output2
 -&gt; Codec context (Either input1 input2) (Either output1 output2)
 </span><span class="hs-identifier hs-var">disjointEitherCodec</span></span><span>
-</span><span id="line-47"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
+</span><span id="line-47"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
 </span><span class="hs-identifier hs-var">codec</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-type">MetadataV2</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-48"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
+</span><span id="line-48"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
 </span><span class="hs-identifier hs-var">codec</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-49"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-50"></span><span>          </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-49"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">forall input output.
 ValueCodec input output -&gt; Text -&gt; ValueCodec input output
 </span><span class="hs-operator hs-var">&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;configuration format for the Hasura GraphQL Engine&quot;</span></span><span>

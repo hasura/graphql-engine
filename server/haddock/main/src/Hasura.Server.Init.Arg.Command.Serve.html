@@ -295,9 +295,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-154"></span><span id="parseServerPort"><span class="annot"><span class="annottext">parseServerPort :: Parser (Maybe Port)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseServerPort"><span class="hs-identifier hs-var hs-var">parseServerPort</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-155"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-156"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-156"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-157"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -336,9 +336,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-172"></span><span id="parseServerHost"><span class="annot"><span class="annottext">parseServerHost :: Parser (Maybe HostPreference)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseServerHost"><span class="hs-identifier hs-var hs-var">parseServerHost</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-173"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-174"></span><span>    </span><span class="annot"><span class="annottext">forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-174"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
 </span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
 </span><span id="line-175"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -397,9 +397,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-193"></span><span>    </span><span id="local-6989586621691284192"><span class="annot"><span class="annottext">pgStripes :: Parser (Maybe (Refined NonNegative Int))
 </span><a href="#local-6989586621691284192"><span class="hs-identifier hs-var hs-var">pgStripes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-194"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-195"></span><span>        </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-195"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-196"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -426,9 +426,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-204"></span><span>    </span><span id="local-6989586621691284191"><span class="annot"><span class="annottext">pgConns :: Parser (Maybe (Refined NonNegative Int))
 </span><a href="#local-6989586621691284191"><span class="hs-identifier hs-var hs-var">pgConns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-205"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-206"></span><span>        </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-206"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-207"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -455,9 +455,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-215"></span><span>    </span><span id="local-6989586621691284190"><span class="annot"><span class="annottext">pgIdleTimeout :: Parser (Maybe (Refined NonNegative Int))
 </span><a href="#local-6989586621691284190"><span class="hs-identifier hs-var hs-var">pgIdleTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-216"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-217"></span><span>        </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-217"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-218"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -480,9 +480,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-225"></span><span>    </span><span id="local-6989586621691284189"><span class="annot"><span class="annottext">pgConnLifetime :: Parser (Maybe (Refined NonNegative NominalDiffTime))
 </span><a href="#local-6989586621691284189"><span class="hs-identifier hs-var hs-var">pgConnLifetime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-226"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-227"></span><span>        </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-227"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-228"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -505,9 +505,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-235"></span><span>    </span><span id="local-6989586621691284188"><span class="annot"><span class="annottext">pgUsePreparedStatements :: Parser (Maybe Bool)
 </span><a href="#local-6989586621691284188"><span class="hs-identifier hs-var hs-var">pgUsePreparedStatements</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-236"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-237"></span><span>        </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-237"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-238"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -530,9 +530,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-245"></span><span>    </span><span id="local-6989586621691284187"><span class="annot"><span class="annottext">pgPoolTimeout :: Parser (Maybe (Refined NonNegative NominalDiffTime))
 </span><a href="#local-6989586621691284187"><span class="hs-identifier hs-var hs-var">pgPoolTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-246"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-247"></span><span>        </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-247"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-248"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -658,9 +658,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-311"></span><span id="parseTxIsolation"><span class="annot"><span class="annottext">parseTxIsolation :: Parser (Maybe TxIsolation)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseTxIsolation"><span class="hs-identifier hs-var hs-var">parseTxIsolation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-312"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-313"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-313"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-314"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -702,26 +702,26 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-330"></span><span id="parseAdminSecret"><span class="annot"><span class="annottext">parseAdminSecret :: Parser (Maybe AdminSecretHash)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseAdminSecret"><span class="hs-identifier hs-var hs-var">parseAdminSecret</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-331"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-332"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; AdminSecretHash
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-332"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; AdminSecretHash
 </span><a href="Hasura.Server.Auth.html#hashAdminSecret"><span class="hs-identifier hs-var">Auth.hashAdminSecret</span></a></span><span>
-</span><span id="line-333"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-333"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
 </span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
-</span><span id="line-334"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span id="line-334"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;admin-secret&quot;</span></span><span>
-</span><span id="line-335"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-335"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;ADMIN SECRET KEY&quot;</span></span><span>
-</span><span id="line-336"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-336"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Config.html#_helpMessage"><span class="hs-identifier hs-var">Config._helpMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#adminSecretOption"><span class="hs-identifier hs-var">adminSecretOption</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-337"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-337"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-338"></span><span>
 </span><span id="line-339"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#adminSecretOption"><span class="hs-identifier hs-type">adminSecretOption</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#Option"><span class="hs-identifier hs-type">Config.Option</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-340"></span><span id="adminSecretOption"><span class="annot"><span class="annottext">adminSecretOption :: Option ()
@@ -741,26 +741,26 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-348"></span><span id="parseAccessKey"><span class="annot"><span class="annottext">parseAccessKey :: Parser (Maybe AdminSecretHash)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseAccessKey"><span class="hs-identifier hs-var hs-var">parseAccessKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-349"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-350"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; AdminSecretHash
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-350"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; AdminSecretHash
 </span><a href="Hasura.Server.Auth.html#hashAdminSecret"><span class="hs-identifier hs-var">Auth.hashAdminSecret</span></a></span><span>
-</span><span id="line-351"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-351"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
 </span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
-</span><span id="line-352"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span id="line-352"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;access-key&quot;</span></span><span>
-</span><span id="line-353"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-353"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;ADMIN SECRET KEY (DEPRECATED: USE --admin-secret)&quot;</span></span><span>
-</span><span id="line-354"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-354"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Config.html#_helpMessage"><span class="hs-identifier hs-var">Config._helpMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#accessKeyOption"><span class="hs-identifier hs-var">accessKeyOption</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-355"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-355"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-356"></span><span>
 </span><span id="line-357"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#accessKeyOption"><span class="hs-identifier hs-type">accessKeyOption</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#Option"><span class="hs-identifier hs-type">Config.Option</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-358"></span><span id="accessKeyOption"><span class="annot"><span class="annottext">accessKeyOption :: Option ()
@@ -791,9 +791,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-369"></span><span>    </span><span id="local-6989586621691284176"><span class="annot"><span class="annottext">url :: Parser (Maybe Text)
 </span><a href="#local-6989586621691284176"><span class="hs-identifier hs-var hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-370"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-371"></span><span>        </span><span class="annot"><span class="annottext">forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-371"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
 </span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
 </span><span id="line-372"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -811,9 +811,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-376"></span><span>    </span><span id="local-6989586621691284175"><span class="annot"><span class="annottext">urlType :: Parser (Maybe AuthHookType)
 </span><a href="#local-6989586621691284175"><span class="hs-identifier hs-var hs-var">urlType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-377"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-378"></span><span>        </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-378"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-379"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -834,9 +834,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-384"></span><span>    </span><span id="local-6989586621691284174"><span class="annot"><span class="annottext">Parser (Maybe Bool)
 </span><a href="#local-6989586621691284174"><span class="hs-identifier hs-var">sendRequestBody</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-385"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-386"></span><span>        </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-386"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-387"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -903,9 +903,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-418"></span><span id="parseJwtSecret"><span class="annot"><span class="annottext">parseJwtSecret :: Parser (Maybe JWTConfig)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseJwtSecret"><span class="hs-identifier hs-var hs-var">parseJwtSecret</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-419"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-420"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-420"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-421"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -950,26 +950,26 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseUnAuthRole"><span class="hs-identifier hs-var hs-var">parseUnAuthRole</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-440"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; Maybe RoleName
-</span><a href="#local-6989586621691284153"><span class="hs-identifier hs-var">mkRoleName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-441"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-442"></span><span>      </span><span class="annot"><span class="annottext">forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
+</span><a href="#local-6989586621691284153"><span class="hs-identifier hs-var">mkRoleName</span></a></span><span>
+</span><span id="line-441"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-442"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
 </span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
-</span><span id="line-443"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span id="line-443"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;unauthorized-role&quot;</span></span><span>
-</span><span id="line-444"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-444"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&lt;ROLE&gt;&quot;</span></span><span>
-</span><span id="line-445"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-445"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Config.html#_helpMessage"><span class="hs-identifier hs-var">Config._helpMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#unAuthRoleOption"><span class="hs-identifier hs-var">unAuthRoleOption</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-446"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-446"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-447"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-448"></span><span>    </span><span id="local-6989586621691284153"><span class="annot"><span class="annottext">mkRoleName :: Maybe Text -&gt; Maybe RoleName
 </span><a href="#local-6989586621691284153"><span class="hs-identifier hs-var hs-var">mkRoleName</span></a></span></span><span> </span><span id="local-6989586621691284150"><span class="annot"><span class="annottext">Maybe Text
@@ -1008,9 +1008,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-463"></span><span>    </span><span id="local-6989586621691284146"><span class="annot"><span class="annottext">corsDomain :: Parser (Maybe CorsConfig)
 </span><a href="#local-6989586621691284146"><span class="hs-identifier hs-var hs-var">corsDomain</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-464"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-465"></span><span>        </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-465"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-466"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1129,9 +1129,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-516"></span><span id="parseConsoleAssetsDir"><span class="annot"><span class="annottext">parseConsoleAssetsDir :: Parser (Maybe Text)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseConsoleAssetsDir"><span class="hs-identifier hs-var hs-var">parseConsoleAssetsDir</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-517"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-518"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-518"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-519"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1171,9 +1171,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-536"></span><span id="parseConsoleSentryDsn"><span class="annot"><span class="annottext">parseConsoleSentryDsn :: Parser (Maybe Text)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseConsoleSentryDsn"><span class="hs-identifier hs-var hs-var">parseConsoleSentryDsn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-537"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-538"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-538"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-539"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1208,9 +1208,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-555"></span><span id="parseEnableTelemetry"><span class="annot"><span class="annottext">parseEnableTelemetry :: Parser (Maybe TelemetryStatus)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnableTelemetry"><span class="hs-identifier hs-var hs-var">parseEnableTelemetry</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-556"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-557"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-557"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-558"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1292,9 +1292,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">bool</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="Hasura.RQL.Types.Schema.Options.html#Don%27tStringifyNumbers"><span class="hs-identifier hs-var">Options.Don'tStringifyNumbers</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="Hasura.RQL.Types.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-var">Options.StringifyNumbers</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-594"></span><span>    </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
+</span><a href="Hasura.RQL.Types.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-var">Options.StringifyNumbers</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-594"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
 </span><span class="hs-identifier hs-var">Opt.switch</span></span><span>
 </span><span id="line-595"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -1325,9 +1325,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-608"></span><span id="parseDangerousBooleanCollapse"><span class="annot"><span class="annottext">parseDangerousBooleanCollapse :: Parser (Maybe DangerouslyCollapseBooleans)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseDangerousBooleanCollapse"><span class="hs-identifier hs-var hs-var">parseDangerousBooleanCollapse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-609"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-610"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-610"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-611"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1368,9 +1368,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-628"></span><span id="parseEnabledAPIs"><span class="annot"><span class="annottext">parseEnabledAPIs :: Parser (Maybe (HashSet API))
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnabledAPIs"><span class="hs-identifier hs-var hs-var">parseEnabledAPIs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-629"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-630"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-630"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-631"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1408,9 +1408,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-645"></span><span id="parseMxRefetchDelay"><span class="annot"><span class="annottext">parseMxRefetchDelay :: Parser (Maybe RefetchInterval)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseMxRefetchDelay"><span class="hs-identifier hs-var hs-var">parseMxRefetchDelay</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-646"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-647"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-647"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-648"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1452,9 +1452,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-665"></span><span id="parseMxBatchSize"><span class="annot"><span class="annottext">parseMxBatchSize :: Parser (Maybe BatchSize)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseMxBatchSize"><span class="hs-identifier hs-var hs-var">parseMxBatchSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-666"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-667"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-667"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-668"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1496,9 +1496,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-685"></span><span id="parseStreamingMxRefetchDelay"><span class="annot"><span class="annottext">parseStreamingMxRefetchDelay :: Parser (Maybe RefetchInterval)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseStreamingMxRefetchDelay"><span class="hs-identifier hs-var hs-var">parseStreamingMxRefetchDelay</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-686"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-687"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-687"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-688"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1540,9 +1540,9 @@ Parser (Maybe (HashSet (EngineLogType impl)))
 </span><span id="line-705"></span><span id="parseStreamingMxBatchSize"><span class="annot"><span class="annottext">parseStreamingMxBatchSize :: Parser (Maybe BatchSize)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseStreamingMxBatchSize"><span class="hs-identifier hs-var hs-var">parseStreamingMxBatchSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-706"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-707"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-707"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-708"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1621,9 +1621,9 @@ EnabledLogTypes impl =&gt;
 Parser (Maybe (HashSet (EngineLogType impl)))
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnabledLogs"><span class="hs-identifier hs-var hs-var">parseEnabledLogs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-742"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-743"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-743"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-744"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1702,9 +1702,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-768"></span><span id="parseLogLevel"><span class="annot"><span class="annottext">parseLogLevel :: Parser (Maybe LogLevel)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseLogLevel"><span class="hs-identifier hs-var hs-var">parseLogLevel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-769"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-770"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-770"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-771"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1738,9 +1738,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-785"></span><span id="parsePlanCacheSize"><span class="annot"><span class="annottext">parsePlanCacheSize :: Parser (Maybe CacheSize)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parsePlanCacheSize"><span class="hs-identifier hs-var hs-var">parsePlanCacheSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-786"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-787"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-787"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-788"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1801,9 +1801,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-814"></span><span id="parseGraphqlAdminInternalErrors"><span class="annot"><span class="annottext">parseGraphqlAdminInternalErrors :: Parser (Maybe AdminInternalErrorsStatus)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseGraphqlAdminInternalErrors"><span class="hs-identifier hs-var hs-var">parseGraphqlAdminInternalErrors</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-815"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-816"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-816"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-817"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1838,9 +1838,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-832"></span><span id="parseGraphqlEventsHttpPoolSize"><span class="annot"><span class="annottext">parseGraphqlEventsHttpPoolSize :: Parser (Maybe (Refined Positive Int))
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseGraphqlEventsHttpPoolSize"><span class="hs-identifier hs-var hs-var">parseGraphqlEventsHttpPoolSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-833"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-834"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-834"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-835"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1878,9 +1878,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-850"></span><span id="parseGraphqlEventsFetchInterval"><span class="annot"><span class="annottext">parseGraphqlEventsFetchInterval :: Parser (Maybe (Refined NonNegative Milliseconds))
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseGraphqlEventsFetchInterval"><span class="hs-identifier hs-var hs-var">parseGraphqlEventsFetchInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-851"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-852"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-852"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-853"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1918,9 +1918,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-868"></span><span id="parseGraphqlAsyncActionsFetchInterval"><span class="annot"><span class="annottext">parseGraphqlAsyncActionsFetchInterval :: Parser (Maybe OptionalInterval)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseGraphqlAsyncActionsFetchInterval"><span class="hs-identifier hs-var hs-var">parseGraphqlAsyncActionsFetchInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-869"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-870"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-870"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-871"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -1969,9 +1969,9 @@ Option (HashSet (EngineLogType impl))
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">bool</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
 </span><a href="Hasura.RQL.Types.Schema.Options.html#DisableRemoteSchemaPermissions"><span class="hs-identifier hs-var">Options.DisableRemoteSchemaPermissions</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
-</span><a href="Hasura.RQL.Types.Schema.Options.html#EnableRemoteSchemaPermissions"><span class="hs-identifier hs-var">Options.EnableRemoteSchemaPermissions</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-891"></span><span>    </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
+</span><a href="Hasura.RQL.Types.Schema.Options.html#EnableRemoteSchemaPermissions"><span class="hs-identifier hs-var">Options.EnableRemoteSchemaPermissions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-891"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
 </span><span class="hs-identifier hs-var">Opt.switch</span></span><span>
 </span><span id="line-892"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -2038,9 +2038,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-921"></span><span id="parseWebSocketKeepAlive"><span class="annot"><span class="annottext">parseWebSocketKeepAlive :: Parser (Maybe KeepAliveDelay)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseWebSocketKeepAlive"><span class="hs-identifier hs-var hs-var">parseWebSocketKeepAlive</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-922"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-923"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-923"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-924"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -2075,9 +2075,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-939"></span><span id="parseInferFunctionPerms"><span class="annot"><span class="annottext">parseInferFunctionPerms :: Parser (Maybe InferFunctionPermissions)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseInferFunctionPerms"><span class="hs-identifier hs-var hs-var">parseInferFunctionPerms</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-940"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-941"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-941"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-942"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -2114,9 +2114,9 @@ Option (HashSet (EngineLogType impl))
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">bool</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. MaintenanceMode a
 </span><a href="Hasura.Server.Types.html#MaintenanceModeDisabled"><span class="hs-identifier hs-var">Types.MaintenanceModeDisabled</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; MaintenanceMode a
-</span><a href="Hasura.Server.Types.html#MaintenanceModeEnabled"><span class="hs-identifier hs-var">Types.MaintenanceModeEnabled</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-958"></span><span>    </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
+</span><a href="Hasura.Server.Types.html#MaintenanceModeEnabled"><span class="hs-identifier hs-var">Types.MaintenanceModeEnabled</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-958"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
 </span><span class="hs-identifier hs-var">Opt.switch</span></span><span>
 </span><span id="line-959"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -2147,9 +2147,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-972"></span><span id="parseSchemaPollInterval"><span class="annot"><span class="annottext">parseSchemaPollInterval :: Parser (Maybe OptionalInterval)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseSchemaPollInterval"><span class="hs-identifier hs-var hs-var">parseSchemaPollInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-973"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-974"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-974"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-975"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -2189,9 +2189,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-991"></span><span id="parseExperimentalFeatures"><span class="annot"><span class="annottext">parseExperimentalFeatures :: Parser (Maybe (HashSet ExperimentalFeature))
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseExperimentalFeatures"><span class="hs-identifier hs-var hs-var">parseExperimentalFeatures</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-992"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-993"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-993"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-994"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -2244,9 +2244,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-1015"></span><span id="parseEventsFetchBatchSize"><span class="annot"><span class="annottext">parseEventsFetchBatchSize :: Parser (Maybe (Refined NonNegative Int))
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEventsFetchBatchSize"><span class="hs-identifier hs-var hs-var">parseEventsFetchBatchSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-1016"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-1017"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-1017"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-1018"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -2288,9 +2288,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-1035"></span><span id="parseGracefulShutdownTimeout"><span class="annot"><span class="annottext">parseGracefulShutdownTimeout :: Parser (Maybe (Refined NonNegative Seconds))
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseGracefulShutdownTimeout"><span class="hs-identifier hs-var hs-var">parseGracefulShutdownTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-1036"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-1037"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-1037"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-1038"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -2331,9 +2331,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-1055"></span><span id="parseWebSocketConnectionInitTimeout"><span class="annot"><span class="annottext">parseWebSocketConnectionInitTimeout :: Parser (Maybe WSConnectionInitTimeout)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseWebSocketConnectionInitTimeout"><span class="hs-identifier hs-var hs-var">parseWebSocketConnectionInitTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-1056"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-1057"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-1057"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-1058"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -2371,9 +2371,9 @@ Option (HashSet (EngineLogType impl))
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">bool</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataQueryLoggingMode
 </span><a href="Hasura.Server.Logging.html#MetadataQueryLoggingDisabled"><span class="hs-identifier hs-var">Server.Logging.MetadataQueryLoggingDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataQueryLoggingMode
-</span><a href="Hasura.Server.Logging.html#MetadataQueryLoggingEnabled"><span class="hs-identifier hs-var">Server.Logging.MetadataQueryLoggingEnabled</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-1075"></span><span>    </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
+</span><a href="Hasura.Server.Logging.html#MetadataQueryLoggingEnabled"><span class="hs-identifier hs-var">Server.Logging.MetadataQueryLoggingEnabled</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-1075"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
 </span><span class="hs-identifier hs-var">Opt.switch</span></span><span>
 </span><span id="line-1076"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -2406,9 +2406,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-1091"></span><span id="parseDefaultNamingConvention"><span class="annot"><span class="annottext">parseDefaultNamingConvention :: Parser (Maybe NamingCase)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseDefaultNamingConvention"><span class="hs-identifier hs-var hs-var">parseDefaultNamingConvention</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-1092"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-1093"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-1093"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-1094"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -2449,9 +2449,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-1111"></span><span id="parseExtensionsSchema"><span class="annot"><span class="annottext">parseExtensionsSchema :: Parser (Maybe ExtensionsSchema)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseExtensionsSchema"><span class="hs-identifier hs-var hs-var">parseExtensionsSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-1112"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-1113"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-1113"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-1114"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a
@@ -2485,9 +2485,9 @@ Option (HashSet (EngineLogType impl))
 </span><span id="line-1128"></span><span id="parseMetadataDefaults"><span class="annot"><span class="annottext">parseMetadataDefaults :: Parser (Maybe MetadataDefaults)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseMetadataDefaults"><span class="hs-identifier hs-var hs-var">parseMetadataDefaults</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-1129"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-1130"></span><span>    </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Opt.optional</span></a></span><span>
+</span><span id="line-1130"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.option</span></span><span>
 </span><span id="line-1131"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (String -&gt; Either String a) -&gt; ReadM a
 </span><span class="hs-identifier hs-var">Opt.eitherReader</span></span><span> </span><span class="annot"><span class="annottext">forall a. FromEnv a =&gt; String -&gt; Either String a

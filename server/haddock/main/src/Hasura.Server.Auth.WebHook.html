@@ -252,26 +252,26 @@ Logger Hasura
 </span><span id="line-92"></span><span>                      </span><span class="annot"><span class="annottext">Lens' Request RequestBody
 </span><span class="hs-identifier hs-var">HTTP.body</span></span><span>
 </span><span id="line-93"></span><span>                      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; RequestBody
-</span><span class="hs-identifier hs-var">HTTP.RequestBodyLBS</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-94"></span><span>                          </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; ByteString
-</span><span class="hs-identifier hs-var">J.encode</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-95"></span><span>                            </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">HTTP.RequestBodyLBS</span></span><span>
+</span><span id="line-94"></span><span>                          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; ByteString
+</span><span class="hs-identifier hs-var">J.encode</span></span><span>
+</span><span id="line-95"></span><span>                          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span>
-</span><span id="line-96"></span><span>                              </span><span class="hs-special">(</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span id="line-96"></span><span>                            </span><span class="hs-special">(</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621691257414"><span class="hs-identifier hs-var">headersPayload</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-97"></span><span>                                  </span><span class="hs-comment">-- We will only send the request if `ahSendRequestBody` is set to true</span><span>
-</span><span id="line-98"></span><span>                                  </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-97"></span><span>                                </span><span class="hs-comment">-- We will only send the request if `ahSendRequestBody` is set to true</span><span>
+</span><span id="line-98"></span><span>                                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;request&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Maybe ReqsText
 </span><a href="#local-6989586621691257454"><span class="hs-identifier hs-var">reqs</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">AuthHook -&gt; Bool
 </span><a href="Hasura.Server.Auth.WebHook.html#ahSendRequestBody"><span class="hs-identifier hs-var">ahSendRequestBody</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHook
 </span><a href="#local-6989586621691257456"><span class="hs-identifier hs-var">hook</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-99"></span><span>                              </span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>                            </span><span class="hs-special">)</span><span>
 </span><span id="line-100"></span><span>                      </span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>            </span><span class="annot"><span class="annottext">Request -&gt; Manager -&gt; IO (Response ByteString)
 </span><span class="hs-identifier hs-var">HTTP.httpLbs</span></span><span> </span><span class="annot"><span class="annottext">Request
@@ -288,9 +288,9 @@ Logger impl
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621691257458"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-106"></span><span>        </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621691257458"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-106"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
 -&gt; Maybe Status
 -&gt; Text
 -&gt; StdMethod
@@ -402,9 +402,9 @@ MonadError QErr m =&gt;
 UserRoleBuild -&gt; UserAdminSecret -&gt; SessionVariables -&gt; m UserInfo
 </span><a href="Hasura.Session.html#mkUserInfo"><span class="hs-identifier hs-var">mkUserInfo</span></a></span><span> </span><span class="annot"><span class="annottext">UserRoleBuild
 </span><a href="Hasura.RQL.Types.Session.html#URBFromSessionVariables"><span class="hs-identifier hs-var">URBFromSessionVariables</span></a></span><span> </span><span class="annot"><span class="annottext">UserAdminSecret
-</span><a href="Hasura.Session.html#UAdminSecretNotSent"><span class="hs-identifier hs-var">UAdminSecretNotSent</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-142"></span><span>          </span><span class="annot"><span class="annottext">HashMap Text Text -&gt; SessionVariables
+</span><a href="Hasura.Session.html#UAdminSecretNotSent"><span class="hs-identifier hs-var">UAdminSecretNotSent</span></a></span><span>
+</span><span id="line-142"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text Text -&gt; SessionVariables
 </span><a href="Hasura.RQL.Types.Session.html#mkSessionVariablesText"><span class="hs-identifier hs-var">mkSessionVariablesText</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text Text
 </span><a href="#local-6989586621691257307"><span class="hs-identifier hs-var">rawHeaders</span></a></span><span>
 </span><span id="line-143"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
@@ -429,7 +429,7 @@ LogLevel -&gt; Maybe ByteString -&gt; Maybe Text -&gt; m ()
 </span><a href="#local-6989586621691257298"><span class="hs-identifier hs-var">expiration</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Header]
 </span><a href="#local-6989586621691257306"><span class="hs-identifier hs-var">responseHdrs</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-146"></span><span>
-</span><span id="line-147"></span><span>    </span><span id="local-6989586621691257608"><span class="annot"><a href="#local-6989586621691257300"><span class="hs-identifier hs-type">logWebHookResp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691257608"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#LogLevel"><span class="hs-identifier hs-type">LogLevel</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691257608"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-147"></span><span>    </span><span id="local-6989586621691257608"><span class="annot"><a href="#local-6989586621691257300"><span class="hs-identifier hs-type">logWebHookResp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691257608"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#LogLevel"><span class="hs-identifier hs-type">LogLevel</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691257608"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-148"></span><span>    </span><span id="local-6989586621691257300"><span class="annot"><span class="annottext">logWebHookResp :: forall (m :: * -&gt; *).
 MonadIO m =&gt;
 LogLevel -&gt; Maybe ByteString -&gt; Maybe Text -&gt; m ()
@@ -440,9 +440,9 @@ LogLevel -&gt; Maybe ByteString -&gt; Maybe Text -&gt; m ()
 </span><span id="line-149"></span><span>      </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621691257321"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-150"></span><span>        </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621691257321"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-150"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
 -&gt; Maybe Status
 -&gt; Text
 -&gt; StdMethod

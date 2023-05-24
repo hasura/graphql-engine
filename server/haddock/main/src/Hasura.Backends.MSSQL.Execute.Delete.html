@@ -124,12 +124,12 @@ AnnDel 'MSSQL
 </span><span id="line-72"></span><span>      </span><span id="local-6989586621691410876"><span class="annot"><span class="annottext">createInsertedTempTableQuery :: Query
 </span><a href="#local-6989586621691410876"><span class="hs-identifier hs-var hs-var">createInsertedTempTableQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">Printer -&gt; Query
-</span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-74"></span><span>          </span><span class="annot"><span class="annottext">SelectIntoTempTable -&gt; Printer
-</span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromSelectIntoTempTable"><span class="hs-identifier hs-var">TQ.fromSelectIntoTempTable</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-75"></span><span>            </span><span class="annot"><span class="annottext">TempTableName
+</span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span>
+</span><span id="line-74"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SelectIntoTempTable -&gt; Printer
+</span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromSelectIntoTempTable"><span class="hs-identifier hs-var">TQ.fromSelectIntoTempTable</span></a></span><span>
+</span><span id="line-75"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">TempTableName
 -&gt; TableName
 -&gt; [ColumnInfo 'MSSQL]
 -&gt; SITTConstraints

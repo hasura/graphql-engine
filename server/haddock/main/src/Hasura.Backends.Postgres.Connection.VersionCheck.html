@@ -66,9 +66,9 @@ Environment
 -&gt; IO (Either QErr a)
 </span><a href="Hasura.Backends.Postgres.Connection.Connect.html#withPostgresDB"><span class="hs-identifier hs-var">withPostgresDB</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
 </span><a href="#local-6989586621691214504"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresConnConfiguration
-</span><a href="#local-6989586621691214503"><span class="hs-identifier hs-var">connConf</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-38"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a e.
+</span><a href="#local-6989586621691214503"><span class="hs-identifier hs-var">connConf</span></a></span><span>
+</span><span id="line-38"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a e.
 (MonadIO m, FromRes a) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; [PrepArg] -&gt; Bool -&gt; TxET e m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.rawQE</span></a></span><span> </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
@@ -95,9 +95,9 @@ Environment
 </span><span id="line-47"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span id="local-6989586621691214494"><span class="annot"><span class="annottext">ParseError
 </span><a href="#local-6989586621691214494"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-48"></span><span>          </span><span class="annot"><span class="annottext">forall a b. a -&gt; Either a b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-49"></span><span>            </span><span class="annot"><span class="annottext">[Pair] -&gt; QErr
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span>
+</span><span id="line-49"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbVersionCheckErr500"><span class="hs-identifier hs-var">crdbVersionCheckErr500</span></a></span><span>
 </span><span id="line-50"></span><span>              </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;version-parse-error&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -121,9 +121,9 @@ Environment
 </span><span id="line-58"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="hs-comment">-- the crdb version is not supported</span><span>
 </span><span id="line-59"></span><span>
 </span><span id="line-60"></span><span>              </span><span class="annot"><span class="annottext">forall a b. a -&gt; Either a b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-61"></span><span>                </span><span class="annot"><span class="annottext">[Pair] -&gt; QErr
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span>
+</span><span id="line-61"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Connection.VersionCheck.html#crdbVersionCheckErr500"><span class="hs-identifier hs-var">crdbVersionCheckErr500</span></a></span><span>
 </span><span id="line-62"></span><span>                  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;version-string&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv

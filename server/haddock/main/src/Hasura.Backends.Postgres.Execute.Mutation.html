@@ -172,13 +172,13 @@ Mutation ('Postgres pgKind) -&gt; m EncJSON
  MonadReader QueryTagsComment m) =&gt;
 Mutation ('Postgres pgKind) -&gt; m EncJSON
 </span><a href="Hasura.Backends.Postgres.Execute.Mutation.html#mutateAndSel"><span class="hs-identifier hs-var">mutateAndSel</span></a></span><span> </span><span class="annot"><span class="annottext">Mutation ('Postgres pgKind)
-</span><a href="#local-6989586621691349804"><span class="hs-identifier hs-var">mut</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-99"></span><span>    </span><span class="annot"><span class="annottext">forall (backend :: BackendType) r a.
+</span><a href="#local-6989586621691349804"><span class="hs-identifier hs-var">mut</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (backend :: BackendType) r a.
 MutationOutputG backend r a -&gt; Bool
-</span><a href="Hasura.RQL.IR.Returning.html#hasNestedFld"><span class="hs-identifier hs-var">hasNestedFld</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-100"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: BackendType). Mutation b -&gt; MutationOutput b
+</span><a href="Hasura.RQL.IR.Returning.html#hasNestedFld"><span class="hs-identifier hs-var">hasNestedFld</span></a></span><span>
+</span><span id="line-100"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). Mutation b -&gt; MutationOutput b
 </span><a href="Hasura.Backends.Postgres.Execute.Mutation.html#_mOutput"><span class="hs-identifier hs-var">_mOutput</span></a></span><span> </span><span class="annot"><span class="annottext">Mutation ('Postgres pgKind)
 </span><a href="#local-6989586621691349804"><span class="hs-identifier hs-var">mut</span></a></span><span>
 </span><span id="line-101"></span><span>
@@ -547,13 +547,13 @@ QualifiedTable
 </span><a href="#local-6989586621691349661"><span class="hs-identifier hs-var">sqlTx</span></a></span><span>
 </span><span id="line-214"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621691349659"><span class="hs-identifier hs-var">checkConstraint</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-215"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="#local-6989586621691349659"><span class="hs-identifier hs-var">checkConstraint</span></a></span><span>
+</span><span id="line-215"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw400</span></span><span> </span><span class="annot"><span class="annottext">Code
-</span><span class="hs-identifier hs-var">PermissionError</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-216"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">PermissionError</span></span><span>
+</span><span id="line-216"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;check constraint of an insert/update permission has failed&quot;</span></span><span>
 </span><span id="line-217"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">a
@@ -753,9 +753,9 @@ AnnBoolExp b v -&gt; Maybe Int -&gt; TablePermG b v
 </span><a href="#local-6989586621691349530"><span class="hs-identifier hs-var hs-var">selFlds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo ('Postgres pgKind)]
-</span><a href="#local-6989586621691349554"><span class="hs-identifier hs-var">cols</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-274"></span><span>      </span><span class="hs-glyph">\</span><span id="local-6989586621691349528"><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
+</span><a href="#local-6989586621691349554"><span class="hs-identifier hs-var">cols</span></a></span><span>
+</span><span id="line-274"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691349528"><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
 </span><a href="#local-6989586621691349528"><span class="hs-identifier hs-var">ci</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). Backend b =&gt; Column b -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Column.html#fromCol"><span class="hs-identifier hs-var">fromCol</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691350219"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Column b
@@ -830,9 +830,9 @@ ColumnInfo backend -&gt; AnnFieldG backend r v
 </span><span id="line-301"></span><span>    </span><span id="local-6989586621691349511"><span class="annot"><span class="annottext">affRowsSel :: SQLExp
 </span><a href="#local-6989586621691349511"><span class="hs-identifier hs-var hs-var">affRowsSel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-302"></span><span>      </span><span class="annot"><span class="annottext">Select -&gt; SQLExp
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#SESelect"><span class="hs-identifier hs-var">S.SESelect</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-303"></span><span>        </span><span class="annot"><span class="annottext">Select
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#SESelect"><span class="hs-identifier hs-var">S.SESelect</span></a></span><span>
+</span><span id="line-303"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Select
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkSelect"><span class="hs-identifier hs-var">S.mkSelect</span></a></span><span>
 </span><span id="line-304"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">selExtr :: [Extractor]
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selExtr"><span class="hs-identifier hs-var">S.selExtr</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SQLExp -&gt; Maybe ColumnAlias -&gt; Extractor
@@ -852,19 +852,19 @@ ColumnInfo backend -&gt; AnnFieldG backend r v
 </span><a href="#local-6989586621691349510"><span class="hs-identifier hs-var">colSel</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691349515"><span class="annot"><span class="annottext">CustomSQLCTEs
 </span><a href="#local-6989586621691349515"><span class="hs-identifier hs-var">customSQLCTEs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-309"></span><span>      </span><span class="annot"><span class="annottext">forall w a. Writer w a -&gt; (a, w)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runWriter</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-310"></span><span>        </span><span class="annot"><span class="annottext">Select -&gt; SQLExp
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runWriter</span></a></span><span>
+</span><span id="line-310"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Select -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SESelect"><span class="hs-identifier hs-var">S.SESelect</span></a></span><span>
-</span><span id="line-311"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-311"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind,
  MonadWriter CustomSQLCTEs m) =&gt;
 JsonAggSelect -&gt; AnnSimpleSelect ('Postgres pgKind) -&gt; m Select
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Simple.html#mkSQLSelect"><span class="hs-identifier hs-var">mkSQLSelect</span></a></span><span>
-</span><span id="line-312"></span><span>            </span><span class="annot"><span class="annottext">JsonAggSelect
+</span><span id="line-312"></span><span>          </span><span class="annot"><span class="annottext">JsonAggSelect
 </span><a href="Hasura.RQL.Types.Common.html#JASMultipleRows"><span class="hs-identifier hs-var">JASMultipleRows</span></a></span><span>
-</span><span id="line-313"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
+</span><span id="line-313"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 Fields (f v)
 -&gt; SelectFromG b v
 -&gt; TablePermG b v
@@ -879,5 +879,5 @@ Fields (f v)
 </span><a href="Hasura.RQL.IR.Select.Args.html#noSelectArgs"><span class="hs-identifier hs-var">noSelectArgs</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="#local-6989586621691349551"><span class="hs-identifier hs-var">strfyNum</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe NamingCase
 </span><a href="#local-6989586621691349550"><span class="hs-identifier hs-var">tCase</span></a></span><span>
-</span><span id="line-314"></span><span>            </span><span class="hs-special">)</span><span>
+</span><span id="line-314"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-315"></span></pre></body></html>

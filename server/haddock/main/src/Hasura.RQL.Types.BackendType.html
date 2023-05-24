@@ -473,9 +473,9 @@ BackendSourceKind b -&gt; JSONCodec (BackendSourceKind b)
 -&gt; Codec context newInput newOutput
 </span><span class="hs-identifier hs-var">bimapCodec</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String (BackendSourceKind b)
 </span><a href="#local-6989586621691035773"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind b -&gt; Text
-</span><a href="#local-6989586621691035772"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-171"></span><span>    </span><span class="annot"><span class="annottext">forall context input output.
+</span><a href="#local-6989586621691035772"><span class="hs-identifier hs-var">enc</span></a></span><span>
+</span><span id="line-171"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall context input output.
 Codec context input output
 -&gt; [Codec context input output] -&gt; Codec context input output
 </span><span class="hs-identifier hs-var">parseAlternatives</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Codec Value Text Text

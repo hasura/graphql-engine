@@ -86,25 +86,25 @@ gfgIdentifier :: GetFeatureFlag -&gt; Text
 </span><a href="#local-6989586621691074987"><span class="hs-identifier hs-var">getFeatureFlag</span></a></span><span> </span><span class="annot"><span class="annottext">FeatureFlag
 </span><a href="#local-6989586621691074979"><span class="hs-identifier hs-var">flag</span></a></span><span>
 </span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
-</span><span class="hs-identifier hs-var">EncJSON.encJFromJValue</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-46"></span><span>          </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
+</span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
+</span><span class="hs-identifier hs-var">EncJSON.encJFromJValue</span></span><span>
+</span><span id="line-46"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span>
-</span><span id="line-47"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span id="line-47"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;identifier&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691074986"><span class="hs-identifier hs-var">gfgIdentifier</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-48"></span><span>              </span><span class="annot"><span class="annottext">Key
+</span><span id="line-48"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621691074978"><span class="hs-identifier hs-var">flagValue</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-49"></span><span>              </span><span class="annot"><span class="annottext">Key
+</span><span id="line-49"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;description&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">FeatureFlag -&gt; Text
 </span><a href="Hasura.Server.Init.FeatureFlag.html#ffDescription"><span class="hs-identifier hs-var">FeatureFlag.ffDescription</span></a></span><span> </span><span class="annot"><span class="annottext">FeatureFlag
 </span><a href="#local-6989586621691074979"><span class="hs-identifier hs-var">flag</span></a></span><span>
-</span><span id="line-50"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-50"></span><span>          </span><span class="hs-special">]</span><span>
 </span><span id="line-51"></span></pre></body></html>

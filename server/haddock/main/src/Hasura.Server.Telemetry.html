@@ -485,21 +485,21 @@ AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><span id="line-193"></span><span>            </span><span id="local-6989586621691442391"><span class="annot"><span class="annottext">serverTelemetry :: ByteString
 </span><a href="#local-6989586621691442391"><span class="hs-identifier hs-var hs-var">serverTelemetry</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-194"></span><span>              </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; ByteString
-</span><span class="hs-identifier hs-var">J.encode</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-195"></span><span>                </span><span class="annot"><span class="annottext">ServerTelemetry -&gt; ServerTelemetryRow
-</span><a href="Hasura.Server.Telemetry.html#ServerTelemetryRow"><span class="hs-identifier hs-var">ServerTelemetryRow</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-196"></span><span>                  </span><span class="annot"><span class="annottext">Maybe Int
+</span><span class="hs-identifier hs-var">J.encode</span></span><span>
+</span><span id="line-195"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ServerTelemetry -&gt; ServerTelemetryRow
+</span><a href="Hasura.Server.Telemetry.html#ServerTelemetryRow"><span class="hs-identifier hs-var">ServerTelemetryRow</span></a></span><span>
+</span><span id="line-196"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
 -&gt; Maybe Int64 -&gt; Maybe ResourceCheckerError -&gt; ServerTelemetry
 </span><a href="Hasura.Server.Telemetry.html#ServerTelemetry"><span class="hs-identifier hs-var">ServerTelemetry</span></a></span><span>
-</span><span id="line-197"></span><span>                    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputeResourcesResponse -&gt; Maybe Int
+</span><span id="line-197"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputeResourcesResponse -&gt; Maybe Int
 </span><a href="Hasura.Server.ResourceChecker.html#_rcrCpu"><span class="hs-identifier hs-var">_rcrCpu</span></a></span><span> </span><span class="annot"><span class="annottext">ComputeResourcesResponse
 </span><a href="#local-6989586621691442482"><span class="hs-identifier hs-var">computeResources</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-198"></span><span>                    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputeResourcesResponse -&gt; Maybe Int64
+</span><span id="line-198"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputeResourcesResponse -&gt; Maybe Int64
 </span><a href="Hasura.Server.ResourceChecker.html#_rcrMemory"><span class="hs-identifier hs-var">_rcrMemory</span></a></span><span> </span><span class="annot"><span class="annottext">ComputeResourcesResponse
 </span><a href="#local-6989586621691442482"><span class="hs-identifier hs-var">computeResources</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-199"></span><span>                    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputeResourcesResponse -&gt; Maybe ResourceCheckerError
+</span><span id="line-199"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputeResourcesResponse -&gt; Maybe ResourceCheckerError
 </span><a href="Hasura.Server.ResourceChecker.html#_rcrErrorCode"><span class="hs-identifier hs-var">_rcrErrorCode</span></a></span><span> </span><span class="annot"><span class="annottext">ComputeResourcesResponse
 </span><a href="#local-6989586621691442482"><span class="hs-identifier hs-var">computeResources</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-200"></span><span>
@@ -894,15 +894,15 @@ _pmRoles :: Int
 </span><span id="line-291"></span><span>      </span><span id="local-6989586621691442253"><span class="annot"><span class="annottext">_mtEventTriggers :: Int
 </span><a href="#local-6989586621691442253"><span class="hs-identifier hs-var hs-var">_mtEventTriggers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-292"></span><span>        </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; Int
-</span><span class="hs-identifier hs-var">HashMap.size</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-293"></span><span>          </span><span class="annot"><span class="annottext">forall v k. (v -&gt; Bool) -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">HashMap.size</span></span><span>
+</span><span id="line-293"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall v k. (v -&gt; Bool) -&gt; HashMap k v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">HashMap.filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; Bool
-</span><span class="hs-identifier hs-var">HashMap.null</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-294"></span><span>            </span><span class="annot"><span class="annottext">forall v1 v2 k. (v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
+</span><span class="hs-identifier hs-var">HashMap.null</span></span><span class="hs-special">)</span><span>
+</span><span id="line-294"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall v1 v2 k. (v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
 </span><span class="hs-identifier hs-var">HashMap.map</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TableInfo b -&gt; EventTriggerInfoMap b
 </span><a href="Hasura.Table.Cache.html#_tiEventTriggerInfoMap"><span class="hs-identifier hs-var">_tiEventTriggerInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">TableCache b
 </span><a href="#local-6989586621691442282"><span class="hs-identifier hs-var">sourceTableCache</span></a></span><span>

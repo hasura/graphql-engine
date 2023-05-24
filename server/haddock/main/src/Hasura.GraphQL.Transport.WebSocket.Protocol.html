@@ -716,137 +716,138 @@ $cshowsPrec :: Int -&gt; ServerErrorCode -&gt; ShowS
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#encodeServerMsg"><span class="hs-identifier hs-var hs-var">encodeServerMsg</span></a></span></span><span> </span><span id="local-6989586621691078271"><span class="annot"><span class="annottext">ServerMsg
 </span><a href="#local-6989586621691078271"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-244"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; ByteString
-</span><span class="hs-identifier hs-var">encJToLBS</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-245"></span><span>    </span><span class="annot"><span class="annottext">[(Text, EncJSON)] -&gt; EncJSON
-</span><span class="hs-identifier hs-var">encJFromAssocList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">encJToLBS</span></span><span>
+</span><span id="line-245"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[(Text, EncJSON)] -&gt; EncJSON
+</span><span class="hs-identifier hs-var">encJFromAssocList</span></span><span>
+</span><span id="line-246"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ServerMsg
 </span><a href="#local-6989586621691078271"><span class="hs-identifier hs-var">msg</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-246"></span><span>      </span><span class="annot"><span class="annottext">ServerMsg
+</span><span id="line-247"></span><span>      </span><span class="annot"><span class="annottext">ServerMsg
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMConnAck"><span class="hs-identifier hs-var">SMConnAck</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-247"></span><span>        </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
+</span><span id="line-248"></span><span>        </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
 </span><a href="#local-6989586621691078269"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_CONNECTION_ACK"><span class="hs-identifier hs-var">SMT_GQL_CONNECTION_ACK</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-248"></span><span>      </span><span class="annot"><span class="annottext">ServerMsg
+</span><span id="line-249"></span><span>      </span><span class="annot"><span class="annottext">ServerMsg
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMConnKeepAlive"><span class="hs-identifier hs-var">SMConnKeepAlive</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-249"></span><span>        </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
+</span><span id="line-250"></span><span>        </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
 </span><a href="#local-6989586621691078269"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_CONNECTION_KEEP_ALIVE"><span class="hs-identifier hs-var">SMT_GQL_CONNECTION_KEEP_ALIVE</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-250"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMConnErr"><span class="hs-identifier hs-type">SMConnErr</span></a></span><span> </span><span id="local-6989586621691078268"><span class="annot"><span class="annottext">ConnErrMsg
+</span><span id="line-251"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMConnErr"><span class="hs-identifier hs-type">SMConnErr</span></a></span><span> </span><span id="local-6989586621691078268"><span class="annot"><span class="annottext">ConnErrMsg
 </span><a href="#local-6989586621691078268"><span class="hs-identifier hs-var">connErr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-251"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
+</span><span id="line-252"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
 </span><a href="#local-6989586621691078269"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_CONNECTION_ERROR"><span class="hs-identifier hs-var">SMT_GQL_CONNECTION_ERROR</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-252"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span id="line-253"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;payload&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><span class="hs-identifier hs-var">encJFromJValue</span></span><span> </span><span class="annot"><span class="annottext">ConnErrMsg
 </span><a href="#local-6989586621691078268"><span class="hs-identifier hs-var">connErr</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-253"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-254"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMData"><span class="hs-identifier hs-type">SMData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#DataMsg"><span class="hs-identifier hs-type">DataMsg</span></a></span><span> </span><span id="local-6989586621691078267"><span class="annot"><span class="annottext">OperationId
+</span><span id="line-254"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-255"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMData"><span class="hs-identifier hs-type">SMData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#DataMsg"><span class="hs-identifier hs-type">DataMsg</span></a></span><span> </span><span id="local-6989586621691078267"><span class="annot"><span class="annottext">OperationId
 </span><a href="#local-6989586621691078267"><span class="hs-identifier hs-var">opId</span></a></span></span><span> </span><span id="local-6989586621691078266"><span class="annot"><span class="annottext">GQResponse
 </span><a href="#local-6989586621691078266"><span class="hs-identifier hs-var">payload</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-255"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
+</span><span id="line-256"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
 </span><a href="#local-6989586621691078269"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_DATA"><span class="hs-identifier hs-var">SMT_GQL_DATA</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-256"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span id="line-257"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;id&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><span class="hs-identifier hs-var">encJFromJValue</span></span><span> </span><span class="annot"><span class="annottext">OperationId
 </span><a href="#local-6989586621691078267"><span class="hs-identifier hs-var">opId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-257"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span id="line-258"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;payload&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GQResponse -&gt; EncJSON
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#encodeGQResp"><span class="hs-identifier hs-var">encodeGQResp</span></a></span><span> </span><span class="annot"><span class="annottext">GQResponse
 </span><a href="#local-6989586621691078266"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-258"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-259"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMErr"><span class="hs-identifier hs-type">SMErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ErrorMsg"><span class="hs-identifier hs-type">ErrorMsg</span></a></span><span> </span><span id="local-6989586621691078264"><span class="annot"><span class="annottext">OperationId
+</span><span id="line-259"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-260"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMErr"><span class="hs-identifier hs-type">SMErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ErrorMsg"><span class="hs-identifier hs-type">ErrorMsg</span></a></span><span> </span><span id="local-6989586621691078264"><span class="annot"><span class="annottext">OperationId
 </span><a href="#local-6989586621691078264"><span class="hs-identifier hs-var">opId</span></a></span></span><span> </span><span id="local-6989586621691078263"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621691078263"><span class="hs-identifier hs-var">payload</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-260"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
+</span><span id="line-261"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
 </span><a href="#local-6989586621691078269"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_ERROR"><span class="hs-identifier hs-var">SMT_GQL_ERROR</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-261"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span id="line-262"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;id&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><span class="hs-identifier hs-var">encJFromJValue</span></span><span> </span><span class="annot"><span class="annottext">OperationId
 </span><a href="#local-6989586621691078264"><span class="hs-identifier hs-var">opId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-262"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span id="line-263"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;payload&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><span class="hs-identifier hs-var">encJFromJValue</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621691078263"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-263"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-264"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMComplete"><span class="hs-identifier hs-type">SMComplete</span></a></span><span> </span><span id="local-6989586621691078262"><span class="annot"><span class="annottext">CompletionMsg
+</span><span id="line-264"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-265"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMComplete"><span class="hs-identifier hs-type">SMComplete</span></a></span><span> </span><span id="local-6989586621691078262"><span class="annot"><span class="annottext">CompletionMsg
 </span><a href="#local-6989586621691078262"><span class="hs-identifier hs-var">compMsg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-265"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
+</span><span id="line-266"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
 </span><a href="#local-6989586621691078269"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_COMPLETE"><span class="hs-identifier hs-var">SMT_GQL_COMPLETE</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-266"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span id="line-267"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;id&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><span class="hs-identifier hs-var">encJFromJValue</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">CompletionMsg -&gt; OperationId
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#unCompletionMsg"><span class="hs-identifier hs-var">unCompletionMsg</span></a></span><span> </span><span class="annot"><span class="annottext">CompletionMsg
 </span><a href="#local-6989586621691078262"><span class="hs-identifier hs-var">compMsg</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-267"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-268"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMPing"><span class="hs-identifier hs-type">SMPing</span></a></span><span> </span><span id="local-6989586621691078261"><span class="annot"><span class="annottext">Maybe PingPongPayload
+</span><span id="line-268"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-269"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMPing"><span class="hs-identifier hs-type">SMPing</span></a></span><span> </span><span id="local-6989586621691078261"><span class="annot"><span class="annottext">Maybe PingPongPayload
 </span><a href="#local-6989586621691078261"><span class="hs-identifier hs-var">mPayload</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-269"></span><span>        </span><span class="annot"><span class="annottext">forall {a} {a} {a}.
+</span><span id="line-270"></span><span>        </span><span class="annot"><span class="annottext">forall {a} {a} {a}.
 (IsString a, ToJSON a, ToJSON a) =&gt;
 Maybe a -&gt; a -&gt; [(a, EncJSON)]
 </span><a href="#local-6989586621691078260"><span class="hs-identifier hs-var">encodePingPongPayload</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PingPongPayload
 </span><a href="#local-6989586621691078261"><span class="hs-identifier hs-var">mPayload</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_PING"><span class="hs-identifier hs-var">SMT_GQL_PING</span></a></span><span>
-</span><span id="line-270"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMPong"><span class="hs-identifier hs-type">SMPong</span></a></span><span> </span><span id="local-6989586621691078259"><span class="annot"><span class="annottext">Maybe PingPongPayload
+</span><span id="line-271"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMPong"><span class="hs-identifier hs-type">SMPong</span></a></span><span> </span><span id="local-6989586621691078259"><span class="annot"><span class="annottext">Maybe PingPongPayload
 </span><a href="#local-6989586621691078259"><span class="hs-identifier hs-var">mPayload</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-271"></span><span>        </span><span class="annot"><span class="annottext">forall {a} {a} {a}.
+</span><span id="line-272"></span><span>        </span><span class="annot"><span class="annottext">forall {a} {a} {a}.
 (IsString a, ToJSON a, ToJSON a) =&gt;
 Maybe a -&gt; a -&gt; [(a, EncJSON)]
 </span><a href="#local-6989586621691078260"><span class="hs-identifier hs-var">encodePingPongPayload</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PingPongPayload
 </span><a href="#local-6989586621691078259"><span class="hs-identifier hs-var">mPayload</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_PONG"><span class="hs-identifier hs-var">SMT_GQL_PONG</span></a></span><span>
-</span><span id="line-272"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMNext"><span class="hs-identifier hs-type">SMNext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#DataMsg"><span class="hs-identifier hs-type">DataMsg</span></a></span><span> </span><span id="local-6989586621691078258"><span class="annot"><span class="annottext">OperationId
+</span><span id="line-273"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMNext"><span class="hs-identifier hs-type">SMNext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#DataMsg"><span class="hs-identifier hs-type">DataMsg</span></a></span><span> </span><span id="local-6989586621691078258"><span class="annot"><span class="annottext">OperationId
 </span><a href="#local-6989586621691078258"><span class="hs-identifier hs-var">opId</span></a></span></span><span> </span><span id="local-6989586621691078257"><span class="annot"><span class="annottext">GQResponse
 </span><a href="#local-6989586621691078257"><span class="hs-identifier hs-var">payload</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-273"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
+</span><span id="line-274"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
 </span><a href="#local-6989586621691078269"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMsgType
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMT_GQL_NEXT"><span class="hs-identifier hs-var">SMT_GQL_NEXT</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-274"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span id="line-275"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;id&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><span class="hs-identifier hs-var">encJFromJValue</span></span><span> </span><span class="annot"><span class="annottext">OperationId
 </span><a href="#local-6989586621691078258"><span class="hs-identifier hs-var">opId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-275"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span id="line-276"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;payload&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">GQResponse -&gt; EncJSON
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#encodeGQResp"><span class="hs-identifier hs-var">encodeGQResp</span></a></span><span> </span><span class="annot"><span class="annottext">GQResponse
 </span><a href="#local-6989586621691078257"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-276"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-277"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-278"></span><span>    </span><span id="local-6989586621691078269"><span class="annot"><span class="annottext">encTy :: a -&gt; (a, EncJSON)
+</span><span id="line-277"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-278"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-279"></span><span>    </span><span id="local-6989586621691078269"><span class="annot"><span class="annottext">encTy :: a -&gt; (a, EncJSON)
 </span><a href="#local-6989586621691078269"><span class="hs-identifier hs-var hs-var">encTy</span></a></span></span><span> </span><span id="local-6989586621691078252"><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621691078252"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;type&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><span class="hs-identifier hs-var">encJFromJValue</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621691078252"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-279"></span><span>
-</span><span id="line-280"></span><span>    </span><span id="local-6989586621691078260"><span class="annot"><span class="annottext">encodePingPongPayload :: Maybe a -&gt; a -&gt; [(a, EncJSON)]
+</span><span id="line-280"></span><span>
+</span><span id="line-281"></span><span>    </span><span id="local-6989586621691078260"><span class="annot"><span class="annottext">encodePingPongPayload :: Maybe a -&gt; a -&gt; [(a, EncJSON)]
 </span><a href="#local-6989586621691078260"><span class="hs-identifier hs-var hs-var">encodePingPongPayload</span></a></span></span><span> </span><span id="local-6989586621691078242"><span class="annot"><span class="annottext">Maybe a
 </span><a href="#local-6989586621691078242"><span class="hs-identifier hs-var">mPayload</span></a></span></span><span> </span><span id="local-6989586621691078241"><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621691078241"><span class="hs-identifier hs-var">msgType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe a
 </span><a href="#local-6989586621691078242"><span class="hs-identifier hs-var">mPayload</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-281"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691078240"><span class="annot"><span class="annottext">a
+</span><span id="line-282"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691078240"><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621691078240"><span class="hs-identifier hs-var">payload</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-282"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
+</span><span id="line-283"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
 </span><a href="#local-6989586621691078269"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621691078241"><span class="hs-identifier hs-var">msgType</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-283"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><span id="line-284"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;payload&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><span class="hs-identifier hs-var">encJFromJValue</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621691078240"><span class="hs-identifier hs-var">payload</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-284"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-285"></span><span>      </span><span class="annot"><span class="annottext">Maybe a
+</span><span id="line-285"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-286"></span><span>      </span><span class="annot"><span class="annottext">Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall {a} {a}. (IsString a, ToJSON a) =&gt; a -&gt; (a, EncJSON)
 </span><a href="#local-6989586621691078269"><span class="hs-identifier hs-var">encTy</span></a></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621691078241"><span class="hs-identifier hs-var">msgType</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-286"></span><span>
-</span><span id="line-287"></span><span class="hs-comment">-- This &quot;timer&quot; is necessary while initialising the connection</span><span>
-</span><span id="line-288"></span><span class="hs-comment">-- with the server. Also, this is specific to the GraphQL-WS protocol.</span><span>
-</span><span id="line-289"></span><span class="hs-keyword">data</span><span> </span><span id="WSConnInitTimerStatus"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimerStatus"><span class="hs-identifier hs-var">WSConnInitTimerStatus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Running"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Running"><span class="hs-identifier hs-var">Running</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Done"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Done"><span class="hs-identifier hs-var">Done</span></a></span></span><span>
-</span><span id="line-290"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691078233"><span id="local-6989586621691078235"><span id="local-6989586621691078237"><span class="annot"><span class="annottext">Int -&gt; WSConnInitTimerStatus -&gt; ShowS
+</span><span id="line-287"></span><span>
+</span><span id="line-288"></span><span class="hs-comment">-- This &quot;timer&quot; is necessary while initialising the connection</span><span>
+</span><span id="line-289"></span><span class="hs-comment">-- with the server. Also, this is specific to the GraphQL-WS protocol.</span><span>
+</span><span id="line-290"></span><span class="hs-keyword">data</span><span> </span><span id="WSConnInitTimerStatus"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimerStatus"><span class="hs-identifier hs-var">WSConnInitTimerStatus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Running"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Running"><span class="hs-identifier hs-var">Running</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Done"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Done"><span class="hs-identifier hs-var">Done</span></a></span></span><span>
+</span><span id="line-291"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691078233"><span id="local-6989586621691078235"><span id="local-6989586621691078237"><span class="annot"><span class="annottext">Int -&gt; WSConnInitTimerStatus -&gt; ShowS
 [WSConnInitTimerStatus] -&gt; ShowS
 WSConnInitTimerStatus -&gt; String
 forall a.
@@ -864,63 +865,64 @@ $c/= :: WSConnInitTimerStatus -&gt; WSConnInitTimerStatus -&gt; Bool
 == :: WSConnInitTimerStatus -&gt; WSConnInitTimerStatus -&gt; Bool
 $c== :: WSConnInitTimerStatus -&gt; WSConnInitTimerStatus -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-291"></span><span>
-</span><span id="line-292"></span><span class="hs-keyword">type</span><span> </span><span id="WSConnInitTimer"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimer"><span class="hs-identifier hs-var">WSConnInitTimer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">TVar</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimerStatus"><span class="hs-identifier hs-type">WSConnInitTimerStatus</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/stm-2.5.0.2/src"><span class="hs-identifier hs-type">TMVar</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-293"></span><span>
-</span><span id="line-294"></span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getWSTimerState"><span class="hs-identifier hs-type">getWSTimerState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimer"><span class="hs-identifier hs-type">WSConnInitTimer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimerStatus"><span class="hs-identifier hs-type">WSConnInitTimerStatus</span></a></span><span>
-</span><span id="line-295"></span><span id="getWSTimerState"><span class="annot"><span class="annottext">getWSTimerState :: WSConnInitTimer -&gt; IO WSConnInitTimerStatus
+</span><span id="line-292"></span><span>
+</span><span id="line-293"></span><span class="hs-keyword">type</span><span> </span><span id="WSConnInitTimer"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimer"><span class="hs-identifier hs-var">WSConnInitTimer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">TVar</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimerStatus"><span class="hs-identifier hs-type">WSConnInitTimerStatus</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/stm-2.5.0.2/src"><span class="hs-identifier hs-type">TMVar</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-294"></span><span>
+</span><span id="line-295"></span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getWSTimerState"><span class="hs-identifier hs-type">getWSTimerState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimer"><span class="hs-identifier hs-type">WSConnInitTimer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimerStatus"><span class="hs-identifier hs-type">WSConnInitTimerStatus</span></a></span><span>
+</span><span id="line-296"></span><span id="getWSTimerState"><span class="annot"><span class="annottext">getWSTimerState :: WSConnInitTimer -&gt; IO WSConnInitTimerStatus
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getWSTimerState"><span class="hs-identifier hs-var hs-var">getWSTimerState</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691078228"><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
 </span><a href="#local-6989586621691078228"><span class="hs-identifier hs-var">timerState</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TMVar ()
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. TVar a -&gt; IO a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">readTVarIO</span></a></span><span> </span><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
 </span><a href="#local-6989586621691078228"><span class="hs-identifier hs-var">timerState</span></a></span><span>
-</span><span id="line-296"></span><span>
-</span><span id="line-297"></span><span class="hs-pragma">{-# ANN</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getNewWSTimer"><span class="hs-pragma hs-type">getNewWSTimer</span></a></span><span> </span><span class="hs-pragma">(</span><span class="annot"><span class="hs-pragma">&quot;HLint: ignore Use withAsync&quot;</span></span><span> </span><span class="hs-pragma">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-pragma hs-type">String</span></a></span><span class="hs-pragma">)</span><span> </span><span class="hs-pragma">#-}</span><span>
-</span><span id="line-298"></span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getNewWSTimer"><span class="hs-identifier hs-type">getNewWSTimer</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-type">Seconds</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimer"><span class="hs-identifier hs-type">WSConnInitTimer</span></a></span><span>
-</span><span id="line-299"></span><span id="getNewWSTimer"><span class="annot"><span class="annottext">getNewWSTimer :: Seconds -&gt; IO WSConnInitTimer
+</span><span id="line-297"></span><span>
+</span><span id="line-298"></span><span class="hs-pragma">{-# ANN</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getNewWSTimer"><span class="hs-pragma hs-type">getNewWSTimer</span></a></span><span> </span><span class="hs-pragma">(</span><span class="annot"><span class="hs-pragma">&quot;HLint: ignore Use withAsync&quot;</span></span><span> </span><span class="hs-pragma">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-pragma hs-type">String</span></a></span><span class="hs-pragma">)</span><span> </span><span class="hs-pragma">#-}</span><span>
+</span><span id="line-299"></span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getNewWSTimer"><span class="hs-identifier hs-type">getNewWSTimer</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-type">Seconds</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSConnInitTimer"><span class="hs-identifier hs-type">WSConnInitTimer</span></a></span><span>
+</span><span id="line-300"></span><span id="getNewWSTimer"><span class="annot"><span class="annottext">getNewWSTimer :: Seconds -&gt; IO WSConnInitTimer
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#getNewWSTimer"><span class="hs-identifier hs-var hs-var">getNewWSTimer</span></a></span></span><span> </span><span id="local-6989586621691078226"><span class="annot"><span class="annottext">Seconds
 </span><a href="#local-6989586621691078226"><span class="hs-identifier hs-var">timeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-300"></span><span>  </span><span id="local-6989586621691078225"><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
+</span><span id="line-301"></span><span>  </span><span id="local-6989586621691078225"><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
 </span><a href="#local-6989586621691078225"><span class="hs-identifier hs-var">timerState</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; IO (TVar a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">newTVarIO</span></a></span><span> </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Running"><span class="hs-identifier hs-var">Running</span></a></span><span>
-</span><span id="line-301"></span><span>  </span><span id="local-6989586621691078223"><span class="annot"><span class="annottext">TMVar ()
+</span><span id="line-302"></span><span>  </span><span id="local-6989586621691078223"><span class="annot"><span class="annottext">TMVar ()
 </span><a href="#local-6989586621691078223"><span class="hs-identifier hs-var">timer</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. IO (TMVar a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/stm-2.5.0.2/src"><span class="hs-identifier hs-var">newEmptyTMVarIO</span></a></span><span>
-</span><span id="line-302"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">void</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-303"></span><span>    </span><span class="annot"><span class="annottext">IO () -&gt; IO ThreadId
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">forkIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span id="line-303"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">void</span></a></span><span>
+</span><span id="line-304"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">IO () -&gt; IO ThreadId
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">forkIO</span></a></span><span>
+</span><span id="line-305"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-304"></span><span>      </span><span class="annot"><span class="annottext">DiffTime -&gt; IO ()
+</span><span id="line-306"></span><span>      </span><span class="annot"><span class="annottext">DiffTime -&gt; IO ()
 </span><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier hs-var">sleep</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds -&gt; DiffTime
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">seconds</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds
 </span><a href="#local-6989586621691078226"><span class="hs-identifier hs-var">timeout</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-305"></span><span>      </span><span class="annot"><span class="annottext">forall a. STM a -&gt; IO a
+</span><span id="line-307"></span><span>      </span><span class="annot"><span class="annottext">forall a. STM a -&gt; IO a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">atomically</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-306"></span><span>        </span><span id="local-6989586621691078217"><span class="annot"><span class="annottext">WSConnInitTimerStatus
+</span><span id="line-308"></span><span>        </span><span id="local-6989586621691078217"><span class="annot"><span class="annottext">WSConnInitTimerStatus
 </span><a href="#local-6989586621691078217"><span class="hs-identifier hs-var">runTimerState</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. TVar a -&gt; STM a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">readTVar</span></a></span><span> </span><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
 </span><a href="#local-6989586621691078225"><span class="hs-identifier hs-var">timerState</span></a></span><span>
-</span><span id="line-307"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
+</span><span id="line-309"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
 </span><a href="#local-6989586621691078217"><span class="hs-identifier hs-var">runTimerState</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-308"></span><span>          </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
+</span><span id="line-310"></span><span>          </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Running"><span class="hs-identifier hs-var">Running</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-309"></span><span>            </span><span class="hs-comment">-- time's up, we set status to &quot;Done&quot;</span><span>
-</span><span id="line-310"></span><span>            </span><span class="annot"><span class="annottext">forall a. TVar a -&gt; a -&gt; STM ()
+</span><span id="line-311"></span><span>            </span><span class="hs-comment">-- time's up, we set status to &quot;Done&quot;</span><span>
+</span><span id="line-312"></span><span>            </span><span class="annot"><span class="annottext">forall a. TVar a -&gt; a -&gt; STM ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">writeTVar</span></a></span><span> </span><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
 </span><a href="#local-6989586621691078225"><span class="hs-identifier hs-var">timerState</span></a></span><span> </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Done"><span class="hs-identifier hs-var">Done</span></a></span><span>
-</span><span id="line-311"></span><span>            </span><span class="annot"><span class="annottext">forall a. TMVar a -&gt; a -&gt; STM ()
+</span><span id="line-313"></span><span>            </span><span class="annot"><span class="annottext">forall a. TMVar a -&gt; a -&gt; STM ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/stm-2.5.0.2/src"><span class="hs-identifier hs-var">putTMVar</span></a></span><span> </span><span class="annot"><span class="annottext">TMVar ()
 </span><a href="#local-6989586621691078223"><span class="hs-identifier hs-var">timer</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-312"></span><span>          </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
+</span><span id="line-314"></span><span>          </span><span class="annot"><span class="annottext">WSConnInitTimerStatus
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Done"><span class="hs-identifier hs-var">Done</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-313"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-315"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TVar WSConnInitTimerStatus
 </span><a href="#local-6989586621691078225"><span class="hs-identifier hs-var">timerState</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TMVar ()
 </span><a href="#local-6989586621691078223"><span class="hs-identifier hs-var">timer</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-314"></span></pre></body></html>
+</span><span id="line-316"></span></pre></body></html>

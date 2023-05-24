@@ -282,12 +282,13 @@ Name
 </span><span id="line-99"></span><span>    </span><span id="local-6989586621691259817"><span class="annot"><span class="annottext">parser :: Parser 'Output n (NamespacedField a)
 </span><a href="#local-6989586621691259817"><span class="hs-identifier hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-100"></span><span>      </span><span class="annot"><span class="annottext">forall a. InsOrdHashMap Name a -&gt; NamespacedField a
-</span><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-var">Namespaced</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-var">Namespaced</span></a></span><span>
+</span><span id="line-101"></span><span>        </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v1 v2.
 (k -&gt; v1 -&gt; v2) -&gt; InsOrdHashMap k v1 -&gt; InsOrdHashMap k v2
 </span><span class="hs-identifier hs-var">InsOrdHashMap.mapWithKey</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; ParsedSelection a -&gt; a
 </span><a href="#local-6989586621691259821"><span class="hs-identifier hs-var">fromParsedSelection</span></a></span><span>
-</span><span id="line-101"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-102"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 MonadParse m =&gt;
 Name
@@ -300,15 +301,15 @@ Name
 </span><a href="#local-6989586621691259822"><span class="hs-identifier hs-var">namespace</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser n a]
 </span><a href="#local-6989586621691259819"><span class="hs-identifier hs-var">fieldParsers</span></a></span><span>
-</span><span id="line-102"></span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#customizeNamespace"><span class="hs-identifier hs-var">customizeNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><span id="line-103"></span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#customizeNamespace"><span class="hs-identifier hs-var">customizeNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; ParsedSelection a -&gt; a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MkTypename
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621691259812"><span class="annot"><span class="annottext">[FieldParser n a]
 </span><a href="#local-6989586621691259812"><span class="hs-identifier hs-var">fieldParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-103"></span><span>  </span><span class="hs-comment">-- No namespace so just wrap the field parser results in @NotNamespaced@.</span><span>
-</span><span id="line-104"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-104"></span><span>  </span><span class="hs-comment">-- No namespace so just wrap the field parser results in @NotNamespaced@.</span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; NamespacedField a
 </span><a href="Hasura.GraphQL.Namespace.html#NotNamespaced"><span class="hs-identifier hs-var">NotNamespaced</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser n a]
 </span><a href="#local-6989586621691259812"><span class="hs-identifier hs-var">fieldParsers</span></a></span><span>
-</span><span id="line-105"></span></pre></body></html>
+</span><span id="line-106"></span></pre></body></html>

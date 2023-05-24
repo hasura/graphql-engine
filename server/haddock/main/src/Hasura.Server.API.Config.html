@@ -255,9 +255,9 @@ $c== :: ServerConfig -&gt; ServerConfig -&gt; Bool
 </span><span id="line-107"></span><span>      </span><span id="local-6989586621691283457"><span class="annot"><span class="annottext">featureFlagSettings :: HashSet FeatureFlagInfo
 </span><a href="#local-6989586621691283457"><span class="hs-identifier hs-var hs-var">featureFlagSettings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-108"></span><span>        </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
-</span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-109"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691283453"><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">Set.fromList</span></span><span>
+</span><span id="line-109"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691283453"><span class="annot"><span class="annottext">Text
 ffDescription :: FeatureFlag -&gt; Text
 ffDescription :: Text
 </span><a href="Hasura.Server.Init.FeatureFlag.html#ffDescription"><span class="hs-identifier hs-var hs-var">ffDescription</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691283451"><span class="annot"><span class="annottext">Identifier
@@ -272,7 +272,7 @@ ffIdentifier :: Identifier
 </span><a href="#local-6989586621691283449"><span class="hs-identifier hs-var">enabled</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ffiDescription :: Text
 </span><a href="Hasura.Server.API.Config.html#ffiDescription"><span class="hs-identifier hs-var">ffiDescription</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691283453"><span class="hs-identifier hs-var">ffDescription</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
-</span><span id="line-110"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-110"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[(FeatureFlag, Bool)]
 </span><a href="#local-6989586621691283463"><span class="hs-identifier hs-var">featureFlags</span></a></span><span>
 </span><span id="line-111"></span><span>

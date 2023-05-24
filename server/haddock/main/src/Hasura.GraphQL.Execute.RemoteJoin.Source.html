@@ -95,9 +95,9 @@
 AllBackendsSatisfy c =&gt;
 AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="Hasura.SQL.AnyBackend.html#dispatchAnyBackend"><span class="hs-identifier hs-var">AB.dispatchAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#BackendExecute"><span class="hs-identifier hs-type">EB.BackendExecute</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend RemoteSourceJoin
-</span><a href="#local-6989586621691439894"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
+</span><a href="#local-6989586621691439894"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span>
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
 (BackendExecute b, MonadQueryTags m, MonadError QErr m) =&gt;
 UserInfo
 -&gt; FieldName
@@ -185,12 +185,12 @@ UserInfo
 </span><span class="hs-identifier hs-var">KM.insert</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;__argument_id__&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621691439829"><span class="hs-identifier hs-var">argumentId</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-112"></span><span>            </span><span class="annot"><span class="annottext">forall v. [(Key, v)] -&gt; KeyMap v
-</span><span class="hs-identifier hs-var">KM.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-113"></span><span>              </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><a href="#local-6989586621691439829"><span class="hs-identifier hs-var">argumentId</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall v. [(Key, v)] -&gt; KeyMap v
+</span><span class="hs-identifier hs-var">KM.fromList</span></span><span>
+</span><span id="line-113"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (p :: * -&gt; * -&gt; *) a b c d.
 Bifunctor p =&gt;
 (a -&gt; b) -&gt; (c -&gt; d) -&gt; p a c -&gt; p b d
@@ -198,12 +198,12 @@ Bifunctor p =&gt;
 </span><span class="hs-identifier hs-var">K.fromText</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier hs-var">getFieldNameTxt</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-var">JO.fromOrdered</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-114"></span><span>                </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-115"></span><span>                  </span><span class="annot"><span class="annottext">JoinArgument -&gt; HashMap FieldName Value
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src"><span class="hs-identifier hs-var">JO.fromOrdered</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-114"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span>
+</span><span id="line-115"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">JoinArgument -&gt; HashMap FieldName Value
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#unJoinArgument"><span class="hs-identifier hs-var">unJoinArgument</span></a></span><span> </span><span class="annot"><span class="annottext">JoinArgument
 </span><a href="#local-6989586621691439828"><span class="hs-identifier hs-var">argument</span></a></span><span>
 </span><span id="line-116"></span><span>      </span><span id="local-6989586621691439818"><span class="annot"><span class="annottext">rowSchema :: HashMap FieldName (Column b, ScalarType b)
@@ -294,14 +294,14 @@ RemoteSourceJoin b
 </span><a href="Hasura.GraphQL.Namespace.html#mkUnNamespacedRootFieldAlias"><span class="hs-identifier hs-var">mkUnNamespacedRootFieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621691439806"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
 </span><span id="line-139"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-140"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
+</span><span id="line-140"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
-</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-141"></span><span>        </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span>
+</span><span id="line-141"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 RootFieldAlias
 -&gt; SourceConfig b -&gt; DBStepInfo b -&gt; SourceJoinCall b
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#SourceJoinCall"><span class="hs-identifier hs-var">SourceJoinCall</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
@@ -421,47 +421,48 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="#local-6989586621691439764"><span class="hs-identifier hs-var hs-var">throwInvalidJsonErr</span></a></span></span><span> </span><span id="local-6989586621691439727"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691439727"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-183"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-184"></span><span>        </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;failed to decode JSON response from the source: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">throw500</span></span><span>
+</span><span id="line-184"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;failed to decode JSON response from the source: &quot;</span></span><span>
+</span><span id="line-185"></span><span>        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691439727"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
-</span><span id="line-185"></span><span>    </span><span id="local-6989586621691439754"><span class="annot"><span class="annottext">throwMissingRelationshipDataErr :: m a
+</span><span id="line-186"></span><span>    </span><span id="local-6989586621691439754"><span class="annot"><span class="annottext">throwMissingRelationshipDataErr :: m a
 </span><a href="#local-6989586621691439754"><span class="hs-identifier hs-var hs-var">throwMissingRelationshipDataErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-186"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-187"></span><span>        </span><span class="annot"><span class="annottext">Text
+</span><span id="line-187"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><span class="hs-identifier hs-var">throw500</span></span><span>
+</span><span id="line-188"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;cannot find relationship data (aliased as 'f') within the source \
-        \response&quot;</span></span><span>
-</span><span id="line-189"></span><span>    </span><span id="local-6989586621691439752"><span class="annot"><span class="annottext">throwMissingArgumentIdErr :: m a
+          \response&quot;</span></span><span>
+</span><span id="line-190"></span><span>    </span><span id="local-6989586621691439752"><span class="annot"><span class="annottext">throwMissingArgumentIdErr :: m a
 </span><a href="#local-6989586621691439752"><span class="hs-identifier hs-var hs-var">throwMissingArgumentIdErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-190"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-191"></span><span>        </span><span class="annot"><span class="annottext">Text
+</span><span id="line-191"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><span class="hs-identifier hs-var">throw500</span></span><span>
+</span><span id="line-192"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;cannot find '__argument_id__' within the source response&quot;</span></span><span>
-</span><span id="line-192"></span><span>    </span><span id="local-6989586621691439747"><span class="annot"><span class="annottext">throwInvalidArgumentIdValueErr :: m a
+</span><span id="line-193"></span><span>    </span><span id="local-6989586621691439747"><span class="annot"><span class="annottext">throwInvalidArgumentIdValueErr :: m a
 </span><a href="#local-6989586621691439747"><span class="hs-identifier hs-var hs-var">throwInvalidArgumentIdValueErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-193"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><span id="line-194"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;expected 'argument_id' to get parsed as backend integer type&quot;</span></span><span>
-</span><span id="line-194"></span><span>    </span><span id="local-6989586621691439743"><span class="annot"><span class="annottext">throwNoNestedObjectErr :: m a
+</span><span id="line-195"></span><span>    </span><span id="local-6989586621691439743"><span class="annot"><span class="annottext">throwNoNestedObjectErr :: m a
 </span><a href="#local-6989586621691439743"><span class="hs-identifier hs-var hs-var">throwNoNestedObjectErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-195"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-196"></span><span>        </span><span class="annot"><span class="annottext">Text
+</span><span id="line-196"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><span class="hs-identifier hs-var">throw500</span></span><span>
+</span><span id="line-197"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;expected an object one level deep in the remote schema's response, \
-        \but found an array/scalar value instead&quot;</span></span><span>
-</span><span id="line-198"></span><span>    </span><span id="local-6989586621691439742"><span class="annot"><span class="annottext">throwNoListOfObjectsErr :: m a
+          \but found an array/scalar value instead&quot;</span></span><span>
+</span><span id="line-199"></span><span>    </span><span id="local-6989586621691439742"><span class="annot"><span class="annottext">throwNoListOfObjectsErr :: m a
 </span><a href="#local-6989586621691439742"><span class="hs-identifier hs-var hs-var">throwNoListOfObjectsErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-199"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><span class="hs-identifier hs-var">throw500</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-200"></span><span>        </span><span class="annot"><span class="annottext">Text
+</span><span id="line-200"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><span class="hs-identifier hs-var">throw500</span></span><span>
+</span><span id="line-201"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;expected a list of objects in the remote schema's response, but found \
-        \an object/scalar value instead&quot;</span></span><span>
-</span><span id="line-202"></span></pre></body></html>
+          \an object/scalar value instead&quot;</span></span><span>
+</span><span id="line-203"></span></pre></body></html>

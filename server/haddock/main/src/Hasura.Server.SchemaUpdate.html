@@ -85,31 +85,31 @@ Logger impl
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621691443654"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">LogLevel -&gt; Text -&gt; Value -&gt; StartupLog
+</span><a href="#local-6989586621691443654"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; Text -&gt; Value -&gt; StartupLog
 </span><a href="Hasura.Server.Logging.html#StartupLog"><span class="hs-identifier hs-var">StartupLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;schema-sync&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-71"></span><span>          </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-string">&quot;schema-sync&quot;</span></span><span>
+</span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span>
-</span><span id="line-72"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span id="line-72"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;instance_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">InstanceId -&gt; Text
 </span><a href="Hasura.Server.Types.html#getInstanceId"><span class="hs-identifier hs-var">getInstanceId</span></a></span><span> </span><span class="annot"><span class="annottext">InstanceId
 </span><a href="#local-6989586621691443653"><span class="hs-identifier hs-var">instanceId</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-73"></span><span>              </span><span class="annot"><span class="annottext">Key
+</span><span id="line-73"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;thread_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; String
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Thread -&gt; ThreadId
 </span><span class="hs-identifier hs-var">Immortal.threadId</span></span><span> </span><span class="annot"><span class="annottext">Thread
 </span><a href="#local-6989586621691443651"><span class="hs-identifier hs-var">thread</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-74"></span><span>              </span><span class="annot"><span class="annottext">Key
+</span><span id="line-74"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621691443650"><span class="hs-identifier hs-var">msg</span></a></span><span>
-</span><span id="line-75"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-75"></span><span>          </span><span class="hs-special">]</span><span>
 </span><span id="line-76"></span><span>
 </span><span id="line-77"></span><span class="hs-comment">{- Note [Schema Cache Sync]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -157,7 +157,7 @@ if listen started after schema cache init start time.
 </span><span id="line-120"></span><span class="hs-comment">-- | An async thread which listen to Postgres notify to enable schema syncing</span><span>
 </span><span id="line-121"></span><span class="hs-comment">-- See Note [Schema Cache Sync]</span><span>
 </span><span id="line-122"></span><span id="local-6989586621691443989"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#startSchemaSyncListenerThread"><span class="hs-identifier hs-type">startSchemaSyncListenerThread</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-123"></span><span>  </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">C.ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691443989"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">C.ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691443989"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-124"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-125"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.PGPool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-126"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#InstanceId"><span class="hs-identifier hs-type">InstanceId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -186,9 +186,9 @@ ForkableMonadIO m =&gt;
 String -&gt; Logger Hasura -&gt; m Void -&gt; ManagedT m Thread
 </span><a href="Control.Concurrent.Extended.html#forkManagedT"><span class="hs-identifier hs-var">C.forkManagedT</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;SchemeUpdate.listener&quot;</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621691443628"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-134"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) void.
+</span><a href="#local-6989586621691443628"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-134"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) void.
 MonadIO m =&gt;
 Logger Hasura
 -&gt; PGPool
@@ -339,9 +339,9 @@ ForkableMonadIO m =&gt;
 String -&gt; Logger Hasura -&gt; m Void -&gt; ManagedT m Thread
 </span><a href="Control.Concurrent.Extended.html#forkManagedT"><span class="hs-identifier hs-var">C.forkManagedT</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;SchemeUpdate.processor&quot;</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621691443528"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-157"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) void impl.
+</span><a href="#local-6989586621691443528"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-157"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) void impl.
 (ForkableMonadIO m, HasAppEnv m, HasCacheStaticConfig m,
  MonadMetadataStorage m, MonadResolveSource m, ProvidesNetwork m) =&gt;
 TMVar MetadataResourceVersion
@@ -393,9 +393,9 @@ PGPool -&gt; TxMode -&gt; TxET e m a -&gt; ExceptT e m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.runTx</span></a></span><span> </span><span class="annot"><span class="annottext">PGPool
 </span><a href="#local-6989586621691443514"><span class="hs-identifier hs-var">pool</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TxIsolation
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.RepeatableRead</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-170"></span><span>        </span><span class="annot"><span class="annottext">TxE QErr MetadataResourceVersion
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-170"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">TxE QErr MetadataResourceVersion
 </span><a href="Hasura.RQL.DDL.Schema.Catalog.html#fetchMetadataResourceVersionFromCatalog"><span class="hs-identifier hs-var">fetchMetadataResourceVersionFromCatalog</span></a></span><span>
 </span><span id="line-171"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-172"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
@@ -514,7 +514,7 @@ $c== :: ErrorState -&gt; ErrorState -&gt; Bool
 </span><span id="line-212"></span><span>
 </span><span id="line-213"></span><span class="hs-comment">-- | An IO action that listens to postgres for events and pushes them to a Queue, in a loop forever.</span><span>
 </span><span id="line-214"></span><span id="local-6989586621691443969"><span id="local-6989586621691443970"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#listener"><span class="hs-identifier hs-type">listener</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-215"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691443970"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-215"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691443970"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-216"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-217"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.PGPool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-218"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/stm-2.5.0.2/src"><span class="hs-identifier hs-type">STM.TMVar</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -607,16 +607,16 @@ Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
 </span><span id="line-237"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ErrorState -&gt; Bool
 </span><a href="Hasura.Server.SchemaUpdate.html#isInErrorState"><span class="hs-identifier hs-var">isInErrorState</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorState
-</span><a href="#local-6989586621691443432"><span class="hs-identifier hs-var">errorState</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-238"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><a href="#local-6989586621691443432"><span class="hs-identifier hs-var">errorState</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-238"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadIO m =&gt;
 Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
 </span><a href="Hasura.Server.SchemaUpdate.html#logInfo"><span class="hs-identifier hs-var">logInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
 </span><a href="#local-6989586621691443438"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
-</span><a href="Hasura.Server.Logging.html#TTListener"><span class="hs-identifier hs-var">TTListener</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-239"></span><span>              </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="Hasura.Server.Logging.html#TTListener"><span class="hs-identifier hs-var">TTListener</span></a></span><span>
+</span><span id="line-239"></span><span>            </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
@@ -807,9 +807,9 @@ appEnvPort :: AppEnv -&gt; Port
 </span><a href="#local-6989586621691443263"><span class="hs-identifier hs-var">appEnvLoggers</span></a></span><span>
 </span><span id="line-286"></span><span>    </span><span id="local-6989586621691443237"><span class="annot"><span class="annottext">Either QErr ()
 </span><a href="#local-6989586621691443237"><span class="hs-identifier hs-var">respErr</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runExceptT</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-287"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) impl a.
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runExceptT</span></a></span><span>
+</span><span id="line-287"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) impl a.
 (MonadIO m, MonadBaseControl IO m) =&gt;
 AppStateRef impl
 -&gt; Logger Hasura
@@ -820,9 +820,10 @@ AppStateRef impl
 </span><a href="#local-6989586621691443271"><span class="hs-identifier hs-var">appStateRef</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
 </span><a href="#local-6989586621691443238"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">TVar Bool
-</span><a href="#local-6989586621691443269"><span class="hs-identifier hs-var">logTVar</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621691443269"><span class="hs-identifier hs-var">logTVar</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-288"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-288"></span><span>        </span><span id="local-6989586621691443236"><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><span id="line-289"></span><span>        </span><span id="local-6989586621691443236"><span class="annot"><span class="annottext">RebuildableSchemaCache
 </span><a href="#local-6989586621691443236"><span class="hs-identifier hs-var">rebuildableCache</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
@@ -831,21 +832,21 @@ AppStateRef impl
 AppStateRef impl -&gt; IO (RebuildableSchemaCache, SchemaCacheVer)
 </span><a href="Hasura.Server.AppStateRef.html#getRebuildableSchemaCacheWithVersion"><span class="hs-identifier hs-var">getRebuildableSchemaCacheWithVersion</span></a></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl
 </span><a href="#local-6989586621691443271"><span class="hs-identifier hs-var">appStateRef</span></a></span><span>
-</span><span id="line-289"></span><span>        </span><span id="local-6989586621691443235"><span class="annot"><span class="annottext">AppContext
+</span><span id="line-290"></span><span>        </span><span id="local-6989586621691443235"><span class="annot"><span class="annottext">AppContext
 </span><a href="#local-6989586621691443235"><span class="hs-identifier hs-var">appContext</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall impl. AppStateRef impl -&gt; IO AppContext
 </span><a href="Hasura.Server.AppStateRef.html#getAppContext"><span class="hs-identifier hs-var">getAppContext</span></a></span><span> </span><span class="annot"><span class="annottext">AppStateRef impl
 </span><a href="#local-6989586621691443271"><span class="hs-identifier hs-var">appStateRef</span></a></span><span>
-</span><span id="line-290"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691443234"><span class="annot"><span class="annottext">dynamicConfig :: CacheDynamicConfig
+</span><span id="line-291"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691443234"><span class="annot"><span class="annottext">dynamicConfig :: CacheDynamicConfig
 </span><a href="#local-6989586621691443234"><span class="hs-identifier hs-var hs-var">dynamicConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AppContext -&gt; CacheDynamicConfig
 </span><a href="Hasura.App.State.html#buildCacheDynamicConfig"><span class="hs-identifier hs-var">buildCacheDynamicConfig</span></a></span><span> </span><span class="annot"><span class="annottext">AppContext
 </span><a href="#local-6989586621691443235"><span class="hs-identifier hs-var">appContext</span></a></span><span>
-</span><span id="line-291"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621691443232"><span class="annot"><span class="annottext">()
+</span><span id="line-292"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621691443232"><span class="annot"><span class="annottext">()
 </span><a href="#local-6989586621691443232"><span class="hs-identifier hs-var">msg</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691443231"><span class="annot"><span class="annottext">RebuildableSchemaCache
 </span><a href="#local-6989586621691443231"><span class="hs-identifier hs-var">cache</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">CacheInvalidations
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-292"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+</span><span id="line-293"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 Monad m =&gt;
 CacheDynamicConfig
 -&gt; RebuildableSchemaCache
@@ -855,77 +856,77 @@ CacheDynamicConfig
 </span><a href="#local-6989586621691443234"><span class="hs-identifier hs-var">dynamicConfig</span></a></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
 </span><a href="#local-6989586621691443236"><span class="hs-identifier hs-var">rebuildableCache</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-293"></span><span>            </span><span id="local-6989586621691443230"><span class="annot"><span class="annottext">SchemaCache
+</span><span id="line-294"></span><span>            </span><span id="local-6989586621691443230"><span class="annot"><span class="annottext">SchemaCache
 </span><a href="#local-6989586621691443230"><span class="hs-identifier hs-var">schemaCache</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). CacheRM m =&gt; m SchemaCache
 </span><a href="Hasura.RQL.Types.SchemaCache.html#askSchemaCache"><span class="hs-identifier hs-var">askSchemaCache</span></a></span><span>
-</span><span id="line-294"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691443228"><span class="annot"><span class="annottext">engineResourceVersion :: MetadataResourceVersion
+</span><span id="line-295"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691443228"><span class="annot"><span class="annottext">engineResourceVersion :: MetadataResourceVersion
 </span><a href="#local-6989586621691443228"><span class="hs-identifier hs-var hs-var">engineResourceVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; MetadataResourceVersion
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scMetadataResourceVersion"><span class="hs-identifier hs-var">scMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
 </span><a href="#local-6989586621691443230"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
-</span><span id="line-295"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span id="line-296"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="#local-6989586621691443228"><span class="hs-identifier hs-var">engineResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="#local-6989586621691443272"><span class="hs-identifier hs-var">resourceVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-296"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-297"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadIO m =&gt;
 Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
 </span><a href="Hasura.Server.SchemaUpdate.html#logInfo"><span class="hs-identifier hs-var">logInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
 </span><a href="#local-6989586621691443238"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
-</span><a href="#local-6989586621691443270"><span class="hs-identifier hs-var">threadType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-297"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-298"></span><span>                  </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+</span><a href="#local-6989586621691443270"><span class="hs-identifier hs-var">threadType</span></a></span><span>
+</span><span id="line-298"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span class="hs-identifier hs-var">String</span></span><span>
+</span><span id="line-299"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
 </span><span class="hs-identifier hs-var">T.unwords</span></span><span>
-</span><span id="line-299"></span><span>                    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-300"></span><span>                  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Received metadata resource version:&quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-300"></span><span>                      </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Text
+</span><span id="line-301"></span><span>                    </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Text
 </span><a href="Hasura.RQL.Types.SchemaCache.html#showMetadataResourceVersion"><span class="hs-identifier hs-var">showMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="#local-6989586621691443272"><span class="hs-identifier hs-var">resourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;,&quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-301"></span><span>                      </span><span class="annot"><span class="annottext">Text
+</span><span id="line-302"></span><span>                    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;different from the current engine resource version:&quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-302"></span><span>                      </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Text
+</span><span id="line-303"></span><span>                    </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Text
 </span><a href="Hasura.RQL.Types.SchemaCache.html#showMetadataResourceVersion"><span class="hs-identifier hs-var">showMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="#local-6989586621691443228"><span class="hs-identifier hs-var">engineResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;.&quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-303"></span><span>                      </span><span class="annot"><span class="annottext">Text
+</span><span id="line-304"></span><span>                    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Trying to update the schema cache.&quot;</span></span><span>
-</span><span id="line-304"></span><span>                    </span><span class="hs-special">]</span><span>
-</span><span id="line-305"></span><span>
-</span><span id="line-306"></span><span>              </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataWithResourceVersion"><span class="hs-identifier hs-type">MetadataWithResourceVersion</span></a></span><span> </span><span id="local-6989586621691443222"><span class="annot"><span class="annottext">Metadata
+</span><span id="line-305"></span><span>                  </span><span class="hs-special">]</span><span>
+</span><span id="line-306"></span><span>
+</span><span id="line-307"></span><span>              </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataWithResourceVersion"><span class="hs-identifier hs-type">MetadataWithResourceVersion</span></a></span><span> </span><span id="local-6989586621691443222"><span class="annot"><span class="annottext">Metadata
 </span><a href="#local-6989586621691443222"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span id="local-6989586621691443221"><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="#local-6989586621691443221"><span class="hs-identifier hs-var">latestResourceVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
 m (Either QErr MetadataWithResourceVersion)
 </span><a href="Hasura.Metadata.Class.html#fetchMetadata"><span class="hs-identifier hs-var">fetchMetadata</span></a></span><span>
-</span><span id="line-307"></span><span>
-</span><span id="line-308"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-308"></span><span>
+</span><span id="line-309"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadIO m =&gt;
 Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
 </span><a href="Hasura.Server.SchemaUpdate.html#logInfo"><span class="hs-identifier hs-var">logInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
 </span><a href="#local-6989586621691443238"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
-</span><a href="#local-6989586621691443270"><span class="hs-identifier hs-var">threadType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-309"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-310"></span><span>                  </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+</span><a href="#local-6989586621691443270"><span class="hs-identifier hs-var">threadType</span></a></span><span>
+</span><span id="line-310"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span class="hs-identifier hs-var">String</span></span><span>
+</span><span id="line-311"></span><span>                </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
 </span><span class="hs-identifier hs-var">T.unwords</span></span><span>
-</span><span id="line-311"></span><span>                    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-312"></span><span>                  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Fetched metadata with resource version:&quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-312"></span><span>                      </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Text
+</span><span id="line-313"></span><span>                    </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Text
 </span><a href="Hasura.RQL.Types.SchemaCache.html#showMetadataResourceVersion"><span class="hs-identifier hs-var">showMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="#local-6989586621691443221"><span class="hs-identifier hs-var">latestResourceVersion</span></a></span><span>
-</span><span id="line-313"></span><span>                    </span><span class="hs-special">]</span><span>
-</span><span id="line-314"></span><span>
-</span><span id="line-315"></span><span>              </span><span id="local-6989586621691443218"><span class="annot"><span class="annottext">[(MetadataResourceVersion, CacheInvalidations)]
+</span><span id="line-314"></span><span>                  </span><span class="hs-special">]</span><span>
+</span><span id="line-315"></span><span>
+</span><span id="line-316"></span><span>              </span><span id="local-6989586621691443218"><span class="annot"><span class="annottext">[(MetadataResourceVersion, CacheInvalidations)]
 </span><a href="#local-6989586621691443218"><span class="hs-identifier hs-var">notifications</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
@@ -936,50 +937,50 @@ MetadataResourceVersion
 </span><a href="Hasura.Metadata.Class.html#fetchMetadataNotifications"><span class="hs-identifier hs-var">fetchMetadataNotifications</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="#local-6989586621691443228"><span class="hs-identifier hs-var">engineResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">InstanceId
 </span><a href="#local-6989586621691443261"><span class="hs-identifier hs-var">appEnvInstanceId</span></a></span><span>
-</span><span id="line-316"></span><span>
-</span><span id="line-317"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[(MetadataResourceVersion, CacheInvalidations)]
+</span><span id="line-317"></span><span>
+</span><span id="line-318"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[(MetadataResourceVersion, CacheInvalidations)]
 </span><a href="#local-6989586621691443218"><span class="hs-identifier hs-var">notifications</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-318"></span><span>                </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-319"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-319"></span><span>                </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-320"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadIO m =&gt;
 Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
 </span><a href="Hasura.Server.SchemaUpdate.html#logInfo"><span class="hs-identifier hs-var">logInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
 </span><a href="#local-6989586621691443238"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
-</span><a href="#local-6989586621691443270"><span class="hs-identifier hs-var">threadType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-320"></span><span>                    </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-321"></span><span>                      </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+</span><a href="#local-6989586621691443270"><span class="hs-identifier hs-var">threadType</span></a></span><span>
+</span><span id="line-321"></span><span>                    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span class="hs-identifier hs-var">String</span></span><span>
+</span><span id="line-322"></span><span>                    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
 </span><span class="hs-identifier hs-var">T.unwords</span></span><span>
-</span><span id="line-322"></span><span>                        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-323"></span><span>                      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Fetched metadata notifications and received no notifications. Not updating the schema cache.&quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-323"></span><span>                          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-324"></span><span>                        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Only setting resource version:&quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-324"></span><span>                          </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Text
+</span><span id="line-325"></span><span>                        </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Text
 </span><a href="Hasura.RQL.Types.SchemaCache.html#showMetadataResourceVersion"><span class="hs-identifier hs-var">showMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="#local-6989586621691443221"><span class="hs-identifier hs-var">latestResourceVersion</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-325"></span><span>                          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-326"></span><span>                        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;in schema cache&quot;</span></span><span>
-</span><span id="line-326"></span><span>                        </span><span class="hs-special">]</span><span>
-</span><span id="line-327"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). CacheRWM m =&gt; MetadataResourceVersion -&gt; m ()
+</span><span id="line-327"></span><span>                      </span><span class="hs-special">]</span><span>
+</span><span id="line-328"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). CacheRWM m =&gt; MetadataResourceVersion -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#setMetadataResourceVersionInSchemaCache"><span class="hs-identifier hs-var">setMetadataResourceVersionInSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="#local-6989586621691443221"><span class="hs-identifier hs-var">latestResourceVersion</span></a></span><span>
-</span><span id="line-328"></span><span>                </span><span class="annot"><span class="annottext">[(MetadataResourceVersion, CacheInvalidations)]
+</span><span id="line-329"></span><span>                </span><span class="annot"><span class="annottext">[(MetadataResourceVersion, CacheInvalidations)]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-329"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-330"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadIO m =&gt;
 Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
 </span><a href="Hasura.Server.SchemaUpdate.html#logInfo"><span class="hs-identifier hs-var">logInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
 </span><a href="#local-6989586621691443238"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
-</span><a href="#local-6989586621691443270"><span class="hs-identifier hs-var">threadType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-330"></span><span>                    </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="#local-6989586621691443270"><span class="hs-identifier hs-var">threadType</span></a></span><span>
+</span><span id="line-331"></span><span>                    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Fetched metadata notifications and received some notifications. Updating the schema cache.&quot;</span></span><span>
-</span><span id="line-331"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691443215"><span class="annot"><span class="annottext">cacheInvalidations :: CacheInvalidations
+</span><span id="line-332"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691443215"><span class="annot"><span class="annottext">cacheInvalidations :: CacheInvalidations
 </span><a href="#local-6989586621691443215"><span class="hs-identifier hs-var hs-var">cacheInvalidations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-332"></span><span>                        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span id="line-333"></span><span>                        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">any</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="#local-6989586621691443228"><span class="hs-identifier hs-var">engineResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
@@ -988,28 +989,28 @@ Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fst</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(MetadataResourceVersion, CacheInvalidations)]
 </span><a href="#local-6989586621691443218"><span class="hs-identifier hs-var">notifications</span></a></span><span>
-</span><span id="line-333"></span><span>                          </span><span class="hs-keyword">then</span><span> </span><span class="hs-comment">-- If (engineResourceVersion + 1) is in the list of notifications then</span><span>
-</span><span id="line-334"></span><span>                          </span><span class="hs-comment">-- we know that we haven't missed any.</span><span>
-</span><span id="line-335"></span><span>                            </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; [a] -&gt; a
+</span><span id="line-334"></span><span>                          </span><span class="hs-keyword">then</span><span> </span><span class="hs-comment">-- If (engineResourceVersion + 1) is in the list of notifications then</span><span>
+</span><span id="line-335"></span><span>                          </span><span class="hs-comment">-- we know that we haven't missed any.</span><span>
+</span><span id="line-336"></span><span>                            </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; [a] -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mconcat</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">snd</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[(MetadataResourceVersion, CacheInvalidations)]
 </span><a href="#local-6989586621691443218"><span class="hs-identifier hs-var">notifications</span></a></span><span>
-</span><span id="line-336"></span><span>                          </span><span class="hs-keyword">else</span><span> </span><span class="hs-comment">-- Otherwise we may have missed some notifications so we need to invalidate the</span><span>
-</span><span id="line-337"></span><span>                          </span><span class="hs-comment">-- whole cache.</span><span>
-</span><span id="line-338"></span><span>
-</span><span id="line-339"></span><span>                            </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheInvalidations"><span class="hs-identifier hs-type">CacheInvalidations</span></a></span><span>
-</span><span id="line-340"></span><span>                              </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">ciMetadata :: Bool
+</span><span id="line-337"></span><span>                          </span><span class="hs-keyword">else</span><span> </span><span class="hs-comment">-- Otherwise we may have missed some notifications so we need to invalidate the</span><span>
+</span><span id="line-338"></span><span>                          </span><span class="hs-comment">-- whole cache.</span><span>
+</span><span id="line-339"></span><span>
+</span><span id="line-340"></span><span>                            </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheInvalidations"><span class="hs-identifier hs-type">CacheInvalidations</span></a></span><span>
+</span><span id="line-341"></span><span>                              </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">ciMetadata :: Bool
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#ciMetadata"><span class="hs-identifier hs-var">ciMetadata</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-341"></span><span>                                </span><span class="annot"><span class="annottext">ciRemoteSchemas :: HashSet RemoteSchemaName
+</span><span id="line-342"></span><span>                                </span><span class="annot"><span class="annottext">ciRemoteSchemas :: HashSet RemoteSchemaName
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#ciRemoteSchemas"><span class="hs-identifier hs-var">ciRemoteSchemas</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; [RemoteSchemaName]
 </span><a href="Hasura.RQL.Types.SchemaCache.html#getAllRemoteSchemas"><span class="hs-identifier hs-var">getAllRemoteSchemas</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
 </span><a href="#local-6989586621691443230"><span class="hs-identifier hs-var">schemaCache</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-342"></span><span>                                </span><span class="annot"><span class="annottext">ciSources :: HashSet SourceName
+</span><span id="line-343"></span><span>                                </span><span class="annot"><span class="annottext">ciSources :: HashSet SourceName
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#ciSources"><span class="hs-identifier hs-var">ciSources</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [k]
@@ -1017,56 +1018,57 @@ Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; SourceCache
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scSources"><span class="hs-identifier hs-var">scSources</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
 </span><a href="#local-6989586621691443230"><span class="hs-identifier hs-var">schemaCache</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-343"></span><span>                                </span><span class="annot"><span class="annottext">ciDataConnectors :: HashSet DataConnectorName
+</span><span id="line-344"></span><span>                                </span><span class="annot"><span class="annottext">ciDataConnectors :: HashSet DataConnectorName
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#ciDataConnectors"><span class="hs-identifier hs-var">ciDataConnectors</span></a></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-344"></span><span>                                  </span><span class="annot"><span class="annottext">forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span id="line-345"></span><span>                                  </span><span class="annot"><span class="annottext">forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [k]
 </span><span class="hs-identifier hs-var">HashMap.keys</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). BackendInfoWrapper b -&gt; BackendInfo b
-</span><a href="Hasura.RQL.Types.SchemaCache.html#unBackendInfoWrapper"><span class="hs-identifier hs-var">unBackendInfoWrapper</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-345"></span><span>                                    </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
+</span><a href="Hasura.RQL.Types.SchemaCache.html#unBackendInfoWrapper"><span class="hs-identifier hs-var">unBackendInfoWrapper</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-346"></span><span>                                    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 BackendMap i -&gt; Maybe (i b)
-</span><a href="Hasura.SQL.BackendMap.html#lookup"><span class="hs-identifier hs-var">BackendMap.lookup</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-346"></span><span>                                      </span><span class="annot"><span class="annottext">SchemaCache -&gt; BackendCache
+</span><a href="Hasura.SQL.BackendMap.html#lookup"><span class="hs-identifier hs-var">BackendMap.lookup</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span>
+</span><span id="line-347"></span><span>                                    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; BackendCache
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scBackendCache"><span class="hs-identifier hs-var">scBackendCache</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
 </span><a href="#local-6989586621691443230"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
-</span><span id="line-347"></span><span>                              </span><span class="hs-special">}</span><span>
-</span><span id="line-348"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-348"></span><span>                              </span><span class="hs-special">}</span><span>
+</span><span id="line-349"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 CacheRWM m =&gt;
 BuildReason -&gt; CacheInvalidations -&gt; Metadata -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheWithOptions"><span class="hs-identifier hs-var">buildSchemaCacheWithOptions</span></a></span><span> </span><span class="annot"><span class="annottext">BuildReason
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#CatalogSync"><span class="hs-identifier hs-var">CatalogSync</span></a></span><span> </span><span class="annot"><span class="annottext">CacheInvalidations
 </span><a href="#local-6989586621691443215"><span class="hs-identifier hs-var">cacheInvalidations</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
 </span><a href="#local-6989586621691443222"><span class="hs-identifier hs-var">metadata</span></a></span><span>
-</span><span id="line-349"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). CacheRWM m =&gt; MetadataResourceVersion -&gt; m ()
+</span><span id="line-350"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). CacheRWM m =&gt; MetadataResourceVersion -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#setMetadataResourceVersionInSchemaCache"><span class="hs-identifier hs-var">setMetadataResourceVersionInSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="#local-6989586621691443221"><span class="hs-identifier hs-var">latestResourceVersion</span></a></span><span>
-</span><span id="line-350"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-351"></span><span>                  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadIO m =&gt;
 Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
 </span><a href="Hasura.Server.SchemaUpdate.html#logInfo"><span class="hs-identifier hs-var">logInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
 </span><a href="#local-6989586621691443238"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
-</span><a href="#local-6989586621691443270"><span class="hs-identifier hs-var">threadType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-351"></span><span>                    </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-352"></span><span>                      </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Schema cache updated with resource version: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621691443270"><span class="hs-identifier hs-var">threadType</span></a></span><span>
+</span><span id="line-352"></span><span>                    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span class="hs-identifier hs-var">String</span></span><span>
+</span><span id="line-353"></span><span>                    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Schema cache updated with resource version: &quot;</span></span><span>
+</span><span id="line-354"></span><span>                    </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Text
 </span><a href="Hasura.RQL.Types.SchemaCache.html#showMetadataResourceVersion"><span class="hs-identifier hs-var">showMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="#local-6989586621691443221"><span class="hs-identifier hs-var">latestResourceVersion</span></a></span><span>
-</span><span id="line-353"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-355"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">()
 </span><a href="#local-6989586621691443232"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
 </span><a href="#local-6989586621691443231"><span class="hs-identifier hs-var">cache</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-354"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
+</span><span id="line-356"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onLeft</span></a></span><span> </span><span class="annot"><span class="annottext">Either QErr ()
@@ -1078,54 +1080,54 @@ Logger Hasura -&gt; SchemaSyncThreadType -&gt; a -&gt; m ()
 </span><a href="#local-6989586621691443270"><span class="hs-identifier hs-var">threadType</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; ThreadError
 </span><a href="Hasura.Server.SchemaUpdate.html#TEQueryError"><span class="hs-identifier hs-var">TEQueryError</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-355"></span><span>
-</span><span id="line-356"></span><span id="local-6989586621691443878"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logInfo"><span class="hs-identifier hs-type">logInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691443878"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html#SchemaSyncThreadType"><span class="hs-identifier hs-type">SchemaSyncThreadType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691443878"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
-</span><span id="line-357"></span><span id="logInfo"><span class="annot"><span class="annottext">logInfo :: forall (m :: * -&gt; *).
+</span><span id="line-357"></span><span>
+</span><span id="line-358"></span><span id="local-6989586621691443878"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logInfo"><span class="hs-identifier hs-type">logInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691443878"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html#SchemaSyncThreadType"><span class="hs-identifier hs-type">SchemaSyncThreadType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691443878"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-359"></span><span id="logInfo"><span class="annot"><span class="annottext">logInfo :: forall (m :: * -&gt; *).
 MonadIO m =&gt;
 Logger Hasura -&gt; SchemaSyncThreadType -&gt; Value -&gt; m ()
 </span><a href="Hasura.Server.SchemaUpdate.html#logInfo"><span class="hs-identifier hs-var hs-var">logInfo</span></a></span></span><span> </span><span id="local-6989586621691443192"><span class="annot"><span class="annottext">Logger Hasura
 </span><a href="#local-6989586621691443192"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621691443191"><span class="annot"><span class="annottext">SchemaSyncThreadType
 </span><a href="#local-6989586621691443191"><span class="hs-identifier hs-var">threadType</span></a></span></span><span> </span><span id="local-6989586621691443190"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621691443190"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-358"></span><span>  </span><span class="annot"><span class="annottext">forall impl.
+</span><span id="line-360"></span><span>  </span><span class="annot"><span class="annottext">forall impl.
 Logger impl
 -&gt; forall a (m :: * -&gt; *).
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621691443192"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-359"></span><span>    </span><span class="annot"><span class="annottext">LogLevel -&gt; SchemaSyncThreadType -&gt; Value -&gt; SchemaSyncLog
+</span><a href="#local-6989586621691443192"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-361"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; SchemaSyncThreadType -&gt; Value -&gt; SchemaSyncLog
 </span><a href="Hasura.Server.Logging.html#SchemaSyncLog"><span class="hs-identifier hs-var">SchemaSyncLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
 </span><a href="#local-6989586621691443191"><span class="hs-identifier hs-var">threadType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621691443190"><span class="hs-identifier hs-var">val</span></a></span><span>
-</span><span id="line-360"></span><span>
-</span><span id="line-361"></span><span id="local-6989586621691443879"><span id="local-6989586621691443880"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logError"><span class="hs-identifier hs-type">logError</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691443880"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621691443879"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html#SchemaSyncThreadType"><span class="hs-identifier hs-type">SchemaSyncThreadType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691443879"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691443880"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
-</span><span id="line-362"></span><span id="logError"><span class="annot"><span class="annottext">logError :: forall (m :: * -&gt; *) a.
+</span><span id="line-362"></span><span>
+</span><span id="line-363"></span><span id="local-6989586621691443879"><span id="local-6989586621691443880"><span class="annot"><a href="Hasura.Server.SchemaUpdate.html#logError"><span class="hs-identifier hs-type">logError</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691443880"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621691443879"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html#SchemaSyncThreadType"><span class="hs-identifier hs-type">SchemaSyncThreadType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691443879"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691443880"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-364"></span><span id="logError"><span class="annot"><span class="annottext">logError :: forall (m :: * -&gt; *) a.
 (MonadIO m, ToJSON a) =&gt;
 Logger Hasura -&gt; SchemaSyncThreadType -&gt; a -&gt; m ()
 </span><a href="Hasura.Server.SchemaUpdate.html#logError"><span class="hs-identifier hs-var hs-var">logError</span></a></span></span><span> </span><span id="local-6989586621691443178"><span class="annot"><span class="annottext">Logger Hasura
 </span><a href="#local-6989586621691443178"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621691443177"><span class="annot"><span class="annottext">SchemaSyncThreadType
 </span><a href="#local-6989586621691443177"><span class="hs-identifier hs-var">threadType</span></a></span></span><span> </span><span id="local-6989586621691443176"><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621691443176"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-363"></span><span>  </span><span class="annot"><span class="annottext">forall impl.
+</span><span id="line-365"></span><span>  </span><span class="annot"><span class="annottext">forall impl.
 Logger impl
 -&gt; forall a (m :: * -&gt; *).
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621691443178"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-364"></span><span>    </span><span class="annot"><span class="annottext">LogLevel -&gt; SchemaSyncThreadType -&gt; Value -&gt; SchemaSyncLog
+</span><a href="#local-6989586621691443178"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-366"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; SchemaSyncThreadType -&gt; Value -&gt; SchemaSyncLog
 </span><a href="Hasura.Server.Logging.html#SchemaSyncLog"><span class="hs-identifier hs-var">SchemaSyncLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">LevelError</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSyncThreadType
-</span><a href="#local-6989586621691443177"><span class="hs-identifier hs-var">threadType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-365"></span><span>      </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="#local-6989586621691443177"><span class="hs-identifier hs-var">threadType</span></a></span><span>
+</span><span id="line-367"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;error&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621691443176"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-366"></span></pre></body></html>
+</span><span id="line-368"></span></pre></body></html>
