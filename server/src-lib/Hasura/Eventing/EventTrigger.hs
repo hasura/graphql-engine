@@ -89,6 +89,8 @@ import Refined.Unsafe (unsafeRefine)
 import System.Metrics.Distribution qualified as EKG.Distribution
 import System.Metrics.Gauge qualified as EKG.Gauge
 import System.Metrics.Prometheus.Counter qualified as Prometheus.Counter
+import System.Metrics.Prometheus.CounterVector (CounterVector)
+import System.Metrics.Prometheus.CounterVector qualified as CounterVector
 import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
 import System.Metrics.Prometheus.Histogram qualified as Prometheus.Histogram
 import System.Timeout.Lifted (timeout)
@@ -472,7 +474,13 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
       eventProcessTime <- liftIO getCurrentTime
       let eventQueueTime = realToFrac $ diffUTCTime eventProcessTime eventFetchedTime
       _ <- liftIO $ EKG.Distribution.add (smEventQueueTime serverMetrics) eventQueueTime
-      liftIO $ Prometheus.Histogram.observe (eventQueueTimeSeconds eventTriggerMetrics) eventQueueTime
+      liftIO $
+        observeHistogramWithLabel
+          getPrometheusMetricsGranularity
+          True
+          (eventQueueTimeSeconds eventTriggerMetrics)
+          (DynamicEventTriggerLabel (tmName (eTrigger e)) sourceName)
+          eventQueueTime
 
       cache <- liftIO getSchemaCache
 
@@ -566,16 +574,39 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                             -- `eventStartTime`) used here in calculation are all UTC time.
                             eventStartTime = fromMaybe (eCreatedAtUTC e) (eRetryAtUTC e)
                             eventProcessingTime' = realToFrac $ diffUTCTime eventExecutionFinishTime eventStartTime
-                        observeHistogramWithLabel getPrometheusMetricsGranularity True (eventProcessingTime eventTriggerMetrics) (TriggerNameLabel (etiName eti)) eventProcessingTime'
+                        observeHistogramWithLabel
+                          getPrometheusMetricsGranularity
+                          True
+                          (eventProcessingTime eventTriggerMetrics)
+                          (DynamicEventTriggerLabel (etiName eti) sourceName)
+                          eventProcessingTime'
                         liftIO $ do
                           EKG.Distribution.add (smEventWebhookProcessingTime serverMetrics) eventWebhookProcessingTime'
-                          Prometheus.Histogram.observe (eventWebhookProcessingTime eventTriggerMetrics) eventWebhookProcessingTime'
+                          observeHistogramWithLabel
+                            getPrometheusMetricsGranularity
+                            True
+                            (eventWebhookProcessingTime eventTriggerMetrics)
+                            (DynamicEventTriggerLabel (etiName eti) sourceName)
+                            eventWebhookProcessingTime'
                           EKG.Distribution.add (smEventProcessingTime serverMetrics) eventProcessingTime'
-                          Prometheus.Counter.inc (eventProcessedTotalSuccess eventTriggerMetrics)
-                          Prometheus.Counter.inc (eventInvocationTotalSuccess eventTriggerMetrics)
+                          incEventTriggerCounterWithLabel
+                            getPrometheusMetricsGranularity
+                            True
+                            (eventProcessedTotal eventTriggerMetrics)
+                            (EventStatusWithTriggerLabel eventSuccessLabel (Just (DynamicEventTriggerLabel (etiName eti) sourceName)))
+                          incEventTriggerCounterWithLabel
+                            getPrometheusMetricsGranularity
+                            True
+                            (eventInvocationTotal eventTriggerMetrics)
+                            (EventStatusWithTriggerLabel eventSuccessLabel (Just (DynamicEventTriggerLabel (etiName eti) sourceName)))
                       Left eventError -> do
                         -- TODO (paritosh): We can also add a label to the metric to indicate the type of error
-                        liftIO $ Prometheus.Counter.inc (eventInvocationTotalFailure eventTriggerMetrics)
+                        liftIO $
+                          incEventTriggerCounterWithLabel
+                            getPrometheusMetricsGranularity
+                            True
+                            (eventInvocationTotal eventTriggerMetrics)
+                            (EventStatusWithTriggerLabel eventFailedLabel (Just (DynamicEventTriggerLabel (etiName eti) sourceName)))
                         case eventError of
                           (HTTPError reqBody err) ->
                             processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion eventTriggerMetrics err >>= flip onLeft logQErr
@@ -633,7 +664,8 @@ processSuccess sourceConfig e reqHeaders ep maintenanceModeVersion resp = do
 processError ::
   forall b m a.
   ( MonadIO m,
-    BackendEventTrigger b
+    BackendEventTrigger b,
+    MonadGetPolicies m
   ) =>
   SourceConfig b ->
   Event b ->
@@ -661,13 +693,16 @@ processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion event
   recordError @b sourceConfig e invocation retryOrError maintenanceModeVersion
 
 retryOrSetError ::
-  MonadIO m =>
+  ( MonadIO m,
+    MonadGetPolicies m
+  ) =>
   Event b ->
   RetryConf ->
   EventTriggerMetrics ->
   HTTPErr a ->
   m ProcessEventError
 retryOrSetError e retryConf eventTriggerMetrics err = do
+  getPrometheusMetricsGranularity <- runGetPrometheusMetricsGranularity
   let mretryHeader = getRetryAfterHeaderFromError err
       tries = eTries e
       mretryHeaderSeconds = mretryHeader >>= parseRetryHeader
@@ -676,7 +711,12 @@ retryOrSetError e retryConf eventTriggerMetrics err = do
   -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
   if triesExhausted && noRetryHeader
     then do
-      liftIO $ Prometheus.Counter.inc (eventProcessedTotalFailure eventTriggerMetrics)
+      liftIO $
+        incEventTriggerCounterWithLabel
+          getPrometheusMetricsGranularity
+          True
+          (eventProcessedTotal eventTriggerMetrics)
+          (EventStatusWithTriggerLabel eventFailedLabel (Just (DynamicEventTriggerLabel (tmName (eTrigger e)) (eSource e))))
       pure PESetError
     else do
       currentTime <- liftIO getCurrentTime
@@ -732,3 +772,18 @@ getEventTriggerInfoFromEvent sc e = do
           <> "' on table '"
           <> table <<> "' not found"
       )
+
+incEventTriggerCounterWithLabel ::
+  (MonadIO m) =>
+  (IO GranularPrometheusMetricsState) ->
+  -- should the metric be observed without a label when granularMetricsState is OFF
+  Bool ->
+  CounterVector EventStatusWithTriggerLabel ->
+  EventStatusWithTriggerLabel ->
+  m ()
+incEventTriggerCounterWithLabel getMetricState alwaysObserve counterVector (EventStatusWithTriggerLabel status tl) = do
+  recordMetricWithLabel
+    getMetricState
+    alwaysObserve
+    (liftIO $ CounterVector.inc counterVector (EventStatusWithTriggerLabel status tl))
+    (liftIO $ CounterVector.inc counterVector (EventStatusWithTriggerLabel status Nothing))

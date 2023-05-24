@@ -19,7 +19,13 @@ module Hasura.Server.Prometheus
     decWebsocketConnections,
     ScheduledTriggerMetrics (..),
     SubscriptionMetrics (..),
-    TriggerNameLabel (..),
+    DynamicEventTriggerLabel (..),
+    ResponseStatus (..),
+    responseStatusToLabelValue,
+    EventStatusLabel (..),
+    eventSuccessLabel,
+    eventFailedLabel,
+    EventStatusWithTriggerLabel (..),
     GranularPrometheusMetricsState (..),
     observeHistogramWithLabel,
     SubscriptionKindLabel (..),
@@ -39,12 +45,15 @@ import Data.Int (Int64)
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Transport.HTTP.Protocol (OperationName (..))
 import Hasura.Prelude
+import Hasura.RQL.Types.Common (SourceName, sourceNameToText)
 import Hasura.RQL.Types.EventTrigger (TriggerName, triggerNameToTxt)
 import Hasura.Server.Types (GranularPrometheusMetricsState (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import System.Metrics.Prometheus (ToLabels (..))
 import System.Metrics.Prometheus.Counter (Counter)
 import System.Metrics.Prometheus.Counter qualified as Counter
+import System.Metrics.Prometheus.CounterVector (CounterVector)
+import System.Metrics.Prometheus.CounterVector qualified as CounterVector
 import System.Metrics.Prometheus.Gauge (Gauge)
 import System.Metrics.Prometheus.Gauge qualified as Gauge
 import System.Metrics.Prometheus.GaugeVector qualified as GaugeVector
@@ -85,16 +94,14 @@ data GraphQLRequestMetrics = GraphQLRequestMetrics
 data EventTriggerMetrics = EventTriggerMetrics
   { eventTriggerHTTPWorkers :: Gauge,
     eventsFetchedPerBatch :: Gauge,
-    eventQueueTimeSeconds :: Histogram,
+    eventQueueTimeSeconds :: HistogramVector (Maybe DynamicEventTriggerLabel),
     eventsFetchTimePerBatch :: Histogram,
-    eventWebhookProcessingTime :: Histogram,
-    eventProcessingTime :: HistogramVector (Maybe TriggerNameLabel),
+    eventWebhookProcessingTime :: HistogramVector (Maybe DynamicEventTriggerLabel),
+    eventProcessingTime :: HistogramVector (Maybe DynamicEventTriggerLabel),
     eventTriggerBytesReceived :: Counter,
     eventTriggerBytesSent :: Counter,
-    eventProcessedTotalSuccess :: Counter,
-    eventProcessedTotalFailure :: Counter,
-    eventInvocationTotalSuccess :: Counter,
-    eventInvocationTotalFailure :: Counter
+    eventProcessedTotal :: CounterVector EventStatusWithTriggerLabel,
+    eventInvocationTotal :: CounterVector EventStatusWithTriggerLabel
   }
 
 data ScheduledTriggerMetrics = ScheduledTriggerMetrics
@@ -159,16 +166,14 @@ makeDummyEventTriggerMetrics :: IO EventTriggerMetrics
 makeDummyEventTriggerMetrics = do
   eventTriggerHTTPWorkers <- Gauge.new
   eventsFetchedPerBatch <- Gauge.new
-  eventQueueTimeSeconds <- Histogram.new []
+  eventQueueTimeSeconds <- HistogramVector.new []
   eventsFetchTimePerBatch <- Histogram.new []
-  eventWebhookProcessingTime <- Histogram.new []
+  eventWebhookProcessingTime <- HistogramVector.new []
   eventProcessingTime <- HistogramVector.new []
   eventTriggerBytesReceived <- Counter.new
   eventTriggerBytesSent <- Counter.new
-  eventProcessedTotalSuccess <- Counter.new
-  eventProcessedTotalFailure <- Counter.new
-  eventInvocationTotalSuccess <- Counter.new
-  eventInvocationTotalFailure <- Counter.new
+  eventProcessedTotal <- CounterVector.new
+  eventInvocationTotal <- CounterVector.new
   pure EventTriggerMetrics {..}
 
 makeDummyScheduledTriggerMetrics :: IO ScheduledTriggerMetrics
@@ -250,12 +255,44 @@ modifyConnectionsGauge ::
 modifyConnectionsGauge f (ConnectionsGauge ref) =
   atomicModifyIORef' ref $ \connections -> (f connections, ())
 
-newtype TriggerNameLabel = TriggerNameLabel TriggerName
+data DynamicEventTriggerLabel = DynamicEventTriggerLabel
+  { _detlTriggerName :: TriggerName,
+    _detlSourceName :: SourceName
+  }
   deriving (Ord, Eq)
 
-instance ToLabels (Maybe TriggerNameLabel) where
+instance ToLabels (Maybe DynamicEventTriggerLabel) where
   toLabels Nothing = Map.empty
-  toLabels (Just (TriggerNameLabel triggerName)) = Map.singleton "trigger_name" (triggerNameToTxt triggerName)
+  toLabels (Just (DynamicEventTriggerLabel triggerName sourceName)) = Map.fromList $ [("trigger_name", triggerNameToTxt triggerName), ("source_name", sourceNameToText sourceName)]
+
+data ResponseStatus = Success | Failed
+
+-- TODO: Make this a method of a new typeclass of the metrics library
+responseStatusToLabelValue :: ResponseStatus -> Text
+responseStatusToLabelValue = \case
+  Success -> "success"
+  Failed -> "failed"
+
+newtype EventStatusLabel = EventStatusLabel
+  { status :: Text
+  }
+  deriving stock (Generic, Ord, Eq)
+  deriving anyclass (ToLabels)
+
+eventSuccessLabel :: EventStatusLabel
+eventSuccessLabel = EventStatusLabel $ responseStatusToLabelValue Success
+
+eventFailedLabel :: EventStatusLabel
+eventFailedLabel = EventStatusLabel $ responseStatusToLabelValue Failed
+
+data EventStatusWithTriggerLabel = EventStatusWithTriggerLabel
+  { _eswtlStatus :: EventStatusLabel,
+    _eswtlDynamicLabels :: Maybe DynamicEventTriggerLabel
+  }
+  deriving stock (Generic, Ord, Eq)
+
+instance ToLabels (EventStatusWithTriggerLabel) where
+  toLabels (EventStatusWithTriggerLabel esl tl) = (HashMap.fromList $ [("status", status esl)]) <> toLabels tl
 
 data SubscriptionKindLabel = SubscriptionKindLabel
   { subscription_kind :: Text
