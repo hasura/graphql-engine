@@ -123,6 +123,7 @@ import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.Catalog
+import Hasura.RQL.DDL.SchemaRegistry qualified as SchemaRegistry
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
@@ -518,6 +519,7 @@ initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
       cacheStaticConfig
       cacheDynamicConfig
       appEnvManager
+      Nothing
 
   -- Build the RebuildableAppContext.
   -- (See note [Hasura Application State].)
@@ -586,6 +588,7 @@ buildFirstSchemaCache ::
   CacheStaticConfig ->
   CacheDynamicConfig ->
   HTTP.Manager ->
+  Maybe SchemaRegistry.SchemaRegistryContext ->
   m RebuildableSchemaCache
 buildFirstSchemaCache
   env
@@ -595,13 +598,14 @@ buildFirstSchemaCache
   metadataWithVersion
   cacheStaticConfig
   cacheDynamicConfig
-  httpManager = do
+  httpManager
+  mSchemaRegistryContext = do
     let cacheBuildParams = CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver cacheStaticConfig
         buildReason = CatalogSync
     result <-
       runExceptT $
         runCacheBuild cacheBuildParams $
-          buildRebuildableSchemaCacheWithReason buildReason logger env metadataWithVersion cacheDynamicConfig
+          buildRebuildableSchemaCacheWithReason buildReason logger env metadataWithVersion cacheDynamicConfig mSchemaRegistryContext
     result `onLeft` \err -> do
       -- TODO: we used to bundle the first schema cache build with the catalog
       -- migration, using the same error handler for both, meaning that an

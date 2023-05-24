@@ -5,6 +5,7 @@ module Hasura.GraphQL.ApolloFederation
     ApolloFederationParserFunction (..),
     convertToApolloFedParserFunc,
     getApolloFederationStatus,
+    generateSDLWithAllTypes,
   )
 where
 
@@ -190,17 +191,25 @@ getApolloFederationStatus experimentalFeatures Nothing =
   bool ApolloFederationDisabled ApolloFederationEnabled (EFApolloFederation `elem` experimentalFeatures)
 getApolloFederationStatus _ (Just apolloFederationStatus) = apolloFederationStatus
 
--- | Generate sdl from the schema introspection
-generateSDL :: G.SchemaIntrospection -> Text
-generateSDL (G.SchemaIntrospection sIntro) = sdl
+data GenerateSDLType
+  = -- | Preserves schema types (GraphQL types prefixed with __) in the sdl generated
+    AllTypes
+  | -- | Removes schema types (GraphQL types prefixed with __) in the sdl generated
+    RemoveSchemaTypes
+  deriving (Eq)
+
+generateSDLFromIntrospection :: GenerateSDLType -> G.SchemaIntrospection -> Text
+generateSDLFromIntrospection genSdlType (G.SchemaIntrospection sIntro) = sdl
   where
     -- NOTE:  add this to the sdl to support apollo v2 directive
     _supportV2 :: Text
     _supportV2 = "\n\nextend schema\n@link(url: \"https://specs.apollo.dev/federation/v2.0\",\nimport: [\"@key\", \"@shareable\"])"
 
+    schemaFilterFn = bool id filterTypeDefinition (genSdlType == RemoveSchemaTypes)
+
     -- first we filter out the type definitions which are not relevent such as
     -- schema fields and types (starts with `__`)
-    typeDefns = map (G.TypeSystemDefinitionType . filterTypeDefinition . bimap (const ()) id) (HashMap.elems sIntro)
+    typeDefns = map (G.TypeSystemDefinitionType . schemaFilterFn . bimap (const ()) id) (HashMap.elems sIntro)
 
     -- next we get the root operation type definitions
     rootOpTypeDefns =
@@ -230,6 +239,12 @@ filterTypeDefinition = \case
     G.TypeDefinitionObject $
       G.ObjectTypeDefinition a b c d (filter (not . T.isPrefixOf "__" . G.unName . G._fldName) e)
   typeDef -> typeDef
+
+generateSDLWithAllTypes :: G.SchemaIntrospection -> Text
+generateSDLWithAllTypes = generateSDLFromIntrospection AllTypes
+
+generateSDL :: G.SchemaIntrospection -> Text
+generateSDL = generateSDLFromIntrospection RemoveSchemaTypes
 
 -------------------------------------------------------------------------------
 -- Related to @_entities@ field
