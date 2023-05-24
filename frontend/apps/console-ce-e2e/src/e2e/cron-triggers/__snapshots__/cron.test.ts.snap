@@ -33,7 +33,7 @@ exports[`Create Cron trigger with shortest possible path > When the users create
     "num_retries": 3,
     "retry_interval_seconds": 20,
     "timeout_seconds": 80,
-    "tolerance_seconds": 21600
+    "tolerance_seconds": 80
   },
   "schedule": "*/10 * * * *",
   "webhook": "http://httpbin.org/post"

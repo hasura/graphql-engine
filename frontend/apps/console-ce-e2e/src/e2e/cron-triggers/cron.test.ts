@@ -73,6 +73,7 @@ describe('Create Cron trigger with shortest possible path', () => {
     cy.get('[name=num_retries]').clear().type('3');
     cy.get('[name=retry_interval_seconds]').clear().type('20');
     cy.get('[name=timeout_seconds]').clear().type('80');
+    cy.get('[name=tolerance_seconds]').clear().type('80');
 
     // add Sample context
     cy.log('**--- Click on show sample context and fill the form');
