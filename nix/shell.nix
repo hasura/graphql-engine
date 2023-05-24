@@ -90,12 +90,11 @@ let
   ];
 
   # The version of GHC in `ghcName` is set in nix/overlays/ghc.nix.
-  #
-  # We list top-level packages before packages scoped to the GHC version, so
-  # that they appear first in the PATH. Otherwise we might end up with older
-  # versions of transitive dependencies (e.g. HLS depending on Ormolu).
   haskellInputs = [
     pkgs.cabal2nix
+
+    # Ormolu is special; it's provided by our overlay.
+    pkgs.ormolu
 
     ghc
     hls
@@ -108,7 +107,6 @@ let
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hlint)
     pkgs.haskell.packages.${pkgs.ghcName}.hoogle
     pkgs.haskell.packages.${pkgs.ghcName}.hspec-discover
-    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.ormolu)
   ];
 
   devInputs = [
