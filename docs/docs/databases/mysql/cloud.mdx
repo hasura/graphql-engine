@@ -17,7 +17,6 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 <div className="badge-container">
   <ProductBadge free standard pro ee />
-  <div className="badge badge-gray heading-badge">Beta</div>
 </div>
 
 ## Introduction
@@ -28,9 +27,9 @@ the easiest way to set up Hasura Engine and the MySQL GraphQL Data Connector.
 :::tip Supported versions:
 
 1.  Hasura GraphQL Engine `v2.24.0` onwards
-2.  MySQL version 8.0 and higher
-3.  Currently only standard implementations of MySQL are supported. PlanetScale and certain other providers are
-    unsupported.
+2.  Hasura supports most databases with standard implementations of **MySQL 8.0 and higher** including: Amazon RDS,
+    Amazon Aurora, Google Cloud SQL and Digital Ocean.
+3.  PlanetScale and certain other providers are unsupported.
 
 :::
 
@@ -67,8 +66,7 @@ From the Console, click the `Data` tab:
 
 <Thumbnail src="/img/getting-started/connect-db-console.png" alt="Connect database" width="1000px" />
 
-Select the MySQL (Beta) data source driver. Enter a database display name and the JDBC Connection URL for your MySQL
-instance.
+Select the MySQL data source driver. Enter a database display name and the JDBC Connection URL for your MySQL instance.
 
 The JDBC connection URL should look like this:
 

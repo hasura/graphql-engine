@@ -13,13 +13,11 @@ sidebar_position: 1
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import LatestRelease from '@site/src/components/LatestRelease';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Getting Started with Hasura and MariaDB in Docker
 
-<div className="badge-container">
-  <div className="badge badge--primary heading-badge">Available on: Enterprise (Self-hosted)</div>
-  <div className="badge badge-gray heading-badge">Beta</div>
-</div>
+<ProductBadge self />
 
 ## Introduction
 
@@ -30,11 +28,12 @@ MariaDB GraphQL Data Connector.
 :::tip Supported versions:
 
 1.  Hasura GraphQL Engine `v2.24.0` onwards
-2.  MariaDB version 10.5 and higher
+2.  Hasura supports most databases with standard implementations of **MariaDB 10.5 and higher** including: Amazon RDS,
+    Amazon Aurora, Digital Ocean and SkySQL.
 
 :::
 
-:::tip Beta version supported features
+:::tip Supported features
 
 Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and
 permissions on MariaDB.
@@ -145,8 +144,8 @@ From the Console, click the `Data` tab:
 
 <Thumbnail src="/img/getting-started/connect-db-console.png" alt="Connect database" width="1000px" />
 
-Select the MariaDB (Beta) data source driver, enter in a display name for the database and set the JDBC Connection URL
-for your MariaDB instance.
+Select the MariaDB data source driver, enter in a display name for the database and set the JDBC Connection URL for your
+MariaDB instance.
 
 The JDBC connection URL should look like this:
 

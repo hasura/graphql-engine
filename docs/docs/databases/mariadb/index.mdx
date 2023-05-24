@@ -8,12 +8,11 @@ keywords:
 slug: index
 ---
 
+import ProductBadge from '@site/src/components/ProductBadge';
+
 # MariaDB
 
-<div className="badge-container">
-  <div className="badge badge--primary heading-badge">Available on: Hasura Cloud, Enterprise (Self-hosted)</div>
-  <div className="badge badge-gray heading-badge">Beta</div>
-</div>
+<ProductBadge free standard pro ee self />
 
 ## Introduction
 
@@ -32,7 +31,8 @@ To get started with MariaDB:
 :::tip Supported versions:
 
 1.  Hasura GraphQL Engine `v2.24.0` onwards
-2.  MariaDB version 10.5 and higher
+2.  Hasura supports most databases with standard implementations of **MariaDB 10.5 and higher** including: Amazon RDS,
+    Amazon Aurora, Digital Ocean and SkySQL.
 
 :::
 

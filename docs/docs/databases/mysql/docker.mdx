@@ -19,7 +19,6 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 <div className="badge-container">
   <ProductBadge self />
-  <div className="badge badge-gray heading-badge">Beta</div>
 </div>
 
 ## Introduction
@@ -31,9 +30,9 @@ MySQL GraphQL Data Connector.
 :::tip Supported versions:
 
 1.  Hasura GraphQL Engine `v2.24.0` onwards
-2.  MySQL version 8.0 and higher
-3.  Currently only standard implementations of MySQL are supported. PlanetScale and certain other providers are
-    unsupported.
+2.  Hasura supports most databases with standard implementations of **MySQL 8.0 and higher** including: Amazon RDS,
+    Amazon Aurora, Google Cloud SQL and Digital Ocean.
+3.  PlanetScale and certain other providers are unsupported.
 
 :::
 
@@ -56,7 +55,9 @@ This tutorial assumes that the following prerequisites have been met:
 
 - You have [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
   working on your machine.
-- To deploy Hasura Enterprise Edition, you will either need to sign up for the [Hasura Enterprise Edition free trial](/latest/enterprise/try-hasura-enterprise-edition/) or you will need to [contact Hasura Sales](mailto:sales@hasura.io) for a license key.
+- To deploy Hasura Enterprise Edition, you will either need to sign up for the
+  [Hasura Enterprise Edition free trial](/latest/enterprise/try-hasura-enterprise-edition/) or you will need to
+  [contact Hasura Sales](mailto:sales@hasura.io) for a license key.
 - You have access to a MySQL database for which you would like to create an API.
 
 ### Step 1: Get the Docker Compose file
@@ -149,8 +150,8 @@ From the Console, click the `Data` tab:
 
 <Thumbnail src="/img/getting-started/connect-db-console.png" alt="Connect database" width="1000px" />
 
-Select the MySQL (Beta) data source driver, enter in a display name for the database and set the JDBC Connection URL
-for your MySQL instance.
+Select the MySQL data source driver, enter in a display name for the database and set the JDBC Connection URL for your
+MySQL instance.
 
 The JDBC connection URL should look like this:
 
