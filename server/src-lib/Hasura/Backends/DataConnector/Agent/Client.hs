@@ -5,6 +5,11 @@ module Hasura.Backends.DataConnector.Agent.Client
     AgentClientContext (..),
     AgentClientT,
     runAgentClientT,
+    capabilities,
+    schema,
+    query,
+    explain,
+    mutation,
   )
 where
 
@@ -13,16 +18,20 @@ where
 import Control.Exception (try)
 import Control.Lens ((%=), (&~), (.=))
 import Data.ByteString (ByteString)
+import Data.Text.Extended (toTxt)
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Logging (logAgentRequest, logClientError)
 import Hasura.Base.Error
 import Hasura.HTTP qualified
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
+import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.Tracing (MonadTrace, traceHTTPRequest)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.HTTP.Types.Status (Status)
 import Servant.Client
 import Servant.Client.Core (Request, RunClient (..))
+import Servant.Client.Generic (genericClient)
 import Servant.Client.Internal.HttpClient (clientResponseToResponse, mkFailureResponse)
 
 -------------------------------------------------------------------------------rs
@@ -86,3 +95,47 @@ throwClientError' err = do
   case err of
     FailureResponse _ r | responseStatusCode r == HTTP.status401 -> throw401 "EE License Key Required."
     _ -> throw500 $ "Error in Data Connector backend: " <> Hasura.HTTP.serializeServantClientErrorMessage err
+
+-------------------------------------------------------------------------------
+
+capabilities :: (MonadIO m, MonadTrace m, MonadError QErr m) => AgentClientT m API.CapabilitiesResponse
+capabilities = do
+  capabilitiesGuard =<< (genericClient @API.Routes // API._capabilities)
+  where
+    errorAction e = throw400WithDetail (mapErrorType $ API._crType e) (API._crMessage e) (API._crDetails e)
+    defaultAction = throw400 DataConnectorError "Unexpected data connector capabilities response - Unexpected Type"
+    capabilitiesGuard = API.capabilitiesCase defaultAction pure errorAction
+
+schema :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> API.Config -> AgentClientT m API.SchemaResponse
+schema sourceName config = do
+  schemaGuard =<< (genericClient // API._schema) (toTxt sourceName) config
+  where
+    errorAction e = throw400WithDetail (mapErrorType $ API._crType e) (API._crMessage e) (API._crDetails e)
+    defaultAction = throw400 DataConnectorError "Unexpected data connector schema response - Unexpected Type"
+    schemaGuard = API.schemaCase defaultAction pure errorAction
+
+query :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> API.Config -> API.QueryRequest -> AgentClientT m API.QueryResponse
+query sourceName config queryRequest = do
+  queryGuard =<< (genericClient // API._query) (toTxt sourceName) config queryRequest
+  where
+    errorAction e = throw400WithDetail (mapErrorType $ API._crType e) (API._crMessage e) (API._crDetails e)
+    defaultAction = throw400 DataConnectorError "Unexpected data connector query response - Unexpected Type"
+    queryGuard = API.queryCase defaultAction pure errorAction
+
+explain :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> API.Config -> API.QueryRequest -> AgentClientT m API.ExplainResponse
+explain sourceName config queryRequest = do
+  (genericClient // API._explain) (toTxt sourceName) config queryRequest
+
+mutation :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> API.Config -> API.MutationRequest -> AgentClientT m API.MutationResponse
+mutation sourceName config mutationRequest = do
+  mutationGuard =<< (genericClient // API._mutation) (toTxt sourceName) config mutationRequest
+  where
+    errorAction e = throw400WithDetail (mapErrorType $ API._crType e) (API._crMessage e) (API._crDetails e)
+    defaultAction = throw400 DataConnectorError "Unexpected data connector mutation response - Unexpected Type"
+    mutationGuard = API.mutationCase defaultAction pure errorAction
+
+mapErrorType :: API.ErrorResponseType -> Code
+mapErrorType = \case
+  API.UncaughtError -> DataConnectorError
+  API.MutationConstraintViolation -> ConstraintViolation
+  API.MutationPermissionCheckFailure -> PermissionError

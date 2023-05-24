@@ -21,17 +21,16 @@ import Data.Semigroup.Foldable (Foldable1 (..))
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended (toTxt, (<<>), (<>>))
-import Hasura.Backends.DataConnector.API (capabilitiesCase, errorResponseSummary, schemaCase)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0 (FunctionInfo (_fiDescription, _fiName))
-import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
 import Hasura.Backends.DataConnector.API.V0.Table qualified as DC (TableType (..))
 import Hasura.Backends.DataConnector.Adapter.Backend (columnTypeToScalarType)
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformSourceConfig, validateConnSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
+import Hasura.Backends.DataConnector.Agent.Client qualified as Client
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
-import Hasura.Base.Error (Code (..), QErr (..), decodeValue, throw400, throw400WithDetail, withPathK)
+import Hasura.Base.Error (Code (..), QErr (..), decodeValue, runAesonParser, throw400, withPathK)
 import Hasura.Function.Cache
   ( FunctionConfig (..),
     FunctionExposedAs (FEAMutation, FEAQuery),
@@ -86,8 +85,6 @@ import Hasura.Tracing (ignoreTraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
-import Servant.Client ((//))
-import Servant.Client.Generic (genericClient)
 import Witch qualified
 
 instance BackendMetadata 'DataConnector where
@@ -251,15 +248,11 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
       HTTP.Manager ->
       m (Either QErr DC.DataConnectorInfo)
     getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager = runExceptT do
-      capabilitiesU <-
+      API.CapabilitiesResponse {..} <-
         ignoreTraceT
           . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing Nothing)
-          $ genericClient @API.Routes // API._capabilities
-
-      let defaultAction = throw400 DataConnectorError "Unexpected data connector capabilities response - Unexpected Type"
-          capabilitiesAction API.CapabilitiesResponse {..} = pure $ DC.DataConnectorInfo options _crCapabilities _crConfigSchemaResponse _crDisplayName _crReleaseName
-
-      capabilitiesCase defaultAction capabilitiesAction errorAction capabilitiesU
+          $ Client.capabilities
+      pure $ DC.DataConnectorInfo options _crCapabilities _crConfigSchemaResponse _crDisplayName _crReleaseName
 
     toHashMap = HashMap.fromList . Map.toList
 
@@ -371,15 +364,9 @@ requestDatabaseSchema ::
   m API.SchemaResponse
 requestDatabaseSchema logger sourceName sourceConfig = do
   transformedSourceConfig <- transformSourceConfig sourceConfig Nothing
-
-  schemaResponseU <-
-    ignoreTraceT
-      . flip runAgentClientT (AgentClientContext logger (DC._scEndpoint transformedSourceConfig) (DC._scManager transformedSourceConfig) (DC._scTimeoutMicroseconds transformedSourceConfig) Nothing)
-      $ (genericClient // API._schema) (toTxt sourceName) (DC._scConfig transformedSourceConfig)
-
-  let defaultAction = throw400 DataConnectorError "Unexpected data connector schema response - Unexpected Type"
-
-  schemaCase defaultAction pure errorAction schemaResponseU
+  ignoreTraceT
+    . flip runAgentClientT (AgentClientContext logger (DC._scEndpoint transformedSourceConfig) (DC._scManager transformedSourceConfig) (DC._scTimeoutMicroseconds transformedSourceConfig) Nothing)
+    $ Client.schema sourceName (DC._scConfig transformedSourceConfig)
 
 toTableObjectType :: API.Capabilities -> HashSet G.Name -> API.ObjectTypeDefinition -> Maybe (G.Name, RQL.T.T.TableObjectType 'DataConnector)
 toTableObjectType capabilities typeNames API.ObjectTypeDefinition {..} =
@@ -542,8 +529,10 @@ parseCollectableType' collectableType = \case
   val -> case collectableType of
     CollectableTypeScalar columnType ->
       PSESQLExp . DC.ValueLiteral (columnTypeToScalarType columnType) <$> RQL.T.C.parseScalarValueColumnType columnType val
-    CollectableTypeArray _ ->
-      throw400 NotSupported "Array types are not supported by the Data Connector backend"
+    CollectableTypeArray columnType -> do
+      vals <- runAesonParser J.parseJSON val
+      scalarValues <- RQL.T.C.parseScalarValuesColumnType columnType vals
+      pure . PSESQLExp $ DC.ArrayLiteral (columnTypeToScalarType columnType) scalarValues
 
 mkTypedSessionVar ::
   CollectableType (RQL.T.C.ColumnType 'DataConnector) ->
@@ -551,9 +540,6 @@ mkTypedSessionVar ::
   PartialSQLExp 'DataConnector
 mkTypedSessionVar columnType =
   PSESessVar (columnTypeToScalarType <$> columnType)
-
-errorAction :: (MonadError QErr m) => API.ErrorResponse -> m a
-errorAction e = throw400WithDetail DataConnectorError (errorResponseSummary e) (_crDetails e)
 
 -- | This function assumes that if a type name is present in the custom object types for the table then it
 -- refers to a nested object of that type.

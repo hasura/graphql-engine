@@ -11,17 +11,16 @@ where
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Text.Encoding qualified as TE
-import Data.Text.Extended (toTxt)
 import Hasura.Backends.DataConnector.API qualified as API
-import Hasura.Backends.DataConnector.API.V0.ErrorResponse (ErrorResponse (..))
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientT)
+import Hasura.Backends.DataConnector.Agent.Client qualified as Client
 import Hasura.Backends.DataConnector.Plan.Common (Plan (..))
 import Hasura.Backends.DataConnector.Plan.MutationPlan qualified as Plan
 import Hasura.Backends.DataConnector.Plan.QueryPlan qualified as Plan
 import Hasura.Backends.DataConnector.Plan.RemoteRelationshipPlan qualified as Plan
-import Hasura.Base.Error (Code (..), QErr, throw400, throw400WithDetail)
+import Hasura.Base.Error (Code (..), QErr, throw400)
 import Hasura.EncJSON (EncJSON, encJFromBuilder, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend (BackendExecute (..), DBStepInfo (..), ExplainPlan (..), OnBaseMonad (..), withNoStatistics)
 import Hasura.GraphQL.Namespace qualified as GQL
@@ -31,8 +30,6 @@ import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
-import Servant.Client.Core.HasClient ((//))
-import Servant.Client.Generic (genericClient)
 
 data DataConnectorPreparedQuery
   = QueryRequest API.QueryRequest
@@ -114,13 +111,9 @@ instance BackendExecute 'DataConnector where
 
 buildQueryAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> Plan API.QueryRequest API.QueryResponse -> AgentClientT m EncJSON
 buildQueryAction sourceName SourceConfig {..} Plan {..} = do
-  queryResponse <- queryGuard =<< (genericClient // API._query) (toTxt sourceName) _scConfig _pRequest
+  queryResponse <- Client.query sourceName _scConfig _pRequest
   reshapedResponse <- _pResponseReshaper queryResponse
   pure . encJFromBuilder $ J.fromEncoding reshapedResponse
-  where
-    errorAction e = throw400WithDetail DataConnectorError (API.errorResponseSummary e) (_crDetails e)
-    defaultAction = throw400 DataConnectorError "Unexpected data connector query response - Unexpected Type"
-    queryGuard = API.queryCase defaultAction pure errorAction
 
 -- Delegates the generation to the Agent's /explain endpoint if it has that capability,
 -- otherwise, returns the IR sent to the agent.
@@ -129,7 +122,7 @@ buildExplainAction fieldName sourceName SourceConfig {..} Plan {..} =
   case API._cExplain _scCapabilities of
     Nothing -> pure . encJFromJValue . toExplainPlan fieldName $ _pRequest
     Just API.ExplainCapabilities -> do
-      explainResponse <- (genericClient // API._explain) (toTxt sourceName) _scConfig _pRequest
+      explainResponse <- Client.explain sourceName _scConfig _pRequest
       pure . encJFromJValue $
         ExplainPlan
           fieldName
@@ -142,10 +135,6 @@ toExplainPlan fieldName queryRequest =
 
 buildMutationAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> Plan API.MutationRequest API.MutationResponse -> AgentClientT m EncJSON
 buildMutationAction sourceName SourceConfig {..} Plan {..} = do
-  queryResponse <- mutationGuard =<< (genericClient // API._mutation) (toTxt sourceName) _scConfig _pRequest
+  queryResponse <- Client.mutation sourceName _scConfig _pRequest
   reshapedResponse <- _pResponseReshaper queryResponse
   pure . encJFromBuilder $ J.fromEncoding reshapedResponse
-  where
-    errorAction e = throw400WithDetail DataConnectorError (API.errorResponseSummary e) (_crDetails e)
-    defaultAction = throw400 DataConnectorError "Unexpected data connector mutations response - Unexpected Type"
-    mutationGuard = API.mutationCase defaultAction pure errorAction

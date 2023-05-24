@@ -242,7 +242,7 @@ async function deleteRows(db: Connection, relationships: Array<TableRelationship
 
 function postMutationCheckError(op: MutationOperation, failed: Array<Row>): ErrorWithStatusCode {
   return ErrorWithStatusCode.mutationPermissionCheckFailure(
-    `Post-Insert checks failed with ${failed.length} ${failed.length > 1 ? 'errors' : 'error'}: ${JSON.stringify(failed)}`,
+    "check constraint of an insert/update permission has failed",
     {op: op, results: failed}
   );
 }

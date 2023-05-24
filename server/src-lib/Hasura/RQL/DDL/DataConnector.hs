@@ -21,10 +21,9 @@ import Data.Has
 import Data.Map.Strict qualified as Map
 import Data.Monoid
 import Data.Text.Extended (ToTxt (..))
-import Hasura.Backends.DataConnector.API (ErrorResponse (_crDetails))
-import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC.Types
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
+import Hasura.Backends.DataConnector.Agent.Client qualified as Client
 import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON (EncJSON)
 import Hasura.EncJSON qualified as EncJSON
@@ -39,8 +38,6 @@ import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Services.Network
 import Hasura.Tracing (ignoreTraceT)
 import Servant.Client qualified as Servant
-import Servant.Client.Core.HasClient ((//))
-import Servant.Client.Generic (genericClient)
 
 --------------------------------------------------------------------------------
 
@@ -134,13 +131,7 @@ checkAgentAvailability ::
 checkAgentAvailability url = do
   manager <- askHTTPManager
   logger <- asks getter
-  res <- runExceptT $ do
-    capabilitiesU <- (ignoreTraceT . flip runAgentClientT (AgentClientContext logger url manager Nothing Nothing) $ genericClient @API.Routes // API._capabilities)
-    API.capabilitiesCase
-      (Error.throw500 "Capabilities request failed unexpectedly")
-      pure
-      (\e -> Error.throw500WithDetail (API.errorResponseSummary e) (_crDetails e))
-      capabilitiesU
+  res <- runExceptT . ignoreTraceT . flip runAgentClientT (AgentClientContext logger url manager Nothing Nothing) $ Client.capabilities
   -- NOTE: 'capabilitiesCase' does not handle the 'no connection to host' scenario so we must handle it explicitly here:
   pure (either NotAvailable (const Available) res)
 
