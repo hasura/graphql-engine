@@ -521,79 +521,74 @@ parseLogicalModelField ::
   Column b ->
   LogicalModelField b ->
   MaybeT (SchemaT r m) (IP.FieldParser MetadataObjId n (AnnotatedField b))
-parseLogicalModelField
-  _
-  column
-  ( LogicalModelField
-      { lmfDescription,
-        lmfType = LogicalModelTypeScalar (LogicalModelTypeScalarC {lmtsScalar, lmtsNullable})
-      }
-    ) = do
-    columnName <- hoistMaybe (G.mkName (toTxt column))
+parseLogicalModelField relationshipInfo column logimoField = do
+  case logimoField of
+    ( LogicalModelField
+        { lmfDescription,
+          lmfType = LogicalModelTypeScalar (LogicalModelTypeScalarC {lmtsScalar, lmtsNullable})
+        }
+      ) -> do
+        columnName <- hoistMaybe (G.mkName (toTxt column))
 
-    -- We have not yet worked out what providing permissions here enables
-    let caseBoolExpUnpreparedValue = Nothing
-        columnType = ColumnScalar lmtsScalar
-        pathArg = scalarSelectionArgumentsParser columnType
+        -- We have not yet worked out what providing permissions here enables
+        let caseBoolExpUnpreparedValue = Nothing
+            columnType = ColumnScalar lmtsScalar
+            pathArg = scalarSelectionArgumentsParser columnType
 
-    field <- lift $ columnParser columnType (G.Nullability lmtsNullable)
+        field <- lift $ columnParser columnType (G.Nullability lmtsNullable)
 
-    pure
-      $! P.selection columnName (G.Description <$> lmfDescription) pathArg field
-      <&> IR.mkAnnColumnField column columnType caseBoolExpUnpreparedValue
-parseLogicalModelField
-  relationshipInfo
-  column
-  ( LogicalModelField
-      { lmfType =
-          LogicalModelTypeReference
-            (LogicalModelTypeReferenceC {lmtrReference})
-      }
-    ) = do
-    -- we currently ignore nullability and assume the field is nullable
-    relName <- hoistMaybe $ columnToRelName @b column
-    -- lookup the reference in the data source
-    relationship <- hoistMaybe $ InsOrdHashMap.lookup relName relationshipInfo
-    logicalModelObjectRelationshipField @b @r @m @n lmtrReference relationship
-parseLogicalModelField
-  relationshipInfo
-  column
-  ( LogicalModelField
-      { lmfType =
-          LogicalModelTypeArray
-            ( LogicalModelTypeArrayC
-                { lmtaArray =
-                    LogicalModelTypeReference (LogicalModelTypeReferenceC {lmtrReference})
-                }
+        pure
+          $! P.selection columnName (G.Description <$> lmfDescription) pathArg field
+          <&> IR.mkAnnColumnField column columnType caseBoolExpUnpreparedValue
+    ( LogicalModelField
+        { lmfType =
+            LogicalModelTypeReference
+              (LogicalModelTypeReferenceC {lmtrReference})
+        }
+      ) -> do
+        -- we currently ignore nullability and assume the field is nullable
+        relName <- hoistMaybe $ columnToRelName @b column
+        -- lookup the reference in the data source
+        relationship <-
+          InsOrdHashMap.lookup relName relationshipInfo
+            `onNothing` throw500
+              ( "Unexpected relationship name "
+                  <> toTxt relName
+                  <> ". Expecting one of: ["
+                  <> commaSeparated (map relNameToTxt (InsOrdHashMap.keys relationshipInfo))
+                  <> "]."
               )
-      }
-    ) = do
-    -- we currently ignore nullability and assume the field is
-    -- non-nullable, as are the contents
-    relName <- hoistMaybe $ columnToRelName @b column
-    -- lookup the reference in the data source
-    relationship <- hoistMaybe $ InsOrdHashMap.lookup relName relationshipInfo
-    logicalModelArrayRelationshipField @b @r @m @n lmtrReference relationship
-parseLogicalModelField
-  _
-  _
-  ( LogicalModelField
-      { lmfType =
-          LogicalModelTypeArray
-            (LogicalModelTypeArrayC {lmtaArray = LogicalModelTypeScalar _})
-      }
-    ) =
-    throw500 "Arrays of scalar types are not currently implemented"
-parseLogicalModelField
-  _
-  _
-  ( LogicalModelField
-      { lmfType =
-          LogicalModelTypeArray
-            (LogicalModelTypeArrayC {lmtaArray = LogicalModelTypeArray _})
-      }
-    ) =
-    throw500 "Nested arrays are not currently implemented"
+        logicalModelObjectRelationshipField @b @r @m @n lmtrReference relationship
+    ( LogicalModelField
+        { lmfType =
+            LogicalModelTypeArray
+              ( LogicalModelTypeArrayC
+                  { lmtaArray =
+                      LogicalModelTypeReference (LogicalModelTypeReferenceC {lmtrReference})
+                  }
+                )
+        }
+      ) -> do
+        -- we currently ignore nullability and assume the field is
+        -- non-nullable, as are the contents
+        relName <- hoistMaybe $ columnToRelName @b column
+        -- lookup the reference in the data source
+        relationship <- hoistMaybe $ InsOrdHashMap.lookup relName relationshipInfo
+        logicalModelArrayRelationshipField @b @r @m @n lmtrReference relationship
+    ( LogicalModelField
+        { lmfType =
+            LogicalModelTypeArray
+              (LogicalModelTypeArrayC {lmtaArray = LogicalModelTypeScalar _})
+        }
+      ) ->
+        throw500 "Arrays of scalar types are not currently implemented"
+    ( LogicalModelField
+        { lmfType =
+            LogicalModelTypeArray
+              (LogicalModelTypeArrayC {lmtaArray = LogicalModelTypeArray _})
+        }
+      ) ->
+        throw500 "Nested arrays are not currently implemented"
 
 defaultLogicalModelSelectionSet ::
   forall b r m n.

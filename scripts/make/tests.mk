@@ -148,7 +148,7 @@ test-cockroach-pro: build-pro build-postgres-agent start-api-tests-pro-backends 
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Cockroach \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
-		cabal run $(API_TESTS_PRO) 
+		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-sqlserver-pro
 ## test-sqlserver-pro: run tests for HGE pro for SQLServer
@@ -166,7 +166,7 @@ test-bigquery-pro: build-pro build-postgres-agent start-api-tests-pro-backends r
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=BigQuery \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
-		cabal run $(API_TESTS_PRO) 
+		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-unit
 ## test-unit: run unit tests from main suite
@@ -215,8 +215,8 @@ test-native-queries-postgres: build-postgres-agent
 test-native-queries-sqlserver: remove-tix-file build-postgres-agent
 	cabal build exe:graphql-engine-pro
 	docker compose up --build --detach --wait postgres sqlserver-healthcheck
+	HSPEC_MATCH=${HSPEC_MATCH:-"NativeQueries"}
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
-		HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
