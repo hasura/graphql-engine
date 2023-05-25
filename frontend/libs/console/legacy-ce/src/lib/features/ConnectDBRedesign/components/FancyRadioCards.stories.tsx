@@ -1,5 +1,5 @@
 import { expect } from '@storybook/jest';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { Meta, StoryFn } from '@storybook/react';
 import { userEvent, within } from '@storybook/testing-library';
 import React from 'react';
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
@@ -15,9 +15,9 @@ export default {
     msw: handlers(),
   },
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof FancyRadioCards>;
+} as Meta<typeof FancyRadioCards>;
 
-const Template: ComponentStory<typeof FancyRadioCards> = () => {
+const Template: StoryFn<typeof FancyRadioCards> = () => {
   // using this hook as it has a handy card data return so the story has an example of icons + text
 
   const { cardData } = useDatabaseConnectDrivers({
@@ -39,18 +39,20 @@ const Template: ComponentStory<typeof FancyRadioCards> = () => {
   );
 };
 
-export const Primary = Template.bind({});
+export const Primary = {
+  render: Template,
 
-Primary.play = async ({ canvasElement }) => {
-  const c = within(canvasElement);
+  play: async ({ canvasElement }) => {
+    const c = within(canvasElement);
 
-  // test click on label element
-  await userEvent.click(await c.findByTestId('fancy-label-snowflake'));
+    // test click on label element
+    await userEvent.click(await c.findByTestId('fancy-label-snowflake'));
 
-  expect(c.getByTestId('value')).toHaveTextContent('snowflake');
+    expect(c.getByTestId('value')).toHaveTextContent('snowflake');
 
-  // test click on radio button
-  await userEvent.click(await c.findByTestId('fancy-radio-mssql'));
+    // test click on radio button
+    await userEvent.click(await c.findByTestId('fancy-radio-mssql'));
 
-  expect(c.getByTestId('value')).toHaveTextContent('mssql');
+    expect(c.getByTestId('value')).toHaveTextContent('mssql');
+  },
 };

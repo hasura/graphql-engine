@@ -1,4 +1,4 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { buildMetadata } from '../../mocks/metadata';
 import { extractModelsAndQueriesFromMetadata } from '../../utils';
 import { ListLogicalModels } from './ListLogicalModels';
@@ -9,7 +9,7 @@ export default {
     onEditClick: { action: 'onEdit' },
     onRemoveClick: { action: 'onRemove' },
   },
-} as ComponentMeta<typeof ListLogicalModels>;
+} as Meta<typeof ListLogicalModels>;
 
 const data = extractModelsAndQueriesFromMetadata(
   buildMetadata({
@@ -17,9 +17,13 @@ const data = extractModelsAndQueriesFromMetadata(
     mssql: { models: true, queries: true },
   })
 );
-export const Basic: ComponentStory<typeof ListLogicalModels> = args => {
-  return <ListLogicalModels {...args} logicalModels={data.models} />;
+export const Basic: StoryObj<typeof ListLogicalModels> = {
+  render: args => {
+    return <ListLogicalModels {...args} logicalModels={data.models} />;
+  },
 };
-export const Loading: ComponentStory<typeof ListLogicalModels> = args => {
-  return <ListLogicalModels {...args} isLoading />;
+export const Loading: StoryObj<typeof ListLogicalModels> = {
+  render: args => {
+    return <ListLogicalModels {...args} isLoading />;
+  },
 };

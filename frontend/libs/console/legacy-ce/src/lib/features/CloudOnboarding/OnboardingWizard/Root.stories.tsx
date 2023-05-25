@@ -1,4 +1,4 @@
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { useQueryClient } from 'react-query';
 import { SurveyQueryKey } from '../../../features/Surveys';
@@ -14,41 +14,45 @@ export default {
   title: 'features/CloudOnboarding/Onboarding Wizard/Root',
   component: Root,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof Root>;
+} as Meta<typeof Root>;
 
-export const WithSurvey: Story = () => {
-  const queryClient = useQueryClient();
-  // need to invalidate as useSurveysData hook is using a stale time
-  void queryClient.invalidateQueries(SurveyQueryKey.fetchAllSurveyData, {
-    refetchActive: false,
-  });
+export const WithSurvey: StoryObj = {
+  render: () => {
+    const queryClient = useQueryClient();
+    // need to invalidate as useSurveysData hook is using a stale time
+    void queryClient.invalidateQueries(SurveyQueryKey.fetchAllSurveyData, {
+      refetchActive: false,
+    });
 
-  return <Root />;
+    return <Root />;
+  },
+
+  parameters: {
+    msw: [
+      ...mutationBaseHandlers(),
+      onboardingDataEmptyActivity,
+      fetchUnansweredSurveysHandler,
+    ],
+    chromatic: { disableSnapshot: true },
+  },
 };
 
-WithSurvey.parameters = {
-  msw: [
-    ...mutationBaseHandlers(),
-    onboardingDataEmptyActivity,
-    fetchUnansweredSurveysHandler,
-  ],
-  chromatic: { disableSnapshot: true },
-};
+export const WithoutSurvey: StoryObj = {
+  render: () => {
+    const queryClient = useQueryClient();
+    // need to invalidate as `useSurveysData` hook is using a stale time
+    void queryClient.invalidateQueries(SurveyQueryKey.fetchAllSurveyData, {
+      refetchActive: false,
+    });
 
-export const WithoutSurvey: Story = () => {
-  const queryClient = useQueryClient();
-  // need to invalidate as `useSurveysData` hook is using a stale time
-  void queryClient.invalidateQueries(SurveyQueryKey.fetchAllSurveyData, {
-    refetchActive: false,
-  });
+    return <Root />;
+  },
 
-  return <Root />;
-};
-
-WithoutSurvey.parameters = {
-  msw: [
-    ...mutationBaseHandlers(),
-    onboardingDataEmptyActivity,
-    fetchAnsweredSurveysHandler,
-  ],
+  parameters: {
+    msw: [
+      ...mutationBaseHandlers(),
+      onboardingDataEmptyActivity,
+      fetchAnsweredSurveysHandler,
+    ],
+  },
 };

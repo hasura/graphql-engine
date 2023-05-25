@@ -1,4 +1,4 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 
 import { ListNativeQueries } from './ListNativeQueries';
 import { buildMetadata } from '../../mocks/metadata';
@@ -11,7 +11,7 @@ export default {
     onEditClick: { action: 'onEdit' },
     onRemoveClick: { action: 'onRemove' },
   },
-} as ComponentMeta<typeof ListNativeQueries>;
+} as Meta<typeof ListNativeQueries>;
 
 const data = extractModelsAndQueriesFromMetadata(
   buildMetadata({
@@ -20,9 +20,13 @@ const data = extractModelsAndQueriesFromMetadata(
   })
 );
 
-export const Basic: ComponentStory<typeof ListNativeQueries> = args => {
-  return <ListNativeQueries {...args} nativeQueries={data.queries} />;
+export const Basic: StoryObj<typeof ListNativeQueries> = {
+  render: args => {
+    return <ListNativeQueries {...args} nativeQueries={data.queries} />;
+  },
 };
-export const Loading: ComponentStory<typeof ListNativeQueries> = args => {
-  return <ListNativeQueries {...args} isLoading />;
+export const Loading: StoryObj<typeof ListNativeQueries> = {
+  render: args => {
+    return <ListNativeQueries {...args} isLoading />;
+  },
 };

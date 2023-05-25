@@ -1,4 +1,4 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { StoredProcedureWidget } from './StoredProcedureWidget';
 import { handlers } from '../LogicalModelWidget/mocks/handlers';
@@ -17,127 +17,146 @@ import {
 export default {
   component: StoredProcedureWidget,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof StoredProcedureWidget>;
+} as Meta<typeof StoredProcedureWidget>;
 
-export const Basic: ComponentStory<typeof StoredProcedureWidget> = args => {
-  return <StoredProcedureWidget />;
+export const Basic: StoryObj<typeof StoredProcedureWidget> = {
+  render: args => {
+    return <StoredProcedureWidget />;
+  },
+
+  parameters: {
+    msw: handlers['200'],
+  },
 };
 
-Basic.parameters = {
-  msw: handlers['200'],
+export const BasicUserFlow: StoryObj<typeof StoredProcedureWidget> = {
+  render: args => {
+    return <StoredProcedureWidget />;
+  },
+
+  name: '🧪 Happy path test',
+
+  parameters: {
+    msw: handlers['200'],
+  },
+
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.selectOptions(
+      await canvas.findByLabelText('Select a source', {}, { timeout: 4000 }),
+      'bikes'
+    );
+
+    await userEvent.selectOptions(
+      await canvas.findByLabelText(
+        'Select a stored procedure',
+        {},
+        { timeout: 4000 }
+      ),
+      'stored_procedure_1'
+    );
+
+    fireEvent.click(canvas.getByText('Add new argument'));
+    await userEvent.type(canvas.getByTestId('arguments[0].name'), 'id');
+    await userEvent.selectOptions(
+      canvas.getByTestId('arguments[0].type'),
+      'int'
+    );
+
+    await userEvent.selectOptions(
+      await canvas.findByLabelText('Return Type', {}, { timeout: 4000 }),
+      'logical_model_1'
+    );
+
+    fireEvent.click(canvas.getByText('Advanced'));
+    await userEvent.type(
+      await canvas.findByLabelText('Custom Name'),
+      'my_custom_name'
+    );
+
+    fireEvent.click(canvas.getByText('Track Stored Procedure'));
+
+    await expect(
+      await canvas.findByText(STORED_PROCEDURE_TRACK_SUCCESS)
+    ).toBeInTheDocument();
+  },
 };
 
-export const BasicUserFlow: ComponentStory<
+export const ErrorWhileSaving: StoryObj<typeof StoredProcedureWidget> = {
+  render: args => {
+    return <StoredProcedureWidget />;
+  },
+
+  name: '🧪 Error while saving',
+
+  parameters: {
+    msw: handlers['400'],
+  },
+
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.selectOptions(
+      await canvas.findByLabelText('Select a source', {}, { timeout: 4000 }),
+      'bikes'
+    );
+
+    await userEvent.selectOptions(
+      await canvas.findByLabelText(
+        'Select a stored procedure',
+        {},
+        { timeout: 4000 }
+      ),
+      'stored_procedure_1'
+    );
+
+    fireEvent.click(canvas.getByText('Add new argument'));
+    await userEvent.type(canvas.getByTestId('arguments[0].name'), 'id');
+    await userEvent.selectOptions(
+      canvas.getByTestId('arguments[0].type'),
+      'int'
+    );
+
+    await userEvent.selectOptions(
+      await canvas.findByLabelText('Return Type', {}, { timeout: 4000 }),
+      'logical_model_1'
+    );
+
+    fireEvent.click(canvas.getByText('Track Stored Procedure'));
+
+    await expect(
+      await canvas.findByText(STORED_PROCEDURE_TRACK_ERROR)
+    ).toBeInTheDocument();
+  },
+};
+
+export const InternalErrorIntrospection: StoryObj<
   typeof StoredProcedureWidget
-> = args => {
-  return <StoredProcedureWidget />;
-};
-BasicUserFlow.storyName = '🧪 Happy path test';
-BasicUserFlow.parameters = {
-  msw: handlers['200'],
-};
-BasicUserFlow.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
+> = {
+  render: args => {
+    return <StoredProcedureWidget />;
+  },
 
-  await userEvent.selectOptions(
-    await canvas.findByLabelText('Select a source', {}, { timeout: 4000 }),
-    'bikes'
-  );
+  name: '🧪 Error while introspection',
 
-  await userEvent.selectOptions(
-    await canvas.findByLabelText(
-      'Select a stored procedure',
-      {},
-      { timeout: 4000 }
-    ),
-    'stored_procedure_1'
-  );
+  parameters: {
+    msw: handlers['500'],
+  },
 
-  fireEvent.click(canvas.getByText('Add new argument'));
-  await userEvent.type(canvas.getByTestId('arguments[0].name'), 'id');
-  await userEvent.selectOptions(canvas.getByTestId('arguments[0].type'), 'int');
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
 
-  await userEvent.selectOptions(
-    await canvas.findByLabelText('Return Type', {}, { timeout: 4000 }),
-    'logical_model_1'
-  );
+    await userEvent.selectOptions(
+      await canvas.findByLabelText('Select a source', {}, { timeout: 4000 }),
+      'bikes'
+    );
 
-  fireEvent.click(canvas.getByText('Advanced'));
-  await userEvent.type(
-    await canvas.findByLabelText('Custom Name'),
-    'my_custom_name'
-  );
-
-  fireEvent.click(canvas.getByText('Track Stored Procedure'));
-
-  await expect(
-    await canvas.findByText(STORED_PROCEDURE_TRACK_SUCCESS)
-  ).toBeInTheDocument();
-};
-
-export const ErrorWhileSaving: ComponentStory<
-  typeof StoredProcedureWidget
-> = args => {
-  return <StoredProcedureWidget />;
-};
-ErrorWhileSaving.storyName = '🧪 Error while saving';
-ErrorWhileSaving.parameters = {
-  msw: handlers['400'],
-};
-ErrorWhileSaving.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-
-  await userEvent.selectOptions(
-    await canvas.findByLabelText('Select a source', {}, { timeout: 4000 }),
-    'bikes'
-  );
-
-  await userEvent.selectOptions(
-    await canvas.findByLabelText(
-      'Select a stored procedure',
-      {},
-      { timeout: 4000 }
-    ),
-    'stored_procedure_1'
-  );
-
-  fireEvent.click(canvas.getByText('Add new argument'));
-  await userEvent.type(canvas.getByTestId('arguments[0].name'), 'id');
-  await userEvent.selectOptions(canvas.getByTestId('arguments[0].type'), 'int');
-
-  await userEvent.selectOptions(
-    await canvas.findByLabelText('Return Type', {}, { timeout: 4000 }),
-    'logical_model_1'
-  );
-
-  fireEvent.click(canvas.getByText('Track Stored Procedure'));
-
-  await expect(
-    await canvas.findByText(STORED_PROCEDURE_TRACK_ERROR)
-  ).toBeInTheDocument();
-};
-
-export const InternalErrorIntrospection: ComponentStory<
-  typeof StoredProcedureWidget
-> = args => {
-  return <StoredProcedureWidget />;
-};
-InternalErrorIntrospection.storyName = '🧪 Error while introspection';
-InternalErrorIntrospection.parameters = {
-  msw: handlers['500'],
-};
-InternalErrorIntrospection.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-
-  await userEvent.selectOptions(
-    await canvas.findByLabelText('Select a source', {}, { timeout: 4000 }),
-    'bikes'
-  );
-
-  await waitFor(
-    async () => {
-      await expect(await canvas.findByTestId('Error')).toBeInTheDocument();
-    },
-    { timeout: 10000 }
-  );
+    await waitFor(
+      async () => {
+        await expect(await canvas.findByTestId('Error')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
+  },
 };

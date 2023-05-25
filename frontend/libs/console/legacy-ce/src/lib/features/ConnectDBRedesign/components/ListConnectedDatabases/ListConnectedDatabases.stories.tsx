@@ -1,17 +1,17 @@
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { handlers } from '../../mocks/handlers.mock';
 import { ListConnectedDatabases } from './ListConnectedDatabases';
 
 export default {
   component: ListConnectedDatabases,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof ListConnectedDatabases>;
+} as Meta<typeof ListConnectedDatabases>;
 
-export const Basic: ComponentStory<typeof ListConnectedDatabases> = () => (
-  <ListConnectedDatabases />
-);
+export const Basic: StoryObj<typeof ListConnectedDatabases> = {
+  render: () => <ListConnectedDatabases />,
 
-Basic.parameters = {
-  msw: handlers(),
+  parameters: {
+    msw: handlers(),
+  },
 };

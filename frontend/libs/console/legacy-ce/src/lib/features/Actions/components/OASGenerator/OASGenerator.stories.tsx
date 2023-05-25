@@ -1,5 +1,5 @@
 import React from 'react';
-import { Story, Meta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { handlers } from '../../../../mocks/metadata.mock';
 import { within, userEvent } from '@storybook/testing-library';
@@ -23,40 +23,42 @@ const meta = {
 
 export default meta;
 
-export const Default: Story<OASGeneratorProps> = args => {
-  return <OASGenerator {...args} />;
-};
+export const Default: StoryObj<OASGeneratorProps> = {
+  render: args => {
+    return <OASGenerator {...args} />;
+  },
 
-Default.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
 
-  const input = canvas.getByTestId('file');
-  userEvent.upload(
-    input,
-    new File([JSON.stringify(petstore)], 'test.json', {
-      type: 'application/json',
-    })
-  );
+    const input = canvas.getByTestId('file');
+    userEvent.upload(
+      input,
+      new File([JSON.stringify(petstore)], 'test.json', {
+        type: 'application/json',
+      })
+    );
 
-  // wait for two seconds
-  await new Promise(resolve => setTimeout(resolve, 2000));
+    // wait for two seconds
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-  // wait for searchbox to appear
-  const searchBox = await canvas.findByTestId('search');
+    // wait for searchbox to appear
+    const searchBox = await canvas.findByTestId('search');
 
-  // count number of operations
-  expect(canvas.getAllByTestId(/^operation.*/)).toHaveLength(4);
+    // count number of operations
+    expect(canvas.getAllByTestId(/^operation.*/)).toHaveLength(4);
 
-  // search operations with 'get'
-  userEvent.type(searchBox, 'GET');
-  // count filtered number of operations
-  expect(canvas.getAllByTestId(/^operation.*/)).toHaveLength(2);
-  // clear search
-  userEvent.clear(searchBox);
-  // search not existing operation
-  userEvent.type(searchBox, 'not-existing');
-  // look for 'No endpoints found' message
-  expect(canvas.queryAllByTestId(/^operation.*/)).toHaveLength(0);
-  // clear search
-  userEvent.clear(searchBox);
+    // search operations with 'get'
+    userEvent.type(searchBox, 'GET');
+    // count filtered number of operations
+    expect(canvas.getAllByTestId(/^operation.*/)).toHaveLength(2);
+    // clear search
+    userEvent.clear(searchBox);
+    // search not existing operation
+    userEvent.type(searchBox, 'not-existing');
+    // look for 'No endpoints found' message
+    expect(canvas.queryAllByTestId(/^operation.*/)).toHaveLength(0);
+    // clear search
+    userEvent.clear(searchBox);
+  },
 };

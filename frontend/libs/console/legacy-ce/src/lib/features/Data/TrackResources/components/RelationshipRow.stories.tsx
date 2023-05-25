@@ -1,4 +1,4 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { SuggestedRelationshipWithName } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useSuggestedRelationships';
 import { RelationshipRow, RelationshipRowProps } from './RelationshipRow';
@@ -7,7 +7,7 @@ import { action } from '@storybook/addon-actions';
 export default {
   component: RelationshipRow,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof RelationshipRow>;
+} as Meta<typeof RelationshipRow>;
 
 const relationship: SuggestedRelationshipWithName = {
   constraintName: 'Album_Artist',
@@ -32,10 +32,10 @@ const baseProps: RelationshipRowProps = {
   onTrack: async () => action('onTrack')(),
 };
 
-export const Base: ComponentStory<typeof RelationshipRow> = () => (
+export const Base: StoryFn<typeof RelationshipRow> = () => (
   <RelationshipRow {...baseProps} />
 );
 
-export const Checked: ComponentStory<typeof RelationshipRow> = () => (
+export const Checked: StoryFn<typeof RelationshipRow> = () => (
   <RelationshipRow {...baseProps} isChecked />
 );

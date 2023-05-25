@@ -1,7 +1,7 @@
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { ReduxDecorator } from '../../../storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
-import { Meta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import React from 'react';
 import { MetadataDataSource } from '../../../metadata/types';
 
@@ -63,12 +63,14 @@ function UseMetadata() {
   );
 }
 
-export const Primary: Story = () => {
-  return <UseMetadata />;
-};
+export const Primary: StoryObj = {
+  render: () => {
+    return <UseMetadata />;
+  },
 
-Primary.args = {
-  database: 'default',
+  args: {
+    database: 'default',
+  },
 };
 
 export default {

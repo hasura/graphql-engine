@@ -1,5 +1,5 @@
 import { expect } from '@storybook/jest';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { within } from '@storybook/testing-library';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 
@@ -11,25 +11,27 @@ export default {
   title: 'Data/Components/ManageTrackedRelationships',
   component: ManageTrackedRelationships,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof ManageTrackedRelationships>;
+} as Meta<typeof ManageTrackedRelationships>;
 
 const suggestedRelationships: SuggestedRelationshipWithName[] = [];
 
 const trackedFKRelationships: Relationship[] = [];
 
-export const Base: ComponentStory<typeof ManageTrackedRelationships> = () => (
-  <ManageTrackedRelationships
-    dataSourceName="chinook"
-    suggestedRelationships={suggestedRelationships}
-    trackedFKRelationships={trackedFKRelationships}
-    isLoading={false}
-  />
-);
+export const Base: StoryObj<typeof ManageTrackedRelationships> = {
+  render: () => (
+    <ManageTrackedRelationships
+      dataSourceName="chinook"
+      suggestedRelationships={suggestedRelationships}
+      trackedFKRelationships={trackedFKRelationships}
+      isLoading={false}
+    />
+  ),
 
-Base.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
 
-  await expect(
-    canvas.getByText('No untracked relationships found')
-  ).toBeInTheDocument();
+    await expect(
+      canvas.getByText('No untracked relationships found')
+    ).toBeInTheDocument();
+  },
 };

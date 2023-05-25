@@ -1,4 +1,4 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 
 import { UntrackedFunctions } from './UntrackedFunctions';
@@ -6,8 +6,8 @@ import { UntrackedFunctions } from './UntrackedFunctions';
 export default {
   component: UntrackedFunctions,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof UntrackedFunctions>;
+} as Meta<typeof UntrackedFunctions>;
 
-export const Primary: ComponentStory<typeof UntrackedFunctions> = () => (
+export const Primary: StoryFn<typeof UntrackedFunctions> = () => (
   <UntrackedFunctions dataSourceName="chinook" />
 );

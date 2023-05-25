@@ -2,7 +2,7 @@ import React from 'react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
-import { Meta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { Button } from '../../../../new-components/Button';
 
 import { handlers } from '../../../../mocks/metadata.mock';
@@ -42,8 +42,10 @@ const UseQueryCollections: React.FC<{ name: string; newName: string }> = ({
   );
 };
 
-export const Primary: Story = ({ name, newName }) => {
-  return <UseQueryCollections name={name} newName={newName} />;
+export const Primary: StoryObj = {
+  render: ({ name, newName }) => {
+    return <UseQueryCollections name={name} newName={newName} />;
+  },
 };
 
 export default {

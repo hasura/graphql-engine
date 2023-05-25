@@ -1,17 +1,19 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
-import { ListStoredProcedures } from './ListStoredProcedures';
 import { handlers } from '../../LogicalModelWidget/mocks/handlers';
+import { ListStoredProcedures } from './ListStoredProcedures';
 
 export default {
   component: ListStoredProcedures,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof ListStoredProcedures>;
+} as Meta<typeof ListStoredProcedures>;
 
-export const Basic: ComponentStory<typeof ListStoredProcedures> = args => {
-  return <ListStoredProcedures />;
-};
+export const Basic: StoryObj<typeof ListStoredProcedures> = {
+  render: args => {
+    return <ListStoredProcedures />;
+  },
 
-Basic.parameters = {
-  msw: handlers['200'],
+  parameters: {
+    msw: handlers['200'],
+  },
 };

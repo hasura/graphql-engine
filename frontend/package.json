@@ -205,6 +205,7 @@
     "@storybook/addon-links": "7.0.7",
     "@storybook/addon-mdx-gfm": "^7.0.7",
     "@storybook/addon-postcss": "2.0.0",
+    "@storybook/blocks": "^7.0.9",
     "@storybook/core-server": "7.0.7",
     "@storybook/jest": "0.1.1-next.0",
     "@storybook/react": "7.0.7",

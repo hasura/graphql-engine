@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { registerEETrialLicenseActiveMutation } from '../../mocks/registration.mock';
 import { SingleSignOnPage } from './SingleSignOnPage';
@@ -22,42 +22,56 @@ export default {
     },
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof SingleSignOnPage>;
+} as Meta<typeof SingleSignOnPage>;
 
-export const Default: ComponentStory<typeof SingleSignOnPage> = () => {
-  return <SingleSignOnPage />;
-};
-Default.storyName = '💠 Default';
-Default.parameters = {
-  msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
-  consoleType: 'pro-lite',
-};
+export const Default: StoryObj<typeof SingleSignOnPage> = {
+  render: () => {
+    return <SingleSignOnPage />;
+  },
 
-export const LicenseActive: ComponentStory<typeof SingleSignOnPage> = () => {
-  return <SingleSignOnPage />;
-};
-LicenseActive.storyName = '💠 License Active';
-LicenseActive.parameters = {
-  msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.active],
-  consoleType: 'pro-lite',
+  name: '💠 Default',
+
+  parameters: {
+    msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const LicenseExpired: ComponentStory<typeof SingleSignOnPage> = () => {
-  return <SingleSignOnPage />;
-};
-LicenseExpired.storyName = '💠 License Expired';
-LicenseExpired.parameters = {
-  msw: [eeLicenseInfo.expired],
-  consoleType: 'pro-lite',
+export const LicenseActive: StoryObj<typeof SingleSignOnPage> = {
+  render: () => {
+    return <SingleSignOnPage />;
+  },
+
+  name: '💠 License Active',
+
+  parameters: {
+    msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const LicenseDeactivated: ComponentStory<
-  typeof SingleSignOnPage
-> = () => {
-  return <SingleSignOnPage />;
+export const LicenseExpired: StoryObj<typeof SingleSignOnPage> = {
+  render: () => {
+    return <SingleSignOnPage />;
+  },
+
+  name: '💠 License Expired',
+
+  parameters: {
+    msw: [eeLicenseInfo.expired],
+    consoleType: 'pro-lite',
+  },
 };
-LicenseDeactivated.storyName = '💠 License Deactivated';
-LicenseDeactivated.parameters = {
-  msw: [eeLicenseInfo.deactivated],
-  consoleType: 'pro-lite',
+
+export const LicenseDeactivated: StoryObj<typeof SingleSignOnPage> = {
+  render: () => {
+    return <SingleSignOnPage />;
+  },
+
+  name: '💠 License Deactivated',
+
+  parameters: {
+    msw: [eeLicenseInfo.deactivated],
+    consoleType: 'pro-lite',
+  },
 };

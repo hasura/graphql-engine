@@ -3,7 +3,7 @@ import { Button } from '../../../../../new-components/Button';
 import HookStatusWrapperWithMetadataVersion from '../../../../../storybook/HookStatusWrapperWithMetadataVersion';
 import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { ReduxDecorator } from '../../../../../storybook/decorators/redux-decorator';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import React from 'react';
 import { useDropRemoteSchemaRelationship } from '..';
 
@@ -36,17 +36,19 @@ function DeleteRemoteSchemaRelationshipComponent({
   );
 }
 
-export const DeleteRemoteSchemaRelationship: ComponentStory<
+export const DeleteRemoteSchemaRelationship: StoryObj<
   typeof DeleteRemoteSchemaRelationshipComponent
-> = args => {
-  return <DeleteRemoteSchemaRelationshipComponent {...args} />;
-};
+> = {
+  render: args => {
+    return <DeleteRemoteSchemaRelationshipComponent {...args} />;
+  },
 
-DeleteRemoteSchemaRelationship.args = {
-  rel: {
-    source: 'default',
-    table: 'person',
-    name: 'name_of_the_remote_relationship',
+  args: {
+    rel: {
+      source: 'default',
+      table: 'person',
+      name: 'name_of_the_remote_relationship',
+    },
   },
 };
 
@@ -56,4 +58,4 @@ export default {
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof DeleteRemoteSchemaRelationshipComponent>;
+} as Meta<typeof DeleteRemoteSchemaRelationshipComponent>;

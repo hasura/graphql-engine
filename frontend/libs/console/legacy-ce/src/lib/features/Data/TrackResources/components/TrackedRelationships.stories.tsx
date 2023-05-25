@@ -1,4 +1,4 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryFn, StoryObj, Meta } from '@storybook/react';
 import { within } from '@storybook/testing-library';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { expect } from '@storybook/jest';
@@ -10,7 +10,7 @@ export default {
   title: 'Data/Components/TrackedRelationships',
   component: TrackedRelationships,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof TrackedRelationships>;
+} as Meta<typeof TrackedRelationships>;
 
 const relationships: Relationship[] = [
   {
@@ -34,16 +34,39 @@ const relationships: Relationship[] = [
   },
 ];
 
-export const Base: ComponentStory<typeof TrackedRelationships> = () => (
-  <TrackedRelationships
-    dataSourceName="chinook"
-    isLoading={false}
-    onRefetchMetadata={() => action('onRefetchMetadata')()}
-    relationships={relationships}
-  />
-);
+export const Base: StoryObj<typeof TrackedRelationships> = {
+  render: () => (
+    <TrackedRelationships
+      dataSourceName="chinook"
+      isLoading={false}
+      onRefetchMetadata={() => action('onRefetchMetadata')()}
+      relationships={relationships}
+    />
+  ),
 
-export const Loading: ComponentStory<typeof TrackedRelationships> = () => (
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText('Untrack Selected (0)')).toBeInTheDocument();
+    await expect(canvas.getByText('Show 10 relationships')).toBeInTheDocument();
+    await expect(canvas.getByText('RELATIONSHIP NAME')).toBeInTheDocument();
+    await expect(canvas.getByText('SOURCE')).toBeInTheDocument();
+    await expect(canvas.getByText('TYPE')).toBeInTheDocument();
+    await expect(canvas.getByText('RELATIONSHIP')).toBeInTheDocument();
+
+    await expect(canvas.getByText('CUSTOMER_INVOICEs')).toBeInTheDocument();
+    await expect(canvas.getByText('INVOICE_CUSTOMER')).toBeInTheDocument();
+
+    await expect(canvas.getByText('Array')).toBeInTheDocument();
+    await expect(canvas.getByText('Object')).toBeInTheDocument();
+
+    await expect(canvas.getAllByText('Snow')).toHaveLength(2);
+    await expect(canvas.getAllByText('Rename')).toHaveLength(2);
+    await expect(canvas.getAllByText('Remove')).toHaveLength(2);
+  },
+};
+
+export const Loading: StoryFn<typeof TrackedRelationships> = () => (
   <TrackedRelationships
     dataSourceName="chinook"
     isLoading={true}
@@ -52,9 +75,7 @@ export const Loading: ComponentStory<typeof TrackedRelationships> = () => (
   />
 );
 
-export const NoRelationships: ComponentStory<
-  typeof TrackedRelationships
-> = () => (
+export const NoRelationships: StoryFn<typeof TrackedRelationships> = () => (
   <TrackedRelationships
     dataSourceName="chinook"
     isLoading={false}
@@ -62,24 +83,3 @@ export const NoRelationships: ComponentStory<
     relationships={[]}
   />
 );
-
-Base.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-
-  await expect(canvas.getByText('Untrack Selected (0)')).toBeInTheDocument();
-  await expect(canvas.getByText('Show 10 relationships')).toBeInTheDocument();
-  await expect(canvas.getByText('RELATIONSHIP NAME')).toBeInTheDocument();
-  await expect(canvas.getByText('SOURCE')).toBeInTheDocument();
-  await expect(canvas.getByText('TYPE')).toBeInTheDocument();
-  await expect(canvas.getByText('RELATIONSHIP')).toBeInTheDocument();
-
-  await expect(canvas.getByText('CUSTOMER_INVOICEs')).toBeInTheDocument();
-  await expect(canvas.getByText('INVOICE_CUSTOMER')).toBeInTheDocument();
-
-  await expect(canvas.getByText('Array')).toBeInTheDocument();
-  await expect(canvas.getByText('Object')).toBeInTheDocument();
-
-  await expect(canvas.getAllByText('Snow')).toHaveLength(2);
-  await expect(canvas.getAllByText('Rename')).toHaveLength(2);
-  await expect(canvas.getAllByText('Remove')).toHaveLength(2);
-};

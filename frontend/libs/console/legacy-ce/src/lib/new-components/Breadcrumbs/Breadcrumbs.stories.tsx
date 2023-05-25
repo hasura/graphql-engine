@@ -1,4 +1,4 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { expect } from '@storybook/jest';
 import { screen, within } from '@storybook/testing-library';
 import { action } from '@storybook/addon-actions';
@@ -14,7 +14,7 @@ export default {
       <div className="p-4 flex gap-5 items-center max-w-screen">{Story()}</div>
     ),
   ],
-} as ComponentMeta<typeof Breadcrumbs>;
+} as Meta<typeof Breadcrumbs>;
 
 const autoByeToast = (message: string) => {
   hasuraToast({ title: message, toastOptions: { duration: 1500 } });
@@ -42,27 +42,34 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ];
 
-export const Basic: ComponentStory<typeof Breadcrumbs> = () => {
-  return (
-    <div>
-      <Breadcrumbs items={breadcrumbs} />
-      <div className="w-full h-full bg-slate-200 p-3">
-        Some other content to visualize spacing
+export const Basic: StoryObj<typeof Breadcrumbs> = {
+  render: () => {
+    return (
+      <div>
+        <Breadcrumbs items={breadcrumbs} />
+        <div className="w-full h-full bg-slate-200 p-3">
+          Some other content to visualize spacing
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  },
 
-Basic.storyName = '🧰 Basic Usage';
-Basic.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
+  name: '🧰 Basic Usage',
 
-  await expect(await screen.findByTestId('breadcrumbs')).toBeInTheDocument();
-  await expect(await canvas.getByText('clickable w/ icon')).toBeInTheDocument();
-  await expect(await canvas.getByText('clickable no icon')).toBeInTheDocument();
-  await expect(await canvas.getByText('not clickable')).toBeInTheDocument();
-  await expect(await canvas.getByText('string item')).toBeInTheDocument();
-  await expect(await canvas.getByText('last item')).toHaveClass(
-    'text-yellow-500'
-  );
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(await screen.findByTestId('breadcrumbs')).toBeInTheDocument();
+    await expect(
+      await canvas.getByText('clickable w/ icon')
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.getByText('clickable no icon')
+    ).toBeInTheDocument();
+    await expect(await canvas.getByText('not clickable')).toBeInTheDocument();
+    await expect(await canvas.getByText('string item')).toBeInTheDocument();
+    await expect(await canvas.getByText('last item')).toHaveClass(
+      'text-yellow-500'
+    );
+  },
 };

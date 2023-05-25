@@ -1,11 +1,11 @@
 import React from 'react';
-import { ComponentMeta } from '@storybook/react';
+import { Meta } from '@storybook/react';
 import { Switch } from './Switch';
 
 export default {
   title: 'components/Switch',
   component: Switch,
-} as ComponentMeta<typeof Switch>;
+} as Meta<typeof Switch>;
 
 export const Off = () => <Switch />;
 

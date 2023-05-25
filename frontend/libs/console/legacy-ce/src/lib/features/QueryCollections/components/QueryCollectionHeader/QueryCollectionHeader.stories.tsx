@@ -1,7 +1,7 @@
 import React from 'react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
-import { ComponentMeta } from '@storybook/react';
+import { Meta } from '@storybook/react';
 import {
   handlers,
   createDefaultInitialData,
@@ -22,7 +22,7 @@ export default {
   parameters: {
     msw: handlers({ delay: 500 }),
   },
-} as ComponentMeta<typeof QueryCollectionHeader>;
+} as Meta<typeof QueryCollectionHeader>;
 
 export const Primary = () => {
   const metadata = createDefaultInitialData();

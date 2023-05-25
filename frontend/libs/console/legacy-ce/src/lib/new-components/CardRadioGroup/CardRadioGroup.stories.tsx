@@ -1,5 +1,5 @@
 import { action } from '@storybook/addon-actions';
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryObj, StoryFn, Meta } from '@storybook/react';
 import { userEvent, within } from '@storybook/testing-library';
 import React from 'react';
 import { CardRadioGroup } from './CardRadioGroup';
@@ -7,7 +7,7 @@ import { CardRadioGroup } from './CardRadioGroup';
 export default {
   title: 'components/CardRadioGroup',
   component: CardRadioGroup,
-} as ComponentMeta<typeof CardRadioGroup>;
+} as Meta<typeof CardRadioGroup>;
 
 type Value = '1' | '2' | '3' | '4' | '5' | '6' | '7';
 
@@ -17,7 +17,7 @@ const data: { value: Value; title: string; body: string }[] = [
   { value: '3', title: 'Radio-3', body: 'Description of radio-3' },
 ];
 
-export const WithTwoCards: Story = () => {
+export const WithTwoCards: StoryFn = () => {
   return (
     <CardRadioGroup<'1' | '2'>
       onChange={action('select')}
@@ -29,11 +29,11 @@ export const WithTwoCards: Story = () => {
   );
 };
 
-export const WithThreeCardWithoutValue: Story = () => {
+export const WithThreeCardWithoutValue: StoryFn = () => {
   return <CardRadioGroup<Value> onChange={action('select')} items={data} />;
 };
 
-export const WithThreeCardVerticalWithoutValue: Story = () => {
+export const WithThreeCardVerticalWithoutValue: StoryFn = () => {
   return (
     <CardRadioGroup<Value>
       onChange={action('select')}
@@ -43,13 +43,13 @@ export const WithThreeCardVerticalWithoutValue: Story = () => {
   );
 };
 
-export const WithThreeCardWithValue: Story = () => {
+export const WithThreeCardWithValue: StoryFn = () => {
   return (
     <CardRadioGroup<Value> onChange={action('select')} items={data} value="1" />
   );
 };
 
-export const WithThreeCardVerticalWithValue: Story = () => {
+export const WithThreeCardVerticalWithValue: StoryFn = () => {
   return (
     <CardRadioGroup<Value>
       onChange={action('select')}
@@ -60,7 +60,7 @@ export const WithThreeCardVerticalWithValue: Story = () => {
   );
 };
 
-export const WithSevenCardWithValue: Story = () => {
+export const WithSevenCardWithValue: StoryFn = () => {
   return (
     <CardRadioGroup<Value>
       onChange={action('select')}
@@ -78,7 +78,7 @@ export const WithSevenCardWithValue: Story = () => {
   );
 };
 
-export const Playground: Story = () => {
+export const Playground: StoryFn = () => {
   const [selected, setSelected] = React.useState<string | undefined>(undefined);
 
   return (
@@ -90,27 +90,31 @@ export const Playground: Story = () => {
   );
 };
 
-export const PlaygroundWithTest: Story = () => {
-  const [selected, setSelected] = React.useState<string | undefined>(undefined);
+export const PlaygroundWithTest: StoryObj = {
+  render: () => {
+    const [selected, setSelected] = React.useState<string | undefined>(
+      undefined
+    );
 
-  return (
-    <CardRadioGroup
-      onChange={value => setSelected(value)}
-      items={data}
-      value={selected}
-    />
-  );
-};
+    return (
+      <CardRadioGroup
+        onChange={value => setSelected(value)}
+        items={data}
+        value={selected}
+      />
+    );
+  },
 
-PlaygroundWithTest.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
 
-  const submitButtonRadio1 = await canvas.findByText('Radio-1');
-  userEvent.click(submitButtonRadio1);
+    const submitButtonRadio1 = await canvas.findByText('Radio-1');
+    userEvent.click(submitButtonRadio1);
 
-  const submitButtonRadio2 = await canvas.findByText('Radio-2');
-  userEvent.click(submitButtonRadio2);
+    const submitButtonRadio2 = await canvas.findByText('Radio-2');
+    userEvent.click(submitButtonRadio2);
 
-  const submitButtonRadio3 = await canvas.findByText('Radio-3');
-  userEvent.click(submitButtonRadio3);
+    const submitButtonRadio3 = await canvas.findByText('Radio-3');
+    userEvent.click(submitButtonRadio3);
+  },
 };

@@ -1,4 +1,4 @@
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { useState } from 'react';
 import {
   GraphQLSchemaInput,
@@ -7,7 +7,7 @@ import {
 
 export default {
   component: GraphQLSchemaInput,
-} as ComponentMeta<typeof GraphQLSchemaInput>;
+} as Meta<typeof GraphQLSchemaInput>;
 
 const graphQLSchema = `
 # Main Schema
@@ -86,7 +86,9 @@ type Query {
 
 `;
 
-export const Primary: Story<GraphQLSchemaInputProps> = args => {
-  const [value, setValue] = useState(graphQLSchema);
-  return <GraphQLSchemaInput value={value} onChange={setValue} />;
+export const Primary: StoryObj<GraphQLSchemaInputProps> = {
+  render: args => {
+    const [value, setValue] = useState(graphQLSchema);
+    return <GraphQLSchemaInput value={value} onChange={setValue} />;
+  },
 };

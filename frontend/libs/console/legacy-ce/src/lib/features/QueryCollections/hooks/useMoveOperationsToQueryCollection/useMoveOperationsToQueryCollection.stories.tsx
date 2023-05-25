@@ -3,7 +3,7 @@ import { ReactQueryDecorator } from '../../../../storybook/decorators/react-quer
 import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
 import { Button } from '../../../../new-components/Button';
-import { Meta, Story } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 
 import { handlers } from '../../../../mocks/metadata.mock';
 import { useMoveOperationsToQueryCollection } from '.';
@@ -38,7 +38,7 @@ const UseMoveOperationsToQueryCollection: React.FC = () => {
   );
 };
 
-export const Primary: Story = () => {
+export const Primary: StoryFn = () => {
   return <UseMoveOperationsToQueryCollection />;
 };
 

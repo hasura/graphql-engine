@@ -1,17 +1,15 @@
 import { SimpleForm } from '../../../../../new-components/Form';
 import { Button } from '../../../../../new-components/Button';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { z } from 'zod';
 import { DatabaseUrl } from './DatabaseUrl';
 import { databaseUrlSchema } from '../schema';
 
 export default {
   component: DatabaseUrl,
-} as ComponentMeta<typeof DatabaseUrl>;
+} as Meta<typeof DatabaseUrl>;
 
-export const DatabaseUrlDefaultView: ComponentStory<
-  typeof DatabaseUrl
-> = () => (
+export const DatabaseUrlDefaultView: StoryFn<typeof DatabaseUrl> = () => (
   <SimpleForm
     onSubmit={data => console.log(data)}
     schema={z.object({

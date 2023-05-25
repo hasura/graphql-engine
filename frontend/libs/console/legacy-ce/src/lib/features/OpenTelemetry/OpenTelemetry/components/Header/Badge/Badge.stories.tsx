@@ -1,4 +1,4 @@
-import type { ComponentStory } from '@storybook/react';
+import type { StoryFn } from '@storybook/react';
 
 import * as React from 'react';
 import { BadgeEnabled as BadgeEnabledComponent } from './BadgeEnabled';
@@ -9,15 +9,12 @@ export default {
   title: 'Features/OpenTelemetry/Badge',
 };
 
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const BadgeEnabled: ComponentStory<
-  typeof BadgeEnabledComponent
-> = () => <BadgeEnabledComponent />;
-export const BadgeDisabled: ComponentStory<
-  typeof BadgeDisabledComponent
-> = () => <BadgeDisabledComponent />;
-export const BadgeSkeleton: ComponentStory<
-  typeof BadgeSkeletonComponent
-> = () => <BadgeSkeletonComponent />;
+export const BadgeEnabled: StoryFn<typeof BadgeEnabledComponent> = () => (
+  <BadgeEnabledComponent />
+);
+export const BadgeDisabled: StoryFn<typeof BadgeDisabledComponent> = () => (
+  <BadgeDisabledComponent />
+);
+export const BadgeSkeleton: StoryFn<typeof BadgeSkeletonComponent> = () => (
+  <BadgeSkeletonComponent />
+);

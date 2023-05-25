@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { registerEETrialLicenseActiveMutation } from '../../mocks/registration.mock';
 import { MultipleAdminSecretsPage } from './MultipleAdminSecretsPage';
@@ -22,46 +22,56 @@ export default {
     },
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof MultipleAdminSecretsPage>;
+} as Meta<typeof MultipleAdminSecretsPage>;
 
-export const Default: ComponentStory<typeof MultipleAdminSecretsPage> = () => {
-  return <MultipleAdminSecretsPage />;
-};
-Default.storyName = '💠 Default';
-Default.parameters = {
-  msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
-  consoleType: 'pro-lite',
-};
+export const Default: StoryObj<typeof MultipleAdminSecretsPage> = {
+  render: () => {
+    return <MultipleAdminSecretsPage />;
+  },
 
-export const LicenseActive: ComponentStory<
-  typeof MultipleAdminSecretsPage
-> = () => {
-  return <MultipleAdminSecretsPage />;
-};
-LicenseActive.storyName = '💠 License Active';
-LicenseActive.parameters = {
-  msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.active],
-  consoleType: 'pro-lite',
+  name: '💠 Default',
+
+  parameters: {
+    msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const LicenseExpired: ComponentStory<
-  typeof MultipleAdminSecretsPage
-> = () => {
-  return <MultipleAdminSecretsPage />;
-};
-LicenseExpired.storyName = '💠 License Expired';
-LicenseExpired.parameters = {
-  msw: [eeLicenseInfo.expired],
-  consoleType: 'pro-lite',
+export const LicenseActive: StoryObj<typeof MultipleAdminSecretsPage> = {
+  render: () => {
+    return <MultipleAdminSecretsPage />;
+  },
+
+  name: '💠 License Active',
+
+  parameters: {
+    msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const LicenseDeactivated: ComponentStory<
-  typeof MultipleAdminSecretsPage
-> = () => {
-  return <MultipleAdminSecretsPage />;
+export const LicenseExpired: StoryObj<typeof MultipleAdminSecretsPage> = {
+  render: () => {
+    return <MultipleAdminSecretsPage />;
+  },
+
+  name: '💠 License Expired',
+
+  parameters: {
+    msw: [eeLicenseInfo.expired],
+    consoleType: 'pro-lite',
+  },
 };
-LicenseDeactivated.storyName = '💠 License Deactivated';
-LicenseDeactivated.parameters = {
-  msw: [eeLicenseInfo.deactivated],
-  consoleType: 'pro-lite',
+
+export const LicenseDeactivated: StoryObj<typeof MultipleAdminSecretsPage> = {
+  render: () => {
+    return <MultipleAdminSecretsPage />;
+  },
+
+  name: '💠 License Deactivated',
+
+  parameters: {
+    msw: [eeLicenseInfo.deactivated],
+    consoleType: 'pro-lite',
+  },
 };

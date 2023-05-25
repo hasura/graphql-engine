@@ -1,7 +1,7 @@
 import React from 'react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
-import { ComponentMeta } from '@storybook/react';
+import { Meta } from '@storybook/react';
 
 import { action } from '@storybook/addon-actions';
 import { handlers } from '../../../../mocks/metadata.mock';
@@ -20,7 +20,7 @@ export default {
   parameters: {
     msw: handlers({ delay: 500 }),
   },
-} as ComponentMeta<typeof AllowListSidebar>;
+} as Meta<typeof AllowListSidebar>;
 
 export const Primary = () => (
   <AllowListSidebar

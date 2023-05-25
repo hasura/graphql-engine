@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryFn, StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { Dialog } from '../../../../../new-components/Dialog';
 import {
@@ -13,54 +13,62 @@ export default {
   title: 'features / EETrial / Activate EE Form / Form 🧬️',
   component: Form,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof Form>;
+} as Meta<typeof Form>;
 
-export const Default: ComponentStory<typeof Form> = () => (
-  <Dialog size="sm" onClose={() => {}} hasBackdrop>
-    <Form onSuccess={() => {}} />
-  </Dialog>
-);
-Default.storyName = '💠 Default';
-Default.parameters = {
-  msw: [registerEETrialLicenseActiveMutation],
-};
-
-export const GraphqlError: ComponentStory<typeof Form> = () => (
-  <Dialog size="sm" onClose={() => {}} hasBackdrop>
-    <>
-      <div className="px-md mt-1 text-red-500 text-lg">
-        Tip: Fill and submit the form to see error states.
-      </div>
+export const Default: StoryObj<typeof Form> = {
+  render: () => (
+    <Dialog size="sm" onClose={() => {}} hasBackdrop>
       <Form onSuccess={() => {}} />
-    </>
-  </Dialog>
-);
-GraphqlError.storyName = '💠 GraphqlError';
-GraphqlError.parameters = {
-  msw: [registerEETrialErrorMutation],
+    </Dialog>
+  ),
+
+  name: '💠 Activate Existing License',
+
+  parameters: {
+    msw: [registerEETrialLicenseActiveMutation],
+  },
 };
 
-export const LicenseAlreadyApplied: ComponentStory<typeof Form> = () => (
-  <Dialog size="sm" onClose={() => {}} hasBackdrop>
-    <>
-      <div className="px-md mt-1 text-red-500 text-lg">
-        Tip: Fill and submit the form to see error states.
-      </div>
-      <Form onSuccess={() => {}} />
-    </>
-  </Dialog>
-);
-LicenseAlreadyApplied.storyName = '💠 License Already Applied';
-LicenseAlreadyApplied.parameters = {
-  msw: [registerEETrialLicenseAlreadyAppliedMutation],
+export const GraphqlError: StoryObj<typeof Form> = {
+  render: () => (
+    <Dialog size="sm" onClose={() => {}} hasBackdrop>
+      <>
+        <div className="px-md mt-1 text-red-500 text-lg">
+          Tip: Fill and submit the form to see error states.
+        </div>
+        <Form onSuccess={() => {}} />
+      </>
+    </Dialog>
+  ),
+
+  name: '💠 GraphqlError',
+
+  parameters: {
+    msw: [registerEETrialErrorMutation],
+  },
 };
 
-export const ActivateExistingLicense: ComponentStory<typeof Form> = () => (
+export const LicenseAlreadyApplied: StoryObj<typeof Form> = {
+  render: () => (
+    <Dialog size="sm" onClose={() => {}} hasBackdrop>
+      <>
+        <div className="px-md mt-1 text-red-500 text-lg">
+          Tip: Fill and submit the form to see error states.
+        </div>
+        <Form onSuccess={() => {}} />
+      </>
+    </Dialog>
+  ),
+
+  name: '💠 License Already Applied',
+
+  parameters: {
+    msw: [registerEETrialLicenseAlreadyAppliedMutation],
+  },
+};
+
+export const ActivateExistingLicense: StoryFn<typeof Form> = () => (
   <Dialog size="sm" onClose={() => {}} hasBackdrop>
     <Form onSuccess={() => {}} formState="activate" />
   </Dialog>
 );
-Default.storyName = '💠 Activate Existing License';
-Default.parameters = {
-  msw: [registerEETrialLicenseActiveMutation],
-};

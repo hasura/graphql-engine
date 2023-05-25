@@ -1,6 +1,6 @@
 import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
 import { ReduxDecorator } from '../../storybook/decorators/redux-decorator';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import React from 'react';
 import { SchemaList } from './useSchemaList.component';
 
@@ -10,25 +10,27 @@ export default {
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof SchemaList>;
+} as Meta<typeof SchemaList>;
 
-export const Playground: ComponentStory<typeof SchemaList> = args => {
-  return <SchemaList {...args} />;
-};
+export const Playground: StoryObj<typeof SchemaList> = {
+  render: args => {
+    return <SchemaList {...args} />;
+  },
 
-Playground.args = {
-  currentDatasource: 'default',
-  driver: 'postgres',
-};
+  args: {
+    currentDatasource: 'default',
+    driver: 'postgres',
+  },
 
-Playground.parameters = {
-  // Disable storybook for playground stories
-  chromatic: { disableSnapshot: true },
-};
+  parameters: {
+    // Disable storybook for playground stories
+    chromatic: { disableSnapshot: true },
+  },
 
-Playground.argTypes = {
-  driver: {
-    options: ['postgres', 'bigquery', 'mssql', 'citus'],
-    control: 'select',
+  argTypes: {
+    driver: {
+      options: ['postgres', 'bigquery', 'mssql', 'citus'],
+      control: 'select',
+    },
   },
 };

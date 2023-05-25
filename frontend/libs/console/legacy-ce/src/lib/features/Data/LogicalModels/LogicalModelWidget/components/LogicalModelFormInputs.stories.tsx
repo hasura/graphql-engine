@@ -1,11 +1,11 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { expect } from '@storybook/jest';
+import { Meta, StoryFn, StoryObj } from '@storybook/react';
+import { within } from '@storybook/testing-library';
+import { SimpleForm } from '../../../../../new-components/Form';
 import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { ReduxDecorator } from '../../../../../storybook/decorators/redux-decorator';
-import { LogicalModelFormInputs } from './LogicalModelFormInputs';
-import { within } from '@storybook/testing-library';
-import { expect } from '@storybook/jest';
-import { SimpleForm } from '../../../../../new-components/Form';
 import { addLogicalModelValidationSchema } from '../validationSchema';
+import { LogicalModelFormInputs } from './LogicalModelFormInputs';
 
 export default {
   component: LogicalModelFormInputs,
@@ -19,54 +19,58 @@ export default {
       },
     }),
   ],
-} as ComponentMeta<typeof LogicalModelFormInputs>;
+} as Meta<typeof LogicalModelFormInputs>;
 
-export const Basic: ComponentStory<typeof LogicalModelFormInputs> = () => (
+export const Basic: StoryFn<typeof LogicalModelFormInputs> = () => (
   <SimpleForm schema={addLogicalModelValidationSchema} onSubmit={() => {}}>
     <LogicalModelFormInputs sourceOptions={[]} typeOptions={[]} />
   </SimpleForm>
 );
 
-export const WithDefaultValues: ComponentStory<
-  typeof LogicalModelFormInputs
-> = () => {
-  return (
-    <SimpleForm
-      schema={addLogicalModelValidationSchema}
-      options={{
-        defaultValues: {
-          dataSourceName: 'chinook',
-          fields: [
-            {
-              name: 'id',
-              type: 'int',
-            },
-            {
-              name: 'first_name',
-              type: 'text',
-            },
-          ],
-          name: 'foobar',
-        },
-      }}
-      onSubmit={() => {}}
-    >
-      <LogicalModelFormInputs
-        sourceOptions={[{ value: 'chinook', label: 'chinook' }]}
-        typeOptions={['text', 'int']}
-      />
-    </SimpleForm>
-  );
-};
+export const WithDefaultValues: StoryObj<typeof LogicalModelFormInputs> = {
+  render: () => {
+    return (
+      <SimpleForm
+        schema={addLogicalModelValidationSchema}
+        options={{
+          defaultValues: {
+            dataSourceName: 'chinook',
+            fields: [
+              {
+                name: 'id',
+                type: 'int',
+              },
+              {
+                name: 'first_name',
+                type: 'text',
+              },
+            ],
+            name: 'foobar',
+          },
+        }}
+        onSubmit={() => {}}
+      >
+        <LogicalModelFormInputs
+          sourceOptions={[{ value: 'chinook', label: 'chinook' }]}
+          typeOptions={['text', 'int']}
+        />
+      </SimpleForm>
+    );
+  },
 
-WithDefaultValues.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
 
-  await expect(await canvas.findByTestId('name')).toHaveValue('foobar');
-  await expect(await canvas.findByTestId('fields[0].name')).toHaveValue('id');
-  await expect(await canvas.findByTestId('fields[0].type')).toHaveValue('int');
-  await expect(await canvas.findByTestId('fields[1].name')).toHaveValue(
-    'first_name'
-  );
-  await expect(await canvas.findByTestId('fields[1].type')).toHaveValue('text');
+    await expect(await canvas.findByTestId('name')).toHaveValue('foobar');
+    await expect(await canvas.findByTestId('fields[0].name')).toHaveValue('id');
+    await expect(await canvas.findByTestId('fields[0].type')).toHaveValue(
+      'int'
+    );
+    await expect(await canvas.findByTestId('fields[1].name')).toHaveValue(
+      'first_name'
+    );
+    await expect(await canvas.findByTestId('fields[1].type')).toHaveValue(
+      'text'
+    );
+  },
 };

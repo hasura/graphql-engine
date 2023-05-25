@@ -1,9 +1,8 @@
-import React from 'react';
-import { Story, Meta } from '@storybook/react';
-import { within, userEvent, screen, waitFor } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { Meta, StoryObj } from '@storybook/react';
+import { screen, userEvent, waitFor, within } from '@storybook/testing-library';
 import { handlers } from '../../../../mocks/metadata.mock';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import {
   AllowListPermissions,
   AllowListPermissionsTabProps,
@@ -18,12 +17,14 @@ export default {
   },
 } as Meta;
 
-export const Default: Story<AllowListPermissionsTabProps> = args => {
-  return <AllowListPermissions {...args} />;
-};
+export const Default: StoryObj<AllowListPermissionsTabProps> = {
+  render: args => {
+    return <AllowListPermissions {...args} />;
+  },
 
-Default.args = {
-  collectionName: 'allowed-queries',
+  args: {
+    collectionName: 'allowed-queries',
+  },
 };
 
 Default.play = async ({ canvasElement }) => {
