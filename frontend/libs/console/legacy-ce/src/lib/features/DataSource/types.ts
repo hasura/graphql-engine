@@ -1,4 +1,3 @@
-import { Capabilities } from '@hasura/dc-api-types';
 import {
   Legacy_SourceToRemoteSchemaRelationship,
   LocalTableArrayRelationship,
@@ -193,10 +192,6 @@ export type GetIsTableViewProps = {
   dataSourceName: string;
   table: Table;
   httpClient: NetworkArgs['httpClient'];
-};
-
-export type DriverCapability = Capabilities & {
-  functions?: Record<string, any>;
 };
 
 export type StoredProcedure = unknown;

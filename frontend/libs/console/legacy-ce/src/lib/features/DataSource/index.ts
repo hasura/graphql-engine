@@ -1,4 +1,4 @@
-import { OpenApiSchema } from '@hasura/dc-api-types';
+import { Capabilities, OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
 import { AxiosInstance } from 'axios';
 import pickBy from 'lodash/pickBy';
@@ -35,7 +35,6 @@ import type {
   TableRow,
   Version,
   WhereClause,
-  DriverCapability,
   StoredProcedure,
   GetStoredProceduresProps,
 } from './types';
@@ -57,6 +56,11 @@ import {
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 import { getTableName } from './common/getTableName';
 import { ReleaseType } from './types';
+import {
+  GetTrackableObjectsProps,
+  GetTrackableObjectsResponse,
+} from './gdc/introspection/getTrackableObjects';
+import { isObject } from '../../components/Common/utils/jsUtils';
 
 export * from './common/utils';
 export type { GDCTable } from './gdc';
@@ -121,7 +125,7 @@ export type Database = {
     getDriverCapabilities: (
       httpClient: AxiosInstance,
       driver?: string
-    ) => Promise<DriverCapability | Feature>;
+    ) => Promise<Capabilities | Feature>;
     getTrackableTables: (
       props: GetTrackableTablesProps
     ) => Promise<IntrospectedTable[] | Feature.NotImplemented>;
@@ -141,6 +145,9 @@ export type Database = {
     getTrackableFunctions: (
       props: GetTrackableFunctionProps
     ) => Promise<IntrospectedFunction[] | Feature.NotImplemented>;
+    getTrackableObjects: (
+      props: GetTrackableObjectsProps
+    ) => Promise<GetTrackableObjectsResponse | Feature.NotImplemented>;
     getDatabaseSchemas: (
       props: GetDatabaseSchemaProps
     ) => Promise<string[] | Feature.NotImplemented>;
@@ -547,13 +554,33 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     );
   },
   getTrackableFunctions: async (dataSourceName: string) => {
+    const functions: IntrospectedFunction[] = [];
     const database = await getDatabaseMethods({ dataSourceName, httpClient });
-    return (
-      database.introspection?.getTrackableFunctions({
+
+    const trackableFunctions =
+      (await database.introspection?.getTrackableFunctions({
         dataSourceName,
         httpClient,
-      }) ?? Feature.NotImplemented
-    );
+      })) ?? [];
+
+    if (Array.isArray(trackableFunctions)) {
+      functions.push(...trackableFunctions);
+    }
+
+    const getTrackableObjectsFn = database.introspection?.getTrackableObjects;
+
+    if (getTrackableObjectsFn) {
+      const trackableObjects = await getTrackableObjectsFn({
+        dataSourceName,
+        httpClient,
+      });
+
+      if (isObject(trackableObjects) && 'functions' in trackableObjects) {
+        functions.push(...trackableObjects.functions);
+      }
+    }
+
+    return functions;
   },
   getDatabaseSchemas: async ({
     dataSourceName,

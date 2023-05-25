@@ -7,7 +7,7 @@ import {
 } from './configuration';
 import { LogicalModel } from './logicalModel';
 import { NativeQuery } from './nativeQuery';
-import { MetadataTable } from './table';
+import { MetadataTable, Table } from './table';
 import { StoredProcedure } from './storedProcedure';
 
 export type NativeDrivers =
@@ -48,6 +48,10 @@ export type MetadataFunction = {
     };
     session_argument?: string;
     exposed_as?: 'mutation' | 'query';
+    response?: {
+      type: 'table';
+      table: Table;
+    };
   };
 };
 

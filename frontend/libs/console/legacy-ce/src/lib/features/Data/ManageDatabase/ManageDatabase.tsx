@@ -14,18 +14,18 @@ export interface ManageDatabaseProps {
 export const ManageDatabase = ({ dataSourceName }: ManageDatabaseProps) => {
   const {
     data: {
-      areFunctionsSupported = false,
       areForeignKeysSupported = false,
+      areUserDefinedFunctionsSupported = false,
     } = {},
   } = useDriverCapabilities({
     dataSourceName,
     select: data => {
       return {
-        areFunctionsSupported: !!get(data, 'functions'),
         areForeignKeysSupported: !!get(
           data,
           'data_schema.supports_foreign_keys'
         ),
+        areUserDefinedFunctionsSupported: !!get(data, 'user_defined_functions'),
       };
     },
   });
@@ -60,7 +60,7 @@ export const ManageDatabase = ({ dataSourceName }: ManageDatabaseProps) => {
             </CollapsibleResource>
           )}
 
-          {areFunctionsSupported && (
+          {areUserDefinedFunctionsSupported && (
             <CollapsibleResource
               title="Untracked Custom Functions"
               tooltip="Expose the functions available in your database via the GraphQL API"

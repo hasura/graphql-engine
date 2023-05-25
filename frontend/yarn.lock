@@ -3375,10 +3375,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hasura/dc-api-types@npm:^0.30.0":
-  version: 0.30.0
-  resolution: "@hasura/dc-api-types@npm:0.30.0"
-  checksum: fbf0376dae3252cac85dd343d77faaf82d7e9100ce5c3a18822e87e7d35550bca0c110f901da766e4099698228eb3b7e25d10f4b305b454e1f64d9ad4c87ae2b
+"@hasura/dc-api-types@npm:^0.32.0":
+  version: 0.32.0
+  resolution: "@hasura/dc-api-types@npm:0.32.0"
+  checksum: c95adc03c894cf737a0e1d366e5726f17156f13ec5d30be205dc705e2e0b55a0796d33603d8eee89926b1153503c171b461c4bace8475598bae7db33f94e0910
   languageName: node
   linkType: hard
 
@@ -18392,7 +18392,7 @@ __metadata:
     "@graphql-codegen/core": ^1.17.8
     "@graphql-codegen/typescript": ^1.17.10
     "@graphql-codegen/typescript-operations": ^2.5.5
-    "@hasura/dc-api-types": ^0.30.0
+    "@hasura/dc-api-types": ^0.32.0
     "@hookform/devtools": 4.0.1
     "@hookform/resolvers": 2.8.10
     "@nrwl/cli": 15.8.1
