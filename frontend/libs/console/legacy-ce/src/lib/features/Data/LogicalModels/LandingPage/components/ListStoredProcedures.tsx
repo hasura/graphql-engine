@@ -18,6 +18,8 @@ import {
   STORED_PROCEDURE_UNTRACK_ERROR,
   STORED_PROCEDURE_UNTRACK_SUCCESS,
 } from '../../constants';
+import { useDestructiveAlert } from '../../../../../new-components/Alert';
+import { getQualifiedTable } from '../../../ManageTable/utils';
 
 // this is local type for the table row. Do not export
 type RowType = { dataSourceName: string } & StoredProcedure;
@@ -42,30 +44,45 @@ export const ListStoredProcedures = () => {
       .flat()
   );
 
+  // const { hasuraAlert } = useHasuraAlert();
+
+  const { destructiveConfirm } = useDestructiveAlert();
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const onRemoveClick = (data: RowType, index: number) => {
-    setActiveRow(index);
-    untrackStoredProcedure({
-      data: {
-        dataSourceName: data.dataSourceName,
-        stored_procedure: data.stored_procedure,
-      },
-      onSuccess: () => {
-        hasuraToast({
-          type: 'success',
-          title: STORED_PROCEDURE_UNTRACK_SUCCESS,
-        });
-      },
-      onError: err => {
-        hasuraToast({
-          type: 'error',
-          title: STORED_PROCEDURE_UNTRACK_ERROR,
-          children: <DisplayToastErrorMessage message={err.message} />,
-        });
-      },
-      onSettled: () => {
-        setActiveRow(undefined);
-      },
+    destructiveConfirm({
+      resourceName: getQualifiedTable(data.stored_procedure).join(' / '),
+      resourceType: 'Stored Procedure',
+      destroyTerm: 'remove',
+      onConfirm: () =>
+        new Promise(resolve => {
+          setActiveRow(index);
+
+          untrackStoredProcedure({
+            data: {
+              dataSourceName: data.dataSourceName,
+              stored_procedure: data.stored_procedure,
+            },
+            onSuccess: () => {
+              hasuraToast({
+                type: 'success',
+                title: STORED_PROCEDURE_UNTRACK_SUCCESS,
+              });
+              resolve(true);
+            },
+            onError: err => {
+              hasuraToast({
+                type: 'error',
+                title: STORED_PROCEDURE_UNTRACK_ERROR,
+                children: <DisplayToastErrorMessage message={err.message} />,
+              });
+              resolve(false);
+            },
+            onSettled: () => {
+              setActiveRow(undefined);
+            },
+          });
+        }),
     });
   };
 
