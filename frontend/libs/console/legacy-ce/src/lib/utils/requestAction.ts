@@ -72,7 +72,9 @@ const requestAction = <T = any>(
       dispatch({ type: LOAD_REQUEST });
       const startTime = new Date().getTime();
       fetch(url, requestOptions).then(
-        response => {
+        async response => {
+          const endTime = new Date().getTime();
+          const responseSize = (await response.clone().text()).length;
           const contentType = response.headers.get('Content-Type');
           const isResponseJson = `${contentType}`.includes('application/json');
 
@@ -95,7 +97,6 @@ const requestAction = <T = any>(
               dispatch({ type: DONE_REQUEST });
 
               if (requestTrackingId) {
-                const endTime = new Date().getTime();
                 const responseTimeMs = endTime - startTime;
                 const isResponseCached = response.headers.has('Cache-Control');
                 const cacheWarning = getCacheRequestWarning(
@@ -105,7 +106,6 @@ const requestAction = <T = any>(
                   url,
                   requestOptions.body
                 );
-                const responseSize = JSON.stringify(results).length * 2;
                 dispatch(
                   processResponseDetails(
                     responseTimeMs,
