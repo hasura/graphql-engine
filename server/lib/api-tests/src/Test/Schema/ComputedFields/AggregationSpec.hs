@@ -218,6 +218,10 @@ tests = do
                     count_articles
                     id
                   }
+                  max {
+                    count_articles
+                    id
+                  }
                 }
               }
             }
@@ -230,6 +234,10 @@ tests = do
               avg:
                 count_articles: 1.5 
                 id: 1.5
+              max:
+                count_articles: 2
+                id: 2
+
       |]
 
   it "Aggregate computed field from the authors table" $ \testEnv -> do
@@ -246,6 +254,9 @@ tests = do
                   avg {
                     count_articles
                   }
+                  max {
+                    count_articles
+                  }
                 }
               }
             }
@@ -257,6 +268,8 @@ tests = do
             aggregate:
               avg:
                 count_articles: 1.5 
+              max:
+                count_articles: 2
       |]
 
   it "Aggregate computed field from the authors table with arguments" $ \testEnv -> do
@@ -273,6 +286,9 @@ tests = do
                   avg {
                     count_articles_plus (args: { plus: 10 })
                   }
+                  max {
+                    count_articles_plus (args: { plus: 10 })
+                  }
                 }
               }
             }
@@ -284,6 +300,8 @@ tests = do
             aggregate:
               avg:
                 count_articles_plus: 11.5 
+              max:
+                count_articles_plus: 12
       |]
 
   it "Aggregate computed field, but use two of them" $ \testEnv -> do
@@ -301,6 +319,11 @@ tests = do
                     count_articles
                     count_articles_plus (args: { plus: 10 })
                   }
+                  max {
+                    count_articles
+                    count_articles_plus (args: { plus: 10 })
+                  }
+
                 }
               }
             }
@@ -313,6 +336,10 @@ tests = do
               avg:
                 count_articles: 1.5
                 count_articles_plus: 11.5 
+              max:
+                count_articles: 2
+                count_articles_plus: 12
+
       |]
 
   it "Aggregate computed field, but use two of them from different tables" $ \testEnv -> do
@@ -329,11 +356,18 @@ tests = do
                   avg {
                     article_length
                   }
+                  max {
+                    article_length
+                  }
                 }
               }
               #{schemaName}_author_aggregate {
                 aggregate {
                   avg {
+                    count_articles
+                    count_articles_plus (args: { plus: 10 })
+                  }
+                  max {
                     count_articles
                     count_articles_plus (args: { plus: 10 })
                   }
@@ -348,10 +382,16 @@ tests = do
             aggregate:
               avg:
                 article_length: 11.6666666666666667 
+              max:
+                article_length: 13
 
           #{schemaName}_author_aggregate:
             aggregate:
               avg:
                 count_articles: 1.5
                 count_articles_plus: 11.5 
+              max:
+                count_articles: 2
+                count_articles_plus: 12
+
       |]

@@ -17,6 +17,8 @@ module Hasura.RQL.Types.ComputedField
     fromComputedField,
     onlyNumComputedFields,
     isNumComputedField,
+    onlyComparableComputedFields,
+    isComparableComputedField,
     removeComputedFieldsReturningExistingTable,
   )
 where
@@ -24,7 +26,7 @@ where
 import Control.Lens hiding ((.=))
 import Data.Aeson
 import Data.Sequence qualified as Seq
-import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName, isNumType)
+import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName, isComparableType, isNumType)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
@@ -103,6 +105,16 @@ onlyNumComputedFields = filter isNumComputedField
 isNumComputedField :: forall b. (Backend b) => ComputedFieldInfo b -> Bool
 isNumComputedField cfi = case computedFieldReturnType @b (_cfiReturnType cfi) of
   ReturnsScalar t -> isNumType @b t
+  _ -> False
+
+-- | Return all the computed fields in the given list that have numeric types.
+onlyComparableComputedFields :: forall b. (Backend b) => [ComputedFieldInfo b] -> [ComputedFieldInfo b]
+onlyComparableComputedFields = filter isComparableComputedField
+
+-- | Check whether a computed field has a numeric type.
+isComparableComputedField :: forall b. (Backend b) => ComputedFieldInfo b -> Bool
+isComparableComputedField cfi = case computedFieldReturnType @b (_cfiReturnType cfi) of
+  ReturnsScalar t -> isComparableType @b t
   _ -> False
 
 $(makeLenses ''ComputedFieldInfo)

@@ -880,6 +880,7 @@ tableAggregationFields tableInfo = do
     let numericColumns = onlyNumCols allColumns
         numericComputedFields = onlyNumComputedFields allComputedFields
         comparableColumns = onlyComparableCols allColumns
+        comparableComputedFields = onlyComparableComputedFields allComputedFields
         customOperatorsAndColumns =
           HashMap.toList $ HashMap.mapMaybe (getCustomAggOpsColumns allColumns) $ getCustomAggregateOperators @b (_siConfiguration sourceInfo)
         description = G.Description $ "aggregate fields of " <>> tableInfoName tableInfo
@@ -895,9 +896,18 @@ tableAggregationFields tableInfo = do
               else Just
                 $ for numericAggOperators
                 $ \operator -> do
-                  numFields <- mkNumericAggComputedFields tableName operator numericComputedFields
+                  numFields <- mkColumnAggComputedFields tableName numericComputedFields
 
-                  pure $ HashMap.singleton operator numFields
+                  pure $ HashMap.singleton operator numFields,
+            -- operators on comparable computed fields
+            if null comparableComputedFields
+              then Nothing
+              else Just
+                $ for comparisonAggOperators
+                $ \operator -> do
+                  comparableFields <- mkColumnAggComputedFields tableName comparableComputedFields
+
+                  pure $ HashMap.singleton operator comparableFields
           ]
     nonCountFieldsMap <-
       fmap (HashMap.unionsWith (++) . concat)
@@ -953,8 +963,8 @@ tableAggregationFields tableInfo = do
           )
         & nonEmpty
 
-    mkNumericAggComputedFields :: TableName b -> GQLNameIdentifier -> [ComputedFieldInfo b] -> SchemaT r m [FieldParser n (IR.SelectionField b (IR.UnpreparedValue b))]
-    mkNumericAggComputedFields tableName _name computedFieldInfos =
+    mkColumnAggComputedFields :: TableName b -> [ComputedFieldInfo b] -> SchemaT r m [FieldParser n (IR.SelectionField b (IR.UnpreparedValue b))]
+    mkColumnAggComputedFields tableName computedFieldInfos =
       traverse (mkColumnAggComputedField tableName) computedFieldInfos <&> catMaybes
 
     mkColumnAggComputedField :: TableName b -> ComputedFieldInfo b -> SchemaT r m (Maybe (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b))))
