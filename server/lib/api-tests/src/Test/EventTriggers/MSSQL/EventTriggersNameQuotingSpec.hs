@@ -89,7 +89,7 @@ tests = describe "weird trigger names are allowed" do
       -- Creating a event trigger with weird name should succeed
       shouldReturnYaml
         testEnvironment
-        (GraphqlEngine.postWithHeadersStatus 200 testEnvironment "/v1/metadata/" mempty createEventTriggerWithWeirdName)
+        (GraphqlEngine.postMetadataWithStatus 200 testEnvironment createEventTriggerWithWeirdName)
         createEventTriggerWithWeirdNameExpectedResponse
 
       let checkAllSQLTriggersQuery =

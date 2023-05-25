@@ -162,11 +162,9 @@ metadataValidationTests = describe "EnableAggregateRootField Validation test " $
   it "the \"select_aggregate\" root field can only be enabled when \"allow_aggregations\" is true" $ \testEnvironment -> do
     shouldReturnYaml
       testEnvironment
-      ( GraphqlEngine.postWithHeadersStatus
+      ( GraphqlEngine.postMetadataWithStatus
           400
           testEnvironment
-          "/v1/metadata"
-          mempty
           [yaml|
          type: pg_create_select_permission
          args:

@@ -12,6 +12,8 @@ module Harness.Logging.Messages
     LogWithContext (..),
     LogHGERequest (..),
     LogHGEResponse (..),
+    LogHGEWebSocketRequest (..),
+    LogHGEWebSocketResponse (..),
     LogDBQuery (..),
     LogDropDBFailedWarning (..),
     LogSubscriptionInit (..),
@@ -228,6 +230,28 @@ instance LoggableMessage LogHGEResponse where
       [ ("type", String "LogHGEResponse"),
         ("path", String lhResponsePath),
         ("body", lhResponseBody)
+      ]
+
+data LogHGEWebSocketRequest = LogHGEWebSocketRequest
+  { lhwsrqMessage :: Value
+  }
+
+instance LoggableMessage LogHGEWebSocketRequest where
+  fromLoggableMessage LogHGEWebSocketRequest {..} =
+    object
+      [ ("type", String "LogHGEWebSocketRequest"),
+        ("message", lhwsrqMessage)
+      ]
+
+data LogHGEWebSocketResponse = LogHGEWebSocketResponse
+  { lhwsrsMessage :: Value
+  }
+
+instance LoggableMessage LogHGEWebSocketResponse where
+  fromLoggableMessage LogHGEWebSocketResponse {..} =
+    object
+      [ ("type", String "LogHGEWebSocketResponse"),
+        ("message", lhwsrsMessage)
       ]
 
 data LogDBQuery = LogDBQuery

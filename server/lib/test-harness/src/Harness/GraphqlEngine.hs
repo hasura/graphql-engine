@@ -55,6 +55,7 @@ import Data.Aeson (Value (String), encode, fromJSON, object, (.=))
 import Data.Aeson.Encode.Pretty as AP
 import Data.Aeson.Types (Pair)
 import Data.ByteString (ByteString)
+import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.CaseInsensitive (original)
 import Data.Environment qualified as Env
 import Data.Has
@@ -69,7 +70,7 @@ import Harness.Logging
 import Harness.Quoter.Yaml (fromYaml, yaml)
 import Harness.Services.GraphqlEngine
 import Harness.TestEnvironment (Protocol (..), Server (..), TestEnvironment (..), TestingRole (..), getServer, requestProtocol, serverUrl)
-import Harness.WebSockets (responseListener)
+import Harness.WebSockets (responseListener, sendMessages)
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
 import Hasura.Prelude
@@ -126,53 +127,61 @@ postWithHeaders =
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postWithHeadersStatus ::
   (HasCallStack) => Int -> TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
-postWithHeadersStatus statusCode testEnv@(getServer -> Server {urlPrefix, port}) path headers requestBody = do
-  testLogMessage testEnv $ LogHGERequest (T.pack path) requestBody
+postWithHeadersStatus statusCode testEnv@(getServer -> Server {urlPrefix, port}) path headers requestBody =
+  withFrozenCallStack $ do
+    testLogMessage testEnv $ LogHGERequest (T.pack path) requestBody
+    responseBody <- Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) (addAuthzHeaders testEnv headers) requestBody
+    testLogMessage testEnv $ LogHGEResponse (T.pack path) responseBody
+    pure responseBody
 
+addAuthzHeaders :: TestEnvironment -> Http.RequestHeaders -> Http.RequestHeaders
+addAuthzHeaders testEnv headers =
   let role :: ByteString
       role = case permissions testEnv of
         Admin -> "admin"
         NonAdmin _ -> "test-role"
+   in ("X-Hasura-Admin-Secret", "top-secret") : ("X-Hasura-Role", role) : headers
 
-      headers' :: Http.RequestHeaders
-      headers' = ("X-Hasura-Admin-Secret", "top-secret") : ("X-Hasura-Role", role) : headers
-
-  responseBody <- withFrozenCallStack case requestProtocol (globalEnvironment testEnv) of
-    WebSocket connection -> postWithHeadersStatusViaWebSocket connection headers' requestBody
-    HTTP -> Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers' requestBody
-
-  testLogMessage testEnv $ LogHGEResponse (T.pack path) responseBody
-  pure responseBody
+-- | Post some JSON to graphql-engine's GraphQL endpoint, getting back more JSON,
+-- either via HTTP or websockets depending on what is configured in the 'TestEnvironment'
+--
+-- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
+postGraphqlViaHttpOrWebSocketWithHeadersStatus ::
+  (HasCallStack) => Int -> TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
+postGraphqlViaHttpOrWebSocketWithHeadersStatus statusCode testEnv headers requestBody = do
+  withFrozenCallStack $ case requestProtocol (globalEnvironment testEnv) of
+    WebSocket connection -> postWithHeadersStatusViaWebSocket testEnv connection (addAuthzHeaders testEnv headers) requestBody
+    HTTP -> postWithHeadersStatus statusCode testEnv "/v1/graphql" headers requestBody
 
 -- | Post some JSON to graphql-engine, getting back more JSON, via websockets.
 --
 -- This will be used by 'postWithHeadersStatus' if the 'TestEnvironment' sets
 -- the 'requestProtocol' to 'WebSocket'.
-postWithHeadersStatusViaWebSocket :: WS.Connection -> Http.RequestHeaders -> Value -> IO Value
-postWithHeadersStatusViaWebSocket connection headers requestBody = do
+postWithHeadersStatusViaWebSocket :: TestEnvironment -> WS.Connection -> Http.RequestHeaders -> Value -> IO Value
+postWithHeadersStatusViaWebSocket testEnv connection headers requestBody = do
   let preparedHeaders :: HashMap Text ByteString
       preparedHeaders =
         HashMap.fromList
           [ (decodeUtf8 (original key), value)
             | (key, value) <- headers
           ]
-
-  WS.sendTextDatas
+  sendMessages
+    testEnv
     connection
-    [ encode
-        $ object
-          [ "type" .= String "connection_init",
-            "payload" .= object ["headers" .= preparedHeaders]
-          ],
-      encode
-        $ object
-          [ "id" .= String "some-request-id",
-            "type" .= String "start",
-            "payload" .= requestBody
-          ]
+    [ object
+        [ "type" .= String "connection_init",
+          "payload" .= object ["headers" .= preparedHeaders]
+        ],
+      object
+        [ "id" .= String "some-request-id",
+          "type" .= String "start",
+          "payload" .= requestBody
+        ]
     ]
 
-  responseListener connection \_ _ payload -> pure payload
+  responseListener testEnv connection \_ type' payload -> do
+    when (type' `notElem` ["data", "error"]) $ fail ("Websocket message type " <> T.unpack type' <> " received. Payload: " <> Char8.unpack (encode payload))
+    pure payload
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
 --
@@ -198,7 +207,7 @@ postGraphqlYaml testEnvironment v = withFrozenCallStack $ postGraphqlYamlWithHea
 postGraphqlYamlWithHeaders ::
   (HasCallStack) => TestEnvironment -> Http.RequestHeaders -> Value -> IO Value
 postGraphqlYamlWithHeaders testEnvironment headers =
-  withFrozenCallStack $ postWithHeaders testEnvironment "/v1/graphql" headers
+  withFrozenCallStack $ postGraphqlViaHttpOrWebSocketWithHeadersStatus 200 testEnvironment headers
 
 postGraphql :: (Has PostGraphql testEnvironment) => testEnvironment -> Value -> IO Value
 postGraphql = getPostGraphql . getter

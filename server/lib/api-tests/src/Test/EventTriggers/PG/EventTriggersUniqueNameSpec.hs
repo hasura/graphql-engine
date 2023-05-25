@@ -157,7 +157,7 @@ tests =
         -- Creating a event trigger with duplicate name should fail
         shouldReturnYaml
           testEnvironment
-          (GraphqlEngine.postWithHeadersStatus 400 testEnvironment "/v1/metadata/" mempty createEventTriggerWithDuplicateName)
+          (GraphqlEngine.postMetadataWithStatus 400 testEnvironment createEventTriggerWithDuplicateName)
           createEventTriggerWithDuplicateNameExpectedResponse
 
     it "replace_metadata: does not allow creating an event trigger with a name that already exists"
@@ -174,7 +174,7 @@ tests =
         -- Creating a event trigger with duplicate name should fail
         shouldReturnYaml
           testEnvironment
-          (GraphqlEngine.postWithHeadersStatus 400 testEnvironment "/v1/metadata/" mempty replaceMetadata)
+          (GraphqlEngine.postMetadataWithStatus 400 testEnvironment replaceMetadata)
           replaceMetadataWithDuplicateNameExpectedResponse
 
 --------------------------------------------------------------------------------

@@ -29,6 +29,7 @@ import Control.Concurrent.STM (atomically, newTVarIO, readTVar, writeTVar)
 import Data.Aeson
 import Data.Aeson.QQ
 import Data.Aeson.Types (Pair)
+import Data.ByteString.Lazy.Char8 qualified as Char8
 import Data.Has
 import Data.IORef (IORef, atomicModifyIORef', newIORef, readIORef)
 import Data.Map.Strict qualified as Map
@@ -40,7 +41,7 @@ import Harness.TestEnvironment
   ( GlobalTestEnvironment (..),
     Server (..),
   )
-import Harness.WebSockets (responseListener)
+import Harness.WebSockets (responseListener, sendMessages)
 import Hasura.Prelude
 import Network.WebSockets qualified as WS
 import System.Timeout (timeout)
@@ -125,7 +126,7 @@ withSubscriptionsHeaders headers = aroundAllWith \actionWithSubAndTest testEnv -
     --  * timeouts on blocking operations, NDAT-230
 
     -- send initialization message
-    WS.sendTextData conn (encode $ initMessage hgeInstance headers)
+    sendMessages testEnv conn [initMessage hgeInstance headers]
 
     -- Open communication channel with responses.
     --
@@ -147,9 +148,11 @@ withSubscriptionsHeaders headers = aroundAllWith \actionWithSubAndTest testEnv -
         -- blocked by reading/writing to the MVar. Will throw an exception to
         -- the other thread if it encounters an error.
         listener :: IO ()
-        listener = responseListener conn \identifier _ payload -> do
+        listener = responseListener testEnv conn \identifier type' payload -> do
+          when (type' == "connection_error") $ fail ("Connection error message received. Payload: " <> Char8.unpack (encode payload))
+          identifier' <- identifier `onNothing` fail "Missing handler identifier"
           readIORef handlers >>= \mvars ->
-            case Map.lookup identifier mvars of
+            case Map.lookup identifier' mvars of
               Just mvar -> putMVar mvar payload
               Nothing -> fail "Unexpected handler identifier"
 
@@ -173,7 +176,7 @@ withSubscriptionsHeaders headers = aroundAllWith \actionWithSubAndTest testEnv -
 
           -- initialize a connection.
           testLogMessage testEnv $ LogSubscriptionInit query
-          WS.sendTextData conn (encode $ startQueryMessage subId query extras)
+          sendMessages testEnv conn [startQueryMessage subId query extras]
           pure $ SubscriptionHandle messageBox
 
         handleExceptionsAndTimeout action = do
