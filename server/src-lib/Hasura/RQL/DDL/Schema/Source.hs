@@ -459,7 +459,9 @@ runGetTableInfo ::
   ( BackendMetadata b,
     CacheRM m,
     MonadError Error.QErr m,
-    Metadata.MetadataM m
+    Metadata.MetadataM m,
+    MonadBaseControl IO m,
+    MonadIO m
   ) =>
   GetTableInfo b ->
   m EncJSON

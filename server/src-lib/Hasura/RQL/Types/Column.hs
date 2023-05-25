@@ -53,7 +53,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.ComputedField.Name (ComputedFieldName)
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 

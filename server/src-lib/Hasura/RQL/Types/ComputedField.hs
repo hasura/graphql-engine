@@ -21,34 +21,16 @@ module Hasura.RQL.Types.ComputedField
   )
 where
 
-import Autodocodec (HasCodec (codec), dimapCodec)
 import Control.Lens hiding ((.=))
 import Data.Aeson
 import Data.Sequence qualified as Seq
-import Data.Text.Extended
-import Data.Text.NonEmpty (NonEmptyText (..))
-import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.SQL.Types hiding (FunctionName, TableName, isNumType)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField.Name (ComputedFieldName (..), computedFieldNameToText, fromComputedField)
 import Language.GraphQL.Draft.Syntax (Name)
-
-newtype ComputedFieldName = ComputedFieldName {unComputedFieldName :: NonEmptyText}
-  deriving (Show, Eq, Ord, NFData, FromJSON, ToJSON, ToJSONKey, PG.ToPrepArg, ToTxt, Hashable, PG.FromCol, Generic)
-
-instance IsIdentifier ComputedFieldName where
-  toIdentifier = Identifier . unNonEmptyText . unComputedFieldName
-
-instance HasCodec ComputedFieldName where
-  codec = dimapCodec ComputedFieldName unComputedFieldName codec
-
-computedFieldNameToText :: ComputedFieldName -> Text
-computedFieldNameToText = unNonEmptyText . unComputedFieldName
-
-fromComputedField :: ComputedFieldName -> FieldName
-fromComputedField = FieldName . computedFieldNameToText
 
 data FunctionTrackedAs (b :: BackendType)
   = FTAComputedField ComputedFieldName SourceName (TableName b)

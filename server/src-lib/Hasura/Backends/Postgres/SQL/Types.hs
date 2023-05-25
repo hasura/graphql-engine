@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 -- | Postgres SQL Types
@@ -53,6 +54,7 @@ module Hasura.Backends.Postgres.SQL.Types
     pgTypeOid,
     tableIdentifierToIdentifier,
     identifierToTableIdentifier,
+    PGExtraTableMetadata (..),
   )
 where
 
@@ -70,6 +72,7 @@ import Data.String
 import Data.Text qualified as T
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
+import Data.Text.NonEmpty (NonEmptyText (unNonEmptyText))
 import Data.Typeable (Typeable)
 import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
@@ -83,6 +86,8 @@ import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField.Name (ComputedFieldName (..))
+import Hasura.RQL.Types.Source.Table (SourceTableType (..))
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 import PostgreSQL.Binary.Decoding qualified as PD
@@ -109,7 +114,8 @@ We want to ensure these are handled in an hygenic way:
 -}
 
 newtype Identifier = Identifier {getIdenTxt :: Text}
-  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data)
+  deriving stock (Data, Eq, Show)
+  deriving newtype (NFData, FromJSON, ToJSON, Hashable, Semigroup)
 
 instance ToSQL Identifier where
   toSQL (Identifier t) =
@@ -121,11 +127,15 @@ class IsIdentifier a where
 instance IsIdentifier Identifier where
   toIdentifier = id
 
+instance IsIdentifier ComputedFieldName where
+  toIdentifier = Identifier . unNonEmptyText . unComputedFieldName
+
 -- | The type of identifiers representing tabular values.
 -- While we are transitioning away from 'Identifier' we provisionally export
 -- the value constructor.
 newtype TableIdentifier = TableIdentifier {unTableIdentifier :: Text}
-  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data)
+  deriving stock (Data, Eq, Show)
+  deriving newtype (NFData, FromJSON, ToJSON, Hashable, Semigroup)
 
 -- | Temporary conversion function, to be removed once 'Identifier' has been
 -- entirely split into 'TableIdentifier' and 'ColumnIdentifier'.
@@ -143,7 +153,8 @@ instance ToSQL TableIdentifier where
 
 -- | The type of identifiers representing scalar values
 newtype ColumnIdentifier = ColumnIdentifier {unColumnIdentifier :: Text}
-  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data)
+  deriving stock (Data, Eq, Show)
+  deriving newtype (NFData, FromJSON, ToJSON, Hashable, Semigroup)
 
 instance ToSQL ColumnIdentifier where
   toSQL (ColumnIdentifier t) =
@@ -166,20 +177,8 @@ trimNullChars :: Text -> Text
 trimNullChars = T.takeWhile (/= '\x0')
 
 newtype TableName = TableName {getTableTxt :: Text}
-  deriving
-    ( Show,
-      Eq,
-      Ord,
-      FromJSON,
-      ToJSON,
-      Hashable,
-      PG.ToPrepArg,
-      PG.FromCol,
-      Data,
-      Generic,
-      NFData,
-      IsString
-    )
+  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving newtype (FromJSON, ToJSON, Hashable, PG.ToPrepArg, PG.FromCol, NFData, IsString)
 
 instance HasCodec TableName where
   codec = dimapCodec TableName getTableTxt codec
@@ -215,8 +214,9 @@ isView TTView = True
 isView _ = False
 
 newtype ConstraintName = ConstraintName {getConstraintTxt :: Text}
-  deriving (Eq, Hashable, NFData, Ord, ToTxt, PG.ToPrepArg, PG.FromCol, Show)
-  deriving (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
+  deriving stock (Eq, Ord, Show)
+  deriving newtype (Hashable, NFData, ToTxt, PG.ToPrepArg, PG.FromCol)
+  deriving newtype (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 
 instance IsIdentifier ConstraintName where
   toIdentifier (ConstraintName t) = Identifier t
@@ -228,7 +228,8 @@ instance ToErrorValue ConstraintName where
   toErrorValue = ErrorValue.squote . getConstraintTxt
 
 newtype FunctionName = FunctionName {getFunctionTxt :: Text}
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, PG.ToPrepArg, PG.FromCol, Hashable, Data, Generic, NFData)
+  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving newtype (FromJSON, ToJSON, PG.ToPrepArg, PG.FromCol, Hashable, NFData)
 
 instance HasCodec FunctionName where
   codec = dimapCodec FunctionName getFunctionTxt codec
@@ -246,20 +247,8 @@ instance ToErrorValue FunctionName where
   toErrorValue = ErrorValue.squote . getFunctionTxt
 
 newtype SchemaName = SchemaName {getSchemaTxt :: Text}
-  deriving
-    ( Show,
-      Eq,
-      Ord,
-      FromJSON,
-      ToJSON,
-      Hashable,
-      PG.ToPrepArg,
-      PG.FromCol,
-      Data,
-      Generic,
-      NFData,
-      IsString
-    )
+  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving newtype (FromJSON, ToJSON, Hashable, PG.ToPrepArg, PG.FromCol, NFData, IsString)
 
 instance HasCodec SchemaName where
   codec = dimapCodec SchemaName getSchemaTxt codec
@@ -382,25 +371,12 @@ type QualifiedTable = QualifiedObject TableName
 type QualifiedFunction = QualifiedObject FunctionName
 
 newtype PGDescription = PGDescription {getPGDescription :: Text}
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, PG.FromCol, NFData, Hashable)
+  deriving stock (Eq, Ord, Show)
+  deriving newtype (FromJSON, ToJSON, PG.FromCol, NFData, Hashable)
 
 newtype PGCol = PGCol {getPGColTxt :: Text}
-  deriving
-    ( Show,
-      Eq,
-      Ord,
-      FromJSON,
-      ToJSON,
-      Hashable,
-      PG.ToPrepArg,
-      PG.FromCol,
-      ToJSONKey,
-      FromJSONKey,
-      Data,
-      Generic,
-      NFData,
-      IsString
-    )
+  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving newtype (FromJSON, ToJSON, Hashable, PG.ToPrepArg, PG.FromCol, ToJSONKey, FromJSONKey, NFData, IsString)
 
 instance HasCodec PGCol where
   codec = dimapCodec PGCol getPGColTxt codec
@@ -792,3 +768,19 @@ pgTypeOid = \case
   PGCompositeScalar _ -> PTI.auto
   PGEnumScalar _ -> PTI.auto
   PGArray _ -> PTI.auto
+
+--  Extra metadata for vanilla Postgres
+data PGExtraTableMetadata = PGExtraTableMetadata
+  { _petmTableType :: SourceTableType
+  }
+  deriving stock (Eq, Generic, Show)
+  deriving anyclass (Hashable, NFData)
+
+instance ToJSON PGExtraTableMetadata where
+  toJSON PGExtraTableMetadata {..} =
+    object ["table_type" .= _petmTableType]
+
+instance FromJSON PGExtraTableMetadata where
+  parseJSON = withObject "PGExtraTableMetadata" \obj -> do
+    _petmTableType <- obj .: "table_type"
+    pure PGExtraTableMetadata {..}

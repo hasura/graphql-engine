@@ -793,6 +793,7 @@ library
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common
                      , Hasura.RQL.Types.ComputedField
+                     , Hasura.RQL.Types.ComputedField.Name
                      , Hasura.RQL.Types.CustomTypes
                      , Hasura.RQL.Types.DataConnector
                      , Hasura.RQL.Types.EECredentials

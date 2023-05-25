@@ -13,11 +13,12 @@ import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as JC
 import Data.Typeable (Typeable)
 import Hasura.Prelude
+import Hasura.RQL.Types.Source.Table (SourceTableType)
 
 data ExtraTableMetadata
-  = Local
-  | Reference
-  | Distributed {distributionColumn :: Text}
+  = Local {tableType :: SourceTableType}
+  | Reference {tableType :: SourceTableType}
+  | Distributed {distributionColumn :: Text, tableType :: SourceTableType}
   deriving stock (Show, Eq, Generic, Typeable)
 
 instance Hashable ExtraTableMetadata

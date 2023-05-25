@@ -21,10 +21,12 @@ SELECT
         WHEN 'distributed'
           THEN jsonb_build_object(
                   'tag', extraMetadata.citus_table_type,
-                  'distribution_column', extraMetadata.distribution_column
+                  'distribution_column', extraMetadata.distribution_column,
+                  'table_type', CASE WHEN "table".relkind IN ('v', 'm') THEN 'view' ELSE 'table' END
                 )
         ELSE jsonb_build_object(
-                  'tag', coalesce(extraMetadata.citus_table_type, 'local')
+                  'tag', coalesce(extraMetadata.citus_table_type, 'local'),
+                  'table_type', CASE WHEN "table".relkind IN ('v', 'm') THEN 'view' ELSE 'table' END
                 )
       END
   )::json AS info
