@@ -55,6 +55,19 @@ than 10000).
 
 The following metrics are exported by Hasura GraphQL Engine:
 
+### Hasura Event Triggers Metrics
+
+The following metrics can be used to monitor the performance of Hasura Event Triggers system:
+
+ - [`hasura_event_fetch_time_per_batch_seconds`](/event-triggers/observability-and-performace.mdx/#event-fetch-time-per-batch)
+ - [`hasura_event_invocations_total`](/event-triggers/observability-and-performace.mdx/#event-invocations-total)
+ - [`hasura_event_processed_total`](/event-triggers/observability-and-performace.mdx/#event-processed-total)
+ - [`hasura_event_processing_time_seconds`](/event-triggers/observability-and-performace.mdx/#event-processing-time) 
+ - [`hasura_event_queue_time_seconds`](/event-triggers/observability-and-performace.mdx/#event-queue-time) 
+ - [`hasura_event_trigger_http_workers`](/event-triggers/observability-and-performace.mdx/#event-triggers-http-workers)
+ - [`hasura_event_webhook_processing_time_seconds`](/event-triggers/observability-and-performace.mdx/#event-webhook-processing-time)
+ - [`hasura_events_fetched_per_batch`](/event-triggers/observability-and-performace.mdx/#events-fetched-per-batch)
+
 ### Subscription Metrics
 
 The following metrics can be used to monitor the performance of subscriptions:
@@ -96,96 +109,6 @@ webhook.
 | Name   | `hasura_cron_events_processed_total` |
 | Type   | Counter                              |
 | Labels | `status`: success \| failed          |
-
-### Hasura event fetch time per batch
-
-Latency of fetching a batch of events. A higher metric indicates slower polling of events from the database, you should
-consider looking into the performance of your database.
-
-|        |                                                                                            |
-| ------ | ------------------------------------------------------------------------------------------ |
-| Name   | `hasura_event_fetch_time_per_batch_seconds`                                                |
-| Type   | Histogram<br /><br />Buckets: 0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10 |
-| Labels | none                                                                                       |
-
-### Hasura event invocations total
-
-Total number of events invoked. Represents the Event Trigger webhook HTTP requests made.
-
-|        |                                                            |
-| ------ | ---------------------------------------------------------- |
-| Name   | `hasura_event_invocations_total`                           |
-| Type   | Counter                                                    |
-| Labels | `status`: success \| failed, `source_name`, `trigger_name` |
-
-### Hasura event processed total
-
-Total number of events processed. Represents the Event Trigger egress.
-
-|        |                                                            |
-| ------ | ---------------------------------------------------------- |
-| Name   | `hasura_event_processed_total`                             |
-| Type   | Counter                                                    |
-| Labels | `status`: success \| failed, `source_name`, `trigger_name` |
-
-### Hasura event processing time
-
-The time taken for an event to be delivered since it's been created (if first attempt) or retried (after first attempt).
-This metric can be considered as the end-to-end processing time for an event.
-
-|        |                                                                       |
-| ------ | --------------------------------------------------------------------- |
-| Name   | `hasura_event_processing_time_seconds`                                |
-| Type   | Histogram<br /><br />Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100 |
-| Labels | `source_name`, `trigger_name`                                         |
-
-### Hasura event queue time
-
-Queue time for an event already in the processing queue. More events in a higher bucket implies slow processing. In this
-case, you can consider increasing the
-[HTTP pool size](/deployment/graphql-engine-flags/reference.mdx/#events-http-pool-size) or optimizing the webhook
-server.
-
-|        |                                                                       |
-| ------ | --------------------------------------------------------------------- |
-| Name   | `hasura_event_queue_time_seconds`                                     |
-| Type   | Histogram<br /><br />Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100 |
-| Labels | `source_name`, `trigger_name`                                         |
-
-### Hasura event trigger HTTP workers
-
-Current number of active Event Trigger HTTP workers. Compare this number to the
-[HTTP pool size](/deployment/graphql-engine-flags/reference.mdx/#events-http-pool-size). Consider increasing it if the
-metric is near the current configured value.
-
-|        |                                     |
-| ------ | ----------------------------------- |
-| Name   | `hasura_event_trigger_http_workers` |
-| Type   | Gauge                               |
-| Labels | none                                |
-
-### Hasura event webhook processing time
-
-The time between when an HTTP worker picks an event for delivery to the time its response is updated in the DB. A higher
-processing time indicates slow webhook, you should try to optimize the event webhook.
-
-|        |                                                              |
-| ------ | ------------------------------------------------------------ |
-| Name   | `hasura_event_webhook_processing_time_seconds`               |
-| Type   | Histogram<br /><br />Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10 |
-| Labels | `source_name`, `trigger_name`                                |
-
-### Hasura events fetched per batch
-
-Number of events fetched in a batch. This number should be equal to the
-[events fetch batch size](/deployment/graphql-engine-flags/reference.mdx/#events-fetch-batch-size) if there are any
-pending events, else this should be 0.
-
-|        |                                   |
-| ------ | --------------------------------- |
-| Name   | `hasura_events_fetched_per_batch` |
-| Type   | Gauge                             |
-| Labels | none                              |
 
 ### Hasura GraphQL execution time seconds
 
