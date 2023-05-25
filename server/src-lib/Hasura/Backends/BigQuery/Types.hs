@@ -344,7 +344,7 @@ data From
   | FromSelect (Aliased Select)
   | FromSelectJson (Aliased SelectJson)
   | FromFunction (Aliased SelectFromFunction)
-  | FromNativeQuery NativeQueryName
+  | FromNativeQuery (Aliased NativeQueryName)
   deriving stock (Eq, Show, Generic, Data, Lift, Ord)
   deriving anyclass (Hashable, NFData)
 

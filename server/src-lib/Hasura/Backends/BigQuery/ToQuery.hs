@@ -25,7 +25,6 @@ import Data.List (intersperse)
 import Data.List.NonEmpty qualified as NE
 import Data.String
 import Data.Text qualified as T
-import Data.Text.Extended qualified as T (toTxt)
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Builder (Builder)
 import Data.Text.Lazy.Builder qualified as LT
@@ -33,7 +32,6 @@ import Data.Tuple
 import Data.Vector qualified as V
 import Hasura.Backends.BigQuery.Types
 import Hasura.NativeQuery.Metadata (InterpolatedItem (..), InterpolatedQuery (..))
-import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude hiding (second)
 
 --------------------------------------------------------------------------------
@@ -559,8 +557,8 @@ fromFrom =
             )
             selectFromFunction
         )
-    FromNativeQuery (NativeQueryName nativeQueryName) ->
-      fromNameText (T.toTxt nativeQueryName)
+    -- Native Queries are bound as CTEs, so usage sites don't do "nativeQueryName AS alias".
+    FromNativeQuery (Aliased {aliasedAlias}) -> fromNameText aliasedAlias
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableNameSchema} =

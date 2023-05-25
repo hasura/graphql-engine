@@ -34,7 +34,6 @@ import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
 import Hasura.LogicalModel.Schema (defaultLogicalModelArgs, defaultLogicalModelSelectionSet)
 import Hasura.Name qualified as Name
-import Hasura.NativeQuery.Schema (defaultBuildNativeQueryRootFields)
 import Hasura.NativeQuery.Schema qualified as NativeQueries
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -66,7 +65,7 @@ instance BackendSchema 'BigQuery where
   buildFunctionQueryFields _ _ _ _ = pure []
   buildFunctionRelayQueryFields _ _ _ _ _ = pure []
   buildFunctionMutationFields _ _ _ _ = pure []
-  buildNativeQueryRootFields = defaultBuildNativeQueryRootFields
+  buildNativeQueryRootFields = NativeQueries.defaultBuildNativeQueryRootFields
 
   -- backend extensions
   relayExtension = Nothing
@@ -92,6 +91,7 @@ instance BackendTableSelectSchema 'BigQuery where
 
 instance BackendNativeQuerySelectSchema 'BigQuery where
   selectNativeQuery = NativeQueries.defaultSelectNativeQuery
+  selectNativeQueryObject = NativeQueries.defaultSelectNativeQueryObject
 
 instance BackendLogicalModelSelectSchema 'BigQuery where
   logicalModelArguments = defaultLogicalModelArgs
