@@ -32,6 +32,7 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
+import Hasura.LogicalModel.Schema (defaultLogicalModelArgs, defaultLogicalModelSelectionSet)
 import Hasura.Name qualified as Name
 import Hasura.NativeQuery.Schema (defaultBuildNativeQueryRootFields)
 import Hasura.NativeQuery.Schema qualified as NativeQueries
