@@ -54,5 +54,6 @@ export const WithoutSurvey: StoryObj = {
       onboardingDataEmptyActivity,
       fetchAnsweredSurveysHandler,
     ],
+    chromatic: { disableSnapshot: true },
   },
 };

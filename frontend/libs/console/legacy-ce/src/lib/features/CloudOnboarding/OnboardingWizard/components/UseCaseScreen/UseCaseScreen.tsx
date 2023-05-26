@@ -1,6 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '../../../../../new-components/Button';
-import { LS_KEYS, removeLSItem } from '../../../../../utils/localStorage';
 import { emitOnboardingEvent } from '../../utils';
 import {
   getUseCaseExperimentOnboardingVariables,
@@ -10,10 +9,7 @@ import { Analytics, trackCustomEvent } from '../../../../Analytics';
 import { Dispatch } from '../../../../../types';
 import _push from '../../../../../components/Services/Data/push';
 
-type UseCaseScreenProps = {
-  dismiss: () => void;
-  dispatch: Dispatch;
-};
+type UseCaseScreenProps = { dismiss: () => void; dispatch: Dispatch };
 
 export type UseCases =
   | 'data-api'
@@ -78,15 +74,16 @@ export const UseCaseScreen = (props: UseCaseScreenProps) => {
     return useCasesAssets.sort(() => Math.random() - 0.5);
   }, [useCasesAssets]);
 
-  const onSubmit = () => {
-    const useCase = useCasesAssets.filter(
-      useCase => useCase.id === selectedUseCase
-    )[0];
+  const useCase = useCasesAssets.find(
+    useCase => useCase.id === selectedUseCase
+  );
 
-    removeLSItem(LS_KEYS.useCaseExperimentOnboarding);
-    props.dispatch(_push(useCase.consoleUrl));
-    window.open(useCase.docsUrl, '_blank', 'noreferrer,noopener');
-    emitOnboardingEvent(getUseCaseExperimentOnboardingVariables(useCase.id));
+  const onSubmit = () => {
+    if (useCase) {
+      props.dispatch(_push(useCase.consoleUrl));
+      emitOnboardingEvent(getUseCaseExperimentOnboardingVariables(useCase.id));
+      props.dismiss();
+    }
   };
 
   return (
@@ -117,7 +114,7 @@ export const UseCaseScreen = (props: UseCaseScreenProps) => {
       </div>
       <div className="use-cases flex flex-wrap justify-around gap-y-15 gap-y-8">
         {randomUseCaseAssets.map((item, index) => (
-          <div className="flex relative h-[250px]">
+          <div className="flex relative h-[250px]" key={index}>
             <label
               key={index}
               htmlFor={item.id}
@@ -155,28 +152,33 @@ export const UseCaseScreen = (props: UseCaseScreenProps) => {
             className="ml-xs mr-4 text-secondary flex items-center cursor-pointer"
             onClick={() => {
               props.dismiss();
-              removeLSItem(LS_KEYS.useCaseExperimentOnboarding);
               emitOnboardingEvent(skippedUseCaseExperimentOnboarding);
             }}
           >
             Skip
           </div>
         </Analytics>
-        <Analytics
-          name={`use-case-onboarding-${selectedUseCase}`}
-          passHtmlAttributesToChildren
-        >
-          <Button
-            mode="primary"
-            disabled={selectedUseCase === null}
-            onClick={() => {
-              props.dismiss();
-              onSubmit();
-            }}
+        {useCase ? (
+          <Analytics name={`use-case-onboarding-${selectedUseCase}`}>
+            <a
+              href={useCase.docsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onSubmit}
+            >
+              <Button mode="primary">Continue</Button>
+            </a>
+          </Analytics>
+        ) : (
+          <Analytics
+            name={`use-case-onboarding-unselected`}
+            passHtmlAttributesToChildren
           >
-            Continue
-          </Button>
-        </Analytics>
+            <Button mode="primary" disabled>
+              Continue
+            </Button>
+          </Analytics>
+        )}
       </div>
     </div>
   );
