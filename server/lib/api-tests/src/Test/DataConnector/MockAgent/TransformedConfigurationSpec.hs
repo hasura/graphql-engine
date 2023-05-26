@@ -134,7 +134,7 @@ tests = describe "Transformed Configuration Tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Album")
               ( emptyQuery
                   & API.qFields

@@ -1,4 +1,4 @@
-import { Table } from '../features/hasura-metadata-types';
+import { QualifiedFunction, Table } from '../features/hasura-metadata-types';
 
 export const getRoute = () => ({
   connectDatabase: (driver?: string) =>
@@ -18,6 +18,13 @@ export const getRoute = () => ({
     return encodeURI(
       `/data/v2/manage/table?database=${dataSourceName}&table=${JSON.stringify(
         table
+      )}`
+    );
+  },
+  function: (dataSourceName: string, fn: QualifiedFunction) => {
+    return encodeURI(
+      `/data/v2/manage/function?database=${dataSourceName}&function=${JSON.stringify(
+        fn
       )}`
     );
   },

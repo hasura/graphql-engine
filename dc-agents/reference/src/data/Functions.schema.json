@@ -1,0 +1,108 @@
+{
+  "tables": [
+    {
+      "name": ["Result"],
+      "type": "table",
+      "primary_key": ["Value"],
+      "description": "Collection of function results",
+      "columns": [
+        {
+          "name": "Value",
+          "type": "number",
+          "nullable": false,
+          "description": "Result primary key identifier and representation of function results",
+          "insertable": false,
+          "updatable": false
+        }
+      ],
+      "insertable": false,
+      "updatable": false,
+      "deletable": false
+    },
+    {
+      "name": ["Authors"],
+      "type": "table",
+      "primary_key": ["id"],
+      "description": "Publication Authors",
+      "columns": [
+        {
+          "name": "id",
+          "type": "number",
+          "description": "primary key for Authors",
+          "nullable": false,
+          "insertable": false,
+          "updatable": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Author name",
+          "nullable": false,
+          "insertable": false,
+          "updatable": false
+        }
+      ],
+      "insertable": false,
+      "updatable": false,
+      "deletable": false
+    },
+    {
+      "name": ["Articles"],
+      "type": "table",
+      "primary_key": ["id"],
+      "description": "Published Articles",
+      "columns": [
+        {
+          "name": "id",
+          "type": "number",
+          "description": "primary key for Articles",
+          "nullable": false,
+          "insertable": false,
+          "updatable": false
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "description": "Article name",
+          "nullable": false,
+          "insertable": false,
+          "updatable": false
+        },
+        {
+          "name": "author_id",
+          "type": "number",
+          "description": "Reference to Authors by ID",
+          "nullable": false,
+          "insertable": false,
+          "updatable": false
+        }
+      ],
+      "insertable": false,
+      "updatable": false,
+      "deletable": false
+    }
+  ],
+  "functions": [
+    {
+      "name": ["Fibonacci"],
+      "type": "read",
+      "returns": {"type": "table", "table": ["Result"]},
+      "response_cardinality": "many",
+      "args": [
+        { "name": "take", "type": "number" },
+        { "name": "__hasura_session", "type": "JSON" }
+      ],
+      "description": "Fibonacci function - Take N Fibonacci numbers!"
+    },
+    {
+      "name": ["SearchArticles"],
+      "type": "read",
+      "returns": {"type": "table", "table": ["Articles"]},
+      "response_cardinality": "many",
+      "args": [
+        { "name": "query", "type": "string" }
+      ],
+      "description": "Search Articles for query."
+    }
+  ]
+}

@@ -20,11 +20,13 @@ module Hasura.Backends.DataConnector.Adapter.Types
     ConstraintName (..),
     ColumnName (..),
     FunctionName (..),
+    FunctionReturnType (..),
     CountAggregate (..),
     Literal (..),
     OrderDirection (..),
     API.GraphQLType (..),
     ScalarType (..),
+    ArgumentExp (..),
     mkScalarType,
     fromGQLType,
     ExtraTableMetadata (..),
@@ -44,6 +46,7 @@ import Data.Aeson.Types (parseEither, toJSONKeyText)
 import Data.Environment (Environment)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
+import Data.OpenApi (ToSchema)
 import Data.Text qualified as Text
 import Data.Text.Extended (ToTxt (..))
 import Hasura.Backends.DataConnector.API qualified as API
@@ -178,6 +181,40 @@ instance J.ToJSON SourceConfig where
 
 --------------------------------------------------------------------------------
 
+-- | This represents what information can be known about the return type of a user-defined function.
+--   For now, either the return type will be the name of a table that exists in the schema,
+--   or "Unknown" - implying that this information can be derived from another source,
+--   or if there is no other source, then it is an error.
+--   In future, this type may be extended with additional constructors including scalar and row types
+--   from the Logical Models feature.
+--
+--   Note: This is very similar to ComputedFieldReturnType defined above.
+--         The two types may be unified in future.
+data FunctionReturnType
+  = FunctionReturnsTable TableName
+  | FunctionReturnsUnknown
+  deriving (Show, Eq, NFData, Hashable, Generic)
+  deriving (ToSchema, ToJSON, FromJSON) via AC.Autodocodec FunctionReturnType
+
+instance AC.HasCodec FunctionReturnType where
+  codec =
+    AC.named "FunctionReturnType" $
+      AC.object "FunctionReturnType" $
+        AC.discriminatedUnionCodec "type" enc dec
+    where
+      typeField = pure ()
+      tableField = AC.requiredField' "table"
+      enc = \case
+        FunctionReturnsTable rt -> ("table", AC.mapToEncoder rt tableField)
+        FunctionReturnsUnknown -> ("inferred", AC.mapToEncoder () typeField) -- We hook into the type field because it's madatory
+      dec =
+        HashMap.fromList
+          [ ("table", ("TableFunctionResponse", AC.mapToDecoder FunctionReturnsTable tableField)),
+            ("inferred", ("InferredFunctionResponse", AC.mapToDecoder (const FunctionReturnsUnknown) typeField))
+          ]
+
+------------
+
 data DataConnectorOptions = DataConnectorOptions
   { _dcoUri :: BaseUrl,
     _dcoDisplayName :: Maybe Text
@@ -292,6 +329,12 @@ newtype FunctionName = FunctionName {unFunctionName :: NonEmpty Text}
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving newtype (FromJSON, Hashable, NFData, ToJSON)
 
+instance Witch.From FunctionName API.FunctionName
+
+instance Witch.From API.FunctionName FunctionName
+
+instance Witch.From (NonEmpty Text) FunctionName
+
 instance HasCodec FunctionName where
   codec = AC.dimapCodec FunctionName unFunctionName codec
 
@@ -303,6 +346,21 @@ instance ToTxt FunctionName where
 
 instance ToErrorValue FunctionName where
   toErrorValue = ErrorValue.squote . toTxt
+
+-- Modified from Hasura.Backends.Postgres.Types.Function
+-- Initially just handles literal input arguments.
+data ArgumentExp a
+  = -- | Table row accessor
+    --   AETableRow
+    -- | -- | Hardcoded reference to @hdb_catalog.hdb_action_log.response_payload@
+    --   AEActionResponsePayload
+    -- | -- | JSON/JSONB hasura session variable object
+    --   AESession a
+    -- |
+    AEInput a
+  deriving stock (Eq, Show, Functor, Foldable, Traversable, Generic)
+
+instance (Hashable a) => Hashable (ArgumentExp a)
 
 --------------------------------------------------------------------------------
 

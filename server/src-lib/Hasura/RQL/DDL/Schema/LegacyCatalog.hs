@@ -258,7 +258,7 @@ addRemoteRelationshipToCatalog CreateFromSourceRelationship {..} =
 addFunctionToCatalog ::
   (MonadTx m, MonadReader SystemDefined m) =>
   QualifiedFunction ->
-  FunctionConfig ->
+  FunctionConfig ('Postgres 'Vanilla) ->
   m ()
 addFunctionToCatalog (QualifiedObject sn fn) config = do
   systemDefined <- ask

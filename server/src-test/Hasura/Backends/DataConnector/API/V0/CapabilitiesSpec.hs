@@ -158,6 +158,9 @@ genRawCapabilities = pure RawCapabilities {}
 genDatasetCapabilities :: MonadGen m => m DatasetCapabilities
 genDatasetCapabilities = pure DatasetCapabilities {}
 
+genUserDefinedFunctionCapabilities :: MonadGen m => m UserDefinedFunctionCapabilities
+genUserDefinedFunctionCapabilities = pure UserDefinedFunctionCapabilities {}
+
 genLicensing :: MonadGen m => m Licensing
 genLicensing = pure Licensing {}
 
@@ -175,6 +178,7 @@ genCapabilities =
     <*> Gen.maybe genExplainCapabilities
     <*> Gen.maybe genRawCapabilities
     <*> Gen.maybe genDatasetCapabilities
+    <*> Gen.maybe genUserDefinedFunctionCapabilities
     <*> Gen.maybe genLicensing
 
 emptyConfigSchemaResponse :: ConfigSchemaResponse

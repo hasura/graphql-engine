@@ -26,14 +26,14 @@ const SuperConnectorDrivers: readonly DriverInfo[] = [
     name: 'mysql8',
     displayName: 'MySQL',
     native: false,
-    release: 'Alpha',
+    release: 'GA',
     enterprise: true,
   },
   {
     name: 'snowflake',
     displayName: 'Snowflake',
     native: false,
-    release: 'Beta',
+    release: 'GA',
     enterprise: true,
   },
   {
@@ -47,14 +47,14 @@ const SuperConnectorDrivers: readonly DriverInfo[] = [
     name: 'mariadb',
     displayName: 'MariaDB',
     native: false,
-    release: 'Beta',
+    release: 'GA',
     enterprise: true,
   },
   {
     name: 'oracle',
     displayName: 'Oracle',
     native: false,
-    release: 'Beta',
+    release: 'GA',
     enterprise: true,
   },
   // {

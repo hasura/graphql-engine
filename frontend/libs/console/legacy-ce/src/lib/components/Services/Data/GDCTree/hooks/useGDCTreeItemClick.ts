@@ -30,6 +30,7 @@ export const useGDCTreeItemClick = (dispatch: Dispatch) => {
        * Handling click for GDC DBs
        */
       const isTableClicked = Object.keys(rest?.table || {}).length !== 0;
+      const isFunctionClicked = Object.keys(rest?.function || {}).length !== 0;
       if (isTableClicked) {
         dispatch(
           _push(
@@ -40,6 +41,8 @@ export const useGDCTreeItemClick = (dispatch: Dispatch) => {
             )
           )
         );
+      } else if (isFunctionClicked) {
+        dispatch(_push(getRoute().function(database, rest.function)));
       } else {
         dispatch(_push(getRoute().database(database)));
       }

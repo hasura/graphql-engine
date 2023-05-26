@@ -12,6 +12,7 @@ import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, maybeToList)
 import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
+import Hasura.Backends.DataConnector.API.V0.Relationships as API
 import Test.AgentAPI (mutationGuarded, queryGuarded)
 import Test.AgentDatasets (chinookTemplate, usesDataset)
 import Test.Data (EdgeCasesTestData (..), TestData (..))
@@ -138,7 +139,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                     pure $ track ^? Data.field "Composer" . Data._ColumnFieldString /= Just "Eric Clapton"
                 )
 
-      receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest & qrTableRelationships .~ tableRelationships)
+      receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest & qrRelationships .~ Set.map API.RTable tableRelationships)
       Data.responseRows receivedInvoiceLines `rowsShouldBe` expectedRemainingRows
 
   for_ (_cMutations >>= _mcReturningCapabilities) $ \_returningCapabilities -> describe "returning" $ do
@@ -452,7 +453,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
     invoiceLinesQueryRequest :: QueryRequest
     invoiceLinesQueryRequest =
       let query = Data.emptyQuery & qFields ?~ invoiceLinesFields & qOrderBy ?~ OrderBy mempty (_tdOrderByColumn [] "InvoiceId" Ascending :| [])
-       in QueryRequest _tdInvoiceLinesTableName mempty query Nothing
+       in TableQueryRequest _tdInvoiceLinesTableName mempty query Nothing
 
     invoiceIdScalarType = _tdFindColumnScalarType _tdInvoiceLinesTableName "InvoiceId"
     invoiceLineIdScalarType = _tdFindColumnScalarType _tdInvoiceLinesTableName "InvoiceLineId"

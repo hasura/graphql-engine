@@ -730,8 +730,8 @@ buildQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExposedAs
           roleName == adminRoleName
             || roleName `HashMap.member` _fiPermissions functionInfo
             || functionPermsCtx == Options.InferFunctionPermissions
-        let targetTableName = _fiReturnType functionInfo
-        lift $ mkRFs $ buildFunctionQueryFields mkRootFieldName functionName functionInfo targetTableName
+        let targetReturnName = _fiReturnType functionInfo
+        lift $ mkRFs $ buildFunctionQueryFields mkRootFieldName functionName functionInfo targetReturnName
   nativeQueryRootFields <-
     buildNativeQueryFields sourceInfo nativeQueries
 
@@ -844,6 +844,7 @@ buildRelayQueryAndSubscriptionFields mkRootFieldName sourceInfo tables (takeExpo
 
   functionConnectionFields <- for (HashMap.toList functions) $ \(functionName, functionInfo) -> runMaybeT do
     let returnTableName = _fiReturnType functionInfo
+
     -- FIXME: only extract the TableInfo once to avoid redundant cache lookups
     returnTableInfo <- lift $ askTableInfo returnTableName
     pkeyColumns <- MaybeT $ (^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns) <$> pure returnTableInfo
@@ -880,6 +881,7 @@ buildMutationFields mkRootFieldName scenario sourceInfo tables (takeExposedAs FE
     pure $ concat [inserts, updates, deletes]
   functionMutations <- for (HashMap.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     let targetTableName = _fiReturnType functionInfo
+
     -- A function exposed as mutation must have a function permission
     -- configured for the role. See Note [Function Permissions]
     guard $

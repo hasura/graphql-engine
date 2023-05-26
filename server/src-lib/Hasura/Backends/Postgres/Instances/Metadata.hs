@@ -285,3 +285,5 @@ instance
         `onLeftM` \err -> throwError (prefixQErr "failed to fetch source tables: " err)
 
     pure [QualifiedObject {..} | (qSchema, qName) <- results]
+
+  listAllTrackables _ = throw500 "listAllTrackables not supported by Postgres"

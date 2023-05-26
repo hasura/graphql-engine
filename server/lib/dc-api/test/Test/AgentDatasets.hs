@@ -5,6 +5,7 @@ module Test.AgentDatasets
     DatasetCloneInfo (..),
     usesDataset,
     chinookTemplate,
+    functionsTemplate,
     testingEdgeCasesTemplate,
     HasDatasetContext,
     getDatasetContext,
@@ -33,6 +34,9 @@ import Prelude
 
 chinookTemplate :: API.DatasetTemplateName
 chinookTemplate = API.DatasetTemplateName "Chinook"
+
+functionsTemplate :: API.DatasetTemplateName
+functionsTemplate = API.DatasetTemplateName "Functions"
 
 testingEdgeCasesTemplate :: API.DatasetTemplateName
 testingEdgeCasesTemplate = API.DatasetTemplateName "TestingEdgeCases"

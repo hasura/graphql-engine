@@ -88,7 +88,7 @@ tests = describe "Custom scalar parsing tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "MyCustomScalarsTable")
               ( emptyQuery
                   & API.qFields
@@ -145,7 +145,7 @@ tests = describe "Custom scalar parsing tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "MyCustomScalarsTable")
               ( emptyQuery
                   & API.qFields

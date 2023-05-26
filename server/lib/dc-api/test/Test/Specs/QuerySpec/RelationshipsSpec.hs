@@ -11,6 +11,7 @@ import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, maybeToList)
 import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
+import Hasura.Backends.DataConnector.API.V0.Relationships as API
 import Test.AgentAPI (queryGuarded)
 import Test.Data (TestData (..))
 import Test.Data qualified as Data
@@ -246,7 +247,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 ("Artist", RelField $ RelationshipField _tdArtistRelationshipName artistsSubquery)
               ]
           query = albumsQuery & qFields ?~ fields
-       in QueryRequest _tdAlbumsTableName (Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]) query Nothing
+       in TableQueryRequest _tdAlbumsTableName (Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]) query Nothing
 
     artistsWithAlbumsQuery :: (Query -> Query) -> QueryRequest
     artistsWithAlbumsQuery modifySubquery =
@@ -260,7 +261,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 ("Albums", RelField $ RelationshipField _tdAlbumsRelationshipName albumsSubquery)
               ]
           query = artistsQuery & qFields ?~ fields
-       in QueryRequest _tdArtistsTableName (Set.fromList [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]) query Nothing
+       in TableQueryRequest _tdArtistsTableName (Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]) query Nothing
 
     employeesWithCustomersQuery :: (Query -> Query) -> QueryRequest
     employeesWithCustomersQuery modifySubquery =
@@ -272,7 +273,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 [ ("SupportRepForCustomers", RelField $ RelationshipField _tdSupportRepForCustomersRelationshipName customersSubquery)
                 ]
           query = employeesQuery & qFields ?~ fields
-       in QueryRequest _tdEmployeesTableName (Set.fromList [Data.onlyKeepRelationships [_tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships]) query Nothing
+       in TableQueryRequest _tdEmployeesTableName (Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships]) query Nothing
 
     customersWithSupportRepQuery :: (Query -> Query) -> QueryRequest
     customersWithSupportRepQuery modifySubquery =
@@ -283,7 +284,7 @@ spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queri
                 [ ("SupportRep", RelField $ RelationshipField _tdSupportRepRelationshipName supportRepSubquery)
                 ]
           query = customersQuery & qFields ?~ fields
-       in QueryRequest _tdCustomersTableName (Set.fromList [Data.onlyKeepRelationships [_tdSupportRepRelationshipName] _tdCustomersTableRelationships]) query Nothing
+       in TableQueryRequest _tdCustomersTableName (Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdSupportRepRelationshipName] _tdCustomersTableRelationships]) query Nothing
 
     artistsQuery :: Query
     artistsQuery =

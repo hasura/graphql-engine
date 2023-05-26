@@ -4464,6 +4464,9 @@
                         ],
                         "type": "string"
                     },
+                    "response": {
+                        "additionalProperties": true
+                    },
                     "session_argument": {
                         "type": "string"
                     }
@@ -4491,6 +4494,23 @@
                     "role"
                 ],
                 "type": "object"
+            },
+            "FunctionReturnType": {
+                "discriminator": {
+                    "mapping": {
+                        "inferred": "InferredFunctionResponse",
+                        "table": "TableFunctionResponse"
+                    },
+                    "propertyName": "type"
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/InferredFunctionResponse"
+                    },
+                    {
+                        "$ref": "#/components/schemas/TableFunctionResponse"
+                    }
+                ]
             },
             "GraphQLName": {
                 "type": "string"
@@ -4576,6 +4596,20 @@
                         "type": "string"
                     }
                 },
+                "type": "object"
+            },
+            "InferredFunctionResponse": {
+                "properties": {
+                    "type": {
+                        "enum": [
+                            "inferred"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "type"
+                ],
                 "type": "object"
             },
             "InputObjectFieldDefinition": {
@@ -8787,6 +8821,27 @@
                         ]
                     }
                 },
+                "type": "object"
+            },
+            "TableFunctionResponse": {
+                "properties": {
+                    "table": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "type": {
+                        "enum": [
+                            "table"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "table",
+                    "type"
+                ],
                 "type": "object"
             },
             "TlsAllow": {

@@ -195,8 +195,8 @@ tests = do
             & API.mrTableRelationships
               .~ Set.fromList
                 [ API.TableRelationships
-                    { API._trSourceTable = mkTableName "Track",
-                      API._trRelationships =
+                    { API._trelSourceTable = mkTableName "Track",
+                      API._trelRelationships =
                         HashMap.fromList
                           [ ( API.RelationshipName "Genre",
                               API.Relationship
@@ -384,8 +384,8 @@ tests = do
             & API.mrTableRelationships
               .~ Set.fromList
                 [ API.TableRelationships
-                    { API._trSourceTable = mkTableName "Track",
-                      API._trRelationships =
+                    { API._trelSourceTable = mkTableName "Track",
+                      API._trelRelationships =
                         HashMap.fromList
                           [ ( API.RelationshipName "Genre",
                               API.Relationship

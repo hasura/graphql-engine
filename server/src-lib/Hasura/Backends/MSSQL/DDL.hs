@@ -69,7 +69,7 @@ buildFunctionInfo ::
   SourceName ->
   FunctionName 'MSSQL ->
   SystemDefined ->
-  FunctionConfig ->
+  FunctionConfig 'MSSQL ->
   FunctionPermissionsMap ->
   RawFunctionInfo 'MSSQL ->
   Maybe Text ->

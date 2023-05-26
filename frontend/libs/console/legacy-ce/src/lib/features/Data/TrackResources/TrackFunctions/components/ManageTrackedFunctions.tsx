@@ -33,7 +33,7 @@ export const ManageTrackedFunctions = ({
   return (
     <TrackableResourceTabs
       introText={
-        'Tracking tables adds them to your GraphQL API. All objects will be admin-only until permissions have been set.'
+        'Tracking functions adds them to your GraphQL API. All objects will be admin-only until permissions have been set.'
       }
       value={tab}
       onValueChange={value => {

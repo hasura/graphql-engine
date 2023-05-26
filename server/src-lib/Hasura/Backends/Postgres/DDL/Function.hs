@@ -66,7 +66,7 @@ buildFunctionInfo ::
   SourceName ->
   QualifiedFunction ->
   SystemDefined ->
-  FunctionConfig ->
+  FunctionConfig ('Postgres pgKind) ->
   FunctionPermissionsMap ->
   RawFunctionInfo ('Postgres pgKind) ->
   Maybe Text ->

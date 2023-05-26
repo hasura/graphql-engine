@@ -145,7 +145,7 @@ class
     SourceName ->
     FunctionName b ->
     SystemDefined ->
-    FunctionConfig ->
+    FunctionConfig b ->
     FunctionPermissionsMap ->
     RawFunctionInfo b ->
     -- | the function comment
@@ -217,6 +217,14 @@ class
     (CacheRM m, MonadBaseControl IO m, MetadataM m, MonadError QErr m, MonadIO m, MonadReader r m, Has (Logger Hasura) r, ProvidesNetwork m) =>
     SourceName ->
     m [TableName b]
+
+  -- | List all the functions on a given data source, including those not tracked
+  -- by Hasura. Primarily useful for user interfaces to allow untracked functions
+  -- to be tracked.
+  listAllTrackables ::
+    (CacheRM m, MonadBaseControl IO m, MetadataM m, MonadError QErr m, MonadIO m, MonadReader r m, Has (Logger Hasura) r, ProvidesNetwork m) =>
+    SourceName ->
+    m (TrackableInfo b)
 
   -- | Get information about a given table on a given source, whether tracked
   -- or not. Primarily useful for user interfaces.

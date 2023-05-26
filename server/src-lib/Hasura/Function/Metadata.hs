@@ -23,7 +23,7 @@ import Hasura.RQL.Types.BackendTag (backendPrefix)
 
 data FunctionMetadata b = FunctionMetadata
   { _fmFunction :: FunctionName b,
-    _fmConfiguration :: FunctionConfig,
+    _fmConfiguration :: FunctionConfig b,
     _fmPermissions :: [FunctionPermissionInfo],
     _fmComment :: Maybe Text
   }

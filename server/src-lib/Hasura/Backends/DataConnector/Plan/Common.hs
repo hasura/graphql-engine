@@ -1,3 +1,6 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingStrategies #-}
+
 -- | This module contains Data Connector request/response planning code and utility
 -- functions and types that are common across the different categories of requests
 -- (ie queries, mutations, etc). It contains code and concepts that are independent
@@ -9,6 +12,7 @@
 module Hasura.Backends.DataConnector.Plan.Common
   ( Plan (..),
     TableRelationships (..),
+    TableRelationshipsKey (..),
     FieldPrefix,
     noPrefix,
     prefixWith,
@@ -65,10 +69,18 @@ data Plan request response = Plan
 
 --------------------------------------------------------------------------------
 
+-- | Key datatype for TableRelationships to avoid having an Either directly as the key,
+--   and make extending the types of relationships easier in future.
+data TableRelationshipsKey
+  = FunctionNameKey API.FunctionName
+  | TableNameKey API.TableName
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (Hashable)
+
 -- | A monoidal data structure used to record Table Relationships encountered during request
 -- translation. Used with 'recordTableRelationship'.
 newtype TableRelationships = TableRelationships
-  {unTableRelationships :: HashMap API.TableName (HashMap API.RelationshipName API.Relationship)}
+  {unTableRelationships :: HashMap TableRelationshipsKey (HashMap API.RelationshipName API.Relationship)}
   deriving stock (Eq, Show)
 
 instance Semigroup TableRelationships where
@@ -84,12 +96,12 @@ recordTableRelationship ::
     Monoid writerOutput,
     MonadError QErr m
   ) =>
-  API.TableName ->
+  TableRelationshipsKey ->
   API.RelationshipName ->
   API.Relationship ->
   CPS.WriterT writerOutput m ()
-recordTableRelationship sourceTableName relationshipName relationship =
-  let newRelationship = TableRelationships $ HashMap.singleton sourceTableName (HashMap.singleton relationshipName relationship)
+recordTableRelationship sourceName relationshipName relationship =
+  let newRelationship = TableRelationships $ HashMap.singleton sourceName (HashMap.singleton relationshipName relationship)
    in CPS.tell $ modifier (const newRelationship) mempty
 
 recordTableRelationshipFromRelInfo ::
@@ -97,7 +109,7 @@ recordTableRelationshipFromRelInfo ::
     Monoid writerOutput,
     MonadError QErr m
   ) =>
-  API.TableName ->
+  TableRelationshipsKey ->
   RelInfo 'DataConnector ->
   CPS.WriterT writerOutput m (API.RelationshipName, API.Relationship)
 recordTableRelationshipFromRelInfo sourceTableName RelInfo {..} = do
@@ -214,11 +226,11 @@ translateBoolExpToExpression ::
     MonadError QErr m
   ) =>
   SessionVariables ->
-  API.TableName ->
+  TableRelationshipsKey ->
   AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
   CPS.WriterT writerOutput m (Maybe API.Expression)
-translateBoolExpToExpression sessionVariables sourceTableName boolExp = do
-  removeAlwaysTrueExpression <$> translateBoolExp sessionVariables sourceTableName boolExp
+translateBoolExpToExpression sessionVariables sourceName boolExp = do
+  removeAlwaysTrueExpression <$> translateBoolExp sessionVariables sourceName boolExp
 
 translateBoolExp ::
   ( Has TableRelationships writerOutput,
@@ -226,25 +238,25 @@ translateBoolExp ::
     MonadError QErr m
   ) =>
   SessionVariables ->
-  API.TableName ->
+  TableRelationshipsKey ->
   AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
   CPS.WriterT writerOutput m API.Expression
-translateBoolExp sessionVariables sourceTableName = \case
+translateBoolExp sessionVariables sourceName = \case
   BoolAnd xs ->
-    mkIfZeroOrMany API.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp' sourceTableName) xs
+    mkIfZeroOrMany API.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp' sourceName) xs
   BoolOr xs ->
-    mkIfZeroOrMany API.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp' sourceTableName) xs
+    mkIfZeroOrMany API.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp' sourceName) xs
   BoolNot x ->
-    API.Not <$> (translateBoolExp' sourceTableName) x
+    API.Not <$> (translateBoolExp' sourceName) x
   BoolField (AVColumn c xs) ->
     lift $ mkIfZeroOrMany API.And <$> traverse (translateOp sessionVariables (Witch.from $ ciColumn c) (Witch.from . columnTypeToScalarType $ ciType c)) xs
   BoolField (AVRelationship relationshipInfo (RelationshipFilters {rfTargetTablePermissions, rfFilter})) -> do
-    (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
+    (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceName relationshipInfo
     -- TODO: How does this function keep track of the root table?
-    API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp' _rTargetTable (BoolAnd [rfTargetTablePermissions, rfFilter])
+    API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp' (TableNameKey _rTargetTable) (BoolAnd [rfTargetTablePermissions, rfFilter])
   BoolExists GExists {..} ->
     let tableName = Witch.from _geTable
-     in API.Exists (API.UnrelatedTable tableName) <$> translateBoolExp' tableName _geWhere
+     in API.Exists (API.UnrelatedTable tableName) <$> translateBoolExp' (TableNameKey tableName) _geWhere
   where
     translateBoolExp' = translateBoolExp sessionVariables
 

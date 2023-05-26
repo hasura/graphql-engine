@@ -139,7 +139,7 @@ tests = describe "Basic Tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Album")
               ( emptyQuery
                   & API.qFields
@@ -193,7 +193,7 @@ tests = describe "Basic Tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Artist")
               ( emptyQuery
                   & API.qFields
@@ -243,7 +243,7 @@ tests = describe "Basic Tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Customer")
               ( emptyQuery
                   & API.qFields

@@ -152,5 +152,5 @@ TrackedTables.play = async ({ canvasElement }) => {
 export const MassiveTableAmount = UntrackedTables.bind({});
 
 MassiveTableAmount.parameters = {
-  msw: handlers(1000000),
+  msw: handlers(100),
 };

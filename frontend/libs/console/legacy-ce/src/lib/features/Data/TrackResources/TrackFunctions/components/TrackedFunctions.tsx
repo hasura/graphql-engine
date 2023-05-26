@@ -16,6 +16,8 @@ import { useTrackedFunctions } from '../hooks/useTrackedFunctions';
 import { hasuraToast } from '../../../../../new-components/Toasts';
 import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessage';
 import { useTrackFunction } from '../../../hooks/useTrackFunction';
+import { ModifyFunctionConfiguration } from '../../../ManageFunction/components/ModifyFunctionConfiguration';
+import { FaEdit } from 'react-icons/fa';
 
 export type TrackedFunctionsProps = {
   dataSourceName: string;
@@ -26,6 +28,9 @@ export const TrackedFunctions = (props: TrackedFunctionsProps) => {
 
   const { data: trackedFunctions = [], isLoading } =
     useTrackedFunctions(dataSourceName);
+
+  const [isConfigurationModalOpen, setIsConfigurationModalOpen] =
+    useState(false);
 
   const [activeRow, setActiveRow] = useState<number | undefined>();
 
@@ -151,6 +156,22 @@ export const TrackedFunctions = (props: TrackedFunctionsProps) => {
               </CardedTable.TableBodyCell>
               <CardedTable.TableBodyCell>
                 <div className="flex gap-2 justify-end">
+                  {isConfigurationModalOpen ? (
+                    <ModifyFunctionConfiguration
+                      dataSourceName={dataSourceName}
+                      qualifiedFunction={trackedFunction.qualifiedFunction}
+                      onSuccess={() => setIsConfigurationModalOpen(false)}
+                      onClose={() => setIsConfigurationModalOpen(false)}
+                    />
+                  ) : null}
+                  <Button
+                    onClick={() => {
+                      setIsConfigurationModalOpen(true);
+                    }}
+                    icon={<FaEdit />}
+                  >
+                    Configure
+                  </Button>
                   <Button
                     onClick={() => {
                       setActiveRow(index);

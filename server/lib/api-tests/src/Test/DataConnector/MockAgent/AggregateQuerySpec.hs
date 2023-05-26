@@ -145,7 +145,7 @@ tests = describe "Aggregate Query Tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Artist")
               ( emptyQuery
                   & API.qFields
@@ -164,21 +164,22 @@ tests = describe "Aggregate Query Tests" $ do
                       ]
                   & API.qLimit ?~ 1
               )
-              & API.qrTableRelationships
+              & API.qrRelationships
                 .~ Set.fromList
-                  [ API.TableRelationships
-                      { _trSourceTable = mkTableName "Artist",
-                        _trRelationships =
-                          HashMap.fromList
-                            [ ( API.RelationshipName "Albums",
-                                API.Relationship
-                                  { _rTargetTable = mkTableName "Album",
-                                    _rRelationshipType = API.ArrayRelationship,
-                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                  }
-                              )
-                            ]
-                      }
+                  [ API.RTable
+                      API.TableRelationships
+                        { _trelSourceTable = mkTableName "Artist",
+                          _trelRelationships =
+                            HashMap.fromList
+                              [ ( API.RelationshipName "Albums",
+                                  API.Relationship
+                                    { _rTargetTable = mkTableName "Album",
+                                      _rRelationshipType = API.ArrayRelationship,
+                                      _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                    }
+                                )
+                              ]
+                        }
                   ]
         )
 
@@ -260,7 +261,7 @@ tests = describe "Aggregate Query Tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Invoice")
               ( emptyQuery
                   & API.qFields
@@ -284,21 +285,22 @@ tests = describe "Aggregate Query Tests" $ do
                   & API.qLimit ?~ 2
                   & API.qAggregatesLimit ?~ 2
               )
-              & API.qrTableRelationships
+              & API.qrRelationships
                 .~ Set.fromList
-                  [ API.TableRelationships
-                      { _trSourceTable = mkTableName "Invoice",
-                        _trRelationships =
-                          HashMap.fromList
-                            [ ( API.RelationshipName "InvoiceLines",
-                                API.Relationship
-                                  { _rTargetTable = mkTableName "InvoiceLine",
-                                    _rRelationshipType = API.ArrayRelationship,
-                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
-                                  }
-                              )
-                            ]
-                      }
+                  [ API.RTable
+                      API.TableRelationships
+                        { _trelSourceTable = mkTableName "Invoice",
+                          _trelRelationships =
+                            HashMap.fromList
+                              [ ( API.RelationshipName "InvoiceLines",
+                                  API.Relationship
+                                    { _rTargetTable = mkTableName "InvoiceLine",
+                                      _rRelationshipType = API.ArrayRelationship,
+                                      _rColumnMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
+                                    }
+                                )
+                              ]
+                        }
                   ]
         )
 

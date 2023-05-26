@@ -80,26 +80,34 @@ mkRemoteRelationshipPlan sessionVariables _sourceConfig joinIds joinIdsSchema ar
             FromTable table -> Witch.from table
             other -> error $ "translateAnnObjectSelectToQueryRequest: " <> show other
       ((fields, whereClause), (TableRelationships tableRelationships)) <- CPS.runWriterT $ do
-        fields <- QueryPlan.translateAnnFields sessionVariables noPrefix tableName _aosFields
-        whereClause <- translateBoolExpToExpression sessionVariables tableName _aosTargetFilter
+        fields <- QueryPlan.translateAnnFields sessionVariables noPrefix (TableNameKey tableName) _aosFields
+        whereClause <- translateBoolExpToExpression sessionVariables (TableNameKey tableName) _aosTargetFilter
         pure (fields, whereClause)
-      let apiTableRelationships = Set.fromList $ uncurry API.TableRelationships <$> HashMap.toList tableRelationships
+      let apiTableRelationships = Set.fromList $ tableRelationshipsToList tableRelationships
       pure $
-        API.QueryRequest
-          { _qrTable = tableName,
-            _qrTableRelationships = apiTableRelationships,
-            _qrQuery =
-              API.Query
-                { _qFields = Just $ mapFieldNameHashMap fields,
-                  _qAggregates = Nothing,
-                  _qAggregatesLimit = Nothing,
-                  _qLimit = Nothing,
-                  _qOffset = Nothing,
-                  _qWhere = whereClause,
-                  _qOrderBy = Nothing
-                },
-            _qrForeach = Just foreachRowFilter
-          }
+        API.QRTable $
+          API.TableRequest
+            { _trTable = tableName,
+              _trRelationships = apiTableRelationships,
+              _trQuery =
+                API.Query
+                  { _qFields = Just $ mapFieldNameHashMap fields,
+                    _qAggregates = Nothing,
+                    _qAggregatesLimit = Nothing,
+                    _qLimit = Nothing,
+                    _qOffset = Nothing,
+                    _qWhere = whereClause,
+                    _qOrderBy = Nothing
+                  },
+              _trForeach = Just foreachRowFilter
+            }
+
+tableRelationshipsToList :: HashMap TableRelationshipsKey (HashMap API.RelationshipName API.Relationship) -> [API.Relationships]
+tableRelationshipsToList m = map (either (API.RFunction . uncurry API.FunctionRelationships) (API.RTable . uncurry API.TableRelationships) . tableRelationshipsKeyToEither) (HashMap.toList m)
+
+tableRelationshipsKeyToEither :: (TableRelationshipsKey, c) -> Either (API.FunctionName, c) (API.TableName, c)
+tableRelationshipsKeyToEither (FunctionNameKey f, x) = Left (f, x)
+tableRelationshipsKeyToEither (TableNameKey t, x) = Right (t, x)
 
 translateForeachRowFilter :: MonadError QErr m => FieldName -> HashMap FieldName (ColumnName, ScalarType) -> J.Object -> m (HashMap API.ColumnName API.ScalarValue)
 translateForeachRowFilter argumentIdFieldName joinIdsSchema joinIds =

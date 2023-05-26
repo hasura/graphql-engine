@@ -55,8 +55,6 @@ export const useCheckRows = <T,>(
     setCheckedIds([]);
   };
 
-  console.log('state of checked', checkedIds);
-
   React.useEffect(() => {
     if (!checkboxRef.current) return;
     checkboxRef.current.indeterminate = inputStatus === 'indeterminate';

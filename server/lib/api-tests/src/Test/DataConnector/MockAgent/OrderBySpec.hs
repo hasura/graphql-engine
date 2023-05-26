@@ -114,7 +114,7 @@ tests = describe "Order By Tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Album")
               ( emptyQuery
                   & API.qFields
@@ -157,7 +157,7 @@ tests = describe "Order By Tests" $ do
     _mrrRecordedRequest
       `shouldBe` Just
         ( Query $
-            mkQueryRequest
+            mkTableRequest
               (mkTableName "Artist")
               ( emptyQuery
                   & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string"))]
@@ -184,21 +184,22 @@ tests = describe "Order By Tests" $ do
                           ]
                       )
               )
-              & API.qrTableRelationships
+              & API.qrRelationships
                 .~ Set.fromList
-                  [ API.TableRelationships
-                      { _trSourceTable = mkTableName "Artist",
-                        _trRelationships =
-                          HashMap.fromList
-                            [ ( API.RelationshipName "Albums",
-                                API.Relationship
-                                  { _rTargetTable = mkTableName "Album",
-                                    _rRelationshipType = API.ArrayRelationship,
-                                    _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                  }
-                              )
-                            ]
-                      }
+                  [ API.RTable
+                      API.TableRelationships
+                        { _trelSourceTable = mkTableName "Artist",
+                          _trelRelationships =
+                            HashMap.fromList
+                              [ ( API.RelationshipName "Albums",
+                                  API.Relationship
+                                    { _rTargetTable = mkTableName "Album",
+                                      _rRelationshipType = API.ArrayRelationship,
+                                      _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                    }
+                                )
+                              ]
+                        }
                   ]
         )
 

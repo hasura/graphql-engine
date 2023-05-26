@@ -1,22 +1,21 @@
 import { UseQueryOptions, useQuery } from 'react-query';
-import { DataSource, DriverCapability, Feature } from '../../DataSource';
+import { DataSource, Feature } from '../../DataSource';
 import { useMetadata } from '../../hasura-metadata-api';
 import { useHttpClient } from '../../Network';
 import { APIError } from '../../../hooks/error';
+import { Capabilities } from '@hasura/dc-api-types';
 
 type UseDatabaseCapabilitiesArgs = {
   dataSourceName: string;
 };
 
-export const useDriverCapabilities = <
-  FinalResult = Feature | DriverCapability
->({
+export const useDriverCapabilities = <FinalResult = Feature | Capabilities>({
   dataSourceName,
   select,
   options = {},
 }: UseDatabaseCapabilitiesArgs & {
-  select?: (data: Feature | DriverCapability) => FinalResult;
-  options?: UseQueryOptions<Feature | DriverCapability, APIError, FinalResult>;
+  select?: (data: Feature | Capabilities) => FinalResult;
+  options?: UseQueryOptions<Feature | Capabilities, APIError, FinalResult>;
 }) => {
   const httpClient = useHttpClient();
 
@@ -24,7 +23,7 @@ export const useDriverCapabilities = <
     m => m.metadata.sources.find(source => source.name === dataSourceName)?.kind
   );
 
-  return useQuery<Feature | DriverCapability, APIError, FinalResult>(
+  return useQuery<Feature | Capabilities, APIError, FinalResult>(
     [dataSourceName, 'capabilities'],
     async () => {
       const result =

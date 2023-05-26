@@ -46,8 +46,9 @@ instance Backend 'DataConnector where
 
   type TableName 'DataConnector = DC.TableName
   type FunctionName 'DataConnector = DC.FunctionName
-  type RawFunctionInfo 'DataConnector = XDisable
-  type FunctionArgument 'DataConnector = XDisable
+  type FunctionReturnType 'DataConnector = DC.FunctionReturnType
+  type RawFunctionInfo 'DataConnector = API.FunctionInfo
+  type FunctionArgument 'DataConnector = API.FunctionArg
   type ConstraintName 'DataConnector = DC.ConstraintName
   type BasicOrderType 'DataConnector = DC.OrderDirection
   type NullsOrderType 'DataConnector = Unimplemented
@@ -64,7 +65,7 @@ instance Backend 'DataConnector where
   type BooleanOperators 'DataConnector = CustomBooleanOperator
   type ExtraTableMetadata 'DataConnector = DC.ExtraTableMetadata
   type ComputedFieldDefinition 'DataConnector = Unimplemented
-  type FunctionArgumentExp 'DataConnector = Const Unimplemented
+  type FunctionArgumentExp 'DataConnector = DC.ArgumentExp
   type ComputedFieldImplicitArguments 'DataConnector = Unimplemented
   type ComputedFieldReturn 'DataConnector = Unimplemented
 
@@ -111,9 +112,7 @@ instance Backend 'DataConnector where
   scalarValueToJSON :: ScalarValue 'DataConnector -> J.Value
   scalarValueToJSON = id
 
-  functionToTable :: FunctionName 'DataConnector -> TableName 'DataConnector
-  functionToTable = error "functionToTable: not implemented for the Data Connector backend."
-
+  -- TODO: Fill in this definition for computed fields
   computedFieldFunction :: ComputedFieldDefinition 'DataConnector -> FunctionName 'DataConnector
   computedFieldFunction = error "computedFieldFunction: not implemented for the Data Connector backend"
 
@@ -127,6 +126,9 @@ instance Backend 'DataConnector where
   tableToFunction :: TableName 'DataConnector -> FunctionName 'DataConnector
   tableToFunction = coerce
 
+  functionToTable :: FunctionName 'DataConnector -> TableName 'DataConnector
+  functionToTable = coerce
+
   tableGraphQLName :: TableName 'DataConnector -> Either QErr G.Name
   tableGraphQLName name = do
     let snakedName = snakeCaseTableName @'DataConnector name
@@ -134,7 +136,10 @@ instance Backend 'DataConnector where
       `onNothing` throw400 ValidationFailed ("TableName " <> snakedName <> " is not a valid GraphQL identifier")
 
   functionGraphQLName :: FunctionName 'DataConnector -> Either QErr G.Name
-  functionGraphQLName = error "functionGraphQLName: not implemented for the Data Connector backend."
+  functionGraphQLName name = do
+    let snakedName = snakeCaseTableName @'DataConnector (coerce name)
+    G.mkName snakedName
+      `onNothing` throw400 ValidationFailed ("FunctionName " <> snakedName <> " is not a valid GraphQL name")
 
   snakeCaseTableName :: TableName 'DataConnector -> Text
   snakeCaseTableName = Text.intercalate "_" . NonEmpty.toList . DC.unTableName
