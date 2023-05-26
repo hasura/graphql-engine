@@ -5,12 +5,13 @@ import {
   isRemoteSchemaRelationship,
 } from '../../DataSource';
 import { MetadataTable } from '../../hasura-metadata-types';
+import { SuggestedRelationshipWithName } from '../components/SuggestedRelationships/hooks/useSuggestedRelationships';
 import {
   LocalRelationship,
   Relationship,
   RemoteDatabaseRelationship,
   RemoteSchemaRelationship,
-  SuggestedRelationship,
+  // SuggestedRelationship,
 } from '../types';
 import {
   adaptLegacyRemoteSchemaRelationship,
@@ -25,7 +26,7 @@ import {
 export const getTableLocalRelationships = (
   metadataTable: MetadataTable | undefined,
   dataSourceName: string,
-  suggestedRelationships: SuggestedRelationship[]
+  suggestedRelationships: SuggestedRelationshipWithName[]
 ) => {
   const table = metadataTable?.table;
   // adapt local array relationships
@@ -39,15 +40,17 @@ export const getTableLocalRelationships = (
         relationship,
       });
 
+    const arraySuggestedRelationship = suggestedRelationships.filter(
+      rel => rel.type === 'array'
+    );
     return adaptLocalArrayRelationshipWithFkConstraint({
       table,
       dataSourceName,
       relationship,
-      suggestedRelationships,
+      suggestedRelationships: arraySuggestedRelationship,
     });
   });
 
-  // adapt local object relationships
   const localObjectRelationships = (
     metadataTable?.object_relationships ?? []
   ).map<LocalRelationship>(relationship => {
@@ -57,11 +60,16 @@ export const getTableLocalRelationships = (
         dataSourceName,
         relationship,
       });
+
+    const objectSuggestedRelationship = suggestedRelationships.filter(
+      rel => rel.type === 'object'
+    );
+
     return adaptLocalObjectRelationshipWithFkConstraint({
       table,
       dataSourceName,
       relationship,
-      suggestedRelationships,
+      suggestedRelationships: objectSuggestedRelationship,
     });
   });
 
@@ -71,7 +79,7 @@ export const getTableLocalRelationships = (
 export const getAllTableRelationships = (
   metadataTable: MetadataTable | undefined,
   dataSourceName: string,
-  suggestedRelationships: SuggestedRelationship[]
+  suggestedRelationships: SuggestedRelationshipWithName[]
 ): Relationship[] => {
   const table = metadataTable?.table;
   // adapt local array relationships
@@ -80,7 +88,6 @@ export const getAllTableRelationships = (
     dataSourceName,
     suggestedRelationships
   );
-
   const remoteRelationships = (metadataTable?.remote_relationships ?? []).map<
     RemoteSchemaRelationship | RemoteDatabaseRelationship
   >(relationship => {

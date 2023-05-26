@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import inflection from 'inflection';
 import camelCase from 'lodash/camelCase';
-import { isEqual } from '../../../../../components/Common/utils/jsUtils';
 import { LocalRelationship, SuggestedRelationship } from '../../../types';
 import { getTableDisplayName } from '../../../utils/helpers';
 import { getDriverPrefix, runMetadataQuery } from '../../../../DataSource';
@@ -94,59 +93,6 @@ export const addConstraintName = (
       ...relationship,
       constraintName,
     };
-  });
-
-type RemoveExistingRelationshipsArgs = {
-  relationships: SuggestedRelationship[];
-  existingRelationships: LocalRelationship[];
-};
-
-export const removeExistingRelationships = ({
-  relationships,
-  existingRelationships,
-}: RemoveExistingRelationshipsArgs) =>
-  relationships.filter(relationship => {
-    const fromTable = relationship.from.table;
-
-    const fromTableExists = existingRelationships.find(rel =>
-      areTablesEqual(rel.fromTable, fromTable)
-    );
-
-    if (!fromTableExists) {
-      return true;
-    }
-
-    const existingRelationshipsFromSameTable = existingRelationships.filter(
-      rel => areTablesEqual(rel.fromTable, fromTable)
-    );
-
-    const toTable = relationship.to.table;
-    const toTableExists = existingRelationshipsFromSameTable.find(rel =>
-      areTablesEqual(rel.definition.toTable, toTable)
-    );
-
-    if (!toTableExists) {
-      return true;
-    }
-
-    const existingRelationshipsFromAndToSameTable =
-      existingRelationshipsFromSameTable.filter(rel =>
-        areTablesEqual(rel.definition.toTable, toTable)
-      );
-
-    const existingRelationshipsFromAndToSameTableAndSameFromColumns =
-      existingRelationshipsFromAndToSameTable.filter(rel => {
-        const existingToColumns = Object.values(rel.definition.mapping).sort();
-        const relationshipToColumns = relationship.to.columns.sort();
-
-        return isEqual(existingToColumns, relationshipToColumns);
-      });
-
-    if (!existingRelationshipsFromAndToSameTableAndSameFromColumns) {
-      return true;
-    }
-
-    return false;
   });
 
 export const getSuggestedRelationshipsCacheQuery = (
@@ -293,6 +239,16 @@ export const useSuggestedRelationships = ({
 
   const suggestedRelationships = data?.relationships || [];
 
+  /**
+   * This is needed because the suggested_relationships metadata API returns Foreign Keys
+   *
+   * from current table -> to other table
+   * but also
+   *
+   * from other table -> to current table
+   *
+   * After the tracking, the second type of Foreign Keys would not be shown in the current table UI
+   */
   const tableFilteredRelationships = table
     ? filterTableRelationships({
         table,
@@ -300,14 +256,8 @@ export const useSuggestedRelationships = ({
       })
     : suggestedRelationships;
 
-  // TODO: remove when the metadata request will correctly omit already tracked relationships
-  const notExistingRelationships = removeExistingRelationships({
-    relationships: tableFilteredRelationships,
-    existingRelationships,
-  });
-
   const relationshipsWithConstraintName = addConstraintName(
-    notExistingRelationships,
+    tableFilteredRelationships,
     namingConvention
   );
 

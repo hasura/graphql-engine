@@ -75,7 +75,7 @@ export type LocalTableObjectRelationship = BaseLocalRelationshipProps & {
       table: Table;
     } & (
       | {
-          // Recommened type to use
+          // Recommended type to use
           columns: string[];
         }
       | {
