@@ -47,7 +47,9 @@ export const isEnvironmentSupportMultiTenantConnectionPooling = (
 
 export const isImportFromOpenAPIEnabled = isProConsole;
 export const isDynamicDBRoutingEnabled = isProConsole;
-export const isCachingEnabled = isProConsole;
+
+export const isCachingEnabled = (env: ProConsoleEnv) =>
+  isProConsole(env) || env.consoleType === 'pro-lite';
 
 export const isEEClassicConsole = () => {
   return window.__env.eeMode || false;
