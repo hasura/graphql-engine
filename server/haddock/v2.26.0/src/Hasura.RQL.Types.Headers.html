@@ -1,0 +1,293 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.Headers</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier">HeaderConf</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderValue"><span class="hs-identifier">HeaderValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier">HVEnv</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier">HVValue</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">codec</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">bimapCodec</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">disjointEitherCodec</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">requiredField'</span></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AC</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span id="local-6989586621690802623"><span id="local-6989586621690802624"></span></span><span class="hs-keyword">data</span><span> </span><span id="HeaderConf"><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-var">HeaderConf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HeaderConf"><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-var">HeaderConf</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderName"><span class="hs-identifier hs-type">HeaderName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderValue"><span class="hs-identifier hs-type">HeaderValue</span></a></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690802611"><span id="local-6989586621690802613"><span id="local-6989586621690802620"><span class="annot"><span class="annottext">Int -&gt; HeaderConf -&gt; ShowS
+[HeaderConf] -&gt; ShowS
+HeaderConf -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [HeaderConf] -&gt; ShowS
+$cshowList :: [HeaderConf] -&gt; ShowS
+show :: HeaderConf -&gt; String
+$cshow :: HeaderConf -&gt; String
+showsPrec :: Int -&gt; HeaderConf -&gt; ShowS
+$cshowsPrec :: Int -&gt; HeaderConf -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690802603"><span id="local-6989586621690802608"><span class="annot"><span class="annottext">HeaderConf -&gt; HeaderConf -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: HeaderConf -&gt; HeaderConf -&gt; Bool
+$c/= :: HeaderConf -&gt; HeaderConf -&gt; Bool
+== :: HeaderConf -&gt; HeaderConf -&gt; Bool
+$c== :: HeaderConf -&gt; HeaderConf -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep HeaderConf x -&gt; HeaderConf
+forall x. HeaderConf -&gt; Rep HeaderConf x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep HeaderConf x -&gt; HeaderConf
+$cfrom :: forall x. HeaderConf -&gt; Rep HeaderConf x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690802597"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690802590"><span id="local-6989586621690802592"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">type</span><span> </span><span id="HeaderName"><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderName"><span class="hs-identifier hs-var">HeaderName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span id="local-6989586621690802586"><span id="local-6989586621690802587"></span></span><span class="hs-keyword">data</span><span> </span><span id="HeaderValue"><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderValue"><span class="hs-identifier hs-var">HeaderValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HVValue"><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-var">HVValue</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="HVEnv"><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier hs-var">HVEnv</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690802576"><span id="local-6989586621690802578"><span id="local-6989586621690802584"><span class="annot"><span class="annottext">Int -&gt; HeaderValue -&gt; ShowS
+[HeaderValue] -&gt; ShowS
+HeaderValue -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [HeaderValue] -&gt; ShowS
+$cshowList :: [HeaderValue] -&gt; ShowS
+show :: HeaderValue -&gt; String
+$cshow :: HeaderValue -&gt; String
+showsPrec :: Int -&gt; HeaderValue -&gt; ShowS
+$cshowsPrec :: Int -&gt; HeaderValue -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690802570"><span id="local-6989586621690802574"><span class="annot"><span class="annottext">HeaderValue -&gt; HeaderValue -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: HeaderValue -&gt; HeaderValue -&gt; Bool
+$c/= :: HeaderValue -&gt; HeaderValue -&gt; Bool
+== :: HeaderValue -&gt; HeaderValue -&gt; Bool
+$c== :: HeaderValue -&gt; HeaderValue -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep HeaderValue x -&gt; HeaderValue
+forall x. HeaderValue -&gt; Rep HeaderValue x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep HeaderValue x -&gt; HeaderValue
+$cfrom :: forall x. HeaderValue -&gt; Rep HeaderValue x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690802566"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderValue"><span class="hs-identifier hs-type">HeaderValue</span></a></span></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690802560"><span id="local-6989586621690802562"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderValue"><span class="hs-identifier hs-type">HeaderValue</span></a></span></span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690802557"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621690802555"><span class="annot"><span class="annottext">codec :: JSONCodec HeaderConf
+</span><a href="#local-6989586621690802555"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+(oldOutput -&gt; Either String newOutput)
+-&gt; (newInput -&gt; oldInput)
+-&gt; Codec context oldInput oldOutput
+-&gt; Codec context newInput newOutput
+</span><span class="hs-identifier hs-var">bimapCodec</span></span><span> </span><span class="annot"><span class="annottext">Either (HeaderName, HeaderName) (HeaderName, HeaderName)
+-&gt; Either String HeaderConf
+</span><a href="#local-6989586621690802554"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderConf
+-&gt; Either (HeaderName, HeaderName) (HeaderName, HeaderName)
+</span><a href="#local-6989586621690802553"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall context input1 output1 input2 output2.
+Codec context input1 output1
+-&gt; Codec context input2 output2
+-&gt; Codec context (Either input1 input2) (Either output1 output2)
+</span><span class="hs-identifier hs-var">disjointEitherCodec</span></span><span> </span><span class="annot"><span class="annottext">ValueCodec (HeaderName, HeaderName) (HeaderName, HeaderName)
+</span><a href="#local-6989586621690802552"><span class="hs-identifier hs-var">valCodec</span></a></span><span> </span><span class="annot"><span class="annottext">ValueCodec (HeaderName, HeaderName) (HeaderName, HeaderName)
+</span><a href="#local-6989586621690802551"><span class="hs-identifier hs-var">fromEnvCodec</span></a></span><span>
+</span><span id="line-31"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-32"></span><span>      </span><span id="local-6989586621690802552"><span class="annot"><span class="annottext">valCodec :: ValueCodec (HeaderName, HeaderName) (HeaderName, HeaderName)
+</span><a href="#local-6989586621690802552"><span class="hs-identifier hs-var hs-var">valCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-33"></span><span>        </span><span class="annot"><span class="annottext">forall input output.
+HeaderName -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;HeaderConfValue&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-34"></span><span>          </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+HeaderName -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fst</span></a></span><span>
+</span><span id="line-36"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+HeaderName -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">snd</span></a></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span>      </span><span id="local-6989586621690802551"><span class="annot"><span class="annottext">fromEnvCodec :: ValueCodec (HeaderName, HeaderName) (HeaderName, HeaderName)
+</span><a href="#local-6989586621690802551"><span class="hs-identifier hs-var hs-var">fromEnvCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-39"></span><span>        </span><span class="annot"><span class="annottext">forall input output.
+HeaderName -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;HeaderConfFromEnv&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-40"></span><span>          </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+HeaderName -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fst</span></a></span><span>
+</span><span id="line-42"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+HeaderName -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;value_from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">snd</span></a></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span>      </span><span id="local-6989586621690802554"><span class="annot"><span class="annottext">dec :: Either (HeaderName, HeaderName) (HeaderName, HeaderName)
+-&gt; Either String HeaderConf
+</span><a href="#local-6989586621690802554"><span class="hs-identifier hs-var hs-var">dec</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690802523"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802523"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690802522"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802522"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. b -&gt; Either a b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Right</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue -&gt; HeaderConf
+</span><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-var">HeaderConf</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802523"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue
+</span><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-var">HVValue</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802522"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>      </span><span class="annot"><a href="#local-6989586621690802554"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690802521"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802521"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690802520"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802520"><span class="hs-identifier hs-var">valueFromEnv</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-46"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderName -&gt; Bool
+</span><span class="hs-identifier hs-var">T.isPrefixOf</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;HASURA_GRAPHQL_&quot;</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802520"><span class="hs-identifier hs-var">valueFromEnv</span></a></span><span>
+</span><span id="line-47"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; Either a b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;env variables starting with \&quot;HASURA_GRAPHQL_\&quot; are not allowed in value_from_env: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; String
+</span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802520"><span class="hs-identifier hs-var">valueFromEnv</span></a></span><span>
+</span><span id="line-48"></span><span>          </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall a b. b -&gt; Either a b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Right</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue -&gt; HeaderConf
+</span><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-var">HeaderConf</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802521"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue
+</span><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier hs-var">HVEnv</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802520"><span class="hs-identifier hs-var">valueFromEnv</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span>      </span><span id="local-6989586621690802553"><span class="annot"><span class="annottext">enc :: HeaderConf
+-&gt; Either (HeaderName, HeaderName) (HeaderName, HeaderName)
+</span><a href="#local-6989586621690802553"><span class="hs-identifier hs-var hs-var">enc</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621690802517"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802517"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-type">HVValue</span></a></span><span> </span><span id="local-6989586621690802516"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802516"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; Either a b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802517"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802516"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>      </span><span class="annot"><a href="#local-6989586621690802553"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621690802515"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802515"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier hs-type">HVEnv</span></a></span><span> </span><span id="local-6989586621690802514"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802514"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. b -&gt; Either a b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Right</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802515"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802514"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690802511"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621690802483"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser HeaderConf
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Object</span></span><span> </span><span id="local-6989586621690802480"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690802480"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-55"></span><span>    </span><span id="local-6989586621690802479"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802479"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690802480"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;name&quot;</span></span><span>
+</span><span id="line-56"></span><span>    </span><span id="local-6989586621690802477"><span class="annot"><span class="annottext">Maybe HeaderName
+</span><a href="#local-6989586621690802477"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690802480"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;value&quot;</span></span><span>
+</span><span id="line-57"></span><span>    </span><span id="local-6989586621690802475"><span class="annot"><span class="annottext">Maybe HeaderName
+</span><a href="#local-6989586621690802475"><span class="hs-identifier hs-var">valueFromEnv</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690802480"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;value_from_env&quot;</span></span><span>
+</span><span id="line-58"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe HeaderName
+</span><a href="#local-6989586621690802477"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe HeaderName
+</span><a href="#local-6989586621690802475"><span class="hs-identifier hs-var">valueFromEnv</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-59"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe HeaderName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe HeaderName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;expecting value or value_from_env keys&quot;</span></span><span>
+</span><span id="line-60"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690802474"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802474"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe HeaderName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue -&gt; HeaderConf
+</span><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-var">HeaderConf</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802479"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue
+</span><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-var">HVValue</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802474"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe HeaderName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690802473"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802473"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderName -&gt; Bool
+</span><span class="hs-identifier hs-var">T.isPrefixOf</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;HASURA_GRAPHQL_&quot;</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802473"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-63"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-64"></span><span>            </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;env variables starting with \&quot;HASURA_GRAPHQL_\&quot; are not allowed in value_from_env: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; String
+</span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802473"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-65"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue -&gt; HeaderConf
+</span><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-var">HeaderConf</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802479"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue
+</span><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier hs-var">HVEnv</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802473"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-66"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;expecting only one of value or value_from_env keys&quot;</span></span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;expecting object for headers&quot;</span></span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690802465"><span id="local-6989586621690802467"><span id="local-6989586621690802469"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621690802447"><span class="annot"><span class="annottext">toJSON :: HeaderConf -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621690802445"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802445"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-type">HVValue</span></a></span><span> </span><span id="local-6989586621690802444"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802444"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802445"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802444"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621690802441"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802441"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier hs-type">HVEnv</span></a></span><span> </span><span id="local-6989586621690802440"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802440"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802441"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;value_from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690802440"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-72"></span></pre></body></html>

@@ -1,0 +1,713 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621690844849"><span id="local-6989586621690844850"></span></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE OverloadedLists #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.Source.Table</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceTableInfo"><span class="hs-identifier">SourceTableInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#stiName"><span class="hs-identifier">stiName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#stiType"><span class="hs-identifier">stiType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#stiColumns"><span class="hs-identifier">stiColumns</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#stiPrimaryKey"><span class="hs-identifier">stiPrimaryKey</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#stiForeignKeys"><span class="hs-identifier">stiForeignKeys</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#stiDescription"><span class="hs-identifier">stiDescription</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#stiInsertable"><span class="hs-identifier">stiInsertable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#stiUpdatable"><span class="hs-identifier">stiUpdatable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#stiDeletable"><span class="hs-identifier">stiDeletable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceTableType"><span class="hs-identifier">SourceTableType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceForeignKeys"><span class="hs-identifier">SourceForeignKeys</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#unSourceForeignKeys"><span class="hs-identifier">unSourceForeignKeys</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceConstraint"><span class="hs-identifier">SourceConstraint</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#scForeignTable"><span class="hs-identifier">scForeignTable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#scColumnMapping"><span class="hs-identifier">scColumnMapping</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec.OpenAPI</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier">Control.DeepSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier">NFData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens.TH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">makeLenses</span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">HashMap</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Hashable</span></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.List.NonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">NonEmpty</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.List.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NonEmpty</span></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.OpenApi</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToSchema</span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ConstraintName"><span class="hs-identifier">ConstraintName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Source.Column</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier">SourceColumnInfo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Prelude</span></a></span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- | Table schema data from the 'SchemaResponse'.</span><span>
+</span><span id="line-46"></span><span id="local-6989586621690844834"><span id="local-6989586621690844835"></span></span><span class="hs-keyword">data</span><span> </span><span id="SourceTableInfo"><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceTableInfo"><span class="hs-identifier hs-var">SourceTableInfo</span></a></span></span><span> </span><span id="local-6989586621690845251"><span class="annot"><a href="#local-6989586621690845251"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceTableInfo"><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceTableInfo"><span class="hs-identifier hs-var">SourceTableInfo</span></a></span></span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_stiName"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; TableName b
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiName"><span class="hs-identifier hs-var hs-var">_stiName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845251"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span id="_stiType"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; SourceTableType
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiType"><span class="hs-identifier hs-var hs-var">_stiType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceTableType"><span class="hs-identifier hs-type">SourceTableType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span id="_stiColumns"><span class="annot"><span class="annottext">forall (b :: BackendType).
+SourceTableInfo b -&gt; [SourceColumnInfo b]
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiColumns"><span class="hs-identifier hs-var hs-var">_stiColumns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845251"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>    </span><span id="_stiPrimaryKey"><span class="annot"><span class="annottext">forall (b :: BackendType).
+SourceTableInfo b -&gt; Maybe (NonEmpty (Column b))
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiPrimaryKey"><span class="hs-identifier hs-var hs-var">_stiPrimaryKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845251"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>    </span><span id="_stiForeignKeys"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; SourceForeignKeys b
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiForeignKeys"><span class="hs-identifier hs-var hs-var">_stiForeignKeys</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceForeignKeys"><span class="hs-identifier hs-type">SourceForeignKeys</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845251"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>    </span><span id="_stiDescription"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; Maybe Text
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiDescription"><span class="hs-identifier hs-var hs-var">_stiDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>    </span><span id="_stiInsertable"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiInsertable"><span class="hs-identifier hs-var hs-var">_stiInsertable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>    </span><span id="_stiUpdatable"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiUpdatable"><span class="hs-identifier hs-var hs-var">_stiUpdatable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>    </span><span id="_stiDeletable"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiDeletable"><span class="hs-identifier hs-var hs-var">_stiDeletable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (SourceTableInfo b) x -&gt; SourceTableInfo b
+forall (b :: BackendType) x.
+SourceTableInfo b -&gt; Rep (SourceTableInfo b) x
+$cto :: forall (b :: BackendType) x.
+Rep (SourceTableInfo b) x -&gt; SourceTableInfo b
+$cfrom :: forall (b :: BackendType) x.
+SourceTableInfo b -&gt; Rep (SourceTableInfo b) x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690844815"><span id="local-6989586621690844817"><span class="annot"><span class="annottext">forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+forall {b :: BackendType}. Backend b =&gt; Eq (SourceTableInfo b)
+forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; SourceTableInfo b -&gt; Int
+forall (b :: BackendType). Backend b =&gt; SourceTableInfo b -&gt; Int
+hash :: SourceTableInfo b -&gt; Int
+$chash :: forall (b :: BackendType). Backend b =&gt; SourceTableInfo b -&gt; Int
+hashWithSalt :: Int -&gt; SourceTableInfo b -&gt; Int
+$chashWithSalt :: forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; SourceTableInfo b -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690844805"><span id="local-6989586621690844811"><span class="annot"><span class="annottext">Value -&gt; Parser [SourceTableInfo b]
+Value -&gt; Parser (SourceTableInfo b)
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser [SourceTableInfo b]
+forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser (SourceTableInfo b)
+parseJSONList :: Value -&gt; Parser [SourceTableInfo b]
+$cparseJSONList :: forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser [SourceTableInfo b]
+parseJSON :: Value -&gt; Parser (SourceTableInfo b)
+$cparseJSON :: forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser (SourceTableInfo b)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690844781"><span id="local-6989586621690844786"><span id="local-6989586621690844791"><span id="local-6989586621690844797"><span class="annot"><span class="annottext">[SourceTableInfo b] -&gt; Value
+[SourceTableInfo b] -&gt; Encoding
+SourceTableInfo b -&gt; Value
+SourceTableInfo b -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+forall (b :: BackendType).
+Backend b =&gt;
+[SourceTableInfo b] -&gt; Value
+forall (b :: BackendType).
+Backend b =&gt;
+[SourceTableInfo b] -&gt; Encoding
+forall (b :: BackendType). Backend b =&gt; SourceTableInfo b -&gt; Value
+forall (b :: BackendType).
+Backend b =&gt;
+SourceTableInfo b -&gt; Encoding
+toEncodingList :: [SourceTableInfo b] -&gt; Encoding
+$ctoEncodingList :: forall (b :: BackendType).
+Backend b =&gt;
+[SourceTableInfo b] -&gt; Encoding
+toJSONList :: [SourceTableInfo b] -&gt; Value
+$ctoJSONList :: forall (b :: BackendType).
+Backend b =&gt;
+[SourceTableInfo b] -&gt; Value
+toEncoding :: SourceTableInfo b -&gt; Encoding
+$ctoEncoding :: forall (b :: BackendType).
+Backend b =&gt;
+SourceTableInfo b -&gt; Encoding
+toJSON :: SourceTableInfo b -&gt; Value
+$ctoJSON :: forall (b :: BackendType). Backend b =&gt; SourceTableInfo b -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690844769"><span class="annot"><span class="annottext">Proxy (SourceTableInfo b)
+-&gt; Declare (Definitions Schema) NamedSchema
+forall a.
+Typeable a
+-&gt; (Proxy a -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema a
+forall {b :: BackendType}.
+Backend b =&gt;
+Typeable (SourceTableInfo b)
+forall (b :: BackendType).
+Backend b =&gt;
+Proxy (SourceTableInfo b)
+-&gt; Declare (Definitions Schema) NamedSchema
+declareNamedSchema :: Proxy (SourceTableInfo b)
+-&gt; Declare (Definitions Schema) NamedSchema
+$cdeclareNamedSchema :: forall (b :: BackendType).
+Backend b =&gt;
+Proxy (SourceTableInfo b)
+-&gt; Declare (Definitions Schema) NamedSchema
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceTableInfo"><span class="hs-identifier hs-type">SourceTableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845251"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span id="local-6989586621690844741"><span id="local-6989586621690844758"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690844736"><span class="annot"><a href="#local-6989586621690844736"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690844736"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceTableInfo"><span class="hs-identifier hs-type">SourceTableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690844736"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span id="local-6989586621690844690"><span id="local-6989586621690844692"><span id="local-6989586621690844695"><span id="local-6989586621690844698"><span id="local-6989586621690844701"><span id="local-6989586621690844715"><span id="local-6989586621690844732"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690845200"><span class="annot"><a href="#local-6989586621690845200"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845200"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceTableInfo"><span class="hs-identifier hs-type">SourceTableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845200"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span id="local-6989586621690844663"><span id="local-6989586621690844665"><span id="local-6989586621690844684"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690845192"><span class="annot"><a href="#local-6989586621690845192"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845192"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceTableInfo"><span class="hs-identifier hs-type">SourceTableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845192"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690844656"><span id="local-6989586621690845227"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845227"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceTableInfo"><span class="hs-identifier hs-type">SourceTableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845227"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621690844603"><span class="annot"><span class="annottext">codec :: JSONCodec (SourceTableInfo b)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;TableInfo&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-70"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+TableName b
+-&gt; SourceTableType
+-&gt; [SourceColumnInfo b]
+-&gt; Maybe (NonEmpty (Column b))
+-&gt; SourceForeignKeys b
+-&gt; Maybe Text
+-&gt; Bool
+-&gt; Bool
+-&gt; Bool
+-&gt; SourceTableInfo b
+</span><a href="Hasura.RQL.Types.Source.Table.html#SourceTableInfo"><span class="hs-identifier hs-var">SourceTableInfo</span></a></span><span>
+</span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The name of the table&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; TableName b
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiName"><span class="hs-identifier hs-var">_stiName</span></a></span><span>
+</span><span id="line-72"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithDefault</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">SourceTableType
+</span><a href="Hasura.RQL.Types.Source.Table.html#Table"><span class="hs-identifier hs-var">Table</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The type of table&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; SourceTableType
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiType"><span class="hs-identifier hs-var">_stiType</span></a></span><span>
+</span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;columns&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The columns of the table&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+SourceTableInfo b -&gt; [SourceColumnInfo b]
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiColumns"><span class="hs-identifier hs-var">_stiColumns</span></a></span><span>
+</span><span id="line-74"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall context a.
+Codec context [a] [a]
+-&gt; Codec context (Maybe (NonEmpty a)) (Maybe (NonEmpty a))
+</span><a href="#local-6989586621690844595"><span class="hs-identifier hs-var">dimapMaybeNonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall output.
+(Eq output, HasCodec output) =&gt;
+Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;primary_key&quot;</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The primary key of the table&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+SourceTableInfo b -&gt; Maybe (NonEmpty (Column b))
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiPrimaryKey"><span class="hs-identifier hs-var">_stiPrimaryKey</span></a></span><span>
+</span><span id="line-75"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+(Eq output, HasCodec output) =&gt;
+Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;foreign_keys&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
+HashMap (ConstraintName b) (SourceConstraint b)
+-&gt; SourceForeignKeys b
+</span><a href="Hasura.RQL.Types.Source.Table.html#SourceForeignKeys"><span class="hs-identifier hs-var">SourceForeignKeys</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Foreign key constraints&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; SourceForeignKeys b
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiForeignKeys"><span class="hs-identifier hs-var">_stiForeignKeys</span></a></span><span>
+</span><span id="line-76"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><span class="hs-identifier hs-var">optionalFieldOrNull</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;description&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Description of the table&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; Maybe Text
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiDescription"><span class="hs-identifier hs-var">_stiDescription</span></a></span><span>
+</span><span id="line-77"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithDefault</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;insertable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Whether or not new rows can be inserted into the table&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiInsertable"><span class="hs-identifier hs-var">_stiInsertable</span></a></span><span>
+</span><span id="line-78"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithDefault</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;updatable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Whether or not existing rows can be updated in the table&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiUpdatable"><span class="hs-identifier hs-var">_stiUpdatable</span></a></span><span>
+</span><span id="line-79"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">optionalFieldWithDefault</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;deletable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Whether or not existing rows can be deleted in the table&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceTableInfo b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Source.Table.html#_stiDeletable"><span class="hs-identifier hs-var">_stiDeletable</span></a></span><span>
+</span><span id="line-80"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>      </span><span id="local-6989586621690845159"><span id="local-6989586621690845160"><span class="annot"><a href="#local-6989586621690844595"><span class="hs-identifier hs-type">dimapMaybeNonEmpty</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Codec</span></span><span> </span><span class="annot"><a href="#local-6989586621690845160"><span class="hs-identifier hs-type">context</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621690845159"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621690845159"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Codec</span></span><span> </span><span class="annot"><a href="#local-6989586621690845160"><span class="hs-identifier hs-type">context</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845159"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845159"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-82"></span><span>      </span><span id="local-6989586621690844595"><span class="annot"><span class="annottext">dimapMaybeNonEmpty :: forall context a.
+Codec context [a] [a]
+-&gt; Codec context (Maybe (NonEmpty a)) (Maybe (NonEmpty a))
+</span><a href="#local-6989586621690844595"><span class="hs-identifier hs-var hs-var">dimapMaybeNonEmpty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+(oldOutput -&gt; newOutput)
+-&gt; (newInput -&gt; oldInput)
+-&gt; Codec context oldInput oldOutput
+-&gt; Codec context newInput newOutput
+</span><span class="hs-identifier hs-var">dimapCodec</span></span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; Maybe (NonEmpty a)
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">NonEmpty.nonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">forall a. NonEmpty a -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">NonEmpty.toList</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span id="local-6989586621690844585"><span id="local-6989586621690844586"></span></span><span class="hs-keyword">data</span><span> </span><span id="SourceTableType"><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceTableType"><span class="hs-identifier hs-var">SourceTableType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Table"><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#Table"><span class="hs-identifier hs-var">Table</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="View"><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#View"><span class="hs-identifier hs-var">View</span></a></span></span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690844580"><span id="local-6989586621690844582"><span class="annot"><span class="annottext">SourceTableType -&gt; SourceTableType -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SourceTableType -&gt; SourceTableType -&gt; Bool
+$c/= :: SourceTableType -&gt; SourceTableType -&gt; Bool
+== :: SourceTableType -&gt; SourceTableType -&gt; Bool
+$c== :: SourceTableType -&gt; SourceTableType -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690844561"><span id="local-6989586621690844563"><span id="local-6989586621690844566"><span id="local-6989586621690844569"><span id="local-6989586621690844572"><span id="local-6989586621690844574"><span id="local-6989586621690844576"><span class="annot"><span class="annottext">Eq SourceTableType
+SourceTableType -&gt; SourceTableType -&gt; Bool
+SourceTableType -&gt; SourceTableType -&gt; Ordering
+SourceTableType -&gt; SourceTableType -&gt; SourceTableType
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: SourceTableType -&gt; SourceTableType -&gt; SourceTableType
+$cmin :: SourceTableType -&gt; SourceTableType -&gt; SourceTableType
+max :: SourceTableType -&gt; SourceTableType -&gt; SourceTableType
+$cmax :: SourceTableType -&gt; SourceTableType -&gt; SourceTableType
+&gt;= :: SourceTableType -&gt; SourceTableType -&gt; Bool
+$c&gt;= :: SourceTableType -&gt; SourceTableType -&gt; Bool
+&gt; :: SourceTableType -&gt; SourceTableType -&gt; Bool
+$c&gt; :: SourceTableType -&gt; SourceTableType -&gt; Bool
+&lt;= :: SourceTableType -&gt; SourceTableType -&gt; Bool
+$c&lt;= :: SourceTableType -&gt; SourceTableType -&gt; Bool
+&lt; :: SourceTableType -&gt; SourceTableType -&gt; Bool
+$c&lt; :: SourceTableType -&gt; SourceTableType -&gt; Bool
+compare :: SourceTableType -&gt; SourceTableType -&gt; Ordering
+$ccompare :: SourceTableType -&gt; SourceTableType -&gt; Ordering
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690844555"><span id="local-6989586621690844557"><span id="local-6989586621690844559"><span class="annot"><span class="annottext">Int -&gt; SourceTableType -&gt; ShowS
+[SourceTableType] -&gt; ShowS
+SourceTableType -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SourceTableType] -&gt; ShowS
+$cshowList :: [SourceTableType] -&gt; ShowS
+show :: SourceTableType -&gt; String
+$cshow :: SourceTableType -&gt; String
+showsPrec :: Int -&gt; SourceTableType -&gt; ShowS
+$cshowsPrec :: Int -&gt; SourceTableType -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep SourceTableType x -&gt; SourceTableType
+forall x. SourceTableType -&gt; Rep SourceTableType x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep SourceTableType x -&gt; SourceTableType
+$cfrom :: forall x. SourceTableType -&gt; Rep SourceTableType x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690844512"><span id="local-6989586621690844514"><span id="local-6989586621690844518"><span id="local-6989586621690844522"><span id="local-6989586621690844524"><span id="local-6989586621690844537"><span id="local-6989586621690844543"><span id="local-6989586621690844551"><span class="annot"><span class="annottext">Int -&gt; SourceTableType
+SourceTableType -&gt; Int
+SourceTableType -&gt; [SourceTableType]
+SourceTableType -&gt; SourceTableType
+SourceTableType -&gt; SourceTableType -&gt; [SourceTableType]
+SourceTableType
+-&gt; SourceTableType -&gt; SourceTableType -&gt; [SourceTableType]
+forall a.
+(a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Int -&gt; a)
+-&gt; (a -&gt; Int)
+-&gt; (a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; a -&gt; [a])
+-&gt; Enum a
+enumFromThenTo :: SourceTableType
+-&gt; SourceTableType -&gt; SourceTableType -&gt; [SourceTableType]
+$cenumFromThenTo :: SourceTableType
+-&gt; SourceTableType -&gt; SourceTableType -&gt; [SourceTableType]
+enumFromTo :: SourceTableType -&gt; SourceTableType -&gt; [SourceTableType]
+$cenumFromTo :: SourceTableType -&gt; SourceTableType -&gt; [SourceTableType]
+enumFromThen :: SourceTableType -&gt; SourceTableType -&gt; [SourceTableType]
+$cenumFromThen :: SourceTableType -&gt; SourceTableType -&gt; [SourceTableType]
+enumFrom :: SourceTableType -&gt; [SourceTableType]
+$cenumFrom :: SourceTableType -&gt; [SourceTableType]
+fromEnum :: SourceTableType -&gt; Int
+$cfromEnum :: SourceTableType -&gt; Int
+toEnum :: Int -&gt; SourceTableType
+$ctoEnum :: Int -&gt; SourceTableType
+pred :: SourceTableType -&gt; SourceTableType
+$cpred :: SourceTableType -&gt; SourceTableType
+succ :: SourceTableType -&gt; SourceTableType
+$csucc :: SourceTableType -&gt; SourceTableType
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690844507"><span id="local-6989586621690844509"><span class="annot"><span class="annottext">SourceTableType
+forall a. a -&gt; a -&gt; Bounded a
+maxBound :: SourceTableType
+$cmaxBound :: SourceTableType
+minBound :: SourceTableType
+$cminBound :: SourceTableType
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690844503"><span class="annot"><span class="annottext">SourceTableType -&gt; ()
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: SourceTableType -&gt; ()
+$crnf :: SourceTableType -&gt; ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690844496"><span id="local-6989586621690844498"><span class="annot"><span class="annottext">Eq SourceTableType
+Int -&gt; SourceTableType -&gt; Int
+SourceTableType -&gt; Int
+forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: SourceTableType -&gt; Int
+$chash :: SourceTableType -&gt; Int
+hashWithSalt :: Int -&gt; SourceTableType -&gt; Int
+$chashWithSalt :: Int -&gt; SourceTableType -&gt; Int
+</span><a href="#local-6989586621690844496"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690844489"><span id="local-6989586621690844494"><span class="annot"><span class="annottext">Value -&gt; Parser [SourceTableType]
+Value -&gt; Parser SourceTableType
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [SourceTableType]
+$cparseJSONList :: Value -&gt; Parser [SourceTableType]
+parseJSON :: Value -&gt; Parser SourceTableType
+$cparseJSON :: Value -&gt; Parser SourceTableType
+</span><a href="#local-6989586621690844489"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690844468"><span id="local-6989586621690844473"><span id="local-6989586621690844478"><span id="local-6989586621690844483"><span class="annot"><span class="annottext">[SourceTableType] -&gt; Value
+[SourceTableType] -&gt; Encoding
+SourceTableType -&gt; Value
+SourceTableType -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [SourceTableType] -&gt; Encoding
+$ctoEncodingList :: [SourceTableType] -&gt; Encoding
+toJSONList :: [SourceTableType] -&gt; Value
+$ctoJSONList :: [SourceTableType] -&gt; Value
+toEncoding :: SourceTableType -&gt; Encoding
+$ctoEncoding :: SourceTableType -&gt; Encoding
+toJSON :: SourceTableType -&gt; Value
+$ctoJSON :: SourceTableType -&gt; Value
+</span><a href="#local-6989586621690844468"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceTableType"><span class="hs-identifier hs-type">SourceTableType</span></a></span><span>
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690844461"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceTableType"><span class="hs-identifier hs-type">SourceTableType</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621690844454"><span class="annot"><span class="annottext">codec :: JSONCodec SourceTableType
+</span><a href="#local-6989586621690844454"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall input output.
+Text -&gt; ValueCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">named</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;TableType&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall constant.
+Eq constant =&gt;
+NonEmpty (constant, Text) -&gt; JSONCodec constant
+</span><span class="hs-identifier hs-var">stringConstCodec</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceTableType
+</span><a href="Hasura.RQL.Types.Source.Table.html#Table"><span class="hs-identifier hs-var">Table</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;table&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceTableType
+</span><a href="Hasura.RQL.Types.Source.Table.html#View"><span class="hs-identifier hs-var">View</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;view&quot;</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span id="local-6989586621690844450"><span id="local-6989586621690844451"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="SourceForeignKeys"><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceForeignKeys"><span class="hs-identifier hs-var">SourceForeignKeys</span></a></span></span><span> </span><span id="local-6989586621690845157"><span class="annot"><a href="#local-6989586621690845157"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceForeignKeys"><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceForeignKeys"><span class="hs-identifier hs-var">SourceForeignKeys</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unSourceForeignKeys"><span class="annot"><span class="annottext">forall (b :: BackendType).
+SourceForeignKeys b
+-&gt; HashMap (ConstraintName b) (SourceConstraint b)
+</span><a href="Hasura.RQL.Types.Source.Table.html#_unSourceForeignKeys"><span class="hs-identifier hs-var hs-var">_unSourceForeignKeys</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ConstraintName"><span class="hs-identifier hs-type">ConstraintName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845157"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceConstraint"><span class="hs-identifier hs-type">SourceConstraint</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845157"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">}</span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (SourceForeignKeys b) x -&gt; SourceForeignKeys b
+forall (b :: BackendType) x.
+SourceForeignKeys b -&gt; Rep (SourceForeignKeys b) x
+$cto :: forall (b :: BackendType) x.
+Rep (SourceForeignKeys b) x -&gt; SourceForeignKeys b
+$cfrom :: forall (b :: BackendType) x.
+SourceForeignKeys b -&gt; Rep (SourceForeignKeys b) x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690844441"><span id="local-6989586621690844443"><span class="annot"><span class="annottext">forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+forall (b :: BackendType). Backend b =&gt; Eq (SourceForeignKeys b)
+forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; SourceForeignKeys b -&gt; Int
+forall (b :: BackendType). Backend b =&gt; SourceForeignKeys b -&gt; Int
+hash :: SourceForeignKeys b -&gt; Int
+$chash :: forall (b :: BackendType). Backend b =&gt; SourceForeignKeys b -&gt; Int
+hashWithSalt :: Int -&gt; SourceForeignKeys b -&gt; Int
+$chashWithSalt :: forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; SourceForeignKeys b -&gt; Int
+</span><a href="#local-6989586621690844441"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690844433"><span id="local-6989586621690844438"><span class="annot"><span class="annottext">Value -&gt; Parser [SourceForeignKeys b]
+Value -&gt; Parser (SourceForeignKeys b)
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser [SourceForeignKeys b]
+forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser (SourceForeignKeys b)
+parseJSONList :: Value -&gt; Parser [SourceForeignKeys b]
+$cparseJSONList :: forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser [SourceForeignKeys b]
+parseJSON :: Value -&gt; Parser (SourceForeignKeys b)
+$cparseJSON :: forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser (SourceForeignKeys b)
+</span><a href="#local-6989586621690844433"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690844411"><span id="local-6989586621690844416"><span id="local-6989586621690844421"><span id="local-6989586621690844426"><span class="annot"><span class="annottext">[SourceForeignKeys b] -&gt; Value
+[SourceForeignKeys b] -&gt; Encoding
+SourceForeignKeys b -&gt; Value
+SourceForeignKeys b -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+forall (b :: BackendType).
+Backend b =&gt;
+[SourceForeignKeys b] -&gt; Value
+forall (b :: BackendType).
+Backend b =&gt;
+[SourceForeignKeys b] -&gt; Encoding
+forall (b :: BackendType).
+Backend b =&gt;
+SourceForeignKeys b -&gt; Value
+forall (b :: BackendType).
+Backend b =&gt;
+SourceForeignKeys b -&gt; Encoding
+toEncodingList :: [SourceForeignKeys b] -&gt; Encoding
+$ctoEncodingList :: forall (b :: BackendType).
+Backend b =&gt;
+[SourceForeignKeys b] -&gt; Encoding
+toJSONList :: [SourceForeignKeys b] -&gt; Value
+$ctoJSONList :: forall (b :: BackendType).
+Backend b =&gt;
+[SourceForeignKeys b] -&gt; Value
+toEncoding :: SourceForeignKeys b -&gt; Encoding
+$ctoEncoding :: forall (b :: BackendType).
+Backend b =&gt;
+SourceForeignKeys b -&gt; Encoding
+toJSON :: SourceForeignKeys b -&gt; Value
+$ctoJSON :: forall (b :: BackendType).
+Backend b =&gt;
+SourceForeignKeys b -&gt; Value
+</span><a href="#local-6989586621690844411"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceForeignKeys"><span class="hs-identifier hs-type">SourceForeignKeys</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845157"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span id="local-6989586621690844400"><span id="local-6989586621690844405"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690845207"><span class="annot"><a href="#local-6989586621690845207"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845207"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceForeignKeys"><span class="hs-identifier hs-type">SourceForeignKeys</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845207"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span id="local-6989586621690844376"><span id="local-6989586621690844378"><span id="local-6989586621690844381"><span id="local-6989586621690844384"><span id="local-6989586621690844387"><span id="local-6989586621690844391"><span id="local-6989586621690844396"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690845201"><span class="annot"><a href="#local-6989586621690845201"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845201"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceForeignKeys"><span class="hs-identifier hs-type">SourceForeignKeys</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845201"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span><span>
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span id="local-6989586621690844366"><span id="local-6989586621690844368"><span id="local-6989586621690844374"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690845193"><span class="annot"><a href="#local-6989586621690845193"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845193"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceForeignKeys"><span class="hs-identifier hs-type">SourceForeignKeys</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845193"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690844363"><span id="local-6989586621690845178"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845178"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceForeignKeys"><span class="hs-identifier hs-type">SourceForeignKeys</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845178"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-108"></span><span>  </span><span id="local-6989586621690844359"><span class="annot"><span class="annottext">codec :: JSONCodec (SourceForeignKeys b)
+</span><a href="#local-6989586621690844359"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+(oldOutput -&gt; newOutput)
+-&gt; (newInput -&gt; oldInput)
+-&gt; Codec context oldInput oldOutput
+-&gt; Codec context newInput newOutput
+</span><span class="hs-identifier hs-var">dimapCodec</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+HashMap (ConstraintName b) (SourceConstraint b)
+-&gt; SourceForeignKeys b
+</span><a href="Hasura.RQL.Types.Source.Table.html#SourceForeignKeys"><span class="hs-identifier hs-var">SourceForeignKeys</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+SourceForeignKeys b
+-&gt; HashMap (ConstraintName b) (SourceConstraint b)
+</span><a href="Hasura.RQL.Types.Source.Table.html#_unSourceForeignKeys"><span class="hs-identifier hs-var">_unSourceForeignKeys</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
+</span><span class="hs-identifier hs-var">codec</span></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ConstraintName"><span class="hs-identifier hs-type">ConstraintName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845178"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceConstraint"><span class="hs-identifier hs-type">SourceConstraint</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845178"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span id="local-6989586621690844357"><span id="local-6989586621690844358"></span></span><span class="hs-keyword">data</span><span> </span><span id="SourceConstraint"><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceConstraint"><span class="hs-identifier hs-var">SourceConstraint</span></a></span></span><span> </span><span id="local-6989586621690845118"><span class="annot"><a href="#local-6989586621690845118"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceConstraint"><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceConstraint"><span class="hs-identifier hs-var">SourceConstraint</span></a></span></span><span>
+</span><span id="line-113"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_scForeignTable"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceConstraint b -&gt; TableName b
+</span><a href="Hasura.RQL.Types.Source.Table.html#_scForeignTable"><span class="hs-identifier hs-var hs-var">_scForeignTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845118"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-114"></span><span>    </span><span id="_scColumnMapping"><span class="annot"><span class="annottext">forall (b :: BackendType).
+SourceConstraint b -&gt; HashMap (Column b) (Column b)
+</span><a href="Hasura.RQL.Types.Source.Table.html#_scColumnMapping"><span class="hs-identifier hs-var hs-var">_scColumnMapping</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845118"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845118"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (SourceConstraint b) x -&gt; SourceConstraint b
+forall (b :: BackendType) x.
+SourceConstraint b -&gt; Rep (SourceConstraint b) x
+$cto :: forall (b :: BackendType) x.
+Rep (SourceConstraint b) x -&gt; SourceConstraint b
+$cfrom :: forall (b :: BackendType) x.
+SourceConstraint b -&gt; Rep (SourceConstraint b) x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690844346"><span id="local-6989586621690844348"><span class="annot"><span class="annottext">forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+forall (b :: BackendType). Backend b =&gt; Eq (SourceConstraint b)
+forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; SourceConstraint b -&gt; Int
+forall (b :: BackendType). Backend b =&gt; SourceConstraint b -&gt; Int
+hash :: SourceConstraint b -&gt; Int
+$chash :: forall (b :: BackendType). Backend b =&gt; SourceConstraint b -&gt; Int
+hashWithSalt :: Int -&gt; SourceConstraint b -&gt; Int
+$chashWithSalt :: forall (b :: BackendType).
+Backend b =&gt;
+Int -&gt; SourceConstraint b -&gt; Int
+</span><a href="#local-6989586621690844346"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690844338"><span id="local-6989586621690844343"><span class="annot"><span class="annottext">Value -&gt; Parser [SourceConstraint b]
+Value -&gt; Parser (SourceConstraint b)
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser [SourceConstraint b]
+forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser (SourceConstraint b)
+parseJSONList :: Value -&gt; Parser [SourceConstraint b]
+$cparseJSONList :: forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser [SourceConstraint b]
+parseJSON :: Value -&gt; Parser (SourceConstraint b)
+$cparseJSON :: forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser (SourceConstraint b)
+</span><a href="#local-6989586621690844338"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690844316"><span id="local-6989586621690844321"><span id="local-6989586621690844326"><span id="local-6989586621690844331"><span class="annot"><span class="annottext">[SourceConstraint b] -&gt; Value
+[SourceConstraint b] -&gt; Encoding
+SourceConstraint b -&gt; Value
+SourceConstraint b -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+forall (b :: BackendType).
+Backend b =&gt;
+[SourceConstraint b] -&gt; Value
+forall (b :: BackendType).
+Backend b =&gt;
+[SourceConstraint b] -&gt; Encoding
+forall (b :: BackendType). Backend b =&gt; SourceConstraint b -&gt; Value
+forall (b :: BackendType).
+Backend b =&gt;
+SourceConstraint b -&gt; Encoding
+toEncodingList :: [SourceConstraint b] -&gt; Encoding
+$ctoEncodingList :: forall (b :: BackendType).
+Backend b =&gt;
+[SourceConstraint b] -&gt; Encoding
+toJSONList :: [SourceConstraint b] -&gt; Value
+$ctoJSONList :: forall (b :: BackendType).
+Backend b =&gt;
+[SourceConstraint b] -&gt; Value
+toEncoding :: SourceConstraint b -&gt; Encoding
+$ctoEncoding :: forall (b :: BackendType).
+Backend b =&gt;
+SourceConstraint b -&gt; Encoding
+toJSON :: SourceConstraint b -&gt; Value
+$ctoJSON :: forall (b :: BackendType). Backend b =&gt; SourceConstraint b -&gt; Value
+</span><a href="#local-6989586621690844316"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceConstraint"><span class="hs-identifier hs-type">SourceConstraint</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845118"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span>
+</span><span id="line-120"></span><span id="local-6989586621690844306"><span id="local-6989586621690844310"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690845129"><span class="annot"><a href="#local-6989586621690845129"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845129"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceConstraint"><span class="hs-identifier hs-type">SourceConstraint</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845129"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span id="local-6989586621690844283"><span id="local-6989586621690844285"><span id="local-6989586621690844288"><span id="local-6989586621690844291"><span id="local-6989586621690844294"><span id="local-6989586621690844298"><span id="local-6989586621690844302"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690845126"><span class="annot"><a href="#local-6989586621690845126"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845126"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceConstraint"><span class="hs-identifier hs-type">SourceConstraint</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845126"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span id="local-6989586621690844274"><span id="local-6989586621690844276"><span id="local-6989586621690844281"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621690845123"><span class="annot"><a href="#local-6989586621690845123"><span class="hs-keyword hs-type">stock</span></a></span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845123"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceConstraint"><span class="hs-identifier hs-type">SourceConstraint</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845123"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-125"></span><span>
+</span><span id="line-126"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690844271"><span id="local-6989586621690845120"><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845120"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Table.html#SourceConstraint"><span class="hs-identifier hs-type">SourceConstraint</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690845120"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-127"></span><span>  </span><span id="local-6989586621690844261"><span class="annot"><span class="annottext">codec :: JSONCodec (SourceConstraint b)
+</span><a href="#local-6989586621690844261"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-128"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;SourceConstraint&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-129"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+TableName b -&gt; HashMap (Column b) (Column b) -&gt; SourceConstraint b
+</span><a href="Hasura.RQL.Types.Source.Table.html#SourceConstraint"><span class="hs-identifier hs-var">SourceConstraint</span></a></span><span>
+</span><span id="line-130"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;foreign_table&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The table referenced by the foreign key in the child table.&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceConstraint b -&gt; TableName b
+</span><a href="Hasura.RQL.Types.Source.Table.html#_scForeignTable"><span class="hs-identifier hs-var">_scForeignTable</span></a></span><span>
+</span><span id="line-131"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;column_mapping&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The columns on which you want want to define the foreign key.&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+SourceConstraint b -&gt; HashMap (Column b) (Column b)
+</span><a href="Hasura.RQL.Types.Source.Table.html#_scColumnMapping"><span class="hs-identifier hs-var">_scColumnMapping</span></a></span><span>
+</span><span id="line-132"></span><span>
+</span><span id="line-133"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span class="hs-special">$</span><span id="stiDeletable"><span id="stiUpdatable"><span id="stiInsertable"><span id="stiDescription"><span id="stiForeignKeys"><span id="stiPrimaryKey"><span id="stiColumns"><span id="stiType"><span id="stiName"><span id="local-6989586621690845251"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SourceTableInfo</span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-136"></span><span class="hs-special">$</span><span id="scColumnMapping"><span id="scForeignTable"><span id="local-6989586621690845118"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SourceConstraint</span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-137"></span><span class="hs-special">$</span><span id="unSourceForeignKeys"><span id="local-6989586621690845087"><span id="local-6989586621690845157"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SourceForeignKeys</span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-138"></span></pre></body></html>
