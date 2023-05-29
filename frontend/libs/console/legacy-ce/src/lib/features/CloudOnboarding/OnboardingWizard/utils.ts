@@ -90,11 +90,8 @@ export function getWizardState(
   // transform the onboarding data if present, to a consumable format
   const transformedOnboardingData = onboardingDataTransformFn(onboardingData);
   if (shouldShowOnboarding(transformedOnboardingData)) {
-    if (getLSItem(LS_KEYS.useCaseExperimentOnboarding)) {
-      return 'use-case-onboarding';
-    }
     if (showFamiliaritySurvey) return 'familiarity-survey';
-    return 'landing-page';
+    return 'use-case-onboarding';
   }
   return 'hidden';
 }
