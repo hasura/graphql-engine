@@ -84,7 +84,7 @@ newtype SchemaHash = SchemaHash {_schemaHash :: T.Text}
 
 type SchemaRegistryMap = HashMap RoleName GQLSchemaInformation
 
-type SchemaRegistryAction = Maybe (IO ())
+type SchemaRegistryAction = Maybe (MetadataResourceVersion -> IO ())
 
 data GQLSchemaInformation = GQLSchemaInformation
   { _gsiSchemaSDL :: SchemaSDL,
