@@ -20430,7 +20430,7 @@ newtype SchemaHash
 SchemaHash :: Text -> SchemaHash
 [_schemaHash] :: SchemaHash -> Text
 type SchemaRegistryMap = HashMap RoleName GQLSchemaInformation
-type SchemaRegistryAction = Maybe (IO ())
+type SchemaRegistryAction = Maybe (MetadataResourceVersion -> IO ())
 data GQLSchemaInformation
 GQLSchemaInformation :: SchemaSDL -> SchemaHash -> GQLSchemaInformation
 [_gsiSchemaSDL] :: GQLSchemaInformation -> SchemaSDL
@@ -24046,22 +24046,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) TriggerOnReplication
-cteqCleanupConfig :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) (Maybe Text)
-cetqWebhook :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) (Maybe InputWebhook)
-cetqUpdate :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) (Maybe (SubscribeOpSpec b_aFXMJ))
-cetqTable :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) (TableName b_aFXMJ)
-cetqSource :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) SourceName
-cetqRetryConf :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) (Maybe RequestTransform)
-cetqReplace :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) Bool
-cetqName :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) TriggerName
-cetqInsert :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) (Maybe (SubscribeOpSpec b_aFXMJ))
-cetqHeaders :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) (Maybe Bool)
-cetqDelete :: forall b_aFXMJ. Lens' (CreateEventTriggerQuery b_aFXMJ) (Maybe (SubscribeOpSpec b_aFXMJ))
+cteqTriggerOnReplication :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) TriggerOnReplication
+cteqCleanupConfig :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) (Maybe Text)
+cetqWebhook :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) (Maybe InputWebhook)
+cetqUpdate :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) (Maybe (SubscribeOpSpec b_aFXMN))
+cetqTable :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) (TableName b_aFXMN)
+cetqSource :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) SourceName
+cetqRetryConf :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) (Maybe RequestTransform)
+cetqReplace :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) Bool
+cetqName :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) TriggerName
+cetqInsert :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) (Maybe (SubscribeOpSpec b_aFXMN))
+cetqHeaders :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) (Maybe Bool)
+cetqDelete :: forall b_aFXMN. Lens' (CreateEventTriggerQuery b_aFXMN) (Maybe (SubscribeOpSpec b_aFXMN))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -24915,7 +24915,7 @@ module Hasura.GraphQL.Schema
 --   generate any. This results in a partial schema being available to the
 --   users, and a better error message than would arise from
 --   <a>safeSelectionSet</a>.
-buildGQLContext :: forall m. (MonadError QErr m, MonadIO m) => InferFunctionPermissions -> RemoteSchemaPermissions -> HashSet ExperimentalFeature -> SQLGenCtx -> ApolloFederationStatus -> SourceCache -> HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) -> ActionCache -> AnnotatedCustomTypes -> MetadataResourceVersion -> Maybe SchemaRegistryContext -> Logger Hasura -> m ((SchemaIntrospection, HashMap RoleName (RoleContext GQLContext), GQLContext, HashSet InconsistentMetadata), (HashMap RoleName (RoleContext GQLContext), GQLContext), SchemaRegistryAction)
+buildGQLContext :: forall m. (MonadError QErr m, MonadIO m) => InferFunctionPermissions -> RemoteSchemaPermissions -> HashSet ExperimentalFeature -> SQLGenCtx -> ApolloFederationStatus -> SourceCache -> HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) -> ActionCache -> AnnotatedCustomTypes -> Maybe SchemaRegistryContext -> Logger Hasura -> m ((SchemaIntrospection, HashMap RoleName (RoleContext GQLContext), GQLContext, HashSet InconsistentMetadata), (HashMap RoleName (RoleContext GQLContext), GQLContext), SchemaRegistryAction)
 
 module Hasura.GraphQL.Execute.RemoteJoin.Types
 
