@@ -360,7 +360,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
   metadataDep <- Inc.newDependency -< metadata
 
   (inconsistentObjects, (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies), ((adminIntrospection, gqlContext, gqlContextUnauth, inconsistentRemoteSchemas), (relayContext, relayContextUnauth), schemaRegistryAction)) <-
-    Inc.cache buildOutputsAndSchema -< (metadataDep, dynamicConfig, invalidationKeysDep, storedIntrospection, metadataResourceVersion)
+    Inc.cache buildOutputsAndSchema -< (metadataDep, dynamicConfig, invalidationKeysDep, storedIntrospection)
 
   let (resolvedEndpoints, endpointCollectedInfo) = runIdentity $ runWriterT $ buildRESTEndpoints _metaQueryCollections (InsOrdHashMap.elems _metaRestEndpoints)
       (cronTriggersMap, cronTriggersCollectedInfo) = runIdentity $ runWriterT $ buildCronTriggers (InsOrdHashMap.elems _metaCronTriggers)
@@ -416,7 +416,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
     bindA
       -< do
         for_ schemaRegistryAction $ \action -> do
-          liftIO action
+          liftIO $ action metadataResourceVersion
 
   returnA
     -<
@@ -462,7 +462,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
         }
   where
     -- See Note [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata]
-    buildOutputsAndSchema = proc (metadataDep, dynamicConfig, invalidationKeysDep, storedIntrospection, metadataResourceVersion) -> do
+    buildOutputsAndSchema = proc (metadataDep, dynamicConfig, invalidationKeysDep, storedIntrospection) -> do
       (outputs, collectedInfo) <- runWriterA buildAndCollectInfo -< (dynamicConfig, metadataDep, invalidationKeysDep, storedIntrospection)
       let (inconsistentObjects, unresolvedDependencies) = partitionEithers $ toList collectedInfo
       out2@(resolvedOutputs, _dependencyInconsistentObjects, _resolvedDependencies) <- resolveDependencies -< (outputs, unresolvedDependencies)
@@ -479,7 +479,6 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
               (_boRemoteSchemas resolvedOutputs)
               (_boActions resolvedOutputs)
               (_boCustomTypes resolvedOutputs)
-              metadataResourceVersion
               mSchemaRegistryContext
               logger
       returnA -< (inconsistentObjects, out2, out3)

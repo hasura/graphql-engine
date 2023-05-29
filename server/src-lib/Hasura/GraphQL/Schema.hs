@@ -117,7 +117,6 @@ buildGQLContext ::
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
   ActionCache ->
   AnnotatedCustomTypes ->
-  MetadataResourceVersion ->
   Maybe SchemaRegistryContext ->
   Logger Hasura ->
   m
@@ -143,7 +142,6 @@ buildGQLContext
   allRemoteSchemas
   allActions
   customTypes
-  metadataResourceVersion
   mSchemaRegistryContext
   logger = do
     let remoteSchemasRoles = concatMap (HashMap.keys . _rscPermissions . fst . snd) $ HashMap.toList allRemoteSchemas
@@ -175,6 +173,7 @@ buildGQLContext
                   remoteSchemaPermissions
                   experimentalFeatures
                   apolloFederationStatus
+                  mSchemaRegistryContext
               )
               ( buildRelayRoleContext
                   (sqlGen, functionPermissions)
@@ -198,10 +197,11 @@ buildGQLContext
         res <- liftIO $ runExceptT $ PG.runTx' (_srpaMetadataDbPoolRef schemaRegistryCtx) selectNowQuery
         case res of
           Left err ->
-            pure $ unLogger logger $ mkGenericLog @Text LevelWarn "schema-registry" ("failed to fetch the time from metadata db correctly: " <> showQErr err)
+            pure $ \_ ->
+              unLogger logger $ mkGenericLog @Text LevelWarn "schema-registry" ("failed to fetch the time from metadata db correctly: " <> showQErr err)
           Right now -> do
             let schemaRegistryMap = generateSchemaRegistryMap hasuraContexts
-                projectSchemaInfo =
+                projectSchemaInfo = \metadataResourceVersion ->
                   ProjectGQLSchemaInformation
                     schemaRegistryMap
                     (IsMetadataInconsistent $ checkMdErrs adminErrs)
@@ -209,20 +209,16 @@ buildGQLContext
                     metadataResourceVersion
                     now
             pure $
-              STM.atomically $
-                STM.writeTQueue (_srpaSchemaRegistryTQueueRef schemaRegistryCtx) $
-                  projectSchemaInfo
-
-    let hasuraContextsWithoutIntrospection = flip HashMap.mapWithKey hasuraContexts $ \r (context, err, schemaIntrospection) ->
-          if r == adminRoleName
-            then (context, err, schemaIntrospection)
-            else (context, err, G.SchemaIntrospection mempty)
+              \metadataResourceVersion ->
+                STM.atomically $
+                  STM.writeTQueue (_srpaSchemaRegistryTQueueRef schemaRegistryCtx) $
+                    projectSchemaInfo metadataResourceVersion
 
     pure
       ( ( adminIntrospection,
-          view _1 <$> hasuraContextsWithoutIntrospection,
+          view _1 <$> hasuraContexts,
           unauthenticated,
-          Set.unions $ unauthenticatedRemotesErrors : (view _2 <$> HashMap.elems hasuraContextsWithoutIntrospection)
+          Set.unions $ unauthenticatedRemotesErrors : (view _2 <$> HashMap.elems hasuraContexts)
         ),
         ( relayContexts,
           -- Currently, remote schemas are exposed through Relay, but ONLY through
@@ -283,8 +279,9 @@ buildRoleContext ::
   Options.RemoteSchemaPermissions ->
   Set.HashSet ExperimentalFeature ->
   ApolloFederationStatus ->
+  Maybe SchemaRegistryContext ->
   m RoleContextValue
-buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures apolloFederationStatus = do
+buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures apolloFederationStatus mSchemaRegistryContext = do
   let schemaOptions = buildSchemaOptions options expFeatures
       schemaContext =
         SchemaContext
@@ -341,17 +338,26 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
     -- checks in the GraphQL schema. Furthermore, we want to persist this
     -- information in the case of the admin role.
     !introspectionSchema <- do
-      throwOnConflictingDefinitions $
-        convertToSchemaIntrospection
-          <$> buildIntrospectionSchema
-            (P.parserType queryParserBackend)
-            (P.parserType <$> mutationParserBackend)
-            (P.parserType <$> subscriptionParser)
-
-    -- TODO(nicuveo): we treat the admin role differently in this function,
-    -- which is a bit inelegant; we might want to refactor this function and
-    -- split it into several steps, so that we can make a separate function for
-    -- the admin role that reuses the common parts and avoid such tests.
+      result <-
+        throwOnConflictingDefinitions $
+          convertToSchemaIntrospection
+            <$> buildIntrospectionSchema
+              (P.parserType queryParserBackend)
+              (P.parserType <$> mutationParserBackend)
+              (P.parserType <$> subscriptionParser)
+      pure $
+        -- TODO(nicuveo,sam): we treat the admin role differently in this function,
+        -- which is a bit inelegant; we might want to refactor this function and
+        -- split it into several steps, so that we can make a separate function for
+        -- the admin role that reuses the common parts and avoid such tests.
+        -- There's also the involvement of the Schema Registry feature in this step
+        -- which makes it furthermore inelegant
+        case mSchemaRegistryContext of
+          Nothing ->
+            if role == adminRoleName
+              then result
+              else G.SchemaIntrospection mempty
+          Just _ -> result
 
     void . throwOnConflictingDefinitions $
       buildIntrospectionSchema
