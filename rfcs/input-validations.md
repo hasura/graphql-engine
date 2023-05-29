@@ -4,6 +4,8 @@
 
 - [Validation for insert mutations](#validation-for-insert-mutations)
 - [Behaviour](#behaviour)
+  * [Mutation performance](#mutation-performance)
+  * [When `check` is defined](#when--check--is-defined)
 - [Webhook specification](#webhook-specification)
   * [Request](#request)
   * [Response](#response)
@@ -14,10 +16,12 @@
   * [Delete mutation](#delete-mutation)
 - [Enhancements](#enhancements)
 
-We want to consider model-level validations during mutations i.e. what type of input values are allowed when mutating a model. As of date, we can already restrict many types of mutations using `check` rule in mutation permissions. But, this is dependent on the type of operators that is available for a given model. We want to give an ability to hook an external (or internal) function for the purposes of validation.
+We want to consider model-level validations during mutations i.e. what type of input values are allowed when mutating a model.
+As of date, we can already restrict many types of mutations using `check` rule in mutation permissions. But, this is dependent
+on the type of operators that is available for a given model. We want to give an ability to hook an external (or internal) function
+for the purposes of validation.
 
 For the first version, we will consider only `insert` mutations for tables.
-
 
 ## Validation for insert mutations
 
@@ -62,8 +66,40 @@ When an insert mutation comes in with a role, the following steps are performed:
 
 1. First "collect" all the tables that the mutation targets (because there could be more than one table involved via nested inserts)
 1. If there is a `validate_input` permission on a table, then any arguments targeting that table are sent to the `handler`. This is done for all tables.
-1. If all handlers validates the insert data, then the request proceeds. A transaction with the database will only be started after the validation is over.
+1. If all handlers validates the insert data, then the request proceeds. A transaction with the database will only be started after the validation is over and successful.
 1. If any handler invalidates the insert data, then the request aborts. An `error` message from the handler can also be forwarded to the client.
+
+Consider the following sample mutation:
+```graphql
+mutation insertAuthorWithArticles($name: String, $email:String, $articles_content:[article_insert_input!]!) {
+  insert_author(objects: {name: $name, email: $email, articles: {data: $articles_content}}){
+    returning {
+      id
+      articles {
+        id
+      }
+    }
+  }
+}
+```
+The mentioned mutation targets the `author` and `article` tables, involving a nested insert into the author model.
+Assuming that the `validate_input` permission is defined for both tables, the validation process unfolds as follows:
+
+- The validation webhook specified for the `author` table is contacted first, including the inserted row with `articles` data.
+- Subsequently, the validation webhook designated for the article table is contacted with `$articles_content` rows.
+- If both of the above webhook calls result in successful validation, a database transaction is initiated to insert the rows into the respective tables.
+
+### Mutation performance
+
+Mutations that involve input validation may exhibit slower performance compared to mutations without validation.
+The execution time of the webhook handler can become a bottleneck, potentially reaching the maximum limit specified
+by the `timeout` configuration value.
+
+### When `check` is defined
+
+A `check` permission is a boolean expression that must be true for every inserted row. This expression is evaluated within the database
+during a transaction. When both `validate_input` and `check` permissions are defined, as mentioned earlier, the validation process occurs
+first through an external handler. After successful validation, a database transaction is initiated, and the check expression is evaluated.
 
 ## Webhook specification
 
