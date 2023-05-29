@@ -23,10 +23,6 @@ import { Button } from '../../../new-components/Button';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import Spinner from '../../Common/Spinner/Spinner';
 import { useGDCTreeItemClick } from './GDCTree/hooks/useGDCTreeItemClick';
-import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '../../../features/FeatureFlags';
 
 const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
 
@@ -87,9 +83,6 @@ const DataSubSidebar = props => {
   const [schemaLoading, setSchemaLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [preLoadState, setPreLoadState] = useState(true);
-  const { enabled: isBigQueryEnabled, isLoading } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.enabledNewUIForBigQuery
-  );
 
   const onDatabaseChange = newSourceName => {
     if (newSourceName === currentDataSource) {
@@ -130,7 +123,7 @@ const DataSubSidebar = props => {
   const getItems = (schemaInfo = null) => {
     let sourceItems = [];
     sources.forEach(source => {
-      if (source.kind === 'bigquery' && isBigQueryEnabled === true) return;
+      if (source.kind === 'bigquery') return;
 
       if (isInconsistentSource(source.name, inconsistentObjects)) return;
 
@@ -250,15 +243,7 @@ const DataSubSidebar = props => {
         setTreeViewItems(newItems);
       }
     );
-  }, [
-    sources.length,
-    tables,
-    functions,
-    enums,
-    schemaList,
-    currentTable,
-    isLoading,
-  ]);
+  }, [sources.length, tables, functions, enums, schemaList, currentTable]);
 
   const databasesCount = metadataSources.length;
 
@@ -301,20 +286,18 @@ const DataSubSidebar = props => {
       </div>
       <ul className={styles.subSidebarListUL} data-test="table-links">
         <div style={{ pointerEvents: 'auto' }}>
-          {!isLoading && (
-            <TreeView
-              items={treeViewItems}
-              onDatabaseChange={onDatabaseChange}
-              onSchemaChange={onSchemaChange}
-              currentDataSource={currentDataSource}
-              currentSchema={currentSchema}
-              pathname={pathname}
-              databaseLoading={databaseLoading}
-              schemaLoading={schemaLoading}
-              preLoadState={preLoadState}
-              gdcItemClick={handleClick}
-            />
-          )}
+          <TreeView
+            items={treeViewItems}
+            onDatabaseChange={onDatabaseChange}
+            onSchemaChange={onSchemaChange}
+            currentDataSource={currentDataSource}
+            currentSchema={currentSchema}
+            pathname={pathname}
+            databaseLoading={databaseLoading}
+            schemaLoading={schemaLoading}
+            preLoadState={preLoadState}
+            gdcItemClick={handleClick}
+          />
         </div>
       </ul>
     </div>
