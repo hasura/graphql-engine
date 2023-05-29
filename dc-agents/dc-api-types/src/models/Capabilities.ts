@@ -14,6 +14,7 @@ import type { RawCapabilities } from './RawCapabilities';
 import type { RelationshipCapabilities } from './RelationshipCapabilities';
 import type { ScalarTypesCapabilities } from './ScalarTypesCapabilities';
 import type { SubscriptionCapabilities } from './SubscriptionCapabilities';
+import type { UserDefinedFunctionCapabilities } from './UserDefinedFunctionCapabilities';
 
 export type Capabilities = {
   comparisons?: ComparisonCapabilities;
@@ -28,5 +29,6 @@ export type Capabilities = {
   relationships?: RelationshipCapabilities;
   scalar_types?: ScalarTypesCapabilities;
   subscriptions?: SubscriptionCapabilities;
+  user_defined_functions?: UserDefinedFunctionCapabilities;
 };
 

@@ -1,14 +1,8 @@
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.IR.Select.OrderBy
-  ( _AOCArrayAggregation,
-    _AOCColumn,
-    _AOCComputedField,
-    _AOCObjectRelation,
-    AnnotatedAggregateOrderBy (..),
+  ( AnnotatedAggregateOrderBy (..),
     AnnotatedOrderByElement (..),
     AnnotatedOrderByItem,
     AnnotatedOrderByItemG,
@@ -17,7 +11,6 @@ module Hasura.RQL.IR.Select.OrderBy
   )
 where
 
-import Control.Lens.TH (makePrisms)
 import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -32,13 +25,13 @@ data AnnotatedOrderByElement (b :: BackendType) v
   = AOCColumn (ColumnInfo b)
   | AOCObjectRelation
       (RelInfo b)
+      -- | Permission filter of the remote table to which the relationship is defined
       (AnnBoolExp b v)
-      -- ^ Permission filter of the remote table to which the relationship is defined
       (AnnotatedOrderByElement b v)
   | AOCArrayAggregation
       (RelInfo b)
+      -- | Permission filter of the remote table to which the relationship is defined
       (AnnBoolExp b v)
-      -- ^ Permission filter of the remote table to which the relationship is defined
       (AnnotatedAggregateOrderBy b)
   | AOCComputedField (ComputedFieldOrderBy b v)
   deriving stock (Generic, Functor, Foldable, Traversable)
@@ -90,10 +83,10 @@ data ComputedFieldOrderByElement (b :: BackendType) v
     CFOBEScalar (ScalarType b)
   | CFOBETableAggregation
       (TableName b)
+      -- | Permission filter of the retuning table
       (AnnBoolExp b v)
-      -- ^ Permission filter of the retuning table
+      -- | Sort by aggregation fields of table rows returned by computed field
       (AnnotatedAggregateOrderBy b)
-      -- ^ Sort by aggregation fields of table rows returned by computed field
   deriving stock (Generic, Functor, Foldable, Traversable)
 
 deriving stock instance
@@ -153,7 +146,3 @@ instance
     Hashable (FunctionArgsExp b v)
   ) =>
   Hashable (ComputedFieldOrderBy b v)
-
--- Lenses
-
-$(makePrisms ''AnnotatedOrderByElement)

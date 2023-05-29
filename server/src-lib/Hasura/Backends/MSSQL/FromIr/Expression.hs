@@ -51,25 +51,25 @@ fromGBoolExp =
       selectFrom <- lift (aliasQualifiedTable _geTable)
       scopedTo selectFrom $ do
         whereExpression <- fromGBoolExp _geWhere
-        pure $
-          ExistsExpression $
-            emptySelect
-              { selectOrderBy = Nothing,
-                selectProjections =
-                  [ ExpressionProjection
-                      ( Aliased
-                          { aliasedThing = trueExpression,
-                            aliasedAlias = existsFieldName
-                          }
-                      )
-                  ],
-                selectFrom = Just selectFrom,
-                selectJoins = mempty,
-                selectWhere = Where [whereExpression],
-                selectTop = NoTop,
-                selectFor = NoFor,
-                selectOffset = Nothing
-              }
+        pure
+          $ ExistsExpression
+          $ emptySelect
+            { selectOrderBy = Nothing,
+              selectProjections =
+                [ ExpressionProjection
+                    ( Aliased
+                        { aliasedThing = trueExpression,
+                          aliasedAlias = existsFieldName
+                        }
+                    )
+                ],
+              selectFrom = Just selectFrom,
+              selectJoins = mempty,
+              selectWhere = Where [whereExpression],
+              selectTop = NoTop,
+              selectFor = NoFor,
+              selectOffset = Nothing
+            }
 
 -- | Translate boolean expressions into TSQL 'Expression's.
 --
@@ -84,30 +84,33 @@ fromAnnBoolExpFld =
     IR.AVColumn columnInfo opExpGs -> do
       expressions <- traverse (fromOpExpG columnInfo) opExpGs
       pure (AndExpression expressions)
-    IR.AVRelationship IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
-      selectFrom <- lift (aliasQualifiedTable table)
-      mappingExpression <- translateMapping selectFrom mapping
-      whereExpression <- scopedTo selectFrom (fromGBoolExp annBoolExp)
-      pure
-        ( ExistsExpression
-            emptySelect
-              { selectOrderBy = Nothing,
-                selectProjections =
-                  [ ExpressionProjection
-                      ( Aliased
-                          { aliasedThing = trueExpression,
-                            aliasedAlias = existsFieldName
-                          }
-                      )
-                  ],
-                selectFrom = Just selectFrom,
-                selectJoins = mempty,
-                selectWhere = Where (mappingExpression <> [whereExpression]),
-                selectTop = NoTop,
-                selectFor = NoFor,
-                selectOffset = Nothing
-              }
-        )
+    IR.AVRelationship IR.RelInfo {riMapping = mapping, riTarget = target} (IR.RelationshipFilters tablePerm annBoolExp) -> do
+      case target of
+        IR.RelTargetNativeQuery _ -> error "fromAnnBoolExpFld RelTargetNativeQuery"
+        IR.RelTargetTable table -> do
+          selectFrom <- lift (aliasQualifiedTable table)
+          mappingExpression <- translateMapping selectFrom mapping
+          whereExpression <- scopedTo selectFrom (fromGBoolExp (IR.BoolAnd [tablePerm, annBoolExp]))
+          pure
+            ( ExistsExpression
+                emptySelect
+                  { selectOrderBy = Nothing,
+                    selectProjections =
+                      [ ExpressionProjection
+                          ( Aliased
+                              { aliasedThing = trueExpression,
+                                aliasedAlias = existsFieldName
+                              }
+                          )
+                      ],
+                    selectFrom = Just selectFrom,
+                    selectJoins = mempty,
+                    selectWhere = Where (mappingExpression <> [whereExpression]),
+                    selectTop = NoTop,
+                    selectFor = NoFor,
+                    selectOffset = Nothing
+                  }
+            )
   where
     -- Translate a relationship field mapping into column equality comparisons.
     translateMapping ::

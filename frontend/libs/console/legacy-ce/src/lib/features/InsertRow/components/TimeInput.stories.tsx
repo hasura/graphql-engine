@@ -1,4 +1,4 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { Meta, StoryFn } from '@storybook/react';
 import { handlers } from '../../../mocks/metadata.mock';
 import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
@@ -16,44 +16,50 @@ export default {
     onChange: { action: true },
     onInput: { action: true },
   },
-} as ComponentMeta<typeof TimeInput>;
+} as Meta<typeof TimeInput>;
 
-const Template: ComponentStory<typeof TimeInput> = args => {
+const Template: StoryFn<typeof TimeInput> = args => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   return <TimeInput {...args} inputRef={inputRef} />;
 };
 
-export const Base = Template.bind({});
-Base.args = {
-  name: 'date',
-  placeholder: 'date...',
+export const Base = {
+  render: Template,
+
+  args: {
+    name: 'date',
+    placeholder: 'date...',
+  },
+
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    userEvent.type(await canvas.findByPlaceholderText('date...'), '15:30:00');
+
+    expect(args.onChange).toHaveBeenCalled();
+    expect(args.onInput).toHaveBeenCalled();
+
+    expect(await canvas.findByDisplayValue('15:30:00')).toBeInTheDocument();
+
+    userEvent.click(await canvas.findByRole('button'));
+
+    userEvent.click(await canvas.findByText('4:30 PM'));
+
+    expect(await canvas.findByLabelText('date')).toHaveDisplayValue('16:30:00');
+
+    expect(args.onChange).toHaveBeenCalled();
+    expect(args.onInput).toHaveBeenCalled();
+
+    // the picker is automatically hidden on selection
+    expect(await canvas.queryByText('Time')).not.toBeInTheDocument();
+  },
 };
 
-export const Disabled = Template.bind({});
-Disabled.args = {
-  ...Base.args,
-  disabled: true,
-};
+export const Disabled = {
+  render: Template,
 
-Base.play = async ({ args, canvasElement }) => {
-  const canvas = within(canvasElement);
-
-  userEvent.type(await canvas.findByPlaceholderText('date...'), '15:30:00');
-
-  expect(args.onChange).toHaveBeenCalled();
-  expect(args.onInput).toHaveBeenCalled();
-
-  expect(await canvas.findByDisplayValue('15:30:00')).toBeInTheDocument();
-
-  userEvent.click(await canvas.findByRole('button'));
-
-  userEvent.click(await canvas.findByText('4:30 PM'));
-
-  expect(await canvas.findByLabelText('date')).toHaveDisplayValue('16:30:00');
-
-  expect(args.onChange).toHaveBeenCalled();
-  expect(args.onInput).toHaveBeenCalled();
-
-  // the picker is automatically hidden on selection
-  expect(await canvas.queryByText('Time')).not.toBeInTheDocument();
+  args: {
+    ...Base.args,
+    disabled: true,
+  },
 };

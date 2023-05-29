@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import inflection from 'inflection';
 import camelCase from 'lodash/camelCase';
-import { isEqual } from '../../../../../components/Common/utils/jsUtils';
 import { LocalRelationship, SuggestedRelationship } from '../../../types';
 import { getTableDisplayName } from '../../../utils/helpers';
 import { getDriverPrefix, runMetadataQuery } from '../../../../DataSource';
@@ -15,6 +14,10 @@ import { useHttpClient } from '../../../../Network';
 import { useQuery, useQueryClient } from 'react-query';
 import { generateQueryKeys } from '../../../utils/queryClientUtils';
 import { useMetadataMigration } from '../../../../MetadataAPI';
+import { useDriverRelationshipSupport } from '../../../../Data/hooks/useDriverRelationshipSupport';
+import { hasuraToast } from '../../../../../new-components/Toasts/hasuraToast';
+import adaptTrackRelationship from '../../../../Data/TrackResources/components/utils/adaptTrackRelationship';
+import { getLocalRelationshipPayload } from '../adapters/getLocalRelationshipPayload';
 
 type UseSuggestedRelationshipsArgs = {
   dataSourceName: string;
@@ -92,67 +95,6 @@ export const addConstraintName = (
     };
   });
 
-type RemoveExistingRelationshipsArgs = {
-  relationships: SuggestedRelationship[];
-  existingRelationships: LocalRelationship[];
-};
-
-export const removeExistingRelationships = ({
-  relationships,
-  existingRelationships,
-}: RemoveExistingRelationshipsArgs) =>
-  relationships.filter(relationship => {
-    const fromTable = relationship.from.table;
-
-    const fromTableExists = existingRelationships.find(rel =>
-      areTablesEqual(rel.fromTable, fromTable)
-    );
-
-    if (!fromTableExists) {
-      return true;
-    }
-
-    const existingRelationshipsFromSameTable = existingRelationships.filter(
-      rel => areTablesEqual(rel.fromTable, fromTable)
-    );
-
-    const toTable = relationship.to.table;
-    const toTableExists = existingRelationshipsFromSameTable.find(rel =>
-      areTablesEqual(rel.definition.toTable, toTable)
-    );
-
-    if (!toTableExists) {
-      return true;
-    }
-
-    const existingRelationshipsFromAndToSameTable =
-      existingRelationshipsFromSameTable.filter(rel =>
-        areTablesEqual(rel.definition.toTable, toTable)
-      );
-
-    const existingRelationshipsFromAndToSameTableAndSameFromColumns =
-      existingRelationshipsFromAndToSameTable.filter(rel => {
-        const existingToColumns = Object.values(rel.definition.mapping).sort();
-        const relationshipToColumns = relationship.to.columns.sort();
-
-        return isEqual(existingToColumns, relationshipToColumns);
-      });
-
-    if (!existingRelationshipsFromAndToSameTableAndSameFromColumns) {
-      return true;
-    }
-
-    return false;
-  });
-
-type AddSuggestedRelationship = {
-  name: string;
-  columnNames: string[];
-  relationshipType: 'object' | 'array';
-  toTable?: Table;
-  fromTable?: Table;
-};
-
 export const getSuggestedRelationshipsCacheQuery = (
   dataSourceName: string,
   table: Table
@@ -167,6 +109,11 @@ export const useSuggestedRelationships = ({
   const { data: metadataSource, isFetching } = useMetadata(
     MetadataSelectors.findSource(dataSourceName)
   );
+
+  const { driverSupportsLocalRelationship, driverSupportsRemoteRelationship } =
+    useDriverRelationshipSupport({
+      dataSourceName,
+    });
 
   const namingConvention: NamingConvention =
     metadataSource?.customization?.naming_convention || 'hasura-default';
@@ -210,35 +157,69 @@ export const useSuggestedRelationships = ({
   const [isAddingSuggestedRelationship, setAddingSuggestedRelationship] =
     useState(false);
 
-  const onAddSuggestedRelationship = async ({
-    name,
-    columnNames,
-    relationshipType,
-    toTable,
-    fromTable,
-  }: AddSuggestedRelationship) => {
+  const onAddSuggestedRelationship = async (
+    relationship: SuggestedRelationshipWithName
+  ) => {
+    const addRelationship = adaptTrackRelationship(relationship);
+
     setAddingSuggestedRelationship(true);
 
-    await metadataMutation.mutateAsync({
-      query: {
-        type: `${dataSourcePrefix}_create_${relationshipType}_relationship`,
-        args: {
-          table: fromTable || table,
-          name,
-          source: dataSourceName,
-          using: {
-            foreign_key_constraint_on:
-              relationshipType === 'object'
-                ? columnNames
-                : {
-                    table: toTable,
-                    columns: columnNames,
-                  },
+    if (!driverSupportsLocalRelationship && !driverSupportsRemoteRelationship) {
+      hasuraToast({
+        type: 'error',
+        title: 'Not able to track',
+        message: `This datasource does not support tracking of relationships.`,
+      });
+      return;
+    }
+
+    if (driverSupportsLocalRelationship) {
+      await metadataMutation.mutateAsync({
+        query: getLocalRelationshipPayload({
+          dataSourcePrefix: dataSourcePrefix || '',
+          dataSourceName,
+          relationship: addRelationship,
+        }),
+      });
+    } else if (driverSupportsRemoteRelationship) {
+      const {
+        fromTable,
+        name,
+        relationshipType,
+        fromColumnNames,
+        toColumnNames,
+      } = addRelationship;
+
+      await metadataMutation.mutateAsync({
+        query: {
+          type: `${dataSourcePrefix}_create_remote_relationship`,
+          args: {
+            table: fromTable || table,
+            name,
+            source: dataSourceName,
+            definition: {
+              to_source: {
+                relationship_type: relationshipType,
+                source: dataSourceName,
+                table: fromTable || table,
+                field_mapping: fromColumnNames?.reduce((tally, curr, i) => {
+                  return {
+                    ...tally,
+                    [curr]: toColumnNames[i],
+                  };
+                }, {}),
+              },
+            },
           },
         },
-      },
-    });
+      });
+    }
 
+    hasuraToast({
+      title: 'Success',
+      message: 'Relationship tracked',
+      type: 'success',
+    });
     setAddingSuggestedRelationship(false);
 
     queryClient.invalidateQueries({
@@ -258,6 +239,16 @@ export const useSuggestedRelationships = ({
 
   const suggestedRelationships = data?.relationships || [];
 
+  /**
+   * This is needed because the suggested_relationships metadata API returns Foreign Keys
+   *
+   * from current table -> to other table
+   * but also
+   *
+   * from other table -> to current table
+   *
+   * After the tracking, the second type of Foreign Keys would not be shown in the current table UI
+   */
   const tableFilteredRelationships = table
     ? filterTableRelationships({
         table,
@@ -265,14 +256,8 @@ export const useSuggestedRelationships = ({
       })
     : suggestedRelationships;
 
-  // TODO: remove when the metadata request will correctly omit already tracked relationships
-  const notExistingRelationships = removeExistingRelationships({
-    relationships: tableFilteredRelationships,
-    existingRelationships,
-  });
-
   const relationshipsWithConstraintName = addConstraintName(
-    notExistingRelationships,
+    tableFilteredRelationships,
     namingConvention
   );
 

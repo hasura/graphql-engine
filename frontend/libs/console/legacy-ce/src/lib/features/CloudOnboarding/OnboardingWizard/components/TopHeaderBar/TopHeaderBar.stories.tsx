@@ -1,10 +1,10 @@
 import React from 'react';
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { TopHeaderBar } from './TopHeaderBar';
 
 export default {
   title: 'features/CloudOnboarding/Onboarding Wizard/Top Header Bar',
   component: TopHeaderBar,
-} as ComponentMeta<typeof TopHeaderBar>;
+} as Meta<typeof TopHeaderBar>;
 
-export const Base: Story = () => <TopHeaderBar />;
+export const Base: StoryFn = () => <TopHeaderBar />;

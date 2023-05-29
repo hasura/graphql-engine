@@ -165,8 +165,8 @@ getTableNameAndPrefixHash identifier =
 getTableIdentifierAndPrefixHash :: TableIdentifier -> MyState TableIdentifier
 getTableIdentifierAndPrefixHash identifier = do
   tables <- _tables <$> get
-  pure $
-    if Set.member identifier tables
+  pure
+    $ if Set.member identifier tables
       then TableIdentifier $ mkPrefixedTableName (unTableIdentifier identifier)
       else identifier
 
@@ -233,19 +233,19 @@ uSelect (S.Select ctes distinctM extrs fromM whereM groupByM havingM orderByM li
   -- Potentially introduces a new alias so it should go before the rest.
   newFromM <- mapM uFromExp fromM
 
-  newWhereM <- forM whereM $
-    \(S.WhereFrag be) -> S.WhereFrag <$> uBoolExp be
-  newGroupByM <- forM groupByM $
-    \(S.GroupByExp l) -> S.GroupByExp <$> mapM uSqlExp l
-  newHavingM <- forM havingM $
-    \(S.HavingExp be) -> S.HavingExp <$> uBoolExp be
+  newWhereM <- forM whereM
+    $ \(S.WhereFrag be) -> S.WhereFrag <$> uBoolExp be
+  newGroupByM <- forM groupByM
+    $ \(S.GroupByExp l) -> S.GroupByExp <$> mapM uSqlExp l
+  newHavingM <- forM havingM
+    $ \(S.HavingExp be) -> S.HavingExp <$> uBoolExp be
   newOrderByM <- mapM uOrderBy orderByM
   newDistinctM <- mapM uDistinct distinctM
   newExtrs <- mapM uExtractor extrs
   newLimitM <- mapM uLimit limitM
   newOffsetM <- mapM uOffset offsetM
-  pure $
-    S.Select
+  pure
+    $ S.Select
       newCTEs
       newDistinctM
       newExtrs
@@ -306,8 +306,9 @@ uFromItem fromItem = case fromItem of
     newAls <- addAliasAndPrefixHash alias
     pure $ S.FISelectWith isLateral newSelectWith newAls
   S.FIValues (S.ValuesExp tups) alias mCols -> do
-    newValExp <- fmap S.ValuesExp $
-      forM tups $ \(S.TupleExp ts) ->
+    newValExp <- fmap S.ValuesExp
+      $ forM tups
+      $ \(S.TupleExp ts) ->
         S.TupleExp <$> mapM uSqlExp ts
     pure $ S.FIValues newValExp (prefixHashTableAlias alias) (fmap (map prefixHashColumnAlias) mCols)
   -- _Note_: Potentially introduces a new alias

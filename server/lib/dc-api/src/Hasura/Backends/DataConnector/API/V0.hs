@@ -5,6 +5,7 @@ module Hasura.Backends.DataConnector.API.V0
     module ConfigSchema,
     module Expression,
     module ErrorResponse,
+    module Function,
     module Mutations,
     module OrderBy,
     module Query,
@@ -26,6 +27,7 @@ import Hasura.Backends.DataConnector.API.V0.Dataset as Dataset
 import Hasura.Backends.DataConnector.API.V0.ErrorResponse as ErrorResponse
 import Hasura.Backends.DataConnector.API.V0.Explain as Explain
 import Hasura.Backends.DataConnector.API.V0.Expression as Expression
+import Hasura.Backends.DataConnector.API.V0.Function as Function
 import Hasura.Backends.DataConnector.API.V0.Mutations as Mutations
 import Hasura.Backends.DataConnector.API.V0.OrderBy as OrderBy
 import Hasura.Backends.DataConnector.API.V0.Query as Query

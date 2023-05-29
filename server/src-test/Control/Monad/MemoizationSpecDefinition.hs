@@ -16,10 +16,10 @@ import Test.Hspec
 
 class
   ( forall k v. MonadTrans (m k v),
-    forall k v n. Monad n => Functor (m k v n),
-    forall k v n. Monad n => Applicative (m k v n),
-    forall k v n. Monad n => Monad (m k v n),
-    forall k v n s. MonadState s n => MonadState s (m k v n)
+    forall k v n. (Monad n) => Functor (m k v n),
+    forall k v n. (Monad n) => Applicative (m k v n),
+    forall k v n. (Monad n) => Monad (m k v n),
+    forall k v n s. (MonadState s n) => MonadState s (m k v n)
   ) =>
   Memoizer (m :: Type -> Type -> (Type -> Type) -> Type -> Type)
   where
@@ -36,7 +36,7 @@ class
     m k v n v ->
     m k v n v
 
-memoizationSpec :: forall m. Memoizer m => Spec
+memoizationSpec :: forall m. (Memoizer m) => Spec
 memoizationSpec = do
   describe "circular graphs" $ checkCircularGraphs @m
   describe "infinite lists" $ checkInfiniteLists @m
@@ -57,7 +57,7 @@ instance Show Node where
 instance Eq Node where
   Node n1 s1 == Node n2 s2 = n1 == n2 && map nodeName s1 == map nodeName s2
 
-checkCircularGraphs :: forall m. Memoizer m => Spec
+checkCircularGraphs :: forall m. (Memoizer m) => Spec
 checkCircularGraphs = do
   it "builds A -> B -> C -> A" do
     (a, b, c) <- succeedsWithinTimeLimit $ runMemoizer @m do
@@ -88,7 +88,7 @@ checkCircularGraphs = do
 --------------------------------------------------------------------------------
 -- Infinite lists
 
-checkInfiniteLists :: forall m. Memoizer m => Spec
+checkInfiniteLists :: forall m. (Memoizer m) => Spec
 checkInfiniteLists = do
   it "builds `x = 1 : x`" do
     l <- succeedsWithinTimeLimit $ runMemoizer @m do
@@ -108,11 +108,12 @@ checkInfiniteLists = do
 --------------------------------------------------------------------------------
 -- Memoization
 
-checkMemoization :: forall m. Memoizer m => Spec
+checkMemoization :: forall m. (Memoizer m) => Spec
 checkMemoization = do
   it "memoizes fibo" do
-    (fibos, count) <- succeedsWithinTimeLimit $
-      flip runStateT (mempty :: HashMap Int Int) $ runMemoizer @m do
+    (fibos, count) <- succeedsWithinTimeLimit
+      $ flip runStateT (mempty :: HashMap Int Int)
+      $ runMemoizer @m do
         let fibo n = memoize 'checkMemoization n do
               modify $ HashMap.insertWith (+) n (1 :: Int)
               case n of
@@ -126,7 +127,7 @@ checkMemoization = do
 --------------------------------------------------------------------------------
 -- Failure
 
-checkFailure :: forall m. Memoizer m => Spec
+checkFailure :: forall m. (Memoizer m) => Spec
 checkFailure = do
   it "unsuccessfully attempts to memoize Maybe" do
     result <- runWithTimeLimit $ runMemoizer @m do

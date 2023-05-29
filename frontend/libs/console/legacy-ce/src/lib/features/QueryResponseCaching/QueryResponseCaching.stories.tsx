@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 
 import { QueryResponseCaching } from './QueryResponseCaching';
 import {
@@ -26,31 +26,35 @@ export default {
     // desired response.
     Story => {
       const queryClient = useQueryClient();
-      queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
+      void queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
       return <Story />;
     },
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof QueryResponseCaching>;
+} as Meta<typeof QueryResponseCaching>;
 
-export const UnregisteredUser: ComponentStory<
-  typeof QueryResponseCaching
-> = () => {
-  return <QueryResponseCaching />;
-};
-UnregisteredUser.storyName = '💠 Unregistered User';
-UnregisteredUser.parameters = {
-  msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
-  consoleType: 'pro-lite',
+export const UnregisteredUser: StoryObj<typeof QueryResponseCaching> = {
+  render: () => {
+    return <QueryResponseCaching />;
+  },
+
+  name: '💠 Unregistered User',
+
+  parameters: {
+    msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const LicenseActive: ComponentStory<
-  typeof QueryResponseCaching
-> = () => {
-  return <QueryResponseCaching />;
-};
-LicenseActive.storyName = '💠 License Active';
-LicenseActive.parameters = {
-  msw: [registerEETrialLicenseAlreadyAppliedMutation, eeLicenseInfo.active],
-  consoleType: 'pro-lite',
+export const LicenseActive: StoryObj<typeof QueryResponseCaching> = {
+  render: () => {
+    return <QueryResponseCaching />;
+  },
+
+  name: '💠 License Active',
+
+  parameters: {
+    msw: [registerEETrialLicenseAlreadyAppliedMutation, eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };

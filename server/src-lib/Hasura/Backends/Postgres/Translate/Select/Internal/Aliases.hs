@@ -46,8 +46,8 @@ mkAnnOrderByAlias tablePrefix parAls similarFields = \case
   AOCArrayAggregation relInfo _ aggOrderBy ->
     let rn = riName relInfo
         arrPfx =
-          mkArrayRelationSourcePrefix tablePrefix parAls similarFields $
-            mkOrderByFieldName rn
+          mkArrayRelationSourcePrefix tablePrefix parAls similarFields
+            $ mkOrderByFieldName rn
         obAls = S.tableIdentifierToColumnAlias arrPfx <> "." <> mkAggregateOrderByAlias aggOrderBy
      in S.toColumnAlias obAls
   AOCComputedField cfOrderBy ->
@@ -83,7 +83,7 @@ mkAggregateOrderByAlias =
     AAOCount -> "count"
     AAOOp opText _resultType col -> opText <> "." <> getPGColTxt (ciColumn col)
 
-mkOrderByFieldName :: ToTxt a => a -> FieldName
+mkOrderByFieldName :: (ToTxt a) => a -> FieldName
 mkOrderByFieldName name =
   FieldName $ toTxt name <> "." <> "order_by"
 
@@ -94,8 +94,8 @@ mkArrayRelationSourcePrefix ::
   FieldName ->
   TableIdentifier
 mkArrayRelationSourcePrefix parentSourcePrefix parentFieldName similarFieldsMap fieldName =
-  mkArrayRelationTableIdentifier parentSourcePrefix parentFieldName $
-    HashMap.lookupDefault [fieldName] fieldName similarFieldsMap
+  mkArrayRelationTableIdentifier parentSourcePrefix parentFieldName
+    $ HashMap.lookupDefault [fieldName] fieldName similarFieldsMap
 
 mkArrayRelationTableIdentifier :: TableIdentifier -> FieldName -> [FieldName] -> TableIdentifier
 mkArrayRelationTableIdentifier pfx parAls flds =
@@ -109,9 +109,9 @@ mkArrayRelationAlias ::
   FieldName ->
   S.TableAlias
 mkArrayRelationAlias parentFieldName similarFieldsMap fieldName =
-  S.mkTableAlias $
-    mkUniqArrayRelationAlias parentFieldName $
-      HashMap.lookupDefault [fieldName] fieldName similarFieldsMap
+  S.mkTableAlias
+    $ mkUniqArrayRelationAlias parentFieldName
+    $ HashMap.lookupDefault [fieldName] fieldName similarFieldsMap
 
 -- array relationships are not grouped, so have to be prefixed by
 -- parent's alias

@@ -8,12 +8,11 @@ keywords:
 slug: index
 ---
 
+import ProductBadge from '@site/src/components/ProductBadge';
+
 # MariaDB
 
-<div className="badge-container">
-  <div className="badge badge--primary heading-badge">Available on: Hasura Cloud, Enterprise (Self-hosted)</div>
-  <div className="badge badge-gray heading-badge">Beta</div>
-</div>
+<ProductBadge free standard pro ee self />
 
 ## Introduction
 
@@ -24,12 +23,16 @@ At present, our MariaDB integration is available for testing in Hasura Cloud and
 Hasura GraphQL Engine and connect the MariaDB GraphQL Data Connector to it. For more information on GraphQL Data
 Connectors check out [our blog post on the topic](https://hasura.io/blog/hasura-graphql-data-connectors/).
 
-To get started with MariaDB, check out our [Getting Started with Docker](/databases/mariadb/docker.mdx) guide.
+To get started with MariaDB:
+
+- In Hasura Cloud, check out our [Getting Started with MariaDB in Hasura Cloud](/databases/mariadb/cloud.mdx) guide
+- In a Docker environment, check out our [Getting Started with Docker](/databases/mariadb/docker.mdx) guide
 
 :::tip Supported versions:
 
-1.  Hasura GraphQL Engine `v2.23.0` onwards
-2.  MariaDB version 10.5 and higher
+1.  Hasura GraphQL Engine `v2.24.0` onwards
+2.  Hasura supports most databases with standard implementations of **MariaDB 10.5 and higher** including: Amazon RDS,
+    Amazon Aurora, Digital Ocean and SkySQL.
 
 :::
 

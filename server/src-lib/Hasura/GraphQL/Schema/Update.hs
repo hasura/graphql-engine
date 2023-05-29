@@ -30,7 +30,7 @@ import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), isNumCol)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax (Description (..), Nullability (..), litName)
 
 -- | @UpdateOperator b m n op@ represents one single update operator for a
@@ -65,7 +65,7 @@ data UpdateOperator b r m n op = UpdateOperator
 --   only used in one operator.
 buildUpdateOperators ::
   forall b r m n op.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   -- | Columns with @preset@ expressions
   (HashMap (Column b) op) ->
   -- | Update operators to include in the Schema
@@ -75,12 +75,12 @@ buildUpdateOperators ::
 buildUpdateOperators presetCols ops tableInfo = do
   parsers :: P.InputFieldsParser n [HashMap (Column b) op] <-
     sequenceA . catMaybes <$> traverse (runUpdateOperator tableInfo) ops
-  pure $
-    parsers
-      `P.bindFields` ( \opExps -> do
-                         let withPreset = presetCols : opExps
-                         mergeDisjoint @b withPreset
-                     )
+  pure
+    $ parsers
+    `P.bindFields` ( \opExps -> do
+                       let withPreset = presetCols : opExps
+                       mergeDisjoint @b withPreset
+                   )
 
 -- | The columns that have 'preset' definitions applied to them. (see
 -- <https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#column-presets
@@ -92,7 +92,7 @@ presetColumns = fmap partialSQLExpToUnpreparedValue . upiSet
 -- applies to the table (i.e., it admits a non-empty column set).
 runUpdateOperator ::
   forall b r m n op.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   TableInfo b ->
   UpdateOperator b r m n op ->
   SchemaT
@@ -127,8 +127,8 @@ mergeDisjoint parsedResults = do
   let unioned = HashMap.unionsAll parsedResults
       duplicates = HashMap.keys $ HashMap.filter (not . null . NE.tail) unioned
 
-  unless (null duplicates) $
-    P.parseError
+  unless (null duplicates)
+    $ P.parseError
       ( "Column found in multiple operators: "
           <> toErrorValue duplicates
           <> "."
@@ -151,7 +151,7 @@ mergeDisjoint parsedResults = do
 -- > HashMap.fromList [("col1", MkOp (fp "x")), ("col2", MkOp (fp "y"))]
 updateOperator ::
   forall n r m b a.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   GQLNameIdentifier ->
   GQLNameIdentifier ->
   GQLNameIdentifier ->
@@ -170,20 +170,21 @@ updateOperator tableGQLName opName opFieldName mkParser columns opDesc objDesc =
       let fieldName = ciName columnInfo
           fieldDesc = ciDescription columnInfo
       fieldParser <- mkParser columnInfo
-      pure $
-        P.fieldOptional fieldName fieldDesc fieldParser
-          `mapField` \value -> (ciColumn columnInfo, value)
+      pure
+        $ P.fieldOptional fieldName fieldDesc fieldParser
+        `mapField` \value -> (ciColumn columnInfo, value)
   let objName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableOperatorInputTypeName tableGQLName opName
-  pure $
-    fmap (HashMap.fromList . (fold :: Maybe [(Column b, a)] -> [(Column b, a)])) $
-      P.fieldOptional (applyFieldNameCaseIdentifier tCase opFieldName) (Just opDesc) $
-        P.object objName (Just objDesc) $
-          (catMaybes . toList) <$> sequenceA fieldParsers
+  pure
+    $ fmap (HashMap.fromList . (fold :: Maybe [(Column b, a)] -> [(Column b, a)]))
+    $ P.fieldOptional (applyFieldNameCaseIdentifier tCase opFieldName) (Just opDesc)
+    $ P.object objName (Just objDesc)
+    $ (catMaybes . toList)
+    <$> sequenceA fieldParsers
 {-# ANN updateOperator ("HLint: ignore Use tuple-section" :: String) #-}
 
 setOp ::
   forall b n r m.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   UpdateOperator b r m n (UnpreparedValue b)
 setOp = UpdateOperator {..}
   where
@@ -207,7 +208,7 @@ setOp = UpdateOperator {..}
 
 incOp ::
   forall b m n r.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   UpdateOperator b r m n (UnpreparedValue b)
 incOp = UpdateOperator {..}
   where

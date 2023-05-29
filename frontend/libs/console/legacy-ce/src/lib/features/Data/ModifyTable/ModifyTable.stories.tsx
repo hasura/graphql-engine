@@ -1,9 +1,8 @@
 // Button.stories.ts|tsx
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import React from 'react';
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ModifyTable } from './ModifyTable';
 import { handlers } from './mock/handlers';
 
@@ -15,41 +14,39 @@ export default {
   component: ModifyTable,
 
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof ModifyTable>;
+} as Meta<typeof ModifyTable>;
 
-export const Primary: ComponentStory<typeof ModifyTable> = args => (
-  <ModifyTable {...args} />
-);
-
-Primary.args = {
-  table: ['Customer'],
-  dataSourceName: 'sqlite',
-  tableName: 'Customer',
-};
-
-export const TestData = Primary.bind({});
-
-TestData.args = {
-  table: ['Customer'],
-  dataSourceName: 'sqlite',
-  tableName: 'Customer',
-};
-
-TestData.parameters = {
-  msw: {
-    handlers: handlers(),
+export const Primary: StoryObj<typeof ModifyTable> = {
+  args: {
+    table: ['Customer'],
+    dataSourceName: 'sqlite',
+    tableName: 'Customer',
   },
 };
 
-TestData.play = async ({ canvasElement }) => {
-  const c = within(canvasElement);
-  const dataTypeBadge = await c.findByTestId(
-    `CustomerId-ui-data-type`,
-    {},
-    { timeout: 3000 }
-  );
-  const hiddenDataInput = await c.findByTestId('CustomerId-data');
-  const correctDataType = await hiddenDataInput.dataset['dataType'];
-  await expect(correctDataType).toBeTruthy();
-  await expect(dataTypeBadge).toHaveTextContent(correctDataType as string);
+export const TestData = {
+  args: {
+    table: ['Customer'],
+    dataSourceName: 'sqlite',
+    tableName: 'Customer',
+  },
+
+  parameters: {
+    msw: {
+      handlers: handlers(),
+    },
+  },
+
+  play: async ({ canvasElement }) => {
+    const c = within(canvasElement);
+    const dataTypeBadge = await c.findByTestId(
+      `CustomerId-ui-data-type`,
+      {},
+      { timeout: 3000 }
+    );
+    const hiddenDataInput = await c.findByTestId('CustomerId-data');
+    const correctDataType = await hiddenDataInput.dataset['dataType'];
+    await expect(correctDataType).toBeTruthy();
+    await expect(dataTypeBadge).toHaveTextContent(correctDataType as string);
+  },
 };

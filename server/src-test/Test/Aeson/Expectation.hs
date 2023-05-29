@@ -22,11 +22,13 @@ import Test.Hspec
 shouldBeSubsetOf :: J.Value -> J.Value -> IO ()
 shouldBeSubsetOf subset superset | subset `jsonSubsetOf` superset = return ()
 shouldBeSubsetOf subset superset =
-  expectationFailure $
-    T.unpack $
-      decodeUtf8 $
-        LBS.toStrict $
-          AP.encodePretty subset <> " is not a subset of " <> AP.encodePretty superset
+  expectationFailure
+    $ T.unpack
+    $ decodeUtf8
+    $ LBS.toStrict
+    $ AP.encodePretty subset
+    <> " is not a subset of "
+    <> AP.encodePretty superset
 
 -- | Compute whether one json value 'sub' is a subset of another value 'sup', in the sense that:
 --
@@ -44,8 +46,8 @@ jsonSubsetOf _sub _sup = False
 
 subobjectOf :: J.KeyMap J.Value -> J.KeyMap J.Value -> Bool
 subobjectOf sub sup =
-  J.foldr (&&) True $
-    J.alignWith
+  J.foldr (&&) True
+    $ J.alignWith
       ( \case
           This _ -> False -- key is only in the sub
           That _ -> True -- key is only in sup

@@ -64,10 +64,10 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing (EventId (..), OpVar (..))
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table (PrimaryKey (..))
 import Hasura.SQL.Types
 import Hasura.Server.Types
 import Hasura.Session
+import Hasura.Table.Cache (PrimaryKey (..))
 import Hasura.Tracing qualified as Tracing
 import Text.Builder qualified as TB
 import Text.Shakespeare.Text qualified as ST
@@ -90,10 +90,10 @@ fetchUndeliveredEvents ::
   FetchBatchSize ->
   m [Event 'MSSQL]
 fetchUndeliveredEvents sourceConfig sourceName triggerNames _ fetchBatchSize = do
-  liftEitherM $
-    liftIO $
-      runMSSQLSourceWriteTx sourceConfig $
-        fetchEvents sourceName triggerNames fetchBatchSize
+  liftEitherM
+    $ liftIO
+    $ runMSSQLSourceWriteTx sourceConfig
+    $ fetchEvents sourceName triggerNames fetchBatchSize
 
 setRetry ::
   (MonadIO m, MonadError QErr m) =>
@@ -103,10 +103,10 @@ setRetry ::
   MaintenanceMode MaintenanceModeVersion ->
   m ()
 setRetry sourceConfig event retryTime maintenanceModeVersion = do
-  liftEitherM $
-    liftIO $
-      runMSSQLSourceWriteTx sourceConfig $
-        setRetryTx event retryTime maintenanceModeVersion
+  liftEitherM
+    $ liftIO
+    $ runMSSQLSourceWriteTx sourceConfig
+    $ setRetryTx event retryTime maintenanceModeVersion
 
 insertManualEvent ::
   (MonadIO m, MonadError QErr m) =>
@@ -118,11 +118,12 @@ insertManualEvent ::
   Maybe Tracing.TraceContext ->
   m EventId
 insertManualEvent sourceConfig tableName triggerName payload _userInfo _traceCtx =
-  liftEitherM $
-    liftIO $
-      runMSSQLSourceWriteTx sourceConfig $
-        -- TODO: Include TraceContext in payload
-        insertMSSQLManualEventTx tableName triggerName payload
+  liftEitherM
+    $ liftIO
+    $ runMSSQLSourceWriteTx sourceConfig
+    $
+    -- TODO: Include TraceContext in payload
+    insertMSSQLManualEventTx tableName triggerName payload
 
 getMaintenanceModeVersion ::
   ( MonadIO m,
@@ -131,10 +132,10 @@ getMaintenanceModeVersion ::
   MSSQLSourceConfig ->
   m MaintenanceModeVersion
 getMaintenanceModeVersion sourceConfig =
-  liftEitherM $
-    liftIO $
-      runMSSQLSourceReadTx sourceConfig $
-        getMaintenanceModeVersionTx
+  liftEitherM
+    $ liftIO
+    $ runMSSQLSourceReadTx sourceConfig
+    $ getMaintenanceModeVersionTx
 
 recordSuccess ::
   (MonadIO m) =>
@@ -144,8 +145,9 @@ recordSuccess ::
   MaintenanceMode MaintenanceModeVersion ->
   m (Either QErr ())
 recordSuccess sourceConfig event invocation maintenanceModeVersion =
-  liftIO $
-    runMSSQLSourceWriteTx sourceConfig $ do
+  liftIO
+    $ runMSSQLSourceWriteTx sourceConfig
+    $ do
       insertInvocation (tmName (eTrigger event)) invocation
       setSuccessTx event maintenanceModeVersion
 
@@ -169,8 +171,9 @@ recordError' ::
   MaintenanceMode MaintenanceModeVersion ->
   m (Either QErr ())
 recordError' sourceConfig event invocation processEventError maintenanceModeVersion =
-  liftIO $
-    runMSSQLSourceWriteTx sourceConfig $ do
+  liftIO
+    $ runMSSQLSourceWriteTx sourceConfig
+    $ do
       for_ invocation $ insertInvocation (tmName (eTrigger event))
       case processEventError of
         PESetRetry retryTime -> do
@@ -183,11 +186,12 @@ redeliverEvent ::
   EventId ->
   m ()
 redeliverEvent sourceConfig eventId =
-  liftEitherM $
-    liftIO $
-      runMSSQLSourceWriteTx sourceConfig $ do
-        checkEventTx eventId
-        markForDeliveryTx eventId
+  liftEitherM
+    $ liftIO
+    $ runMSSQLSourceWriteTx sourceConfig
+    $ do
+      checkEventTx eventId
+      markForDeliveryTx eventId
 
 dropTriggerAndArchiveEvents ::
   (MonadIO m, MonadError QErr m) =>
@@ -196,11 +200,12 @@ dropTriggerAndArchiveEvents ::
   TableName ->
   m ()
 dropTriggerAndArchiveEvents sourceConfig triggerName table =
-  liftEitherM $
-    liftIO $
-      runMSSQLSourceWriteTx sourceConfig $ do
-        dropTriggerQ triggerName (tableSchema table)
-        archiveEvents triggerName
+  liftEitherM
+    $ liftIO
+    $ runMSSQLSourceWriteTx sourceConfig
+    $ do
+      dropTriggerQ triggerName (tableSchema table)
+      archiveEvents triggerName
 
 dropDanglingSQLTrigger ::
   (MonadIO m, MonadError QErr m) =>
@@ -210,13 +215,14 @@ dropDanglingSQLTrigger ::
   HashSet Ops ->
   m ()
 dropDanglingSQLTrigger sourceConfig triggerName table ops =
-  liftEitherM $
-    liftIO $
-      runMSSQLSourceWriteTx sourceConfig $ do
-        traverse_ (dropTriggerOp triggerName (tableSchema table)) ops
+  liftEitherM
+    $ liftIO
+    $ runMSSQLSourceWriteTx sourceConfig
+    $ do
+      traverse_ (dropTriggerOp triggerName (tableSchema table)) ops
 
 createTableEventTrigger ::
-  MonadIO m =>
+  (MonadIO m) =>
   SQLGenCtx ->
   MSSQLSourceConfig ->
   TableName ->
@@ -227,8 +233,9 @@ createTableEventTrigger ::
   Maybe (PrimaryKey 'MSSQL (ColumnInfo 'MSSQL)) ->
   m (Either QErr ())
 createTableEventTrigger _sqlGen sourceConfig table columns triggerName triggerOnReplication opsDefinition primaryKeyMaybe = do
-  liftIO $
-    runMSSQLSourceWriteTx sourceConfig $ do
+  liftIO
+    $ runMSSQLSourceWriteTx sourceConfig
+    $ do
       mkAllTriggersQ triggerName table triggerOnReplication columns opsDefinition primaryKeyMaybe
 
 createMissingSQLTriggers ::
@@ -252,8 +259,9 @@ createMissingSQLTriggers
   triggerName
   triggerOnReplication
   opsDefinition = do
-    liftEitherM $
-      runMSSQLSourceWriteTx sourceConfig $ do
+    liftEitherM
+      $ runMSSQLSourceWriteTx sourceConfig
+      $ do
         for_ (tdInsert opsDefinition) (doesSQLTriggerExist INSERT)
         for_ (tdUpdate opsDefinition) (doesSQLTriggerExist UPDATE)
         for_ (tdDelete opsDefinition) (doesSQLTriggerExist DELETE)
@@ -261,8 +269,8 @@ createMissingSQLTriggers
       doesSQLTriggerExist op opSpec = do
         let triggerNameWithOp = "notify_hasura_" <> triggerNameToTxt triggerName <> "_" <> tshow op
         doesOpTriggerExist <-
-          liftMSSQLTx $
-            singleRowQueryE
+          liftMSSQLTx
+            $ singleRowQueryE
               HGE.defaultMSSQLTxErrorHandler
               [ODBC.sql|
                SELECT CASE WHEN EXISTS
@@ -284,13 +292,14 @@ createMissingSQLTriggers
             MANUAL -> pure ()
 
 unlockEventsInSource ::
-  MonadIO m =>
+  (MonadIO m) =>
   MSSQLSourceConfig ->
   NE.NESet EventId ->
   m (Either QErr Int)
 unlockEventsInSource sourceConfig eventIds =
-  liftIO $
-    runMSSQLSourceWriteTx sourceConfig $ do
+  liftIO
+    $ runMSSQLSourceWriteTx sourceConfig
+    $ do
       unlockEventsTx $ toList eventIds
 
 -- Check if any trigger for any of the operation exists with the 'triggerName'
@@ -301,10 +310,10 @@ checkIfTriggerExists ::
   HashSet Ops ->
   m Bool
 checkIfTriggerExists sourceConfig triggerName ops = do
-  liftEitherM $
-    liftIO $
-      runMSSQLSourceWriteTx sourceConfig $
-        fmap or (traverse (checkIfTriggerExistsQ triggerName) (HashSet.toList ops))
+  liftEitherM
+    $ liftIO
+    $ runMSSQLSourceWriteTx sourceConfig
+    $ fmap or (traverse (checkIfTriggerExistsQ triggerName) (HashSet.toList ops))
 
 ---- DATABASE QUERIES ---------------------
 --
@@ -439,9 +448,10 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) = do
   -- Due to the problematic variable substitution of `ODBC.sql` it is imperative that
   -- we resort to template strings, since that does not do any changes to the string.
   events <-
-    multiRowQueryE HGE.defaultMSSQLTxErrorHandler $
-      rawUnescapedText . LT.toStrict $
-        $(makeRelativeToProject "src-rsr/mssql/mssql_fetch_events.sql.shakespeare" >>= ST.stextFile)
+    multiRowQueryE HGE.defaultMSSQLTxErrorHandler
+      $ rawUnescapedText
+      . LT.toStrict
+      $ $(makeRelativeToProject "src-rsr/mssql/mssql_fetch_events.sql.shakespeare" >>= ST.stextFile)
   mapM uncurryEvent events
   where
     -- Creates a list of trigger names to be used for 'IN' operator
@@ -458,16 +468,18 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) = do
       createdAt' <- bsToUTCTime createdAt "conversion of created_at to UTCTime failed while fetching MSSQL events"
       retryAt <- traverse (`bsToUTCTime` "conversion of next_retry_at to UTCTime failed while fetching MSSQL events") nextRetryAt
 
-      pure $
-        Event
+      pure
+        $ Event
           { eId = EventId (bsToTxt eventId),
             eSource = source,
             eTable = (TableName tn (SchemaName sn)),
             eTrigger = TriggerMetadata (TriggerName $ mkNonEmptyTextUnsafe trn),
             eEvent = payload',
             eTries = tries,
-            eCreatedAt = createdAt',
-            eRetryAt = retryAt
+            eCreatedAt = utcToLocalTime utc createdAt',
+            eRetryAt = retryAt,
+            eCreatedAtUTC = createdAt',
+            eRetryAtUTC = retryAt
           }
 
 dropTriggerQ :: TriggerName -> SchemaName -> TxE QErr ()
@@ -523,8 +535,8 @@ checkEventTx eventId = do
     getEvent (x : _) = return x
 
     assertEventUnlocked locked =
-      when locked $
-        throw400 Busy "event is already being processed"
+      when locked
+        $ throw400 Busy "event is already being processed"
 
 markForDeliveryTx :: EventId -> TxE QErr ()
 markForDeliveryTx eventId = do
@@ -541,11 +553,13 @@ markForDeliveryTx eventId = do
 unlockEventsTx :: [EventId] -> TxE QErr Int
 unlockEventsTx eventIds = do
   numEvents <-
-    singleRowQueryE HGE.defaultMSSQLTxErrorHandler $
-      rawUnescapedText . LT.toStrict $
-        -- EventIds as list of VALUES (Eg: ('123-abc'), ('456-vgh'), ('234-asd'))
-        let eventIdsValues = generateValuesFromEvents eventIds
-         in $(makeRelativeToProject "src-rsr/mssql/mssql_unlock_events.sql.shakespeare" >>= ST.stextFile)
+    singleRowQueryE HGE.defaultMSSQLTxErrorHandler
+      $ rawUnescapedText
+      . LT.toStrict
+      $
+      -- EventIds as list of VALUES (Eg: ('123-abc'), ('456-vgh'), ('234-asd'))
+      let eventIdsValues = generateValuesFromEvents eventIds
+       in $(makeRelativeToProject "src-rsr/mssql/mssql_unlock_events.sql.shakespeare" >>= ST.stextFile)
   return numEvents
   where
     generateValuesFromEvents :: [EventId] -> Text
@@ -558,15 +572,15 @@ getMaintenanceModeVersionTx :: TxE QErr MaintenanceModeVersion
 getMaintenanceModeVersionTx = do
   catalogVersion <- getSourceCatalogVersion
   if
-      | catalogVersion == latestSourceCatalogVersion -> pure CurrentMMVersion
-      | otherwise ->
-          throw500 $
-            "Maintenance mode is only supported with catalog versions: "
-              <> tshow latestSourceCatalogVersion
-              <> " but received "
-              <> tshow catalogVersion
+    | catalogVersion == latestSourceCatalogVersion -> pure CurrentMMVersion
+    | otherwise ->
+        throw500
+          $ "Maintenance mode is only supported with catalog versions: "
+          <> tshow latestSourceCatalogVersion
+          <> " but received "
+          <> tshow catalogVersion
 
-convertUTCToDatetime2 :: MonadIO m => UTCTime -> m Datetime2
+convertUTCToDatetime2 :: (MonadIO m) => UTCTime -> m Datetime2
 convertUTCToDatetime2 utcTime = do
   let localTime = utcToLocalTime utc utcTime
   return $ Datetime2 localTime
@@ -577,8 +591,8 @@ checkIfTriggerExistsQ ::
   TxE QErr Bool
 checkIfTriggerExistsQ triggerName op = do
   let triggerNameWithOp = "notify_hasura_" <> triggerNameToTxt triggerName <> "_" <> tshow op
-  liftMSSQLTx $
-    singleRowQueryE
+  liftMSSQLTx
+    $ singleRowQueryE
       HGE.defaultMSSQLTxErrorHandler
       -- We check the existence of trigger across the entire database irrespective of
       -- the schema of the table
@@ -633,7 +647,7 @@ qualifiedTriggerNameToText = TB.run . toSQL
 newtype SQLFragment = SQLFragment {unSQLFragment :: Text}
 
 mkAllTriggersQ ::
-  MonadMSSQLTx m =>
+  (MonadMSSQLTx m) =>
   TriggerName ->
   TableName ->
   TriggerOnReplication ->
@@ -655,7 +669,7 @@ getApplicableColumns allColumnInfos = \case
 -- We do this because, currently the graphQL API for these types is broken
 -- for MSSQL sources. Ref: https://github.com/hasura/graphql-engine-mono/issues/787
 checkSpatialDataTypeColumns ::
-  MonadMSSQLTx m =>
+  (MonadMSSQLTx m) =>
   [ColumnInfo 'MSSQL] ->
   SubscribeOpSpec 'MSSQL ->
   m ()
@@ -664,13 +678,13 @@ checkSpatialDataTypeColumns allCols (SubscribeOpSpec listenCols deliveryCols) = 
       deliveryColumns = getApplicableColumns allCols $ fromMaybe SubCStar deliveryCols
       isGeoTypesInListenCols = any (isScalarColumnWhere isGeoType . ciType) listenColumns
       isGeoTypesInDeliversCols = any (isScalarColumnWhere isGeoType . ciType) deliveryColumns
-  when (isGeoTypesInListenCols || isGeoTypesInDeliversCols) $
-    throw400 NotSupported "Event triggers for MS-SQL sources are not supported on tables having Geometry or Geography column types"
+  when (isGeoTypesInListenCols || isGeoTypesInDeliversCols)
+    $ throw400 NotSupported "Event triggers for MS-SQL sources are not supported on tables having Geometry or Geography column types"
   where
     isGeoType = (`elem` geoTypes)
 
 mkInsertTriggerQ ::
-  MonadMSSQLTx m =>
+  (MonadMSSQLTx m) =>
   TriggerName ->
   TableName ->
   [ColumnInfo 'MSSQL] ->
@@ -680,13 +694,15 @@ mkInsertTriggerQ ::
 mkInsertTriggerQ triggerName table allCols triggerOnReplication subOpSpec@(SubscribeOpSpec _listenCols deliveryCols) = do
   checkSpatialDataTypeColumns allCols subOpSpec
   liftMSSQLTx $ do
-    unitQueryE HGE.defaultMSSQLTxErrorHandler $
-      rawUnescapedText . LT.toStrict $ do
+    unitQueryE HGE.defaultMSSQLTxErrorHandler
+      $ rawUnescapedText
+      . LT.toStrict
+      $ do
         let deliveryColumns = getApplicableColumns allCols $ fromMaybe SubCStar deliveryCols
         mkInsertTriggerQuery table triggerName deliveryColumns triggerOnReplication
 
 mkDeleteTriggerQ ::
-  MonadMSSQLTx m =>
+  (MonadMSSQLTx m) =>
   TriggerName ->
   TableName ->
   [ColumnInfo 'MSSQL] ->
@@ -696,13 +712,15 @@ mkDeleteTriggerQ ::
 mkDeleteTriggerQ triggerName table allCols triggerOnReplication subOpSpec@(SubscribeOpSpec _listenCols deliveryCols) = do
   checkSpatialDataTypeColumns allCols subOpSpec
   liftMSSQLTx $ do
-    unitQueryE HGE.defaultMSSQLTxErrorHandler $
-      rawUnescapedText . LT.toStrict $ do
+    unitQueryE HGE.defaultMSSQLTxErrorHandler
+      $ rawUnescapedText
+      . LT.toStrict
+      $ do
         let deliveryColumns = getApplicableColumns allCols $ fromMaybe SubCStar deliveryCols
         mkDeleteTriggerQuery table triggerName deliveryColumns triggerOnReplication
 
 mkUpdateTriggerQ ::
-  MonadMSSQLTx m =>
+  (MonadMSSQLTx m) =>
   TriggerName ->
   TableName ->
   [ColumnInfo 'MSSQL] ->
@@ -716,9 +734,10 @@ mkUpdateTriggerQ triggerName table allCols triggerOnReplication primaryKeyMaybe 
     primaryKey <- onNothing primaryKeyMaybe (throw400 NotSupported "Update event triggers for MS-SQL sources are only supported on tables with primary keys")
     let deliveryColumns = getApplicableColumns allCols $ fromMaybe SubCStar deliveryCols
         listenColumns = getApplicableColumns allCols listenCols
-    unitQueryE HGE.defaultMSSQLTxErrorHandler $
-      rawUnescapedText . LT.toStrict $
-        mkUpdateTriggerQuery table triggerName listenColumns deliveryColumns primaryKey triggerOnReplication
+    unitQueryE HGE.defaultMSSQLTxErrorHandler
+      $ rawUnescapedText
+      . LT.toStrict
+      $ mkUpdateTriggerQuery table triggerName listenColumns deliveryColumns primaryKey triggerOnReplication
 
 -- Create alias for columns
 -- eg: If colPrefixMaybe is defined then 'inserted.id as payload.data.old.id'
@@ -908,11 +927,11 @@ addCleanupSchedules sourceConfig triggersWithcleanupConfig =
                       lastScheduledTime
             )
             triggersWithcleanupConfig
-    unless (null scheduledTriggersAndTimestamps) $
-      liftEitherM $
-        liftIO $
-          runMSSQLSourceWriteTx sourceConfig $
-            insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
+    unless (null scheduledTriggersAndTimestamps)
+      $ liftEitherM
+      $ liftIO
+      $ runMSSQLSourceWriteTx sourceConfig
+      $ insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
 
 -- | Insert the cleanup logs for the given trigger name and schedules
 insertEventTriggerCleanupLogsTx :: [(TriggerName, [Datetimeoffset])] -> TxET QErr IO ()
@@ -927,8 +946,8 @@ insertEventTriggerCleanupLogsTx triggerNameWithSchedules =
     )
   where
     sqlValues =
-      commaSeparated $
-        map
+      commaSeparated
+        $ map
           ( \(triggerName, schedules) ->
               generateSQLValuesFromListWith
                 ( \schedule ->
@@ -1027,10 +1046,10 @@ getCleanupEventsForDeletion sourceConfig =
 markCleanupEventsAsDeadTx :: [Text] -> TxE QErr ()
 markCleanupEventsAsDeadTx toDeadEvents = do
   let deadEventsValues = generateSQLValuesFromList toDeadEvents
-  unless (null toDeadEvents) $
-    unitQueryE HGE.defaultMSSQLTxErrorHandler $
-      rawUnescapedText $
-        [ST.st|
+  unless (null toDeadEvents)
+    $ unitQueryE HGE.defaultMSSQLTxErrorHandler
+    $ rawUnescapedText
+    $ [ST.st|
         UPDATE hdb_catalog.hdb_event_log_cleanups
         SET status = 'dead'
         WHERE id = ANY ( SELECT id from  (VALUES #{deadEventsValues}) AS X(id));
@@ -1111,9 +1130,9 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
     else do
       let eventIdsValues = generateSQLValuesFromList deadEventIDs
       --  Lock the events in the database so that other HGE instances don't pick them up for deletion.
-      unitQueryE HGE.defaultMSSQLTxErrorHandler $
-        rawUnescapedText $
-          [ST.st|
+      unitQueryE HGE.defaultMSSQLTxErrorHandler
+        $ rawUnescapedText
+        $ [ST.st|
           UPDATE hdb_catalog.event_log
           SET locked = SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'
           WHERE id = ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id))
@@ -1123,26 +1142,26 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
       --  to appropriate value. Please note that the event_id won't exist anymore in the event_log
       --  table, but we are still retaining it for debugging purpose.
       deletedInvocationLogs :: [Int] <- -- This will be an array of 1 and is only used to count the number of deleted rows.
-        multiRowQueryE HGE.defaultMSSQLTxErrorHandler $
-          rawUnescapedText $
-            if tlccCleanInvocationLogs
-              then
-                [ST.st|
+        multiRowQueryE HGE.defaultMSSQLTxErrorHandler
+          $ rawUnescapedText
+          $ if tlccCleanInvocationLogs
+            then
+              [ST.st|
                 DELETE FROM hdb_catalog.event_invocation_logs
                 OUTPUT 1
                 WHERE event_id = ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id));
                 |]
-              else
-                [ST.st|
+            else
+              [ST.st|
                 UPDATE hdb_catalog.event_invocation_logs
                 SET trigger_name = '#{qTriggerName}'
                 WHERE event_id = ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id));
                 |]
       --  Finally delete the event logs.
       deletedEventLogs :: [Int] <- -- This will be an array of 1 and is only used to count the number of deleted rows.
-        multiRowQueryE HGE.defaultMSSQLTxErrorHandler $
-          rawUnescapedText $
-            [ST.st|
+        multiRowQueryE HGE.defaultMSSQLTxErrorHandler
+          $ rawUnescapedText
+          $ [ST.st|
             DELETE FROM hdb_catalog.event_log
             OUTPUT 1
             WHERE id = ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id));
@@ -1268,8 +1287,8 @@ fetchEventById sourceConfig getEventById = do
   fetchEventByIdTxE' <- liftIO $ runMSSQLSourceReadTx sourceConfig $ fetchEventByIdTxE getEventById
   case fetchEventByIdTxE' of
     Left err ->
-      throwError $
-        prefixQErr ("unexpected error while fetching event with id " <> eventId <> ": ") err
+      throwError
+        $ prefixQErr ("unexpected error while fetching event with id " <> eventId <> ": ") err
     Right eventLogWithInvocations -> do
       if isNothing (elwiEvent eventLogWithInvocations)
         then throw400 NotExists errMsg
@@ -1392,7 +1411,7 @@ encodeJSON json err =
 -- We make sure that the parse will never fail, by ensuring that values present
 -- in the `created_at`, `locked` and `next_retry_at` columns are always in UTC
 -- Time.
-bsToUTCTime :: MonadError QErr m => B.ByteString -> String -> m UTCTime
+bsToUTCTime :: (MonadError QErr m) => B.ByteString -> String -> m UTCTime
 bsToUTCTime timeInByteString err =
   onLeft
     (readEither (T.unpack $ bsToTxt timeInByteString) :: Either String UTCTime)

@@ -20,8 +20,8 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Table
 import Hasura.SQL.Types
+import Hasura.Table.Cache
 
 -- | Note:- Using sorted columns is necessary to enable casting the rows returned by VALUES expression to table type.
 -- For example, let's consider the table, `CREATE TABLE test (id serial primary key, name text not null, age int)`.
@@ -29,7 +29,7 @@ import Hasura.SQL.Types
 -- `SELECT ("row"::table).* VALUES (1, 'Robert', 23) AS "row"`.
 mkSelectExpFromColumnValues ::
   forall pgKind m.
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
   [ColumnValues ('Postgres pgKind) TxtEncodedVal] ->
@@ -50,13 +50,16 @@ mkSelectExpFromColumnValues qt allCols = \case
     extractor = S.selectStar' $ S.QualifiedIdentifier rowIdentifier $ Just $ S.TypeAnn $ toSQLTxt qt
     sortedCols = sortCols allCols
     mkTupsFromColVal colVal =
-      fmap S.TupleExp $
-        forM sortedCols $ \ci -> do
+      fmap S.TupleExp
+        $ forM sortedCols
+        $ \ci -> do
           let pgCol = ciColumn ci
           val <-
-            onNothing (HashMap.lookup pgCol colVal) $
-              throw500 $
-                "column " <> pgCol <<> " not found in returning values"
+            onNothing (HashMap.lookup pgCol colVal)
+              $ throw500
+              $ "column "
+              <> pgCol
+              <<> " not found in returning values"
           pure $ txtEncodedToSQLExp (ciType ci) val
 
     selNoRows =

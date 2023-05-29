@@ -28,7 +28,9 @@ export const Tabs: React.FC<TabsProps> = props => {
                 className={clsx(
                   'whitespace-nowrap py-xs px-sm border-b-2 font-semibold',
                   'hover:border-gray-300 border-transparent text-muted',
-                  'radix-state-active:hover:border-yellow-500 radix-state-active:border-yellow-500 radix-state-active:text-yellow-500'
+                  'radix-state-active:hover:border-yellow-500 radix-state-active:border-yellow-500 radix-state-active:text-yellow-500',
+                  // add focus visible outline for accessibility
+                  'focus-visible:outline focus-visible:outline-2 outline-offset-2 focus-visible:outline-secondary'
                 )}
               >
                 {icon ? (

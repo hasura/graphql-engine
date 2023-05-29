@@ -14,6 +14,9 @@ export const defaultIntrospectionProps = {
   getTrackableFunctions: async () => Feature.NotImplemented,
   getDatabaseSchemas: async () => Feature.NotImplemented,
   getIsTableView: async () => Feature.NotImplemented,
+  getSupportedDataTypes: async () => Feature.NotImplemented,
+  getStoredProcedures: async () => Feature.NotImplemented,
+  getTrackableObjects: async () => Feature.NotImplemented,
 };
 
 export const defaultDatabaseProps: Database = {

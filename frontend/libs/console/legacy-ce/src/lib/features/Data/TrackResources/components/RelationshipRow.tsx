@@ -5,7 +5,6 @@ import { FaArrowRight, FaColumns, FaDatabase, FaTable } from 'react-icons/fa';
 import { capitaliseFirstLetter } from '../../../../components/Common/ConfigureTransformation/utils';
 import { getTableDisplayName } from '../../../DatabaseRelationships';
 import { SuggestedRelationshipWithName } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useSuggestedRelationships';
-import { hasuraToast } from '../../../../new-components/Toasts';
 
 export type RelationshipRowProps = {
   dataSourceName: string;
@@ -29,15 +28,7 @@ export const RelationshipRow: React.VFC<RelationshipRowProps> = ({
   const [isLoadingState, setLoading] = useState(false);
   const onTrackHandler = () => {
     setLoading(true);
-    onTrack()
-      .then(() => {
-        hasuraToast({
-          title: 'Success',
-          message: 'Relationship tracked',
-          type: 'success',
-        });
-      })
-      .finally(() => setLoading(false));
+    onTrack().finally(() => setLoading(false));
   };
   return (
     <CardedTable.TableBodyRow

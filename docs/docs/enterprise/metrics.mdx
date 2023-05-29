@@ -34,205 +34,173 @@ HASURA_GRAPHQL_METRICS_SECRET=<secret>
 curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
 ```
 
-:::note Note
+:::info Configure a secret
 
-- The metrics endpoint should be configured with a secret to prevent misuse and should not be exposed over the internet.
+The metrics endpoint should be configured with a secret to prevent misuse and should not be exposed over the internet.
+
+:::
+
+:::tip High-cardinality Labels
+
+Starting in `v2.26.0`, Hasura GraphQL Engine exposes metrics with high-cardinality labels by default.
+
+You can disable
+[the cardinality of labels for metrics](/deployment/graphql-engine-flags/reference.mdx#enable-high-cardinality-labels-for-metrics)
+if you are experiencing high memory usage, which can be due to a large number of labels in the metrics (typically more
+than 10000).
 
 :::
 
 ## Metrics exported
 
-<table>
-  <tr>
-    <td>Name</td>
-    <td>Description</td>
-    <td>Type</td>
-    <td>Labels</td>
-    <td>Comment</td>
-  </tr>
-  <tr>
-    <td><code>hasura_http_connections</code></td>
-    <td>Current number of active HTTP connections (excluding WebSocket connections)</td>
-    <td>Gauge</td>
-    <td>none</td>
-    <td>Represents the HTTP load on the server</td>
-  </tr>
-  <tr>
-    <td><code>hasura_websocket_connections</code></td>
-    <td>Current number of active WebSocket connections</td>
-    <td>Gauge</td>
-    <td>none</td>
-    <td>Represents the websocket load on the server.</td>
-  </tr>
-  <tr>
-    <td><code>hasura_active_subscriptions</code></td>
-    <td>Current number of active subscriptions</td>
-    <td>Gauge</td>
-    <td>none</td>
-    <td>Represents the subscription load on the server.</td>
-  </tr>
-  <tr>
-    <td><code>hasura_graphql_requests_total</code></td>
-    <td>Number of GraphQL requests received </td>
-    <td>Counter</td>
-    <td>&#8226; "operation_type": query|mutation|subscription|unknown <br/>
-      &#8226; The "unknown" operation type will be returned for queries that fail authorization, parsing, or certain
-      validations<br/>
-      &#8226; "response_status": success|failed
-    </td>
-    <td>Represents the graphql query/mutation traffic on the server.</td>
-  </tr>
-  <tr>
-    <td><code>hasura_graphql_execution_time_seconds</code></td>
-    <td>Execution time of successful GraphQL requests (excluding subscriptions)</td>
-    <td>Histogram<br/><br/>Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10</td>
-    <td>&#8226; "operation_type": query|mutation</td>
-    <td>If more requests are falling in the higher buckets, you should consider <a href="/latest/deployment/performance-tuning">tuning the performance</a>.</td>
-  </tr>
-  <tr>
-    <td><code>hasura_event_queue_time_seconds</code></td>
-    <td>Queue time for an event already in the processing queue</td>
-    <td>Histogram<br/><br/>Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100</td>
-    <td>none</td>
-    <td>More events in higher bucket implies slow processing, you can consider increasing the <a href="/latest/deployment/graphql-engine-flags/reference/#events-http-pool-size">HTTP pool size</a> or optimizing the webhook server.</td>
-  </tr>
-  <tr>
-    <td><code>hasura_event_fetch_time_per_batch_seconds</code></td>
-    <td>Latency of fetching a batch of events</td>
-    <td>Histogram<br/><br/>Buckets: 0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10</td>
-    <td>none</td>
-    <td>A higher metric indicates slower polling of events from the database, you should consider looking into the performance of your database.</td>
-  </tr>
-  <tr>
-    <td><code>hasura_event_webhook_processing_time_seconds</code></td>
-    <td>The time between when an HTTP worker picks an event for delivery to the time its response is updated in the DB</td>
-    <td>Histogram<br/><br/>Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10</td>
-    <td>none</td>
-    <td>A higher processing time indicates slow webhook, you should try to optimize the event webhook.</td>
-  </tr>
-  <tr>
-    <td><code>hasura_event_processing_time_seconds</code></td>
-    <td>The time taken for an event to be delivered since it's been created (if first attempt) or retried (after first attempt).</td>
-    <td>Histogram<br/><br/>Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100</td>
-    <td>none</td>
-    <td>This metric can be considered as the end-to-end processing time for an event.</td>
-  </tr>
-  <tr>
-    <td><code>hasura_event_trigger_http_workers</code></td>
-    <td>Current number of active Event Trigger HTTP workers</td>
-    <td>Gauge</td>
-    <td>none</td>
-    <td>Compare this number to the <a href="/latest/deployment/graphql-engine-flags/reference/#events-http-pool-size">HTTP pool size</a>. Consider increasing it if the metric is near the current configured value.</td>
-  </tr>
-  <tr>
-    <td><code>hasura_event_processed_total</code></td>
-    <td>Total number of events processed</td>
-    <td>Counter</td>
-    <td>&#8226; "status": success|failed</td>
-    <td>Represents the Event Trigger egress.</td>
-  </tr>
-  <tr>
-    <td><code>hasura_event_invocations_total</code></td>
-    <td>Total number of events invoked</td>
-    <td>Counter</td>
-    <td>&#8226; "status": success|failed</td>
-    <td>Represents the Event Trigger webhook HTTP requests made.</td>
-  </tr>
-  <tr>
-    <td><code>hasura_postgres_connections</code></td>
-    <td>Current number of active PostgreSQL connections</td>
-    <td>Gauge</td>
-    <td>&#8226; "source_name": name of the database<br/>
-      &#8226; "conn_info": connection url string (password omitted) or name of the connection url environment variable<br/>
-      &#8226; "role": primary|replica
-    </td>
-    <td>Compare this to <a href="/latest/api-reference/syntax-defs/#pgpoolsettings">pool settings</a>.</td>
-  </tr>
-  <tr>
-  <td><code>hasura_cron_events_invocation_total</code></td>
-  <td>Total number of cron events invoked</td>
-  <td>Counter</td>
-  <td>&#8226; "status": success|failed<br /></td>
-  <td>Total number of invocations made for cron events.</td>
-</tr>
-<tr>
-  <td><code>hasura_cron_events_processed_total</code></td>
-  <td>Total number of cron events processed</td>
-  <td>Counter</td>
-  <td>&#8226; "status": success|failed<br /></td>
-  <td>
-    Compare this to <code>hasura_cron_events_invocation_total</code>. A high difference between the two metrics
-    indicates high failure rate of the cron webhook.
-  </td>
-</tr>
-<tr>
-  <td><code>hasura_oneoff_events_invocation_total</code></td>
-  <td>Total number of one-off events invoked</td>
-  <td>Counter</td>
-  <td>&#8226; "status": success|failed<br /></td>
-  <td>Total number of invocations made for one-off events.</td>
-</tr>
+The following metrics are exported by Hasura GraphQL Engine:
 
-<tr>
-  <td>
-    <code>hasura_oneoff_events_processed_total</code>
-  </td>
-  <td>Total number of one-off events processed</td>
-  <td>Counter</td>
-  <td>
-    &#8226; "status": success|failed
-    <br />
-  </td>
-  <td>
-    Compare this to <code>hasura_oneoff_events_invocation_total</code>. A high difference between the two metrics
-    indicates high failure rate of the one-off webhook.
-  </td>
-</tr>
-<tr>
-  <td>
-    <code>hasura_active_subscription_pollers</code>
-  </td>
-  <td>Current number of active subscription pollers. A subscription poller <a href="https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-3-batch-multiple-live-queries-into-one-sql-query">multiplexes </a> similar subscriptions together.
- </td>
-  <td>Gauge</td>
-  <td>
-    &#8226; "subscription_kind": streaming|live-query
-    <br />
-  </td>
-  <td>
-    The value of this metric is supposed to be proportional to the number of uniquely parameterised subscriptions i.e. subscriptions with the same selection set
-    but with different input arguments and session variables are multiplexed on the same poller.
-    If this metric is high then it may be an indication that there are too many uniquely parameterised subscriptions
-    which could be optimized for better performance.
-    </td>
-</tr>
-<tr>
-  <td>
-    <code>hasura_active_subscription_pollers_in_error_state</code>
-  </td>
-  <td>Current number of active subscription pollers that are in the error state.
-      A subscription poller <a href="https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-3-batch-multiple-live-queries-into-one-sql-query">multiplexes </a>
-      similar subscriptions together.
- </td>
-  <td>Gauge</td>
-  <td>
-    &#8226; "subscription_kind": streaming|live-query
-    <br />
-  </td>
-  <td>
-    A non-zero value of this metric indicates that there are runtime errors in atleast one of the subscription pollers that are running
-    in Hasura. In most of the cases, runtime errors in subscriptions are caused due to the changes at the data model layer and fixing the
-    issue at the data model layer should automatically fix the runtime errors.
-    </td>
-</tr>
+### Hasura Event Triggers Metrics
 
+The following metrics can be used to monitor the performance of Hasura Event Triggers system:
 
+ - [`hasura_event_fetch_time_per_batch_seconds`](/event-triggers/observability-and-performace.mdx/#event-fetch-time-per-batch)
+ - [`hasura_event_invocations_total`](/event-triggers/observability-and-performace.mdx/#event-invocations-total)
+ - [`hasura_event_processed_total`](/event-triggers/observability-and-performace.mdx/#event-processed-total)
+ - [`hasura_event_processing_time_seconds`](/event-triggers/observability-and-performace.mdx/#event-processing-time) 
+ - [`hasura_event_queue_time_seconds`](/event-triggers/observability-and-performace.mdx/#event-queue-time) 
+ - [`hasura_event_trigger_http_workers`](/event-triggers/observability-and-performace.mdx/#event-triggers-http-workers)
+ - [`hasura_event_webhook_processing_time_seconds`](/event-triggers/observability-and-performace.mdx/#event-webhook-processing-time)
+ - [`hasura_events_fetched_per_batch`](/event-triggers/observability-and-performace.mdx/#events-fetched-per-batch)
 
-</table>
+### Subscription Metrics
 
-:::note Note
+The following metrics can be used to monitor the performance of subscriptions:
 
-The GraphQL request execution time:
+- [`hasura_active_subscriptions`](/subscriptions/observability-and-performance.mdx#active-subscriptions)
+- [`hasura_active_subscription_pollers`](/subscriptions/observability-and-performance.mdx#active-subscription-pollers)
+- [`hasura_active_subscription_pollers_in_error_state`](/subscriptions/observability-and-performance.mdx#active-subscription-pollers-in-error-state)
+- [`hasura_subscription_db_execution_time_seconds`](/subscriptions/observability-and-performance.mdx#subscription-database-execution-time)
+- [`hasura_subscription_total_time_seconds`](/subscriptions/observability-and-performance.mdx#subscription-total-time)
+
+### Hasura cache request count
+
+Tracks cache hit and miss requests, which helps in monitoring and optimizing cache utilization. You can read more about this [here](/caching/caching-metrics.mdx).
+
+|        |                              |
+| ------ | ---------------------------- |
+| Name   | `hasura_cache_request_count` |
+| Type   | Counter                      |
+| Labels | `status`: hit \| miss        |
+
+### Hasura cron events invocation total
+
+Total number of cron events invoked, representing the number of invocations made for cron events.
+
+|        |                                       |
+| ------ | ------------------------------------- |
+| Name   | `hasura_cron_events_invocation_total` |
+| Type   | Counter                               |
+| Labels | `status`: success \| failed           |
+
+### Hasura cron events processed total
+
+Total number of cron events processed, representing the number of invocations made for cron events. Compare this to
+`hasura_cron_events_invocation_total`. A high difference between the two metrics indicates high failure rate of the cron
+webhook.
+
+|        |                                      |
+| ------ | ------------------------------------ |
+| Name   | `hasura_cron_events_processed_total` |
+| Type   | Counter                              |
+| Labels | `status`: success \| failed          |
+
+### Hasura GraphQL execution time seconds
+
+Execution time of successful GraphQL requests (excluding subscriptions). If more requests are falling in the higher
+buckets, you should consider [tuning the performance](/deployment/performance-tuning.mdx).
+
+|        |                                                                |
+| ------ | -------------------------------------------------------------- |
+| Name   | `hasura_graphql_execution_time_seconds`                        |
+| Type   | Histogram<br /><br />Buckets: 0.01, 0.03, 0.1, 0.3, 1, 3, 10   |
+| Labels | `operation_type`: query \| mutation                            |
+
+### Hasura GraphQL requests total
+
+Number of GraphQL requests received, representing the GraphQL query/mutation traffic on the server.
+
+|        |                                                                |
+| ------ | -------------------------------------------------------------- |
+| Name   | `hasura_graphql_requests_total`                                |
+| Type   | Counter                                                        |
+| Labels | `operation_type`: query \| mutation \| subscription \| unknown |
+
+The `unknown` operation type will be returned for queries that fail authorization, parsing, or certain validations. The
+`response_status` label will be `success` for successful requests and `failed` for failed requests.
+
+### Hasura HTTP connections
+
+Current number of active HTTP connections (excluding WebSocket connections), representing the HTTP load on the server.
+
+|        |                           |
+| ------ | ------------------------- |
+| Name   | `hasura_http_connections` |
+| Type   | Gauge                     |
+| Labels | none                      |
+
+### Hasura one-off events invocation total
+
+Total number of one-off events invoked, representing the number of invocations made for one-off events.
+
+|        |                                         |
+| ------ | --------------------------------------- |
+| Name   | `hasura_oneoff_events_invocation_total` |
+| Type   | Counter                                 |
+| Labels | `status`: success \| failed             |
+
+### Hasura one-off events processed total
+
+Total number of one-off events processed, representing the number of invocations made for one-off events. Compare this
+to `hasura_oneoff_events_invocation_total`. A high difference between the two metrics indicates high failure rate of the
+one-off webhook.
+
+|        |                                        |
+| ------ | -------------------------------------- |
+| Name   | `hasura_oneoff_events_processed_total` |
+| Type   | Counter                                |
+| Labels | `status`: success \| failed            |
+
+### Hasura postgres connections
+
+Current number of active PostgreSQL connections. Compare this to
+[pool settings](/api-reference/syntax-defs.mdx/#pgpoolsettings).
+
+|        |                                                                                                                                                                                   |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name   | `hasura_postgres_connections`                                                                                                                                                     |
+| Type   | Gauge                                                                                                                                                                             |
+| Labels | `source_name`: name of the database<br />`conn_info`: connection url string (password omitted) or name of the connection url environment variable<br />`role`: primary \| replica |
+
+### Hasura source health
+
+Health check status of a particular data source, corresponding to the output of
+`/healthz/sources`, with possible values 0 through 3 indicating, respectively:
+OK, TIMEOUT, FAILED, ERROR. See the [Source Health Check API Reference](/api-reference/source-health.mdx)
+for details.
+
+|        |                                                                                                                                                                                   |
+| ------ | -------------------------------------- |
+| Name   | `hasura_source_health`                 |
+| Type   | Gauge                                  |
+| Labels | `source_name`: name of the database    |
+
+### Hasura WebSocket connections
+
+Current number of active WebSocket connections, representing the WebSocket load on the server.
+
+|        |                                |
+| ------ | ------------------------------ |
+| Name   | `hasura_websocket_connections` |
+| Type   | Gauge                          |
+| Labels | none                           |
+
+:::info GraphQL request execution time
 
 - Uses wall-clock time, so it includes time spent waiting on I/O.
 - Includes authorization, parsing, validation, planning, and execution (calls to databases, Remote Schemas).

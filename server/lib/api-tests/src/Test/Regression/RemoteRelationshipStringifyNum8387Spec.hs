@@ -30,11 +30,11 @@ import Test.Schema.RemoteRelationships.MetadataAPI.Common qualified as Common
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
-  Fixture.hgeWithEnv [("HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES", "true")] $
-    Fixture.runWithLocalTestEnvironment contexts testsWithFeatureOn
+  Fixture.hgeWithEnv [("HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES", "true")]
+    $ Fixture.runWithLocalTestEnvironment contexts testsWithFeatureOn
 
-  Fixture.hgeWithEnv [("HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES", "false")] $
-    Fixture.runWithLocalTestEnvironment contexts testsWithFeatureOff
+  Fixture.hgeWithEnv [("HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES", "false")]
+    $ Fixture.runWithLocalTestEnvironment contexts testsWithFeatureOff
   where
     lhsFixtures = [lhsPostgres, lhsRemoteServer]
     rhsFixtures = [rhsPostgres]
@@ -80,8 +80,8 @@ rhsPostgres =
               [ SetupAction.noTeardown (rhsPostgresSetup testEnv)
               ],
             Fixture.customOptions =
-              Just $
-                Fixture.defaultOptions
+              Just
+                $ Fixture.defaultOptions
                   { Fixture.stringifyNumbers = True
                   }
           }
@@ -124,29 +124,29 @@ album =
 
 floatType :: Schema.ScalarType
 floatType =
-  Schema.TCustomType $
-    Schema.defaultBackendScalarType
+  Schema.TCustomType
+    $ Schema.defaultBackendScalarType
       { Schema.bstPostgres = Just "NUMERIC"
       }
 
 mkFloatValue :: Text -> Schema.ScalarValue
 mkFloatValue int =
-  Schema.VCustomValue $
-    Schema.defaultBackendScalarValue
+  Schema.VCustomValue
+    $ Schema.defaultBackendScalarValue
       { Schema.bsvPostgres = Just (Schema.Unquoted int)
       }
 
 bigIntType :: Schema.ScalarType
 bigIntType =
-  Schema.TCustomType $
-    Schema.defaultBackendScalarType
+  Schema.TCustomType
+    $ Schema.defaultBackendScalarType
       { Schema.bstPostgres = Just "BIGINT"
       }
 
 mkBigIntValue :: Text -> Schema.ScalarValue
 mkBigIntValue int =
-  Schema.VCustomValue $
-    Schema.defaultBackendScalarValue
+  Schema.VCustomValue
+    $ Schema.defaultBackendScalarValue
       { Schema.bsvPostgres = Just (Schema.Unquoted int)
       }
 

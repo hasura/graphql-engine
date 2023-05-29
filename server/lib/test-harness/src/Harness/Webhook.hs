@@ -56,24 +56,25 @@ run = mkTestResource do
               let mkJSONPathE = either (error . T.unpack) id . parseJSONPath
                   eventJSONPath = mkJSONPathE "$.event.data"
                in iResultToMaybe =<< executeJSONPath eventJSONPath <$> jsonBody
-        liftIO $
-          Chan.writeChan eventsQueueChan $
-            fromMaybe (error "error in parsing the event data from the body") eventDataPayload
-  thread <- Async.async $
-    Spock.runSpockNoBanner port $
-      Spock.spockT id $ do
-        Spock.get "/" $
-          Spock.json $
-            J.String "OK"
-        Spock.post "/hello" $
-          Spock.json $
-            J.String "world"
-        Spock.post "/echo" $ do
-          extractEventDataInsertIntoEventQueue
-          Spock.json $ J.object ["success" J..= True]
-        Spock.post "/nextRetry" $ do
-          extractEventDataInsertIntoEventQueue
-          Spock.setStatus HTTP.status503
+        liftIO
+          $ Chan.writeChan eventsQueueChan
+          $ fromMaybe (error "error in parsing the event data from the body") eventDataPayload
+  thread <- Async.async
+    $ Spock.runSpockNoBanner port
+    $ Spock.spockT id
+    $ do
+      Spock.get "/"
+        $ Spock.json
+        $ J.String "OK"
+      Spock.post "/hello"
+        $ Spock.json
+        $ J.String "world"
+      Spock.post "/echo" $ do
+        extractEventDataInsertIntoEventQueue
+        Spock.json $ J.object ["success" J..= True]
+      Spock.post "/nextRetry" $ do
+        extractEventDataInsertIntoEventQueue
+        Spock.setStatus HTTP.status503
 
   let server = Server {port = fromIntegral port, urlPrefix, thread}
   pure

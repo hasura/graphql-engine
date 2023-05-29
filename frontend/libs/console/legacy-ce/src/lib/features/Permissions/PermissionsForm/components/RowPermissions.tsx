@@ -1,21 +1,25 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 import { useFormContext } from 'react-hook-form';
-import { MetadataTable, Table } from '../../../hasura-metadata-types';
-import { useHttpClient } from '../../../Network';
 import { useQuery } from 'react-query';
-import { DataSource, exportMetadata, Operator } from '../../../DataSource';
-import { areTablesEqual } from '../../../hasura-metadata-api';
-import { getTypeName } from '../../../GraphQLUtils';
+import { getIngForm } from '../../../../components/Services/Data/utils';
 import { InputField } from '../../../../new-components/Form';
 import { IconTooltip } from '../../../../new-components/Tooltip';
 import { Collapse } from '../../../../new-components/deprecated';
-import { getIngForm } from '../../../../components/Services/Data/utils';
-import { RowPermissionBuilder } from './RowPermissionsBuilder';
+import { DataSource, Operator, exportMetadata } from '../../../DataSource';
+import { getTypeName } from '../../../GraphQLUtils';
+import { useHttpClient } from '../../../Network';
+import {
+  MetadataSelectors,
+  areTablesEqual,
+  useMetadata,
+} from '../../../hasura-metadata-api';
+import { Table } from '../../../hasura-metadata-types';
 import { QueryType } from '../../types';
 import { ReturnValue } from '../hooks';
-import { useMetadataTable } from '../../../hasura-metadata-api/metadataHooks';
+import { copyQueryTypePermissions } from '../utils/copyQueryTypePermissions';
 import { getNonSelectedQueryTypePermissions } from '../utils/getMapQueryTypePermissions';
+import { RowPermissionBuilder } from './RowPermissionsBuilder';
 
 const NoChecksLabel = () => (
   <span data-test="without-checks">Without any checks&nbsp;</span>
@@ -31,7 +35,7 @@ const CustomLabel = () => (
 export interface RowPermissionsProps {
   table: unknown;
   queryType: QueryType;
-  subQueryType?: string;
+  subQueryType?: 'pre_update' | 'post_update';
   dataSourceName: string;
   supportedOperators: Operator[];
   defaultValues: ReturnValue['defaultValues'];
@@ -49,39 +53,32 @@ enum SelectedSection {
   delete = 'delete',
 }
 
-const getRowPermission = (queryType: QueryType, subQueryType?: string) => {
-  if (queryType === 'insert') {
+export type RowPermissionsSectionType =
+  | QueryType
+  | 'pre_update'
+  | 'post_update';
+
+export const getRowPermission = (
+  queryType: RowPermissionsSectionType
+): 'filter' | 'check' => {
+  if (queryType === 'pre_update') {
+    return 'filter';
+  }
+  if (queryType === 'post_update') {
     return 'check';
   }
-
-  if (queryType === 'update') {
-    if (subQueryType === 'post') {
-      return 'check';
-    }
-
-    return 'filter';
+  if (queryType === 'insert') {
+    return 'check';
   }
 
   return 'filter';
 };
 
 const getRowPermissionCheckType = (
-  queryType: QueryType,
-  subQueryType?: string
-) => {
-  if (queryType === 'insert') {
-    return 'checkType';
-  }
-
-  if (queryType === 'update') {
-    if (subQueryType === 'post') {
-      return 'checkType';
-    }
-
-    return 'filterType';
-  }
-
-  return 'filterType';
+  queryType: RowPermissionsSectionType
+): 'filterType' | 'checkType' => {
+  const permissionType = getRowPermission(queryType);
+  return permissionType === 'filter' ? 'filterType' : 'checkType';
 };
 
 const useTypeName = ({
@@ -145,24 +142,28 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
   roleName,
 }) => {
   const { data: tableName, isLoading } = useTypeName({ table, dataSourceName });
-  const metadataTable = useMetadataTable(dataSourceName, table);
+
+  const { data: metadataTable } = useMetadata(
+    MetadataSelectors.findTable(dataSourceName, table)
+  );
 
   const nonSelectedQueryTypePermissions = getNonSelectedQueryTypePermissions(
-    metadataTable?.data as MetadataTable,
+    metadataTable,
     queryType,
     roleName
   );
 
-  const { watch, setValue, reset, getValues } = useFormContext();
+  const { watch, setValue } = useFormContext();
   // determines whether the inputs should be pointed at `check` or `filter`
-  const rowPermissions = getRowPermission(queryType, subQueryType);
+  const rowPermissions = getRowPermission(subQueryType ?? queryType);
+
   // determines whether the check type should be pointer at `checkType` or `filterType`
   const rowPermissionsCheckType = getRowPermissionCheckType(
-    queryType,
-    subQueryType
+    subQueryType ?? queryType
   );
 
   const selectedSection = watch(rowPermissionsCheckType);
+
   return (
     <fieldset key={queryType} className="grid gap-2">
       <div>
@@ -216,13 +217,14 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
                   value={type}
                   checked={selectedSection === type}
                   onClick={() => {
-                    reset({
-                      ...getValues(),
-                      ...data,
-                      queryType,
-                    });
-
                     setValue(rowPermissionsCheckType, type);
+                    const newValues = copyQueryTypePermissions(
+                      type,
+                      queryType,
+                      subQueryType,
+                      data
+                    );
+                    setValue(...newValues);
                   }}
                 />
                 <span data-test="mutual-check">
@@ -234,7 +236,9 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
                 <div
                   // Permissions are not otherwise stored in plan JSON format in the dom.
                   // This is a hack to get the JSON into the dom for testing.
-                  data-state={JSON.stringify(data[getRowPermission(type)])}
+                  data-state={JSON.stringify(
+                    getRowPermission(type) ? data?.[getRowPermission(type)] : {}
+                  )}
                   data-testid="external-check-json-editor"
                   className="mt-4 p-6 rounded-lg bg-white border border-gray-200 min-h-32 w-full"
                 >

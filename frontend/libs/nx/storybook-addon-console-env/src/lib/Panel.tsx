@@ -1,7 +1,14 @@
 import React, { useMemo, useCallback, useEffect } from 'react';
-import { useGlobals, useGlobalTypes, useParameter } from '@storybook/api';
-import { AddonPanel, Args, ArgsTable, ArgTypes } from '@storybook/components';
+import {
+  Args,
+  ArgTypes,
+  useGlobals,
+  useGlobalTypes,
+  useParameter,
+} from '@storybook/api';
+import { AddonPanel } from '@storybook/components';
 import { ADDON_ID } from './constants';
+import { PureArgsTable } from '@storybook/blocks';
 
 type PanelProps = {
   active?: boolean;
@@ -66,7 +73,7 @@ export const Panel = ({ active = true }: PanelProps) => {
   return (
     <AddonPanel active={active} key={ADDON_ID}>
       {Object.values(rows).length > 0 ? (
-        <ArgsTable
+        <PureArgsTable
           inAddonPanel
           rows={rows}
           args={globals}

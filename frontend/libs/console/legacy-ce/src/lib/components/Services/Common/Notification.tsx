@@ -98,7 +98,7 @@ export const getNotificationDetails = (
   detailsJson: Json,
   children: React.ReactNode
 ) => {
-  return children ? (
+  return children || detailsJson ? (
     <div className="notification-details">
       <AceEditor
         readOnly

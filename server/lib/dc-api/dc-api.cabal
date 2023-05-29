@@ -63,6 +63,7 @@ library
     autodocodec-openapi3,
     base,
     bytestring,
+    containers,
     deepseq,
     extra,
     graphql-parser,
@@ -77,7 +78,8 @@ library
     servant-openapi3,
     text,
     unordered-containers,
-    http-media
+    http-media,
+    witch
 
   exposed-modules:
     Hasura.Backends.DataConnector.API
@@ -88,6 +90,7 @@ library
     Hasura.Backends.DataConnector.API.V0.ConfigSchema
     Hasura.Backends.DataConnector.API.V0.ErrorResponse
     Hasura.Backends.DataConnector.API.V0.Expression
+    Hasura.Backends.DataConnector.API.V0.Function
     Hasura.Backends.DataConnector.API.V0.Mutations
     Hasura.Backends.DataConnector.API.V0.OrderBy
     Hasura.Backends.DataConnector.API.V0.Query
@@ -174,4 +177,5 @@ test-suite tests-dc-api
     Test.Specs.QuerySpec.OrderBySpec
     Test.Specs.QuerySpec.RelationshipsSpec
     Test.Specs.SchemaSpec
+    Test.Specs.UDFSpec
     Test.TestHelpers

@@ -68,52 +68,52 @@ setupFunctions :: TestEnvironment -> [Fixture.SetupAction]
 setupFunctions testEnv =
   let schemaName = Schema.getSchemaName testEnv
       articleTableSQL = unSchemaName schemaName <> ".article"
-   in [ SetupAction.noTeardown $
-          BigQuery.run_ $
-            T.unpack $
-              T.unwords $
-                [ "CREATE TABLE FUNCTION ",
-                  fetch_articles_returns_table schemaName,
-                  "(a_id INT64, search STRING)",
-                  "RETURNS TABLE<id INT64, title STRING, content STRING>",
-                  "AS (",
-                  "SELECT t.id, t.title, t.content FROM",
-                  articleTableSQL,
-                  "AS t WHERE t.author_id = a_id and (t.title LIKE `search` OR t.content LIKE `search`)",
-                  ");"
-                ],
-        SetupAction.noTeardown $
-          BigQuery.run_ $
-            T.unpack $
-              T.unwords $
-                [ "CREATE TABLE FUNCTION ",
-                  fetch_articles schemaName,
-                  "(a_id INT64, search STRING)",
-                  "AS (",
-                  "SELECT t.* FROM",
-                  articleTableSQL,
-                  "AS t WHERE t.author_id = a_id and (t.title LIKE `search` OR t.content LIKE `search`)",
-                  ");"
-                ],
-        SetupAction.noTeardown $
-          BigQuery.run_ $
-            T.unpack $
-              T.unwords $
-                [ "CREATE TABLE FUNCTION ",
-                  function_no_args schemaName <> "()",
-                  "AS (",
-                  "SELECT t.* FROM",
-                  articleTableSQL,
-                  "AS t);"
-                ],
-        SetupAction.noTeardown $
-          BigQuery.run_ $
-            T.unpack $
-              T.unwords $
-                [ "CREATE FUNCTION ",
-                  add_int schemaName <> "(a INT64, b INT64)",
-                  "RETURNS INT64 AS (a + b);"
-                ]
+   in [ SetupAction.noTeardown
+          $ BigQuery.run_
+          $ T.unpack
+          $ T.unwords
+          $ [ "CREATE TABLE FUNCTION ",
+              fetch_articles_returns_table schemaName,
+              "(a_id INT64, search STRING)",
+              "RETURNS TABLE<id INT64, title STRING, content STRING>",
+              "AS (",
+              "SELECT t.id, t.title, t.content FROM",
+              articleTableSQL,
+              "AS t WHERE t.author_id = a_id and (t.title LIKE `search` OR t.content LIKE `search`)",
+              ");"
+            ],
+        SetupAction.noTeardown
+          $ BigQuery.run_
+          $ T.unpack
+          $ T.unwords
+          $ [ "CREATE TABLE FUNCTION ",
+              fetch_articles schemaName,
+              "(a_id INT64, search STRING)",
+              "AS (",
+              "SELECT t.* FROM",
+              articleTableSQL,
+              "AS t WHERE t.author_id = a_id and (t.title LIKE `search` OR t.content LIKE `search`)",
+              ");"
+            ],
+        SetupAction.noTeardown
+          $ BigQuery.run_
+          $ T.unpack
+          $ T.unwords
+          $ [ "CREATE TABLE FUNCTION ",
+              function_no_args schemaName <> "()",
+              "AS (",
+              "SELECT t.* FROM",
+              articleTableSQL,
+              "AS t);"
+            ],
+        SetupAction.noTeardown
+          $ BigQuery.run_
+          $ T.unpack
+          $ T.unwords
+          $ [ "CREATE FUNCTION ",
+              add_int schemaName <> "(a INT64, b INT64)",
+              "RETURNS INT64 AS (a + b);"
+            ]
       ]
 
 fetch_articles_returns_table :: SchemaName -> T.Text

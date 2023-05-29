@@ -1,5 +1,5 @@
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, StoryFn, Meta } from '@storybook/react';
 import React from 'react';
 import { screen } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
@@ -21,11 +21,9 @@ export default {
     ReactQueryDecorator(),
     Story => <div className="p-4 w-full">{Story()}</div>,
   ],
-} as ComponentMeta<typeof RenderOpenApi3Form>;
+} as Meta<typeof RenderOpenApi3Form>;
 
-export const ObjectInputWithFields: ComponentStory<
-  typeof RenderOpenApi3Form
-> = () => {
+export const ObjectInputWithFields: StoryFn<typeof RenderOpenApi3Form> = () => {
   return (
     <RenderOpenApi3Form
       getSchema={() => [
@@ -101,9 +99,7 @@ export const ObjectInputWithFields: ComponentStory<
   );
 };
 
-export const ObjectInputArrayInput: ComponentStory<
-  typeof RenderOpenApi3Form
-> = () => {
+export const ObjectInputArrayInput: StoryFn<typeof RenderOpenApi3Form> = () => {
   return (
     <RenderOpenApi3Form
       getSchema={() => [
@@ -176,60 +172,62 @@ export const ObjectInputArrayInput: ComponentStory<
   );
 };
 
-export const Test: ComponentStory<typeof RenderOpenApi3Form> = () => (
-  <RenderOpenApi3Form
-    getSchema={() => [
-      {
-        title: 'Connection Parameters',
-        type: 'object',
-        nullable: false,
-        properties: {
-          username: {
-            title: 'Username',
-            type: 'string',
-            nullable: false,
-          },
-          port: {
-            title: 'Port',
-            type: 'number',
-            nullable: false,
-          },
-          enable_log: {
-            title: 'Enable Log',
-            type: 'boolean',
+export const Test: StoryObj<typeof RenderOpenApi3Form> = {
+  render: () => (
+    <RenderOpenApi3Form
+      getSchema={() => [
+        {
+          title: 'Connection Parameters',
+          type: 'object',
+          nullable: false,
+          properties: {
+            username: {
+              title: 'Username',
+              type: 'string',
+              nullable: false,
+            },
+            port: {
+              title: 'Port',
+              type: 'number',
+              nullable: false,
+            },
+            enable_log: {
+              title: 'Enable Log',
+              type: 'boolean',
+            },
           },
         },
-      },
-      {},
-    ]}
-    defaultValues={{}}
-    name="ObjectProperty"
-    rawOutput
-  />
-);
+        {},
+      ]}
+      defaultValues={{}}
+      name="ObjectProperty"
+      rawOutput
+    />
+  ),
 
-Test.storyName = '🧪 Testing - input interaction';
+  name: '🧪 Testing - input interaction',
 
-Test.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
 
-  await waitFor(async () => {
-    await userEvent.type(
-      canvas.getByTestId('ObjectProperty.username'),
-      'foobar'
-    );
-    await userEvent.type(canvas.getByTestId('ObjectProperty.port'), '1234');
+    await waitFor(async () => {
+      await userEvent.type(
+        canvas.getByTestId('ObjectProperty.username'),
+        'foobar'
+      );
+      await userEvent.type(canvas.getByTestId('ObjectProperty.port'), '1234');
 
-    await userEvent.click(canvas.getByTestId('ObjectProperty.enable_log'));
-  });
+      await userEvent.click(canvas.getByTestId('ObjectProperty.enable_log'));
+    });
 
-  await waitFor(async () => {
-    await userEvent.click(canvas.getByTestId('submit-form-btn'));
-  });
+    await waitFor(async () => {
+      await userEvent.click(canvas.getByTestId('submit-form-btn'));
+    });
 
-  await waitFor(async () => {
-    await expect(screen.getByTestId('output').textContent).toBe(
-      '{"ObjectProperty":{"username":"foobar","port":1234,"enable_log":true}}'
-    );
-  });
+    await waitFor(async () => {
+      await expect(screen.getByTestId('output').textContent).toBe(
+        '{"ObjectProperty":{"username":"foobar","port":1234,"enable_log":true}}'
+      );
+    });
+  },
 };

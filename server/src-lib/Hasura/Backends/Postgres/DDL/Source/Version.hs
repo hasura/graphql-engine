@@ -32,10 +32,10 @@ latestSourceCatalogVersion = Version.SourceCatalogVersion 3
 previousSourceCatalogVersions :: [SourceCatalogVersion pgKind]
 previousSourceCatalogVersions = [initialSourceCatalogVersion .. pred latestSourceCatalogVersion]
 
-setSourceCatalogVersion :: MonadTx m => m ()
+setSourceCatalogVersion :: (MonadTx m) => m ()
 setSourceCatalogVersion =
-  liftTx $
-    PG.unitQE
+  liftTx
+    $ PG.unitQE
       defaultTxErrorHandler
       [PG.sql|
         INSERT INTO hdb_catalog.hdb_source_catalog_version(version, upgraded_on)
@@ -46,14 +46,15 @@ setSourceCatalogVersion =
       (Identity (tshow latestSourceCatalogVersion))
       False
 
-getSourceCatalogVersion :: MonadTx m => m (SourceCatalogVersion postgres)
+getSourceCatalogVersion :: (MonadTx m) => m (SourceCatalogVersion postgres)
 getSourceCatalogVersion = do
   versionText <-
-    liftTx $
-      runIdentity . PG.getRow
-        <$> PG.withQE
-          defaultTxErrorHandler
-          [PG.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |]
-          ()
-          False
+    liftTx
+      $ runIdentity
+      . PG.getRow
+      <$> PG.withQE
+        defaultTxErrorHandler
+        [PG.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |]
+        ()
+        False
   readEither (T.unpack versionText) `onLeft` (throw500 . (("Invalid source catalog version in the metadata: " <>) . T.pack))

@@ -1,7 +1,8 @@
 import { useQuery } from 'react-query';
 import { useAllSuggestedRelationships } from '../../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
-import { tableRelationships as getTableRelationships } from '../../../../DatabaseRelationships/utils/tableRelationships';
-import { useMetadata } from '../../../../hasura-metadata-api';
+import { getTableLocalRelationships } from '../../../../DatabaseRelationships/utils/tableRelationships';
+import { exportMetadata } from '../../../../hasura-metadata-api';
+import { useHttpClient } from '../../../../Network';
 
 export const getTrackedRelationshipsCacheKey = (dataSourceName: string) => [
   'tracked_relationships',
@@ -9,15 +10,17 @@ export const getTrackedRelationshipsCacheKey = (dataSourceName: string) => [
 ];
 
 export const useTrackedRelationships = (dataSourceName: string) => {
+  const httpClient = useHttpClient();
   const { suggestedRelationships } = useAllSuggestedRelationships({
     dataSourceName,
     isEnabled: true,
     omitTracked: false,
   });
 
-  const { data: metadata } = useMetadata(m => m.metadata);
-
-  const fetchRelationships = async () => {
+  const fetchLocalRelationships = async () => {
+    const { metadata } = await exportMetadata({
+      httpClient,
+    });
     const currentMetadataSource = metadata?.sources?.find(
       source => source.name === dataSourceName
     );
@@ -27,7 +30,7 @@ export const useTrackedRelationships = (dataSourceName: string) => {
     const _tableRelationships = [];
     if (metadataTables) {
       for (const metadataTable of metadataTables) {
-        const tableRelationships = getTableRelationships(
+        const tableRelationships = getTableLocalRelationships(
           metadataTable,
           dataSourceName,
           suggestedRelationships
@@ -46,7 +49,7 @@ export const useTrackedRelationships = (dataSourceName: string) => {
     refetch: refetchRelationships,
     error,
   } = useQuery({
-    queryFn: fetchRelationships,
+    queryFn: fetchLocalRelationships,
     queryKey: getTrackedRelationshipsCacheKey(dataSourceName),
   });
 

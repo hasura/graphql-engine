@@ -65,8 +65,8 @@ data LocalTestTestEnvironment = LocalTestTestEnvironment
 
 dbTodbRemoteRelationshipFixture :: Fixture.Fixture LocalTestTestEnvironment
 dbTodbRemoteRelationshipFixture =
-  ( Fixture.fixture $
-      Fixture.Combine
+  ( Fixture.fixture
+      $ Fixture.Combine
         (Fixture.Backend Postgres.backendTypeMetadata)
         (Fixture.Backend Postgres.backendTypeMetadata)
   )
@@ -440,7 +440,7 @@ data LHSQuery m = LHSQuery
   }
   deriving (Generic)
 
-instance Typeable m => Morpheus.GQLType (LHSQuery m) where
+instance (Typeable m) => Morpheus.GQLType (LHSQuery m) where
   typeOptions _ _ = hasuraTypeOptions
 
 data LHSHasuraTrackArgs = LHSHasuraTrackArgs
@@ -460,7 +460,7 @@ data LHSHasuraTrack m = LHSHasuraTrack
   }
   deriving (Generic)
 
-instance Typeable m => Morpheus.GQLType (LHSHasuraTrack m) where
+instance (Typeable m) => Morpheus.GQLType (LHSHasuraTrack m) where
   typeOptions _ _ = hasuraTypeOptions
 
 data LHSHasuraTrackOrderBy = LHSHasuraTrackOrderBy
@@ -517,12 +517,12 @@ lhsRemoteServerMkLocalTestEnvironment _ =
             Nothing -> \_ _ -> EQ
             Just orderByArg -> orderTrack orderByArg
           limitFunction = maybe Hasura.Prelude.id take ta_limit
-      pure $
-        tracks
-          & filter filterFunction
-          & sortBy orderByFunction
-          & limitFunction
-          & map mkTrack
+      pure
+        $ tracks
+        & filter filterFunction
+        & sortBy orderByFunction
+        & limitFunction
+        & map mkTrack
     -- Returns True iif the given track matches the given boolean expression.
     matchTrack trackInfo@(trackId, trackTitle, maybeAlbumId) (LHSHasuraTrackBoolExp {..}) =
       and
@@ -543,16 +543,16 @@ lhsRemoteServerMkLocalTestEnvironment _ =
       (trackId2, trackTitle2, trackAlbumId2) =
         flip foldMap orderByList \LHSHasuraTrackOrderBy {..} ->
           if
-              | Just idOrder <- tob_id -> case idOrder of
-                  Asc -> compare trackId1 trackId2
-                  Desc -> compare trackId2 trackId1
-              | Just titleOrder <- tob_title -> case titleOrder of
-                  Asc -> compare trackTitle1 trackTitle2
-                  Desc -> compare trackTitle2 trackTitle1
-              | Just albumIdOrder <- tob_album_id ->
-                  compareWithNullLast albumIdOrder trackAlbumId1 trackAlbumId2
-              | otherwise ->
-                  error "empty track_order object"
+            | Just idOrder <- tob_id -> case idOrder of
+                Asc -> compare trackId1 trackId2
+                Desc -> compare trackId2 trackId1
+            | Just titleOrder <- tob_title -> case titleOrder of
+                Asc -> compare trackTitle1 trackTitle2
+                Desc -> compare trackTitle2 trackTitle1
+            | Just albumIdOrder <- tob_album_id ->
+                compareWithNullLast albumIdOrder trackAlbumId1 trackAlbumId2
+            | otherwise ->
+                error "empty track_order object"
     compareWithNullLast Desc x1 x2 = compareWithNullLast Asc x2 x1
     compareWithNullLast Asc Nothing Nothing = EQ
     compareWithNullLast Asc (Just _) Nothing = LT

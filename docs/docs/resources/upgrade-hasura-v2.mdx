@@ -72,17 +72,22 @@ A detailed changelog with all the new features introduced in Hasura v2 is availa
   i.e. `[{field1: sortOrder}, {field2: sortOrder}]` but it is also accepts a single object with multiple keys as an
   input, i.e. `{field1: sortOrder, field2: sortOrder}`. In earlier versions, Hasura's query parsing logic used to
   maintain the order of keys in the input object and hence the appropriate `order by` clauses with the fields in the
-  right order were generated .
+  right order were generated.
 
-  As the [GraphQL spec](http://spec.graphql.org/June2018/#sec-Input-Object-Values) mentions that input object keys are
-  unordered, Hasura v2.0's new and stricter query parsing logic doesn't maintain the order of keys in the input object
-  taking away the guarantee of the generated `order by` clauses to have the fields in the given order.
+  As the [GraphQL spec](http://spec.graphql.org/June2018/#sec-Input-Object-Values) specifies that input object keys are
+  unordered, Hasura v2.0's new and stricter query parsing logic doesn't maintain the order of keys in the input object,
+  removing the previous guarantee that the generated `order by` clauses specify the fields in the given order.
 
   For example: The query `fetch_users(order_by: {age: desc, name: asc}) {id name age}` which is intended to fetch users
   ordered by their age and then by their name is now not guaranteed to return results first ordered by age and then by
-  their name as the `order_by` input is passed as an object. To achieve the expected behavior, the following query
-  `fetch_users(order_by: [{age: desc}, {name: asc}]) {id name age}` should be used which uses an array to define the
+  their name as the `order_by` input is passed as an object. To achieve the expected behavior, the query
+  `fetch_users(order_by: [{age: desc}, {name: asc}]) {id name age}` should be used, which uses an array to define the
   order of fields to generate the appropriate `order by` clause.
+
+  This has an effect on query operators that depend on `order_by`, most notably `distinct_on`. The `distinct_on`
+  operator relies on the order of `order_by`, and therefore is also impacted by this change.
+
+  To avoid confusion and potentially-unwanted behavior, you should use an array value for all `order_by` clauses.
 
 - **Type name for computed fields' input argument has changed**
 

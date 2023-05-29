@@ -17,7 +17,7 @@ import Hedgehog.Gen qualified as Gen
 
 --------------------------------------------------------------------------------
 
-genAnnSelectG :: forall m f a. MonadGen m => m a -> m (f a) -> m (AnnSelectG ('Postgres 'Vanilla) f a)
+genAnnSelectG :: forall m f a. (MonadGen m) => m a -> m (f a) -> m (AnnSelectG ('Postgres 'Vanilla) f a)
 genAnnSelectG genA genFA =
   AnnSelectG
     <$> genFields genFA defaultRange defaultRange

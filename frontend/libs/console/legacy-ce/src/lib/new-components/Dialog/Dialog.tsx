@@ -20,6 +20,7 @@ export type FooterProps = {
   onSubmitAnalyticsName?: string;
   onCancelAnalyticsName?: string;
   disabled?: boolean;
+  id?: string;
 };
 
 const noop = () => null;
@@ -38,6 +39,7 @@ const Footer: React.VFC<FooterProps> = ({
   onSubmitAnalyticsName,
   onCancelAnalyticsName,
   disabled = false,
+  id,
 }) => {
   const callToActionProps: ButtonProps = {
     icon: callToActionIcon,
@@ -55,6 +57,7 @@ const Footer: React.VFC<FooterProps> = ({
 
   return (
     <div
+      id={id}
       className={clsx(
         'flex items-center justify-end border-t border-gray-300 bg-white p-sm',
         className

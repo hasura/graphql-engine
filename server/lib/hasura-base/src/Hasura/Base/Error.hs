@@ -202,8 +202,8 @@ instance ToJSON QErr where
         "error" .= msg,
         "code" .= code
       ]
-  toJSON (QErr jPath _ msg code (Just extra)) = object $
-    case extra of
+  toJSON (QErr jPath _ msg code (Just extra)) = object
+    $ case extra of
       ExtraInternal e -> err ++ ["internal" .= e]
       ExtraExtensions {} -> err
       HideInconsistencies -> []
@@ -346,8 +346,8 @@ throw500WithDetail t detail =
 
 throwConnectionError :: (QErrM m) => Text -> m a
 throwConnectionError t =
-  throwError $
-    (err500 Unexpected t)
+  throwError
+    $ (err500 Unexpected t)
       { qeInternal = Just HideInconsistencies,
         qeCode = ConnectionNotEstablished
       }
@@ -407,7 +407,9 @@ indexedFoldlA' f = proc (e, (acc0, (xs, s))) ->
   (|
     foldlA'
       (\acc (i, v) -> (| withPathIA ((e, (acc, (v, s))) >- f) |) i)
-  |) acc0 (zip [0 ..] (toList xs))
+  |)
+    acc0
+    (zip [0 ..] (toList xs))
 
 indexedTraverseA_ ::
   (ArrowChoice arr, ArrowError QErr arr, Foldable t) =>

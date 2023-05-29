@@ -1,10 +1,10 @@
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { useState } from 'react';
 import { JsonSchemaInput, JsonSchemaInputProps } from './JsonSchemaInput';
 
 export default {
   component: JsonSchemaInput,
-} as ComponentMeta<typeof JsonSchemaInput>;
+} as Meta<typeof JsonSchemaInput>;
 
 const listingsAndReviews = {
   title: 'listingsAndReview',
@@ -304,7 +304,9 @@ const listingsAndReviews = {
 
 const json = JSON.stringify(listingsAndReviews, null, 2);
 
-export const Primary: Story<JsonSchemaInputProps> = args => {
-  const [value, setValue] = useState<string>(json);
-  return <JsonSchemaInput value={value} onChange={setValue} />;
+export const Primary: StoryObj<JsonSchemaInputProps> = {
+  render: args => {
+    const [value, setValue] = useState<string>(json);
+    return <JsonSchemaInput value={value} onChange={setValue} />;
+  },
 };

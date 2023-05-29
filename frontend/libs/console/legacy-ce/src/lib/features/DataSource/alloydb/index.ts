@@ -17,6 +17,7 @@ import { getTableRows } from '../postgres/query';
 import { runSQL } from '../api';
 import { postgresCapabilities } from '../common/capabilities';
 import { getIsTableView } from './introspection/getIsTableView';
+import { consoleDataTypeToSQLTypeMap } from '../postgres/utils';
 
 export type AlloyDbTable = { name: string; schema: string };
 
@@ -53,6 +54,7 @@ export const alloy: Database = {
     getSupportedOperators,
     getDatabaseSchemas,
     getIsTableView,
+    getSupportedDataTypes: async () => consoleDataTypeToSQLTypeMap,
   },
   query: {
     getTableRows,

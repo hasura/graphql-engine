@@ -73,18 +73,19 @@ instance ToEngineLog (SourceName, SourceCatalogMigrationState) Hasura where
             SCMSNothingToDo catalogVersion ->
               "source "
                 <> sourceName
-                  <<> " is already at the latest catalog version ("
+                <<> " is already at the latest catalog version ("
                 <> tshow catalogVersion
                 <> ")."
             SCMSInitialized catalogVersion ->
               "source "
                 <> sourceName
-                  <<> " has the source catalog version successfully initialized (at version "
+                <<> " has the source catalog version successfully initialized (at version "
                 <> tshow catalogVersion
                 <> ")."
             SCMSMigratedTo oldCatalogVersion newCatalogVersion ->
               "source "
-                <> sourceName <<> " has been migrated successfully from catalog version "
+                <> sourceName
+                <<> " has been migrated successfully from catalog version "
                 <> tshow oldCatalogVersion
                 <> " to "
                 <> tshow newCatalogVersion
@@ -93,13 +94,13 @@ instance ToEngineLog (SourceName, SourceCatalogMigrationState) Hasura where
               "Source catalog migration for source: " <> sourceName <<> " is on hold due to " <> reason <> "."
             SCMSNotSupported ->
               "Source catalog migration is not supported for source " <>> sourceName
-     in toEngineLog $
-          StartupLog
+     in toEngineLog
+          $ StartupLog
             { slLogLevel = LevelInfo,
               slKind = "source_catalog_migrate",
               slInfo =
-                J.toJSON $
-                  J.object
+                J.toJSON
+                  $ J.object
                     [ "source" J..= sourceName,
                       "message" J..= migrationStatusMessage
                     ]

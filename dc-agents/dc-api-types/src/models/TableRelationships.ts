@@ -11,5 +11,6 @@ export type TableRelationships = {
    */
   relationships: Record<string, Relationship>;
   source_table: TableName;
+  type: 'table';
 };
 

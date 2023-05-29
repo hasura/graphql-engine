@@ -47,8 +47,8 @@ instance ToEngineLog AgentCommunicationLog Hasura where
     (LevelDebug, ELTDataConnectorLog, logJson)
     where
       logJson =
-        object $
-          catMaybes
+        object
+          $ catMaybes
             [ ("requestMethod" .=) . _rliRequestMethod <$> _aclRequest,
               ("requestUri" .=) . _rliRequestUri <$> _aclRequest,
               ("requestHeaders" .=) . _rliRequestHeaders <$> _aclRequest,

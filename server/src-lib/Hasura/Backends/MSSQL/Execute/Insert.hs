@@ -156,9 +156,9 @@ buildInsertTx tableName withAlias stringifyNum insert queryTags = do
 
   -- Create #inserted temporary table
   let createInsertedTempTableQuery =
-        toQueryFlat $
-          TQ.fromSelectIntoTempTable $
-            TSQL.toSelectIntoTempTable tempTableNameInserted tableName tableColumns RemoveConstraints
+        toQueryFlat
+          $ TQ.fromSelectIntoTempTable
+          $ TSQL.toSelectIntoTempTable tempTableNameInserted tableName tableColumns RemoveConstraints
 
   Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
 
@@ -181,8 +181,8 @@ buildInsertTx tableName withAlias stringifyNum insert queryTags = do
   Tx.unitQueryE defaultMSSQLTxErrorHandler (dropInsertedTempTableQuery `withQueryTags` queryTags)
 
   -- Raise an exception if the check condition is not met
-  unless (checkConditionInt == 0) $
-    throw400 PermissionError "check constraint of an insert/update permission has failed"
+  unless (checkConditionInt == 0)
+    $ throw400 PermissionError "check constraint of an insert/update permission has failed"
 
   pure $ encJFromText responseText
 
@@ -199,7 +199,7 @@ buildInsertTx tableName withAlias stringifyNum insert queryTags = do
 --
 --   Should be used as part of a bigger transaction in 'buildInsertTx'.
 buildUpsertTx ::
-  MonadIO m =>
+  (MonadIO m) =>
   TSQL.TableName ->
   AnnotatedInsert 'MSSQL Void Expression ->
   IfMatched Expression ->
@@ -212,18 +212,19 @@ buildUpsertTx tableName insert ifMatched queryTags = do
       allTableColumns = _aiTableColumns $ _aiData insert
       insertColumns = filter (\c -> ciColumn c `elem` insertColumnNames) allTableColumns
       createValuesTempTableQuery =
-        toQueryFlat $
-          TQ.fromSelectIntoTempTable $
-            -- We want to KeepConstraints here so the user can omit values for identity columns such as `id`
-            TSQL.toSelectIntoTempTable tempTableNameValues tableName insertColumns KeepConstraints
+        toQueryFlat
+          $ TQ.fromSelectIntoTempTable
+          $
+          -- We want to KeepConstraints here so the user can omit values for identity columns such as `id`
+          TSQL.toSelectIntoTempTable tempTableNameValues tableName insertColumns KeepConstraints
   -- Create #values temporary table
   Tx.unitQueryE defaultMSSQLTxErrorHandler (createValuesTempTableQuery `withQueryTags` queryTags)
 
   -- Store values in #values temporary table
   let insertValuesIntoTempTableQuery =
-        toQueryFlat $
-          TQ.fromInsertValuesIntoTempTable $
-            TSQL.toInsertValuesIntoTempTable tempTableNameValues insert
+        toQueryFlat
+          $ TQ.fromInsertValuesIntoTempTable
+          $ TSQL.toInsertValuesIntoTempTable tempTableNameValues insert
   Tx.unitQueryE mutationMSSQLTxErrorHandler (insertValuesIntoTempTableQuery `withQueryTags` queryTags)
 
   -- Run the MERGE query and store the mutated rows in #inserted temporary table
@@ -236,7 +237,7 @@ buildUpsertTx tableName insert ifMatched queryTags = do
 
 -- | Builds a response to the user using the values in the temporary table named #inserted.
 buildInsertResponseTx ::
-  MonadIO m =>
+  (MonadIO m) =>
   Options.StringifyNumbers ->
   Text ->
   AnnotatedInsert 'MSSQL Void Expression ->

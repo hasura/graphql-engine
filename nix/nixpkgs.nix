@@ -8,6 +8,7 @@ import nixpkgs {
   };
   overlays = [
     (import ./overlays/ghc.nix)
+    (import ./overlays/ormolu.nix)
     (import ./overlays/msodbcsql18.nix)
     (import ./overlays/graphql-parser.nix)
     (import ./overlays/resource-pool.nix)

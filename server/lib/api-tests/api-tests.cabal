@@ -99,10 +99,13 @@ library
     Test.API.Metadata.BulkKeepGoingSpec
     Test.API.Metadata.ComputedFieldsSpec
     Test.API.Metadata.InconsistentSpec
+    Test.API.Metadata.LogicalModelsSpec
     Test.API.Metadata.SuggestRelationshipsSpec
     Test.API.Metadata.TablesSpec
     Test.API.Metadata.TestConnectionTemplateSpec
+    Test.API.Metadata.TrackTablesSpec
     Test.API.Metadata.TransparentDefaultsSpec
+    Test.API.Metadata.UntrackTablesSpec
     Test.API.Metadata.WarningsSpec
     Test.API.Schema.RunSQLSpec
     Test.Auth.Authorization.DisableRootFields.Common
@@ -179,9 +182,11 @@ library
     Test.Queries.Errors.NoQueriesAvailableSpec
     Test.Queries.FilterSearch.AggregationPredicatesSpec
     Test.Queries.FilterSearch.FilterSearchSpec
+    Test.Queries.NativeQueriesSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
+    Test.Queries.Relationship.PermissionRootReferenceSpec
     Test.Queries.Simple.JSONSpec
     Test.Queries.Simple.ObjectQueriesSpec
     Test.Queries.Simple.OperationNameSpec
@@ -211,6 +216,7 @@ library
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
     Test.Regression.SqlServerIdentifierQuotingSpec
     Test.ScheduledEvents.ScheduledEventsInvalidEnvVarSpec
+    Test.Schema.ComputedFields.AggregationSpec
     Test.Schema.ComputedFields.ScalarSpec
     Test.Schema.ComputedFields.TableSpec
     Test.Schema.ConflictsSpec

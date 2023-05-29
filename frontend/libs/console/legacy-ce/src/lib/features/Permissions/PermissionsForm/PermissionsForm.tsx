@@ -140,7 +140,7 @@ const Component = (props: ComponentProps) => {
               table={table}
               roleName={roleName}
               queryType={queryType}
-              subQueryType={queryType === 'update' ? 'pre' : undefined}
+              subQueryType={queryType === 'update' ? 'pre_update' : undefined}
               permissionsKey={filterKeys[0]}
               dataSourceName={dataSourceName}
               supportedOperators={data?.defaultValues?.supportedOperators ?? []}
@@ -157,7 +157,9 @@ const Component = (props: ComponentProps) => {
                   table={table}
                   roleName={roleName}
                   queryType={queryType}
-                  subQueryType={queryType === 'update' ? 'post' : undefined}
+                  subQueryType={
+                    queryType === 'update' ? 'post_update' : undefined
+                  }
                   permissionsKey={filterKeys[1]}
                   dataSourceName={dataSourceName}
                   supportedOperators={

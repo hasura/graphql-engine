@@ -51,7 +51,7 @@ import Prelude
 
 -------------------------------------------------------------------------------
 
-newtype AgentIOClient = AgentIOClient (forall m. MonadIO m => Client m (NamedRoutes API.Routes))
+newtype AgentIOClient = AgentIOClient (forall m. (MonadIO m) => Client m (NamedRoutes API.Routes))
 
 configHeader :: HeaderName
 configHeader = CI.mk "X-Hasura-DataConnector-Config"
@@ -61,7 +61,7 @@ newtype AgentAuthKey = AgentAuthKey {getAgentAuthKey :: ByteString}
 eeLicenseKeyHeader :: HeaderName
 eeLicenseKeyHeader = CI.mk "X-Hasura-License"
 
-mkHttpClientManager :: MonadIO m => SensitiveOutputHandling -> Maybe AgentAuthKey -> m HttpClient.Manager
+mkHttpClientManager :: (MonadIO m) => SensitiveOutputHandling -> Maybe AgentAuthKey -> m HttpClient.Manager
 mkHttpClientManager sensitiveOutputHandling agentAuthKey =
   let modifyRequest = addHeaderRedaction sensitiveOutputHandling . maybe id addLicenseKeyHeader agentAuthKey
       settings = HttpClient.defaultManagerSettings {HttpClient.managerModifyRequest = pure . modifyRequest}
@@ -76,7 +76,7 @@ addHeaderRedaction sensitiveOutputHandling request =
     AllowSensitiveOutput -> request
     DisallowSensitiveOutput -> request {HttpClient.redactHeaders = HttpClient.redactHeaders request <> Set.fromList [configHeader, eeLicenseKeyHeader]}
 
-mkAgentIOClient :: MonadIO m => SensitiveOutputHandling -> Maybe AgentAuthKey -> BaseUrl -> m AgentIOClient
+mkAgentIOClient :: (MonadIO m) => SensitiveOutputHandling -> Maybe AgentAuthKey -> BaseUrl -> m AgentIOClient
 mkAgentIOClient sensitiveOutputHandling agentAuthKey agentBaseUrl = do
   manager <- mkHttpClientManager sensitiveOutputHandling agentAuthKey
   let clientEnv = mkClientEnv manager agentBaseUrl
@@ -90,7 +90,7 @@ data AgentClientConfig = AgentClientConfig
     _accSensitiveOutputHandling :: SensitiveOutputHandling
   }
 
-mkAgentClientConfig :: MonadIO m => SensitiveOutputHandling -> Maybe AgentAuthKey -> BaseUrl -> m AgentClientConfig
+mkAgentClientConfig :: (MonadIO m) => SensitiveOutputHandling -> Maybe AgentAuthKey -> BaseUrl -> m AgentClientConfig
 mkAgentClientConfig sensitiveOutputHandling agentAuthKey agentBaseUrl = do
   manager <- mkHttpClientManager sensitiveOutputHandling agentAuthKey
   pure $ AgentClientConfig agentBaseUrl manager sensitiveOutputHandling
@@ -174,10 +174,10 @@ runRequestAcceptStatus' acceptStatus request = do
     then pure $ response
     else throwClientError $ mkFailureResponse _accBaseUrl request response
 
-getClientState :: Monad m => AgentClientT m AgentClientState
+getClientState :: (Monad m) => AgentClientT m AgentClientState
 getClientState = AgentClientT get
 
-incrementRequestCounter :: Monad m => AgentClientT m ()
+incrementRequestCounter :: (Monad m) => AgentClientT m ()
 incrementRequestCounter = AgentClientT $ modify' \state -> state {_acsRequestCounter = _acsRequestCounter state + 1}
 
 redactJsonResponse :: Method -> ByteString -> J.Value -> J.Value

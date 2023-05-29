@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useSurveysData } from '../../../Surveys';
-import { trackCustomEvent } from '../../../Analytics';
 import { useOnboardingData } from './useOnboardingData';
 import { getWizardState } from '../utils';
 import { AllowedSurveyNames } from '../../../Surveys/types';
-import { LS_KEYS, setLSItem } from '../../../../utils';
+import { getLSItem, LS_KEYS, removeLSItem, setLSItem } from '../../../../utils';
 
 export type WizardState =
   | 'familiarity-survey'
@@ -14,14 +13,6 @@ export type WizardState =
   | 'hidden';
 
 export function useWizardState() {
-  useEffect(() => {
-    trackCustomEvent({
-      location: 'Console',
-      action: 'Load',
-      object: 'Onboarding Wizard',
-    });
-  }, []);
-
   const {
     show: showSurvey,
     data: familiaritySurveyData,
@@ -40,8 +31,12 @@ export function useWizardState() {
       setLSItem(LS_KEYS.showUseCaseOverviewPopup, 'true');
     }
     setState(wizardState);
-  }, [onboardingData, showSurvey]);
 
+    //removing skipOnboarding key from LocalStorage
+    if (getLSItem(LS_KEYS.skipOnboarding) === 'true') {
+      removeLSItem(LS_KEYS.skipOnboarding);
+    }
+  }, [onboardingData, showSurvey]);
   return {
     state,
     setState,

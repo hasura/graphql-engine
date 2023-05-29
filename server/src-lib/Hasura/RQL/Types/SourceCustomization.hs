@@ -86,12 +86,12 @@ import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier (..))
 import Data.Text.Casing qualified as C
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
-import Hasura.RQL.Types.Table
+import Hasura.RQL.Types.NamingCase (NamingCase (..))
+import Hasura.Table.Cache (CustomRootField (..), TableConfig (..), TableCoreInfoG (..), TableInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data RootFieldsCustomization = RootFieldsCustomization
@@ -103,11 +103,14 @@ data RootFieldsCustomization = RootFieldsCustomization
 
 instance HasCodec RootFieldsCustomization where
   codec =
-    AC.object "RootFieldsCustomization" $
-      RootFieldsCustomization
-        <$> optionalFieldWith' "namespace" graphQLFieldNameCodec AC..= _rootfcNamespace
-        <*> optionalFieldWith' "prefix" graphQLFieldNameCodec AC..= _rootfcPrefix
-        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec AC..= _rootfcSuffix
+    AC.object "RootFieldsCustomization"
+      $ RootFieldsCustomization
+      <$> optionalFieldWith' "namespace" graphQLFieldNameCodec
+      AC..= _rootfcNamespace
+        <*> optionalFieldWith' "prefix" graphQLFieldNameCodec
+      AC..= _rootfcPrefix
+        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec
+      AC..= _rootfcSuffix
 
 instance ToJSON RootFieldsCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -126,10 +129,12 @@ data SourceTypeCustomization = SourceTypeCustomization
 
 instance HasCodec SourceTypeCustomization where
   codec =
-    AC.object "SourceTypeCustomization" $
-      SourceTypeCustomization
-        <$> optionalFieldWith' "prefix" graphQLFieldNameCodec AC..= _stcPrefix
-        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec AC..= _stcSuffix
+    AC.object "SourceTypeCustomization"
+      $ SourceTypeCustomization
+      <$> optionalFieldWith' "prefix" graphQLFieldNameCodec
+      AC..= _stcPrefix
+        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec
+      AC..= _stcSuffix
 
 instance ToJSON SourceTypeCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -242,11 +247,14 @@ data SourceCustomization = SourceCustomization
 
 instance HasCodec SourceCustomization where
   codec =
-    AC.object "SourceCustomization" $
-      SourceCustomization
-        <$> optionalField' "root_fields" AC..= _scRootFields
-        <*> optionalField' "type_names" AC..= _scTypeNames
-        <*> optionalField' "naming_convention" AC..= _scNamingConvention
+    AC.object "SourceCustomization"
+      $ SourceCustomization
+      <$> optionalField' "root_fields"
+      AC..= _scRootFields
+        <*> optionalField' "type_names"
+      AC..= _scTypeNames
+        <*> optionalField' "naming_convention"
+      AC..= _scNamingConvention
 
 instance ToJSON SourceCustomization where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}

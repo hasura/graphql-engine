@@ -5,7 +5,6 @@
 module Harness.TestEnvironment
   ( TestEnvironment (..),
     GlobalTestEnvironment (..),
-    PassthroughEnvVars (..),
     Protocol (..),
     Server (..),
     TestingMode (..),
@@ -107,7 +106,11 @@ instance Has Services.PostgresServerUrl TestEnvironment where
   getter = getter . getter @GlobalTestEnvironment
   modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
 
-instance Has PassthroughEnvVars TestEnvironment where
+instance Has Services.PassthroughEnvVars TestEnvironment where
+  getter = getter . getter @GlobalTestEnvironment
+  modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
+
+instance Has Services.HgeServerInstance TestEnvironment where
   getter = getter . getter @GlobalTestEnvironment
   modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
 
@@ -169,7 +172,7 @@ stopServer Server {thread} = Async.cancel thread
 -- | Log an unstructured trace string. Should only be used directly in specs,
 -- not in the Harness modules.
 {-# ANN testLogTrace ("HLINT: ignore" :: String) #-}
-testLogTrace :: TraceString a => TestEnvironment -> a -> IO ()
+testLogTrace :: (TraceString a) => TestEnvironment -> a -> IO ()
 testLogTrace testEnv =
   testLogMessage testEnv . logTrace
 
@@ -183,7 +186,7 @@ testLogShow testEnv =
 -- in the Harness modules, not in Specs.
 --
 -- This should ideally be replaced with more specific logging functions.
-testLogHarness :: TraceString a => TestEnvironment -> a -> IO ()
+testLogHarness :: (TraceString a) => TestEnvironment -> a -> IO ()
 testLogHarness testEnv = testLogMessage testEnv . logHarness
 
 -- Compatibility with the new, componentised fixtures:
@@ -236,10 +239,10 @@ getSchemaNameInternal testEnv = getSchemaNameByTestIdAndBackendType (fmap backen
     getSchemaNameByTestIdAndBackendType :: Maybe BackendType -> UniqueTestId -> SchemaName
     getSchemaNameByTestIdAndBackendType Nothing _ = SchemaName "hasura" -- the `Nothing` case is for tests with multiple schemas
     getSchemaNameByTestIdAndBackendType (Just BigQuery) uniqueTestId =
-      SchemaName $
-        T.pack $
-          "hasura_test_"
-            <> show uniqueTestId
+      SchemaName
+        $ T.pack
+        $ "hasura_test_"
+        <> show uniqueTestId
     getSchemaNameByTestIdAndBackendType (Just Postgres) _ = SchemaName Constants.postgresDb
     getSchemaNameByTestIdAndBackendType (Just SQLServer) _ = SchemaName $ T.pack Constants.sqlserverDb
     getSchemaNameByTestIdAndBackendType (Just Citus) _ = SchemaName Constants.citusDb

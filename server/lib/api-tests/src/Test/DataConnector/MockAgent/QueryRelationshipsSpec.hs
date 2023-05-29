@@ -10,6 +10,7 @@ import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
+import Data.Set qualified as Set
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockConfig, MockRequestResults (..), mockAgentGraphqlTest, mockAgentMetadataTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
@@ -161,14 +162,14 @@ tests = describe "Object Relationships Tests" $ do
           mkRowsQueryResponse
             [ [ ("Name", API.mkColumnFieldValue $ J.String "For Those About To Rock (We Salute You)"),
                 ( "Genre",
-                  API.mkRelationshipFieldValue $
-                    mkRowsQueryResponse
+                  API.mkRelationshipFieldValue
+                    $ mkRowsQueryResponse
                       [ [("Name", API.mkColumnFieldValue $ J.String "Rock")]
                       ]
                 ),
                 ( "MediaType",
-                  API.mkRelationshipFieldValue $
-                    mkRowsQueryResponse
+                  API.mkRelationshipFieldValue
+                    $ mkRowsQueryResponse
                       [ [("Name", API.mkColumnFieldValue $ J.String "MPEG audio file")]
                       ]
                 )
@@ -191,54 +192,57 @@ tests = describe "Object Relationships Tests" $ do
 
     _mrrRecordedRequest
       `shouldBe` Just
-        ( Query $
-            mkQueryRequest
+        ( Query
+            $ mkTableRequest
               (mkTableName "Track")
               ( emptyQuery
                   & API.qFields
-                    ?~ mkFieldsMap
-                      [ ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string"),
-                        ( "Genre",
-                          API.RelField
-                            ( API.RelationshipField
-                                (API.RelationshipName "Genre")
-                                (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")])
-                            )
-                        ),
-                        ( "MediaType",
-                          API.RelField
-                            ( API.RelationshipField
-                                (API.RelationshipName "MediaType")
-                                (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")])
-                            )
-                        )
-                      ]
-                  & API.qLimit ?~ 1
+                  ?~ mkFieldsMap
+                    [ ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string"),
+                      ( "Genre",
+                        API.RelField
+                          ( API.RelationshipField
+                              (API.RelationshipName "Genre")
+                              (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")])
+                          )
+                      ),
+                      ( "MediaType",
+                        API.RelField
+                          ( API.RelationshipField
+                              (API.RelationshipName "MediaType")
+                              (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")])
+                          )
+                      )
+                    ]
+                    & API.qLimit
+                  ?~ 1
               )
-              & API.qrTableRelationships
-                .~ [ API.TableRelationships
-                       { _trSourceTable = mkTableName "Track",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "Genre",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "Genre",
-                                     _rRelationshipType = API.ObjectRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
-                                   }
-                               ),
-                               ( API.RelationshipName "MediaType",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "MediaType",
-                                     _rRelationshipType = API.ObjectRelationship,
-                                     _rColumnMapping =
-                                       HashMap.fromList
-                                         [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
-                                   }
-                               )
-                             ]
-                       }
-                   ]
+            & API.qrRelationships
+            .~ Set.fromList
+              [ API.RTable
+                  API.TableRelationships
+                    { _trelSourceTable = mkTableName "Track",
+                      _trelRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "Genre",
+                              API.Relationship
+                                { _rTargetTable = mkTableName "Genre",
+                                  _rRelationshipType = API.ObjectRelationship,
+                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+                                }
+                            ),
+                            ( API.RelationshipName "MediaType",
+                              API.Relationship
+                                { _rTargetTable = mkTableName "MediaType",
+                                  _rRelationshipType = API.ObjectRelationship,
+                                  _rColumnMapping =
+                                    HashMap.fromList
+                                      [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
+                                }
+                            )
+                          ]
+                    }
+              ]
         )
 
   mockAgentGraphqlTest "works with an order by that navigates relationships" $ \_testEnv performGraphqlRequest -> do
@@ -259,11 +263,11 @@ tests = describe "Object Relationships Tests" $ do
     let queryResponse =
           mkRowsQueryResponse
             [ [ ( "Album",
-                  API.mkRelationshipFieldValue $
-                    mkRowsQueryResponse
+                  API.mkRelationshipFieldValue
+                    $ mkRowsQueryResponse
                       [ [ ( "Artist",
-                            API.mkRelationshipFieldValue $
-                              mkRowsQueryResponse
+                            API.mkRelationshipFieldValue
+                              $ mkRowsQueryResponse
                                 [[("Name", API.mkColumnFieldValue $ J.String "Zeca Pagodinho")]]
                           )
                         ]
@@ -288,84 +292,88 @@ tests = describe "Object Relationships Tests" $ do
 
     _mrrRecordedRequest
       `shouldBe` Just
-        ( Query $
-            mkQueryRequest
+        ( Query
+            $ mkTableRequest
               (mkTableName "Track")
               ( emptyQuery
                   & API.qFields
-                    ?~ mkFieldsMap
-                      [ ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string"),
-                        ( "Album",
-                          API.RelField
-                            ( API.RelationshipField
-                                (API.RelationshipName "Album")
-                                ( emptyQuery
-                                    & API.qFields
-                                      ?~ mkFieldsMap
-                                        [ ( "Artist",
-                                            API.RelField
-                                              ( API.RelationshipField
-                                                  (API.RelationshipName "Artist")
-                                                  (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string"))])
-                                              )
+                  ?~ mkFieldsMap
+                    [ ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string"),
+                      ( "Album",
+                        API.RelField
+                          ( API.RelationshipField
+                              (API.RelationshipName "Album")
+                              ( emptyQuery
+                                  & API.qFields
+                                  ?~ mkFieldsMap
+                                    [ ( "Artist",
+                                        API.RelField
+                                          ( API.RelationshipField
+                                              (API.RelationshipName "Artist")
+                                              (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string"))])
                                           )
-                                        ]
-                                )
-                            )
-                        )
-                      ]
-                  & API.qLimit ?~ 1
-                  & API.qOrderBy
-                    ?~ API.OrderBy
-                      ( HashMap.fromList
-                          [ ( API.RelationshipName "Album",
-                              API.OrderByRelation
-                                Nothing
-                                ( HashMap.fromList
-                                    [ ( API.RelationshipName "Artist",
-                                        API.OrderByRelation
-                                          Nothing
-                                          mempty
                                       )
                                     ]
-                                )
+                              )
+                          )
+                      )
+                    ]
+                    & API.qLimit
+                  ?~ 1
+                    & API.qOrderBy
+                  ?~ API.OrderBy
+                    ( HashMap.fromList
+                        [ ( API.RelationshipName "Album",
+                            API.OrderByRelation
+                              Nothing
+                              ( HashMap.fromList
+                                  [ ( API.RelationshipName "Artist",
+                                      API.OrderByRelation
+                                        Nothing
+                                        mempty
+                                    )
+                                  ]
+                              )
+                          )
+                        ]
+                    )
+                    ( NE.fromList
+                        [ API.OrderByElement [API.RelationshipName "Album", API.RelationshipName "Artist"] (API.OrderByColumn (API.ColumnName "Name")) API.Descending,
+                          API.OrderByElement [] (API.OrderByColumn (API.ColumnName "Name")) API.Ascending
+                        ]
+                    )
+              )
+            & API.qrRelationships
+            .~ Set.fromList
+              [ API.RTable
+                  API.TableRelationships
+                    { _trelSourceTable = mkTableName "Track",
+                      _trelRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "Album",
+                              API.Relationship
+                                { _rTargetTable = mkTableName "Album",
+                                  _rRelationshipType = API.ObjectRelationship,
+                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
+                                }
                             )
                           ]
-                      )
-                      ( NE.fromList
-                          [ API.OrderByElement [API.RelationshipName "Album", API.RelationshipName "Artist"] (API.OrderByColumn (API.ColumnName "Name")) API.Descending,
-                            API.OrderByElement [] (API.OrderByColumn (API.ColumnName "Name")) API.Ascending
+                    },
+                API.RTable
+                  API.TableRelationships
+                    { _trelSourceTable = mkTableName "Album",
+                      _trelRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "Artist",
+                              API.Relationship
+                                { _rTargetTable = mkTableName "Artist",
+                                  _rRelationshipType = API.ObjectRelationship,
+                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                }
+                            )
                           ]
-                      )
-              )
-              & API.qrTableRelationships
-                .~ [ API.TableRelationships
-                       { _trSourceTable = mkTableName "Track",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "Album",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "Album",
-                                     _rRelationshipType = API.ObjectRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
-                                   }
-                               )
-                             ]
-                       },
-                     API.TableRelationships
-                       { _trSourceTable = mkTableName "Album",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "Artist",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "Artist",
-                                     _rRelationshipType = API.ObjectRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                   }
-                               )
-                             ]
-                       }
-                   ]
+                    }
+              ]
         )
 
   mockAgentGraphqlTest "works with an order by that navigates a relationship with table permissions" $ \_testEnv performGraphqlRequest -> do
@@ -396,66 +404,71 @@ tests = describe "Object Relationships Tests" $ do
 
     _mrrRecordedRequest
       `shouldBe` Just
-        ( Query $
-            mkQueryRequest
+        ( Query
+            $ mkTableRequest
               (mkTableName "Employee")
               ( emptyQuery
-                  & API.qFields ?~ mkFieldsMap [("EmployeeId", API.ColumnField (API.ColumnName "EmployeeId") $ API.ScalarType "number")]
-                  & API.qLimit ?~ 1
-                  & API.qWhere
-                    ?~ API.Exists
-                      (API.RelatedTable $ API.RelationshipName "SupportRepForCustomers")
-                      ( API.ApplyBinaryComparisonOperator
-                          API.Equal
-                          (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") $ API.ScalarType "string")
-                          (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") $ API.ScalarType "string"))
-                      )
-                  & API.qOrderBy
-                    ?~ API.OrderBy
-                      ( HashMap.fromList
-                          [ ( API.RelationshipName "SupportRepForCustomers",
-                              API.OrderByRelation
-                                ( Just $
-                                    API.Exists (API.RelatedTable $ API.RelationshipName "SupportRep") $
-                                      API.ApplyBinaryComparisonOperator
-                                        API.Equal
-                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") $ API.ScalarType "string")
-                                        (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") $ API.ScalarType "string"))
-                                )
-                                mempty
+                  & API.qFields
+                  ?~ mkFieldsMap [("EmployeeId", API.ColumnField (API.ColumnName "EmployeeId") $ API.ScalarType "number")]
+                    & API.qLimit
+                  ?~ 1
+                    & API.qWhere
+                  ?~ API.Exists
+                    (API.RelatedTable $ API.RelationshipName "SupportRepForCustomers")
+                    ( API.ApplyBinaryComparisonOperator
+                        API.Equal
+                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") $ API.ScalarType "string")
+                        (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") $ API.ScalarType "string"))
+                    )
+                    & API.qOrderBy
+                  ?~ API.OrderBy
+                    ( HashMap.fromList
+                        [ ( API.RelationshipName "SupportRepForCustomers",
+                            API.OrderByRelation
+                              ( Just
+                                  $ API.Exists (API.RelatedTable $ API.RelationshipName "SupportRep")
+                                  $ API.ApplyBinaryComparisonOperator
+                                    API.Equal
+                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") $ API.ScalarType "string")
+                                    (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") $ API.ScalarType "string"))
+                              )
+                              mempty
+                          )
+                        ]
+                    )
+                    (API.OrderByElement [API.RelationshipName "SupportRepForCustomers"] API.OrderByStarCountAggregate API.Descending :| [])
+              )
+            & API.qrRelationships
+            .~ Set.fromList
+              [ API.RTable
+                  API.TableRelationships
+                    { _trelSourceTable = mkTableName "Customer",
+                      _trelRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "SupportRep",
+                              API.Relationship
+                                { _rTargetTable = mkTableName "Employee",
+                                  _rRelationshipType = API.ObjectRelationship,
+                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
+                                }
                             )
                           ]
-                      )
-                      (API.OrderByElement [API.RelationshipName "SupportRepForCustomers"] API.OrderByStarCountAggregate API.Descending :| [])
-              )
-              & API.qrTableRelationships
-                .~ [ API.TableRelationships
-                       { _trSourceTable = mkTableName "Customer",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "SupportRep",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "Employee",
-                                     _rRelationshipType = API.ObjectRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
-                                   }
-                               )
-                             ]
-                       },
-                     API.TableRelationships
-                       { _trSourceTable = mkTableName "Employee",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "SupportRepForCustomers",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "Customer",
-                                     _rRelationshipType = API.ArrayRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
-                                   }
-                               )
-                             ]
-                       }
-                   ]
+                    },
+                API.RTable
+                  API.TableRelationships
+                    { _trelSourceTable = mkTableName "Employee",
+                      _trelRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "SupportRepForCustomers",
+                              API.Relationship
+                                { _rTargetTable = mkTableName "Customer",
+                                  _rRelationshipType = API.ArrayRelationship,
+                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
+                                }
+                            )
+                          ]
+                    }
+              ]
         )
 
 --------------------------------------------------------------------------------
@@ -465,7 +478,9 @@ noRelationshipsCapabilityMockConfig =
   Mock.chinookMock
     { Mock._capabilitiesResponse =
         Mock._capabilitiesResponse Mock.chinookMock
-          & API.crCapabilities . API.cRelationships .~ Nothing -- Remove relationships capability
+          & API.crCapabilities
+          . API.cRelationships
+          .~ Nothing -- Remove relationships capability
     }
 
 noRelationshipsCapabilitySourceMetadata :: J.Value

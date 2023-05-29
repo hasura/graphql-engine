@@ -10,7 +10,6 @@ import Data.Environment qualified as Env
 import Data.Has (Has)
 import Hasura.Base.Error
 import Hasura.Function.Cache
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata)
@@ -26,14 +25,17 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
+import Hasura.RQL.Types.Source.Table (SourceTableInfo)
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Version
 import Hasura.Services.Network
+import Hasura.StoredProcedure.Metadata (StoredProcedureConfig, StoredProcedureMetadata)
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client qualified as HTTP
 
@@ -143,7 +145,7 @@ class
     SourceName ->
     FunctionName b ->
     SystemDefined ->
-    FunctionConfig ->
+    FunctionConfig b ->
     FunctionPermissionsMap ->
     RawFunctionInfo b ->
     -- | the function comment
@@ -173,13 +175,13 @@ class
 
   -- TODO: rename?
   validateRelationship ::
-    MonadError QErr m =>
+    (MonadError QErr m) =>
     TableCache b ->
     TableName b ->
     Either (ObjRelDef b) (ArrRelDef b) ->
     m ()
   default validateRelationship ::
-    MonadError QErr m =>
+    (MonadError QErr m) =>
     TableCache b ->
     TableName b ->
     Either (ObjRelDef b) (ArrRelDef b) ->
@@ -216,6 +218,22 @@ class
     SourceName ->
     m [TableName b]
 
+  -- | List all the functions on a given data source, including those not tracked
+  -- by Hasura. Primarily useful for user interfaces to allow untracked functions
+  -- to be tracked.
+  listAllTrackables ::
+    (CacheRM m, MonadBaseControl IO m, MetadataM m, MonadError QErr m, MonadIO m, MonadReader r m, Has (Logger Hasura) r, ProvidesNetwork m) =>
+    SourceName ->
+    m (TrackableInfo b)
+
+  -- | Get information about a given table on a given source, whether tracked
+  -- or not. Primarily useful for user interfaces.
+  getTableInfo ::
+    (CacheRM m, MetadataM m, MonadError QErr m, MonadBaseControl IO m, MonadIO m) =>
+    SourceName ->
+    TableName b ->
+    m (Maybe (SourceTableInfo b))
+
   validateNativeQuery ::
     (MonadIO m, MonadError QErr m) =>
     Env.Environment ->
@@ -226,14 +244,23 @@ class
   validateNativeQuery _ _ _ _ =
     throw500 "validateNativeQuery: not implemented for this backend."
 
-  -- | How to convert a column to a field.
-  -- For backends that don't support nested objects or arrays the default implementation
-  -- (i.e. wrapping the ColumnInfo in FIColumn) is what you want.
-  columnInfoToFieldInfo ::
-    HashMap G.Name (TableObjectType b) ->
-    ColumnInfo b ->
-    FieldInfo b
-  columnInfoToFieldInfo _ = FIColumn
+  validateStoredProcedure ::
+    (MonadIO m, MonadError QErr m) =>
+    Env.Environment ->
+    SourceConnConfiguration b ->
+    LogicalModelMetadata b ->
+    StoredProcedureMetadata b ->
+    m ()
+  validateStoredProcedure _ _ _ _ =
+    throw500 "validateStoredProcedure: not implemented for this backend."
+
+  getStoredProcedureGraphqlName ::
+    (MonadError QErr m) =>
+    FunctionName b ->
+    StoredProcedureConfig ->
+    m G.Name
+  getStoredProcedureGraphqlName _ _ =
+    throw500 "getStoredProcedureGraphqlName: not implemented for this backend."
 
   -- | Allows the backend to control whether or not a particular source supports being
   -- the target of remote relationships or not

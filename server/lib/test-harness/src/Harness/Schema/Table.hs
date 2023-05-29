@@ -19,10 +19,6 @@ module Harness.Schema.Table
     BackendScalarValue (..),
     BackendScalarValueType (..),
     ManualRelationship (..),
-    NativeQuery (..),
-    nativeQuery,
-    NativeQueryColumn (..),
-    nativeQueryColumn,
     quotedValue,
     unquotedValue,
     backendScalarValue,
@@ -36,7 +32,6 @@ module Harness.Schema.Table
   )
 where
 
-import Data.Aeson qualified as J
 import Data.Time (defaultTimeLocale)
 import Data.Time.Format (parseTimeOrError)
 import Harness.Test.ScalarType
@@ -93,42 +88,6 @@ table tableName =
       tableConstraints = [],
       tableUniqueIndexes = [],
       tableQualifiers = []
-    }
-
-data NativeQueryColumn = NativeQueryColumn
-  { nativeQueryColumnName :: Text,
-    nativeQueryColumnType :: ScalarType,
-    nativeQueryColumnNullable :: Bool,
-    nativeQueryColumnDescription :: Maybe Text
-  }
-  deriving (Show, Eq)
-
-nativeQueryColumn :: Text -> ScalarType -> NativeQueryColumn
-nativeQueryColumn name colType =
-  NativeQueryColumn
-    { nativeQueryColumnName = name,
-      nativeQueryColumnType = colType,
-      nativeQueryColumnNullable = False,
-      nativeQueryColumnDescription = Nothing
-    }
-
-data NativeQuery = NativeQuery
-  { nativeQueryName :: Text,
-    nativeQueryLogicalModel :: Text,
-    nativeQueryQuery :: Text,
-    nativeQueryArguments :: [NativeQueryColumn],
-    nativeQueryArrayRelationships :: [J.Value]
-  }
-  deriving (Show, Eq)
-
-nativeQuery :: Text -> Text -> Text -> NativeQuery
-nativeQuery nativeQueryName query returnType =
-  NativeQuery
-    { nativeQueryName,
-      nativeQueryLogicalModel = returnType,
-      nativeQueryQuery = query,
-      nativeQueryArguments = mempty,
-      nativeQueryArrayRelationships = mempty
     }
 
 -- | Foreign keys for backends that support it.

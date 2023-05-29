@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RQL.Types.Session
   ( SessionVariable (..),
     SessionVariables (..),
@@ -20,7 +18,6 @@ module Hasura.RQL.Types.Session
 where
 
 import Data.Aeson
-import Data.Aeson.TH qualified as J
 import Data.Aeson.Types (Parser, toJSONKeyText)
 import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict qualified as HashMap
@@ -96,7 +93,12 @@ data BackendOnlyFieldAccess
   | BOFADisallowed
   deriving (Show, Eq, Generic)
 
-$(J.deriveJSON hasuraJSON ''BackendOnlyFieldAccess)
+instance FromJSON BackendOnlyFieldAccess where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON BackendOnlyFieldAccess where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 instance Hashable BackendOnlyFieldAccess
 
@@ -109,7 +111,12 @@ data UserInfo = UserInfo
 
 instance Hashable UserInfo
 
-$(J.deriveJSON hasuraJSON ''UserInfo)
+instance FromJSON UserInfo where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON UserInfo where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 class (Monad m) => UserInfoM m where
   askUserInfo :: m UserInfo

@@ -34,13 +34,13 @@ import Hasura.Eventing.Common (LockedEventsCtx)
 import Hasura.Eventing.EventTrigger
 import Hasura.GraphQL.Execute.Subscription.Options
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache (MetadataResourceVersion)
@@ -104,6 +104,7 @@ data AppEnv = AppEnv
   { appEnvPort :: Port,
     appEnvHost :: HostPreference,
     appEnvMetadataDbPool :: PG.PGPool,
+    appEnvIntrospectionDbPool :: Maybe PG.PGPool,
     appEnvManager :: HTTP.Manager,
     appEnvLoggers :: Loggers,
     appEnvMetadataVersionRef :: STM.TMVar MetadataResourceVersion,
@@ -186,7 +187,7 @@ data InvalidationKeys = InvalidationKeys
 -- subset of the environment, exposed by small, local typeclasses. For instance,
 -- at time of writing, this can be used to implement 'HasServerConfigCtx', as a
 -- first step towards breaking it down.
-class Monad m => HasAppEnv m where
+class (Monad m) => HasAppEnv m where
   askAppEnv :: m AppEnv
 
 instance (HasAppEnv m) => HasAppEnv (ReaderT r m) where
@@ -222,11 +223,11 @@ rebuildRebuildableAppContext ::
 rebuildRebuildableAppContext readerCtx (RebuildableAppContext _ _ rule) serveOptions env = do
   let newInvalidationKeys = InvalidationKeys
   result <-
-    liftEitherM $
-      liftIO $
-        runExceptT $
-          flip runReaderT readerCtx $
-            Inc.build rule (serveOptions, env, newInvalidationKeys)
+    liftEitherM
+      $ liftIO
+      $ runExceptT
+      $ flip runReaderT readerCtx
+      $ Inc.build rule (serveOptions, env, newInvalidationKeys)
   let appContext = Inc.result result
       !newCtx = RebuildableAppContext appContext newInvalidationKeys (Inc.rebuildRule result)
   pure newCtx
@@ -285,8 +286,8 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
           -< do
             (logger, httpManager) <- ask
             authModeRes <-
-              runExceptT $
-                setupAuthMode
+              runExceptT
+                $ setupAuthMode
                   adminSecretHashSet
                   webHook
                   jwtSecrets
@@ -300,9 +301,9 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
     buildResponseInternalErrorsConfig = Inc.cache proc (adminInternalErrors, devMode) -> do
       let responseInternalErrorsConfig =
             if
-                | isDevModeEnabled devMode -> InternalErrorsAllRequests
-                | isAdminInternalErrorsEnabled adminInternalErrors -> InternalErrorsAdminOnly
-                | otherwise -> InternalErrorsDisabled
+              | isDevModeEnabled devMode -> InternalErrorsAllRequests
+              | isAdminInternalErrorsEnabled adminInternalErrors -> InternalErrorsAdminOnly
+              | otherwise -> InternalErrorsDisabled
       returnA -< responseInternalErrorsConfig
 
 --------------------------------------------------------------------------------
@@ -324,21 +325,19 @@ buildCacheStaticConfig AppEnv {..} =
   CacheStaticConfig
     { _cscMaintenanceMode = appEnvEnableMaintenanceMode,
       _cscEventingMode = appEnvEventingMode,
-      _cscReadOnlyMode = appEnvEnableReadOnlyMode
+      _cscReadOnlyMode = appEnvEnableReadOnlyMode,
+      _cscAreNativeQueriesEnabled = False,
+      _cscAreStoredProceduresEnabled = False
     }
 
-buildCacheDynamicConfig :: MonadIO m => AppEnv -> AppContext -> m CacheDynamicConfig
-buildCacheDynamicConfig AppEnv {..} AppContext {..} = do
-  let CheckFeatureFlag runCheckFlag = appEnvCheckFeatureFlag
-  nativeQueriesEnabled <- liftIO $ runCheckFlag nativeQueryInterface
-  pure
-    CacheDynamicConfig
-      { _cdcFunctionPermsCtx = acFunctionPermsCtx,
-        _cdcRemoteSchemaPermsCtx = acRemoteSchemaPermsCtx,
-        _cdcSQLGenCtx = acSQLGenCtx,
-        _cdcExperimentalFeatures = acExperimentalFeatures,
-        _cdcDefaultNamingConvention = acDefaultNamingConvention,
-        _cdcMetadataDefaults = acMetadataDefaults,
-        _cdcApolloFederationStatus = acApolloFederationStatus,
-        _cdcAreNativeQueriesEnabled = nativeQueriesEnabled
-      }
+buildCacheDynamicConfig :: AppContext -> CacheDynamicConfig
+buildCacheDynamicConfig AppContext {..} = do
+  CacheDynamicConfig
+    { _cdcFunctionPermsCtx = acFunctionPermsCtx,
+      _cdcRemoteSchemaPermsCtx = acRemoteSchemaPermsCtx,
+      _cdcSQLGenCtx = acSQLGenCtx,
+      _cdcExperimentalFeatures = acExperimentalFeatures,
+      _cdcDefaultNamingConvention = acDefaultNamingConvention,
+      _cdcMetadataDefaults = acMetadataDefaults,
+      _cdcApolloFederationStatus = acApolloFederationStatus
+    }

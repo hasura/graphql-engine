@@ -1,4 +1,4 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { Meta } from '@storybook/react';
 import { handlers } from '../../../mocks/metadata.mock';
 import { action } from '@storybook/addon-actions';
 import { userEvent, within } from '@storybook/testing-library';
@@ -11,25 +11,22 @@ export default {
   parameters: {
     msw: handlers(),
   },
-} as ComponentMeta<typeof BooleanInput>;
+} as Meta<typeof BooleanInput>;
 
-const Template: ComponentStory<typeof BooleanInput> = args => (
-  <BooleanInput {...args} />
-);
+export const Base = {
+  args: {
+    onCheckedChange: action('onCheckedChange'),
+    name: 'isActive',
+  },
 
-export const Base = Template.bind({});
-Base.args = {
-  onCheckedChange: action('onCheckedChange'),
-  name: 'isActive',
-};
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
 
-Base.play = async ({ args, canvasElement }) => {
-  const canvas = within(canvasElement);
+    userEvent.click(await canvas.findByText('true'));
 
-  userEvent.click(await canvas.findByText('true'));
+    expect(args.onCheckedChange).toHaveBeenCalledWith(true);
 
-  expect(args.onCheckedChange).toHaveBeenCalledWith(true);
-
-  userEvent.click(await canvas.findByText('false'));
-  expect(args.onCheckedChange).toHaveBeenCalledWith(false);
+    userEvent.click(await canvas.findByText('false'));
+    expect(args.onCheckedChange).toHaveBeenCalledWith(false);
+  },
 };

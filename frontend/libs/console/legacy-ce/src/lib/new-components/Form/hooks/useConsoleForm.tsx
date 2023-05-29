@@ -1,3 +1,4 @@
+import { DevTool } from '@hookform/devtools';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as React from 'react';
 import {
@@ -22,7 +23,7 @@ const ConsoleFormWrapper = <
 >(
   props: FormWrapperProps<TFieldValues, TSchema, TContext>
 ) => {
-  const { id, className, onSubmit, children, ...methods } = props;
+  const { id, className, onSubmit, children, debug, ...methods } = props;
   return (
     <FormProvider {...methods}>
       <form
@@ -31,6 +32,10 @@ const ConsoleFormWrapper = <
         onSubmit={methods.handleSubmit(onSubmit)}
         data-non-regression="new-form-pattern"
       >
+        {debug && (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          <DevTool control={methods.control as any} />
+        )}
         {children}
       </form>
     </FormProvider>

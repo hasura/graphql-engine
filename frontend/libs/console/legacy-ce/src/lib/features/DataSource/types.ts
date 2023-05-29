@@ -193,3 +193,8 @@ export type GetIsTableViewProps = {
   table: Table;
   httpClient: NetworkArgs['httpClient'];
 };
+
+export type StoredProcedure = unknown;
+export type GetStoredProceduresProps = {
+  dataSourceName: string;
+} & NetworkArgs;

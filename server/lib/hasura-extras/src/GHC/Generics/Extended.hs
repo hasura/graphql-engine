@@ -18,7 +18,7 @@ constrName a = genericConstrName $ from a
 class HasConstructor (f :: Type -> Type) where
   genericConstrName :: f x -> String
 
-instance HasConstructor f => HasConstructor (D1 c f) where
+instance (HasConstructor f) => HasConstructor (D1 c f) where
   genericConstrName (M1 x) = genericConstrName x
   {-# INLINE genericConstrName #-}
 
@@ -27,6 +27,6 @@ instance (HasConstructor x, HasConstructor y) => HasConstructor (x :+: y) where
   genericConstrName (R1 r) = genericConstrName r
   {-# INLINE genericConstrName #-}
 
-instance Constructor c => HasConstructor (C1 c f) where
+instance (Constructor c) => HasConstructor (C1 c f) where
   genericConstrName x = conName x
   {-# INLINE genericConstrName #-}

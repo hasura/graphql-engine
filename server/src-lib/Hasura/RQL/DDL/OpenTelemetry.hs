@@ -30,10 +30,11 @@ runSetOpenTelemetryConfig ::
   OpenTelemetryConfig ->
   m EncJSON
 runSetOpenTelemetryConfig otelConfig = do
-  withNewInconsistentObjsCheck $
-    buildSchemaCacheFor (MOOpenTelemetry OtelSubobjectAll) $
-      MetadataModifier $
-        metaOpenTelemetryConfig .~ otelConfig
+  withNewInconsistentObjsCheck
+    $ buildSchemaCacheFor (MOOpenTelemetry OtelSubobjectAll)
+    $ MetadataModifier
+    $ metaOpenTelemetryConfig
+    .~ otelConfig
   pure successMsg
 
 -- | Set just the "status" field of the OpenTelemetry configuration.
@@ -42,10 +43,12 @@ runSetOpenTelemetryStatus ::
   OtelStatus ->
   m EncJSON
 runSetOpenTelemetryStatus otelStatus = do
-  withNewInconsistentObjsCheck $
-    buildSchemaCacheFor (MOOpenTelemetry OtelSubobjectAll) $
-      MetadataModifier $
-        metaOpenTelemetryConfig . ocStatus .~ otelStatus
+  withNewInconsistentObjsCheck
+    $ buildSchemaCacheFor (MOOpenTelemetry OtelSubobjectAll)
+    $ MetadataModifier
+    $ metaOpenTelemetryConfig
+    . ocStatus
+    .~ otelStatus
   pure successMsg
 
 -- | Smart constructor for 'OtelExporterInfo'.
@@ -72,24 +75,24 @@ parseOtelExporterConfig otelStatus env OtelExporterConfig {..} = do
         OtelEnabled -> Left (err400 InvalidParams "Missing traces endpoint")
     Just rawTracesEndpoint -> do
       tracesUri <-
-        maybeToEither (err400 InvalidParams "Invalid URL") $
-          parseURI $
-            Text.unpack rawTracesEndpoint
+        maybeToEither (err400 InvalidParams "Invalid URL")
+          $ parseURI
+          $ Text.unpack rawTracesEndpoint
       uriRequest <-
         first (err400 InvalidParams . tshow) $ requestFromURI tracesUri
-      pure $
-        Just $
-          OtelExporterInfo
-            { _oteleiTracesBaseRequest =
-                uriRequest
-                  { requestHeaders = headers ++ requestHeaders uriRequest
-                  },
-              _oteleiResourceAttributes =
-                Map.fromList $
-                  map
-                    (\NameValue {nv_name, nv_value} -> (nv_name, nv_value))
-                    _oecResourceAttributes
-            }
+      pure
+        $ Just
+        $ OtelExporterInfo
+          { _oteleiTracesBaseRequest =
+              uriRequest
+                { requestHeaders = headers ++ requestHeaders uriRequest
+                },
+            _oteleiResourceAttributes =
+              Map.fromList
+                $ map
+                  (\NameValue {nv_name, nv_value} -> (nv_name, nv_value))
+                  _oecResourceAttributes
+          }
 
 -- Smart constructor. Consistent with defaults.
 parseOtelBatchSpanProcessorConfig ::

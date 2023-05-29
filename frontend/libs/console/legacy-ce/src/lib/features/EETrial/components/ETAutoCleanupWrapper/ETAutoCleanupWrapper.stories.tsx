@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { AutoCleanupForm } from '../../../../components/Services/Events/EventTriggers/Common/AutoCleanupForm';
 import {
@@ -22,67 +22,77 @@ export default {
     // desired response.
     Story => {
       const queryClient = useQueryClient();
-      queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
+      void queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
       return <Story />;
     },
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof ETAutoCleanupWrapper>;
+} as Meta<typeof ETAutoCleanupWrapper>;
 
-export const Default: ComponentStory<typeof ETAutoCleanupWrapper> = () => {
-  return (
-    <ETAutoCleanupWrapper>
-      <AutoCleanupForm onChange={() => {}} />
-    </ETAutoCleanupWrapper>
-  );
-};
-Default.storyName = '💠 Default';
-Default.parameters = {
-  msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
-  consoleType: 'pro-lite',
-};
+export const Default: StoryObj<typeof ETAutoCleanupWrapper> = {
+  render: () => {
+    return (
+      <ETAutoCleanupWrapper>
+        <AutoCleanupForm onChange={() => {}} />
+      </ETAutoCleanupWrapper>
+    );
+  },
 
-export const LicenseActive: ComponentStory<
-  typeof ETAutoCleanupWrapper
-> = () => {
-  return (
-    <ETAutoCleanupWrapper>
-      <AutoCleanupForm onChange={() => {}} />
-    </ETAutoCleanupWrapper>
-  );
-};
-LicenseActive.storyName = '💠 License Active';
-LicenseActive.parameters = {
-  msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.active],
-  consoleType: 'pro-lite',
+  name: '💠 Default',
+
+  parameters: {
+    msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const LicenseExpired: ComponentStory<
-  typeof ETAutoCleanupWrapper
-> = () => {
-  return (
-    <ETAutoCleanupWrapper>
-      <AutoCleanupForm onChange={() => {}} />
-    </ETAutoCleanupWrapper>
-  );
-};
-LicenseExpired.storyName = '💠 License Expired';
-LicenseExpired.parameters = {
-  msw: [registerEETrialLicenseExpiredMutation, eeLicenseInfo.expired],
-  consoleType: 'pro-lite',
+export const LicenseActive: StoryObj<typeof ETAutoCleanupWrapper> = {
+  render: () => {
+    return (
+      <ETAutoCleanupWrapper>
+        <AutoCleanupForm onChange={() => {}} />
+      </ETAutoCleanupWrapper>
+    );
+  },
+
+  name: '💠 License Active',
+
+  parameters: {
+    msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const LicenseDeactivated: ComponentStory<
-  typeof ETAutoCleanupWrapper
-> = () => {
-  return (
-    <ETAutoCleanupWrapper>
-      <AutoCleanupForm onChange={() => {}} />
-    </ETAutoCleanupWrapper>
-  );
+export const LicenseExpired: StoryObj<typeof ETAutoCleanupWrapper> = {
+  render: () => {
+    return (
+      <ETAutoCleanupWrapper>
+        <AutoCleanupForm onChange={() => {}} />
+      </ETAutoCleanupWrapper>
+    );
+  },
+
+  name: '💠 License Expired',
+
+  parameters: {
+    msw: [registerEETrialLicenseExpiredMutation, eeLicenseInfo.expired],
+    consoleType: 'pro-lite',
+  },
 };
-LicenseDeactivated.storyName = '💠 License Deactivated';
-LicenseDeactivated.parameters = {
-  msw: [registerEETrialLicenseDeactivatedMutation, eeLicenseInfo.deactivated],
-  consoleType: 'pro-lite',
+
+export const LicenseDeactivated: StoryObj<typeof ETAutoCleanupWrapper> = {
+  render: () => {
+    return (
+      <ETAutoCleanupWrapper>
+        <AutoCleanupForm onChange={() => {}} />
+      </ETAutoCleanupWrapper>
+    );
+  },
+
+  name: '💠 License Deactivated',
+
+  parameters: {
+    msw: [registerEETrialLicenseDeactivatedMutation, eeLicenseInfo.deactivated],
+    consoleType: 'pro-lite',
+  },
 };

@@ -5,7 +5,7 @@ import { adaptPostgresConnection } from './utils/adaptResponse';
 
 const numberSchema = z.preprocess(
   val => parseInt(val as string, 10),
-  z.union([z.number(), z.nan()])
+  z.union([z.number().min(0), z.nan()])
 );
 
 export const poolSettingsSchema = z

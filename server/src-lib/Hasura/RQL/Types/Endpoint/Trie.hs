@@ -30,11 +30,11 @@ data PathComponent a
   | PathParam
   deriving stock (Show, Eq, Ord, Generic)
 
-instance ToJSON a => ToJSON (PathComponent a)
+instance (ToJSON a) => ToJSON (PathComponent a)
 
-instance ToJSON a => ToJSONKey (PathComponent a)
+instance (ToJSON a) => ToJSONKey (PathComponent a)
 
-instance Hashable a => Hashable (PathComponent a)
+instance (Hashable a) => Hashable (PathComponent a)
 
 -- | Result of matching a path @['PathComponent'] a@ and key @k@ in a 'MultiMapPathTrie'.
 --
@@ -88,7 +88,7 @@ instance Monoid (MatchResult a k v) where
 -- | Look up the value at a path.
 -- @PathParam@ matches any path component.
 -- Returns a list of pairs containing the value found and bindings for any @PathParam@s.
-lookupPath :: Hashable a => [a] -> T.Trie (PathComponent a) v -> [(v, [a])]
+lookupPath :: (Hashable a) => [a] -> T.Trie (PathComponent a) v -> [(v, [a])]
 lookupPath [] t = [(v, []) | v <- maybeToList (T.trieData t)]
 lookupPath (x : xs) t = do
   (pc, t') <- matchPathComponent x $ T.trieMap t
@@ -98,7 +98,7 @@ lookupPath (x : xs) t = do
     PathParam -> (x :) <$> m
   where
     matchPathComponent ::
-      Hashable a =>
+      (Hashable a) =>
       a ->
       HashMap.HashMap (PathComponent a) v ->
       [(PathComponent (), v)]

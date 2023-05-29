@@ -32,7 +32,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Types qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Foldable
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Maybe
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
@@ -153,7 +153,7 @@ executeProblemMessage showDetails = \case
           HideDetails -> summary
           InsecurelyShowDetails -> summary <> " and body:\n" <> LT.toStrict (LT.decodeUtf8 (J.encode body))
   where
-    showErr :: forall a. Show a => a -> Text
+    showErr :: forall a. (Show a) => a -> Text
     showErr err =
       case showDetails of
         HideDetails -> ""
@@ -257,7 +257,7 @@ bigQueryProjectUrl projectId =
 -- Executing the planned actions forest
 
 runExecute ::
-  MonadIO m =>
+  (MonadIO m) =>
   BigQuerySourceConfig ->
   Execute (BigQuery.Job, RecordSet) ->
   m (Either ExecuteProblem (BigQuery.Job, RecordSet))
@@ -289,7 +289,7 @@ getFinalRecordSet recordSet =
     recordSet
       { rows =
           fmap
-            ( OMap.filterWithKey
+            ( InsOrdHashMap.filterWithKey
                 ( \(FieldNameText k) _ ->
                     all (elem k) (wantedFields recordSet)
                 )
@@ -305,14 +305,14 @@ selectToBigQuery select =
   BigQuery
     { query = LT.toLazyText query,
       parameters =
-        OMap.fromList
+        InsOrdHashMap.fromList
           ( map
               ( \(int, value) ->
                   ( ParameterName (LT.toLazyText (ToQuery.paramName int)),
                     Parameter {typ = valueType value, value}
                   )
               )
-              (OMap.toList params)
+              (InsOrdHashMap.toList params)
           )
     }
   where
@@ -431,7 +431,7 @@ streamBigQuery conn bigquery = do
     Left e -> pure (Left e)
 
 -- | Execute a query without expecting any output (e.g. CREATE TABLE or INSERT)
-executeBigQuery :: MonadIO m => BigQueryConnection -> BigQuery -> m (Either ExecuteProblem ())
+executeBigQuery :: (MonadIO m) => BigQueryConnection -> BigQuery -> m (Either ExecuteProblem ())
 executeBigQuery conn bigquery = do
   jobResult <- runExceptT $ createQueryJob conn bigquery
   case jobResult of
@@ -560,9 +560,9 @@ createQueryJob conn BigQuery {..} = do
           <> "/jobs?alt=json&prettyPrint=false"
 
       req =
-        jsonRequestHeader $
-          setRequestBodyLBS body $
-            parseRequest_ url
+        jsonRequestHeader
+          $ setRequestBodyLBS body
+          $ parseRequest_ url
 
       body =
         J.encode
@@ -584,7 +584,7 @@ createQueryJob conn BigQuery {..} = do
                                         "parameterValue" .= valueToBigQueryJson value
                                       ]
                                 )
-                                (OMap.toList parameters)
+                                (InsOrdHashMap.toList parameters)
                           ]
                     ]
               ]
@@ -659,9 +659,9 @@ insertDataset conn datasetId =
             <> "/datasets?alt=json&prettyPrint=false"
 
         req =
-          jsonRequestHeader $
-            setRequestBodyLBS body $
-              parseRequest_ url
+          jsonRequestHeader
+            $ setRequestBodyLBS body
+            $ parseRequest_ url
 
         body =
           J.encode
@@ -736,7 +736,7 @@ parseBigQueryRow columnTypes =
                 fields
             )
             J.<?> J.Key "f"
-        pure (RecordOutputValue (OMap.fromList (V.toList values)))
+        pure (RecordOutputValue (InsOrdHashMap.fromList (V.toList values)))
     )
 
 parseBigQueryValue :: IsNullable -> BigQueryFieldType -> J.Value -> J.Parser OutputValue
@@ -890,25 +890,25 @@ instance J.FromJSON BigQueryField where
             do
               flag :: Text <- o .: "type"
               if
-                  | flag == "NUMERIC" || flag == "DECIMAL" -> pure FieldDECIMAL
-                  | flag == "BIGNUMERIC" || flag == "BIGDECIMAL" ->
-                      pure FieldBIGDECIMAL
-                  | flag == "INT64" || flag == "INTEGER" -> pure FieldINTEGER
-                  | flag == "FLOAT64" || flag == "FLOAT" -> pure FieldFLOAT
-                  | flag == "BOOLEAN" || flag == "BOOL" -> pure FieldBOOL
-                  | flag == "STRING" -> pure FieldSTRING
-                  | flag == "JSON" -> pure FieldJSON
-                  | flag == "DATE" -> pure FieldDATE
-                  | flag == "TIME" -> pure FieldTIME
-                  | flag == "DATETIME" -> pure FieldDATETIME
-                  | flag == "TIMESTAMP" -> pure FieldTIMESTAMP
-                  | flag == "GEOGRAPHY" -> pure FieldGEOGRAPHY
-                  | flag == "BYTES" -> pure FieldBYTES
-                  | flag == "RECORD" || flag == "STRUCT" ->
-                      do
-                        fields <- o .: "fields"
-                        pure (FieldSTRUCT fields)
-                  | otherwise -> fail ("Unsupported field type: " ++ show flag)
+                | flag == "NUMERIC" || flag == "DECIMAL" -> pure FieldDECIMAL
+                | flag == "BIGNUMERIC" || flag == "BIGDECIMAL" ->
+                    pure FieldBIGDECIMAL
+                | flag == "INT64" || flag == "INTEGER" -> pure FieldINTEGER
+                | flag == "FLOAT64" || flag == "FLOAT" -> pure FieldFLOAT
+                | flag == "BOOLEAN" || flag == "BOOL" -> pure FieldBOOL
+                | flag == "STRING" -> pure FieldSTRING
+                | flag == "JSON" -> pure FieldJSON
+                | flag == "DATE" -> pure FieldDATE
+                | flag == "TIME" -> pure FieldTIME
+                | flag == "DATETIME" -> pure FieldDATETIME
+                | flag == "TIMESTAMP" -> pure FieldTIMESTAMP
+                | flag == "GEOGRAPHY" -> pure FieldGEOGRAPHY
+                | flag == "BYTES" -> pure FieldBYTES
+                | flag == "RECORD" || flag == "STRUCT" ->
+                    do
+                      fields <- o .: "fields"
+                      pure (FieldSTRUCT fields)
+                | otherwise -> fail ("Unsupported field type: " ++ show flag)
           mode <- o .:? "mode" .!= Nullable
           pure BigQueryField {..}
       )

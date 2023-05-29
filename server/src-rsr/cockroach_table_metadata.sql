@@ -31,7 +31,9 @@ SELECT
       'is_deletable', ((pg_catalog.pg_relation_is_updatable("table".oid, true) & 16) = 16)
     ) END,
     'description', description.description,
-    'extra_table_metadata', '[]'::json
+    'extra_table_metadata', jsonb_build_object(
+      'table_type', CASE WHEN "table".relkind IN ('v', 'm') THEN 'view' ELSE 'table' END
+    )
   )::json AS info
 FROM "tabletable" "table"
 

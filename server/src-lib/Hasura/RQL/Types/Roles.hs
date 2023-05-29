@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RQL.Types.Roles
   ( DropInheritedRole (..),
     InheritedRole,
@@ -18,7 +16,6 @@ import Autodocodec qualified as AC
 import Autodocodec.Extended (hashSetCodec)
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.Aeson.TH
 import Data.Text.Extended (ToTxt (toTxt))
 import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyText, mkNonEmptyTextUnsafe, nonEmptyTextCodec, unNonEmptyText)
 import Database.PG.Query qualified as PG
@@ -84,10 +81,12 @@ instance Hashable Role
 
 instance HasCodec Role where
   codec =
-    AC.object "Role" $
-      Role
-        <$> requiredField' "role_name" AC..= _rRoleName
-        <*> requiredField' "role_set" AC..= _rParentRoles
+    AC.object "Role"
+      $ Role
+      <$> requiredField' "role_name"
+      AC..= _rRoleName
+        <*> requiredField' "role_set"
+      AC..= _rParentRoles
 
 instance ToJSON Role where
   toJSON (Role roleName parentRoles) =
@@ -109,6 +108,11 @@ type InheritedRole = Role
 newtype DropInheritedRole = DropInheritedRole
   { _ddrRoleName :: RoleName
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON (aesonDrop 4 snakeCase) ''DropInheritedRole)
+instance FromJSON DropInheritedRole where
+  parseJSON = genericParseJSON (aesonDrop 4 snakeCase)
+
+instance ToJSON DropInheritedRole where
+  toJSON = genericToJSON (aesonDrop 4 snakeCase)
+  toEncoding = genericToEncoding (aesonDrop 4 snakeCase)

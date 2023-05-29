@@ -36,8 +36,8 @@ spec =
                   setupPermissionsAction permissions testEnv
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
             },

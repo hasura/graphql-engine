@@ -54,12 +54,16 @@ instance NFData ToSourceRelationshipDef
 
 instance HasCodec ToSourceRelationshipDef where
   codec =
-    AC.object "ToSourceRelationshipDef" $
-      ToSourceRelationshipDef
-        <$> requiredField' "relationship_type" AC..= _tsrdRelationshipType
-        <*> requiredField' "field_mapping" AC..= _tsrdFieldMapping
-        <*> requiredField' "source" AC..= _tsrdSource
-        <*> requiredField' "table" AC..= _tsrdTable
+    AC.object "ToSourceRelationshipDef"
+      $ ToSourceRelationshipDef
+      <$> requiredField' "relationship_type"
+      AC..= _tsrdRelationshipType
+        <*> requiredField' "field_mapping"
+      AC..= _tsrdFieldMapping
+        <*> requiredField' "source"
+      AC..= _tsrdSource
+        <*> requiredField' "table"
+      AC..= _tsrdTable
 
 instance ToJSON ToSourceRelationshipDef where
   toJSON = genericToJSON hasuraJSON

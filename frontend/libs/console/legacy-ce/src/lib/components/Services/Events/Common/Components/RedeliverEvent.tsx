@@ -42,7 +42,7 @@ const RedeliverEvent: React.FC<Props> = ({
     };
   }, []);
 
-  const gridHeadings = ['status', 'id', 'created_at'].map(column => {
+  const gridHeadings = ['http_status', 'id', 'created_at'].map(column => {
     return {
       Header: column,
       accessor: column,

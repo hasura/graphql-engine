@@ -10,14 +10,14 @@ import Data.Bifunctor
 import Data.ByteString qualified as BS
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrd
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
-import Data.Text.Extended (commaSeparated, toTxt)
+import Data.Text.Extended (commaSeparated, dquoteList, toTxt)
 import Data.Tuple (swap)
 import Database.PG.Query qualified as PG
 import Database.PostgreSQL.LibPQ qualified as PQ
@@ -29,9 +29,9 @@ import Hasura.Base.Error
 import Hasura.LogicalModel.Common (columnsFromFields)
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.NativeQuery.Metadata
-  ( InterpolatedItem (..),
+  ( ArgumentName,
+    InterpolatedItem (..),
     InterpolatedQuery (..),
-    NativeQueryArgumentName,
     NativeQueryMetadata (..),
   )
 import Hasura.NativeQuery.Types (NullableScalarType (nstType))
@@ -42,7 +42,7 @@ import Hasura.RQL.Types.BackendType
 validateNativeQuery ::
   forall m pgKind.
   (MonadIO m, MonadError QErr m) =>
-  InsOrd.InsOrdHashMap PGScalarType PQ.Oid ->
+  InsOrdHashMap.InsOrdHashMap PGScalarType PQ.Oid ->
   Env.Environment ->
   PG.PostgresConnConfiguration ->
   LogicalModelMetadata ('Postgres pgKind) ->
@@ -51,7 +51,7 @@ validateNativeQuery ::
 validateNativeQuery pgTypeOidMapping env connConf logicalModel model = do
   (prepname, preparedQuery) <- nativeQueryToPreparedStatement logicalModel model
   description <- runCheck prepname (PG.fromText preparedQuery)
-  let returnColumns = bimap toTxt nstType <$> InsOrd.toList (columnsFromFields $ _lmmFields logicalModel)
+  let returnColumns = bimap toTxt nstType <$> InsOrdHashMap.toList (columnsFromFields $ _lmmFields logicalModel)
 
   for_ (toList returnColumns) (matchTypes description)
   where
@@ -100,57 +100,59 @@ validateNativeQuery pgTypeOidMapping env connConf logicalModel model = do
           throwError
             (err400 ValidationFailed "Failed to validate query")
               { qeInternal =
-                  Just $
-                    ExtraInternal $
-                      toJSON @Text $
-                        "Column named '" <> toTxt name <> "' is not returned from the query."
+                  Just
+                    $ ExtraInternal
+                    $ toJSON @Text
+                    $ "Column named '"
+                    <> toTxt name
+                    <> "' is not returned from the query."
               }
         Just actualOid
-          | Just expectedOid <- InsOrd.lookup expectedType pgTypeOidMapping,
+          | Just expectedOid <- InsOrdHashMap.lookup expectedType pgTypeOidMapping,
             expectedOid /= actualOid ->
               throwError
                 (err400 ValidationFailed "Failed to validate query")
                   { qeInternal =
-                      Just $
-                        ExtraInternal $
-                          toJSON @Text $
-                            Text.unwords $
-                              [ "Return column '" <> name <> "' has a type mismatch.",
-                                "The expected type is '" <> toTxt expectedType <> "',"
-                              ]
-                                <> case Map.lookup actualOid (invertPgTypeOidMap pgTypeOidMapping) of
-                                  Just t ->
-                                    ["but the actual type is '" <> toTxt t <> "'."]
-                                  Nothing ->
-                                    [ "and has the " <> tshow expectedOid <> ",",
-                                      "but the actual type has the " <> tshow actualOid <> "."
-                                    ]
+                      Just
+                        $ ExtraInternal
+                        $ toJSON @Text
+                        $ Text.unwords
+                        $ [ "Return column '" <> name <> "' has a type mismatch.",
+                            "The expected type is '" <> toTxt expectedType <> "',"
+                          ]
+                        <> case Map.lookup actualOid (invertPgTypeOidMap pgTypeOidMapping) of
+                          Just t ->
+                            ["but the actual type is '" <> toTxt t <> "'."]
+                          Nothing ->
+                            [ "and has the " <> tshow expectedOid <> ",",
+                              "but the actual type has the " <> tshow actualOid <> "."
+                            ]
                   }
         Just {} -> pure ()
 
 -- | Invert the type/oid mapping.
 invertPgTypeOidMap :: InsOrdHashMap PGScalarType PQ.Oid -> Map PQ.Oid PGScalarType
-invertPgTypeOidMap = Map.fromList . map swap . InsOrd.toList
+invertPgTypeOidMap = Map.fromList . map swap . InsOrdHashMap.toList
 
 ---------------------------------------
 
 -- | The environment and fresh-name generator used by 'renameIQ'.
 data RenamingState = RenamingState
   { rsNextFree :: Int,
-    rsBoundVars :: Map NativeQueryArgumentName Int
+    rsBoundVars :: Map ArgumentName Int
   }
 
--- | 'Rename' an 'InterpolatedQuery' expression with 'NativeQueryArgumentName' variables
+-- | 'Rename' an 'InterpolatedQuery' expression with 'ArgumentName' variables
 -- into one which uses ordinal arguments instead of named arguments, suitable
 -- for a prepared query.
 renameIQ ::
-  InterpolatedQuery NativeQueryArgumentName ->
+  InterpolatedQuery ArgumentName ->
   ( InterpolatedQuery Int,
-    Map Int NativeQueryArgumentName
+    Map Int ArgumentName
   )
 renameIQ = runRenaming . fmap InterpolatedQuery . mapM renameII . getInterpolatedQuery
   where
-    runRenaming :: forall a. State RenamingState a -> (a, Map Int NativeQueryArgumentName)
+    runRenaming :: forall a. State RenamingState a -> (a, Map Int ArgumentName)
     runRenaming action =
       let (res, st) = runState action (RenamingState 1 mempty)
        in (res, inverseMap $ rsBoundVars st)
@@ -165,7 +167,7 @@ renameIQ = runRenaming . fmap InterpolatedQuery . mapM renameII . getInterpolate
     -- variables and reusing the previously assigned indices when encountering a
     -- previously treated variable accordingly.
     renameII ::
-      InterpolatedItem NativeQueryArgumentName ->
+      InterpolatedItem ArgumentName ->
       State RenamingState (InterpolatedItem Int)
     renameII = traverse \v -> do
       env <- gets rsBoundVars
@@ -182,7 +184,7 @@ renameIQ = runRenaming . fmap InterpolatedQuery . mapM renameII . getInterpolate
     -- When subsequently rendering the prepared statement definition however, it
     -- is more convenient to inspect the environment by index.
     -- Therefore we invert the map as part of renaming.
-    inverseMap :: Ord b => Map a b -> Map b a
+    inverseMap :: (Ord b) => Map a b -> Map b a
     inverseMap = Map.fromList . map swap . Map.toList
 
 -- | Pretty print an interpolated query with numbered parameters.
@@ -200,7 +202,7 @@ renderIQ (InterpolatedQuery items) = foldMap printItem items
 -- Used by 'validateNativeQuery'. Exported for testing.
 nativeQueryToPreparedStatement ::
   forall m pgKind.
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   LogicalModelMetadata ('Postgres pgKind) ->
   NativeQueryMetadata ('Postgres pgKind) ->
   m (BS.ByteString, Text)
@@ -210,7 +212,7 @@ nativeQueryToPreparedStatement logicalModel model = do
       logimoCode = renderIQ preparedIQ
       prepname = "_logimo_vali_"
 
-      occurringArguments, declaredArguments, undeclaredArguments :: Set NativeQueryArgumentName
+      occurringArguments, declaredArguments, undeclaredArguments :: Set ArgumentName
       occurringArguments = Set.fromList (Map.elems argumentMapping)
       declaredArguments = Set.fromList $ HashMap.keys (_nqmArguments model)
       undeclaredArguments = occurringArguments `Set.difference` declaredArguments
@@ -224,7 +226,7 @@ nativeQueryToPreparedStatement logicalModel model = do
 
       returnedColumnNames :: Text
       returnedColumnNames =
-        commaSeparated $ InsOrd.keys (columnsFromFields $ _lmmFields logicalModel)
+        dquoteList $ InsOrdHashMap.keys (columnsFromFields $ _lmmFields logicalModel)
 
       wrapInCTE :: Text -> Text
       wrapInCTE query =
@@ -241,9 +243,10 @@ nativeQueryToPreparedStatement logicalModel model = do
 
       preparedQuery = "PREPARE " <> prepname <> argumentSignature <> " AS " <> wrapInCTE logimoCode
 
-  when (Set.empty /= undeclaredArguments) $
-    throwError $
-      err400 ValidationFailed $
-        "Undeclared arguments: " <> commaSeparated (map tshow $ Set.toList undeclaredArguments)
+  when (Set.empty /= undeclaredArguments)
+    $ throwError
+    $ err400 ValidationFailed
+    $ "Undeclared arguments: "
+    <> commaSeparated (map tshow $ Set.toList undeclaredArguments)
 
   pure (Text.encodeUtf8 prepname, preparedQuery)

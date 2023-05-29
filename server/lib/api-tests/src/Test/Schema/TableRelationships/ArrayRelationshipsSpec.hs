@@ -44,8 +44,8 @@ spec = do
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [BigQuery.setupTablesAction schema testEnv],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
             }

@@ -64,13 +64,13 @@ class
   runPingSourceImpl _ _ _ _ = pure ()
 
 instance PostgresBackend 'Vanilla where
-  type PgExtraTableMetadata 'Vanilla = ()
+  type PgExtraTableMetadata 'Vanilla = Postgres.PGExtraTableMetadata
 
 instance PostgresBackend 'Citus where
   type PgExtraTableMetadata 'Citus = Citus.ExtraTableMetadata
 
 instance PostgresBackend 'Cockroach where
-  type PgExtraTableMetadata 'Cockroach = ()
+  type PgExtraTableMetadata 'Cockroach = Postgres.PGExtraTableMetadata
   versionCheckImpl = runCockroachVersionCheck
   runPingSourceImpl = runCockroachDBPing
 
@@ -127,12 +127,13 @@ instance
 
   type HealthCheckTest ('Postgres pgKind) = HealthCheckTestSql
   healthCheckImplementation =
-    Just $
-      HealthCheckImplementation
+    Just
+      $ HealthCheckImplementation
         { _hciDefaultTest = defaultHealthCheckTestSql,
           _hciTestCodec = codec
         }
 
+  supportsAggregateComputedFields = True
   versionCheckImplementation = versionCheckImpl @pgKind
   runPingSource = runPingSourceImpl @pgKind
   isComparableType = Postgres.isComparableType

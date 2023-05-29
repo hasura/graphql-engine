@@ -10,6 +10,9 @@ module Test.Data
     -- = TestingEdgeCases Test Data
     EdgeCasesTestData (..),
     mkEdgeCasesTestData,
+    -- = Functions Test Data
+    FunctionsTestData (..),
+    mkFunctionsTestData,
     -- = Utilities
     emptyQuery,
     emptyMutationRequest,
@@ -39,6 +42,8 @@ module Test.Data
     mkSubqueryFieldValue,
     mkSubqueryRowsFieldValue,
     mkSubqueryAggregatesFieldValue,
+    mkAndExpr,
+    mkOrExpr,
   )
 where
 
@@ -55,6 +60,7 @@ import Data.ByteString.Lazy qualified as BSL
 import Data.CaseInsensitive (CI)
 import Data.CaseInsensitive qualified as CI
 import Data.FileEmbed (embedFile, makeRelativeToProject)
+import Data.Foldable qualified as Foldable
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List (find, sortOn)
@@ -62,6 +68,7 @@ import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Scientific (Scientific)
+import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
@@ -82,7 +89,7 @@ numericColumns =
     >>= ( API._tiColumns
             >>> mapMaybe
               ( \API.ColumnInfo {..} ->
-                  if _ciType == API.ScalarType "number"
+                  if _ciType == API.ColumnTypeScalar (API.ScalarType "number")
                     then Just _ciName
                     else Nothing
               )
@@ -335,6 +342,12 @@ genresTableName = mkTableName "Genre"
 genresRows :: [HashMap API.FieldName API.FieldValue]
 genresRows = sortBy (API.FieldName "GenreId") $ readTableFromXmlIntoRows genresTableName
 
+mkFibonacciRows :: Int -> [HashMap API.FieldName API.FieldValue]
+mkFibonacciRows n = take n $ fibonacciRow <$> fibs
+  where
+    fibs = 0 : 1 : zipWith (+) fibs (tail fibs)
+    fibonacciRow x = HashMap.singleton (API.FieldName "Value") (API.mkColumnFieldValue (J.Number x))
+
 genresTableRelationships :: API.TableRelationships
 genresTableRelationships =
   let joinFieldMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
@@ -512,12 +525,12 @@ mkTestData schemaResponse testConfig =
     formatTableRelationships :: API.TableRelationships -> API.TableRelationships
     formatTableRelationships =
       prefixTableRelationships
-        >>> API.trRelationships . traverse . API.rColumnMapping %~ (HashMap.toList >>> fmap (bimap (formatColumnName testConfig) (formatColumnName testConfig)) >>> HashMap.fromList)
+        >>> API.trelRelationships . traverse . API.rColumnMapping %~ (HashMap.toList >>> fmap (bimap (formatColumnName testConfig) (formatColumnName testConfig)) >>> HashMap.fromList)
 
     prefixTableRelationships :: API.TableRelationships -> API.TableRelationships
     prefixTableRelationships =
-      API.trSourceTable %~ formatTableName testConfig
-        >>> API.trRelationships . traverse . API.rTargetTable %~ formatTableName testConfig
+      API.trelSourceTable %~ formatTableName testConfig
+        >>> API.trelRelationships . traverse . API.rTargetTable %~ formatTableName testConfig
 
 -- | Test data from the TestingEdgeCases dataset template
 data EdgeCasesTestData = EdgeCasesTestData
@@ -558,8 +571,29 @@ mkEdgeCasesTestData testConfig schemaResponse =
     defaultedPrimaryKeyTableName = formatTableName testConfig (API.TableName $ "DefaultedPrimaryKey" :| [])
     allColumnsDefaultableTableName = formatTableName testConfig (API.TableName $ "AllColumnsDefaultable" :| [])
 
+-- | Test data from the FunctionsTestData dataset template
+data FunctionsTestData = FunctionsTestData
+  { -- = Functions
+    _ftdFunctionField :: API.FunctionName -> Text -> API.Field,
+    _ftdFibonacciRows :: Int -> [HashMap API.FieldName API.FieldValue],
+    _ftdFibonacciFunctionName :: API.FunctionName,
+    _ftdSearchArticlesFunctionName :: API.FunctionName
+  }
+
+mkFunctionsTestData :: API.SchemaResponse -> TestConfig -> FunctionsTestData
+mkFunctionsTestData schemaResponse testConfig =
+  FunctionsTestData
+    { _ftdFunctionField = functionField schemaResponse testConfig (API.singletonTableName "Result"),
+      _ftdFibonacciRows = mkFibonacciRows,
+      _ftdFibonacciFunctionName = formatFunctionName testConfig (API.FunctionName (NonEmpty.singleton "Fibonacci")),
+      _ftdSearchArticlesFunctionName = formatFunctionName testConfig (API.FunctionName (NonEmpty.singleton "SearchArticles"))
+    }
+
 formatTableName :: TestConfig -> API.TableName -> API.TableName
 formatTableName TestConfig {..} = applyTableNamePrefix _tcTableNamePrefix . API.TableName . fmap (applyNameCasing _tcTableNameCasing) . API.unTableName
+
+formatFunctionName :: TestConfig -> API.FunctionName -> API.FunctionName
+formatFunctionName TestConfig {..} = applyFunctionNamePrefix _tcFunctionNamePrefix . API.FunctionName . fmap (applyNameCasing _tcFunctionNameCasing) . API.unFunctionName
 
 formatTableInfo :: TestConfig -> API.TableInfo -> API.TableInfo
 formatTableInfo testConfig =
@@ -577,6 +611,12 @@ applyTableNamePrefix prefix tableName@(API.TableName rawTableName) =
     Just prefix' -> API.TableName (prefix' <> rawTableName)
     Nothing -> tableName
 
+applyFunctionNamePrefix :: [Text] -> API.FunctionName -> API.FunctionName
+applyFunctionNamePrefix prefix functionName@(API.FunctionName rawFunctionName) =
+  case NonEmpty.nonEmpty prefix of
+    Just prefix' -> API.FunctionName (prefix' <> rawFunctionName)
+    Nothing -> functionName
+
 applyNameCasing :: NameCasing -> Text -> Text
 applyNameCasing casing text = case casing of
   PascalCase -> text
@@ -592,6 +632,14 @@ columnField schemaResponse testConfig tableName columnName =
   where
     columnName' = formatColumnName testConfig $ API.ColumnName columnName
     scalarType = findColumnScalarType schemaResponse tableName columnName'
+
+functionField :: API.SchemaResponse -> TestConfig -> API.TableName -> API.FunctionName -> Text -> API.Field
+functionField schemaResponse@API.SchemaResponse {..} testConfig defaultTableName functionName columnName =
+  columnField schemaResponse testConfig tableName columnName
+  where
+    tableName = fromMaybe defaultTableName (functionReturnType ^? API._FunctionReturnsTable)
+    functionReturnType = maybe (error $ "Can't find the function " <> show functionName <> " in " <> show (API._fiName <$> _srFunctions)) API._fiReturns functionInfo
+    functionInfo = find (\API.FunctionInfo {..} -> _fiName == functionName) _srFunctions
 
 mkDefaultTableInsertSchema :: API.SchemaResponse -> TestConfig -> [API.TableInfo] -> API.TableName -> API.TableInsertSchema
 mkDefaultTableInsertSchema schemaResponse testConfig expectedSchemaTables tableName =
@@ -642,7 +690,9 @@ findColumnInfo API.SchemaResponse {..} tableName columnName =
 
 findColumnScalarType :: API.SchemaResponse -> API.TableName -> API.ColumnName -> API.ScalarType
 findColumnScalarType schemaResponse tableName columnName =
-  API._ciType $ findColumnInfo schemaResponse tableName columnName
+  case API._ciType $ findColumnInfo schemaResponse tableName columnName of
+    API.ColumnTypeScalar scalarType -> scalarType
+    _ -> error $ "Column " <> show columnName <> " in table " <> show tableName <> " does not have a scalar type"
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing Nothing
@@ -677,7 +727,7 @@ renameColumns columns =
 
 onlyKeepRelationships :: [API.RelationshipName] -> API.TableRelationships -> API.TableRelationships
 onlyKeepRelationships names tableRels =
-  tableRels & API.trRelationships %~ HashMap.filterWithKey (\relName _ -> relName `elem` names)
+  tableRels & API.trelRelationships %~ HashMap.filterWithKey (\relName _ -> relName `elem` names)
 
 queryFields :: API.Query -> HashMap API.FieldName API.Field
 queryFields = fromMaybe mempty . API._qFields
@@ -750,3 +800,9 @@ mkSubqueryRowsFieldValue rows =
 mkSubqueryAggregatesFieldValue :: HashMap API.FieldName J.Value -> API.FieldValue
 mkSubqueryAggregatesFieldValue aggregates =
   API.mkRelationshipFieldValue $ API.QueryResponse Nothing (Just aggregates)
+
+mkAndExpr :: (Foldable f) => f API.Expression -> API.Expression
+mkAndExpr = API.And . Set.fromList . Foldable.toList
+
+mkOrExpr :: (Foldable f) => f API.Expression -> API.Expression
+mkOrExpr = API.Or . Set.fromList . Foldable.toList

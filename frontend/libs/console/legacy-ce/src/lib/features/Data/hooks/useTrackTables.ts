@@ -7,6 +7,7 @@ import {
 } from '../../hasura-metadata-api';
 import type { TrackableTable } from '../TrackResources/types';
 import { MetadataMigrationOptions } from '../../MetadataAPI/hooks/useMetadataMigration';
+import { transformErrorResponse } from '../../ConnectDBRedesign/utils';
 import { BulkKeepGoingResponse } from '../../hasura-metadata-types';
 
 export const useTrackTables = ({
@@ -26,6 +27,7 @@ export const useTrackTables = ({
       invalidateMetadata();
       globalMutateOptions?.onSuccess?.(data, variables, ctx);
     },
+    errorTransform: transformErrorResponse,
   });
 
   const trackTables = useCallback(
@@ -38,17 +40,16 @@ export const useTrackTables = ({
       mutate(
         {
           query: {
-            type: 'bulk_keep_going',
-            source: dataSourceName,
+            type: `${driver}_track_tables`,
             resource_version,
-            args: tablesToBeTracked.map(trackableTable => ({
-              type: `${driver}_track_table`,
-              args: {
+            args: {
+              allow_warnings: true,
+              tables: tablesToBeTracked.map(trackableTable => ({
                 table: trackableTable.table,
                 source: dataSourceName,
                 configuration: trackableTable.configuration,
-              },
-            })),
+              })),
+            },
           },
         },
         mutateOptions
@@ -59,26 +60,24 @@ export const useTrackTables = ({
 
   const untrackTables = useCallback(
     ({
-      tablesToBeTracked,
+      tablesToBeUntracked,
       ...mutateOptions
     }: {
-      tablesToBeTracked: TrackableTable[];
-    } & MetadataMigrationOptions<BulkKeepGoingResponse>) => {
+      tablesToBeUntracked: TrackableTable[];
+    } & MetadataMigrationOptions) => {
       mutate(
         {
           query: {
-            type: 'bulk_keep_going',
-            source: dataSourceName,
+            type: `${driver}_untrack_tables`,
             resource_version,
-            args: tablesToBeTracked.map(trackableTable => ({
-              type: `${driver}_untrack_table`,
-              args: {
-                table: trackableTable.table,
+            args: {
+              allow_warnings: true,
+              tables: tablesToBeUntracked.map(untrackableTable => ({
+                table: untrackableTable.table,
                 source: dataSourceName,
-                // This will remove any relationships that are attached to the table
-                cascade: true,
-              },
-            })),
+                configuration: untrackableTable.configuration,
+              })),
+            },
           },
         },
         mutateOptions
@@ -87,5 +86,9 @@ export const useTrackTables = ({
     [dataSourceName, driver, mutate, resource_version]
   );
 
-  return { trackTables, untrackTables, ...rest };
+  return {
+    trackTables,
+    untrackTables,
+    ...rest,
+  };
 };

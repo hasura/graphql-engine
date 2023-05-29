@@ -7,16 +7,17 @@ import Control.Arrow.Extended
 import Control.Lens hiding ((.=))
 import Data.Aeson
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrd
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as HS
 import Data.List (nub)
 import Data.Monoid (First)
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.Function.Cache
-import Hasura.LogicalModel.Cache (LogicalModelInfo (..), lmiPermissions)
-import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiReturns), nqiArrayRelationships)
+import Hasura.Function.Lenses (fiPermissions)
+import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
+import Hasura.LogicalModel.Lenses (lmiPermissions)
+import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiReturns))
+import Hasura.NativeQuery.Lenses (nqiRelationships)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal (permissionIsDefined)
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -33,10 +34,11 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.SchemaCache (rscPermissions, rscRemoteRelationships)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap qualified as BackendMap
+import Hasura.StoredProcedure.Cache (StoredProcedureInfo (_spiReturns))
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to
@@ -93,16 +95,16 @@ performIteration iterationNumber cache inconsistencies dependencies = do
           throwError
             (err500 Unexpected "schema dependency resolution failed to terminate")
               { qeInternal =
-                  Just $
-                    ExtraInternal $
-                      object
-                        [ "inconsistent_objects"
-                            .= object
-                              [ "old" .= inconsistencies,
-                                "new" .= newInconsistencies
-                              ],
-                          "pruned_dependencies" .= (map snd <$> prunedDependencies)
-                        ]
+                  Just
+                    $ ExtraInternal
+                    $ object
+                      [ "inconsistent_objects"
+                          .= object
+                            [ "old" .= inconsistencies,
+                              "new" .= newInconsistencies
+                            ],
+                        "pruned_dependencies" .= (map snd <$> prunedDependencies)
+                      ]
               }
 
 pruneDanglingDependents ::
@@ -118,41 +120,47 @@ pruneDanglingDependents cache =
     resolveDependency :: SchemaDependency -> Either Text ()
     resolveDependency (SchemaDependency objectId _) = case objectId of
       SOSource source ->
-        void $
-          HashMap.lookup source (_boSources cache)
-            `onNothing` Left ("no such source exists: " <>> source)
+        void
+          $ HashMap.lookup source (_boSources cache)
+          `onNothing` Left ("no such source exists: " <>> source)
       SORemoteSchema remoteSchemaName ->
-        unless (remoteSchemaName `HashMap.member` _boRemoteSchemas cache) $
-          Left $
-            "remote schema " <> remoteSchemaName <<> " is not found"
+        unless (remoteSchemaName `HashMap.member` _boRemoteSchemas cache)
+          $ Left
+          $ "remote schema "
+          <> remoteSchemaName
+          <<> " is not found"
       SORemoteSchemaPermission remoteSchemaName roleName -> do
         remoteSchema <-
-          onNothing (HashMap.lookup remoteSchemaName $ _boRemoteSchemas cache) $
-            Left $
-              "remote schema " <> remoteSchemaName <<> " is not found"
-        unless (roleName `HashMap.member` _rscPermissions (fst remoteSchema)) $
-          Left $
-            "no permission defined on remote schema "
-              <> remoteSchemaName
-                <<> " for role "
-                <>> roleName
+          onNothing (HashMap.lookup remoteSchemaName $ _boRemoteSchemas cache)
+            $ Left
+            $ "remote schema "
+            <> remoteSchemaName
+            <<> " is not found"
+        unless (roleName `HashMap.member` _rscPermissions (fst remoteSchema))
+          $ Left
+          $ "no permission defined on remote schema "
+          <> remoteSchemaName
+          <<> " for role "
+          <>> roleName
       SORemoteSchemaRemoteRelationship remoteSchemaName typeName relationshipName -> do
         remoteSchema <-
-          fmap fst $
-            onNothing (HashMap.lookup remoteSchemaName $ _boRemoteSchemas cache) $
-              Left $
-                "remote schema " <> remoteSchemaName <<> " is not found"
+          fmap fst
+            $ onNothing (HashMap.lookup remoteSchemaName $ _boRemoteSchemas cache)
+            $ Left
+            $ "remote schema "
+            <> remoteSchemaName
+            <<> " is not found"
         void
           $ onNothing
-            (OMap.lookup typeName (_rscRemoteRelationships remoteSchema) >>= OMap.lookup relationshipName)
+            (InsOrdHashMap.lookup typeName (_rscRemoteRelationships remoteSchema) >>= InsOrdHashMap.lookup relationshipName)
           $ Left
           $ "remote relationship "
-            <> relationshipName
-              <<> " on type "
-            <> G.unName typeName
-            <> " on "
-            <> remoteSchemaName
-              <<> " is not found"
+          <> relationshipName
+          <<> " on type "
+          <> G.unName typeName
+          <> " on "
+          <> remoteSchemaName
+          <<> " is not found"
       SOSourceObj source exists -> do
         AB.dispatchAnyBackend @Backend exists $ \(sourceObjId :: SourceObjId b) -> do
           sourceInfo <- castSourceInfo source sourceObjId
@@ -160,9 +168,9 @@ pruneDanglingDependents cache =
             SOITable tableName ->
               void $ resolveTable sourceInfo tableName
             SOIFunction functionName ->
-              void $
-                HashMap.lookup functionName (_siFunctions sourceInfo)
-                  `onNothing` Left ("function " <> functionName <<> " is not tracked")
+              void
+                $ HashMap.lookup functionName (_siFunctions sourceInfo)
+                `onNothing` Left ("function " <> functionName <<> " is not tracked")
             SOILogicalModel logicalModelName ->
               void $ resolveLogicalModel sourceInfo logicalModelName
             SOILogicalModelObj logicalModelName logicalModelObjId -> do
@@ -172,14 +180,16 @@ pruneDanglingDependents cache =
                   let rolePermissions :: Maybe (RolePermInfo b)
                       rolePermissions = logicalModel ^? lmiPermissions . ix roleName
 
-                  unless (any (permissionIsDefined permType) rolePermissions) $
-                    Left $
-                      "no "
-                        <> permTypeToCode permType
-                        <> " permission defined on logical model "
-                        <> logicalModelName <<> " for role " <>> roleName
+                  unless (any (permissionIsDefined permType) rolePermissions)
+                    $ Left
+                    $ "no "
+                    <> permTypeToCode permType
+                    <> " permission defined on logical model "
+                    <> logicalModelName
+                    <<> " for role "
+                    <>> roleName
                 LMOCol column ->
-                  unless (InsOrd.member column (_lmiFields logicalModel)) do
+                  unless (InsOrdHashMap.member column (_lmiFields logicalModel)) do
                     Left ("Could not find column " <> column <<> " in logical model " <>> logicalModelName)
             SOINativeQuery nativeQueryName -> do
               void $ resolveNativeQuery sourceInfo nativeQueryName
@@ -187,9 +197,18 @@ pruneDanglingDependents cache =
               nativeQueryInfo <- resolveNativeQuery sourceInfo nativeQueryName
               case nativeQueryObjId of
                 NQOCol colName ->
-                  unless (InsOrd.member colName (_lmiFields (_nqiReturns nativeQueryInfo))) $
-                    Left
+                  unless (InsOrdHashMap.member colName (_lmiFields (_nqiReturns nativeQueryInfo)))
+                    $ Left
                       ("native query " <> nativeQueryName <<> " has no field named " <>> colName)
+            SOIStoredProcedure storedProcedureName -> do
+              void $ resolveStoredProcedure sourceInfo storedProcedureName
+            SOIStoredProcedureObj storedProcedureName storedProcedureObjId -> do
+              storedProcedureInfo <- resolveStoredProcedure sourceInfo storedProcedureName
+              case storedProcedureObjId of
+                SPOCol colName ->
+                  unless (InsOrdHashMap.member colName (_lmiFields (_spiReturns storedProcedureInfo)))
+                    $ Left
+                      ("stored procedure " <> storedProcedureName <<> " has no field named " <>> colName)
             SOITableObj tableName tableObjectId -> do
               tableInfo <- resolveTable sourceInfo tableName
               case tableObjectId of
@@ -203,26 +222,33 @@ pruneDanglingDependents cache =
                   void $ resolveField tableInfo (fromRemoteRelationship fieldName) _FIRemoteRelationship "remote relationship"
                 TOForeignKey constraintName -> do
                   let foreignKeys = _tciForeignKeys $ _tiCoreInfo tableInfo
-                  unless (isJust $ find ((== constraintName) . _cName . _fkConstraint) foreignKeys) $
-                    Left $
-                      "no foreign key constraint named "
-                        <> constraintName <<> " is "
-                        <> "defined for table " <>> tableName
+                  unless (isJust $ find ((== constraintName) . _cName . _fkConstraint) foreignKeys)
+                    $ Left
+                    $ "no foreign key constraint named "
+                    <> constraintName
+                    <<> " is "
+                    <> "defined for table "
+                    <>> tableName
                 TOPerm roleName permType -> do
-                  unless (any (permissionIsDefined permType) (tableInfo ^? (tiRolePermInfoMap . ix roleName))) $
-                    Left $
-                      "no "
-                        <> permTypeToCode permType
-                        <> " permission defined on table "
-                        <> tableName <<> " for role " <>> roleName
+                  unless (any (permissionIsDefined permType) (tableInfo ^? (tiRolePermInfoMap . ix roleName)))
+                    $ Left
+                    $ "no "
+                    <> permTypeToCode permType
+                    <> " permission defined on table "
+                    <> tableName
+                    <<> " for role "
+                    <>> roleName
                 TOTrigger triggerName ->
-                  unless (HashMap.member triggerName (_tiEventTriggerInfoMap tableInfo)) $
-                    Left $
-                      "no event trigger named " <> triggerName <<> " is defined for table " <>> tableName
+                  unless (HashMap.member triggerName (_tiEventTriggerInfoMap tableInfo))
+                    $ Left
+                    $ "no event trigger named "
+                    <> triggerName
+                    <<> " is defined for table "
+                    <>> tableName
       SORole roleName ->
-        void $
-          (HashMap.lookup roleName (_boRoles cache))
-            `onNothing` Left ("parent role " <> roleName <<> " does not exist")
+        void
+          $ (HashMap.lookup roleName (_boRoles cache))
+          `onNothing` Left ("parent role " <> roleName <<> " does not exist")
 
     castSourceInfo ::
       (Backend b) => SourceName -> SourceObjId b -> Either Text (SourceInfo b)
@@ -240,6 +266,10 @@ pruneDanglingDependents cache =
       HashMap.lookup nativeQueryName (_siNativeQueries sourceInfo)
         `onNothing` Left ("native query " <> nativeQueryName <<> " is not tracked")
 
+    resolveStoredProcedure sourceInfo storedProcedureName =
+      HashMap.lookup storedProcedureName (_siStoredProcedures sourceInfo)
+        `onNothing` Left ("stored procedure " <> storedProcedureName <<> " is not tracked")
+
     resolveLogicalModel sourceInfo logicalModelName =
       HashMap.lookup logicalModelName (_siLogicalModels sourceInfo)
         `onNothing` Left ("logical model " <> logicalModelName <<> " is not tracked")
@@ -248,7 +278,7 @@ pruneDanglingDependents cache =
     columnToFieldName _ = fromCol @b
 
     resolveField ::
-      Backend b =>
+      (Backend b) =>
       TableInfo b ->
       FieldName ->
       Getting (First a) (FieldInfo b) a ->
@@ -277,7 +307,7 @@ deleteMetadataObject = \case
   MORemoteSchema name -> boRemoteSchemas %~ HashMap.delete name
   MORemoteSchemaPermissions name role -> boRemoteSchemas . ix name . _1 . rscPermissions %~ HashMap.delete role
   MORemoteSchemaRemoteRelationship remoteSchema typeName relationshipName ->
-    boRemoteSchemas . ix remoteSchema . _1 . rscRemoteRelationships . ix typeName %~ OMap.delete relationshipName
+    boRemoteSchemas . ix remoteSchema . _1 . rscRemoteRelationships . ix typeName %~ InsOrdHashMap.delete relationshipName
   MOCustomTypes -> boCustomTypes %~ const mempty
   MOAction name -> boActions %~ HashMap.delete name
   MOActionPermission name role -> boActions . ix name . aiPermissions %~ HashMap.delete role
@@ -314,7 +344,8 @@ deleteMetadataObject = \case
       SMONativeQuery name -> siNativeQueries %~ HashMap.delete name
       SMONativeQueryObj nativeQueryName nativeQueryObjId ->
         siNativeQueries . ix nativeQueryName %~ case nativeQueryObjId of
-          NQMORel name _ -> nqiArrayRelationships %~ InsOrd.delete name
+          NQMORel name _ -> nqiRelationships %~ InsOrdHashMap.delete name
+      SMOStoredProcedure name -> siStoredProcedures %~ HashMap.delete name
       SMOLogicalModel name -> siLogicalModels %~ HashMap.delete name
       SMOLogicalModelObj logicalModelName logicalModelObjectId ->
         siLogicalModels . ix logicalModelName %~ case logicalModelObjectId of

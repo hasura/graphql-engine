@@ -41,6 +41,7 @@ import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RemoteSchema.MetadataAPI
 import Hasura.SQL.AnyBackend
+import Hasura.StoredProcedure.API qualified as StoredProcedures
 import Network.Types.Extended
 
 data RQLMetadataV1
@@ -52,10 +53,14 @@ data RQLMetadataV1
   | RMListSourceKinds !ListSourceKinds
   | RMGetSourceKindCapabilities !GetSourceKindCapabilities
   | RMGetSourceTables !(AnyBackend GetSourceTables)
-  | RMGetTableInfo !GetTableInfo
+  | RMGetSourceTrackables !(AnyBackend GetSourceTrackables)
+  | RMGetTableInfo !(AnyBackend GetTableInfo)
+  | RMGetTableInfo_ !GetTableInfo_
   | -- Tables
     RMTrackTable !(AnyBackend TrackTableV2)
+  | RMTrackTables !(AnyBackend TrackTables)
   | RMUntrackTable !(AnyBackend UntrackTable)
+  | RMUntrackTables !(AnyBackend UntrackTables)
   | RMSetTableCustomization !(AnyBackend SetTableCustomization)
   | RMSetApolloFederationConfig (AnyBackend SetApolloFederationConfig)
   | RMPgSetTableIsEnum !(AnyBackend SetTableIsEnum)
@@ -96,6 +101,10 @@ data RQLMetadataV1
     RMGetNativeQuery !(AnyBackend NativeQueries.GetNativeQuery)
   | RMTrackNativeQuery !(AnyBackend NativeQueries.TrackNativeQuery)
   | RMUntrackNativeQuery !(AnyBackend NativeQueries.UntrackNativeQuery)
+  | -- Stored Procedures
+    RMGetStoredProcedure !(AnyBackend StoredProcedures.GetStoredProcedure)
+  | RMTrackStoredProcedure !(AnyBackend StoredProcedures.TrackStoredProcedure)
+  | RMUntrackStoredProcedure !(AnyBackend StoredProcedures.UntrackStoredProcedure)
   | -- Custom types
     RMGetLogicalModel !(AnyBackend LogicalModel.GetLogicalModel)
   | RMTrackLogicalModel !(AnyBackend LogicalModel.TrackLogicalModel)

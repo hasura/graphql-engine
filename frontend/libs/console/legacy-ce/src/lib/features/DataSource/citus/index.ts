@@ -16,6 +16,7 @@ import {
 } from './introspection';
 import { getTableRows } from './query';
 import { postgresCapabilities } from '../common/capabilities';
+import { consoleDataTypeToSQLTypeMap } from '../postgres/utils';
 
 export type CitusTable = { name: string; schema: string };
 
@@ -86,6 +87,7 @@ export const citus: Database = {
     getSupportedOperators,
     getDatabaseSchemas: async () => Feature.NotImplemented,
     getIsTableView,
+    getSupportedDataTypes: async () => consoleDataTypeToSQLTypeMap,
   },
   query: {
     getTableRows,

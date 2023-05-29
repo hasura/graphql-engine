@@ -1,7 +1,9 @@
+{-# LANGUAGE PatternSynonyms #-}
+
 module Test.Specs.ExplainSpec (spec) where
 
 import Control.Lens ((&), (?~))
-import Hasura.Backends.DataConnector.API (Capabilities (..), ExplainResponse (..), QueryRequest (..), qFields)
+import Hasura.Backends.DataConnector.API (Capabilities (..), ExplainResponse (..), QueryRequest (..), qFields, pattern TableQueryRequest)
 import Test.AgentAPI (explain)
 import Test.Data (TestData (..))
 import Test.Data qualified as Data
@@ -26,4 +28,4 @@ spec TestData {..} _ = do
     artistsQueryRequest =
       let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdArtistsTableName [] query Nothing
+       in TableQueryRequest _tdArtistsTableName mempty query Nothing

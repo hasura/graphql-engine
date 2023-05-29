@@ -75,6 +75,9 @@ runMultipleUpdates TestBuilder {..} =
                 }
     case Update.mkUpdateCTE @'Vanilla upd of
       (Update.MultiUpdate ctes) ->
-        SI.fromText . toSQLTxt <$> ctes
-          `shouldBe` SI.fromText <$> expectedSQL
+        SI.fromText
+          . toSQLTxt
+          <$> ctes
+          `shouldBe` SI.fromText
+          <$> expectedSQL
       _ -> assertFailure "expected update_many, got single update"

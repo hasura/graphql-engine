@@ -2,7 +2,7 @@ module Main (main) where
 
 --------------------------------------------------------------------------------
 
-import Command (AgentConfig (..), AgentOptions (..), Command (..), SandwichArguments (..), TestOptions (..), parseCommandLine)
+import Command (AgentConfig (..), AgentOptions (..), Command (..), SandwichArguments (..), TestConfig, TestOptions (..), parseCommandLine)
 import Control.Exception (bracket)
 import Data.Aeson.Text (encodeToLazyText)
 import Data.ByteString.Char8 qualified as Char8
@@ -15,7 +15,7 @@ import Servant.Client ((//))
 import System.Environment qualified as Env
 import Test.AgentAPI (guardCapabilitiesResponse, guardSchemaResponse, mergeAgentConfig)
 import Test.AgentClient (AgentAuthKey (..), AgentIOClient (..), introduceAgentClient, mkAgentClientConfig, mkAgentIOClient)
-import Test.AgentDatasets (DatasetCloneInfo (..), chinookTemplate, createClone, deleteClone, testingEdgeCasesTemplate, usesDataset)
+import Test.AgentDatasets (DatasetCloneInfo (..), chinookTemplate, createClone, deleteClone, functionsTemplate, testingEdgeCasesTemplate, usesDataset)
 import Test.AgentTestContext (AgentTestContext (..), introduceAgentTestContext)
 import Test.Data (EdgeCasesTestData, TestData, mkEdgeCasesTestData, mkTestData)
 import Test.DataExport (exportData)
@@ -29,6 +29,7 @@ import Test.Specs.MetricsSpec qualified
 import Test.Specs.MutationSpec qualified
 import Test.Specs.QuerySpec qualified
 import Test.Specs.SchemaSpec qualified
+import Test.Specs.UDFSpec qualified
 import Test.TestHelpers (AgentTestSpec)
 import Prelude
 
@@ -37,8 +38,8 @@ import Prelude
 testSourceName :: API.SourceName
 testSourceName = "dc-api-tests"
 
-tests :: TestData -> Maybe EdgeCasesTestData -> API.CapabilitiesResponse -> AgentTestSpec
-tests testData edgeCasesTestData capabilitiesResponse@API.CapabilitiesResponse {..} = do
+tests :: TestData -> TestConfig -> Maybe EdgeCasesTestData -> API.CapabilitiesResponse -> AgentTestSpec
+tests testData testConfig edgeCasesTestData capabilitiesResponse@API.CapabilitiesResponse {..} = do
   usesDataset chinookTemplate $ do
     Test.Specs.HealthSpec.spec
     Test.Specs.CapabilitiesSpec.spec capabilitiesResponse
@@ -48,6 +49,9 @@ tests testData edgeCasesTestData capabilitiesResponse@API.CapabilitiesResponse {
     for_ (API._cMetrics _crCapabilities) \m -> Test.Specs.MetricsSpec.spec m
     for_ (API._cExplain _crCapabilities) \_ -> Test.Specs.ExplainSpec.spec testData _crCapabilities
   for_ (API._cMutations _crCapabilities) \_ -> Test.Specs.MutationSpec.spec testData edgeCasesTestData _crCapabilities
+  for_ (API._cUserDefinedFunctions _crCapabilities) \_ -> do
+    usesDataset functionsTemplate do
+      Test.Specs.UDFSpec.spec testConfig _crCapabilities
 
 getCloneSchema :: Maybe API.Config -> API.DatasetTemplateName -> AgentIOClient -> IO API.SchemaResponse
 getCloneSchema mergeConfig datasetTemplate (AgentIOClient agentClient) =
@@ -100,7 +104,7 @@ main = do
       let testContext = AgentTestContext testSourceName agentCapabilities (_aoAgentConfig _toAgentOptions)
       runSandwichWithCommandLineArgs Sandwich.defaultOptions $
         introduceAgentTestContext testContext . introduceAgentClient agentClientConfig $
-          tests testData edgeCasesTestData agentCapabilities
+          tests testData _toTestConfig edgeCasesTestData agentCapabilities
       pure ()
     ExportOpenAPISpec ->
       Text.putStrLn $ encodeToLazyText openApiSchema

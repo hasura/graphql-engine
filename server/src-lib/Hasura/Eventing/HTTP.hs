@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- |
 --  = Hasura.Eventing.HTTP
 --
@@ -50,7 +48,6 @@ import Data.Aeson.Encoding qualified as JE
 import Data.Aeson.Key qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Lens
-import Data.Aeson.TH
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy (ByteString)
 import Data.ByteString.Lazy qualified as LBS
@@ -89,9 +86,11 @@ data HTTPResp (a :: TriggerTypes) = HTTPResp
     hrsBody :: !SB.SerializableBlob,
     hrsSize :: !Int64
   }
-  deriving (Show)
+  deriving (Generic, Show)
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''HTTPResp)
+instance J.ToJSON (HTTPResp a) where
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
 
 instance ToEngineLog (HTTPResp 'EventType) Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, J.toJSON resp)
@@ -135,14 +134,14 @@ mkHTTPResp :: HTTP.Response LBS.ByteString -> HTTPResp a
 mkHTTPResp resp =
   HTTPResp
     { hrsStatus = HTTP.statusCode $ HTTP.responseStatus resp,
-      hrsHeaders = map decodeHeader $ HTTP.responseHeaders resp,
+      hrsHeaders = map decodeHeader' $ HTTP.responseHeaders resp,
       hrsBody = SB.fromLBS respBody,
       hrsSize = LBS.length respBody
     }
   where
     respBody = HTTP.responseBody resp
     decodeBS = TE.decodeUtf8With TE.lenientDecode
-    decodeHeader (hdrName, hdrVal) =
+    decodeHeader' (hdrName, hdrVal) =
       HeaderConf (decodeBS $ CI.original hdrName) (HVValue (decodeBS hdrVal))
 
 data RequestDetails = RequestDetails
@@ -153,11 +152,14 @@ data RequestDetails = RequestDetails
     _rdReqTransformCtx :: Maybe Transform.RequestContext,
     _rdSessionVars :: Maybe SessionVariables
   }
+  deriving (Generic)
 
 extractRequest :: RequestDetails -> HTTP.Request
 extractRequest RequestDetails {..} = fromMaybe _rdOriginalRequest _rdTransformedRequest
 
-$(deriveToJSON hasuraJSON ''RequestDetails)
+instance J.ToJSON RequestDetails where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data HTTPRespExtra (a :: TriggerTypes) = HTTPRespExtra
   { _hreResponse :: !(Either (HTTPErr a) (HTTPResp a)),
@@ -171,19 +173,19 @@ instance J.ToJSON (HTTPRespExtra a) where
   toJSON (HTTPRespExtra resp ctxt req webhookVarName logHeaders) =
     case resp of
       Left errResp ->
-        J.object $
-          [ "response" J..= J.toJSON errResp,
-            "request" J..= sanitiseReqJSON req,
-            "event_id" J..= elEventId ctxt
-          ]
-            ++ eventName
+        J.object
+          $ [ "response" J..= J.toJSON errResp,
+              "request" J..= sanitiseReqJSON req,
+              "event_id" J..= elEventId ctxt
+            ]
+          ++ eventName
       Right okResp ->
-        J.object $
-          [ "response" J..= J.toJSON okResp,
-            "request" J..= J.toJSON req,
-            "event_id" J..= elEventId ctxt
-          ]
-            ++ eventName
+        J.object
+          $ [ "response" J..= J.toJSON okResp,
+              "request" J..= J.toJSON req,
+              "event_id" J..= elEventId ctxt
+            ]
+          ++ eventName
     where
       eventName = case elEventName ctxt of
         Just name -> ["event_name" J..= name]
@@ -192,8 +194,8 @@ instance J.ToJSON (HTTPRespExtra a) where
         HVValue txt -> J.String txt
         HVEnv txt -> J.String txt
       getRedactedHeaders =
-        J.Object $
-          foldr (\(HeaderConf name val) -> KM.insert (J.fromText name) (getValue val)) mempty logHeaders
+        J.Object
+          $ foldr (\(HeaderConf name val) -> KM.insert (J.fromText name) (getValue val)) mempty logHeaders
       updateReqDetail v reqType =
         let webhookRedactedReq = J.toJSON v & key reqType . key "url" .~ J.String webhookVarName
             redactedReq = webhookRedactedReq & key reqType . key "headers" .~ getRedactedHeaders
@@ -239,9 +241,11 @@ data HTTPReq = HTTPReq
     _hrqTry :: !Int,
     _hrqDelay :: !(Maybe Int)
   }
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(deriveJSON hasuraJSON {omitNothingFields = True} ''HTTPReq)
+instance J.ToJSON HTTPReq where
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
 
 instance ToEngineLog HTTPReq Hasura where
   toEngineLog req = (LevelInfo, eventTriggerLogType, J.toJSON req)
@@ -287,7 +291,7 @@ data TransformableRequestError a
   deriving (Show)
 
 mkRequest ::
-  MonadError (TransformableRequestError a) m =>
+  (MonadError (TransformableRequestError a) m) =>
   [HTTP.Header] ->
   HTTP.ResponseTimeout ->
   -- | the request body. It is passed as a 'BL.Bytestring' because we need to
@@ -353,7 +357,7 @@ invokeRequest reqDetails@RequestDetails {..} respTransform' sessionVars logger =
     Just respTransform -> do
       let respBody = SB.toLBS $ hrsBody resp
           engine = Transform.respTransformTemplateEngine respTransform
-          respTransformCtx = Transform.buildRespTransformCtx _rdReqTransformCtx sessionVars engine respBody
+          respTransformCtx = Transform.buildRespTransformCtx _rdReqTransformCtx sessionVars engine respBody (hrsStatus resp)
        in case Transform.applyResponseTransform respTransform respTransformCtx of
             Left err -> do
               -- Log The Response Transformation Error

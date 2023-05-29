@@ -10,8 +10,18 @@
         "target": "nx-internal-plugin:build",
         "jestConfig": "apps/nx/internal-plugin-e2e/jest.config.ts"
       }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/nx/internal-plugin-e2e/**/*.ts",
+          "apps/nx/internal-plugin-e2e/**/*.json"
+        ]
+      }
     }
   },
-  "tags": [],
+  "tags": ["scope:nx-plugins", "type:e2e"],
   "implicitDependencies": ["nx-internal-plugin"]
 }

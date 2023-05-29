@@ -15,6 +15,7 @@ import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Prelude
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Schema.Options qualified as Options
 
 toTxtValue :: ColumnValue ('Postgres pgKind) -> SQLExp

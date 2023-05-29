@@ -2,7 +2,7 @@
 
 module Test.API.Metadata.TablesSpec where
 
-import Data.Aeson (Value)
+import Data.Aeson (Value (Null))
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
@@ -16,7 +16,7 @@ import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
-import Harness.Yaml (shouldReturnYaml)
+import Harness.Yaml (shouldAtLeastBe, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
 
@@ -49,8 +49,8 @@ spec = do
                 [ BigQuery.setupTablesAction schema testEnvironment
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
             },
@@ -96,6 +96,7 @@ tests = do
     let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
         backendType = BackendType.backendTypeString backendTypeMetadata
         schemaName = Schema.getSchemaName testEnvironment
+        sourceName = BackendType.backendSourceName backendTypeMetadata
 
         actual :: IO Value
         actual =
@@ -104,7 +105,7 @@ tests = do
             [interpolateYaml|
               type: #{backendType}_get_source_tables
               args:
-                source: #{BackendType.backendSourceName backendTypeMetadata}
+                source: #{sourceName}
             |]
 
         expected :: Value
@@ -146,3 +147,139 @@ tests = do
       b -> error ("Unknown backend: " <> b)
 
     shouldReturnYaml testEnvironment actual expected
+
+  it "Gets the table info" \testEnvironment -> do
+    let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+        backendType = BackendType.backendTypeString backendTypeMetadata
+        schemaName = Schema.getSchemaName testEnvironment
+        sourceName = BackendType.backendSourceName backendTypeMetadata
+
+        actual :: IO Value
+        actual =
+          GraphqlEngine.postMetadata
+            testEnvironment
+            case backendType of
+              x
+                | x `elem` ["pg", "citus"] ->
+                    [interpolateYaml|
+                      type: #{ backendType }_get_table_info
+                      args:
+                        source: #{ sourceName }
+                        table:
+                          schema: #{ schemaName }
+                          name: articles
+                    |]
+              _ ->
+                [interpolateYaml|
+                  type: #{ backendType }_get_table_info
+                  args:
+                    source: #{ sourceName }
+                    table:
+                      - #{ schemaName }
+                      - articles
+                |]
+
+        expected :: Value
+        expected =
+          case backendType of
+            "sqlite" ->
+              [interpolateYaml|
+                columns:
+                - insertable: true
+                  name: id
+                  nullable: false
+                  type:
+                  - number
+                  - Float
+                  updatable: true
+                - insertable: true
+                  name: author
+                  nullable: false
+                  type:
+                  - number
+                  - Float
+                  updatable: true
+                - insertable: true
+                  name: title
+                  nullable: false
+                  type:
+                  - string
+                  - String
+                  updatable: true
+                deletable: true
+                insertable: true
+                name:
+                - main
+                - articles
+                primary_key:
+                - id
+                type: table
+                updatable: true
+              |]
+            _ ->
+              [interpolateYaml|
+                columns:
+                - insertable: true
+                  name: id
+                  nullable: false
+                  type: integer
+                  updatable: true
+                - insertable: true
+                  name: author
+                  nullable: false
+                  type: integer
+                  updatable: true
+                - insertable: true
+                  name: title
+                  nullable: false
+                  type: text
+                  updatable: true
+                deletable: true
+                insertable: true
+                name:
+                  schema: #{schemaName}
+                  name: articles
+                primary_key:
+                - id
+                type: table
+                updatable: true
+              |]
+
+    unless (backendType `elem` ["cockroach", "mssql", "bigquery"])
+      $ actual
+      >>= \result -> result `shouldAtLeastBe` expected
+
+  it "Returns null for an invalid table" \testEnvironment -> do
+    let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+        backendType = BackendType.backendTypeString backendTypeMetadata
+        schemaName = Schema.getSchemaName testEnvironment
+        sourceName = BackendType.backendSourceName backendTypeMetadata
+
+        actual :: IO Value
+        actual =
+          case backendType of
+            "sqlite" ->
+              GraphqlEngine.postMetadata
+                testEnvironment
+                [interpolateYaml|
+                  type: #{backendType}_get_table_info
+                  args:
+                    source: #{sourceName}
+                    table:
+                      - #{schemaName}
+                      - made_up_table
+                |]
+            _ ->
+              GraphqlEngine.postMetadata
+                testEnvironment
+                [interpolateYaml|
+                  type: #{backendType}_get_table_info
+                  args:
+                    source: #{sourceName}
+                    table:
+                      schema: #{schemaName}
+                      name: made_up_table
+                |]
+
+    unless (backendType `elem` ["mssql", "bigquery"])
+      $ shouldReturnYaml testEnvironment actual Null

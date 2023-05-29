@@ -43,7 +43,7 @@ instance (Hashable k, Ord v) => Monoid (MultiMap k v) where
 
 -- | Construct a 'MmultiMap' with a single key, to which only one
 -- value is associated.
-singleton :: Hashable k => k -> v -> MultiMap k v
+singleton :: (Hashable k) => k -> v -> MultiMap k v
 singleton k v = MultiMap $ HashMap.singleton k (S.singleton v)
 
 -- | Construct a 'MultiMap' with the supplied mappings.
@@ -73,7 +73,7 @@ toList (MultiMap m) = HashMap.toList $ fmap (S.toList) m
 
 -- | Return the value to which the specified key is mapped, or 'Nothing' if
 -- this map contains no mapping for the key.
-lookup :: Hashable k => k -> MultiMap k v -> S.Set v
+lookup :: (Hashable k) => k -> MultiMap k v -> S.Set v
 lookup k (MultiMap m) = fromMaybe S.empty $ HashMap.lookup k m
 
 -- | Associate the specified value with the specified key in this map.

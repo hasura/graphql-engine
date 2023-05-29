@@ -78,7 +78,7 @@ import Control.Monad.Trans.Writer
 -- NB: This is conceptually different from `ArrowApply`, which expresses that a
 -- given `Arrow` /is/ a Kleisli arrow.  `ArrowInterpret` has no such condition
 -- on @arr@.
-interpretWriter :: ArrowWriter w arr => Writer w a `arr` a
+interpretWriter :: (ArrowWriter w arr) => Writer w a `arr` a
 interpretWriter = proc m -> do
   let (a, w) = runWriter m
   tellA -< w

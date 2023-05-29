@@ -25,7 +25,7 @@ import Hasura.Tracing
 
 -- | This typeclass enacapsulates how a given backend sends queries and mutations over the
 -- network. Each backend is currently responsible for both logging and tracing, for now.
-class BackendExecute b => BackendTransport (b :: BackendType) where
+class (BackendExecute b) => BackendTransport (b :: BackendType) where
   runDBQuery ::
     forall m.
     ( MonadIO m,

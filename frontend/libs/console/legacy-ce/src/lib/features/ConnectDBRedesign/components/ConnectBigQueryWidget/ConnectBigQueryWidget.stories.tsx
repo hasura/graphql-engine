@@ -1,4 +1,4 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, StoryFn, Meta } from '@storybook/react';
 import { ConnectBigQueryWidget } from './ConnectBigQueryWidget';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { userEvent, within } from '@storybook/testing-library';
@@ -10,11 +10,9 @@ export default {
   parameters: {
     // msw: handlers(),
   },
-} as ComponentMeta<typeof ConnectBigQueryWidget>;
+} as Meta<typeof ConnectBigQueryWidget>;
 
-export const CreateConnection: ComponentStory<
-  typeof ConnectBigQueryWidget
-> = () => {
+export const CreateConnection: StoryFn<typeof ConnectBigQueryWidget> = () => {
   return (
     <div className="flex justify-center">
       <div className="w-1/2">
@@ -24,61 +22,66 @@ export const CreateConnection: ComponentStory<
   );
 };
 
-export const Test: ComponentStory<typeof ConnectBigQueryWidget> = () => {
-  return (
-    <div className="flex justify-center">
-      <div className="w-1/2">
-        <ConnectBigQueryWidget />
+export const Test: StoryObj<typeof ConnectBigQueryWidget> = {
+  render: () => {
+    return (
+      <div className="flex justify-center">
+        <div className="w-1/2">
+          <ConnectBigQueryWidget />
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  },
 
-Test.storyName = '🧪 BigQuery Interaction test (add database)';
-Test.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
+  name: '🧪 BigQuery Interaction test (add database)',
 
-  // verify if the right title is displayed. It should contain the word `postgres`.
-  await expect(
-    await canvas.findByText('Connect BigQuery Database')
-  ).toBeInTheDocument();
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
 
-  // verify if all the fields are present (in oss mode)
+    // verify if the right title is displayed. It should contain the word `postgres`.
+    await expect(
+      await canvas.findByText('Connect BigQuery Database')
+    ).toBeInTheDocument();
 
-  await expect(
-    await canvas.findByLabelText('Database name')
-  ).toBeInTheDocument();
+    // verify if all the fields are present (in oss mode)
 
-  // There should be exactly 2 supported database connection options
-  const radioOptions = await canvas.findAllByLabelText('Connect Database via');
-  await expect(radioOptions.length).toBe(2);
+    await expect(
+      await canvas.findByLabelText('Database name')
+    ).toBeInTheDocument();
 
-  const serviceAccountKeyOption = await canvas.findByTestId(
-    'configuration.serviceAccount.type-serviceAccountKey'
-  );
-  await expect(serviceAccountKeyOption).toBeInTheDocument();
+    // There should be exactly 2 supported database connection options
+    const radioOptions = await canvas.findAllByLabelText(
+      'Connect Database via'
+    );
+    await expect(radioOptions.length).toBe(2);
 
-  // click on the environment variable option and verify if the correct fields are shown
-  const environmentVariableOption = await canvas.findByTestId(
-    'configuration.serviceAccount.type-envVar'
-  );
-  await expect(environmentVariableOption).toBeChecked();
-  await userEvent.click(environmentVariableOption);
-  await expect(
-    await canvas.findByPlaceholderText('HASURA_GRAPHQL_DB_URL_FROM_ENV')
-  ).toBeInTheDocument();
+    const serviceAccountKeyOption = await canvas.findByTestId(
+      'configuration.serviceAccount.type-serviceAccountKey'
+    );
+    await expect(serviceAccountKeyOption).toBeInTheDocument();
 
-  await expect(
-    await canvas.findByTestId('configuration.projectId.type-value')
-  ).toBeInTheDocument();
-  await expect(
-    await canvas.findByTestId('configuration.projectId.type-envVar')
-  ).toBeInTheDocument();
+    // click on the environment variable option and verify if the correct fields are shown
+    const environmentVariableOption = await canvas.findByTestId(
+      'configuration.serviceAccount.type-envVar'
+    );
+    await expect(environmentVariableOption).toBeChecked();
+    await userEvent.click(environmentVariableOption);
+    await expect(
+      await canvas.findByPlaceholderText('HASURA_GRAPHQL_DB_URL_FROM_ENV')
+    ).toBeInTheDocument();
 
-  await expect(
-    await canvas.findByTestId('configuration.datasets.type-value')
-  ).toBeInTheDocument();
-  await expect(
-    await canvas.findByTestId('configuration.datasets.type-envVar')
-  ).toBeInTheDocument();
+    await expect(
+      await canvas.findByTestId('configuration.projectId.type-value')
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByTestId('configuration.projectId.type-envVar')
+    ).toBeInTheDocument();
+
+    await expect(
+      await canvas.findByTestId('configuration.datasets.type-value')
+    ).toBeInTheDocument();
+    await expect(
+      await canvas.findByTestId('configuration.datasets.type-envVar')
+    ).toBeInTheDocument();
+  },
 };

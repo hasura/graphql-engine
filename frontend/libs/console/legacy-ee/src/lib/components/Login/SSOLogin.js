@@ -7,6 +7,7 @@ export const SSOLogin = ({
   keyIcon,
   doSSOLogin,
   doAdminSecretLogin,
+  children,
 }) => {
   return (
     <div className="flex items-center justify-center w-full h-screen bg-gray-50 text-gray-900">
@@ -25,6 +26,7 @@ export const SSOLogin = ({
               Hasura Single Sign-On
             </button>
           )}
+          {children}
           <div>
             <button
               type="button"

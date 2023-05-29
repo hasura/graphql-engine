@@ -1,8 +1,9 @@
+import get from 'lodash/get';
 import { Analytics, REDACT_EVERYTHING } from '../../Analytics';
-//import { MetadataSelectors, useMetadata } from '../../hasura-metadata-api';
 import { ManageTrackedTables } from '../ManageTable/components/ManageTrackedTables';
+import { ManageTrackedFunctions } from '../TrackResources/TrackFunctions/components/ManageTrackedFunctions';
 import { ManageTrackedRelationshipsContainer } from '../TrackResources/components/ManageTrackedRelationshipsContainer';
-//import TemplateGallery from '../../../components/Services/Data/Schema/TemplateGallery/TemplateGallery';
+import { useDriverCapabilities } from '../hooks/useDriverCapabilities';
 import { BreadCrumbs, SourceName, CollapsibleResource } from './parts';
 
 export interface ManageDatabaseProps {
@@ -11,9 +12,24 @@ export interface ManageDatabaseProps {
 
 //This component has the code for template gallery but is currently commented out until further notice.
 export const ManageDatabase = ({ dataSourceName }: ManageDatabaseProps) => {
-  // const { data: source } = useMetadata(
-  //   MetadataSelectors.findSource(dataSourceName)
-  // );
+  const {
+    data: {
+      areForeignKeysSupported = false,
+      areUserDefinedFunctionsSupported = false,
+    } = {},
+  } = useDriverCapabilities({
+    dataSourceName,
+    select: data => {
+      return {
+        areForeignKeysSupported: !!get(
+          data,
+          'data_schema.supports_foreign_keys'
+        ),
+        areUserDefinedFunctionsSupported: !!get(data, 'user_defined_functions'),
+      };
+    },
+  });
+
   return (
     <Analytics name="ManageDatabaseV2" {...REDACT_EVERYTHING}>
       <div className="w-full overflow-y-auto bg-gray-50">
@@ -22,15 +38,6 @@ export const ManageDatabase = ({ dataSourceName }: ManageDatabaseProps) => {
           <SourceName dataSourceName={dataSourceName} />
         </div>
         <div className="px-md group relative gap-2 flex-col flex">
-          {/* {(source?.kind === 'postgres' || source?.kind === 'mssql') && (
-            <CollapsibleResource
-              title="Template Gallery"
-              tooltip="Apply pre-created sets of SQL migrations and Hasura metadata."
-            >
-              <TemplateGallery driver={source?.kind} showHeader={false} />
-            </CollapsibleResource>
-          )} */}
-
           <CollapsibleResource
             title="Tables/Views"
             tooltip="Expose the tables available in your database via the GraphQL API"
@@ -41,14 +48,26 @@ export const ManageDatabase = ({ dataSourceName }: ManageDatabaseProps) => {
               key={dataSourceName}
             />
           </CollapsibleResource>
-          <CollapsibleResource
-            title="Foreign Key Relationships"
-            tooltip="Track foreign key relationships in your database in your GraphQL API"
-          >
-            <ManageTrackedRelationshipsContainer
-              dataSourceName={dataSourceName}
-            />
-          </CollapsibleResource>
+
+          {areForeignKeysSupported && (
+            <CollapsibleResource
+              title="Foreign Key Relationships"
+              tooltip="Track foreign key relationships in your database in your GraphQL API"
+            >
+              <ManageTrackedRelationshipsContainer
+                dataSourceName={dataSourceName}
+              />
+            </CollapsibleResource>
+          )}
+
+          {areUserDefinedFunctionsSupported && (
+            <CollapsibleResource
+              title="Untracked Custom Functions"
+              tooltip="Expose the functions available in your database via the GraphQL API"
+            >
+              <ManageTrackedFunctions dataSourceName={dataSourceName} />
+            </CollapsibleResource>
+          )}
         </div>
       </div>
     </Analytics>

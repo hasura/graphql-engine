@@ -76,9 +76,9 @@ buildUpdateTx ::
 buildUpdateTx updateOperation stringifyNum queryTags = do
   let withAlias = "with_alias"
       createInsertedTempTableQuery =
-        toQueryFlat $
-          TQ.fromSelectIntoTempTable $
-            TSQL.toSelectIntoTempTable tempTableNameUpdated (_auTable updateOperation) (_auAllCols updateOperation) RemoveConstraints
+        toQueryFlat
+          $ TQ.fromSelectIntoTempTable
+          $ TSQL.toSelectIntoTempTable tempTableNameUpdated (_auTable updateOperation) (_auAllCols updateOperation) RemoveConstraints
   -- Create a temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
   let updateQuery = TQ.fromUpdate <$> TSQL.fromUpdate updateOperation
@@ -106,6 +106,6 @@ buildUpdateTx updateOperation stringifyNum queryTags = do
   -- Drop the temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler (toQueryFlat (dropTempTableQuery tempTableNameUpdated) `withQueryTags` queryTags)
   -- Raise an exception if the check condition is not met
-  unless (checkConditionInt == (0 :: Int)) $
-    throw400 PermissionError "check constraint of an insert/update permission has failed"
+  unless (checkConditionInt == (0 :: Int))
+    $ throw400 PermissionError "check constraint of an insert/update permission has failed"
   pure $ encJFromText responseText

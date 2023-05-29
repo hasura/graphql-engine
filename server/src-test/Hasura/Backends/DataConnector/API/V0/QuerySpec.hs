@@ -18,21 +18,22 @@ import Hasura.Backends.DataConnector.API.V0.AggregateSpec (genAggregate)
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
 import Hasura.Backends.DataConnector.API.V0.OrderBySpec (genOrderBy)
-import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genTableRelationships)
+import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genRelationships)
 import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType, genScalarValue)
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
 import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText, genHashMap)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
+import Hedgehog.Internal.Range (linear)
 import Test.Aeson.Utils (genValue, jsonOpenApiProperties, testToFromJSONToSchema)
 import Test.Hspec
 
 spec :: Spec
 spec = do
   describe "Field" $ do
-    describe "ColumnField" $
-      testToFromJSONToSchema
+    describe "ColumnField"
+      $ testToFromJSONToSchema
         (ColumnField (ColumnName "my_column_name") (ScalarType "string"))
         [aesonQQ|
           { "type": "column",
@@ -88,23 +89,46 @@ spec = do
       |]
     jsonOpenApiProperties genQuery
 
-  describe "QueryRequest" $ do
+  describe "TableRequest" $ do
     let queryRequest =
-          QueryRequest
-            { _qrTable = TableName ["my_table"],
-              _qrTableRelationships = [],
-              _qrQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing,
-              _qrForeach = Just (HashMap.fromList [(ColumnName "my_id", ScalarValue (J.Number 666) (ScalarType "number"))] :| [])
-            }
+          QRTable
+            $ TableRequest
+              { _trTable = TableName ["my_table"],
+                _trRelationships = [],
+                _trQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing,
+                _trForeach = Just (HashMap.fromList [(ColumnName "my_id", ScalarValue (J.Number 666) (ScalarType "number"))] :| [])
+              }
     testToFromJSONToSchema
       queryRequest
       [aesonQQ|
-        { "table": ["my_table"],
+        { "type": "table",
+          "table": ["my_table"],
           "table_relationships": [],
           "query": { "fields": {} },
           "foreach": [
             { "my_id": { "value": 666, "value_type": "number" } }
           ]
+        }
+      |]
+    jsonOpenApiProperties genQueryRequest
+
+  describe "FunctionRequest" $ do
+    let queryRequest =
+          QRFunction
+            $ FunctionRequest
+              { _frFunction = FunctionName ["my_function"],
+                _frFunctionArguments = [],
+                _frRelationships = [],
+                _frQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing
+              }
+    testToFromJSONToSchema
+      queryRequest
+      [aesonQQ|
+        { "type": "function",
+          "function": ["my_function"],
+          "function_arguments": [],
+          "relationships": [],
+          "query": { "fields": {} }
         }
       |]
     jsonOpenApiProperties genQueryRequest
@@ -188,10 +212,37 @@ genQuery =
     <*> Gen.maybe genOrderBy
 
 genQueryRequest :: Gen QueryRequest
-genQueryRequest =
-  QueryRequest
+genQueryRequest = genTableRequest <|> genFunctionRequest -- NOTE: We should probably weight tables more than functions...
+
+genFunctionRequest :: Gen QueryRequest
+genFunctionRequest =
+  FunctionQueryRequest
+    <$> genFunctionName
+    <*> Gen.list defaultRange genFunctionArgument
+    <*> Gen.set defaultRange genRelationships
+    <*> genQuery
+
+genFunctionName :: (MonadGen m) => m FunctionName
+genFunctionName = FunctionName <$> Gen.nonEmpty (linear 1 3) (genArbitraryAlphaNumText defaultRange)
+
+genFunctionArgument :: Gen FunctionArgument
+genFunctionArgument =
+  NamedArgument
+    <$> genArbitraryAlphaNumText defaultRange
+    <*> genArgumentValue
+
+genArgumentValue :: Gen ArgumentValue
+genArgumentValue =
+  fmap ScalarArgumentValue
+    $ ScalarValue
+    <$> genValue
+    <*> genScalarType
+
+genTableRequest :: Gen QueryRequest
+genTableRequest =
+  TableQueryRequest
     <$> genTableName
-    <*> Gen.list defaultRange genTableRelationships
+    <*> Gen.set defaultRange genRelationships
     <*> genQuery
     <*> Gen.maybe (Gen.nonEmpty defaultRange (genHashMap genColumnName genScalarValue defaultRange))
 

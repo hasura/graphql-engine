@@ -1,16 +1,15 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '../../../../../new-components/Button';
-import { LS_KEYS, removeLSItem } from '../../../../../utils/localStorage';
-import { emitOnboardingEvent, persistSkippedOnboarding } from '../../utils';
-import { getUseCaseExperimentOnboardingVariables } from '../../constants';
+import { emitOnboardingEvent } from '../../utils';
+import {
+  getUseCaseExperimentOnboardingVariables,
+  skippedUseCaseExperimentOnboarding,
+} from '../../constants';
 import { Analytics, trackCustomEvent } from '../../../../Analytics';
 import { Dispatch } from '../../../../../types';
 import _push from '../../../../../components/Services/Data/push';
 
-type UseCaseScreenProps = {
-  dismiss: () => void;
-  dispatch: Dispatch;
-};
+type UseCaseScreenProps = { dismiss: () => void; dispatch: Dispatch };
 
 export type UseCases =
   | 'data-api'
@@ -32,7 +31,7 @@ const useCasesAssets: UseCaseAssets[] = [
     id: 'data-api',
     image:
       'https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-console/assets/common/img/hasura-usecase-data-api.svg',
-    title: 'Data API',
+    title: 'Data Access Layer',
     description:
       'Build an instant, real-time API over your data sources for easy and performant access',
     consoleUrl: '/',
@@ -49,21 +48,10 @@ const useCasesAssets: UseCaseAssets[] = [
     docsUrl: 'https://hasura.io/docs/latest/resources/use-case/gql-backend/',
   },
   {
-    id: 'data-federation',
-    image:
-      'https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-console/assets/common/img/hasura-usecase-data-federation.svg',
-    title: 'Data Federation',
-    description:
-      'Build an API that enables real-time data composition from different data sources',
-    consoleUrl: '/',
-    docsUrl:
-      'https://hasura.io/docs/latest/resources/use-case/data-federation/',
-  },
-  {
     id: 'gateway',
     image:
       'https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-console/assets/common/img/hasura-usecase-gateway.svg',
-    title: 'Gateway Service',
+    title: 'API Gateway',
     description:
       'Build a single entry point from client applications into an ecosystem of microservices',
     consoleUrl: '/',
@@ -86,15 +74,16 @@ export const UseCaseScreen = (props: UseCaseScreenProps) => {
     return useCasesAssets.sort(() => Math.random() - 0.5);
   }, [useCasesAssets]);
 
-  const onSubmit = () => {
-    const useCase = useCasesAssets.filter(
-      useCase => useCase.id === selectedUseCase
-    )[0];
+  const useCase = useCasesAssets.find(
+    useCase => useCase.id === selectedUseCase
+  );
 
-    removeLSItem(LS_KEYS.useCaseExperimentOnboarding);
-    props.dispatch(_push(useCase.consoleUrl));
-    window.open(useCase.docsUrl, '_blank', 'noreferrer,noopener');
-    emitOnboardingEvent(getUseCaseExperimentOnboardingVariables(useCase.id));
+  const onSubmit = () => {
+    if (useCase) {
+      props.dispatch(_push(useCase.consoleUrl));
+      emitOnboardingEvent(getUseCaseExperimentOnboardingVariables(useCase.id));
+      props.dismiss();
+    }
   };
 
   return (
@@ -123,9 +112,9 @@ export const UseCaseScreen = (props: UseCaseScreenProps) => {
       <div className="use-case-intro-text text-[#64748B] font-sans mt-3 mb-3.5">
         What would you like to build with Hasura?
       </div>
-      <div className="use-cases flex flex-wrap justify-between gap-y-15 gap-y-8">
+      <div className="use-cases flex flex-wrap justify-around gap-y-15 gap-y-8">
         {randomUseCaseAssets.map((item, index) => (
-          <div className="flex relative h-[250px]">
+          <div className="flex relative h-[250px]" key={index}>
             <label
               key={index}
               htmlFor={item.id}
@@ -163,28 +152,33 @@ export const UseCaseScreen = (props: UseCaseScreenProps) => {
             className="ml-xs mr-4 text-secondary flex items-center cursor-pointer"
             onClick={() => {
               props.dismiss();
-              removeLSItem(LS_KEYS.useCaseExperimentOnboarding);
-              persistSkippedOnboarding();
+              emitOnboardingEvent(skippedUseCaseExperimentOnboarding);
             }}
           >
             Skip
           </div>
         </Analytics>
-        <Analytics
-          name={`use-case-onboarding-${selectedUseCase}`}
-          passHtmlAttributesToChildren
-        >
-          <Button
-            mode="primary"
-            disabled={selectedUseCase === null}
-            onClick={() => {
-              props.dismiss();
-              onSubmit();
-            }}
+        {useCase ? (
+          <Analytics name={`use-case-onboarding-${selectedUseCase}`}>
+            <a
+              href={useCase.docsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onSubmit}
+            >
+              <Button mode="primary">Continue</Button>
+            </a>
+          </Analytics>
+        ) : (
+          <Analytics
+            name={`use-case-onboarding-unselected`}
+            passHtmlAttributesToChildren
           >
-            Continue
-          </Button>
-        </Analytics>
+            <Button mode="primary" disabled>
+              Continue
+            </Button>
+          </Analytics>
+        )}
       </div>
     </div>
   );

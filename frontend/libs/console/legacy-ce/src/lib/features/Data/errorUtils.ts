@@ -11,3 +11,17 @@ export const parseRunSQLErrors = (err: AxiosError<RunSQLAPIError>) => {
       err.response?.data?.internal?.error?.message ?? PLACEHOLDER_ERROR_MESSAGE,
   };
 };
+
+export const transformErrorResponse = (error: unknown) => {
+  const err = error as Record<string, any>;
+
+  let message = '';
+
+  if ('internal' in err) message = JSON.stringify(err?.internal, null, '\t');
+  else message = err.error;
+
+  return {
+    name: `Error code: ${err.code}`,
+    message,
+  };
+};

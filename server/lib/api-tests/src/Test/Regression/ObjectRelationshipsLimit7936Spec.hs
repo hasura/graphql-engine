@@ -309,7 +309,7 @@ setupMetadata testEnvironment = do
 --
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
-shouldReturnOneOfYaml :: HasCallStack => TestEnvironment -> IO Value -> [Value] -> IO ()
+shouldReturnOneOfYaml :: (HasCallStack) => TestEnvironment -> IO Value -> [Value] -> IO ()
 shouldReturnOneOfYaml testEnv actualIO candidates = do
   let Fixture.Options {stringifyNumbers} = _options testEnv
   actual <- actualIO

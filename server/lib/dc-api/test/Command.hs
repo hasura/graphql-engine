@@ -47,6 +47,8 @@ newtype SandwichArguments = SandwichArguments [String]
 data TestConfig = TestConfig
   { _tcTableNamePrefix :: [Text],
     _tcTableNameCasing :: NameCasing,
+    _tcFunctionNamePrefix :: [Text],
+    _tcFunctionNameCasing :: NameCasing,
     _tcColumnNameCasing :: NameCasing
   }
 
@@ -168,6 +170,21 @@ testConfigParser =
           <> value PascalCase
       )
     <*> option
+      jsonValue
+      ( long "function-name-prefix"
+          <> short 'f'
+          <> metavar "FUNCTION_PREFIX"
+          <> help "The prefix to use for all function names, as a JSON array of strings"
+          <> value []
+      )
+    <*> option
+      auto
+      ( long "function-name-casing"
+          <> metavar "FUNCTION_CASING"
+          <> help ("The casing style to use for function names (" <> casingOptions <> "). Default: PascalCase")
+          <> value PascalCase
+      )
+    <*> option
       auto
       ( long "column-name-casing"
           <> metavar "CASING"
@@ -194,15 +211,15 @@ agentOptionsParser =
                   <> metavar "JSON"
                   <> help "The configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header. If omitted, datasets will be used to load test data and provide this configuration dynamically"
               )
-            <|> DatasetConfig
-              <$> optional
-                ( option
-                    configValue
-                    ( long "merge-agent-config"
-                        <> metavar "JSON"
-                        <> help "Datasets will be used to load test data and provide configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header. This config will be merged with the dataset-provided config before being sent to the agent."
-                    )
-                )
+              <|> DatasetConfig
+            <$> optional
+              ( option
+                  configValue
+                  ( long "merge-agent-config"
+                      <> metavar "JSON"
+                      <> help "Datasets will be used to load test data and provide configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header. This config will be merged with the dataset-provided config before being sent to the agent."
+                  )
+              )
         )
 
 exportDataConfigParser :: Parser ExportDataConfig
@@ -235,5 +252,5 @@ baseUrl = eitherReader $ left show . parseBaseUrl
 configValue :: ReadM API.Config
 configValue = fmap API.Config jsonValue
 
-jsonValue :: FromJSON v => ReadM v
+jsonValue :: (FromJSON v) => ReadM v
 jsonValue = eitherReader (eitherDecodeStrict' . Text.encodeUtf8 . Text.pack)

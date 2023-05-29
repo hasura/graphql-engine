@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { FaAngleLeft, FaAngleRight } from 'react-icons/fa';
-// import { useTrackTable } from '../..';
 import { Badge } from '../../../../new-components/Badge';
 import { Button } from '../../../../new-components/Button';
 import { CardedTable } from '../../../../new-components/CardedTable';
@@ -18,7 +17,7 @@ import { TableRow } from './TableRow';
 import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
 import { useTrackTables } from '../../hooks/useTrackTables';
 import { hasuraToast } from '../../../../new-components/Toasts';
-import { APIError } from '../../../../hooks/error';
+import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
 
 interface TableListProps {
   dataSourceName: string;
@@ -45,7 +44,7 @@ export const TableList = (props: TableListProps) => {
     checkboxRef.current.indeterminate = inputStatus === 'indeterminate';
   }, [inputStatus]);
 
-  const { trackTables, untrackTables, isLoading } = useTrackTables({
+  const { trackTables, isLoading, untrackTables } = useTrackTables({
     dataSourceName,
   });
 
@@ -53,70 +52,44 @@ export const TableList = (props: TableListProps) => {
     const tables = filteredTables.filter(({ name }) =>
       checkedIds.includes(name)
     );
-    if (mode === 'track') {
-      untrackTables({
+
+    if (mode === 'untrack') {
+      trackTables({
         tablesToBeTracked: tables,
-        onSuccess: response => {
-          response.forEach(result => {
-            if ('error' in result) {
-              hasuraToast({
-                type: 'error',
-                title: 'Error while untracking table',
-                children: result.error,
-              });
-            }
-          });
-
-          const successfullyUntrackedCounter = response.filter(
-            result => 'message' in result && result.message === 'success'
-          ).length;
-
-          const plural = successfullyUntrackedCounter > 1 ? 's' : '';
-
+        onSuccess: () => {
           hasuraToast({
             type: 'success',
-            title: 'Successfully untracked',
-            message: `${successfullyUntrackedCounter} object${plural} untracked`,
+            title: 'Successfully tracked',
+            message: `${tables.length} ${
+              tables.length <= 1 ? 'table' : 'tables'
+            } tracked!`,
           });
         },
         onError: err => {
           hasuraToast({
             type: 'error',
-            title: 'Unable to perform operation',
-            message: (err as APIError).message,
+            title: err.name,
+            children: <DisplayToastErrorMessage message={err.message} />,
           });
         },
       });
     } else {
-      trackTables({
-        tablesToBeTracked: tables,
-        onSuccess: response => {
-          response.forEach(result => {
-            if ('error' in result) {
-              hasuraToast({
-                type: 'error',
-                title: 'Error while tracking table',
-                children: result.error,
-              });
-            }
-          });
-
-          const successfulTrackingsCounter = response.filter(
-            result => 'message' in result && result.message === 'success'
-          ).length;
-          const plural = successfulTrackingsCounter > 1 ? 's' : '';
-
+      untrackTables({
+        tablesToBeUntracked: tables,
+        onSuccess: () => {
           hasuraToast({
             type: 'success',
             title: 'Successfully untracked',
-            message: `${successfulTrackingsCounter} object${plural} tracked`,
+            message: `${tables.length} ${
+              tables.length <= 1 ? 'table' : 'tables'
+            } untracked`,
           });
         },
         onError: err => {
           hasuraToast({
             type: 'error',
-            title: 'Unable to perform operation',
-            message: (err as APIError).message,
+            title: err.name,
+            children: <DisplayToastErrorMessage message={err.message} />,
           });
         },
       });
@@ -137,7 +110,6 @@ export const TableList = (props: TableListProps) => {
       </div>
     );
   }
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between space-x-4">
@@ -147,7 +119,7 @@ export const TableList = (props: TableListProps) => {
             disabled={!checkedIds.length}
             onClick={onClick}
             isLoading={isLoading}
-            loadingText="Please Wait"
+            loadingText={'Please Wait'}
           >
             {`${mode === 'track' ? 'Untrack' : 'Track'} Selected (${
               checkedIds.length

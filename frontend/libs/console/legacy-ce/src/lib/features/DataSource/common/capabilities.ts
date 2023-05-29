@@ -7,4 +7,8 @@ export const postgresCapabilities: Capabilities = {
     delete: {},
   },
   queries: {},
+  user_defined_functions: {},
+  data_schema: {
+    supports_foreign_keys: true,
+  },
 };

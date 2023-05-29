@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | types and helpers for user-defined-functions after they have been resolved
@@ -20,56 +19,28 @@ module Hasura.Function.Cache
     InputArgument (..),
     FunctionArgsExpG (..),
     FunctionArgsExp,
+    TrackableFunctionInfo (..),
+    TrackableTableInfo (..),
+    TrackableInfo (..),
     emptyFunctionConfig,
     emptyFunctionCustomRootFields,
-    fiComment,
-    fiDescription,
-    fiExposedAs,
-    fiGQLAggregateName,
-    fiGQLArgsName,
-    fiGQLName,
-    fiInputArgs,
-    fiJsonAggSelect,
-    fiPermissions,
-    fiReturnType,
-    fiSQLName,
-    fiSystemDefined,
-    fiVolatility,
-    fpmRole,
     funcTypToTxt,
-    getFunctionAggregateGQLName,
-    getFunctionArgsGQLName,
-    getFunctionGQLName,
-    getInputArgs,
     emptyFunctionArgsExp,
-    _IASessionVariables,
-    _IAUserProvided,
   )
 where
 
-import Autodocodec
-  ( HasCodec (codec),
-    bimapCodec,
-    dimapCodec,
-    optionalField',
-    optionalFieldWith',
-    optionalFieldWithDefault',
-    requiredField',
-    stringConstCodec,
-  )
+import Autodocodec (HasCodec (codec))
 import Autodocodec qualified as AC
 import Autodocodec.Extended (graphQLFieldNameCodec)
 import Control.Lens
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.Aeson.TH
 import Data.Char (toLower)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.Extended as LE
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
@@ -87,7 +58,12 @@ data FunctionVolatility
 
 instance NFData FunctionVolatility
 
-$(deriveJSON defaultOptions {constructorTagModifier = drop 2} ''FunctionVolatility)
+instance FromJSON FunctionVolatility where
+  parseJSON = genericParseJSON defaultOptions {constructorTagModifier = drop 2}
+
+instance ToJSON FunctionVolatility where
+  toJSON = genericToJSON defaultOptions {constructorTagModifier = drop 2}
+  toEncoding = genericToEncoding defaultOptions {constructorTagModifier = drop 2}
 
 funcTypToTxt :: FunctionVolatility -> Text
 funcTypToTxt FTVOLATILE = "VOLATILE"
@@ -100,22 +76,17 @@ instance Show FunctionVolatility where
 newtype FunctionArgName = FunctionArgName {getFuncArgNameTxt :: Text}
   deriving (Show, Eq, Ord, NFData, ToJSON, ToJSONKey, FromJSON, FromJSONKey, ToTxt, IsString, Generic, Hashable, Lift, Data)
 
-instance HasCodec FunctionArgName where
-  codec = dimapCodec FunctionArgName getFuncArgNameTxt codec
+instance AC.HasCodec FunctionArgName where
+  codec = AC.dimapCodec FunctionArgName getFuncArgNameTxt codec
 
 data InputArgument a
   = IAUserProvided a
   | IASessionVariables FunctionArgName
-  deriving (Show, Eq, Functor)
+  deriving (Show, Eq, Functor, Generic)
 
-$( deriveToJSON
-     defaultOptions
-       { constructorTagModifier = snakeCase . drop 2,
-         sumEncoding = TaggedObject "type" "argument"
-       }
-     ''InputArgument
- )
-$(makePrisms ''InputArgument)
+instance (ToJSON a) => ToJSON (InputArgument a) where
+  toJSON = genericToJSON defaultOptions {constructorTagModifier = snakeCase . drop 2, sumEncoding = TaggedObject "type" "argument"}
+  toEncoding = genericToEncoding defaultOptions {constructorTagModifier = snakeCase . drop 2, sumEncoding = TaggedObject "type" "argument"}
 
 type FunctionInputArgument b = InputArgument (FunctionArgument b)
 
@@ -127,12 +98,14 @@ data FunctionExposedAs = FEAQuery | FEAMutation
 instance NFData FunctionExposedAs
 
 instance HasCodec FunctionExposedAs where
-  codec = stringConstCodec [(FEAQuery, "query"), (FEAMutation, "mutation")]
+  codec = AC.stringConstCodec [(FEAQuery, "query"), (FEAMutation, "mutation")]
 
-$( deriveJSON
-     defaultOptions {sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3}
-     ''FunctionExposedAs
- )
+instance FromJSON FunctionExposedAs where
+  parseJSON = genericParseJSON defaultOptions {sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3}
+
+instance ToJSON FunctionExposedAs where
+  toJSON = genericToJSON defaultOptions {sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3}
+  toEncoding = genericToEncoding defaultOptions {sumEncoding = UntaggedValue, constructorTagModifier = map toLower . drop 3}
 
 newtype FunctionPermissionInfo = FunctionPermissionInfo
   { _fpmRole :: RoleName
@@ -141,11 +114,17 @@ newtype FunctionPermissionInfo = FunctionPermissionInfo
 
 instance HasCodec FunctionPermissionInfo where
   codec =
-    AC.object "FunctionPermissionInfo" $
-      FunctionPermissionInfo <$> requiredField' "role" AC..= _fpmRole
+    AC.object "FunctionPermissionInfo"
+      $ FunctionPermissionInfo
+      <$> AC.requiredField' "role"
+      AC..= _fpmRole
 
-$(makeLenses ''FunctionPermissionInfo)
-$(deriveJSON hasuraJSON ''FunctionPermissionInfo)
+instance FromJSON FunctionPermissionInfo where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON FunctionPermissionInfo where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 type FunctionPermissionsMap = HashMap RoleName FunctionPermissionInfo
 
@@ -163,20 +142,27 @@ instance NFData FunctionCustomRootFields
 
 instance HasCodec FunctionCustomRootFields where
   codec =
-    bimapCodec checkForDup id $
-      AC.object "FunctionCustomRootFields" $
-        FunctionCustomRootFields
-          <$> optionalFieldWith' "function" graphQLFieldNameCodec AC..= _fcrfFunction
-          <*> optionalFieldWith' "function_aggregate" graphQLFieldNameCodec AC..= _fcrfFunctionAggregate
+    AC.bimapCodec checkForDup id
+      $ AC.object "FunctionCustomRootFields"
+      $ FunctionCustomRootFields
+      <$> AC.optionalFieldWith' "function" graphQLFieldNameCodec
+      AC..= _fcrfFunction
+        <*> AC.optionalFieldWith' "function_aggregate" graphQLFieldNameCodec
+      AC..= _fcrfFunctionAggregate
     where
       checkForDup (FunctionCustomRootFields (Just f) (Just fa))
         | f == fa =
-            Left $
-              T.unpack $
-                "the following custom root field names are duplicated: " <> toTxt f <<> " and " <>> toTxt fa
+            Left
+              $ T.unpack
+              $ "the following custom root field names are duplicated: "
+              <> toTxt f
+              <<> " and "
+              <>> toTxt fa
       checkForDup fields = Right fields
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''FunctionCustomRootFields)
+instance ToJSON FunctionCustomRootFields where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 instance FromJSON FunctionCustomRootFields where
   parseJSON = withObject "Object" $ \obj -> do
@@ -186,10 +172,12 @@ instance FromJSON FunctionCustomRootFields where
     case (function, functionAggregate) of
       (Just f, Just fa)
         | f == fa ->
-            fail $
-              T.unpack $
-                "the following custom root field names are duplicated: "
-                  <> toTxt f <<> " and " <>> toTxt fa
+            fail
+              $ T.unpack
+              $ "the following custom root field names are duplicated: "
+              <> toTxt f
+              <<> " and "
+              <>> toTxt fa
       _ ->
         pure ()
 
@@ -219,7 +207,8 @@ data FunctionInfo (b :: BackendType) = FunctionInfo
     -- | NOTE: when a table is created, a new composite type of the same name is
     -- automatically created; so strictly speaking this field means "the function
     -- returns the composite type corresponding to this table".
-    _fiReturnType :: TableName b,
+    _fiReturnType :: TableName b, -- NOTE: We will extend this in future, but for now always resolves to a (TableName b)
+
     -- | this field represents the description of the function as present on the database
     _fiDescription :: Maybe Text,
     -- | Roles to which the function is accessible
@@ -229,85 +218,65 @@ data FunctionInfo (b :: BackendType) = FunctionInfo
   }
   deriving (Generic)
 
-deriving instance Backend b => Show (FunctionInfo b)
+deriving instance (Backend b) => Show (FunctionInfo b)
 
-deriving instance Backend b => Eq (FunctionInfo b)
+deriving instance (Backend b) => Eq (FunctionInfo b)
 
 instance (Backend b) => ToJSON (FunctionInfo b) where
   toJSON = genericToJSON hasuraJSON
 
-$(makeLenses ''FunctionInfo)
-
--- | Apply function name customization to function arguments, as detailed in
--- 'rfcs/function-root-field-customisation.md'.  We want the different
--- variations of a function (i.e. basic, aggregate) to share the same type name
--- for their arguments.
-getFunctionArgsGQLName ::
-  -- | The GQL version of the DB name of the function
-  G.Name ->
-  FunctionConfig ->
-  -- | Custom function for setting naming case
-  (G.Name -> G.Name) ->
-  G.Name
-getFunctionArgsGQLName
-  funcGivenName
-  FunctionConfig {..}
-  setCase =
-    setCase $ fromMaybe funcGivenName _fcCustomName <> Name.__args
-
--- | Apply function name customization to the basic function variation, as
--- detailed in 'rfcs/function-root-field-customisation.md'.
-getFunctionGQLName ::
-  G.Name ->
-  FunctionConfig ->
-  -- | Custom function for setting naming case
-  (G.Name -> G.Name) ->
-  G.Name
-getFunctionGQLName
-  funcGivenName
-  FunctionConfig
-    { _fcCustomRootFields = FunctionCustomRootFields {..},
-      ..
-    }
-  setCase =
-    choice
-      [ _fcrfFunction,
-        _fcCustomName
-      ]
-      & fromMaybe (setCase funcGivenName)
-
--- | Apply function name customization to the aggregate function variation, as
--- detailed in 'rfcs/function-root-field-customisation.md'.
-getFunctionAggregateGQLName ::
-  G.Name ->
-  FunctionConfig ->
-  -- | Custom function for setting naming case
-  (G.Name -> G.Name) ->
-  G.Name
-getFunctionAggregateGQLName
-  funcGivenName
-  FunctionConfig
-    { _fcCustomRootFields = FunctionCustomRootFields {..},
-      ..
-    }
-  setCase =
-    choice
-      [ _fcrfFunctionAggregate,
-        _fcCustomName <&> (<> Name.__aggregate)
-      ]
-      & fromMaybe (setCase $ funcGivenName <> Name.__aggregate)
-
-getInputArgs :: FunctionInfo b -> Seq.Seq (FunctionArgument b)
-getInputArgs =
-  Seq.fromList . mapMaybe (^? _IAUserProvided) . toList . _fiInputArgs
-
 type FunctionCache b = HashMap (FunctionName b) (FunctionInfo b) -- info of all functions
+
+data TrackableFunctionInfo b = TrackableFunctionInfo
+  { tfiFunctionName :: FunctionName b,
+    tfiFunctionVolitility :: FunctionVolatility
+  }
+  deriving (Generic)
+
+deriving instance (Backend b) => Show (TrackableFunctionInfo b)
+
+deriving instance (Backend b) => Eq (TrackableFunctionInfo b)
+
+instance (Backend b) => ToJSON (TrackableFunctionInfo b) where
+  toJSON (TrackableFunctionInfo name volitility) =
+    object
+      [ "name" Data.Aeson..= name,
+        "volitility" Data.Aeson..= volitility
+      ]
+
+newtype TrackableTableInfo b = TrackableTableInfo
+  {tfTableiName :: TableName b}
+  deriving (Generic)
+
+deriving instance (Backend b) => Show (TrackableTableInfo b)
+
+deriving instance (Backend b) => Eq (TrackableTableInfo b)
+
+instance (Backend b) => ToJSON (TrackableTableInfo b) where
+  toJSON (TrackableTableInfo ti) = object ["name" Data.Aeson..= ti]
+
+data TrackableInfo b = TrackableInfo
+  { trackableFunctions :: [TrackableFunctionInfo b],
+    trackableTables :: [TrackableTableInfo b]
+  }
+  deriving (Generic)
+
+deriving instance (Backend b) => Show (TrackableInfo b)
+
+deriving instance (Backend b) => Eq (TrackableInfo b)
+
+instance (Backend b) => ToJSON (TrackableInfo b) where
+  toJSON (TrackableInfo functions tables) =
+    object
+      [ "tables" Data.Aeson..= tables,
+        "functions" Data.Aeson..= functions
+      ]
 
 -- Metadata requests related types
 
 -- | Tracked function configuration, and payload of the 'pg_track_function' and
 -- 'pg_set_function_customization' API calls.
-data FunctionConfig = FunctionConfig
+data FunctionConfig b = FunctionConfig
   { _fcSessionArgument :: Maybe FunctionArgName,
     -- | In which top-level field should we expose this function?
     --
@@ -316,42 +285,64 @@ data FunctionConfig = FunctionConfig
     -- docs for details of validation, etc.
     _fcExposedAs :: Maybe FunctionExposedAs,
     _fcCustomRootFields :: FunctionCustomRootFields,
-    _fcCustomName :: Maybe G.Name
+    _fcCustomName :: Maybe G.Name,
+    _fcResponse :: Maybe (FunctionReturnType b)
   }
-  deriving (Show, Eq, Generic)
+  deriving (Generic)
 
-instance NFData FunctionConfig
+deriving stock instance (Backend b) => Show (FunctionConfig b)
 
-instance HasCodec FunctionConfig where
+deriving stock instance (Backend b) => Eq (FunctionConfig b)
+
+instance (Backend b) => NFData (FunctionConfig b)
+
+instance (Backend b) => HasCodec (FunctionConfig b) where
   codec =
-    AC.object "FunctionConfig" $
-      FunctionConfig
-        <$> optionalField' "session_argument" AC..= _fcSessionArgument
-        <*> optionalField' "exposed_as" AC..= _fcExposedAs
-        <*> optionalFieldWithDefault' "custom_root_fields" emptyFunctionCustomRootFields AC..= _fcCustomRootFields
-        <*> optionalFieldWith' "custom_name" graphQLFieldNameCodec AC..= _fcCustomName
+    AC.object "FunctionConfig"
+      $ FunctionConfig
+      <$> AC.optionalField' "session_argument"
+      AC..= _fcSessionArgument
+        <*> AC.optionalField' "exposed_as"
+      AC..= _fcExposedAs
+        <*> AC.optionalFieldWithDefault' "custom_root_fields" emptyFunctionCustomRootFields
+      AC..= _fcCustomRootFields
+        <*> AC.optionalFieldWith' "custom_name" graphQLFieldNameCodec
+      AC..= _fcCustomName
+        <*> AC.optionalFieldWith' "response" codec
+      AC..= _fcResponse
 
-instance FromJSON FunctionConfig where
+instance (Backend b) => FromJSON (FunctionConfig b) where
   parseJSON = withObject "FunctionConfig" $ \obj ->
     FunctionConfig
-      <$> obj .:? "session_argument"
-      <*> obj .:? "exposed_as"
-      <*> obj .:? "custom_root_fields" .!= emptyFunctionCustomRootFields
-      <*> obj .:? "custom_name"
+      <$> obj
+      .:? "session_argument"
+      <*> obj
+      .:? "exposed_as"
+      <*> obj
+      .:? "custom_root_fields"
+      .!= emptyFunctionCustomRootFields
+      <*> obj
+      .:? "custom_name"
+      <*> obj
+      .:? "response"
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''FunctionConfig)
+instance (Backend b) => ToJSON (FunctionConfig b) where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 -- | The default function config; v1 of the API implies this.
-emptyFunctionConfig :: FunctionConfig
-emptyFunctionConfig = FunctionConfig Nothing Nothing emptyFunctionCustomRootFields Nothing
+emptyFunctionConfig :: FunctionConfig b
+emptyFunctionConfig = FunctionConfig Nothing Nothing emptyFunctionCustomRootFields Nothing Nothing
 
 type DBFunctionsMetadata b = HashMap (FunctionName b) (FunctionOverloads b)
 
 newtype FunctionOverloads b = FunctionOverloads {getFunctionOverloads :: NonEmpty (RawFunctionInfo b)}
 
-deriving newtype instance Backend b => Eq (FunctionOverloads b)
+deriving newtype instance (Backend b) => Eq (FunctionOverloads b)
 
-deriving newtype instance FromJSON (RawFunctionInfo b) => FromJSON (FunctionOverloads b)
+deriving newtype instance (Backend b) => Show (FunctionOverloads b)
+
+deriving newtype instance (FromJSON (RawFunctionInfo b)) => FromJSON (FunctionOverloads b)
 
 data FunctionArgsExpG a = FunctionArgsExp
   { _faePositional :: [a],

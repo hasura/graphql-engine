@@ -23,8 +23,8 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.RQL.Types.Table ()
 import Hasura.SQL.Types
+import Hasura.Table.Cache ()
 
 -- This convoluted expression instead of col = val
 -- to handle the case of col : null
@@ -54,7 +54,7 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
 -- to columns etc are relative to the given 'rootReference'.
 toSQLBoolExp ::
   forall pgKind.
-  Backend ('Postgres pgKind) =>
+  (Backend ('Postgres pgKind)) =>
   -- | The name of the tabular value in query scope that the boolean expression
   -- applies to
   S.Qual ->
@@ -124,14 +124,35 @@ translateBoolExp = \case
       let colFld = fromCol @('Postgres pgKind) $ ciColumn colInfo
           bExps = map (mkFieldCompExp rootReference currTableReference $ LColumn colFld) opExps
       return $ sqlAnd bExps
-    AVRelationship (RelInfo _ _ colMapping relTN _ _) nesAnn -> do
-      -- Convert the where clause on the relationship
-      relTNAlias <- S.toTableAlias <$> freshIdentifier relTN
-      let relTNIdentifier = S.tableAliasToIdentifier relTNAlias
-      annRelBoolExp <- withCurrentTable (S.QualifiedIdentifier relTNIdentifier Nothing) (translateBoolExp nesAnn)
-      tableRelExp <- translateTableRelationship colMapping relTNIdentifier
-      let innerBoolExp = S.BEBin S.AndOp tableRelExp annRelBoolExp
-      return $ S.mkExists (S.FISimple relTN $ Just $ relTNAlias) innerBoolExp
+    AVRelationship
+      (RelInfo {riTarget = RelTargetNativeQuery _})
+      _ -> error "translateBoolExp RelTargetNativeQuery"
+    AVRelationship
+      (RelInfo {riMapping = colMapping, riTarget = RelTargetTable relTN})
+      RelationshipFilters
+        { rfTargetTablePermissions,
+          rfFilter
+        } -> do
+        -- Convert the where clause on the relationship
+        relTNAlias <- S.toTableAlias <$> freshIdentifier relTN
+        let relTNIdentifier = S.tableAliasToIdentifier relTNAlias
+            relTNQual = S.QualifiedIdentifier relTNIdentifier Nothing
+
+        -- '$' references in permissions of the relationship target table refer to that table, so we
+        -- reset both here.
+        permBoolExp <-
+          local
+            ( \e ->
+                e
+                  { currTableReference = relTNQual,
+                    rootReference = relTNQual
+                  }
+            )
+            (translateBoolExp rfTargetTablePermissions)
+        annRelBoolExp <- withCurrentTable relTNQual (translateBoolExp rfFilter)
+        tableRelExp <- translateTableRelationship colMapping relTNIdentifier
+        let innerBoolExp = S.BEBin S.AndOp tableRelExp (S.BEBin S.AndOp permBoolExp annRelBoolExp)
+        return $ S.mkExists (S.FISimple relTN $ Just $ relTNAlias) innerBoolExp
     AVComputedField (AnnComputedFieldBoolExp _ _ function sessionArgPresence cfBoolExp) -> do
       case cfBoolExp of
         CFBEScalar opExps -> do
@@ -145,9 +166,9 @@ translateBoolExp = \case
           functionAlias <- S.toTableAlias <$> freshIdentifier function
           let functionIdentifier = S.tableAliasToIdentifier functionAlias
               functionExp =
-                mkComputedFieldFunctionExp currTableReference function sessionArgPresence $
-                  Just $
-                    functionAlias
+                mkComputedFieldFunctionExp currTableReference function sessionArgPresence
+                  $ Just
+                  $ functionAlias
           S.mkExists (S.FIFunc functionExp) <$> withCurrentTable (S.QualifiedIdentifier functionIdentifier Nothing) (translateBoolExp be)
     AVAggregationPredicates aggPreds -> translateAVAggregationPredicates aggPreds
 
@@ -156,19 +177,19 @@ withCurrentTable :: forall a. S.Qual -> BoolExpM a -> BoolExpM a
 withCurrentTable curr = local (\e -> e {currTableReference = curr})
 
 -- | Draw a fresh identifier intended to alias the given object.
-freshIdentifier :: forall a. ToTxt a => QualifiedObject a -> BoolExpM Identifier
+freshIdentifier :: forall a. (ToTxt a) => QualifiedObject a -> BoolExpM Identifier
 freshIdentifier obj = do
   curVarNum <- get
   put $ curVarNum + 1
   let newIdentifier =
-        Identifier $
-          "_be_"
-            <> tshow curVarNum
-            <> "_"
-            <> snakeCaseQualifiedObject obj
+        Identifier
+          $ "_be_"
+          <> tshow curVarNum
+          <> "_"
+          <> snakeCaseQualifiedObject obj
   return newIdentifier
 
-identifierWithSuffix :: ToTxt a => QualifiedObject a -> Text -> Identifier
+identifierWithSuffix :: (ToTxt a) => QualifiedObject a -> Text -> Identifier
 identifierWithSuffix relTableName name =
   Identifier (snakeCaseQualifiedObject relTableName <> "_" <> name)
 
@@ -199,7 +220,7 @@ translateAVAggregationPredicates ::
   AggregationPredicatesImplementation ('Postgres pgKind) (SQLExpression ('Postgres pgKind)) ->
   BoolExpM S.BoolExp
 translateAVAggregationPredicates
-  api@(AggregationPredicatesImplementation (RelInfo {riRTable = relTableName, riMapping = colMapping}) _rowPermissions predicate) = do
+  api@(AggregationPredicatesImplementation (RelInfo {riTarget = RelTargetTable relTableName, riMapping = colMapping}) _rowPermissions predicate) = do
     -- e.g. __be_0_<schema>_<table_name>
     relTableNameAlias <- S.toTableAlias <$> freshIdentifier relTableName
     let relTableNameIdentifier = S.tableAliasToIdentifier relTableNameAlias
@@ -213,6 +234,8 @@ translateAVAggregationPredicates
         $ translateAggPredsSubselect subselectAlias relTableNameAlias tableRelExp api
     outerWhereFrag <- translateAggPredBoolExp relTableName subselectIdentifier predicate
     pure $ S.mkExists subselect outerWhereFrag
+translateAVAggregationPredicates (AggregationPredicatesImplementation (RelInfo {riTarget = RelTargetNativeQuery _}) _rowPermissions _predicate) =
+  error "translateAVAggregationPredicates RelTargetNativeQuery"
 
 translateAggPredBoolExp ::
   forall pgKind.
@@ -241,11 +264,20 @@ translateAggPredsSubselect ::
   AggregationPredicatesImplementation ('Postgres pgKind) S.SQLExp ->
   BoolExpM S.FromItem
 translateAggPredsSubselect
+  _subselectAlias
+  _relTableNameAlias
+  _tableRelExp
+  ( AggregationPredicatesImplementation
+      RelInfo {riTarget = RelTargetNativeQuery _}
+      _rowPermissions
+      _predicate
+    ) = error "translateAggPredsSubselect RelTargetNativeQuery"
+translateAggPredsSubselect
   subselectAlias
   relTableNameAlias
   tableRelExp
   ( AggregationPredicatesImplementation
-      RelInfo {riRTable = relTableName}
+      RelInfo {riTarget = RelTargetTable relTableName}
       rowPermissions
       predicate
     ) = do
@@ -258,8 +290,8 @@ translateAggPredsSubselect
         fromExp = pure $ S.FISimple relTableName $ Just $ S.toTableAlias relTableNameAlias
         -- WHERE <relationship_table_key> AND <row_permissions> AND <mFilter>
         whereExp = sqlAnd $ [tableRelExp, rowPermExp] ++ maybeToList mFilter
-    pure $
-      S.mkSelFromItem
+    pure
+      $ S.mkSelFromItem
         S.mkSelect
           { S.selExtr = [extractorsExp],
             S.selFrom = Just $ S.FromExp fromExp,
@@ -292,13 +324,14 @@ translateAggPredArguments predArgs relTableNameIdentifier =
 translateTableRelationship :: HashMap PGCol PGCol -> TableIdentifier -> BoolExpM S.BoolExp
 translateTableRelationship colMapping relTableNameIdentifier = do
   BoolExpCtx {currTableReference} <- ask
-  pure $
-    sqlAnd $
-      flip map (HashMap.toList colMapping) $ \(lCol, rCol) ->
-        S.BECompare
-          S.SEQ
-          (S.mkIdentifierSQLExp (S.QualifiedIdentifier relTableNameIdentifier Nothing) rCol)
-          (S.mkIdentifierSQLExp currTableReference lCol)
+  pure
+    $ sqlAnd
+    $ flip map (HashMap.toList colMapping)
+    $ \(lCol, rCol) ->
+      S.BECompare
+        S.SEQ
+        (S.mkIdentifierSQLExp (S.QualifiedIdentifier relTableNameIdentifier Nothing) rCol)
+        (S.mkIdentifierSQLExp currTableReference lCol)
 
 data LHSField b
   = LColumn FieldName

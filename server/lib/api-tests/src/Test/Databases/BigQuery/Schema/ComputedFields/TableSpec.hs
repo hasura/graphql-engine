@@ -98,8 +98,8 @@ setupFunction testEnv =
   let schemaName = Schema.getSchemaName testEnv
    in [ Fixture.SetupAction
           { Fixture.setupAction =
-              BigQuery.run_ $
-                [i|
+              BigQuery.run_
+                $ [i|
                 CREATE TABLE FUNCTION #{ unSchemaName schemaName }.fetch_articles_implicit_return(a_id INT64, search STRING)
                 AS
                 SELECT article_alias.*
@@ -111,8 +111,8 @@ setupFunction testEnv =
           },
         Fixture.SetupAction
           { Fixture.setupAction =
-              BigQuery.run_ $
-                [i|
+              BigQuery.run_
+                $ [i|
                 CREATE TABLE FUNCTION #{ unSchemaName schemaName }.fetch_articles_explicit_return(a_id INT64, search STRING)
                 RETURNS TABLE<id INT64, title STRING, content STRING, author_id INT64> AS
                 SELECT article_alias.id, article_alias.title, article_alias.content, article_alias.author_id

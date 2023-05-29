@@ -1,4 +1,4 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react';
 import { handlers } from '../../mocks/metadata.mock';
 import { InsertRowForm, InsertRowFormProps } from './InsertRowForm';
 import { action } from '@storybook/addon-actions';
@@ -9,13 +9,7 @@ export default {
   parameters: {
     msw: handlers(),
   },
-} as ComponentMeta<typeof InsertRowForm>;
-
-const Template: ComponentStory<typeof InsertRowForm> = args => (
-  <InsertRowForm {...args} />
-);
-
-export const Base = Template.bind({});
+} as Meta<typeof InsertRowForm>;
 
 const columns: InsertRowFormProps['columns'] = [
   {
@@ -93,9 +87,12 @@ const columns: InsertRowFormProps['columns'] = [
   },
 ];
 
-Base.args = {
-  columns,
-  isLoading: false,
-  isInserting: false,
-  onInsertRow: () => action('onInsertRow')(),
+export const Base: StoryObj<typeof InsertRowForm> = {
+  render: args => <InsertRowForm {...args} />,
+  args: {
+    columns,
+    isLoading: false,
+    isInserting: false,
+    onInsertRow: () => action('onInsertRow')(),
+  },
 };

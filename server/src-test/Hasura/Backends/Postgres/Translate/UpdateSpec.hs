@@ -25,8 +25,8 @@ spec =
           columns = [P.idColumn, P.nameColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           updateVariant =
-            Expect.SingleBatchUpdate $
-              Expect.UpdateBatchBuilder
+            Expect.SingleBatchUpdate
+              $ Expect.UpdateBatchBuilder
                 { ubbOperations = [(P.nameColumn, UpdateSet P.textNew)],
                   ubbWhere = [(P.idColumn, [AEQ True P.integerOne])]
                 },
@@ -47,8 +47,8 @@ spec =
           columns = [P.idColumn, P.nameColumn, P.descColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           updateVariant =
-            Expect.SingleBatchUpdate $
-              Expect.UpdateBatchBuilder
+            Expect.SingleBatchUpdate
+              $ Expect.UpdateBatchBuilder
                 { ubbOperations =
                     [ (P.nameColumn, UpdateSet P.textNew),
                       (P.descColumn, UpdateSet P.textOther)
@@ -72,8 +72,8 @@ spec =
           columns = [P.idColumn, P.nameColumn, P.descColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           updateVariant =
-            Expect.SingleBatchUpdate $
-              Expect.UpdateBatchBuilder
+            Expect.SingleBatchUpdate
+              $ Expect.UpdateBatchBuilder
                 { ubbOperations = [(P.nameColumn, UpdateSet P.textNew)],
                   ubbWhere =
                     [ (P.idColumn, [AEQ True P.integerOne]),

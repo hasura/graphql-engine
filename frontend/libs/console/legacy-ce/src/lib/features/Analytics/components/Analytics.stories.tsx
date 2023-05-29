@@ -1,7 +1,6 @@
-import type { ComponentPropsWithoutRef } from 'react';
-import type { ComponentMeta, ComponentStory } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '../../../new-components/Button';
 import { Analytics } from './Analytics';
@@ -21,82 +20,48 @@ Passing an HTML element is better because at the time of writing (Sep 2022) [Saf
       source: { type: 'code' },
     },
   },
-} as ComponentMeta<typeof Analytics>;
+} as Meta<typeof Analytics>;
 
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// REACT COMPONENT STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
+export const HtmlElementPlayground: StoryObj<typeof Analytics> = {
+  render: args => {
+    const { ref, outerHtml } = useGetOuterHtml();
 
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
+    return (
+      <Analytics {...args}>
+        <div ref={ref} data-foo="bar">
+          The Analytics component decorates the passed HTML element with some
+          extra HTML attributes.
+          <br />
+          The passed HTML element initially had only the{' '}
+          <pre>data-foo=&quot;bar&quot;</pre> HTML attribute, now its outer HTML
+          is the following
+          <br />
+          <pre>{outerHtml}</pre>
+        </div>
+      </Analytics>
+    );
+  },
 
-export const HtmlElementPlayground: ComponentStory<typeof Analytics> = args => {
-  const { ref, outerHtml } = useGetOuterHtml();
-
-  return (
-    <Analytics {...args}>
-      <div ref={ref} data-foo="bar">
-        The Analytics component decorates the passed HTML element with some
-        extra HTML attributes.
-        <br />
-        The passed HTML element initially had only the{' '}
-        <pre>data-foo=&quot;bar&quot;</pre> HTML attribute, now its outer HTML
-        is the following
-        <br />
-        <pre>{outerHtml}</pre>
-      </div>
-    </Analytics>
-  );
+  name: '⚙️ Passing an HTML element',
+  args: {
+    name: 'elementName',
+  },
 };
-HtmlElementPlayground.storyName = '⚙️ Passing an HTML element';
 
-const htmlElementPlaygroundArgs: ComponentPropsWithoutRef<typeof Analytics> = {
-  name: 'elementName',
-  children: null, // will be overwritten by the story
+export const ReactComponent: StoryObj<typeof Analytics> = {
+  render: args => {
+    return (
+      <Analytics {...args}>
+        <Component />
+      </Analytics>
+    );
+  },
+
+  name: '⚙️ Passing a React component',
+  args: {
+    name: 'componentName',
+  },
 };
-HtmlElementPlayground.args = htmlElementPlaygroundArgs;
-
-// #endregion
-
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// REACT COMPONENT STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-
-export const ReactComponent: ComponentStory<typeof Analytics> = args => {
-  return (
-    <Analytics {...args}>
-      <Component />
-    </Analytics>
-  );
-};
-ReactComponent.storyName = '⚙️ Passing a React component';
-
-// --------------------------------------------------
-// PROPS
-// --------------------------------------------------
-// Explicitly defining the story' args allows leveraging TS protection over them since story.args is
-// a Partial<Props> and then developers cannot know that they break the story by changing the
-// component props
-const reactComponentArgs: ComponentPropsWithoutRef<typeof Analytics> = {
-  name: 'componentName',
-  children: null, // will be overwritten by the story
-};
-ReactComponent.args = reactComponentArgs;
 
 // --------------------------------------------------
 // COMPONENTS
@@ -129,48 +94,23 @@ function useGetParentOuterHtml() {
   return { ref, outerHtml };
 }
 
-// #endregion
-
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// REACT COMPONENT STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-
-export const ReactComponentThatAcceptHtmlAttributes: ComponentStory<
-  typeof Analytics
-> = args => {
-  return (
-    <Analytics {...args}>
-      <ComponentThatAcceptHtmlAttributes />
-    </Analytics>
-  );
-};
-ReactComponentThatAcceptHtmlAttributes.storyName =
-  '⚙️ Passing a React component that accept HTML attributes as props';
-
-// --------------------------------------------------
-// PROPS
-// --------------------------------------------------
-// Explicitly defining the story' args allows leveraging TS protection over them since story.args is
-// a Partial<Props> and then developers cannot know that they break the story by changing the
-// component props
-const reactComponentThatAcceptHtmlAttributesArgs: ComponentPropsWithoutRef<
+export const ReactComponentThatAcceptHtmlAttributes: StoryObj<
   typeof Analytics
 > = {
-  name: 'componentName',
-  children: null, // will be overwritten by the story
-  passHtmlAttributesToChildren: true,
+  render: args => {
+    return (
+      <Analytics {...args}>
+        <ComponentThatAcceptHtmlAttributes />
+      </Analytics>
+    );
+  },
+
+  name: '⚙️ Passing a React component that accept HTML attributes as props',
+  args: {
+    name: 'componentName',
+    passHtmlAttributesToChildren: true,
+  },
 };
-ReactComponentThatAcceptHtmlAttributes.args =
-  reactComponentThatAcceptHtmlAttributesArgs;
 
 // --------------------------------------------------
 // COMPONENTS
@@ -190,47 +130,24 @@ function ComponentThatAcceptHtmlAttributes(props: Record<string, string>) {
   );
 }
 
-// #endregion
+export const PassingButtonComponent: StoryObj<typeof Analytics> = {
+  render: args => {
+    return (
+      <Analytics {...args}>
+        <Button>
+          The Analytics component passes the HTML attributes to the Button
+          (please inspect the DOM to find the rendered HTML attributes)
+        </Button>
+      </Analytics>
+    );
+  },
 
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// PASSING BUTTON COMPONENT STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-
-export const PassingButtonComponent: ComponentStory<
-  typeof Analytics
-> = args => {
-  return (
-    <Analytics {...args}>
-      <Button>
-        The Analytics component passes the HTML attributes to the Button (please
-        inspect the DOM to find the rendered HTML attributes)
-      </Button>
-    </Analytics>
-  );
+  name: '⚙️ Passing the Button component',
+  args: {
+    name: 'componentName',
+    passHtmlAttributesToChildren: true,
+  },
 };
-PassingButtonComponent.storyName = '⚙️ Passing the Button component';
-
-// --------------------------------------------------
-// PROPS
-// --------------------------------------------------
-// Explicitly defining the story' args allows leveraging TS protection over them since story.args is
-// a Partial<Props> and then developers cannot know that they break the story by changing the
-// component props
-const passingButtonComponentArgs: ComponentPropsWithoutRef<typeof Analytics> = {
-  name: 'componentName',
-  children: null, // will be overwritten by the story
-  passHtmlAttributesToChildren: true,
-};
-PassingButtonComponent.args = passingButtonComponentArgs;
 
 // --------------------------------------------------
 // UTILS

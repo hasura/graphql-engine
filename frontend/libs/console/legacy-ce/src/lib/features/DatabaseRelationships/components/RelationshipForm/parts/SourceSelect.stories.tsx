@@ -3,7 +3,7 @@ import { SimpleForm } from '../../../../../new-components/Form';
 import { z } from 'zod';
 import { Button } from '../../../../../new-components/Button';
 
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { SourceOption, SourceSelect } from './SourceSelect';
 
 export default {
@@ -12,7 +12,7 @@ export default {
    * to learn how to generate automatic titles
    */
   component: SourceSelect,
-} as ComponentMeta<typeof SourceSelect>;
+} as Meta<typeof SourceSelect>;
 
 const options: SourceOption[] = [
   {
@@ -40,7 +40,7 @@ const options: SourceOption[] = [
   },
 ];
 
-export const Primary: ComponentStory<typeof SourceSelect> = () => (
+export const Primary: StoryFn<typeof SourceSelect> = () => (
   <SimpleForm
     schema={z.object({
       test: z.any(),

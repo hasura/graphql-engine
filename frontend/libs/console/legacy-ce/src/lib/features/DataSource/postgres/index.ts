@@ -7,7 +7,10 @@ import {
 import { Table } from '../../hasura-metadata-types';
 import { runSQL } from '../api';
 import { postgresCapabilities } from '../common/capabilities';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
+import {
+  defaultDatabaseProps,
+  defaultIntrospectionProps,
+} from '../common/defaultDatabaseProps';
 import {
   getDatabaseConfiguration,
   getDatabaseSchemas,
@@ -20,6 +23,7 @@ import {
   getIsTableView,
 } from './introspection';
 import { getTableRows } from './query';
+import { consoleDataTypeToSQLTypeMap } from './utils';
 
 export type PostgresTable = { name: string; schema: string };
 
@@ -32,6 +36,7 @@ const getCreateSchemaSql = (schemaName: string) =>
 export const postgres: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    ...defaultIntrospectionProps,
     getTrackableFunctions,
     getVersion: async ({ dataSourceName, httpClient }: GetVersionProps) => {
       const result = await runSQL({
@@ -62,6 +67,7 @@ export const postgres: Database = {
     getSupportedOperators,
     getDatabaseSchemas,
     getIsTableView,
+    getSupportedDataTypes: async () => consoleDataTypeToSQLTypeMap,
   },
   query: {
     getTableRows,

@@ -39,11 +39,12 @@ booleanPermissionSpec = do
         HashMap.fromList $ [(role3Name, ActionPermissionInfo role3Name), (inheritedRole1Name, ActionPermissionInfo inheritedRole1Name)]
       processedPermissions = mkBooleanPermissionMap ActionPermissionInfo metadataPermissions orderedRoles
   describe "Action Permissions" $ do
-    it "overrides the inherited permission for a role if permission already exists in the metadata" $
-      HashMap.lookup inheritedRole1Name processedPermissions
-        `shouldBe` (Just (ActionPermissionInfo inheritedRole1Name))
-    it "when a role doesn't have a metadata permission and at least one of its parents has, then the inherited role should inherit the permission" $
-      HashMap.lookup inheritedRole2Name processedPermissions
-        `shouldBe` (Just (ActionPermissionInfo inheritedRole2Name))
-    it "when a role doesn't have a metadata permission and none of the parents have permissions, then the inherited role should not inherit the permission" $
-      HashMap.lookup inheritedRole3Name processedPermissions `shouldBe` Nothing
+    it "overrides the inherited permission for a role if permission already exists in the metadata"
+      $ HashMap.lookup inheritedRole1Name processedPermissions
+      `shouldBe` (Just (ActionPermissionInfo inheritedRole1Name))
+    it "when a role doesn't have a metadata permission and at least one of its parents has, then the inherited role should inherit the permission"
+      $ HashMap.lookup inheritedRole2Name processedPermissions
+      `shouldBe` (Just (ActionPermissionInfo inheritedRole2Name))
+    it "when a role doesn't have a metadata permission and none of the parents have permissions, then the inherited role should not inherit the permission"
+      $ HashMap.lookup inheritedRole3Name processedPermissions
+      `shouldBe` Nothing

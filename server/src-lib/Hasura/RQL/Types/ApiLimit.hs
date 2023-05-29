@@ -53,24 +53,37 @@ data ApiLimit = ApiLimit
 
 instance HasCodec ApiLimit where
   codec =
-    AC.object "ApiLimit" $
-      ApiLimit
-        <$> optionalField' "rate_limit" AC..= _alRateLimit
-        <*> optionalField' "depth_limit" AC..= _alDepthLimit
-        <*> optionalField' "node_limit" AC..= _alNodeLimit
-        <*> optionalField' "time_limit" AC..= _alTimeLimit
-        <*> optionalField' "batch_limit" AC..= _alBatchLimit
-        <*> optionalFieldWithDefault' "disabled" False AC..= _alDisabled
+    AC.object "ApiLimit"
+      $ ApiLimit
+      <$> optionalField' "rate_limit"
+      AC..= _alRateLimit
+        <*> optionalField' "depth_limit"
+      AC..= _alDepthLimit
+        <*> optionalField' "node_limit"
+      AC..= _alNodeLimit
+        <*> optionalField' "time_limit"
+      AC..= _alTimeLimit
+        <*> optionalField' "batch_limit"
+      AC..= _alBatchLimit
+        <*> optionalFieldWithDefault' "disabled" False
+      AC..= _alDisabled
 
 instance FromJSON ApiLimit where
   parseJSON = withObject "ApiLimit" $ \o ->
     ApiLimit
-      <$> o .:? "rate_limit"
-      <*> o .:? "depth_limit"
-      <*> o .:? "node_limit"
-      <*> o .:? "time_limit"
-      <*> o .:? "batch_limit"
-      <*> o .:? "disabled" .!= False
+      <$> o
+      .:? "rate_limit"
+      <*> o
+      .:? "depth_limit"
+      <*> o
+      .:? "node_limit"
+      <*> o
+      .:? "time_limit"
+      <*> o
+      .:? "batch_limit"
+      <*> o
+      .:? "disabled"
+      .!= False
 
 instance ToJSON ApiLimit where
   toJSON =
@@ -87,16 +100,18 @@ data Limit a = Limit
 
 instance (HasCodec a, Typeable a) => HasCodec (Limit a) where
   codec =
-    AC.object ("Limit_" <> typeableName @a) $
-      Limit
-        <$> requiredField' "global" AC..= _lGlobal
-        <*> optionalFieldWithDefault' "per_role" mempty AC..= _lPerRole
+    AC.object ("Limit_" <> typeableName @a)
+      $ Limit
+      <$> requiredField' "global"
+      AC..= _lGlobal
+        <*> optionalFieldWithDefault' "per_role" mempty
+      AC..= _lPerRole
 
-instance FromJSON a => FromJSON (Limit a) where
+instance (FromJSON a) => FromJSON (Limit a) where
   parseJSON = withObject "Limit" $ \o ->
     Limit <$> o .: "global" <*> o .:? "per_role" .!= mempty
 
-instance ToJSON a => ToJSON (Limit a) where
+instance (ToJSON a) => ToJSON (Limit a) where
   toJSON =
     genericToJSON (Casing.aesonPrefix Casing.snakeCase)
 
@@ -118,10 +133,12 @@ data RateLimitConfig = RateLimitConfig
 
 instance HasCodec RateLimitConfig where
   codec =
-    AC.object "RateLimitConfig" $
-      RateLimitConfig
-        <$> requiredFieldWith' "max_reqs_per_min" (integralWithLowerBoundCodec 0) AC..= _rlcMaxReqsPerMin
-        <*> optionalField "unique_params" "This would be either fixed value \"IP\" or a list of Session variables" AC..= _rlcUniqueParams
+    AC.object "RateLimitConfig"
+      $ RateLimitConfig
+      <$> requiredFieldWith' "max_reqs_per_min" (integralWithLowerBoundCodec 0)
+      AC..= _rlcMaxReqsPerMin
+        <*> optionalField "unique_params" "This would be either fixed value \"IP\" or a list of Session variables"
+      AC..= _rlcUniqueParams
 
 instance FromJSON RateLimitConfig where
   parseJSON =
@@ -143,8 +160,8 @@ instance HasCodec UniqueParamConfig where
   codec = bimapCodec dec enc $ disjointEitherCodec ipAddress sessionVariables
     where
       ipAddress =
-        dimapCodec fromEither Left $
-          disjointEitherCodec
+        dimapCodec fromEither Left
+          $ disjointEitherCodec
             (literalTextValueCodec () "IP")
             (literalTextValueCodec () "ip")
       sessionVariables = codec
@@ -187,8 +204,8 @@ newtype MaxDepth = MaxDepth {unMaxDepth :: Int}
 
 instance HasCodec MaxDepth where
   codec =
-    dimapCodec MaxDepth unMaxDepth $
-      integralWithLowerBoundCodec 0
+    dimapCodec MaxDepth unMaxDepth
+      $ integralWithLowerBoundCodec 0
 
 newtype MaxNodes = MaxNodes {unMaxNodes :: Int}
   deriving stock (Show, Eq, Ord, Generic)
@@ -196,8 +213,8 @@ newtype MaxNodes = MaxNodes {unMaxNodes :: Int}
 
 instance HasCodec MaxNodes where
   codec =
-    dimapCodec MaxNodes unMaxNodes $
-      integralWithLowerBoundCodec 0
+    dimapCodec MaxNodes unMaxNodes
+      $ integralWithLowerBoundCodec 0
 
 newtype MaxTime = MaxTime {unMaxTime :: Seconds}
   deriving stock (Show, Eq, Ord, Generic)
@@ -205,8 +222,8 @@ newtype MaxTime = MaxTime {unMaxTime :: Seconds}
 
 instance HasCodec MaxTime where
   codec =
-    dimapCodec MaxTime unMaxTime $
-      realFracWithLowerBoundCodec 0
+    dimapCodec MaxTime unMaxTime
+      $ realFracWithLowerBoundCodec 0
 
 newtype MaxBatchSize = MaxBatchSize {unMaxBatchSize :: Int}
   deriving stock (Show, Eq, Ord, Generic)
@@ -214,8 +231,8 @@ newtype MaxBatchSize = MaxBatchSize {unMaxBatchSize :: Int}
 
 instance HasCodec MaxBatchSize where
   codec =
-    dimapCodec MaxBatchSize unMaxBatchSize $
-      integralWithLowerBoundCodec 0
+    dimapCodec MaxBatchSize unMaxBatchSize
+      $ integralWithLowerBoundCodec 0
 
 -- | Defers to the (illegal) DiffTime Show instance.
 --

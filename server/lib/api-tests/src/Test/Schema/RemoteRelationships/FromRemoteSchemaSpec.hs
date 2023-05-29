@@ -37,15 +37,15 @@ spec = Fixture.runWithLocalTestEnvironmentSingleSetup (NE.fromList [context]) te
       (Fixture.fixture $ Fixture.RemoteGraphQLServer)
         { -- start only one remote server
           Fixture.mkLocalTestEnvironment = \_testEnvironment ->
-            RemoteServer.run $
-              RemoteServer.generateQueryInterpreter $
-                Query
-                  { object = objectResolver,
-                    writer = writerResolver,
-                    artist = artistResolver,
-                    objects = objectsResolver,
-                    articles = articlesResolver
-                  },
+            RemoteServer.run
+              $ RemoteServer.generateQueryInterpreter
+              $ Query
+                { object = objectResolver,
+                  writer = writerResolver,
+                  artist = artistResolver,
+                  objects = objectsResolver,
+                  articles = articlesResolver
+                },
           -- set that remote server as both source and target, for convenience
           -- start a RHS Postgres for Metadata tests only
           setupTeardown = \(testEnvironment, server) ->
@@ -181,7 +181,7 @@ type Article {
 
 |]
 
-knownObjects :: Monad m => [(Int, Object m)]
+knownObjects :: (Monad m) => [(Int, Object m)]
 knownObjects =
   [ (101, ObjectWriter writer1),
     (102, ObjectWriter writer2),
@@ -202,28 +202,29 @@ knownObjects =
     article3 = Article (pure 303) (pure "Article3") (pure 201) (pure 102)
     article4 = Article (pure 304) (pure "Article4") (pure 202) (pure 102)
 
-objectResolver :: Monad m => Arg "id" Int -> m (Maybe (Object m))
+objectResolver :: (Monad m) => Arg "id" Int -> m (Maybe (Object m))
 objectResolver (Arg objectId) = pure $ lookup objectId knownObjects
 
-writerResolver :: Monad m => Arg "id" Int -> m (Maybe (Writer m))
+writerResolver :: (Monad m) => Arg "id" Int -> m (Maybe (Writer m))
 writerResolver (Arg objectId) =
   pure $ case lookup objectId knownObjects of
     Just (ObjectWriter w) -> Just w
     _ -> Nothing
 
-artistResolver :: Monad m => Arg "id" Int -> m (Maybe (Artist m))
+artistResolver :: (Monad m) => Arg "id" Int -> m (Maybe (Artist m))
 artistResolver (Arg objectId) =
   pure $ case lookup objectId knownObjects of
     Just (ObjectArtist a) -> Just a
     _ -> Nothing
 
-objectsResolver :: Monad m => Arg "ids" [Int] -> m [Maybe (Object m)]
+objectsResolver :: (Monad m) => Arg "ids" [Int] -> m [Maybe (Object m)]
 objectsResolver (Arg objectIds) = pure [lookup objectId knownObjects | objectId <- objectIds]
 
-articlesResolver :: Monad m => Arg "ids" [Int] -> m [Maybe (Article m)]
+articlesResolver :: (Monad m) => Arg "ids" [Int] -> m [Maybe (Article m)]
 articlesResolver (Arg objectIds) =
-  pure $
-    objectIds <&> \objectId ->
+  pure
+    $ objectIds
+    <&> \objectId ->
       case lookup objectId knownObjects of
         Just (ObjectArticle a) -> Just a
         _ -> Nothing

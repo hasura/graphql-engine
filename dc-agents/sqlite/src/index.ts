@@ -131,11 +131,21 @@ server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (reque
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
   const end = queryHistogram.startTimer()
   const config = getConfig(request);
-  try {
-    const result : QueryResponse = await queryData(config, sqlLogger, request.body);
-    return result;
-  } finally {
-    end();
+  const body = request.body;
+  switch(body.type) {
+    case 'function':
+      throw new ErrorWithStatusCode(
+        "User defined functions not supported in queries",
+        500,
+        {function: { name: body.function }}
+      );
+    case 'table':
+      try {
+        const result : QueryResponse = await queryData(config, sqlLogger, body);
+        return result;
+      } finally {
+        end();
+      }
   }
 });
 
@@ -149,7 +159,17 @@ server.post<{ Body: RawRequest, Reply: RawResponse }>("/raw", async (request, _r
 server.post<{ Body: QueryRequest, Reply: ExplainResponse}>("/explain", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
   const config = getConfig(request);
-  return explain(config, sqlLogger, request.body);
+  const body = request.body;
+  switch(body.type) {
+    case 'function':
+      throw new ErrorWithStatusCode(
+        "User defined functions not supported in queries",
+        500,
+        {function: { name: body.function }}
+      );
+    case 'table':
+      return explain(config, sqlLogger, body);
+  }
 });
 
 if(MUTATIONS) {

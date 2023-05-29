@@ -239,7 +239,7 @@ lhsRole2 =
         selectPermissionSource = Just lhsSourceName_
       }
 
-createRemoteRelationship :: HasCallStack => Value -> Value -> TestEnvironment -> IO ()
+createRemoteRelationship :: (HasCallStack) => Value -> Value -> TestEnvironment -> IO ()
 createRemoteRelationship lhsTableName rhsTableName testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
       backendType = BackendType.backendTypeString backendTypeMetadata
@@ -333,7 +333,7 @@ rhsTable =
 --------------------------------------------------------------------------------
 -- LHS Postgres
 
-lhsPostgresSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsPostgresSetup :: (HasCallStack) => Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup rhsTableName (wholeTestEnvironment, _) = do
   let testEnvironment = focusFixtureLeft wholeTestEnvironment
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
@@ -359,7 +359,7 @@ lhsPostgresSetup rhsTableName (wholeTestEnvironment, _) = do
 --------------------------------------------------------------------------------
 -- LHS Cockroach
 
-lhsCockroachSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsCockroachSetup :: (HasCallStack) => Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsCockroachSetup rhsTableName (wholeTestEnvironment, _) = do
   let testEnvironment = focusFixtureLeft wholeTestEnvironment
       sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
@@ -386,7 +386,7 @@ lhsCockroachSetup rhsTableName (wholeTestEnvironment, _) = do
 --------------------------------------------------------------------------------
 -- LHS Citus
 
-lhsCitusSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsCitusSetup :: (HasCallStack) => Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsCitusSetup rhsTableName (wholeTestEnvironment, _) = do
   let testEnvironment = focusFixtureLeft wholeTestEnvironment
       sourceConfig = Citus.defaultSourceConfiguration testEnvironment
@@ -412,7 +412,7 @@ lhsCitusSetup rhsTableName (wholeTestEnvironment, _) = do
 --------------------------------------------------------------------------------
 -- LHS SQLServer
 
-lhsSQLServerSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsSQLServerSetup :: (HasCallStack) => Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsSQLServerSetup rhsTableName (wholeTestEnvironment, _) = do
   let testEnvironment = focusFixtureLeft wholeTestEnvironment
       sourceConfig = SQLServer.defaultSourceConfiguration testEnvironment
@@ -438,7 +438,7 @@ lhsSQLServerSetup rhsTableName (wholeTestEnvironment, _) = do
 --------------------------------------------------------------------------------
 -- LHS SQLite
 
-lhsSqliteSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO API.DatasetCloneName
+lhsSqliteSetup :: (HasCallStack) => Value -> (TestEnvironment, Maybe Server) -> IO API.DatasetCloneName
 lhsSqliteSetup rhsTableName (wholeTestEnvironment, _) = do
   let testEnvironment = focusFixtureLeft wholeTestEnvironment
   let cloneName = API.DatasetCloneName $ tshow (uniqueTestId testEnvironment) <> "-lhs"
@@ -502,7 +502,7 @@ data Query m = Query
   }
   deriving (Generic)
 
-instance Typeable m => Morpheus.GQLType (Query m)
+instance (Typeable m) => Morpheus.GQLType (Query m)
 
 data HasuraArtistArgs = HasuraArtistArgs
   { aa_where :: Maybe HasuraArtistBoolExp,
@@ -520,7 +520,7 @@ data HasuraArtist m = HasuraArtist
   }
   deriving (Generic)
 
-instance Typeable m => Morpheus.GQLType (HasuraArtist m) where
+instance (Typeable m) => Morpheus.GQLType (HasuraArtist m) where
   typeOptions _ _ = hasuraTypeOptions
 
 data HasuraArtistOrderBy = HasuraArtistOrderBy
@@ -575,12 +575,12 @@ lhsRemoteServerMkLocalTestEnvironment _ =
             Nothing -> \_ _ -> EQ
             Just orderByArg -> orderArtist orderByArg
           limitFunction = maybe id take aa_limit
-      pure $
-        artists
-          & filter filterFunction
-          & sortBy orderByFunction
-          & limitFunction
-          & map mkArtist
+      pure
+        $ artists
+        & filter filterFunction
+        & sortBy orderByFunction
+        & limitFunction
+        & map mkArtist
     -- Returns True iif the given artist matches the given boolean expression.
     matchArtist artistInfo@(artistId, artistName) (HasuraArtistBoolExp {..}) =
       and
@@ -599,13 +599,13 @@ lhsRemoteServerMkLocalTestEnvironment _ =
       (artistId2, artistName2) =
         flip foldMap orderByList \HasuraArtistOrderBy {..} ->
           if
-              | Just idOrder <- aob_id ->
-                  compareWithNullLast idOrder artistId1 artistId2
-              | Just nameOrder <- aob_name -> case nameOrder of
-                  Asc -> compare artistName1 artistName2
-                  Desc -> compare artistName2 artistName1
-              | otherwise ->
-                  error "empty artist_order object"
+            | Just idOrder <- aob_id ->
+                compareWithNullLast idOrder artistId1 artistId2
+            | Just nameOrder <- aob_name -> case nameOrder of
+                Asc -> compare artistName1 artistName2
+                Desc -> compare artistName2 artistName1
+            | otherwise ->
+                error "empty artist_order object"
     compareWithNullLast Desc x1 x2 = compareWithNullLast Asc x2 x1
     compareWithNullLast Asc Nothing Nothing = EQ
     compareWithNullLast Asc (Just _) Nothing = LT
@@ -623,7 +623,7 @@ lhsRemoteServerMkLocalTestEnvironment _ =
           a_name = pure $ Just artistName
         }
 
-lhsRemoteServerSetup :: HasCallStack => Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsRemoteServerSetup :: (HasCallStack) => Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsRemoteServerSetup tableName (testEnvironment, maybeRemoteServer) = case maybeRemoteServer of
   Nothing -> error "XToDBArrayRelationshipSpec: remote server local testEnvironment did not succesfully create a server"
   Just remoteServer -> do
@@ -832,14 +832,14 @@ schemaTests =
             . key "fields"
             . values
         albumsField =
-          Unsafe.fromJust $
-            findOf
+          Unsafe.fromJust
+            $ findOf
               focusArtistFields
               (has $ key "name" . _String . only "albums")
               introspectionResult
         albumsAggregateField =
-          Unsafe.fromJust $
-            findOf
+          Unsafe.fromJust
+            $ findOf
               focusArtistFields
               (has $ key "name" . _String . only "albums_aggregate")
               introspectionResult

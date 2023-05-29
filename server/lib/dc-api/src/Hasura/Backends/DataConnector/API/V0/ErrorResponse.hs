@@ -6,7 +6,6 @@ module Hasura.Backends.DataConnector.API.V0.ErrorResponse
     ErrorResponse400,
     ErrorResponseType (..),
     errorResponseJsonText,
-    errorResponseSummary,
   )
 where
 
@@ -16,7 +15,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.Aeson.Text (encodeToLazyText)
 import Data.OpenApi (ToSchema (..))
-import Data.Text (Text, pack)
+import Data.Text (Text)
 import Data.Text.Lazy (toStrict)
 import GHC.Generics (Generic)
 import Servant.API (HasStatus)
@@ -50,10 +49,6 @@ instance HasStatus ErrorResponse where
   type StatusOf ErrorResponse = 500
 
 type ErrorResponse400 = Servant.WithStatus 400 ErrorResponse
-
-{-# HLINT ignore "Use tshow" #-}
-errorResponseSummary :: ErrorResponse -> Text
-errorResponseSummary ErrorResponse {..} = pack (show _crType) <> ": " <> _crMessage
 
 errorResponseJsonText :: ErrorResponse -> Text
 errorResponseJsonText = toStrict . encodeToLazyText

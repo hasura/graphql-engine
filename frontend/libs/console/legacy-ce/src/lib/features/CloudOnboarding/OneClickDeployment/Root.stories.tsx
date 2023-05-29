@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { Root } from './Root';
 
@@ -7,9 +7,9 @@ export default {
   title: 'features/CloudOnboarding/One Click Deployment/Root',
   component: Root,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof Root>;
+} as Meta<typeof Root>;
 
-export const Base: Story = () => {
+export const Base: StoryFn = () => {
   return (
     <Root
       deployment={{

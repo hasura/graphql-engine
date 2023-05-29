@@ -132,9 +132,9 @@ instance J.FromJSON JWTHeader where
   parseJSON = J.withObject "JWTHeader" $ \o -> do
     hdrType <- o J..: "type" <&> CI.mk @Text
     if
-        | hdrType == "Authorization" -> pure JHAuthorization
-        | hdrType == "Cookie" -> JHCookie <$> o J..: "name"
-        | otherwise -> fail "expected 'type' is 'Authorization' or 'Cookie'"
+      | hdrType == "Authorization" -> pure JHAuthorization
+      | hdrType == "Cookie" -> JHCookie <$> o J..: "name"
+      | otherwise -> fail "expected 'type' is 'Authorization' or 'Cookie'"
 
 instance J.ToJSON JWTHeader where
   toJSON JHAuthorization = J.object ["type" J..= ("Authorization" :: String)]
@@ -180,9 +180,9 @@ instance (J.FromJSON v) => J.FromJSON (JWTCustomClaimsMapValueG v) where
 
 instance (J.ToJSON v) => J.ToJSON (JWTCustomClaimsMapValueG v) where
   toJSON (JWTCustomClaimsMapJSONPath jsonPath mDefVal) =
-    J.object $
-      ["path" J..= encodeJSONPath jsonPath]
-        <> ["default" J..= defVal | Just defVal <- [mDefVal]]
+    J.object
+      $ ["path" J..= encodeJSONPath jsonPath]
+      <> ["default" J..= defVal | Just defVal <- [mDefVal]]
   toJSON (JWTCustomClaimsMapStatic v) = J.toJSON v
 
 type JWTCustomClaimsMapDefaultRole = JWTCustomClaimsMapValueG RoleName
@@ -208,32 +208,33 @@ data JWTCustomClaimsMap = JWTCustomClaimsMap
 
 instance J.ToJSON JWTCustomClaimsMap where
   toJSON (JWTCustomClaimsMap defaultRole allowedRoles customClaims) =
-    J.Object $
-      KM.fromList $
-        map (first (K.fromText . sessionVariableToText)) $
-          [ (defaultRoleClaim, J.toJSON defaultRole),
-            (allowedRolesClaim, J.toJSON allowedRoles)
-          ]
-            <> map (second J.toJSON) (HashMap.toList customClaims)
+    J.Object
+      $ KM.fromList
+      $ map (first (K.fromText . sessionVariableToText))
+      $ [ (defaultRoleClaim, J.toJSON defaultRole),
+          (allowedRolesClaim, J.toJSON allowedRoles)
+        ]
+      <> map (second J.toJSON) (HashMap.toList customClaims)
 
 instance J.FromJSON JWTCustomClaimsMap where
   parseJSON = J.withObject "JWTClaimsMap" $ \obj -> do
     let withNotFoundError sessionVariable =
           let sessionVarText = sessionVariableToText sessionVariable
               errorMsg =
-                T.unpack $
-                  sessionVarText <> " is expected but not found"
+                T.unpack
+                  $ sessionVarText
+                  <> " is expected but not found"
            in KM.lookup (K.fromText sessionVarText) obj
                 `onNothing` fail errorMsg
 
     allowedRoles <- withNotFoundError allowedRolesClaim >>= J.parseJSON
     defaultRole <- withNotFoundError defaultRoleClaim >>= J.parseJSON
     let filteredClaims =
-          HashMap.delete allowedRolesClaim $
-            HashMap.delete defaultRoleClaim $
-              HashMap.fromList $
-                map (first (mkSessionVariable . K.toText)) $
-                  KM.toList obj
+          HashMap.delete allowedRolesClaim
+            $ HashMap.delete defaultRoleClaim
+            $ HashMap.fromList
+            $ map (first (mkSessionVariable . K.toText))
+            $ KM.toList obj
     customClaims <- flip HashMap.traverseWithKey filteredClaims $ const $ J.parseJSON
     pure $ JWTCustomClaimsMap defaultRole allowedRoles customClaims
 
@@ -327,8 +328,8 @@ fetchAndUpdateJWKs logger httpManager url jwkRef = do
     Left _e -> pure ()
     Right (jwkSet, responseHeaders) -> do
       expiryRes <-
-        runExceptT $
-          determineJwkExpiryLifetime (liftIO getCurrentTime) logger responseHeaders
+        runExceptT
+          $ determineJwkExpiryLifetime (liftIO getCurrentTime) logger responseHeaders
       maybeExpiry <- onLeft expiryRes (const $ pure Nothing)
       case maybeExpiry of
         Nothing -> liftIO $ do
@@ -425,12 +426,12 @@ determineJwkExpiryLifetime getCurrentTime' (Logger logger) responseHeaders =
         Nothing -> return Nothing
 
       if
-          -- If a max-age is specified with a must-revalidate we use it, but if not we use an immediate expiry time
-          | mustRevalidateExists cacheControl -> pure $ fromMaybe currTime maxExpiryMaybe
-          -- In these cases we want don't want to cache the JWK, so we use an immediate expiry time
-          | noCacheExists cacheControl || noStoreExists cacheControl -> pure currTime
-          -- Use max-age, if it exists
-          | otherwise -> hoistMaybe maxExpiryMaybe
+        -- If a max-age is specified with a must-revalidate we use it, but if not we use an immediate expiry time
+        | mustRevalidateExists cacheControl -> pure $ fromMaybe currTime maxExpiryMaybe
+        -- In these cases we want don't want to cache the JWK, so we use an immediate expiry time
+        | noCacheExists cacheControl || noStoreExists cacheControl -> pure currTime
+        -- Use max-age, if it exists
+        | otherwise -> hoistMaybe maxExpiryMaybe
 
     timeFromExpires :: MaybeT m UTCTime
     timeFromExpires = do
@@ -508,7 +509,7 @@ processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthR
     (_, [(ctx, val)]) -> withAuthZ val ctx
     _ -> throw400 InvalidHeaders "Could not verify JWT: Multiple JWTs found"
   where
-    intersectKeys :: Hashable a => HashMap.HashMap a [b] -> HashMap.HashMap a [c] -> [(b, c)]
+    intersectKeys :: (Hashable a) => HashMap.HashMap a [b] -> HashMap.HashMap a [c] -> [(b, c)]
     intersectKeys m n = concatMap (uncurry cartesianProduct) $ HashMap.elems $ HashMap.intersectionWith (,) m n
 
     issuerMatch (j, b) = do
@@ -556,29 +557,31 @@ processJwt_ processJwtBytes decodeIssuer fGetHeaderType jwtCtxs headers mUnAuthR
             -- see if there is a x-hasura-role header, or else pick the default role.
             -- The role returned is unauthenticated at this point:
             let requestedRole =
-                  fromMaybe defaultRole $
-                    getRequestHeader userRoleHeader headers >>= mkRoleName . bsToTxt
+                  fromMaybe defaultRole
+                    $ getRequestHeader userRoleHeader headers
+                    >>= mkRoleName
+                    . bsToTxt
 
-            when (requestedRole `notElem` allowedRoles) $
-              throw400 AccessDenied "Your requested role is not in allowed roles"
+            when (requestedRole `notElem` allowedRoles)
+              $ throw400 AccessDenied "Your requested role is not in allowed roles"
             let finalClaims =
                   HashMap.delete defaultRoleClaim . HashMap.delete allowedRolesClaim $ claimsMap
 
             let finalClaimsObject =
-                  KM.fromList $
-                    map (first (K.fromText . sessionVariableToText)) $
-                      HashMap.toList finalClaims
+                  KM.fromList
+                    $ map (first (K.fromText . sessionVariableToText))
+                    $ HashMap.toList finalClaims
             metadata <- parseJwtClaim (J.Object finalClaimsObject) "x-hasura-* claims"
             userInfo <-
-              mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent $
-                mkSessionVariablesText metadata
+              mkUserInfo (URBPreDetermined requestedRole) UAdminSecretNotSent
+                $ mkSessionVariablesText metadata
             pure (userInfo, expTimeM, [], Just jwtCtx)
 
     withoutAuthZ = do
       unAuthRole <- onNothing mUnAuthRole (throw400 InvalidHeaders "Missing 'Authorization' or 'Cookie' header in JWT authentication mode")
       userInfo <-
-        mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent $
-          mkSessionVariablesHeaders headers
+        mkUserInfo (URBPreDetermined unAuthRole) UAdminSecretNotSent
+          $ mkSessionVariablesHeaders headers
       pure (userInfo, Nothing, [], Nothing)
 
     jwtNotIssuerError = throw400 JWTInvalid "Could not verify JWT: JWTNotInIssuer"
@@ -618,7 +621,7 @@ processHeaderSimple jwtCtx jwt = do
 
 -- | parse the claims map from the JWT token or custom claims from the JWT config
 parseClaimsMap ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   -- | Unregistered JWT claims
   Jose.ClaimsSet ->
   -- | Claims config
@@ -640,11 +643,11 @@ parseClaimsMap claimsSet jcxClaims = do
 
       -- filter only x-hasura claims
       let claimsMap =
-            HashMap.fromList $
-              map (first mkSessionVariable) $
-                filter (isSessionVariable . fst) $
-                  map (first K.toText) $
-                    KM.toList claimsObject
+            HashMap.fromList
+              $ map (first mkSessionVariable)
+              $ filter (isSessionVariable . fst)
+              $ map (first K.toText)
+              $ KM.toList claimsObject
 
       pure claimsMap
     JCMap claimsConfig -> do
@@ -657,17 +660,17 @@ parseClaimsMap claimsSet jcxClaims = do
 
       defaultRole <- case defaultRoleClaimsMap of
         JWTCustomClaimsMapJSONPath defaultRoleJsonPath defaultVal ->
-          parseDefaultRoleClaim defaultVal $
-            iResultToMaybe $
-              executeJSONPath defaultRoleJsonPath claimsJSON
+          parseDefaultRoleClaim defaultVal
+            $ iResultToMaybe
+            $ executeJSONPath defaultRoleJsonPath claimsJSON
         JWTCustomClaimsMapStatic staticDefaultRole -> pure staticDefaultRole
 
       otherClaims <- flip HashMap.traverseWithKey otherClaimsMap $ \k claimObj -> do
         let throwClaimErr =
-              throw400 JWTInvalidClaims $
-                "JWT claim from claims_map, "
-                  <> sessionVariableToText k
-                  <> " not found"
+              throw400 JWTInvalidClaims
+                $ "JWT claim from claims_map, "
+                <> sessionVariableToText k
+                <> " not found"
         case claimObj of
           JWTCustomClaimsMapJSONPath path defaultVal ->
             iResultToMaybe (executeJSONPath path claimsJSON)
@@ -675,34 +678,36 @@ parseClaimsMap claimsSet jcxClaims = do
               `onNothing` throwClaimErr
           JWTCustomClaimsMapStatic claimStaticValue -> pure $ J.String claimStaticValue
 
-      pure $
-        HashMap.fromList
+      pure
+        $ HashMap.fromList
           [ (allowedRolesClaim, J.toJSON allowedRoles),
             (defaultRoleClaim, J.toJSON defaultRole)
           ]
-          <> otherClaims
+        <> otherClaims
   where
     parseAllowedRolesClaim defaultVal = \case
       Nothing ->
-        onNothing defaultVal $
-          throw400 JWTRoleClaimMissing $
-            "JWT claim does not contain " <> sessionVariableToText allowedRolesClaim
+        onNothing defaultVal
+          $ throw400 JWTRoleClaimMissing
+          $ "JWT claim does not contain "
+          <> sessionVariableToText allowedRolesClaim
       Just v ->
-        parseJwtClaim v $
-          "invalid "
-            <> sessionVariableToText allowedRolesClaim
-            <> "; should be a list of roles"
+        parseJwtClaim v
+          $ "invalid "
+          <> sessionVariableToText allowedRolesClaim
+          <> "; should be a list of roles"
 
     parseDefaultRoleClaim defaultVal = \case
       Nothing ->
-        onNothing defaultVal $
-          throw400 JWTRoleClaimMissing $
-            "JWT claim does not contain " <> sessionVariableToText defaultRoleClaim
+        onNothing defaultVal
+          $ throw400 JWTRoleClaimMissing
+          $ "JWT claim does not contain "
+          <> sessionVariableToText defaultRoleClaim
       Just v ->
-        parseJwtClaim v $
-          "invalid "
-            <> sessionVariableToText defaultRoleClaim
-            <> "; should be a role"
+        parseJwtClaim v
+          $ "invalid "
+          <> sessionVariableToText defaultRoleClaim
+          <> "; should be a role"
 
     claimsNotFound namespace =
       throw400 JWTInvalidClaims $ case namespace of
@@ -778,14 +783,14 @@ instance J.ToJSON JWTConfig where
                   ClaimNs ns -> ["claims_namespace" J..= J.String ns]
              in namespacePairs <> ["claims_format" J..= claimsFormat]
           JCMap claimsMap -> ["claims_map" J..= claimsMap]
-     in J.object $
-          keyOrUrlPairs
-            <> [ "audience" J..= aud,
-                 "issuer" J..= iss,
-                 "header" J..= jwtHeader
-               ]
-            <> claimsPairs
-            <> (maybe [] (\skew -> ["allowed_skew" J..= skew]) allowedSkew)
+     in J.object
+          $ keyOrUrlPairs
+          <> [ "audience" J..= aud,
+               "issuer" J..= iss,
+               "header" J..= jwtHeader
+             ]
+          <> claimsPairs
+          <> (maybe [] (\skew -> ["allowed_skew" J..= skew]) allowedSkew)
 
 -- | Parse from a json string like:
 -- | `{"type": "RS256", "key": "<PEM-encoded-public-key-or-X509-cert>"}`
@@ -848,7 +853,7 @@ parseHasuraClaims claimsMap = do
     <$> parseClaim allowedRolesClaim "should be a list of roles"
     <*> parseClaim defaultRoleClaim "should be a single role name"
   where
-    parseClaim :: J.FromJSON a => SessionVariable -> Text -> m a
+    parseClaim :: (J.FromJSON a) => SessionVariable -> Text -> m a
     parseClaim claim hint = do
       claimV <- onNothing (HashMap.lookup claim claimsMap) missingClaim
       parseJwtClaim claimV $ "invalid " <> claimText <> "; " <> hint

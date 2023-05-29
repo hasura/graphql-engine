@@ -1,6 +1,4 @@
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Removed from `RQL.IR.Select` to speed up compilation
@@ -11,15 +9,9 @@ module Hasura.RQL.IR.Select.Args
     SelectStreamArgs,
     StreamCursorItem (..),
     noSelectArgs,
-    saDistinct,
-    saLimit,
-    saOffset,
-    saOrderBy,
-    saWhere,
   )
 where
 
-import Control.Lens.TH (makeLenses)
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
 import Hasura.Prelude
@@ -108,7 +100,3 @@ data StreamCursorItem (b :: BackendType) = StreamCursorItem
 deriving instance (Backend b) => Eq (StreamCursorItem b)
 
 deriving instance (Backend b) => Show (StreamCursorItem b)
-
--- Lenses
-
-$(makeLenses ''SelectArgsG)

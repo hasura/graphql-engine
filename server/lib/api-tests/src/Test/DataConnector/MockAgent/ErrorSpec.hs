@@ -50,11 +50,14 @@ sourceMetadata =
               custom_root_fields:
                 select: albums
                 select_by_pk: albums_by_pk
+                insert: insert_albums
               column_config:
                 AlbumId:
                   custom_name: id
                 Title:
                   custom_name: title
+                ArtistId:
+                  custom_name: artist_id
         configuration: {}
       |]
 
@@ -62,7 +65,7 @@ sourceMetadata =
 
 tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests = describe "Error Protocol Tests" $ do
-  mockAgentGraphqlTest "handles returned errors correctly" $ \_testEnv performGraphqlRequest -> do
+  mockAgentGraphqlTest "handles returned UncaughtError errors correctly" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -73,7 +76,7 @@ tests = describe "Error Protocol Tests" $ do
               }
             }
           |]
-    let errorResponse = API.ErrorResponse API.UncaughtError "Hello World!" [yaml| { foo: "bar" } |]
+    let errorResponse = API.ErrorResponse API.UncaughtError "An unhandled error occurred" [yaml| { foo: "bar" } |]
     let mockConfig = Mock.defaultMockRequestConfig {Mock._queryResponse = \_ -> Left errorResponse}
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
@@ -81,26 +84,82 @@ tests = describe "Error Protocol Tests" $ do
     _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
-          -
-            extensions:
+          - extensions:
               code: "data-connector-error"
               path: "$"
               internal:
                 foo: "bar"
-            message: "UncaughtError: Hello World!"
+            message: "An unhandled error occurred"
       |]
 
     _mrrRecordedRequest
       `shouldBe` Just
-        ( Query $
-            mkQueryRequest
+        ( Query
+            $ mkTableRequest
               (mkTableName "Album")
               ( emptyQuery
                   & API.qFields
-                    ?~ mkFieldsMap
-                      [ ("id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                        ("title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
-                      ]
-                  & API.qLimit ?~ 1
+                  ?~ mkFieldsMap
+                    [ ("id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
+                      ("title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
+                    ]
+                    & API.qLimit
+                  ?~ 1
               )
         )
+
+  mockAgentGraphqlTest "handles returned MutationConstraintViolation errors correctly" $ \_testEnv performGraphqlRequest -> do
+    let headers = []
+    let graphqlRequest =
+          [graphql|
+            mutation insertAlbum {
+              insert_albums(objects: [
+                {id: 9001, title: "Super Mega Rock", artist_id: 1}
+              ]) {
+                affected_rows
+              }
+            }
+          |]
+    let errorResponse = API.ErrorResponse API.MutationConstraintViolation "A constraint was violated" [yaml| { foo: "bar" } |]
+    let mockConfig = Mock.defaultMockRequestConfig {Mock._mutationResponse = \_ -> Left errorResponse}
+
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
+
+    _mrrResponse
+      `shouldBeYaml` [yaml|
+        errors:
+          - extensions:
+              code: "constraint-violation"
+              path: "$"
+              internal:
+                foo: "bar"
+            message: "A constraint was violated"
+      |]
+
+  mockAgentGraphqlTest "handles returned MutationPermissionCheckFailure errors correctly" $ \_testEnv performGraphqlRequest -> do
+    let headers = []
+    let graphqlRequest =
+          [graphql|
+            mutation insertAlbum {
+              insert_albums(objects: [
+                {id: 9001, title: "Super Mega Rock", artist_id: 1}
+              ]) {
+                affected_rows
+              }
+            }
+          |]
+    let errorResponse = API.ErrorResponse API.MutationPermissionCheckFailure "A permission check failed" [yaml| { foo: "bar" } |]
+    let mockConfig = Mock.defaultMockRequestConfig {Mock._mutationResponse = \_ -> Left errorResponse}
+
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
+
+    _mrrResponse
+      `shouldBeYaml` [yaml|
+        errors:
+          - extensions:
+              code: "permission-error"
+              path: "$"
+              internal:
+                foo: "bar"
+            message: "A permission check failed"
+      |]

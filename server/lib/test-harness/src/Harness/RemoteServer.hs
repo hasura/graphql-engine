@@ -59,17 +59,18 @@ run ::
 run (Interpreter interpreter) = mkTestResource do
   let urlPrefix = "http://127.0.0.1"
   port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
-  thread <- Async.async $
-    Spock.runSpockNoBanner port $
-      Spock.spockT id $ do
-        Spock.get "/" $ do
-          Spock.json $ J.String "OK"
-        Spock.post "/graphql" $ do
-          req <- Spock.request
-          body <- liftIO $ Wai.strictRequestBody req
-          result <- liftIO $ interpreter body
-          Spock.setHeader "Content-Type" "application/json; charset=utf-8"
-          Spock.lazyBytes result
+  thread <- Async.async
+    $ Spock.runSpockNoBanner port
+    $ Spock.spockT id
+    $ do
+      Spock.get "/" $ do
+        Spock.json $ J.String "OK"
+      Spock.post "/graphql" $ do
+        req <- Spock.request
+        body <- liftIO $ Wai.strictRequestBody req
+        result <- liftIO $ interpreter body
+        Spock.setHeader "Content-Type" "application/json; charset=utf-8"
+        Spock.lazyBytes result
   let server = Server {port = fromIntegral port, urlPrefix, thread}
   Http.healthCheck $ serverUrl server
   pure
@@ -152,21 +153,21 @@ run (Interpreter interpreter) = mkTestResource do
 --   - https://github.com/morpheusgraphql/mythology-api/blob/master/src/Mythology/API.hs
 generateInterpreter ::
   forall query mutation.
-  RootResolverConstraint IO () query mutation Undefined =>
+  (RootResolverConstraint IO () query mutation Undefined) =>
   query (Resolver QUERY () IO) ->
   mutation (Resolver MUTATION () IO) ->
   Interpreter
 generateInterpreter queryResolver mutationResolver =
-  Interpreter $
-    Morpheus.interpreter $
-      defaultRootResolver {queryResolver, mutationResolver}
+  Interpreter
+    $ Morpheus.interpreter
+    $ defaultRootResolver {queryResolver, mutationResolver}
 
 -- | This function is similar to 'generateInterpreter', but only expects a
 -- resolver for queries. The resulting 'Interpreter' only supports queries, and
 -- handles neither mutations nor subscriptions.
 generateQueryInterpreter ::
   forall query.
-  RootResolverConstraint IO () query Undefined Undefined =>
+  (RootResolverConstraint IO () query Undefined Undefined) =>
   query (Resolver QUERY () IO) ->
   Interpreter
 generateQueryInterpreter queryResolver =

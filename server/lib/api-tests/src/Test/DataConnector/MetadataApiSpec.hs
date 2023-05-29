@@ -16,6 +16,7 @@ where
 
 --------------------------------------------------------------------------------
 
+import Control.Lens ((^?), _Just)
 import Control.Lens qualified as Lens
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
@@ -222,7 +223,8 @@ schemaInspectionTests = describe "Schema and Source Inspection" $ do
                 args:
                   name: *backendString
               |]
-              ) -- Note: These fields are backend specific so we ignore their values and just verify their shapes:
+              )
+                -- Note: These fields are backend specific so we ignore their values and just verify their shapes:
                 <&> Lens.set (key "config_schema_response" . key "other_schemas") J.Null
                 <&> Lens.set (key "config_schema_response" . key "config_schema") J.Null
                 <&> Lens.set (key "capabilities" . _Object . Lens.at "datasets") Nothing
@@ -324,10 +326,6 @@ schemaCrudTests = describe "A series of actions to setup and teardown a source w
                     kind: bigquery
                     display_name: bigquery
                     available: true
-                  - builtin: true
-                    kind: mysql
-                    display_name: mysql
-                    available: true
                   - builtin: false
                     display_name: "FOOBARDB"
                     kind: foobar
@@ -359,7 +357,7 @@ schemaCrudTests = describe "A series of actions to setup and teardown a source w
             |]
 
   describe "<kind>_track_table" $ do
-    it "success" $ \(testEnvironment, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
+    it "success - track Album" $ \(testEnvironment, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
       case (backendTypeString &&& backendSourceName) <$> TestEnvironment.getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just (backendType, sourceName) -> do
@@ -380,28 +378,42 @@ schemaCrudTests = describe "A series of actions to setup and teardown a source w
               message: success
             |]
 
-  describe "<kind>_create_object_relationship" $ do
-    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
-      let foreignKeySupport = (getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities) <&> API._dscSupportsForeignKeys . API._cDataSchema
-      case (backendTypeString &&& backendSourceName) <$> getBackendTypeConfig testEnvironment of
+    it "success - track Artist" $ \(testEnvironment, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
+      case (backendTypeString &&& backendSourceName) <$> TestEnvironment.getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just (backendType, sourceName) -> do
           let actionType = backendType <> "_track_table"
-              artistTable = _nfFormatTableName ["Artist"]
-              albumTable = _nfFormatTableName ["Album"]
-              artistId = _nfFormatColumnName "ArtistId"
-          GraphqlEngine.postMetadata_
+              artist = _nfFormatTableName ["Artist"]
+          shouldReturnYaml
             testEnvironment
+            ( GraphqlEngine.postMetadata
+                testEnvironment
+                [yaml|
+                type: *actionType
+                args:
+                  source: *sourceName
+                  table: *artist
+              |]
+            )
             [yaml|
-            type: *actionType
-            args:
-              source: *sourceName
-              table: *artistTable
-          |]
+              message: success
+            |]
 
-          when
-            (foreignKeySupport == Just False)
-            (pendingWith "Backend does not support Foreign Key constraints")
+  describe "<kind>_create_object_relationship" $ do
+    it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
+      let capabilities = getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities
+      let foreignKeySupport = fromMaybe False $ capabilities ^? _Just . API.cDataSchema . API.dscSupportsForeignKeys
+      let relationshipsSupport = isJust $ capabilities ^? _Just . API.cRelationships . _Just
+      unless relationshipsSupport
+        $ pendingWith "Backend does not support local relationships"
+      unless foreignKeySupport
+        $ pendingWith "Backend does not support Foreign Key constraints"
+
+      case (backendTypeString &&& backendSourceName) <$> getBackendTypeConfig testEnvironment of
+        Nothing -> pendingWith "Backend Type not found in testEnvironment"
+        Just (backendType, sourceName) -> do
+          let albumTable = _nfFormatTableName ["Album"]
+              artistId = _nfFormatColumnName "ArtistId"
 
           let createObjectRelationAction = backendType <> "_create_object_relationship"
           shouldReturnYaml
@@ -425,10 +437,14 @@ schemaCrudTests = describe "A series of actions to setup and teardown a source w
 
   describe "<kind>_create_array_relationship" $ do
     it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
-      let foreignKeySupport = (getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities) <&> API._dscSupportsForeignKeys . API._cDataSchema
-      when
-        (foreignKeySupport == Just False)
-        (pendingWith "Backend does not support Foreign Key constraints")
+      let capabilities = getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities
+      let foreignKeySupport = fromMaybe False $ capabilities ^? _Just . API.cDataSchema . API.dscSupportsForeignKeys
+      let relationshipsSupport = isJust $ capabilities ^? _Just . API.cRelationships . _Just
+      unless relationshipsSupport
+        $ pendingWith "Backend does not support local relationships"
+      unless foreignKeySupport
+        $ pendingWith "Backend does not support Foreign Key constraints"
+
       case (backendTypeString &&& backendSourceName) <$> TestEnvironment.getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just (backendType, sourceName) -> do
@@ -462,7 +478,9 @@ schemaCrudTests = describe "A series of actions to setup and teardown a source w
       case ((fold . backendServerUrl) &&& backendTypeString &&& backendSourceName) <$> TestEnvironment.getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just (agentUrl, (backendType, sourceName)) -> do
-          let foreignKeySupport = (getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities) <&> API._dscSupportsForeignKeys . API._cDataSchema
+          let capabilities = getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities
+          let foreignKeySupport = fromMaybe False $ capabilities ^? _Just . API.cDataSchema . API.dscSupportsForeignKeys
+          let relationshipsSupport = isJust $ capabilities ^? _Just . API.cRelationships . _Just
               albumTable = _nfFormatTableName ["Album"]
               artistTable = _nfFormatTableName ["Artist"]
               artistId = _nfFormatColumnName "ArtistId"
@@ -475,7 +493,7 @@ schemaCrudTests = describe "A series of actions to setup and teardown a source w
                 args: {}
               |]
             )
-            if foreignKeySupport == Just True
+            if foreignKeySupport && relationshipsSupport
               then
                 [yaml|
                 backend_configs:
@@ -519,10 +537,14 @@ schemaCrudTests = describe "A series of actions to setup and teardown a source w
 
   describe "<kind>_drop_relationship" $ do
     it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
-      let foreignKeySupport = (getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities) <&> API._dscSupportsForeignKeys . API._cDataSchema
-      when
-        (foreignKeySupport == Just False)
-        (pendingWith "Backend does not support Foreign Key constraints")
+      let capabilities = getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities
+      let foreignKeySupport = fromMaybe False $ capabilities ^? _Just . API.cDataSchema . API.dscSupportsForeignKeys
+      let relationshipsSupport = isJust $ capabilities ^? _Just . API.cRelationships . _Just
+      unless relationshipsSupport
+        $ pendingWith "Backend does not support local relationships"
+      unless foreignKeySupport
+        $ pendingWith "Backend does not support Foreign Key constraints"
+
       case (backendTypeString &&& backendSourceName) <$> TestEnvironment.getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just (backendType, sourceName) -> do
@@ -546,10 +568,6 @@ schemaCrudTests = describe "A series of actions to setup and teardown a source w
 
   describe "<kind>_untrack_table" $ do
     it "success" $ \(testEnvironment@TestEnvironment {}, Chinook.ChinookTestEnv {nameFormatting = NameFormatting {..}}) -> do
-      let foreignKeySupport = (getBackendTypeConfig testEnvironment >>= BackendType.parseCapabilities) <&> API._dscSupportsForeignKeys . API._cDataSchema
-      when
-        (foreignKeySupport == Just False)
-        (pendingWith "Backend does not support Foreign Key constraints")
       case (backendTypeString &&& backendSourceName) <$> TestEnvironment.getBackendTypeConfig testEnvironment of
         Nothing -> pendingWith "Backend Type not found in testEnvironment"
         Just (backendType, sourceName) -> do

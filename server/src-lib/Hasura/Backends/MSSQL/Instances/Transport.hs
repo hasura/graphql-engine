@@ -77,9 +77,9 @@ runQuery ::
   m (DiffTime, EncJSON)
 runQuery reqId query fieldName _userInfo logger _ _sourceConfig tx genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
-  withElapsedTime $
-    newSpan ("MSSQL Query for root field " <>> fieldName) $
-      fmap snd (run tx)
+  withElapsedTime
+    $ newSpan ("MSSQL Query for root field " <>> fieldName)
+    $ fmap snd (run tx)
 
 runQueryExplain ::
   ( MonadIO m,
@@ -114,9 +114,9 @@ runMutation ::
   m (DiffTime, EncJSON)
 runMutation reqId query fieldName _userInfo logger _ _sourceConfig tx _genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName Nothing reqId
-  withElapsedTime $
-    newSpan ("MSSQL Mutation for root field " <>> fieldName) $
-      run tx
+  withElapsedTime
+    $ newSpan ("MSSQL Mutation for root field " <>> fieldName)
+    $ run tx
 
 runSubscription ::
   (MonadIO m, MonadBaseControl IO m) =>

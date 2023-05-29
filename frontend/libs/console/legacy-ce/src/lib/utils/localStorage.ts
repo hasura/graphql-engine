@@ -124,7 +124,7 @@ export const LS_KEYS = {
   notificationsData: 'notifications:data',
   notificationsLastSeen: 'notifications:lastSeen',
   authState: 'AUTH_STATE',
-  useCaseExperimentOnboarding: 'onboarding:useCaseExperiment',
+  skipOnboarding: 'SKIP_CLOUD_ONBOARDING',
   showUseCaseOverviewPopup: 'onboarding:showUseCaseOverviewPopup',
 };
 

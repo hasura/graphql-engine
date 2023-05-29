@@ -80,11 +80,7 @@ function Prometheus() {
       ifDisabled={(doNotMatch, current: { hasuraPlan }) => {
         if (doNotMatch.ee) {
           if (hasuraPlan.type === 'ce') {
-            return (
-              <div>
-                Try EE Lite and give all the paid feature a try for free!
-              </div>
-            );
+            return <div>Try EE Lite and give all the paid feature a try for free!</div>;
           }
 
           return <div>Prometheus is enabled for EE Lite only</div>;
@@ -110,9 +106,7 @@ function Prometheus() {
   if (status === 'disabled') {
     if (doNotMatch.ee) {
       if (hasuraPlan.type === 'ce') {
-        return (
-          <div>Try EE Lite and give all the paid feature a try for free!</div>
-        );
+        return <div>Try EE Lite and give all the paid feature a try for free!</div>;
       }
 
       return <div>Prometheus is enabled for EE Lite only</div>;

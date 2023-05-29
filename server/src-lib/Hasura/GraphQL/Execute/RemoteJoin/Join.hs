@@ -10,7 +10,7 @@ import Data.Aeson.Ordered qualified as JO
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.HashSet qualified as HS
 import Data.IntMap.Strict qualified as IntMap
@@ -122,8 +122,8 @@ processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo 
       -- Resulting JSON object, as a 'ByteString'.
       m BL.ByteString
     callRemoteServer remoteSchemaInfo request =
-      fmap (view _3) $
-        execRemoteGQ env userInfo requestHeaders remoteSchemaInfo request
+      fmap (view _3)
+        $ execRemoteGQ env userInfo requestHeaders remoteSchemaInfo request
 
 -- | Fold the join tree.
 --
@@ -149,8 +149,9 @@ foldJoinTreeWith ::
   m (f JO.Value)
 foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree reqHeaders operationName = do
   (compositeValue, joins) <- collectJoinArguments (assignJoinIds joinTree) lhs
-  joinIndices <- fmap catMaybes $
-    for joins $ \JoinArguments {..} -> do
+  joinIndices <- fmap catMaybes
+    $ for joins
+    $ \JoinArguments {..} -> do
       let joinArguments = IntMap.fromList $ map swap $ HashMap.toList _jalArguments
       previousStep <- case _jalJoin of
         RemoteJoinRemoteSchema remoteSchemaJoin childJoinTree -> do
@@ -302,10 +303,10 @@ collectJoinArguments joinTree lhs = do
     traverseObject joinTree_ object = do
       let joinTreeNodes = unJoinTree joinTree_
           phantomFields =
-            HS.fromList $
-              map getFieldNameTxt $
-                concatMap (getPhantomFields . snd) $
-                  toList joinTree_
+            HS.fromList
+              $ map getFieldNameTxt
+              $ concatMap (getPhantomFields . snd)
+              $ toList joinTree_
 
       -- If we need the typename to disambiguate branches in the join tree, it
       -- will be present in the answer as a placeholder internal field.
@@ -334,12 +335,14 @@ collectJoinArguments joinTree lhs = do
           Just (Leaf (joinId, remoteJoin)) -> do
             joinArgument <- forM (getJoinColumnMapping remoteJoin) $ \alias -> do
               let aliasTxt = getFieldNameTxt $ getAliasFieldName alias
-              onNothing (JO.lookup aliasTxt object) $
-                throw500 $
-                  "a join column is missing from the response: " <> aliasTxt
+              onNothing (JO.lookup aliasTxt object)
+                $ throw500
+                $ "a join column is missing from the response: "
+                <> aliasTxt
             if HashMap.null (HashMap.filter (== JO.Null) joinArgument)
               then
-                Just . CVFromRemote
+                Just
+                  . CVFromRemote
                   <$> getReplacementToken joinId remoteJoin (JoinArgument joinArgument) (FieldName fieldName)
               else -- we do not join with the remote field if any of the leaves of
               -- the join argument are null
@@ -351,7 +354,9 @@ collectJoinArguments joinTree lhs = do
               then pure Nothing
               else pure $ Just $ CVOrdValue value_
 
-      pure . OMap.fromList $
+      pure
+        . InsOrdHashMap.fromList
+        $
         -- filter out the Nothings
         mapMaybe sequenceA compositeObject
 
@@ -367,18 +372,18 @@ joinResults remoteResults compositeValues = do
     replaceToken :: ReplacementToken -> m JO.Value
     replaceToken (ReplacementToken joinCallId argumentId) = do
       joinCallResults <-
-        onNothing (IntMap.lookup joinCallId remoteResults) $
-          throw500 $
-            "couldn't find results for the join with id: "
-              <> tshow joinCallId
-      onNothing (IntMap.lookup argumentId joinCallResults) $
-        throw500 $
-          "couldn't find a value for argument id in the join results: "
-            <> tshow (argumentId, joinCallId)
+        onNothing (IntMap.lookup joinCallId remoteResults)
+          $ throw500
+          $ "couldn't find results for the join with id: "
+          <> tshow joinCallId
+      onNothing (IntMap.lookup argumentId joinCallResults)
+        $ throw500
+        $ "couldn't find a value for argument id in the join results: "
+        <> tshow (argumentId, joinCallId)
 
 -------------------------------------------------------------------------------
 
-type CompositeObject a = OMap.InsOrdHashMap Text (CompositeValue a)
+type CompositeObject a = InsOrdHashMap.InsOrdHashMap Text (CompositeValue a)
 
 -- | A hybrid JSON value representation which captures the context of remote join field in type parameter.
 data CompositeValue a
@@ -391,7 +396,7 @@ data CompositeValue a
 compositeValueToJSON :: CompositeValue JO.Value -> JO.Value
 compositeValueToJSON = \case
   CVOrdValue v -> v
-  CVObject obj -> JO.object $ OMap.toList $ OMap.map compositeValueToJSON obj
+  CVObject obj -> JO.object $ InsOrdHashMap.toList $ InsOrdHashMap.map compositeValueToJSON obj
   CVObjectArray vals -> JO.array $ map compositeValueToJSON vals
   CVFromRemote v -> v
 

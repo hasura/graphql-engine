@@ -4,20 +4,27 @@ import {
   mockMetadata,
   mockSourceKinds,
 } from './data.mock';
+type AgentTestType =
+  | 'super_connector_agents_added'
+  | 'super_connector_agents_not_added'
+  | 'super_connector_agents_added_but_unavailable';
 
-export const handlers = ({
-  dcAgentsAdded,
-}: { dcAgentsAdded?: boolean } = {}) => [
+export const handlers = (props?: { agentTestType: AgentTestType }) => [
   rest.post('http://localhost:8080/v1/metadata', (req, res, ctx) => {
     const requestBody = req.body as Record<string, any>;
     if (requestBody.type === 'list_source_kinds') {
-      return res(
-        ctx.json(
-          dcAgentsAdded
-            ? mockSourceKinds.agentsAdded
-            : mockSourceKinds.agentsNotAdded
-        )
-      );
+      switch (props?.agentTestType) {
+        case 'super_connector_agents_added':
+          return res(ctx.json(mockSourceKinds.agentsAdded));
+        case 'super_connector_agents_not_added':
+          return res(ctx.json(mockSourceKinds.agentsNotAdded));
+        case 'super_connector_agents_added_but_unavailable':
+          return res(
+            ctx.json(mockSourceKinds.agentsAddedSuperConnectorNotAvailable)
+          );
+        default:
+          return res(ctx.json(mockSourceKinds.agentsNotAdded));
+      }
     }
     if (requestBody.type === 'export_metadata')
       return res(ctx.json(mockMetadata));

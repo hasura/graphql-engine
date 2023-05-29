@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- |
 --  Send anonymized metrics to the telemetry server regarding usage of various
@@ -30,8 +31,10 @@ import Control.Concurrent.Extended qualified as C
 import Control.Exception (try)
 import Control.Lens
 import Data.Aeson qualified as J
+import Data.Aeson.TH qualified as Aeson
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as HashMap
+import Data.Int (Int64)
 import Data.List qualified as L
 import Data.List.Extended qualified as L
 import Data.Text qualified as T
@@ -40,6 +43,7 @@ import Data.Text.Extended (toTxt)
 import Hasura.App.State qualified as State
 import Hasura.HTTP
 import Hasura.Logging
+import Hasura.LogicalModel.Cache (LogicalModelInfo)
 import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiArguments))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
@@ -52,14 +56,16 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as Any
 import Hasura.Server.AppStateRef qualified as HGE
 import Hasura.Server.Init.Config
+import Hasura.Server.ResourceChecker
 import Hasura.Server.Telemetry.Counters (dumpServiceTimingMetrics)
 import Hasura.Server.Telemetry.Types
 import Hasura.Server.Types
 import Hasura.Server.Version
+import Hasura.StoredProcedure.Cache (StoredProcedureInfo (_spiArguments))
+import Hasura.Table.Cache
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wreq qualified as Wreq
@@ -103,6 +109,19 @@ instance J.ToJSON TelemetryHttpError where
 instance ToEngineLog TelemetryLog Hasura where
   toEngineLog tl = (_tlLogLevel tl, ELTInternal ILTTelemetry, J.toJSON tl)
 
+newtype ServerTelemetryRow = ServerTelemetryRow
+  { _strServerMetrics :: ServerTelemetry
+  }
+
+data ServerTelemetry = ServerTelemetry
+  { _stResourceCpu :: Maybe Int,
+    _stResourceMemory :: Maybe Int64,
+    _stResourceCheckerErrorCode :: Maybe ResourceCheckerError
+  }
+
+$(Aeson.deriveToJSON hasuraJSON ''ServerTelemetry)
+$(Aeson.deriveToJSON hasuraJSON ''ServerTelemetryRow)
+
 mkHttpError ::
   Text ->
   Maybe (Wreq.Response BL.ByteString) ->
@@ -139,8 +158,9 @@ runTelemetry ::
   HGE.AppStateRef impl ->
   MetadataDbId ->
   PGVersion ->
+  ComputeResourcesResponse ->
   m Void
-runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion = do
+runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion computeResources = do
   State.AppEnv {..} <- State.askAppEnv
   let options = wreqOptions appEnvManager []
   forever $ liftIO $ do
@@ -170,7 +190,15 @@ runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion = do
                 (HashMap.elems (scSources schemaCache))
             payloads = J.encode <$> telemetries
 
-        for_ payloads $ \payload -> do
+            serverTelemetry =
+              J.encode
+                $ ServerTelemetryRow
+                $ ServerTelemetry
+                  (_rcrCpu computeResources)
+                  (_rcrMemory computeResources)
+                  (_rcrErrorCode computeResources)
+
+        for_ (serverTelemetry : payloads) $ \payload -> do
           logger $ debugLBS $ "metrics_info: " <> payload
           resp <- try $ Wreq.postWith options (T.unpack telemetryUrl) payload
           either logHttpEx handleHttpResp resp
@@ -261,13 +289,15 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
       _mtPermissions =
         PermissionMetric {..}
       _mtEventTriggers =
-        HashMap.size $
-          HashMap.filter (not . HashMap.null) $
-            HashMap.map _tiEventTriggerInfoMap sourceTableCache
+        HashMap.size
+          $ HashMap.filter (not . HashMap.null)
+          $ HashMap.map _tiEventTriggerInfoMap sourceTableCache
       _mtRemoteSchemas = HashMap.size <$> remoteSchemaMap
       _mtFunctions = HashMap.size $ HashMap.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
       _mtActions = computeActionsMetrics <$> actionCache
       _mtNativeQueries = countNativeQueries (HashMap.elems $ _siNativeQueries sourceInfo)
+      _mtStoredProcedures = countStoredProcedures (HashMap.elems $ _siStoredProcedures sourceInfo)
+      _mtLogicalModels = countLogicalModels (HashMap.elems $ _siLogicalModels sourceInfo)
    in Metrics {..}
   where
     sourceTableCache = _siTables sourceInfo
@@ -280,13 +310,27 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
     permsOfTbl :: TableInfo b -> [(RoleName, RolePermInfo b)]
     permsOfTbl = HashMap.toList . _tiRolePermInfoMap
 
+    countLogicalModels :: [LogicalModelInfo b] -> LogicalModelsMetrics
+    countLogicalModels =
+      foldMap
+        (\_ -> mempty {_lmmCount = 1})
+
     countNativeQueries :: [NativeQueryInfo b] -> NativeQueriesMetrics
     countNativeQueries =
       foldMap
-        ( \logimo ->
-            if null (_nqiArguments logimo)
+        ( \nativeQuery ->
+            if null (_nqiArguments nativeQuery)
               then mempty {_nqmWithoutParameters = 1}
               else mempty {_nqmWithParameters = 1}
+        )
+
+    countStoredProcedures :: [StoredProcedureInfo b] -> StoredProceduresMetrics
+    countStoredProcedures =
+      foldMap
+        ( \storedProcedure ->
+            if null (_spiArguments storedProcedure)
+              then mempty {_spmWithoutParameters = 1}
+              else mempty {_spmWithParameters = 1}
         )
 
 -- | Compute the relevant metrics for actions from the action cache.

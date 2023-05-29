@@ -122,6 +122,118 @@ Hasura GraphQL Engine requires the constraint names (if any) of a table to be
 | source                   | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the table (default: `default`) |
 | apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo federation configuration for the table                 |
 
+## pg_track_tables {#metadata-pg-track-tables}
+
+:::tip Supported from
+
+`pg_track_tables` is supported for versions `v2.26.0` and above.
+
+:::
+
+`pg_track_tables` is used to track multiple tables at once. It is typically faster to track more than one table using
+this API, compared to repeating `pg_track_table` for each table you want to track.
+
+`pg_track_tables` works in very similar fashion to `pg_track_table`, except it allows you to pass multiple tables,
+each using the same args format as `pg_track_table`.
+
+Add two tables/views `author` and `book`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_track_tables",
+  "args": {
+    "tables": [
+      {
+        "source": "default",
+        "table": "author",
+        "configuration": {
+          "custom_root_fields": {
+            "select": "Authors",
+            "select_by_pk": "Author",
+            "select_aggregate": "AuthorAggregate",
+            "insert": "AddAuthors",
+            "insert_one":"AddAuthor",
+            "update": "UpdateAuthors",
+            "update_by_pk": "UpdateAuthor",
+            "delete": "DeleteAuthors",
+            "delete_by_pk": "DeleteAuthor"
+          },
+          "column_config": {
+            "id": {
+              "custom_name": "authorId",
+              "comment": "The ID of the Author"
+            }
+          },
+          "comment": "Authors of books"
+        },
+        "apollo_federation_config": {
+          "enable": "v1"
+        }
+      },
+      {
+        "source": "default",
+        "table": "book",
+        "configuration": {
+          "custom_root_fields": {
+            "select": "Books",
+            "select_by_pk": "Book",
+            "select_aggregate": "BookAggregate",
+            "insert": "AddBooks",
+            "insert_one":"AddBook",
+            "update": "UpdateBooks",
+            "update_by_pk": "UpdateBook",
+            "delete": "DeleteBooks",
+            "delete_by_pk": "DeleteBook"
+          }
+        },
+        "apollo_federation_config": {
+          "enable": "v1"
+        }
+      }
+    ]
+  }
+}
+```
+
+By default, if some of the tables specified in `pg_track_tables` fail to track, these tables will be skipped.
+Information about the tables that failed to track will be returned as warnings in the response.
+
+To track tables in an all-or-nothing fashion, you can disallow warnings by using the `allow_warnings` property:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_track_tables",
+  "args": {
+    "allow_warnings": false,
+    "tables": [
+      {
+        "source": "default",
+        "table": "author"
+      },
+      {
+        "source": "default",
+        "table": "book"
+      }
+    ]
+  }
+}
+```
+
+### Args syntax {#metadata-pg-track-tables-syntax}
+
+| Key            | Required | Schema                                                   | Description                                                                                                                                                                        |
+| -------------- | -------- | -------------------------------------------------------  | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| tables         | true     | [[pg_track_table Args](#metadata-pg-track-table-syntax)] | An array of track table arguments.                                                                                                                                                 |
+| allow_warnings | false    | Boolean                                                  | If set to `false`, any warnings will cause the API call to fail and no new tables to be tracked. Otherwise tables that fail to track will be raised as warnings. (default: `true`) |
+
 ## pg_untrack_table {#metadata-pg-untrack-table}
 
 `untrack_table` is used to remove a table/view from the GraphQL schema.
@@ -134,25 +246,109 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-    "type": "pg_untrack_table",
-    "args": {
-        "table": {
-            "schema": "public",
-            "name": "author"
-         },
-        "source": "default",
-        "cascade": true
-    }
+  "type": "pg_untrack_table",
+  "args": {
+    "table": {
+      "schema": "public",
+      "name": "author"
+    },
+    "source": "default",
+    "cascade": true
+  }
 }
 ```
 
 ### Args syntax {#metadata-pg-untrack-table-syntax}
 
-| Key     | Required | Schema                                                  | Description                                                                                                                        |
-| ------- | -------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)   | Name of the table                                                                                                                  |
-| cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any Metadata dependent objects (relationships, permissions, templates) |
-| source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`)                                                                      |
+| Key     | Required | Schema                                                  | Description                                                                                                                                            |
+| ------- | -------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)   | Name of the table                                                                                                                                      |
+| cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any Metadata dependent objects (relationships, permissions, templates). (default: `false`) |
+| source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`)                                                                                          |
+
+## pg_untrack_tables {#metadata-pg-untrack-tables}
+
+:::tip Supported from
+
+`pg_untrack_tables` is supported for versions `v2.26.0` and above.
+
+:::
+
+`pg_untrack_tables` is used to remove multiple tables/views from the GraphQL schema at once. It is typically faster to
+untrack more than one table using this API, compared to repeating `pg_untrack_table` for each table you want to
+untrack.
+
+`pg_untrack_tables` works in very similar fashion to `pg_untrack_table`, except it allows you to pass multiple tables,
+each using the same args format as `pg_untrack_table`.
+
+Remove two tables/views, `author` and `book`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_untrack_tables",
+  "args": {
+    "tables": [
+      {
+        "table": {
+          "schema": "public",
+          "name": "author"
+        },
+        "source": "default",
+        "cascade": true
+      },
+      {
+        "table": {
+          "schema": "public",
+          "name": "book"
+        },
+        "source": "default",
+        "cascade": true
+      }
+    ]
+  }
+}
+```
+
+By default, if some of the tables specified in `pg_untrack_tables` fail to untrack, these tables will be skipped.
+Information about the tables that failed to untrack will be returned as warnings in the response.
+
+To untrack tables in an all-or-nothing fashion, you can disallow warnings by using the `allow_warnings` property:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_untrack_tables",
+  "args": {
+    "allow_warnings": false,
+    "tables": [
+      {
+        "source": "default",
+        "table": "author",
+        "cascade": true
+      },
+      {
+        "source": "default",
+        "table": "book",
+        "cascade": true
+      }
+    ]
+  }
+}
+```
+
+### Args syntax {#metadata-pg-untrack-tables-syntax}
+
+| Key            | Required | Schema                                                       | Description                                                                                                                                                                        |
+| -------------- | -------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| tables         | true     | [[pg_untrack_table Args](#metadata-pg-untrack-table-syntax)] | An array of untrack table arguments.                                                                                                                                               |
+| allow_warnings | false    | Boolean                                                      | If set to `false`, any warnings will cause the API call to fail and no tables to be untracked. Otherwise tables that fail to untrack will be raised as warnings. (default: `true`) |
 
 ## pg_set_table_is_enum {#metadata-pg-set-table-is-enum}
 
@@ -402,6 +598,79 @@ Hasura GraphQL Engine requires the constraint names (if any) of a table to be
 | source                   | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the table (default: `default`) |
 | apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo federation configuration for the table                 |
 
+## mssql_track_tables {#mssql-track-tables}
+
+:::tip Supported from
+
+`mssql_track_tables` is supported for versions `v2.26.0` and above.
+
+:::
+
+`mssql_track_tables` is used to track multiple tables at once. It is typically faster to track more than one table using
+this API, compared to repeating `mssql_track_table` for each table you want to track.
+
+`mssql_track_tables` works in very similar fashion to `mssql_track_table`, except it allows you to pass multiple tables,
+each using the same args format as `mssql_track_table`.
+
+Add two tables/views `author` and `book`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mssql_track_tables",
+  "args": {
+    "tables": [
+      {
+        "source": "default",
+        "table": "author"
+      },
+      {
+        "source": "default",
+        "table": "book"
+      }
+    ]
+  }
+}
+```
+
+By default, if some of the tables specified in `mssql_track_tables` fail to track, these tables will be skipped.
+Information about the tables that failed to track will be returned as warnings in the response.
+
+To track tables in an all-or-nothing fashion, you can disallow warnings by using the `allow_warnings` property:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mssql_track_tables",
+  "args": {
+    "allow_warnings": false,
+    "tables": [
+      {
+        "source": "default",
+        "table": "author"
+      },
+      {
+        "source": "default",
+        "table": "book"
+      }
+    ]
+  }
+}
+```
+
+### Args syntax {#mssql-track-tables-syntax}
+
+| Key            | Required | Schema                                                         | Description                                                                                                                                                                        |
+| -------------- | -------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| tables         | true     | [[mssql_track_table Args](#mssql-track-table-syntax)] | An array of track table arguments.                                                                                                                                                 |
+| allow_warnings | false    | Boolean                                                        | If set to `false`, any warnings will cause the API call to fail and no new tables to be tracked. Otherwise tables that fail to track will be raised as warnings. (default: `true`) |
+
 ## mssql_untrack_table {#mssql-untrack-table}
 
 `untrack_table` is used to remove a table/view from the GraphQL schema.
@@ -414,25 +683,109 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-    "type": "mssql_untrack_table",
-    "args": {
-        "table": {
-            "schema": "dbo",
-            "name": "author"
-          },
-        "source": "default",
-        "cascade": true
-    }
+  "type": "mssql_untrack_table",
+  "args": {
+    "table": {
+      "schema": "dbo",
+      "name": "author"
+    },
+    "source": "default",
+    "cascade": true
+  }
 }
 ```
 
 ### Args syntax {#mssql-untrack-table-syntax}
 
-| Key     | Required | Schema                                                  | Description                                                                                                                        |
-| ------- | -------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)   | Name of the table                                                                                                                  |
-| cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any Metadata dependent objects (relationships, permissions, templates) |
-| source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`)                                                                      |
+| Key     | Required | Schema                                                  | Description                                                                                                                                            |
+| ------- | -------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| table   | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)   | Name of the table                                                                                                                                      |
+| cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any Metadata dependent objects (relationships, permissions, templates). (default: `false`) |
+| source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`)                                                                                          |
+
+## mssql_untrack_tables {#mssql-untrack-tables}
+
+:::tip Supported from
+
+`mssql_untrack_tables` is supported for versions `v2.26.0` and above.
+
+:::
+
+`mssql_untrack_tables` is used to remove multiple tables/views from the GraphQL schema at once. It is typically faster to
+untrack more than one table using this API, compared to repeating `mssql_untrack_table` for each table you want to
+untrack.
+
+`mssql_untrack_tables` works in very similar fashion to `mssql_untrack_table`, except it allows you to pass multiple tables,
+each using the same args format as `mssql_untrack_table`.
+
+Remove two tables/views, `author` and `book`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mssql_untrack_tables",
+  "args": {
+    "tables": [
+      {
+        "table": {
+          "schema": "dbo",
+          "name": "author"
+        },
+        "source": "default",
+        "cascade": true
+      },
+      {
+        "table": {
+          "schema": "dbo",
+          "name": "book"
+        },
+        "source": "default",
+        "cascade": true
+      }
+    ]
+  }
+}
+```
+
+By default, if some of the tables specified in `mssql_untrack_tables` fail to untrack, these tables will be skipped.
+Information about the tables that failed to untrack will be returned as warnings in the response.
+
+To untrack tables in an all-or-nothing fashion, you can disallow warnings by using the `allow_warnings` property:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mssql_untrack_tables",
+  "args": {
+    "allow_warnings": false,
+    "tables": [
+      {
+        "source": "default",
+        "table": "author",
+        "cascade": true
+      },
+      {
+        "source": "default",
+        "table": "book",
+        "cascade": true
+      }
+    ]
+  }
+}
+```
+
+### Args syntax {#mssql-untrack-tables-syntax}
+
+| Key            | Required | Schema                                                    | Description                                                                                                                                                                        |
+| -------------- | -------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| tables         | true     | [[mssql_untrack_table Args](#mssql-untrack-table-syntax)] | An array of untrack table arguments.                                                                                                                                               |
+| allow_warnings | false    | Boolean                                                   | If set to `false`, any warnings will cause the API call to fail and no tables to be untracked. Otherwise tables that fail to untrack will be raised as warnings. (default: `true`) |
 
 ## mssql_set_table_customization {#mssql-set-table-customization}
 
@@ -629,6 +982,91 @@ Hasura GraphQL Engine requires the constraint names (if any) of a table to be
 | source                   | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the table (default: `default`) |
 | apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo federation configuration for the table                 |
 
+## bigquery_track_tables {#metadata-bigquery-track-tables}
+
+:::tip Supported from
+
+`bigquery_track_tables` is supported for versions `v2.26.0` and above.
+
+:::
+
+`bigquery_track_tables` is used to track multiple tables at once. It is typically faster to track more than one table using
+this API, compared to repeating `bigquery_track_table` for each table you want to track.
+
+`bigquery_track_tables` works in very similar fashion to `bigquery_track_table`, except it allows you to pass multiple tables,
+each using the same args format as `bigquery_track_table`.
+
+Add two tables/views `author` and `book`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bigquery_track_tables",
+  "args": {
+    "tables": [
+      {
+        "source": "default",
+        "table": {
+          "dataset": "hasura",
+          "name": "author"
+        }
+      },
+      {
+        "source": "default",
+        "table": {
+          "dataset": "hasura",
+          "name": "book"
+        }
+      }
+    ]
+  }
+}
+```
+
+By default, if some of the tables specified in `bigquery_track_tables` fail to track, these tables will be skipped.
+Information about the tables that failed to track will be returned as warnings in the response.
+
+To track tables in an all-or-nothing fashion, you can disallow warnings by using the `allow_warnings` property:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bigquery_track_tables",
+  "args": {
+    "allow_warnings": false,
+    "tables": [
+      {
+        "source": "default",
+        "table": {
+          "dataset": "hasura",
+          "name": "author"
+        }
+      },
+      {
+        "source": "default",
+        "table": {
+          "dataset": "hasura",
+          "name": "book"
+        }
+      }
+    ]
+  }
+}
+```
+
+### Args syntax {#metadata-bigquery-track-tables-syntax}
+
+| Key            | Required | Schema                                                               | Description                                                                                                                                                                        |
+| -------------- | -------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| tables         | true     | [[bigquery_track_table Args](#metadata-bigquery-track-table-syntax)] | An array of track table arguments.                                                                                                                                                 |
+| allow_warnings | false    | Boolean                                                              | If set to `false`, any warnings will cause the API call to fail and no new tables to be tracked. Otherwise tables that fail to track will be raised as warnings. (default: `true`) |
+
 ## bigquery_untrack_table {#metadata-bigquery-untrack-table}
 
 `bigquery_untrack_table` is used to remove a table/view from the GraphQL schema.
@@ -641,25 +1079,115 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-    "type": "bigquery_untrack_table",
-    "args": {
-        "table": {
-            "dataset": "hasura",
-            "name": "author"
-          },
-        "source": "default",
-        "cascade": true
-    }
+  "type": "bigquery_untrack_table",
+  "args": {
+    "table": {
+      "dataset": "hasura",
+      "name": "author"
+    },
+    "source": "default",
+    "cascade": true
+  }
 }
 ```
 
 ### Args syntax {#metadata-bigquery-untrack-table-syntax}
 
-| Key     | Required | Schema                                                  | Description                                                                                                                        |
-| ------- | -------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| table   | true     | {"dataset":\_, "name":\_}                               | Name of the table                                                                                                                  |
-| cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any Metadata dependent objects (relationships, permissions, templates) |
-| source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`)                                                                      |
+| Key     | Required | Schema                                                  | Description                                                                                                                                            |
+| ------- | -------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| table   | true     | {"dataset":\_, "name":\_}                               | Name of the table                                                                                                                                      |
+| cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any Metadata dependent objects (relationships, permissions, templates). (default: `false`) |
+| source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database of the table (default: `default`)                                                                                          |
+
+## bigquery_untrack_tables {#metadata-bigquery-untrack-tables}
+
+:::tip Supported from
+
+`bigquery_untrack_tables` is supported for versions `v2.26.0` and above.
+
+:::
+
+`bigquery_untrack_tables` is used to remove multiple tables/views from the GraphQL schema at once. It is typically faster to
+untrack more than one table using this API, compared to repeating `bigquery_untrack_table` for each table you want to
+untrack.
+
+`bigquery_untrack_tables` works in very similar fashion to `bigquery_untrack_table`, except it allows you to pass multiple tables,
+each using the same args format as `bigquery_untrack_table`.
+
+Remove two tables/views, `author` and `book`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bigquery_untrack_tables",
+  "args": {
+    "tables": [
+      {
+        "table": {
+          "dataset": "hasura",
+          "name": "author"
+        },
+        "source": "default",
+        "cascade": true
+      },
+      {
+        "table": {
+          "dataset": "hasura",
+          "name": "book"
+        },
+        "source": "default",
+        "cascade": true
+      }
+    ]
+  }
+}
+```
+
+By default, if some of the tables specified in `bigquery_untrack_tables` fail to untrack, these tables will be skipped.
+Information about the tables that failed to untrack will be returned as warnings in the response.
+
+To untrack tables in an all-or-nothing fashion, you can disallow warnings by using the `allow_warnings` property:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bigquery_untrack_tables",
+  "args": {
+    "allow_warnings": false,
+    "tables": [
+      {
+        "table": {
+          "dataset": "hasura",
+          "name": "author"
+        },
+        "source": "default",
+        "cascade": true
+      },
+      {
+        "table": {
+          "dataset": "hasura",
+          "name": "book"
+        },
+        "source": "default",
+        "cascade": true
+      }
+    ]
+  }
+}
+```
+
+### Args syntax {#metadata-bigquery-untrack-tables-syntax}
+
+| Key            | Required | Schema                                                                   | Description                                                                                                                                                                        |
+| -------------- | -------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| tables         | true     | [[bigquery_untrack_table Args](#metadata-bigquery-untrack-table-syntax)] | An array of untrack table arguments.                                                                                                                                               |
+| allow_warnings | false    | Boolean                                                                  | If set to `false`, any warnings will cause the API call to fail and no tables to be untracked. Otherwise tables that fail to untrack will be raised as warnings. (default: `true`) |
 
 ## bigquery_set_table_customization {#metadata-bigquery-set-table-customization}
 

@@ -14,7 +14,6 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 <div className="badge-container">
   <ProductBadge free standard pro ee self />
-  <div className="badge badge-gray heading-badge">Beta</div>
 </div>
 
 ## Introduction
@@ -22,35 +21,32 @@ import ProductBadge from '@site/src/components/ProductBadge';
 Hasura enables you to connect to MySQL databases to automatically build a rich GraphQL API based on your database
 schema.
 
-At present, our MySQL integration is available in Hasura Cloud and Docker environments, where you can run
-Hasura GraphQL Engine and connect the MySQL GraphQL Data Connector to it. For more information on GraphQL Data
-Connectors check out [our blog post on the topic](https://hasura.io/blog/hasura-graphql-data-connectors/).
+At present, our MySQL integration is available in Hasura Cloud and Docker environments, where you can run Hasura GraphQL
+Engine and connect the MySQL GraphQL Data Connector to it. For more information on GraphQL Data Connectors check out
+[our blog post on the topic](https://hasura.io/blog/hasura-graphql-data-connectors/).
 
-To get started with MySQL, check out our [Getting Started with Docker](/databases/mysql/docker.mdx) guide.
+To get started with MySQL:
+
+- In Hasura Cloud, check out our [Getting Started with MySQL in Hasura Cloud](/databases/mysql/cloud.mdx) guide
+- In a Docker environment, check out our [Getting Started with Docker](/databases/mysql/docker.mdx) guide
 
 :::tip Supported versions:
 
-1.  Hasura GraphQL Engine `v2.19.0` onwards
-2.  MySQL version 8.0 and higher
-3.  Currently only standard implementations of MySQL are supported. PlanetScale and certain other providers are
-    unsupported.
+1.  Hasura GraphQL Engine `v2.24.0` onwards
+2.  Hasura supports most databases with standard implementations of **MySQL 8.0 and higher** including: Amazon RDS,
+    Amazon Aurora, Google Cloud SQL and Digital Ocean.
+3.  PlanetScale and certain other providers are unsupported.
 
 :::
 
 :::tip Supported features
 
-Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and permissions on MySQL.
+Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and
+permissions on MySQL.
 
 Note that Hasura doesn't yet support the ability to modify the database schema for MySQL, so the database you connect to
 should already contain tables and data. You should also ideally have access to it outside of Hasura to modify the
 schema.
-
-:::
-
-:::warning Deprecation Notice
-
-The previous [MySQL preview implementation](/databases/mysql/deprecated/index.mdx) has been deprecated in favor of this
-new implementation built using our [GraphQL Data Connectors](https://hasura.io/blog/hasura-graphql-data-connectors/).
 
 :::
 

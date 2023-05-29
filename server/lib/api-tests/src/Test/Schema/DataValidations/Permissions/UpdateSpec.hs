@@ -6,10 +6,10 @@
 module Test.Schema.DataValidations.Permissions.UpdateSpec (spec) where
 
 import Data.Aeson (Value)
-import Data.Aeson.Key qualified as Key (toString)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphqlWithHeaders, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
@@ -42,6 +42,12 @@ spec = do
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
                   setupMetadata Cockroach.backendTypeMetadata testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Sqlite.setupTablesAction schema testEnvironment,
+                  setupMetadata Sqlite.backendTypeMetadata testEnvironment
                 ]
             }
         ]
@@ -150,7 +156,7 @@ tests =
             errors:
             - extensions:
                 code: validation-failed
-                path: "$.selectionSet.update_hasura_author.args._set.id"
+                path: "$.selectionSet.update_#{schemaName}_author.args._set.id"
               message: "field 'id' not found in type: '#{schemaName}_author_set_input'"
             |]
 
@@ -184,7 +190,7 @@ tests =
             errors:
             - extensions:
                 code: validation-failed
-                path: "$.selectionSet.update_hasura_author_many.args.updates[0]._set.id"
+                path: "$.selectionSet.update_#{schemaName}_author_many.args.updates[0]._set.id"
               message: "field 'id' not found in type: '#{schemaName}_author_set_input'"
             |]
 
@@ -216,14 +222,14 @@ setupMetadata backendTypeMetadata testEnvironment = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
 
-      schemaKeyword :: String
-      schemaKeyword = Key.toString $ Fixture.backendSchemaKeyword backendTypeMetadata
-
       backendPrefix :: String
       backendPrefix = Fixture.backendTypeString backendTypeMetadata
 
       source :: String
       source = Fixture.backendSourceName backendTypeMetadata
+
+      authorTable :: Value
+      authorTable = Schema.mkTableField backendTypeMetadata schemaName "author"
 
       setup :: IO ()
       setup =
@@ -235,9 +241,7 @@ setupMetadata backendTypeMetadata testEnvironment = do
             - type: #{backendPrefix}_create_select_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: author
+                table: #{authorTable}
                 role: user
                 permission:
                   filter:
@@ -249,9 +253,7 @@ setupMetadata backendTypeMetadata testEnvironment = do
             - type: #{backendPrefix}_create_update_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: author
+                table: #{authorTable}
                 role: user
                 permission:
                   filter:
@@ -271,16 +273,12 @@ setupMetadata backendTypeMetadata testEnvironment = do
             - type: #{backendPrefix}_drop_select_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: author
+                table: #{authorTable}
                 role: user
             - type: #{backendPrefix}_drop_update_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: author
+                table: #{authorTable}
                 role: user
           |]
 

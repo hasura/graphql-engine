@@ -30,9 +30,14 @@ data PGDumpReqBody = PGDumpReqBody
 instance FromJSON PGDumpReqBody where
   parseJSON = withObject "Object" $ \o ->
     PGDumpReqBody
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "opts"
-      <*> o .:? "clean_output" .!= False
+      <$> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "opts"
+      <*> o
+      .:? "clean_output"
+      .!= False
 
 execPGDump ::
   (MonadError RTE.QErr m, MonadIO m) =>

@@ -18,7 +18,7 @@ where
 
 import Control.Lens.TH (makePrisms)
 import Data.Aeson qualified as J
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Kind (Type)
 import Hasura.EncJSON
 import Hasura.Prelude
@@ -74,7 +74,7 @@ type MutFlds b = MutFldsG b Void (SQLExpression b)
 
 buildEmptyMutResp :: MutationOutput backend -> EncJSON
 buildEmptyMutResp = \case
-  MOutMultirowFields mutFlds -> encJFromJValue $ OMap.fromList $ map (second convMutFld) mutFlds
+  MOutMultirowFields mutFlds -> encJFromJValue $ InsOrdHashMap.fromList $ map (second convMutFld) mutFlds
   MOutSinglerowObject _ -> encJFromJValue $ J.Object mempty
   where
     convMutFld = \case

@@ -331,20 +331,20 @@ data Countable fieldname
   | DistinctCountable (NonEmpty fieldname)
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
 
-deriving anyclass instance FromJSON a => FromJSON (Countable a)
+deriving anyclass instance (FromJSON a) => FromJSON (Countable a)
 
-deriving anyclass instance Hashable a => Hashable (Countable a)
+deriving anyclass instance (Hashable a) => Hashable (Countable a)
 
-deriving anyclass instance ToJSON a => ToJSON (Countable a)
+deriving anyclass instance (ToJSON a) => ToJSON (Countable a)
 
-deriving anyclass instance NFData a => NFData (Countable a)
+deriving anyclass instance (NFData a) => NFData (Countable a)
 
 data From
   = FromQualifiedTable (Aliased TableName)
   | FromSelect (Aliased Select)
   | FromSelectJson (Aliased SelectJson)
   | FromFunction (Aliased SelectFromFunction)
-  | FromNativeQuery NativeQueryName
+  | FromNativeQuery (Aliased NativeQueryName)
   deriving stock (Eq, Show, Generic, Data, Lift, Ord)
   deriving anyclass (Hashable, NFData)
 
@@ -381,13 +381,13 @@ data Aliased a = Aliased
   }
   deriving stock (Eq, Ord, Show, Generic, Data, Lift, Functor)
 
-deriving anyclass instance FromJSON a => FromJSON (Aliased a)
+deriving anyclass instance (FromJSON a) => FromJSON (Aliased a)
 
-deriving anyclass instance Hashable a => Hashable (Aliased a)
+deriving anyclass instance (Hashable a) => Hashable (Aliased a)
 
-deriving anyclass instance ToJSON a => ToJSON (Aliased a)
+deriving anyclass instance (ToJSON a) => ToJSON (Aliased a)
 
-deriving anyclass instance NFData a => NFData (Aliased a)
+deriving anyclass instance (NFData a) => NFData (Aliased a)
 
 data TableName = TableName
   { tableName :: Text,
@@ -398,10 +398,12 @@ data TableName = TableName
 
 instance HasCodec TableName where
   codec =
-    object "BigQueryTableName" $
-      TableName
-        <$> requiredField' "name" .= tableName
-        <*> requiredField' "dataset" .= tableNameSchema
+    object "BigQueryTableName"
+      $ TableName
+      <$> requiredField' "name"
+      .= tableName
+        <*> requiredField' "dataset"
+      .= tableNameSchema
 
 instance FromJSON TableName where
   parseJSON =
@@ -626,8 +628,8 @@ data ScalarType
   deriving (FromJSON, ToJSON) via AC.Autodocodec ScalarType
 
 instance HasCodec ScalarType where
-  codec = AC.named "ScalarType" $
-    boundedEnumCodec \case
+  codec = AC.named "ScalarType"
+    $ boundedEnumCodec \case
       StringScalarType -> "STRING"
       BytesScalarType -> "BYTES"
       IntegerScalarType -> "INT64"
@@ -708,11 +710,11 @@ data BooleanOperators a
   | ASTDWithin (DWithinGeogOp a)
   deriving stock (Eq, Generic, Foldable, Functor, Traversable, Show)
 
-instance NFData a => NFData (BooleanOperators a)
+instance (NFData a) => NFData (BooleanOperators a)
 
-instance Hashable a => Hashable (BooleanOperators a)
+instance (Hashable a) => Hashable (BooleanOperators a)
 
-instance ToJSON a => J.ToJSONKeyValue (BooleanOperators a) where
+instance (ToJSON a) => J.ToJSONKeyValue (BooleanOperators a) where
   toJSONKeyValue = \case
     ASTContains a -> ("_st_contains", J.toJSON a)
     ASTEquals a -> ("_st_equals", J.toJSON a)
@@ -731,10 +733,12 @@ data FunctionName = FunctionName
 
 instance HasCodec FunctionName where
   codec =
-    object "BigQueryFunctionName" $
-      FunctionName
-        <$> requiredField' "name" .= functionName
-        <*> optionalField' "dataset" .= functionNameSchema
+    object "BigQueryFunctionName"
+      $ FunctionName
+      <$> requiredField' "name"
+      .= functionName
+        <*> optionalField' "dataset"
+      .= functionNameSchema
 
 instance FromJSON FunctionName where
   parseJSON =
@@ -769,11 +773,14 @@ data ComputedFieldDefinition = ComputedFieldDefinition
 
 instance HasCodec ComputedFieldDefinition where
   codec =
-    AC.object "BigQueryComputedFieldDefinition" $
-      ComputedFieldDefinition
-        <$> requiredField' "function" AC..= _bqcfdFunction
-        <*> optionalField' "return_table" AC..= _bqcfdReturnTable
-        <*> requiredField' "argument_mapping" AC..= _bqcfdArgumentMapping
+    AC.object "BigQueryComputedFieldDefinition"
+      $ ComputedFieldDefinition
+      <$> requiredField' "function"
+      AC..= _bqcfdFunction
+        <*> optionalField' "return_table"
+      AC..= _bqcfdReturnTable
+        <*> requiredField' "argument_mapping"
+      AC..= _bqcfdArgumentMapping
 
 instance ToJSON ComputedFieldDefinition where
   toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
@@ -799,13 +806,13 @@ data ComputedFieldReturn
     ReturnExistingTable TableName
   | -- | An arbitrary table schema specified by column name and type pairs
     ReturnTableSchema [(ColumnName, G.Name, ScalarType)]
-  deriving stock (Show, Eq, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (Hashable, NFData)
 
 instance ToJSON ComputedFieldReturn where
   toJSON =
-    J.genericToJSON $
-      J.defaultOptions
+    J.genericToJSON
+      $ J.defaultOptions
         { J.constructorTagModifier = J.snakeCase,
           J.sumEncoding = J.TaggedObject "type" "info"
         }
@@ -818,7 +825,7 @@ data FunctionArgument = FunctionArgument
     -- | The data type of the argument
     _faType :: ScalarType
   }
-  deriving stock (Show, Eq, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (Hashable, NFData)
 
 instance ToJSON FunctionArgument where
@@ -891,9 +898,11 @@ isNumType =
 getGQLTableName :: TableName -> Either QErr G.Name
 getGQLTableName (TableName table schema) = do
   let textName = schema <> "_" <> table
-  onNothing (G.mkName textName) $
-    throw400 ValidationFailed $
-      "cannot include " <> textName <> " in the GraphQL schema because it is not a valid GraphQL identifier"
+  onNothing (G.mkName textName)
+    $ throw400 ValidationFailed
+    $ "cannot include "
+    <> textName
+    <> " in the GraphQL schema because it is not a valid GraphQL identifier"
 
 --------------------------------------------------------------------------------
 -- Liberal numeric parsers/printers (via JSON)
@@ -904,10 +913,10 @@ getGQLTableName (TableName table schema) = do
 
 -- These printers may do something more clever later. See PG backend's
 -- equivalent functions.
-liberalIntegralPrinter :: Coercible Text a => a -> J.Value
+liberalIntegralPrinter :: (Coercible Text a) => a -> J.Value
 liberalIntegralPrinter a = J.toJSON (coerce a :: Text)
 
-liberalDecimalPrinter :: Coercible a Text => a -> J.Value
+liberalDecimalPrinter :: (Coercible a Text) => a -> J.Value
 liberalDecimalPrinter a = J.toJSON (coerce a :: Text)
 
 -- | Parse from text by simply validating it contains digits;

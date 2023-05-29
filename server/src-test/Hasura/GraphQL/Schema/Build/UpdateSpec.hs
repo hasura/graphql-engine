@@ -34,8 +34,8 @@ spec = do
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
                     utbUpdate =
-                      SingleBatchUpdate $
-                        UpdateBatchBuilder
+                      SingleBatchUpdate
+                        $ UpdateBatchBuilder
                           { ubbOperations = [(P.nameColumnBuilder, UpdateSet P.textNew)],
                             ubbWhere = [(P.nameColumnBuilder, [AEQ True P.textOld])]
                           }
@@ -60,8 +60,8 @@ spec = do
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
                     utbUpdate =
-                      SingleBatchUpdate $
-                        UpdateBatchBuilder
+                      SingleBatchUpdate
+                        $ UpdateBatchBuilder
                           { ubbOperations =
                               [ (P.nameColumnBuilder, UpdateSet P.textNew),
                                 (P.descColumnBuilder, UpdateSet P.textOther)

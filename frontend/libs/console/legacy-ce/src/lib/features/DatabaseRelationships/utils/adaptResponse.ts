@@ -27,6 +27,14 @@ const getKeyValuePair = (arr1: string[], arr2: string[]) => {
   return result;
 };
 
+type FkDefinition = {
+  fromColumns?: string[];
+  fromTable: Table;
+  toColumns?: string[];
+  toTable: Table;
+  mapping: Record<string, string>;
+};
+
 const getFkDefinition = (
   table: Table,
   relationship:
@@ -34,7 +42,7 @@ const getFkDefinition = (
     | LocalTableObjectRelationship
     | LocalTableArrayRelationship,
   suggestedRelationships: SuggestedRelationship[]
-): { toTable: Table; mapping: Record<string, string> } => {
+): FkDefinition => {
   if (isSameTableObjectRelationship(relationship)) {
     const fromTable = table;
     const fromColumns = Array.isArray(
@@ -51,6 +59,9 @@ const getFkDefinition = (
 
     return {
       toTable: matchingFkConstraint?.to.table,
+      toColumns: matchingFkConstraint?.to.columns,
+      fromTable: matchingFkConstraint?.from.table,
+      fromColumns: matchingFkConstraint?.from.columns,
       mapping: matchingFkConstraint
         ? getKeyValuePair(
             matchingFkConstraint.from.columns,
@@ -60,20 +71,36 @@ const getFkDefinition = (
     };
   }
 
-  const toTable = table;
   const toColumn =
     'column' in relationship.using.foreign_key_constraint_on
       ? [relationship.using.foreign_key_constraint_on.column]
       : relationship.using.foreign_key_constraint_on.columns;
 
   const matchingFkConstraint = suggestedRelationships.find(
-    suggestedRelationship =>
-      areTablesEqual(toTable, suggestedRelationship.to.table) &&
-      isEqual(toColumn.sort(), suggestedRelationship.to.columns)
+    suggestedRelationship => {
+      const sameFromTable = areTablesEqual(
+        table,
+        suggestedRelationship.from.table
+      );
+
+      const sameToColumns = isEqual(
+        toColumn.sort(),
+        suggestedRelationship.from.columns
+      );
+      const sameToTable = areTablesEqual(
+        relationship.using.foreign_key_constraint_on.table,
+        suggestedRelationship.to.table
+      );
+
+      return sameFromTable && sameToColumns && sameToTable;
+    }
   );
 
   return {
-    toTable: matchingFkConstraint?.from.table,
+    toTable: matchingFkConstraint?.to.table,
+    toColumns: matchingFkConstraint?.to.columns,
+    fromTable: matchingFkConstraint?.from.table,
+    fromColumns: matchingFkConstraint?.from.columns,
     mapping: matchingFkConstraint
       ? getKeyValuePair(
           matchingFkConstraint.to.columns,
@@ -83,7 +110,7 @@ const getFkDefinition = (
   };
 };
 
-export const adaptLocalObjectRelationshipWithManualConfigruation = ({
+export const adaptLocalObjectRelationshipWithManualConfiguration = ({
   table,
   dataSourceName,
   relationship,
@@ -116,14 +143,22 @@ export const adaptLocalObjectRelationshipWithFkConstraint = ({
   relationship: SameTableObjectRelationship | LocalTableObjectRelationship;
   suggestedRelationships: SuggestedRelationship[];
 }): LocalRelationship => {
-  return {
+  const fkDefinition = getFkDefinition(
+    table,
+    relationship,
+    suggestedRelationships
+  );
+
+  const localRelationship: LocalRelationship = {
     name: relationship.name,
     fromSource: dataSourceName,
     fromTable: table,
     relationshipType: 'Object',
     type: 'localRelationship',
-    definition: getFkDefinition(table, relationship, suggestedRelationships),
+    definition: fkDefinition,
   };
+
+  return localRelationship;
 };
 
 export const adaptLocalArrayRelationshipWithManualConfiguration = ({
@@ -159,14 +194,22 @@ export const adaptLocalArrayRelationshipWithFkConstraint = ({
   relationship: LocalTableArrayRelationship;
   suggestedRelationships: SuggestedRelationship[];
 }): LocalRelationship => {
-  return {
+  const fkDefinition = getFkDefinition(
+    table,
+    relationship,
+    suggestedRelationships
+  );
+
+  const localRelationship: LocalRelationship = {
     name: relationship.name,
     fromSource: dataSourceName,
-    fromTable: table,
+    fromTable: fkDefinition.fromTable,
     relationshipType: 'Array',
     type: 'localRelationship',
     definition: getFkDefinition(table, relationship, suggestedRelationships),
   };
+
+  return localRelationship;
 };
 
 export const adaptRemoteSchemaRelationship = ({

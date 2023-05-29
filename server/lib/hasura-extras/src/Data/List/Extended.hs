@@ -19,7 +19,7 @@ import Data.List qualified as L
 import Data.List.NonEmpty qualified as NE
 import Prelude
 
-duplicates :: Hashable a => [a] -> Set.HashSet a
+duplicates :: (Hashable a) => [a] -> Set.HashSet a
 duplicates =
   HashMap.keysSet . HashMap.filter (> 1) . HashMap.fromListWith (+) . map (,1 :: Int)
 
@@ -30,13 +30,13 @@ duplicates =
 uniques :: (Ord a) => [a] -> [a]
 uniques = nubOrd
 
-getDifference :: Hashable a => [a] -> [a] -> Set.HashSet a
+getDifference :: (Hashable a) => [a] -> [a] -> Set.HashSet a
 getDifference = Set.difference `on` Set.fromList
 
-getDifferenceOn :: Hashable k => (v -> k) -> [v] -> [v] -> [v]
+getDifferenceOn :: (Hashable k) => (v -> k) -> [v] -> [v] -> [v]
 getDifferenceOn f l = HashMap.elems . HashMap.differenceOn f l
 
-getOverlapWith :: Hashable k => (v -> k) -> [v] -> [v] -> [(v, v)]
+getOverlapWith :: (Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlapWith getKey left right =
   HashMap.elems $ HashMap.intersectionWith (,) (mkMap left) (mkMap right)
   where
@@ -49,7 +49,7 @@ getOverlapWith getKey left right =
 --
 -- >>> longestCommonPrefix []
 -- []
-longestCommonPrefix :: Eq a => [[a]] -> [a]
+longestCommonPrefix :: (Eq a) => [[a]] -> [a]
 longestCommonPrefix [] = []
 longestCommonPrefix (x : xs) = foldr prefix x xs
   where

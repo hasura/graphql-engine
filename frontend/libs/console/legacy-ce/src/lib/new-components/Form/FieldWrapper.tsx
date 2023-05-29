@@ -36,6 +36,10 @@ export type FieldWrapperPassThroughProps = {
    */
   dataTest?: string;
   /**
+   * The field data test id for testing
+   */
+  dataTestId?: string;
+  /**
    * Flag indicating whether the field is loading
    */
   loading?: boolean;
@@ -86,7 +90,15 @@ type FieldWrapperProps = FieldWrapperPassThroughProps & {
    * The field error
    */
   error?: FieldError | undefined;
+  /**
+   * Disable wrapping children in layers of divs to enable impacting children with styles (e.g. centering a switch element)
+   */
+  doNotWrapChildren?: boolean;
 };
+
+export const fieldLabelStyles = clsx(
+  'block pt-1 text-gray-600 mb-xs font-semibold'
+);
 
 export const ErrorComponentTemplate = (props: {
   label: React.ReactNode;
@@ -129,6 +141,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
     loading,
     noErrorPlaceholder = false,
     renderDescriptionLineBreaks = false,
+    doNotWrapChildren = false,
   } = props;
 
   let FieldLabel = () => <></>;
@@ -164,7 +177,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
 
   if (label) {
     FieldLabel = () => (
-      <label htmlFor={id} className={clsx('block pt-1 text-gray-600 mb-xs')}>
+      <label htmlFor={id} className={fieldLabelStyles}>
         <span className={clsx('flex items-center')}>
           <span className={clsx('font-semibold', { relative: !!loading })}>
             <FieldLabelIcon />
@@ -207,21 +220,39 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
       )}
     >
       <FieldLabel />
-      <div>
-        {/*
+      {doNotWrapChildren ? (
+        <>
+          {loading ? (
+            <div className={'relative'}>
+              {/* Just in case anyone is wondering... we render the children here b/c the height/width of the children takes up the space that the loading skeleton appears on top of. So, without the children, the skeleton would not appear. */}
+              {children}
+              <Skeleton
+                containerClassName="block leading-[0]"
+                className="absolute inset-0"
+              />
+            </div>
+          ) : (
+            children
+          )}
+          <FieldErrors />
+        </>
+      ) : (
+        <div>
+          {/*
           Remove line height to prevent skeleton bug
         */}
-        <div className={loading ? 'relative' : ''}>
-          {children}
-          {loading && (
-            <Skeleton
-              containerClassName="block leading-[0]"
-              className="absolute inset-0"
-            />
-          )}
+          <div className={loading ? 'relative' : ''}>
+            {children}
+            {loading && (
+              <Skeleton
+                containerClassName="block leading-[0]"
+                className="absolute inset-0"
+              />
+            )}
+          </div>
+          <FieldErrors />
         </div>
-        <FieldErrors />
-      </div>
+      )}
     </div>
   );
 };

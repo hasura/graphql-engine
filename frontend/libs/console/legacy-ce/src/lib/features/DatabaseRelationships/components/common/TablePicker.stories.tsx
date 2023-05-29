@@ -3,16 +3,16 @@ import { SimpleForm } from '../../../../new-components/Form';
 import { z } from 'zod';
 import { action } from '@storybook/addon-actions';
 import { Button } from '../../../../new-components/Button';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { TablePicker } from './TablePicker';
 
 export default {
   component: TablePicker,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof TablePicker>;
+} as Meta<typeof TablePicker>;
 
-export const Basic: ComponentStory<typeof TablePicker> = () => (
+export const Basic: StoryFn<typeof TablePicker> = () => (
   <SimpleForm
     schema={z.object({
       fromSource: z.object({

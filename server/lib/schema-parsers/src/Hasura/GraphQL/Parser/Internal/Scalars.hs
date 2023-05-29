@@ -60,46 +60,46 @@ import Language.GraphQL.Draft.Syntax hiding (Definition)
 --------------------------------------------------------------------------------
 -- Built-in scalars
 
-namedBoolean :: MonadParse m => Name -> Parser origin 'Both m Bool
+namedBoolean :: (MonadParse m) => Name -> Parser origin 'Both m Bool
 namedBoolean name = mkScalar name \case
   GraphQLValue (VBoolean b) -> pure b
   JSONValue (J.Bool b) -> pure b
   v -> typeMismatch name "a boolean" v
 
-boolean :: MonadParse m => Parser origin 'Both m Bool
+boolean :: (MonadParse m) => Parser origin 'Both m Bool
 boolean = namedBoolean GName._Boolean
 
-namedInt :: MonadParse m => Name -> Parser origin 'Both m Int32
+namedInt :: (MonadParse m) => Name -> Parser origin 'Both m Int32
 namedInt name = mkScalar name \case
   GraphQLValue (VInt i) -> scientificToInteger $ fromInteger i
   JSONValue (J.Number n) -> scientificToInteger n
   v -> typeMismatch name "a 32-bit integer" v
 
-int :: MonadParse m => Parser origin 'Both m Int32
+int :: (MonadParse m) => Parser origin 'Both m Int32
 int = namedInt GName._Int
 
-namedFloat :: MonadParse m => Name -> Parser origin 'Both m Double
+namedFloat :: (MonadParse m) => Name -> Parser origin 'Both m Double
 namedFloat name = mkScalar name \case
   GraphQLValue (VFloat f) -> scientificToFloat f
   GraphQLValue (VInt i) -> scientificToFloat $ fromInteger i
   JSONValue (J.Number n) -> scientificToFloat n
   v -> typeMismatch name "a float" v
 
-float :: MonadParse m => Parser origin 'Both m Double
+float :: (MonadParse m) => Parser origin 'Both m Double
 float = namedFloat GName._Float
 
-namedString :: MonadParse m => Name -> Parser origin 'Both m Text
+namedString :: (MonadParse m) => Name -> Parser origin 'Both m Text
 namedString name = mkScalar name \case
   GraphQLValue (VString s) -> pure s
   JSONValue (J.String s) -> pure s
   v -> typeMismatch name "a string" v
 
-string :: MonadParse m => Parser origin 'Both m Text
+string :: (MonadParse m) => Parser origin 'Both m Text
 string = namedString GName._String
 
 -- | As an input type, any string or integer input value should be coerced to ID as Text
 -- https://spec.graphql.org/June2018/#sec-ID
-namedIdentifier :: MonadParse m => Name -> Parser origin 'Both m Text
+namedIdentifier :: (MonadParse m) => Name -> Parser origin 'Both m Text
 namedIdentifier name = mkScalar name \case
   GraphQLValue (VString s) -> pure s
   GraphQLValue (VInt i) -> pure . Text.pack $ show i
@@ -109,13 +109,13 @@ namedIdentifier name = mkScalar name \case
   where
     parseScientific = fmap (Text.pack . show @Int) . scientificToInteger
 
-identifier :: MonadParse m => Parser origin 'Both m Text
+identifier :: (MonadParse m) => Parser origin 'Both m Text
 identifier = namedIdentifier GName._ID
 
 --------------------------------------------------------------------------------
 -- Custom scalars
 
-uuid :: MonadParse m => Parser origin 'Both m UUID.UUID
+uuid :: (MonadParse m) => Parser origin 'Both m UUID.UUID
 uuid = mkScalar name \case
   GraphQLValue (VString s) -> parseJSON $ J.String s
   JSONValue v -> parseJSON v
@@ -123,14 +123,14 @@ uuid = mkScalar name \case
   where
     name = $$(litName "uuid")
 
-json, jsonb :: MonadParse m => Parser origin 'Both m J.Value
+json, jsonb :: (MonadParse m) => Parser origin 'Both m J.Value
 json = jsonScalar $$(litName "json") Nothing
 jsonb = jsonScalar $$(litName "jsonb") Nothing
 
 -- | Additional validation on integers. We do keep the same type name in the schema for backwards
 -- compatibility.
 -- TODO: when we can do a breaking change, we can rename the type to "NonNegativeInt".
-nonNegativeInt :: MonadParse m => Parser origin 'Both m Int32
+nonNegativeInt :: (MonadParse m) => Parser origin 'Both m Int32
 nonNegativeInt = mkScalar GName._Int \case
   GraphQLValue (VInt i) | i >= 0 -> scientificToInteger $ fromInteger i
   JSONValue (J.Number n) | n >= 0 -> scientificToInteger n
@@ -140,7 +140,7 @@ nonNegativeInt = mkScalar GName._Int \case
 -- we declare a cusom scalar that can represent 64-bit ints, which accepts both int literals and
 -- string literals. We do keep the same type name in the schema for backwards compatibility.
 -- TODO: when we can do a breaking change, we can rename the type to "BigInt".
-bigInt :: MonadParse m => Parser origin 'Both m Int64
+bigInt :: (MonadParse m) => Parser origin 'Both m Int64
 bigInt = mkScalar GName._Int \case
   GraphQLValue (VInt i) -> scientificToInteger $ fromInteger i
   JSONValue (J.Number n) -> scientificToInteger n
@@ -154,7 +154,7 @@ bigInt = mkScalar GName._Int \case
 
 -- | Parser for 'Scientific'. Certain backends like BigQuery support
 -- Decimal/BigDecimal and need an arbitrary precision number.
-scientific :: MonadParse m => Parser origin 'Both m Scientific
+scientific :: (MonadParse m) => Parser origin 'Both m Scientific
 scientific = mkScalar name \case
   GraphQLValue (VFloat f) -> pure f
   GraphQLValue (VInt i) -> pure $ S.scientific i 0
@@ -168,7 +168,7 @@ scientific = mkScalar name \case
 
 -- | Creates a parser that transforms its input into a JSON value. 'valueToJSON'
 -- does properly unpack variables.
-jsonScalar :: MonadParse m => Name -> Maybe Description -> Parser origin 'Both m J.Value
+jsonScalar :: (MonadParse m) => Name -> Maybe Description -> Parser origin 'Both m J.Value
 jsonScalar name description =
   Parser
     { pType = schemaType,
@@ -182,7 +182,7 @@ jsonScalar name description =
 
 -- | Creates a custom scalar, exposed in the schema with the given name.
 mkScalar ::
-  MonadParse m =>
+  (MonadParse m) =>
   Name ->
   (InputValue Variable -> m a) ->
   Parser origin 'Both m a

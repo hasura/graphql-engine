@@ -27,9 +27,9 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Table
 import Hasura.SQL.Types
 import Hasura.Session
+import Hasura.Table.Cache
 import Hasura.Tracing qualified as Tracing
 
 data CountQueryP1 = CountQueryP1
@@ -45,14 +45,14 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
   S.mkSelect
     { S.selExtr = [S.Extractor S.countStar Nothing],
       S.selFrom =
-        Just $
-          S.FromExp
+        Just
+          $ S.FromExp
             [S.mkSelFromExp False innerSel $ TableName "r"]
     }
   where
     finalWC =
-      toSQLBoolExp (S.QualTable tn) $
-        maybe permFltr (andAnnBoolExps permFltr) mWc
+      toSQLBoolExp (S.QualTable tn)
+        $ maybe permFltr (andAnnBoolExps permFltr) mWc
 
     innerSel =
       partSel
@@ -85,8 +85,8 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt _ mDistCols mWhere) = 
 
   -- Check if select is allowed
   selPerm <-
-    modifyErr (<> selNecessaryMsg) $
-      askSelPermInfo tableInfo
+    modifyErr (<> selNecessaryMsg)
+      $ askSelPermInfo tableInfo
 
   let colInfoMap = _tciFieldInfoMap $ _tiCoreInfo tableInfo
 
@@ -99,15 +99,15 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt _ mDistCols mWhere) = 
 
   -- convert the where clause
   annSQLBoolExp <- forM mWhere $ \be ->
-    withPathK "where" $
-      convBoolExp colInfoMap selPerm be sessVarBldr colInfoMap (valueParserWithCollectableType prepValBldr)
+    withPathK "where"
+      $ convBoolExp colInfoMap selPerm be sessVarBldr colInfoMap (valueParserWithCollectableType prepValBldr)
 
   resolvedSelFltr <-
-    convAnnBoolExpPartialSQL sessVarBldr $
-      spiFilter selPerm
+    convAnnBoolExpPartialSQL sessVarBldr
+      $ spiFilter selPerm
 
-  return $
-    CountQueryP1
+  return
+    $ CountQueryP1
       qt
       (resolvedSelFltr, annSQLBoolExp)
       mDistCols
@@ -125,9 +125,9 @@ validateCountQ ::
 validateCountQ query = do
   let source = cqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
-  flip runTableCacheRT tableCache $
-    runDMLP1T $
-      validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
+  flip runTableCacheRT tableCache
+    $ runDMLP1T
+    $ validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
 
 countQToTx ::
   (MonadTx m) =>
@@ -135,8 +135,8 @@ countQToTx ::
   m EncJSON
 countQToTx (u, p) = do
   qRes <-
-    liftTx $
-      PG.rawQE
+    liftTx
+      $ PG.rawQE
         dmlTxErrorHandler
         (PG.fromBuilder countSQL)
         (toList p)

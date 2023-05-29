@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { registerEETrialLicenseActiveMutation } from '../../mocks/registration.mock';
 
@@ -9,17 +9,20 @@ export default {
   title: 'features / EETrial / Activate EE Form / Form Wrapper 🧬️',
   component: FormWrapper,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof FormWrapper>;
+} as Meta<typeof FormWrapper>;
 
-export const Default: ComponentStory<typeof FormWrapper> = () => (
-  <FormWrapper onFormClose={() => {}} showBenefitsView />
-);
-Default.storyName = '💠 Default';
-Default.parameters = {
-  msw: [registerEETrialLicenseActiveMutation],
+export const Default: StoryObj<typeof FormWrapper> = {
+  render: () => <FormWrapper onFormClose={() => {}} showBenefitsView />,
+
+  name: '💠 Default',
+
+  parameters: {
+    msw: [registerEETrialLicenseActiveMutation],
+  },
 };
 
-export const LicenseExpired: ComponentStory<typeof FormWrapper> = () => (
-  <FormWrapper onFormClose={() => {}} showBenefitsView />
-);
-LicenseExpired.storyName = '💠 License Expired';
+export const LicenseExpired: StoryObj<typeof FormWrapper> = {
+  render: () => <FormWrapper onFormClose={() => {}} showBenefitsView />,
+
+  name: '💠 License Expired',
+};

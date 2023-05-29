@@ -235,8 +235,8 @@ mkCohortVariables ::
   ValidatedCursorVariables ->
   CohortVariables
 mkCohortVariables requiredSessionVariables sessionVariableValues =
-  CohortVariables $
-    filterSessionVariables
+  CohortVariables
+    $ filterSessionVariables
       (\k _ -> Set.member k requiredSessionVariables)
       sessionVariableValues
 

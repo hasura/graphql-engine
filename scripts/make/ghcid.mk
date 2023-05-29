@@ -60,7 +60,7 @@ ghcid-api-tests-pro:
 
 .PHONY: ghcid-test-backends
 ## ghcid-test-backends: run all api tests in ghcid
-ghcid-test-backends: start-backends remove-tix-file
+ghcid-test-backends: start-api-tests-backends remove-tix-file
 	$(call run_ghcid_api_tests,api-tests:exe:api-tests)
 
 .PHONY: ghcid-test-postgres

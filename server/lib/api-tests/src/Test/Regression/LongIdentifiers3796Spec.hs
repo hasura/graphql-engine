@@ -29,15 +29,7 @@ spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ -- Create table fails currently becasuse we postfix table names for some reason
-          -- which makes the valid table name go over the limit
-          --
-          -- (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
-          --   { Fixture.setupTeardown = \(testEnv, _) ->
-          --       [ Mysql.setupTablesAction schema testEnv
-          --       ]
-          --   },
-          (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv
                 ]
@@ -65,8 +57,8 @@ spec = do
                 [ BigQuery.setupTablesAction schema testEnv
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
             }

@@ -1,29 +1,29 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Data.HashMap.Strict.InsOrd.Extended
-  ( module OMap,
+  ( module InsOrdHashMap,
     catMaybes,
     partition,
     alterF,
   )
 where
 
-import Data.HashMap.Strict.InsOrd as OMap
+import Data.HashMap.Strict.InsOrd as InsOrdHashMap
 import Data.Hashable (Hashable)
 import Witherable (Filterable (..))
 import Prelude
 
-instance Filterable (OMap.InsOrdHashMap k) where
-  mapMaybe = OMap.mapMaybe
-  filter = OMap.filter
+instance Filterable (InsOrdHashMap.InsOrdHashMap k) where
+  mapMaybe = InsOrdHashMap.mapMaybe
+  filter = InsOrdHashMap.filter
 
-partition :: Hashable k => (v -> Bool) -> OMap.InsOrdHashMap k v -> (OMap.InsOrdHashMap k v, OMap.InsOrdHashMap k v)
+partition :: (Hashable k) => (v -> Bool) -> InsOrdHashMap.InsOrdHashMap k v -> (InsOrdHashMap.InsOrdHashMap k v, InsOrdHashMap.InsOrdHashMap k v)
 partition predicate =
-  OMap.foldlWithKey'
+  InsOrdHashMap.foldlWithKey'
     ( \(left, right) key val ->
         if (predicate val)
-          then (OMap.insert key val left, right)
-          else (left, OMap.insert key val right)
+          then (InsOrdHashMap.insert key val left, right)
+          else (left, InsOrdHashMap.insert key val right)
     )
     (mempty, mempty)
 
@@ -35,8 +35,8 @@ alterF ::
   k ->
   InsOrdHashMap k v ->
   f (InsOrdHashMap k v)
-alterF f k m = alter' <$> f (OMap.lookup k m)
+alterF f k m = alter' <$> f (InsOrdHashMap.lookup k m)
   where
     alter' = \case
-      Nothing -> OMap.delete k m
-      Just v -> OMap.insert k v m
+      Nothing -> InsOrdHashMap.delete k m
+      Just v -> InsOrdHashMap.insert k v m

@@ -141,7 +141,7 @@ spec TestData {..} API.Capabilities {..} = describe "schema API" $ preloadAgentS
         Maybe API.TableInfo -> -- Actual table
         ExampleT innerContext m ()
       ) ->
-      forall context. HasPreloadedAgentSchema context => SpecFree context IO ()
+      forall context. (HasPreloadedAgentSchema context) => SpecFree context IO ()
     testPerTable description test =
       describe description $ do
         forM_ _tdSchemaTables $ \expectedTable@API.TableInfo {..} -> do

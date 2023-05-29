@@ -35,8 +35,8 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
       v -> pure . AEQ False <$> parseWithTy columnType v
 
     parseOperation :: ColumnType 'BigQuery -> (Text, J.Value) -> m (OpExpG 'BigQuery v)
-    parseOperation columnType (opStr, val) = withPathK opStr $
-      case opStr of
+    parseOperation columnType (opStr, val) = withPathK opStr
+      $ case opStr of
         "_eq" -> parseEq
         "$eq" -> parseEq
         "_neq" -> parseNeq

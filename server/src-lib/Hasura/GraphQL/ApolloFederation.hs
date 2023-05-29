@@ -5,6 +5,7 @@ module Hasura.GraphQL.ApolloFederation
     ApolloFederationParserFunction (..),
     convertToApolloFedParserFunc,
     getApolloFederationStatus,
+    generateSDLWithAllTypes,
   )
 where
 
@@ -15,13 +16,12 @@ import Data.Aeson.KeyMap qualified as KMap
 import Data.Aeson.Ordered qualified as JO
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text qualified as T
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Schema.Common
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -31,11 +31,12 @@ import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Value (UnpreparedValue, ValueWithOrigin (ValueNoOrigin))
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Schema.Options (StringifyNumbers)
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Printer qualified as Printer
 import Language.GraphQL.Draft.Syntax qualified as G
 import Text.Builder qualified as Builder
@@ -61,8 +62,8 @@ anyParser =
       J.Object obj -> case KMap.lookup typenameKey obj of
         Just (J.String txt) -> case G.mkName txt of
           Just tName ->
-            pure $
-              ApolloFederationAnyType
+            pure
+              $ ApolloFederationAnyType
                 { afTypename = tName,
                   afPKValues = KMap.delete typenameKey obj
                 }
@@ -109,30 +110,34 @@ modifyApolloFedParserFunc
         cvValue <- case KMap.lookup (K.fromText colName) afPKValues of
           Nothing -> P.parseError . toErrorMessage $ "cannot find " <> colName <> " in _Any type"
           Just va -> liftQErr $ parseScalarValueColumnType (ciType columnInfo) va
-        pure $
-          IR.BoolField . IR.AVColumn columnInfo . pure . IR.AEQ True . IR.mkParameter $
-            ValueNoOrigin $
-              ColumnValue {..}
+        pure
+          $ IR.BoolField
+          . IR.AVColumn columnInfo
+          . pure
+          . IR.AEQ True
+          . IR.mkParameter
+          $ ValueNoOrigin
+          $ ColumnValue {..}
     let whereExpr = Just $ IR.BoolAnd $ toList allConstraints
         sourceName = _siName
         sourceConfig = _siConfiguration
         tableName = _tciName _tiCoreInfo
         queryDBRoot =
-          IR.QDBR $
-            IR.QDBSingleRow $
-              IR.AnnSelectG
-                { IR._asnFields = annField,
-                  IR._asnFrom = IR.FromTable tableName,
-                  IR._asnPerm = selectPermissions,
-                  IR._asnArgs = IR.noSelectArgs {IR._saWhere = whereExpr},
-                  IR._asnStrfyNum = stringifyNumbers,
-                  IR._asnNamingConvention = tCase
-                }
-    pure $
-      IR.RFDB sourceName $
-        AB.mkAnyBackend $
-          IR.SourceConfigWith sourceConfig Nothing $
-            queryDBRoot
+          IR.QDBR
+            $ IR.QDBSingleRow
+            $ IR.AnnSelectG
+              { IR._asnFields = annField,
+                IR._asnFrom = IR.FromTable tableName,
+                IR._asnPerm = selectPermissions,
+                IR._asnArgs = IR.noSelectArgs {IR._saWhere = whereExpr},
+                IR._asnStrfyNum = stringifyNumbers,
+                IR._asnNamingConvention = tCase
+              }
+    pure
+      $ IR.RFDB sourceName
+      $ AB.mkAnyBackend
+      $ IR.SourceConfigWith sourceConfig Nothing
+      $ queryDBRoot
     where
       liftQErr = either (P.parseError . toErrorMessage . qeError) pure . runExcept
 
@@ -157,7 +162,7 @@ mkServiceField = serviceFieldParser
     serviceParser = P.nonNullableParser $ P.selectionSet Name.__Service Nothing [sdlField]
     serviceFieldParser =
       P.subselection_ Name.__service Nothing serviceParser `bindField` \selSet -> do
-        let partialValue = OMap.map (\ps -> handleTypename (\tName _ -> JO.toOrdered tName) ps) (OMap.mapKeys G.unName selSet)
+        let partialValue = InsOrdHashMap.map (\ps -> handleTypename (\tName _ -> JO.toOrdered tName) ps) (InsOrdHashMap.mapKeys G.unName selSet)
         pure \schemaIntrospection -> RFRaw . JO.fromOrderedHashMap $ (partialValue ?? schemaIntrospection)
 
 apolloRootFields ::
@@ -175,11 +180,11 @@ apolloRootFields apolloFederationStatus apolloFedTableParsers =
       -- `serviceField` is essential to connect hasura to gateway, `entityField`
       -- is essential only if we have types that has @key directive
       if
-          | isApolloFederationEnabled apolloFederationStatus && not (null apolloFedTableParsers) ->
-              [serviceField, entityField]
-          | isApolloFederationEnabled apolloFederationStatus ->
-              [serviceField]
-          | otherwise -> []
+        | isApolloFederationEnabled apolloFederationStatus && not (null apolloFedTableParsers) ->
+            [serviceField, entityField]
+        | isApolloFederationEnabled apolloFederationStatus ->
+            [serviceField]
+        | otherwise -> []
 
 -- helpers
 
@@ -190,17 +195,25 @@ getApolloFederationStatus experimentalFeatures Nothing =
   bool ApolloFederationDisabled ApolloFederationEnabled (EFApolloFederation `elem` experimentalFeatures)
 getApolloFederationStatus _ (Just apolloFederationStatus) = apolloFederationStatus
 
--- | Generate sdl from the schema introspection
-generateSDL :: G.SchemaIntrospection -> Text
-generateSDL (G.SchemaIntrospection sIntro) = sdl
+data GenerateSDLType
+  = -- | Preserves schema types (GraphQL types prefixed with __) in the sdl generated
+    AllTypes
+  | -- | Removes schema types (GraphQL types prefixed with __) in the sdl generated
+    RemoveSchemaTypes
+  deriving (Eq)
+
+generateSDLFromIntrospection :: GenerateSDLType -> G.SchemaIntrospection -> Text
+generateSDLFromIntrospection genSdlType (G.SchemaIntrospection sIntro) = sdl
   where
     -- NOTE:  add this to the sdl to support apollo v2 directive
     _supportV2 :: Text
     _supportV2 = "\n\nextend schema\n@link(url: \"https://specs.apollo.dev/federation/v2.0\",\nimport: [\"@key\", \"@shareable\"])"
 
+    schemaFilterFn = bool id filterTypeDefinition (genSdlType == RemoveSchemaTypes)
+
     -- first we filter out the type definitions which are not relevent such as
     -- schema fields and types (starts with `__`)
-    typeDefns = map (G.TypeSystemDefinitionType . filterTypeDefinition . bimap (const ()) id) (HashMap.elems sIntro)
+    typeDefns = map (G.TypeSystemDefinitionType . schemaFilterFn . bimap (const ()) id) (HashMap.elems sIntro)
 
     -- next we get the root operation type definitions
     rootOpTypeDefns =
@@ -219,17 +232,24 @@ generateSDL (G.SchemaIntrospection sIntro) = sdl
 
     getSchemaDocument :: G.SchemaDocument
     getSchemaDocument =
-      G.SchemaDocument $
-        G.TypeSystemDefinitionSchema (G.SchemaDefinition Nothing rootOpTypeDefns) : typeDefns
+      G.SchemaDocument
+        $ G.TypeSystemDefinitionSchema (G.SchemaDefinition Nothing rootOpTypeDefns)
+        : typeDefns
 
 -- | Filter out schema components from sdl which are not required by apollo federation
 filterTypeDefinition :: G.TypeDefinition possibleTypes G.InputValueDefinition -> G.TypeDefinition possibleTypes G.InputValueDefinition
 filterTypeDefinition = \case
   G.TypeDefinitionObject (G.ObjectTypeDefinition a b c d e) ->
     -- We are skipping the schema types here
-    G.TypeDefinitionObject $
-      G.ObjectTypeDefinition a b c d (filter (not . T.isPrefixOf "__" . G.unName . G._fldName) e)
+    G.TypeDefinitionObject
+      $ G.ObjectTypeDefinition a b c d (filter (not . T.isPrefixOf "__" . G.unName . G._fldName) e)
   typeDef -> typeDef
+
+generateSDLWithAllTypes :: G.SchemaIntrospection -> Text
+generateSDLWithAllTypes = generateSDLFromIntrospection AllTypes
+
+generateSDL :: G.SchemaIntrospection -> Text
+generateSDL = generateSDLFromIntrospection RemoveSchemaTypes
 
 -------------------------------------------------------------------------------
 -- Related to @_entities@ field

@@ -13,30 +13,13 @@ import { SuggestedRelationshipWithName } from '../../../DatabaseRelationships/co
 import { RelationshipRow } from './RelationshipRow';
 import { SuggestedRelationshipTrackModal } from '../../../DatabaseRelationships/components/SuggestedRelationshipTrackModal/SuggestedRelationshipTrackModal';
 import Skeleton from 'react-loading-skeleton';
-import {
-  AddSuggestedRelationship,
-  useAllSuggestedRelationships,
-} from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
+import { useAllSuggestedRelationships } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
 import { useCheckRows } from '../../../DatabaseRelationships/hooks/useCheckRows';
+import { useTrackedRelationships } from './hooks/useTrackedRelationships';
 
 interface UntrackedRelationshipsProps {
   dataSourceName: string;
 }
-
-const adaptTrackRelationship = (
-  relationship: SuggestedRelationshipWithName
-): AddSuggestedRelationship => {
-  const isObjectRelationship = !!relationship.from?.constraint_name;
-  return {
-    name: relationship.constraintName,
-    columnNames: isObjectRelationship
-      ? relationship.from.columns
-      : relationship.to.columns,
-    relationshipType: isObjectRelationship ? 'object' : 'array',
-    toTable: isObjectRelationship ? undefined : relationship.to.table,
-    fromTable: relationship.from.table,
-  };
-};
 
 export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
   dataSourceName,
@@ -59,6 +42,9 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
     omitTracked: true,
   });
 
+  const { data: trackedRelationships } =
+    useTrackedRelationships(dataSourceName);
+
   const checkboxRef = React.useRef<HTMLInputElement>(null);
   const { checkedIds, onCheck, allChecked, toggleAll, reset, inputStatus } =
     useCheckRows(
@@ -68,7 +54,8 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
   const [filteredRelationships, setFilteredRelationships] = useState<
     SuggestedRelationshipWithName[]
   >(suggestedRelationships);
-
+  console.log('trackedRelationships', trackedRelationships);
+  console.log('suggestedRelationships', suggestedRelationships);
   const serializedRelationshipNames = suggestedRelationships
     .map(rel => rel.constraintName)
     .join('-');
@@ -91,10 +78,10 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
     checkboxRef.current.indeterminate = inputStatus === 'indeterminate';
   }, [inputStatus]);
 
-  const onTrackRelationship = (relationship: SuggestedRelationshipWithName) => {
-    return onAddMultipleSuggestedRelationships([
-      adaptTrackRelationship(relationship),
-    ]);
+  const onTrackRelationship = async (
+    relationship: SuggestedRelationshipWithName
+  ) => {
+    await onAddMultipleSuggestedRelationships([relationship]);
   };
 
   const [isTrackingSelectedRelationships, setTrackingSelectedRelationships] =
@@ -106,10 +93,7 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
         checkedIds.includes(rel.constraintName)
       );
 
-      const trackRelationships: AddSuggestedRelationship[] =
-        selectedRelationships.map(adaptTrackRelationship);
-
-      await onAddMultipleSuggestedRelationships(trackRelationships);
+      await onAddMultipleSuggestedRelationships(selectedRelationships);
     } catch (err) {
       setTrackingSelectedRelationships(false);
     }
@@ -210,23 +194,25 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
         </CardedTable.TableHead>
 
         <CardedTable.TableBody>
-          {paginate(filteredRelationships, pageSize, pageNumber).map(
-            relationship => (
-              <RelationshipRow
-                key={relationship.constraintName}
-                isChecked={checkedIds.includes(relationship.constraintName)}
-                isLoading={false}
-                relationship={relationship}
-                onToggle={() => onCheck(relationship.constraintName)}
-                onTrack={() => onTrackRelationship(relationship)}
-                onCustomize={() => {
-                  setSelectedRelationship(relationship);
-                  setModalVisible(true);
-                }}
-                dataSourceName={dataSourceName}
-              />
-            )
-          )}
+          {paginate({
+            data: filteredRelationships,
+            pageSize,
+            pageNumber,
+          }).data.map(relationship => (
+            <RelationshipRow
+              key={relationship.constraintName}
+              isChecked={checkedIds.includes(relationship.constraintName)}
+              isLoading={false}
+              relationship={relationship}
+              onToggle={() => onCheck(relationship.constraintName)}
+              onTrack={() => onTrackRelationship(relationship)}
+              onCustomize={() => {
+                setSelectedRelationship(relationship);
+                setModalVisible(true);
+              }}
+              dataSourceName={dataSourceName}
+            />
+          ))}
         </CardedTable.TableBody>
       </CardedTable.Table>
       {isModalVisible && selectedRelationship && (

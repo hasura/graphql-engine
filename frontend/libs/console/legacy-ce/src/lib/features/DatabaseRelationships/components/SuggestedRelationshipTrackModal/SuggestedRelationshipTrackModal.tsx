@@ -33,21 +33,11 @@ export const SuggestedRelationshipTrackModal: React.VFC<
 
   const onTrackRelationship = async (relationshipName: string) => {
     try {
-      const isObjectRelationship = !!relationship.from?.constraint_name;
-
       await onAddSuggestedRelationship({
-        name: relationshipName,
-        columnNames: isObjectRelationship
-          ? relationship.from.columns
-          : relationship.to.columns,
-        relationshipType: isObjectRelationship ? 'object' : 'array',
-        toTable: isObjectRelationship ? undefined : relationship.to.table,
+        ...relationship,
+        constraintName: relationshipName,
       });
-      hasuraToast({
-        title: 'Success',
-        message: 'Relationship tracked',
-        type: 'success',
-      });
+
       refetchSuggestedRelationships();
       onClose();
     } catch (err: unknown) {

@@ -3,7 +3,6 @@ module Hasura.RQL.DDL.ApiLimit
     runSetApiLimits,
     warningMessage,
     compareTimeLimitWith,
-    MonadGetApiTimeLimit (..),
   )
 where
 
@@ -17,10 +16,10 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
-import Hasura.Tracing (TraceT)
+import Hasura.Server.Types (MonadGetPolicies (..))
 
 runSetApiLimits ::
-  (MonadError QErr m, MetadataM m, CacheRWM m, MonadGetApiTimeLimit m) =>
+  (MonadError QErr m, MetadataM m, CacheRWM m, MonadGetPolicies m) =>
   ApiLimit ->
   m EncJSON
 runSetApiLimits al = do
@@ -35,15 +34,16 @@ runSetApiLimits al = do
     Right _ -> setApiLimit successMsg
   where
     setApiLimit successMessage = do
-      withNewInconsistentObjsCheck $
-        buildSchemaCache $
-          MetadataModifier $
-            metaApiLimits .~ al
+      withNewInconsistentObjsCheck
+        $ buildSchemaCache
+        $ MetadataModifier
+        $ metaApiLimits
+        .~ al
       return successMessage
 
 -- This function compares the user time_limit and the cloud time_limit (used in both set_api_limit and replace_metadata
 -- APIs). The function returns either a metadata warning or `()`
-compareTimeLimitWith :: MonadGetApiTimeLimit m => Maybe MaxTime -> m (Either MetadataWarning ())
+compareTimeLimitWith :: (MonadGetPolicies m) => Maybe MaxTime -> m (Either MetadataWarning ())
 compareTimeLimitWith userTimeLimitMaybe = do
   cloudApiTimeLimit <- runGetApiTimeLimit
   let compareTimeLimitResultEither =
@@ -58,40 +58,22 @@ compareTimeLimitWith userTimeLimitMaybe = do
 -- warning message if the user time limit API limit is greater than the cloud time limit API limit
 warningMessage :: MaxTime -> MaxTime -> MetadataWarning
 warningMessage userTimeLimit cloudTimeLimit =
-  MetadataWarning WCTimeLimitExceededSystemLimit (MOSource defaultSource) $
-    "the configured time limit: "
-      <> tshow (seconds $ unMaxTime userTimeLimit)
-      <> " exceeds the project time limit: "
-      <> tshow (seconds $ unMaxTime cloudTimeLimit)
-      <> ". Time limit of "
-      <> tshow (seconds $ unMaxTime cloudTimeLimit)
-      <> " will be applied"
+  MetadataWarning WCTimeLimitExceededSystemLimit (MOSource defaultSource)
+    $ "the configured time limit: "
+    <> tshow (seconds $ unMaxTime userTimeLimit)
+    <> " exceeds the project time limit: "
+    <> tshow (seconds $ unMaxTime cloudTimeLimit)
+    <> ". Time limit of "
+    <> tshow (seconds $ unMaxTime cloudTimeLimit)
+    <> " will be applied"
 
 runRemoveApiLimits ::
   (MonadError QErr m, MetadataM m, CacheRWM m) =>
   m EncJSON
 runRemoveApiLimits = do
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      MetadataModifier $
-        metaApiLimits .~ emptyApiLimit
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ metaApiLimits
+    .~ emptyApiLimit
   return successMsg
-
-class Monad m => MonadGetApiTimeLimit m where
-  runGetApiTimeLimit ::
-    m (Maybe MaxTime)
-
-instance (MonadGetApiTimeLimit m) => MonadGetApiTimeLimit (ReaderT r m) where
-  runGetApiTimeLimit = lift runGetApiTimeLimit
-
-instance (MonadGetApiTimeLimit m) => MonadGetApiTimeLimit (MetadataT m) where
-  runGetApiTimeLimit = lift runGetApiTimeLimit
-
-instance (MonadGetApiTimeLimit m) => MonadGetApiTimeLimit (TraceT m) where
-  runGetApiTimeLimit = lift runGetApiTimeLimit
-
-instance (MonadGetApiTimeLimit m) => MonadGetApiTimeLimit (ExceptT e m) where
-  runGetApiTimeLimit = lift runGetApiTimeLimit
-
-instance (MonadGetApiTimeLimit m) => MonadGetApiTimeLimit (StateT w m) where
-  runGetApiTimeLimit = lift runGetApiTimeLimit

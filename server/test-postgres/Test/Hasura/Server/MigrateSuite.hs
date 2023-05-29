@@ -17,7 +17,6 @@ import Hasura.EncJSON
 import Hasura.Logging
 import Hasura.Metadata.Class
 import Hasura.Prelude
-import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Metadata (ClearMetadata (..), runClearMetadata)
 import Hasura.RQL.DDL.Schema
@@ -55,7 +54,7 @@ newtype CacheRefT m a = CacheRefT {runCacheRefT :: (CacheDynamicConfig, MVar Reb
       MonadMetadataStorage,
       MonadResolveSource,
       ProvidesNetwork,
-      MonadGetApiTimeLimit
+      MonadGetPolicies
     )
     via (ReaderT (CacheDynamicConfig, MVar RebuildableSchemaCache) m)
 
@@ -78,17 +77,18 @@ instance
   ( MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
+    MonadMetadataStorage m,
     MonadResolveSource m,
     ProvidesNetwork m,
     HasCacheStaticConfig m
   ) =>
   CacheRWM (CacheRefT m)
   where
-  buildSchemaCacheWithOptions reason invalidations metadata = do
+  tryBuildSchemaCacheWithOptions reason invalidations metadata validateNewSchemaCache = do
     (dynamicConfig, scVar) <- ask
     modifyMVar scVar \schemaCache -> do
-      ((), cache, _) <- runCacheRWT dynamicConfig schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
-      pure (cache, ())
+      (valueToReturn, cache, _) <- runCacheRWT dynamicConfig schemaCache (tryBuildSchemaCacheWithOptions reason invalidations metadata validateNewSchemaCache)
+      pure (cache, valueToReturn)
 
   setMetadataResourceVersionInSchemaCache resourceVersion = do
     (dynamicConfig, scVar) <- ask
@@ -114,7 +114,7 @@ suite ::
     MonadMetadataStorage m,
     MonadEventLogCleanup m,
     ProvidesNetwork m,
-    MonadGetApiTimeLimit m,
+    MonadGetPolicies m,
     HasCacheStaticConfig m
   ) =>
   PostgresConnConfiguration ->
@@ -130,7 +130,7 @@ suite srcConfig pgExecCtx pgConnInfo = do
       migrateCatalogAndBuildCache env time = do
         dynamicConfig <- asks fst
         (migrationResult, metadataWithVersion) <- runTx' pgExecCtx $ migrateCatalog (Just srcConfig) (ExtensionsSchema "public") MaintenanceModeDisabled time
-        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadataWithVersion dynamicConfig)
+        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadataWithVersion dynamicConfig Nothing)
 
       dropAndInit env time = lift do
         scVar <- asks snd

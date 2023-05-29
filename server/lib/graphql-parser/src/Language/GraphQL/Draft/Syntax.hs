@@ -149,9 +149,9 @@ data ExecutableDefinition var
   | ExecutableDefinitionFragment FragmentDefinition
   deriving stock (Eq, Generic, Lift, Ord, Show, Functor, Foldable, Traversable)
 
-instance Hashable var => Hashable (ExecutableDefinition var)
+instance (Hashable var) => Hashable (ExecutableDefinition var)
 
-instance NFData var => NFData (ExecutableDefinition var)
+instance (NFData var) => NFData (ExecutableDefinition var)
 
 partitionExDefs ::
   [ExecutableDefinition var] ->
@@ -320,7 +320,7 @@ data Value var
   deriving stock (Eq, Generic, Ord, Show, Functor, Foldable, Traversable)
   deriving anyclass (Hashable, NFData)
 
-instance Lift var => Lift (Value var) where
+instance (Lift var) => Lift (Value var) where
   liftTyped (VVariable a) = [||VVariable a||]
   liftTyped VNull = [||VNull||]
   liftTyped (VInt a) = [||VInt a||]
@@ -343,7 +343,7 @@ data Directive var = Directive
   deriving stock (Eq, Generic, Ord, Show, Functor, Foldable, Traversable)
   deriving anyclass (Hashable, NFData)
 
-instance Lift var => Lift (Directive var) where
+instance (Lift var) => Lift (Directive var) where
   liftTyped Directive {..} =
     [||
     Directive

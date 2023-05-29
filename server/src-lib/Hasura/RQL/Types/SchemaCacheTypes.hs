@@ -12,6 +12,7 @@ module Hasura.RQL.Types.SchemaCacheTypes
     TableObjId (..),
     LogicalModelObjId (..),
     NativeQueryObjId (..),
+    StoredProcedureObjId (..),
     purgeDependentObject,
     purgeSourceAndSchemaDependencies,
     reasonToTxt,
@@ -57,7 +58,7 @@ data TableObjId (b :: BackendType)
   | TOTrigger TriggerName
   deriving (Generic)
 
-deriving instance Backend b => Eq (TableObjId b)
+deriving instance (Backend b) => Eq (TableObjId b)
 
 instance (Backend b) => Hashable (TableObjId b)
 
@@ -81,9 +82,21 @@ newtype NativeQueryObjId (b :: BackendType)
   = NQOCol (Column b)
   deriving (Generic)
 
-deriving instance Backend b => Eq (NativeQueryObjId b)
+deriving instance (Backend b) => Eq (NativeQueryObjId b)
 
 instance (Backend b) => Hashable (NativeQueryObjId b)
+
+-- | Identifier for component of Stored Procedures within the metadata. These are
+-- used to track dependencies between items in the resolved schema. For
+-- instance, we use `SPOCol` along with `TOCol` from `TableObjId` to ensure
+-- that the two columns that join an array relationship actually exist.
+newtype StoredProcedureObjId (b :: BackendType)
+  = SPOCol (Column b)
+  deriving (Generic)
+
+deriving instance (Backend b) => Eq (StoredProcedureObjId b)
+
+instance (Backend b) => Hashable (StoredProcedureObjId b)
 
 data SourceObjId (b :: BackendType)
   = SOITable (TableName b)
@@ -91,6 +104,8 @@ data SourceObjId (b :: BackendType)
   | SOIFunction (FunctionName b)
   | SOINativeQuery NativeQueryName
   | SOINativeQueryObj NativeQueryName (NativeQueryObjId b)
+  | SOIStoredProcedure (FunctionName b)
+  | SOIStoredProcedureObj (FunctionName b) (StoredProcedureObjId b)
   | SOILogicalModel LogicalModelName
   | SOILogicalModelObj LogicalModelName (LogicalModelObjId b)
   deriving (Eq, Generic)
@@ -115,15 +130,18 @@ instance Hashable SchemaObjId
 reportSchemaObj :: SchemaObjId -> T.Text
 reportSchemaObj = \case
   SOSource source -> "source " <> sourceNameToText source
-  SOSourceObj source exists -> inSource source $
-    AB.dispatchAnyBackend @Backend
+  SOSourceObj source exists -> inSource source
+    $ AB.dispatchAnyBackend @Backend
       exists
       \case
         SOITable tn -> "table " <> toTxt tn
         SOIFunction fn -> "function " <> toTxt fn
-        SOINativeQuery lmn -> "native query " <> toTxt lmn
+        SOINativeQuery nqn -> "native query " <> toTxt nqn
         SOINativeQueryObj nqn (NQOCol cn) ->
           "column " <> toTxt nqn <> "." <> toTxt cn
+        SOIStoredProcedure spn -> "stored procedure " <> toTxt spn
+        SOIStoredProcedureObj spn (SPOCol cn) ->
+          "column " <> toTxt spn <> "." <> toTxt cn
         SOILogicalModel lm -> "logical model " <> toTxt lm
         SOILogicalModelObj lm (LMOCol cn) ->
           "logical model column " <> toTxt lm <> "." <> toTxt cn
@@ -148,7 +166,8 @@ reportSchemaObj = \case
   SORemoteSchemaPermission remoteSchemaName roleName ->
     "remote schema permission "
       <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
-      <> "." <>> roleName
+      <> "."
+      <>> roleName
   SORemoteSchemaRemoteRelationship remoteSchemaName typeName relationshipName ->
     "remote_relationship "
       <> toTxt relationshipName
@@ -229,12 +248,12 @@ instance Hashable SchemaDependency
 
 reportDependentObjectsExist :: (MonadError QErr m) => [SchemaObjId] -> m ()
 reportDependentObjectsExist dependentObjects =
-  throw400 DependencyError $
-    "cannot drop due to the following dependent objects: "
-      <> reportSchemaObjs dependentObjects
+  throw400 DependencyError
+    $ "cannot drop due to the following dependent objects: "
+    <> reportSchemaObjs dependentObjects
 
 purgeSourceAndSchemaDependencies ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SchemaObjId ->
   WriterT MetadataModifier m ()
 purgeSourceAndSchemaDependencies = \case
@@ -253,23 +272,24 @@ purgeDependentObject ::
   m MetadataModifier
 purgeDependentObject source sourceObjId = case sourceObjId of
   SOITableObj tn tableObj ->
-    pure $
-      MetadataModifier $
-        tableMetadataSetter @b source tn %~ case tableObj of
-          TOPerm rn pt -> dropPermissionInMetadata rn pt
-          TORel rn -> dropRelationshipInMetadata rn
-          TOTrigger trn -> dropEventTriggerInMetadata trn
-          TOComputedField ccn -> dropComputedFieldInMetadata ccn
-          TORemoteRel rrn -> dropRemoteRelationshipInMetadata rrn
-          _ -> id
+    pure
+      $ MetadataModifier
+      $ tableMetadataSetter @b source tn
+      %~ case tableObj of
+        TOPerm rn pt -> dropPermissionInMetadata rn pt
+        TORel rn -> dropRelationshipInMetadata rn
+        TOTrigger trn -> dropEventTriggerInMetadata trn
+        TOComputedField ccn -> dropComputedFieldInMetadata ccn
+        TORemoteRel rrn -> dropRemoteRelationshipInMetadata rrn
+        _ -> id
   SOIFunction qf -> pure $ dropFunctionInMetadata @b source qf
   _ ->
-    throw500 $
-      "unexpected dependent object: "
-        <> reportSchemaObj (SOSourceObj source $ AB.mkAnyBackend sourceObjId)
+    throw500
+      $ "unexpected dependent object: "
+      <> reportSchemaObj (SOSourceObj source $ AB.mkAnyBackend sourceObjId)
 
 -- | Type class to collect schema dependencies from backend-specific aggregation predicates.
-class Backend b => GetAggregationPredicatesDeps b where
+class (Backend b) => GetAggregationPredicatesDeps b where
   getAggregationPredicateDeps ::
     AggregationPredicates b (PartialSQLExp b) ->
     BoolExpM b [SchemaDependency]

@@ -25,11 +25,11 @@ data BackendInsert v = BackendInsert
 
 deriving instance (Backend 'MSSQL, Show (IfMatched v), Show v) => Show (BackendInsert v)
 
-deriving instance Backend 'MSSQL => Functor BackendInsert
+deriving instance (Backend 'MSSQL) => Functor BackendInsert
 
-deriving instance Backend 'MSSQL => Foldable BackendInsert
+deriving instance (Backend 'MSSQL) => Foldable BackendInsert
 
-deriving instance Backend 'MSSQL => Traversable BackendInsert
+deriving instance (Backend 'MSSQL) => Traversable BackendInsert
 
 -- | The IR data representing an @if_matched@ clause, which handles upserts.
 data IfMatched v = IfMatched
@@ -45,8 +45,8 @@ data IfMatched v = IfMatched
 
 deriving instance (Backend 'MSSQL, Show (AnnBoolExp 'MSSQL v), Show v) => Show (IfMatched v)
 
-deriving instance Backend 'MSSQL => Functor IfMatched
+deriving instance (Backend 'MSSQL) => Functor IfMatched
 
-deriving instance Backend 'MSSQL => Foldable IfMatched
+deriving instance (Backend 'MSSQL) => Foldable IfMatched
 
-deriving instance Backend 'MSSQL => Traversable IfMatched
+deriving instance (Backend 'MSSQL) => Traversable IfMatched

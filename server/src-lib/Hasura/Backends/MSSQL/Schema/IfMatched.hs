@@ -39,7 +39,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Field-parser for:
@@ -95,8 +95,8 @@ ifMatchedObjectParser tableInfo = runMaybeT do
         updateColumnsName = Name._update_columns
         whereName = Name._where
     whereExpParser <- tableBoolExp tableInfo
-    pure $
-      P.object objectName (Just objectDesc) do
+    pure
+      $ P.object objectName (Just objectDesc) do
         _imConditions <-
           (\whereExp -> BoolAnd $ updateFilter : maybeToList whereExp)
             <$> P.fieldOptional whereName Nothing whereExpParser
@@ -119,7 +119,7 @@ ifMatchedObjectParser tableInfo = runMaybeT do
 -- permissions for.
 tableInsertMatchColumnsEnum ::
   forall r m n.
-  MonadBuildSourceSchema 'MSSQL r m n =>
+  (MonadBuildSourceSchema 'MSSQL r m n) =>
   TableInfo 'MSSQL ->
   SchemaT r m (Maybe (Parser 'Both n (Column 'MSSQL)))
 tableInsertMatchColumnsEnum tableInfo = do
@@ -130,18 +130,19 @@ tableInsertMatchColumnsEnum tableInfo = do
   columns <- tableSelectColumns tableInfo
   let enumName = mkTypename $ tableGQLName <> Name.__insert_match_column
       description =
-        Just $
-          G.Description $
-            "select match_columns of table " <>> tableInfoName tableInfo
-  pure $
-    P.enum enumName description
-      <$> nonEmpty
-        [ ( define $ ciName column,
-            ciColumn column
-          )
-          | column <- columns,
-            isMatchColumnValid column
-        ]
+        Just
+          $ G.Description
+          $ "select match_columns of table "
+          <>> tableInfoName tableInfo
+  pure
+    $ P.enum enumName description
+    <$> nonEmpty
+      [ ( define $ ciName column,
+          ciColumn column
+        )
+        | SCIScalarColumn column <- columns,
+          isMatchColumnValid column
+      ]
   where
     define name =
       P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo

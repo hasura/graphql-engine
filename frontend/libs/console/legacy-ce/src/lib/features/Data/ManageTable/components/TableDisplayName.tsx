@@ -12,6 +12,8 @@ export const TableDisplayName = ({
   dataSourceName?: string;
   table: Table;
 }) => {
+  if (!table) return null;
+
   const tableName = getQualifiedTable(table);
   const content = () => (
     <>

@@ -42,9 +42,9 @@ newtype BackendMap (i :: BackendType -> Type) = BackendMap (Map BackendType (Any
   deriving stock (Generic)
   deriving newtype (Semigroup, Monoid)
 
-deriving newtype instance i `SatisfiesForAllBackends` Show => Show (BackendMap i)
+deriving newtype instance (i `SatisfiesForAllBackends` Show) => Show (BackendMap i)
 
-deriving newtype instance i `SatisfiesForAllBackends` Eq => Eq (BackendMap i)
+deriving newtype instance (i `SatisfiesForAllBackends` Eq) => Eq (BackendMap i)
 
 instance
   ( i `SatisfiesForAllBackends` HasCodec,
@@ -53,8 +53,8 @@ instance
   HasCodec (BackendMap i)
   where
   codec =
-    AC.object ("BackendMap_" <> objectNameSuffix) $
-      foldl'
+    AC.object ("BackendMap_" <> objectNameSuffix)
+      $ foldl'
         foldBackendType
         (pure mempty)
         supportedBackends
@@ -80,10 +80,11 @@ instance
         let t = typeableName @(i 'DataConnector)
          in fromMaybe t $ stripSuffix "__DataConnector" t
 
-instance i `SatisfiesForAllBackends` FromJSON => FromJSON (BackendMap i) where
+instance (i `SatisfiesForAllBackends` FromJSON) => FromJSON (BackendMap i) where
   parseJSON =
     J.withObject "BackendMap" $ \obj -> do
-      BackendMap . Map.fromList
+      BackendMap
+        . Map.fromList
         <$> traverse
           ( \keyValue -> do
               out <- parseJSONKeyValue keyValue
@@ -91,7 +92,7 @@ instance i `SatisfiesForAllBackends` FromJSON => FromJSON (BackendMap i) where
           )
           (KeyMap.toList obj)
 
-instance i `SatisfiesForAllBackends` ToJSON => ToJSON (BackendMap i) where
+instance (i `SatisfiesForAllBackends` ToJSON) => ToJSON (BackendMap i) where
   toJSON (BackendMap backendMap) =
     J.object $ valueToPair <$> Map.elems backendMap
     where
@@ -105,7 +106,7 @@ instance Select (BackendMap i) where
   select (BackendMapS (_ :: BackendTag b)) = lookup @b
 
 data BackendMapS i a where
-  BackendMapS :: forall (b :: BackendType) (i :: BackendType -> Type). HasTag b => BackendTag b -> BackendMapS i (Maybe (i b))
+  BackendMapS :: forall (b :: BackendType) (i :: BackendType -> Type). (HasTag b) => BackendTag b -> BackendMapS i (Maybe (i b))
 
 instance GEq (BackendMapS i) where
   BackendMapS a `geq` BackendMapS b = case a `geq` b of
@@ -120,14 +121,14 @@ instance GCompare (BackendMapS i) where
 
 lookupD ::
   forall (b :: BackendType) (i :: BackendType -> Type).
-  HasTag b =>
+  (HasTag b) =>
   Dependency (BackendMap i) ->
   Dependency (Maybe (i b))
 lookupD = selectD (BackendMapS (backendTag @b))
 
 --------------------------------------------------------------------------------
 
-singleton :: forall b i. HasTag b => i b -> BackendMap i
+singleton :: forall b i. (HasTag b) => i b -> BackendMap i
 singleton value = BackendMap $ Map.singleton (reify $ backendTag @b) (mkAnyBackend value)
 
 -- | Get a value from the map for the particular 'BackendType' 'b'. This function
@@ -135,7 +136,7 @@ singleton value = BackendMap $ Map.singleton (reify $ backendTag @b) (mkAnyBacke
 -- @
 -- lookup @('Postgres 'Vanilla) backendMap
 -- @
-lookup :: forall (b :: BackendType) i. HasTag b => BackendMap i -> Maybe (i b)
+lookup :: forall (b :: BackendType) i. (HasTag b) => BackendMap i -> Maybe (i b)
 lookup (BackendMap backendMap) =
   Map.lookup (reify $ backendTag @b) backendMap >>= unpackAnyBackend @b
 
@@ -158,7 +159,7 @@ modify f = alter \case
 -- value in a Map.
 --
 -- In short : @lookup k (alter f k m) = f (lookup k m)@.
-alter :: forall b i. HasTag b => (Maybe (i b) -> Maybe (i b)) -> BackendMap i -> BackendMap i
+alter :: forall b i. (HasTag b) => (Maybe (i b) -> Maybe (i b)) -> BackendMap i -> BackendMap i
 alter f (BackendMap bmap) = BackendMap $ Map.alter (wrap . f . unwrap) (reify @b backendTag) bmap
   where
     wrap :: Maybe (i b) -> Maybe (AnyBackend i)
@@ -169,7 +170,7 @@ alter f (BackendMap bmap) = BackendMap $ Map.alter (wrap . f . unwrap) (reify @b
 
 -- | The expression @a `overridesDeeply b@ applies the values from @a@ on top of the defaults @b@.
 -- In practice this should union the maps for each backend type.
-overridesDeeply :: i `SatisfiesForAllBackends` Semigroup => BackendMap i -> BackendMap i -> BackendMap i
+overridesDeeply :: (i `SatisfiesForAllBackends` Semigroup) => BackendMap i -> BackendMap i -> BackendMap i
 overridesDeeply (BackendMap a) (BackendMap b) = BackendMap (Map.unionWith override a b)
   where
     override a' b' = mergeAnyBackend @Semigroup (<>) a' b' a'

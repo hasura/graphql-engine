@@ -57,7 +57,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- > }
 actionExecute ::
   forall r m n.
-  MonadBuildActionSchema r m n =>
+  (MonadBuildActionSchema r m n) =>
   AnnotatedCustomTypes ->
   ActionInfo ->
   SchemaT r m (Maybe (FieldParser n (IR.AnnActionExecution (IR.RemoteRelationshipField IR.UnpreparedValue))))
@@ -74,22 +74,22 @@ actionExecute customTypes actionInfo = runMaybeT do
     AOTScalar ast -> do
       let selectionSet = customScalarParser ast
       pure $ P.selection fieldName description inputArguments selectionSet <&> (,[])
-  pure $
-    parserOutput
-      <&> \(argsJson, fields) ->
-        IR.AnnActionExecution
-          { _aaeName = actionName,
-            _aaeFields = fields,
-            _aaePayload = argsJson,
-            _aaeOutputType = _adOutputType definition,
-            _aaeOutputFields = IR.getActionOutputFields outputObject,
-            _aaeWebhook = _adHandler definition,
-            _aaeHeaders = _adHeaders definition,
-            _aaeForwardClientHeaders = _adForwardClientHeaders definition,
-            _aaeTimeOut = _adTimeout definition,
-            _aaeRequestTransform = _adRequestTransform definition,
-            _aaeResponseTransform = _adResponseTransform definition
-          }
+  pure
+    $ parserOutput
+    <&> \(argsJson, fields) ->
+      IR.AnnActionExecution
+        { _aaeName = actionName,
+          _aaeFields = fields,
+          _aaePayload = argsJson,
+          _aaeOutputType = _adOutputType definition,
+          _aaeOutputFields = IR.getActionOutputFields outputObject,
+          _aaeWebhook = _adHandler definition,
+          _aaeHeaders = _adHeaders definition,
+          _aaeForwardClientHeaders = _adForwardClientHeaders definition,
+          _aaeTimeOut = _adTimeout definition,
+          _aaeRequestTransform = _adRequestTransform definition,
+          _aaeResponseTransform = _adResponseTransform definition
+        }
   where
     ActionInfo actionName (outputType, outputObject) definition permissions _ comment = actionInfo
 
@@ -101,7 +101,7 @@ actionExecute customTypes actionInfo = runMaybeT do
 -- > action_name(action_input_arguments)
 actionAsyncMutation ::
   forall r m n.
-  MonadBuildActionSchema r m n =>
+  (MonadBuildActionSchema r m n) =>
   HashMap G.Name AnnotatedInputType ->
   ActionInfo ->
   SchemaT r m (Maybe (FieldParser n IR.AnnActionMutationAsync))
@@ -111,9 +111,9 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
   let fieldName = unActionName actionName
       description = G.Description <$> comment
-  pure $
-    P.selection fieldName description inputArguments actionIdParser
-      <&> IR.AnnActionMutationAsync actionName forwardClientHeaders
+  pure
+    $ P.selection fieldName description inputArguments actionIdParser
+    <&> IR.AnnActionMutationAsync actionName forwardClientHeaders
   where
     ActionInfo actionName _ definition permissions forwardClientHeaders comment = actionInfo
 
@@ -132,7 +132,7 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
 -- > }
 actionAsyncQuery ::
   forall r m n.
-  MonadBuildActionSchema r m n =>
+  (MonadBuildActionSchema r m n) =>
   HashMap G.Name AnnotatedObjectType ->
   ActionInfo ->
   SchemaT r m (Maybe (FieldParser n (IR.AnnActionAsyncQuery ('Postgres 'Vanilla) (IR.RemoteRelationshipField IR.UnpreparedValue))))
@@ -183,19 +183,19 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
 
   stringifyNumbers <- retrieve Options.soStringifyNumbers
   definitionsList <- lift $ mkDefinitionList outputObject
-  pure $
-    parserOutput
-      <&> \(idArg, fields) ->
-        IR.AnnActionAsyncQuery
-          { _aaaqName = actionName,
-            _aaaqActionId = idArg,
-            _aaaqOutputType = _adOutputType definition,
-            _aaaqFields = fields,
-            _aaaqDefinitionList = definitionsList,
-            _aaaqStringifyNum = stringifyNumbers,
-            _aaaqForwardClientHeaders = forwardClientHeaders,
-            _aaaqSource = getActionSourceInfo outputObject
-          }
+  pure
+    $ parserOutput
+    <&> \(idArg, fields) ->
+      IR.AnnActionAsyncQuery
+        { _aaaqName = actionName,
+          _aaaqActionId = idArg,
+          _aaaqOutputType = _adOutputType definition,
+          _aaaqFields = fields,
+          _aaaqDefinitionList = definitionsList,
+          _aaaqStringifyNum = stringifyNumbers,
+          _aaaqForwardClientHeaders = forwardClientHeaders,
+          _aaaqSource = getActionSourceInfo outputObject
+        }
   where
     -- For historical reasons, we use postgres-specific scalar names for two
     -- specific output fields. To avoid calling all the postgres schema
@@ -205,7 +205,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
     -- Since we know that those parsers are only used for output scalar fields,
     -- we don't care about their output value: they are not used to parse input
     -- values, nor do they have a selection set to process.
-    mkOutputParser :: forall m'. MonadError QErr m' => PGScalarType -> m' (Parser 'Both n ())
+    mkOutputParser :: forall m'. (MonadError QErr m') => PGScalarType -> m' (Parser 'Both n ())
     mkOutputParser scalarType = do
       gName <- mkScalarTypeName scalarType
       pure $ mkScalar gName $ const $ pure ()
@@ -244,22 +244,22 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
             Just pgScalar -> pure $ unwrapScalar pgScalar
             Nothing -> throw500 "encountered non-Postgres scalar in async query actions"
         ASTCustom ScalarTypeDefinition {..} ->
-          pure $
-            if
-                | _stdName == GName._ID -> PGText
-                | _stdName == GName._Int -> PGInteger
-                | _stdName == GName._Float -> PGFloat
-                | _stdName == GName._String -> PGText
-                | _stdName == GName._Boolean -> PGBoolean
-                | otherwise -> PGJSON
+          pure
+            $ if
+              | _stdName == GName._ID -> PGText
+              | _stdName == GName._Int -> PGInteger
+              | _stdName == GName._Float -> PGFloat
+              | _stdName == GName._String -> PGText
+              | _stdName == GName._Boolean -> PGBoolean
+              | otherwise -> PGJSON
 
 -- | Async action's unique id
-actionIdParser :: MonadParse n => Parser 'Both n ActionId
+actionIdParser :: (MonadParse n) => Parser 'Both n ActionId
 actionIdParser = ActionId <$> P.uuid
 
 actionOutputFields ::
   forall r m n.
-  MonadBuildActionSchema r m n =>
+  (MonadBuildActionSchema r m n) =>
   G.GType ->
   AnnotatedObjectType ->
   HashMap G.Name AnnotatedObjectType ->
@@ -272,10 +272,10 @@ actionOutputFields outputType annotatedObject objectTypes = do
         scalarOrEnumOrObjectFields
           <> concat (catMaybes relationshipFields)
       outputTypeDescription = _aotDescription annotatedObject
-  pure $
-    outputParserModifier outputType $
-      P.selectionSet outputTypeName outputTypeDescription allFieldParsers
-        <&> parsedSelectionsToFields IR.ACFExpression
+  pure
+    $ outputParserModifier outputType
+    $ P.selectionSet outputTypeName outputTypeDescription allFieldParsers
+    <&> parsedSelectionsToFields IR.ACFExpression
   where
     outputParserModifier :: G.GType -> Parser 'Output n a -> Parser 'Output n a
     outputParserModifier = \case
@@ -300,9 +300,9 @@ actionOutputFields outputType annotatedObject objectTypes = do
       where
         fieldName = unObjectFieldName name
         wrapScalar parser =
-          pure $
-            P.wrapFieldParser gType (P.selection_ fieldName description parser)
-              $> IR.ACFScalar fieldName
+          pure
+            $ P.wrapFieldParser gType (P.selection_ fieldName description parser)
+            $> IR.ACFScalar fieldName
 
     relationshipFieldParser ::
       AnnotatedTypeRelationship ->
@@ -329,16 +329,16 @@ actionOutputFields outputType annotatedObject objectTypes = do
             RemoteFieldInfo
               { _rfiLHS = lhsJoinFields,
                 _rfiRHS =
-                  RFISource $
-                    AB.mkAnyBackend @('Postgres 'Vanilla) $
-                      RemoteSourceFieldInfo
-                        { _rsfiName = relName,
-                          _rsfiType = _atrType,
-                          _rsfiSource = _atrSource,
-                          _rsfiSourceConfig = _atrSourceConfig,
-                          _rsfiTable = _atrTableName,
-                          _rsfiMapping = joinMapping
-                        }
+                  RFISource
+                    $ AB.mkAnyBackend @('Postgres 'Vanilla)
+                    $ RemoteSourceFieldInfo
+                      { _rsfiName = relName,
+                        _rsfiType = _atrType,
+                        _rsfiSource = _atrSource,
+                        _rsfiSourceConfig = _atrSourceConfig,
+                        _rsfiTable = _atrTableName,
+                        _rsfiMapping = joinMapping
+                      }
               }
       RemoteRelationshipParserBuilder remoteRelationshipField <- retrieve scRemoteRelationshipParserBuilder
       remoteRelationshipFieldParsers <- MaybeT $ remoteRelationshipField remoteFieldInfo
@@ -346,7 +346,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
 
 actionInputArguments ::
   forall r m n.
-  MonadBuildActionSchema r m n =>
+  (MonadBuildActionSchema r m n) =>
   HashMap G.Name AnnotatedInputType ->
   [ArgumentDefinition (G.GType, AnnotatedInputType)] ->
   SchemaT r m (InputFieldsParser n J.Value)
@@ -387,9 +387,10 @@ actionInputArguments nonObjectTypeMap arguments = do
                   HashMap.lookup (G.getBaseType fieldType) nonObjectTypeMap
                     `onNothing` throw500 "object type for a field found in custom input object type"
                 (fieldName,) <$> argumentParser fieldName fieldDesc fieldType nonObjectFieldType
-            pure $
-              P.object objectName objectDesc $
-                J.Object <$> inputFieldsToObject inputFieldsParsers
+            pure
+              $ P.object objectName objectDesc
+              $ J.Object
+              <$> inputFieldsToObject inputFieldsParsers
 
 mkArgumentInputFieldParser ::
   forall m k.
@@ -417,18 +418,18 @@ mkArgumentInputFieldParser name description gType parser =
           bool (fmap J.toJSON) (fmap J.toJSON . P.nullable) . G.unNullability
 
 customScalarParser ::
-  MonadParse m =>
+  (MonadParse m) =>
   AnnotatedScalarType ->
   Parser 'Both m J.Value
 customScalarParser = \case
   ASTCustom ScalarTypeDefinition {..} ->
     if
-        | _stdName == GName._ID -> J.toJSON <$> P.identifier
-        | _stdName == GName._Int -> J.toJSON <$> P.int
-        | _stdName == GName._Float -> J.toJSON <$> P.float
-        | _stdName == GName._String -> J.toJSON <$> P.string
-        | _stdName == GName._Boolean -> J.toJSON <$> P.boolean
-        | otherwise -> P.jsonScalar _stdName _stdDescription
+      | _stdName == GName._ID -> J.toJSON <$> P.identifier
+      | _stdName == GName._Int -> J.toJSON <$> P.int
+      | _stdName == GName._Float -> J.toJSON <$> P.float
+      | _stdName == GName._String -> J.toJSON <$> P.string
+      | _stdName == GName._Boolean -> J.toJSON <$> P.boolean
+      | otherwise -> P.jsonScalar _stdName _stdDescription
   ASTReusedScalar name backendScalarType ->
     let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar
         backendScalarValidator =
@@ -441,9 +442,9 @@ customScalarParser = \case
             -- of the remote server. We do not parse scalars for remote servers
             -- for that reason; we might want to reconsider this validation as
             -- well.
-            void $
-              parseScalarValue @b (unwrapScalar scalarType) jsonInput
-                `onLeft` \e -> parseErrorWith P.ParseFailed . toErrorMessage $ qeError e
+            void
+              $ parseScalarValue @b (unwrapScalar scalarType) jsonInput
+              `onLeft` \e -> parseErrorWith P.ParseFailed . toErrorMessage $ qeError e
             pure jsonInput
      in P.Parser
           { pType = schemaType,
@@ -451,7 +452,7 @@ customScalarParser = \case
           }
 
 customEnumParser ::
-  MonadParse m =>
+  (MonadParse m) =>
   EnumTypeDefinition ->
   Parser 'Both m J.Value
 customEnumParser (EnumTypeDefinition typeName description enumValues) =
@@ -459,8 +460,8 @@ customEnumParser (EnumTypeDefinition typeName description enumValues) =
       enumValueDefinitions =
         enumValues <&> \enumValue ->
           let valueName = G.unEnumValue $ _evdValue enumValue
-           in (,J.toJSON valueName) $
-                P.Definition
+           in (,J.toJSON valueName)
+                $ P.Definition
                   valueName
                   (_evdDescription enumValue)
                   Nothing

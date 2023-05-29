@@ -10,7 +10,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
 import Hasura.CredentialCache
@@ -80,8 +80,8 @@ explainQueryField agentLicenseKey userInfo reqHeaders operationName fieldName ro
         exists
         \(SourceConfigWith sourceConfig _ (QDBR db)) -> do
           let (newDB, remoteJoins) = RJ.getRemoteJoinsQueryDB db
-          unless (isNothing remoteJoins) $
-            throw400 InvalidParams "queries with remote relationships cannot be explained"
+          unless (isNothing remoteJoins)
+            $ throw400 InvalidParams "queries with remote relationships cannot be explained"
           mkDBQueryExplain fieldName userInfo sourceName sourceConfig newDB reqHeaders operationName
       AB.dispatchAnyBackend @BackendTransport step (runDBQueryExplain agentLicenseKey)
 
@@ -115,7 +115,7 @@ explainGQLQuery sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw mayb
         E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
       -- TODO: validate directives here
       encJFromList
-        <$> for (OMap.toList unpreparedQueries) (uncurry (explainQueryField agentLicenseKey userInfo reqHeaders (_unOperationName <$> _grOperationName query)))
+        <$> for (InsOrdHashMap.toList unpreparedQueries) (uncurry (explainQueryField agentLicenseKey userInfo reqHeaders (_unOperationName <$> _grOperationName query)))
     G.TypedOperationDefinition G.OperationTypeMutation _ _ _ _ ->
       throw400 InvalidParams "only queries can be explained"
     G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do

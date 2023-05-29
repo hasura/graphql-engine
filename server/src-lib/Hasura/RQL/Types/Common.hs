@@ -146,8 +146,9 @@ instance FromJSON RelType where
   parseJSON _ = fail "expecting either 'object' or 'array' for rel_type"
 
 instance PG.FromCol RelType where
-  fromCol bs = flip PG.fromColHelper bs $
-    PD.enum $ \case
+  fromCol bs = flip PG.fromColHelper bs
+    $ PD.enum
+    $ \case
       "object" -> Just ObjRel
       "array" -> Just ArrRel
       _ -> Nothing
@@ -347,7 +348,7 @@ instance PG.FromCol InputWebhook where
 -- Consists of the environment variable name with missing/invalid value
 newtype ResolveWebhookError = ResolveWebhookError {unResolveWebhookError :: Text} deriving (Show, ToTxt)
 
-resolveWebhook :: QErrM m => Env.Environment -> InputWebhook -> m ResolvedWebhook
+resolveWebhook :: (QErrM m) => Env.Environment -> InputWebhook -> m ResolvedWebhook
 resolveWebhook env inputWebhook = do
   let eitherRenderedTemplate = resolveWebhookEither env inputWebhook
   onLeft
@@ -397,43 +398,43 @@ instance Hashable PGConnectionParams
 
 instance HasCodec PGConnectionParams where
   codec =
-    AC.object "PGConnectionParams" $
-      PGConnectionParams
-        <$> requiredField' "host"
-          AC..= _pgcpHost
+    AC.object "PGConnectionParams"
+      $ PGConnectionParams
+      <$> requiredField' "host"
+      AC..= _pgcpHost
         <*> requiredField' "username"
-          AC..= _pgcpUsername
+      AC..= _pgcpUsername
         <*> optionalFieldOrNull' "password"
-          AC..= _pgcpPassword
+      AC..= _pgcpPassword
         <*> requiredField' "port"
-          AC..= _pgcpPort
+      AC..= _pgcpPort
         <*> requiredField' "database"
-          AC..= _pgcpDatabase
+      AC..= _pgcpDatabase
 
 -- TODO: Use HasCodec to define Aeson instances?
 instance ToJSON PGConnectionParams where
   toJSON PGConnectionParams {..} =
-    J.object $
-      [ "host" .= _pgcpHost,
-        "username" .= _pgcpUsername,
-        "port" .= _pgcpPort,
-        "database" .= _pgcpDatabase
-      ]
-        ++ ["password" .= _pgcpPassword | isJust _pgcpPassword]
+    J.object
+      $ [ "host" .= _pgcpHost,
+          "username" .= _pgcpUsername,
+          "port" .= _pgcpPort,
+          "database" .= _pgcpDatabase
+        ]
+      ++ ["password" .= _pgcpPassword | isJust _pgcpPassword]
 
 instance FromJSON PGConnectionParams where
   parseJSON = withObject "PGConnectionParams" $ \o ->
     PGConnectionParams
       <$> o
-        .: "host"
+      .: "host"
       <*> o
-        .: "username"
+      .: "username"
       <*> o
-        .:? "password"
+      .:? "password"
       <*> o
-        .: "port"
+      .: "port"
       <*> o
-        .: "database"
+      .: "database"
 
 data UrlConf
   = -- | the database connection string
@@ -450,9 +451,9 @@ instance Hashable UrlConf
 
 instance HasCodec UrlConf where
   codec =
-    dimapCodec dec enc $
-      disjointEitherCodec valCodec $
-        disjointEitherCodec fromEnvCodec fromParamsCodec
+    dimapCodec dec enc
+      $ disjointEitherCodec valCodec
+      $ disjointEitherCodec fromEnvCodec fromParamsCodec
     where
       valCodec = codec
       fromParamsCodec = AC.object "UrlConfFromParams" $ requiredField' "connection_parameters"
@@ -520,15 +521,15 @@ getConnOptionsFromConnParams PGConnectionParams {..} =
 getPGConnectionStringFromParams :: PGConnectionParams -> String
 getPGConnectionStringFromParams PGConnectionParams {..} =
   let uriAuth =
-        rectifyAuth $
-          URIAuth
+        rectifyAuth
+          $ URIAuth
             { uriUserInfo = getURIAuthUserInfo _pgcpUsername _pgcpPassword,
               uriRegName = unpackEscape _pgcpHost,
               uriPort = show _pgcpPort
             }
       pgConnectionURI =
-        rectify $
-          URI
+        rectify
+          $ URI
             { uriScheme = "postgresql",
               uriAuthority = Just uriAuth,
               uriPath = "/" <> unpackEscape _pgcpDatabase,
@@ -547,14 +548,14 @@ getPGConnectionStringFromParams PGConnectionParams {..} =
       Nothing -> unpackEscape username
       Just password -> unpackEscape username <> ":" <> unpackEscape password
 
-resolveUrlConf :: MonadError QErr m => Env.Environment -> UrlConf -> m Text
+resolveUrlConf :: (MonadError QErr m) => Env.Environment -> UrlConf -> m Text
 resolveUrlConf env = \case
   UrlValue v -> unResolvedWebhook <$> resolveWebhook env v
   UrlFromEnv envVar -> getEnv env envVar
   UrlFromParams connParams ->
     pure . T.pack $ getPGConnectionStringFromParams connParams
 
-getEnv :: QErrM m => Env.Environment -> Text -> m Text
+getEnv :: (QErrM m) => Env.Environment -> Text -> m Text
 getEnv env k = do
   let eitherEnv = getEnvEither env k
   onLeft
@@ -579,10 +580,12 @@ data MetricsConfig = MetricsConfig
 
 instance HasCodec MetricsConfig where
   codec =
-    AC.object "MetricsConfig" $
-      MetricsConfig
-        <$> requiredField' "analyze_query_variables" AC..= _mcAnalyzeQueryVariables
-        <*> requiredField' "analyze_response_body" AC..= _mcAnalyzeResponseBody
+    AC.object "MetricsConfig"
+      $ MetricsConfig
+      <$> requiredField' "analyze_query_variables"
+      AC..= _mcAnalyzeQueryVariables
+        <*> requiredField' "analyze_response_body"
+      AC..= _mcAnalyzeResponseBody
 
 instance FromJSON MetricsConfig where
   parseJSON = J.withObject "MetricsConfig" $ \o -> do
@@ -649,9 +652,9 @@ data EnvRecord a = EnvRecord
   }
   deriving (Show, Eq, Generic)
 
-instance NFData a => NFData (EnvRecord a)
+instance (NFData a) => NFData (EnvRecord a)
 
-instance Hashable a => Hashable (EnvRecord a)
+instance (Hashable a) => Hashable (EnvRecord a)
 
 instance (ToJSON a) => ToJSON (EnvRecord a) where
   toJSON (EnvRecord envVar _envValue) = object ["env_var" .= envVar]
@@ -667,8 +670,8 @@ instance ToJSON ApolloFederationVersion where
   toJSON V1 = J.String "v1"
 
 instance FromJSON ApolloFederationVersion where
-  parseJSON = withText "ApolloFederationVersion" $
-    \case
+  parseJSON = withText "ApolloFederationVersion"
+    $ \case
       "v1" -> pure V1
       _ -> fail "enable takes the version of apollo federation. Supported value is v1 only."
 
@@ -681,9 +684,10 @@ data ApolloFederationConfig = ApolloFederationConfig
 
 instance HasCodec ApolloFederationConfig where
   codec =
-    AC.object "ApolloFederationConfig" $
-      ApolloFederationConfig
-        <$> requiredField "enable" enableDoc AC..= enable
+    AC.object "ApolloFederationConfig"
+      $ ApolloFederationConfig
+      <$> requiredField "enable" enableDoc
+      AC..= enable
     where
       enableDoc = "enable takes the version of apollo federation. Supported value is v1 only."
 
@@ -733,7 +737,7 @@ data RemoteRelationshipG definition = RemoteRelationship
   }
   deriving (Show, Eq, Generic)
 
-instance ToJSON definition => ToJSON (RemoteRelationshipG definition) where
+instance (ToJSON definition) => ToJSON (RemoteRelationshipG definition) where
   toJSON RemoteRelationship {..} =
     J.object
       [ "name" .= _rrName,
@@ -752,7 +756,9 @@ remoteRelationshipCodec ::
   JSONCodec definition ->
   JSONCodec (RemoteRelationshipG definition)
 remoteRelationshipCodec definitionCodec =
-  AC.object ("RemoteRelationship_" <> typeableName @definition) $
-    RemoteRelationship
-      <$> requiredField' "name" AC..= _rrName
-      <*> requiredFieldWith' "definition" definitionCodec AC..= _rrDefinition
+  AC.object ("RemoteRelationship_" <> typeableName @definition)
+    $ RemoteRelationship
+    <$> requiredField' "name"
+    AC..= _rrName
+      <*> requiredFieldWith' "definition" definitionCodec
+    AC..= _rrDefinition

@@ -35,6 +35,8 @@ import type {
   TableRow,
   Version,
   WhereClause,
+  StoredProcedure,
+  GetStoredProceduresProps,
 } from './types';
 
 import { transformSchemaToZodObject } from '../OpenApi3Form/utils';
@@ -54,6 +56,11 @@ import {
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 import { getTableName } from './common/getTableName';
 import { ReleaseType } from './types';
+import {
+  GetTrackableObjectsProps,
+  GetTrackableObjectsResponse,
+} from './gdc/introspection/getTrackableObjects';
+import { isObject } from '../../components/Common/utils/jsUtils';
 
 export * from './common/utils';
 export type { GDCTable } from './gdc';
@@ -138,12 +145,21 @@ export type Database = {
     getTrackableFunctions: (
       props: GetTrackableFunctionProps
     ) => Promise<IntrospectedFunction[] | Feature.NotImplemented>;
+    getTrackableObjects: (
+      props: GetTrackableObjectsProps
+    ) => Promise<GetTrackableObjectsResponse | Feature.NotImplemented>;
     getDatabaseSchemas: (
       props: GetDatabaseSchemaProps
     ) => Promise<string[] | Feature.NotImplemented>;
     getIsTableView: (
       props: GetIsTableViewProps
     ) => Promise<boolean | Feature.NotImplemented>;
+    getSupportedDataTypes: () => Promise<
+      Record<TableColumn['consoleDataType'], string[]> | Feature.NotImplemented
+    >;
+    getStoredProcedures: (
+      props: GetStoredProceduresProps
+    ) => Promise<StoredProcedure[] | Feature.NotImplemented>;
   };
   query?: {
     getTableRows: (
@@ -538,11 +554,33 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     );
   },
   getTrackableFunctions: async (dataSourceName: string) => {
+    const functions: IntrospectedFunction[] = [];
     const database = await getDatabaseMethods({ dataSourceName, httpClient });
-    return database.introspection?.getTrackableFunctions({
-      dataSourceName,
-      httpClient,
-    });
+
+    const trackableFunctions =
+      (await database.introspection?.getTrackableFunctions({
+        dataSourceName,
+        httpClient,
+      })) ?? [];
+
+    if (Array.isArray(trackableFunctions)) {
+      functions.push(...trackableFunctions);
+    }
+
+    const getTrackableObjectsFn = database.introspection?.getTrackableObjects;
+
+    if (getTrackableObjectsFn) {
+      const trackableObjects = await getTrackableObjectsFn({
+        dataSourceName,
+        httpClient,
+      });
+
+      if (isObject(trackableObjects) && 'functions' in trackableObjects) {
+        functions.push(...trackableObjects.functions);
+      }
+    }
+
+    return functions;
   },
   getDatabaseSchemas: async ({
     dataSourceName,
@@ -592,5 +630,28 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     if (isView === Feature.NotImplemented) return false;
 
     return isView;
+  },
+  getSupportedDataTypes: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+    return (
+      database.introspection?.getSupportedDataTypes() ?? Feature.NotImplemented
+    );
+  },
+  getStoredProcedures: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+    return (
+      database.introspection?.getStoredProcedures({
+        dataSourceName,
+        httpClient,
+      }) ?? Feature.NotImplemented
+    );
   },
 });

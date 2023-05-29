@@ -1,5 +1,4 @@
-import React from 'react';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import RemoteSchemaRelationshipTable from './RemoteSchemaRelationshipsTable';
 
 const tableWithLegacyAndNewRemoteSchemaRelations: any = {
@@ -87,14 +86,14 @@ export default {
     onDelete: { action: 'clicked' },
     onEdit: { action: 'clicked' },
   },
-} as ComponentMeta<typeof RemoteSchemaRelationshipTable>;
+} as Meta<typeof RemoteSchemaRelationshipTable>;
 
-export const WithLgacyandNewRemoteRelationships: ComponentStory<
+export const WithLgacyandNewRemoteRelationships: StoryObj<
   typeof RemoteSchemaRelationshipTable
-> = args => <RemoteSchemaRelationshipTable {...args} />;
-
-WithLgacyandNewRemoteRelationships.args = {
-  remoteSchemaRels:
-    tableWithLegacyAndNewRemoteSchemaRelations?.remote_relationships,
-  remoteSchema: 'countries',
+> = {
+  args: {
+    remoteSchemaRels:
+      tableWithLegacyAndNewRemoteSchemaRelations?.remote_relationships,
+    remoteSchema: 'countries',
+  },
 };

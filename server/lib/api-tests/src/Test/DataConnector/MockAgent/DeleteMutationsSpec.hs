@@ -8,6 +8,7 @@ import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
+import Data.Set qualified as Set
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockMutationResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
@@ -113,8 +114,8 @@ tests = do
                           [ ("deletedRows_AlbumId", API.mkColumnFieldValue $ J.Number 112),
                             ("deletedRows_Title", API.mkColumnFieldValue $ J.String "The Number of The Beast"),
                             ( "deletedRows_Artist",
-                              API.mkRelationshipFieldValue $
-                                mkRowsQueryResponse
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
                                   [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 90),
                                       ("Name", API.mkColumnFieldValue $ J.String "Iron Maiden")
                                     ]
@@ -125,8 +126,8 @@ tests = do
                           [ ("deletedRows_AlbumId", API.mkColumnFieldValue $ J.Number 113),
                             ("deletedRows_Title", API.mkColumnFieldValue $ J.String "The X Factor"),
                             ( "deletedRows_Artist",
-                              API.mkRelationshipFieldValue $
-                                mkRowsQueryResponse
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
                                   [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 90),
                                       ("Name", API.mkColumnFieldValue $ J.String "Iron Maiden")
                                     ]
@@ -137,8 +138,8 @@ tests = do
                           [ ("deletedRows_AlbumId", API.mkColumnFieldValue $ J.Number 114),
                             ("deletedRows_Title", API.mkColumnFieldValue $ J.String "Virtual XI"),
                             ( "deletedRows_Artist",
-                              API.mkRelationshipFieldValue $
-                                mkRowsQueryResponse
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
                                   [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 90),
                                       ("Name", API.mkColumnFieldValue $ J.String "Iron Maiden")
                                     ]
@@ -178,56 +179,58 @@ tests = do
     let expectedRequest =
           emptyMutationRequest
             & API.mrTableRelationships
-              .~ [ API.TableRelationships
-                     { API._trSourceTable = mkTableName "Album",
-                       API._trRelationships =
-                         HashMap.fromList
-                           [ ( API.RelationshipName "Artist",
-                               API.Relationship
-                                 { API._rTargetTable = mkTableName "Artist",
-                                   API._rRelationshipType = API.ObjectRelationship,
-                                   API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                 }
+            .~ Set.fromList
+              [ API.TableRelationships
+                  { API._trelSourceTable = mkTableName "Album",
+                    API._trelRelationships =
+                      HashMap.fromList
+                        [ ( API.RelationshipName "Artist",
+                            API.Relationship
+                              { API._rTargetTable = mkTableName "Artist",
+                                API._rRelationshipType = API.ObjectRelationship,
+                                API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                              }
+                          )
+                        ]
+                  }
+              ]
+              & API.mrOperations
+            .~ [ API.DeleteOperation
+                   $ API.DeleteMutationOperation
+                     { API._dmoTable = mkTableName "Album",
+                       API._dmoWhere =
+                         Just
+                           . API.And
+                           $ Set.fromList
+                             [ API.ApplyBinaryComparisonOperator
+                                 API.Equal
+                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 90) (API.ScalarType "number")),
+                               API.ApplyBinaryComparisonOperator
+                                 API.GreaterThan
+                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 111) (API.ScalarType "number"))
+                             ],
+                       API._dmoReturningFields =
+                         mkFieldsMap
+                           [ ("deletedRows_AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
+                             ("deletedRows_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string")),
+                             ( "deletedRows_Artist",
+                               API.RelField
+                                 ( API.RelationshipField
+                                     (API.RelationshipName "Artist")
+                                     ( emptyQuery
+                                         & API.qFields
+                                         ?~ mkFieldsMap
+                                           [ ("ArtistId", API.ColumnField (API.ColumnName "ArtistId") $ API.ScalarType "number"),
+                                             ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
+                                           ]
+                                     )
+                                 )
                              )
                            ]
                      }
-                 ]
-            & API.mrOperations
-              .~ [ API.DeleteOperation $
-                     API.DeleteMutationOperation
-                       { API._dmoTable = mkTableName "Album",
-                         API._dmoWhere =
-                           Just $
-                             API.And
-                               [ API.ApplyBinaryComparisonOperator
-                                   API.Equal
-                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 90) (API.ScalarType "number")),
-                                 API.ApplyBinaryComparisonOperator
-                                   API.GreaterThan
-                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 111) (API.ScalarType "number"))
-                               ],
-                         API._dmoReturningFields =
-                           mkFieldsMap
-                             [ ("deletedRows_AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                               ("deletedRows_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string")),
-                               ( "deletedRows_Artist",
-                                 API.RelField
-                                   ( API.RelationshipField
-                                       (API.RelationshipName "Artist")
-                                       ( emptyQuery
-                                           & API.qFields
-                                             ?~ mkFieldsMap
-                                               [ ("ArtistId", API.ColumnField (API.ColumnName "ArtistId") $ API.ScalarType "number"),
-                                                 ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
-                                               ]
-                                       )
-                                   )
-                               )
-                             ]
-                       }
-                 ]
+               ]
     _mrrRecordedRequest `shouldBe` Just (Mutation expectedRequest)
 
   mockAgentGraphqlTest "delete row by pk with delete permissions" $ \_testEnv performGraphqlRequest -> do
@@ -255,8 +258,8 @@ tests = do
                           [ ("AlbumId", API.mkColumnFieldValue $ J.Number 112),
                             ("Title", API.mkColumnFieldValue $ J.String "The Number of The Beast"),
                             ( "Artist",
-                              API.mkRelationshipFieldValue $
-                                mkRowsQueryResponse
+                              API.mkRelationshipFieldValue
+                                $ mkRowsQueryResponse
                                   [ [ ("ArtistId", API.mkColumnFieldValue $ J.Number 90),
                                       ("Name", API.mkColumnFieldValue $ J.String "Iron Maiden")
                                     ]
@@ -284,54 +287,56 @@ tests = do
     let expectedRequest =
           emptyMutationRequest
             & API.mrTableRelationships
-              .~ [ API.TableRelationships
-                     { API._trSourceTable = mkTableName "Album",
-                       API._trRelationships =
-                         HashMap.fromList
-                           [ ( API.RelationshipName "Artist",
-                               API.Relationship
-                                 { API._rTargetTable = mkTableName "Artist",
-                                   API._rRelationshipType = API.ObjectRelationship,
-                                   API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                 }
+            .~ Set.fromList
+              [ API.TableRelationships
+                  { API._trelSourceTable = mkTableName "Album",
+                    API._trelRelationships =
+                      HashMap.fromList
+                        [ ( API.RelationshipName "Artist",
+                            API.Relationship
+                              { API._rTargetTable = mkTableName "Artist",
+                                API._rRelationshipType = API.ObjectRelationship,
+                                API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                              }
+                          )
+                        ]
+                  }
+              ]
+              & API.mrOperations
+            .~ [ API.DeleteOperation
+                   $ API.DeleteMutationOperation
+                     { API._dmoTable = mkTableName "Album",
+                       API._dmoWhere =
+                         Just
+                           . API.And
+                           $ Set.fromList
+                             [ API.ApplyBinaryComparisonOperator
+                                 API.Equal
+                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 90) (API.ScalarType "number")),
+                               API.ApplyBinaryComparisonOperator
+                                 API.Equal
+                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
+                                 (API.ScalarValueComparison $ API.ScalarValue (J.Number 112) (API.ScalarType "number"))
+                             ],
+                       API._dmoReturningFields =
+                         mkFieldsMap
+                           [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
+                             ("Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string")),
+                             ( "Artist",
+                               API.RelField
+                                 ( API.RelationshipField
+                                     (API.RelationshipName "Artist")
+                                     ( emptyQuery
+                                         & API.qFields
+                                         ?~ mkFieldsMap
+                                           [ ("ArtistId", API.ColumnField (API.ColumnName "ArtistId") $ API.ScalarType "number"),
+                                             ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
+                                           ]
+                                     )
+                                 )
                              )
                            ]
                      }
-                 ]
-            & API.mrOperations
-              .~ [ API.DeleteOperation $
-                     API.DeleteMutationOperation
-                       { API._dmoTable = mkTableName "Album",
-                         API._dmoWhere =
-                           Just $
-                             API.And
-                               [ API.ApplyBinaryComparisonOperator
-                                   API.Equal
-                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 90) (API.ScalarType "number")),
-                                 API.ApplyBinaryComparisonOperator
-                                   API.Equal
-                                   (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
-                                   (API.ScalarValueComparison $ API.ScalarValue (J.Number 112) (API.ScalarType "number"))
-                               ],
-                         API._dmoReturningFields =
-                           mkFieldsMap
-                             [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                               ("Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string")),
-                               ( "Artist",
-                                 API.RelField
-                                   ( API.RelationshipField
-                                       (API.RelationshipName "Artist")
-                                       ( emptyQuery
-                                           & API.qFields
-                                             ?~ mkFieldsMap
-                                               [ ("ArtistId", API.ColumnField (API.ColumnName "ArtistId") $ API.ScalarType "number"),
-                                                 ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
-                                               ]
-                                       )
-                                   )
-                               )
-                             ]
-                       }
-                 ]
+               ]
     _mrrRecordedRequest `shouldBe` Just (Mutation expectedRequest)

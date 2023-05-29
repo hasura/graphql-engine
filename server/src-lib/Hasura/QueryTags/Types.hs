@@ -31,8 +31,8 @@ instance ToJSON QueryTagsFormat where
     SQLCommenter -> "sqlcommenter"
 
 instance FromJSON QueryTagsFormat where
-  parseJSON = withText "QueryTagsFormat" $
-    \t -> case T.toLower t of
+  parseJSON = withText "QueryTagsFormat"
+    $ \t -> case T.toLower t of
       "standard" -> pure Standard
       "sqlcommenter" -> pure SQLCommenter
       _ -> fail errMsg
@@ -44,12 +44,12 @@ instance FromJSON QueryTagsFormat where
 -- affecting the API.
 instance HasCodec QueryTagsFormat where
   codec =
-    named "QueryTagsFormat" $
-      stringConstCodec $
-        NonEmpty.fromList $
-          [ (Standard, "standard"),
-            (SQLCommenter, "sqlcommenter")
-          ]
+    named "QueryTagsFormat"
+      $ stringConstCodec
+      $ NonEmpty.fromList
+      $ [ (Standard, "standard"),
+          (SQLCommenter, "sqlcommenter")
+        ]
 
 -- | QueryTagsConfig is the configuration created by the users to control query tags
 --
@@ -92,17 +92,26 @@ $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''QueryTagsConfig)
 instance FromJSON QueryTagsConfig where
   parseJSON = withObject "QueryTagsConfig" $ \o ->
     QueryTagsConfig
-      <$> o .:? "disabled" .!= False
-      <*> o .:? "format" .!= Standard
-      <*> o .:? "omit_request_id" .!= True
+      <$> o
+      .:? "disabled"
+      .!= False
+      <*> o
+      .:? "format"
+      .!= Standard
+      <*> o
+      .:? "omit_request_id"
+      .!= True
 
 instance HasCodec QueryTagsConfig where
   codec =
-    AC.object "QueryTagsConfig" $
-      QueryTagsConfig
-        <$> optionalFieldWithDefault' "disabled" False .== _qtcDisabled
-        <*> optionalFieldWithDefault' "format" Standard .== _qtcFormat
-        <*> optionalFieldWithDefault' "omit_request_id" True .== _qtcOmitRequestId
+    AC.object "QueryTagsConfig"
+      $ QueryTagsConfig
+      <$> optionalFieldWithDefault' "disabled" False
+      .== _qtcDisabled
+        <*> optionalFieldWithDefault' "format" Standard
+      .== _qtcFormat
+        <*> optionalFieldWithDefault' "omit_request_id" True
+      .== _qtcOmitRequestId
     where
       (.==) = (AC..=)
 

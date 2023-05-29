@@ -87,8 +87,8 @@ articlesTable tableName =
 tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests =
   describe "only unique trigger names are allowed" do
-    it "check: inserting a new row invokes a event trigger" $
-      \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+    it "check: inserting a new row invokes a event trigger"
+      $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
         let insertQuery =
@@ -127,8 +127,8 @@ tests =
 
         eventPayload `shouldBeYaml` expectedEventPayload
 
-    it "metadata_api: does not allow creating an event trigger with a name that already exists" $
-      \(testEnvironment, (webhookServer, _)) -> do
+    it "metadata_api: does not allow creating an event trigger with a name that already exists"
+      $ \(testEnvironment, (webhookServer, _)) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
         -- metadata <- GraphqlEngine.exportMetadata testEnvironment
@@ -157,11 +157,11 @@ tests =
         -- Creating a event trigger with duplicate name should fail
         shouldReturnYaml
           testEnvironment
-          (GraphqlEngine.postWithHeadersStatus 400 testEnvironment "/v1/metadata/" mempty createEventTriggerWithDuplicateName)
+          (GraphqlEngine.postMetadataWithStatus 400 testEnvironment createEventTriggerWithDuplicateName)
           createEventTriggerWithDuplicateNameExpectedResponse
 
-    it "replace_metadata: does not allow creating an event trigger with a name that already exists" $
-      \(testEnvironment, (webhookServer, _)) -> do
+    it "replace_metadata: does not allow creating an event trigger with a name that already exists"
+      $ \(testEnvironment, (webhookServer, _)) -> do
         let replaceMetadata = getReplaceMetadata testEnvironment webhookServer
 
             replaceMetadataWithDuplicateNameExpectedResponse =
@@ -174,7 +174,7 @@ tests =
         -- Creating a event trigger with duplicate name should fail
         shouldReturnYaml
           testEnvironment
-          (GraphqlEngine.postWithHeadersStatus 400 testEnvironment "/v1/metadata/" mempty replaceMetadata)
+          (GraphqlEngine.postMetadataWithStatus 400 testEnvironment replaceMetadata)
           replaceMetadataWithDuplicateNameExpectedResponse
 
 --------------------------------------------------------------------------------
@@ -186,8 +186,8 @@ postgresSetup testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger
@@ -251,8 +251,8 @@ getReplaceMetadata testEnvironment webhookServer =
 
 postgresTeardown :: TestEnvironment -> IO ()
 postgresTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: bulk
       args:
       - type: pg_delete_event_trigger

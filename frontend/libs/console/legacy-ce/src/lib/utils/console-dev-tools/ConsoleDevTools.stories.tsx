@@ -1,14 +1,16 @@
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { ConsoleDevToolsInner } from './ConsoleDevTools';
 
 export default {
   component: ConsoleDevToolsInner,
   title: 'ConsoleDevTools',
-} as ComponentMeta<typeof ConsoleDevToolsInner>;
+} as Meta<typeof ConsoleDevToolsInner>;
 
-const Template: ComponentStory<typeof ConsoleDevToolsInner> = args => {
+const Template: StoryFn<typeof ConsoleDevToolsInner> = args => {
   return <ConsoleDevToolsInner {...args} />;
 };
 
-export const Primary = Template.bind({});
-Primary.args = {};
+export const Primary = {
+  render: Template,
+  args: {},
+};

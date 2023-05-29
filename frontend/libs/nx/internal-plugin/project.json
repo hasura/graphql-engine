@@ -42,9 +42,7 @@
       "options": {
         "lintFilePatterns": [
           "libs/nx/internal-plugin/**/*.ts",
-          "libs/nx/internal-plugin/generators.json",
-          "libs/nx/internal-plugin/executors.json",
-          "libs/nx/internal-plugin/package.json"
+          "libs/nx/internal-plugin/**/*.json"
         ]
       }
     },
@@ -57,5 +55,5 @@
       }
     }
   },
-  "tags": []
+  "tags": ["scope:nx-plugins", "type:feature"]
 }

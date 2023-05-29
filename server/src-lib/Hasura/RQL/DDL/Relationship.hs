@@ -9,14 +9,14 @@ module Hasura.RQL.DDL.Relationship
     dropRelationshipInMetadata,
     SetRelComment,
     runSetRelComment,
-    nativeQueryArrayRelationshipSetup,
+    nativeQueryRelationshipSetup,
   )
 where
 
 import Control.Lens ((.~))
 import Data.Aeson.Types
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
@@ -36,8 +36,13 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
+import Hasura.Table.Metadata
+  ( TableMetadata,
+    tmArrayRelationships,
+    tmObjectRelationships,
+  )
 
 --------------------------------------------------------------------------------
 -- Create local relationship
@@ -58,23 +63,26 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
   let relName = _rdName relDef
   -- Check if any field with relationship name already exists in the table
   tableFields <- _tciFieldInfoMap <$> askTableCoreInfo @b source tableName
-  for_ (HashMap.lookup (fromRel relName) tableFields) $
-    const $
-      throw400 AlreadyExists $
-        "field with name " <> relName <<> " already exists in table " <>> tableName
+  for_ (HashMap.lookup (fromRel relName) tableFields)
+    $ const
+    $ throw400 AlreadyExists
+    $ "field with name "
+    <> relName
+    <<> " already exists in table "
+    <>> tableName
 
   tableCache <-
     askSchemaCache
       >>= flip onNothing (throw400 NotFound "Could not find source.")
-        . unsafeTableCache source
-        . scSources
+      . unsafeTableCache source
+      . scSources
 
   let comment = _rdComment relDef
       metadataObj =
-        MOSourceObjId source $
-          AB.mkAnyBackend $
-            SMOTableObj @b tableName $
-              MTORel relName relType
+        MOSourceObjId source
+          $ AB.mkAnyBackend
+          $ SMOTableObj @b tableName
+          $ MTORel relName relType
   addRelationshipToMetadata <- case relType of
     ObjRel -> do
       value <- decodeValue $ toJSON relDef
@@ -82,18 +90,19 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
         tableCache
         tableName
         (Left value)
-      pure $ tmObjectRelationships %~ OMap.insert relName (RelDef relName (_rdUsing value) comment)
+      pure $ tmObjectRelationships %~ InsOrdHashMap.insert relName (RelDef relName (_rdUsing value) comment)
     ArrRel -> do
       value <- decodeValue $ toJSON relDef
       validateRelationship @b
         tableCache
         tableName
         (Right value)
-      pure $ tmArrayRelationships %~ OMap.insert relName (RelDef relName (_rdUsing value) comment)
+      pure $ tmArrayRelationships %~ InsOrdHashMap.insert relName (RelDef relName (_rdUsing value) comment)
 
-  buildSchemaCacheFor metadataObj $
-    MetadataModifier $
-      tableMetadataSetter @b source tableName %~ addRelationshipToMetadata
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter @b source tableName
+    %~ addRelationshipToMetadata
   pure successMsg
 
 defaultBuildObjectRelationshipInfo ::
@@ -105,22 +114,21 @@ defaultBuildObjectRelationshipInfo ::
   ObjRelDef b ->
   m (RelInfo b, Seq SchemaDependency)
 defaultBuildObjectRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case ru of
-  RUManual rm -> do
-    let refqt = rmTable rm
-        (lCols, rCols) = unzip $ HashMap.toList $ rmColumns rm
-        io = fromMaybe BeforeParent $ rmInsertOrder rm
+  RUManual (RelManualTableConfig {rmtTable = refqt, rmtCommon = common}) -> do
+    let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
+        io = fromMaybe BeforeParent $ rmInsertOrder common
         mkDependency tableName reason col =
           SchemaDependency
-            ( SOSourceObj source $
-                AB.mkAnyBackend $
-                  SOITableObj @b tableName $
-                    TOCol @b col
+            ( SOSourceObj source
+                $ AB.mkAnyBackend
+                $ SOITableObj @b tableName
+                $ TOCol @b col
             )
             reason
         dependencies =
           (mkDependency qt DRLeftColumn <$> Seq.fromList lCols)
             <> (mkDependency refqt DRRightColumn <$> Seq.fromList rCols)
-    pure (RelInfo rn ObjRel (rmColumns rm) refqt True io, dependencies)
+    pure (RelInfo rn ObjRel (rmColumns common) (RelTargetTable refqt) True io, dependencies)
   RUFKeyOn (SameTable columns) -> do
     foreignTableForeignKeys <-
       HashMap.lookup qt foreignKeys
@@ -129,48 +137,48 @@ defaultBuildObjectRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case
     let dependencies =
           Seq.fromList
             [ SchemaDependency
-                ( SOSourceObj source $
-                    AB.mkAnyBackend $
-                      SOITableObj @b qt $
-                        TOForeignKey @b (_cName constraint)
+                ( SOSourceObj source
+                    $ AB.mkAnyBackend
+                    $ SOITableObj @b qt
+                    $ TOForeignKey @b (_cName constraint)
                 )
                 DRFkey,
               -- this needs to be added explicitly to handle the remote table being untracked. In this case,
               -- neither the using_col nor the constraint name will help.
               SchemaDependency
-                ( SOSourceObj source $
-                    AB.mkAnyBackend $
-                      SOITable @b foreignTable
+                ( SOSourceObj source
+                    $ AB.mkAnyBackend
+                    $ SOITable @b foreignTable
                 )
                 DRRemoteTable
             ]
             <> (drUsingColumnDep @b source qt <$> Seq.fromList (toList columns))
-    pure (RelInfo rn ObjRel (NEHashMap.toHashMap colMap) foreignTable False BeforeParent, dependencies)
+    pure (RelInfo rn ObjRel (NEHashMap.toHashMap colMap) (RelTargetTable foreignTable) False BeforeParent, dependencies)
   RUFKeyOn (RemoteTable remoteTable remoteCols) ->
     mkFkeyRel ObjRel AfterParent source rn qt remoteTable remoteCols foreignKeys
 
--- | set up an array relationship from a Native Query onto another data source
--- currently we can only connect to other tables but this will expand in future
--- we only do RelManualConfig as we don't have any notion of ForeignKey from a
--- Native Query
-nativeQueryArrayRelationshipSetup ::
+-- | set up a relationship from a Native Query onto another data source
+nativeQueryRelationshipSetup ::
   forall b m.
   (QErrM m, Backend b) =>
   SourceName ->
   NativeQueryName ->
-  RelDef (RelManualConfig b) ->
+  RelType ->
+  RelDef (RelManualNativeQueryConfig b) ->
   m (RelInfo b, Seq SchemaDependency)
-nativeQueryArrayRelationshipSetup sourceName nativeQueryName (RelDef relName manualConfig _) = do
-  let refqt = rmTable manualConfig
-      (lCols, rCols) = unzip $ HashMap.toList $ rmColumns manualConfig
+nativeQueryRelationshipSetup sourceName nativeQueryName relType (RelDef relName (RelManualNativeQueryConfig {rmnNativeQueryName = refqt, rmnCommon = common}) _) = do
+  let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
+      io = case relType of
+        ObjRel -> fromMaybe BeforeParent $ rmInsertOrder common
+        ArrRel -> AfterParent
       deps =
         ( fmap
             ( \c ->
                 SchemaDependency
-                  ( SOSourceObj sourceName $
-                      AB.mkAnyBackend $
-                        SOINativeQueryObj @b nativeQueryName $
-                          NQOCol @b c
+                  ( SOSourceObj sourceName
+                      $ AB.mkAnyBackend
+                      $ SOINativeQueryObj @b nativeQueryName
+                      $ NQOCol @b c
                   )
                   DRLeftColumn
             )
@@ -179,15 +187,15 @@ nativeQueryArrayRelationshipSetup sourceName nativeQueryName (RelDef relName man
           <> fmap
             ( \c ->
                 SchemaDependency
-                  ( SOSourceObj sourceName $
-                      AB.mkAnyBackend $
-                        SOITableObj @b refqt $
-                          TOCol @b c
+                  ( SOSourceObj sourceName
+                      $ AB.mkAnyBackend
+                      $ SOINativeQueryObj @b refqt
+                      $ NQOCol @b c
                   )
                   DRRightColumn
             )
             (Seq.fromList rCols)
-  pure (RelInfo relName ArrRel (rmColumns manualConfig) refqt True AfterParent, deps)
+  pure (RelInfo relName relType (rmColumns common) (RelTargetNativeQuery refqt) True io, deps)
 
 defaultBuildArrayRelationshipInfo ::
   forall b m.
@@ -198,17 +206,16 @@ defaultBuildArrayRelationshipInfo ::
   ArrRelDef b ->
   m (RelInfo b, Seq SchemaDependency)
 defaultBuildArrayRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case ru of
-  RUManual rm -> do
-    let refqt = rmTable rm
-        (lCols, rCols) = unzip $ HashMap.toList $ rmColumns rm
+  RUManual (RelManualTableConfig {rmtTable = refqt, rmtCommon = common}) -> do
+    let (lCols, rCols) = unzip $ HashMap.toList $ rmColumns common
         deps =
           ( fmap
               ( \c ->
                   SchemaDependency
-                    ( SOSourceObj source $
-                        AB.mkAnyBackend $
-                          SOITableObj @b qt $
-                            TOCol @b c
+                    ( SOSourceObj source
+                        $ AB.mkAnyBackend
+                        $ SOITableObj @b qt
+                        $ TOCol @b c
                     )
                     DRLeftColumn
               )
@@ -217,22 +224,22 @@ defaultBuildArrayRelationshipInfo source foreignKeys qt (RelDef rn ru _) = case 
             <> fmap
               ( \c ->
                   SchemaDependency
-                    ( SOSourceObj source $
-                        AB.mkAnyBackend $
-                          SOITableObj @b refqt $
-                            TOCol @b c
+                    ( SOSourceObj source
+                        $ AB.mkAnyBackend
+                        $ SOITableObj @b refqt
+                        $ TOCol @b c
                     )
                     DRRightColumn
               )
               (Seq.fromList rCols)
-    pure (RelInfo rn ArrRel (rmColumns rm) refqt True AfterParent, deps)
+    pure (RelInfo rn ArrRel (rmColumns common) (RelTargetTable refqt) True AfterParent, deps)
   RUFKeyOn (ArrRelUsingFKeyOn refqt refCols) ->
     mkFkeyRel ArrRel AfterParent source rn qt refqt refCols foreignKeys
 
 mkFkeyRel ::
   forall b m.
-  QErrM m =>
-  Backend b =>
+  (QErrM m) =>
+  (Backend b) =>
   RelType ->
   InsertOrder ->
   SourceName ->
@@ -251,25 +258,25 @@ mkFkeyRel relType io source rn sourceTable remoteTable remoteColumns foreignKeys
   let dependencies =
         Seq.fromList
           [ SchemaDependency
-              ( SOSourceObj source $
-                  AB.mkAnyBackend $
-                    SOITableObj @b remoteTable $
-                      TOForeignKey @b (_cName constraint)
+              ( SOSourceObj source
+                  $ AB.mkAnyBackend
+                  $ SOITableObj @b remoteTable
+                  $ TOForeignKey @b (_cName constraint)
               )
               DRRemoteFkey,
             SchemaDependency
-              ( SOSourceObj source $
-                  AB.mkAnyBackend $
-                    SOITable @b remoteTable
+              ( SOSourceObj source
+                  $ AB.mkAnyBackend
+                  $ SOITable @b remoteTable
               )
               DRRemoteTable
           ]
           <> ( drUsingColumnDep @b source remoteTable
                  <$> Seq.fromList (toList remoteColumns)
              )
-  pure (RelInfo rn relType (reverseMap (NEHashMap.toHashMap colMap)) remoteTable False io, dependencies)
+  pure (RelInfo rn relType (reverseMap (NEHashMap.toHashMap colMap)) (RelTargetTable remoteTable) False io, dependencies)
   where
-    reverseMap :: Hashable y => HashMap x y -> HashMap y x
+    reverseMap :: (Hashable y) => HashMap x y -> HashMap y x
     reverseMap = HashMap.fromList . fmap swap . HashMap.toList
 
 -- | Try to find a foreign key constraint, identifying a constraint by its set of columns
@@ -288,17 +295,17 @@ getRequiredFkey cols fkeys =
 
 drUsingColumnDep ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   SourceName ->
   TableName b ->
   Column b ->
   SchemaDependency
 drUsingColumnDep source qt col =
   SchemaDependency
-    ( SOSourceObj source $
-        AB.mkAnyBackend $
-          SOITableObj @b qt $
-            TOCol @b col
+    ( SOSourceObj source
+        $ AB.mkAnyBackend
+        $ SOITableObj @b qt
+        $ TOCol @b col
     )
     DRUsingColumn
 
@@ -315,10 +322,16 @@ data DropRel b = DropRel
 instance (Backend b) => FromJSON (DropRel b) where
   parseJSON = withObject "DropRel" $ \o ->
     DropRel
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .: "relationship"
-      <*> o .:? "cascade" .!= False
+      <$> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "table"
+      <*> o
+      .: "relationship"
+      <*> o
+      .:? "cascade"
+      .!= False
 
 runDropRel ::
   forall b m.
@@ -329,10 +342,11 @@ runDropRel (DropRel source qt rn cascade) = do
   depObjs <- collectDependencies
   withNewInconsistentObjsCheck do
     metadataModifiers <- traverse purgeRelDep depObjs
-    buildSchemaCache $
-      MetadataModifier $
-        tableMetadataSetter @b source qt
-          %~ dropRelationshipInMetadata rn . foldr (.) id metadataModifiers
+    buildSchemaCache
+      $ MetadataModifier
+      $ tableMetadataSetter @b source qt
+      %~ dropRelationshipInMetadata rn
+      . foldr (.) id metadataModifiers
   pure successMsg
   where
     collectDependencies = do
@@ -342,27 +356,27 @@ runDropRel (DropRel source qt rn cascade) = do
       let depObjs =
             getDependentObjs
               sc
-              ( SOSourceObj source $
-                  AB.mkAnyBackend $
-                    SOITableObj @b qt $
-                      TORel rn
+              ( SOSourceObj source
+                  $ AB.mkAnyBackend
+                  $ SOITableObj @b qt
+                  $ TORel rn
               )
       unless (null depObjs || cascade) $ reportDependentObjectsExist depObjs
       pure depObjs
 
 purgeRelDep ::
   forall b m.
-  QErrM m =>
-  Backend b =>
+  (QErrM m) =>
+  (Backend b) =>
   SchemaObjId ->
   m (TableMetadata b -> TableMetadata b)
 purgeRelDep (SOSourceObj _ exists)
   | Just (SOITableObj _ (TOPerm rn pt)) <- AB.unpackAnyBackend @b exists =
       pure $ dropPermissionInMetadata rn pt
 purgeRelDep d =
-  throw500 $
-    "unexpected dependency of relationship: "
-      <> reportSchemaObj d
+  throw500
+    $ "unexpected dependency of relationship: "
+    <> reportSchemaObj d
 
 --------------------------------------------------------------------------------
 -- Set local relationship comment
@@ -382,10 +396,15 @@ deriving instance (Backend b) => Eq (SetRelComment b)
 instance (Backend b) => FromJSON (SetRelComment b) where
   parseJSON = withObject "SetRelComment" $ \o ->
     SetRelComment
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .: "relationship"
-      <*> o .:? "comment"
+      <$> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "table"
+      <*> o
+      .: "relationship"
+      <*> o
+      .:? "comment"
 
 runSetRelComment ::
   forall m b.
@@ -396,15 +415,16 @@ runSetRelComment defn = do
   tabInfo <- askTableCoreInfo @b source qt
   relType <- riType <$> askRelType (_tciFieldInfoMap tabInfo) rn ""
   let metadataObj =
-        MOSourceObjId source $
-          AB.mkAnyBackend $
-            SMOTableObj @b qt $
-              MTORel rn relType
-  buildSchemaCacheFor metadataObj $
-    MetadataModifier $
-      tableMetadataSetter @b source qt %~ case relType of
-        ObjRel -> tmObjectRelationships . ix rn . rdComment .~ comment
-        ArrRel -> tmArrayRelationships . ix rn . rdComment .~ comment
+        MOSourceObjId source
+          $ AB.mkAnyBackend
+          $ SMOTableObj @b qt
+          $ MTORel rn relType
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter @b source qt
+    %~ case relType of
+      ObjRel -> tmObjectRelationships . ix rn . rdComment .~ comment
+      ArrRel -> tmArrayRelationships . ix rn . rdComment .~ comment
   pure successMsg
   where
     SetRelComment source qt rn comment = defn

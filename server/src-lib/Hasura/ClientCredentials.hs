@@ -16,7 +16,8 @@ import Hasura.RQL.Types.EECredentials (EEClientCredentials (..), EEClientId (..)
 
 getEEClientCredentialsTx :: PG.TxE QErr (Maybe EEClientCredentials)
 getEEClientCredentialsTx =
-  makeClientCredentials . PG.getRow
+  makeClientCredentials
+    . PG.getRow
     <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|

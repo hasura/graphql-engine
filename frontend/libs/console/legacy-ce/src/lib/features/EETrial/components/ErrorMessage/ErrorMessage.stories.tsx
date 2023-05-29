@@ -1,13 +1,16 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ErrorMessage } from './ErrorMessage';
 
 export default {
   title: 'features / EETrial / EE Error Message 🧬️',
   component: ErrorMessage,
-} as ComponentMeta<typeof ErrorMessage>;
+} as Meta<typeof ErrorMessage>;
 
-export const Default: ComponentStory<typeof ErrorMessage> = () => {
-  return <ErrorMessage message={<div>Some error occured</div>} />;
+export const Default: StoryObj<typeof ErrorMessage> = {
+  render: () => {
+    return <ErrorMessage message={<div>Some error occured</div>} />;
+  },
+
+  name: '💠 Default',
 };
-Default.storyName = '💠 Default';

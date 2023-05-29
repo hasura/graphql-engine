@@ -90,8 +90,8 @@ postgresRunSqlQuery testEnvironment bulkType = do
   let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ getBackendTypeConfig testEnvironment
       sourceName = BackendType.backendSourceName backendTypeMetadata
       backendPrefix = BackendType.backendTypeString backendTypeMetadata
-  postV2Query 200 testEnvironment $
-    [interpolateYaml|
+  postV2Query 200 testEnvironment
+    $ [interpolateYaml|
       type: #{bulkType}
       args:
       - type: #{backendPrefix}_run_sql
@@ -153,8 +153,8 @@ mssqlRunSqlQuery testEnvironment bulkType = do
   let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ getBackendTypeConfig testEnvironment
       sourceName = BackendType.backendSourceName backendTypeMetadata
       backendPrefix = BackendType.backendTypeString backendTypeMetadata
-  postV2Query 200 testEnvironment $
-    [interpolateYaml|
+  postV2Query 200 testEnvironment
+    $ [interpolateYaml|
       type: #{bulkType}
       args:
       - type: #{backendPrefix}_run_sql

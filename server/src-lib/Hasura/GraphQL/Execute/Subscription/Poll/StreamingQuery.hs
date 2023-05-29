@@ -37,10 +37,12 @@ import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
 import Hasura.SQL.Value (TxtEncodedVal (..))
-import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..))
+import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..), recordSubcriptionMetric, streamingSubscriptionLabel)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Refined (unrefine)
 import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
+import System.Metrics.Prometheus.HistogramVector qualified as HistogramVector
 import Text.Shakespeare.Text (st)
 
 {- Note [Streaming subscriptions rebuilding cohort map]
@@ -196,8 +198,8 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cursorValues r
       else -- when the response is unchanged, the response is only sent to the newly added subscribers
         return (newSinks, curSinks)
   pushResultToSubscribers subscribersToPush
-  pure $
-    over
+  pure
+    $ over
       (each . each)
       ( \Subscriber {..} ->
           SubscriberExecutionDetails _sId _sMetadata
@@ -228,15 +230,15 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cursorValues r
     response = result <&> \payload -> SubscriptionResponse payload dTime
 
     pushResultToSubscribers subscribers =
-      unless isResponseEmpty $
-        flip A.mapConcurrently_ subscribers $
-          \Subscriber {..} -> _sOnChangeCallback response
+      unless isResponseEmpty
+        $ flip A.mapConcurrently_ subscribers
+        $ \Subscriber {..} -> _sOnChangeCallback response
 
 -- | A single iteration of the streaming query polling loop. Invocations on the
 -- same mutable objects may race.
 pollStreamingQuery ::
   forall b.
-  BackendTransport b =>
+  (BackendTransport b) =>
   PollerId ->
   STM.TVar PollerResponseState ->
   SubscriptionsOptions ->
@@ -249,9 +251,12 @@ pollStreamingQuery ::
   SubscriptionPostPollHook ->
   Maybe (IO ()) -> -- Optional IO action to make this function (pollStreamingQuery) testable
   PrometheusMetrics ->
+  IO GranularPrometheusMetricsState ->
+  TMap.TMap (Maybe OperationName) Int ->
   ResolvedConnectionTemplate b ->
   IO ()
-pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe prometheusMetrics resolvedConnectionTemplate = do
+pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe prometheusMetrics granularPrometheusMetricsState operationNames' resolvedConnectionTemplate = do
+  operationNames <- STM.atomically $ TMap.getMap operationNames'
   (totalTime, (snapshotTime, batchesDetailsAndProcessedCohorts)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
     -- This STM transaction is a read only transaction i.e. it doesn't mutate any state
@@ -275,6 +280,14 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
           query
           (over (each . _2) C._csVariables $ fmap (fmap fst) cohorts)
           resolvedConnectionTemplate
+      let dbExecTimeMetric = submDBExecTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
+      recordSubcriptionMetric
+        granularPrometheusMetricsState
+        True
+        operationNames
+        parameterizedQueryHash
+        streamingSubscriptionLabel
+        (flip (HistogramVector.observe dbExecTimeMetric) (realToFrac queryExecutionTime))
 
       previousPollerResponseState <- STM.readTVarIO pollerResponseState
 
@@ -295,8 +308,9 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
             case mxRes of
               Left _ -> Nothing
               Right resp -> Just $ getSum $ foldMap ((\(_, sqlResp, _) -> Sum . BS.length $ sqlResp)) resp
-      (pushTime, cohortsExecutionDetails) <- withElapsedTime $
-        A.forConcurrently operations $ \(res, cohortId, respData, latestCursorValueMaybe, (snapshot, cohort)) -> do
+      (pushTime, cohortsExecutionDetails) <- withElapsedTime
+        $ A.forConcurrently operations
+        $ \(res, cohortId, respData, latestCursorValueMaybe, (snapshot, cohort)) -> do
           let latestCursorValue@(CursorVariableValues updatedCursorVarVal) =
                 let prevCursorVariableValue = CursorVariableValues $ C._unValidatedVariables $ C._cvCursorVariables $ C._csVariables snapshot
                  in case latestCursorValueMaybe of
@@ -404,8 +418,8 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
                       newCohort <- do
                         existingSubs <- TMap.new
                         newSubs <- TMap.new
-                        pure $
-                          C.Cohort
+                        pure
+                          $ C.Cohort
                             (C._cCohortId currentCohort)
                             (C._cPreviousResponse currentCohort)
                             existingSubs
@@ -426,6 +440,14 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
         currentCohorts
     TMap.replace cohortMap updatedCohortsMap
   postPollHook pollDetails
+  let totalTimeMetric = submTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
+  recordSubcriptionMetric
+    granularPrometheusMetricsState
+    True
+    operationNames
+    parameterizedQueryHash
+    streamingSubscriptionLabel
+    (flip (HistogramVector.observe totalTimeMetric) (realToFrac totalTime))
   where
     SubscriptionsOptions batchSize _ = streamingQueryOpts
 
@@ -456,8 +478,8 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
           oldCohortNewSubscribers = C._cNewSubscribers oldCohort
       mergedExistingSubscribers <- TMap.union newCohortExistingSubscribers oldCohortExistingSubscribers
       mergedNewSubscribers <- TMap.union newCohortNewSubscribers oldCohortNewSubscribers
-      pure $
-        newCohort
+      pure
+        $ newCohort
           { C._cNewSubscribers = mergedNewSubscribers,
             C._cExistingSubscribers = mergedExistingSubscribers
           }

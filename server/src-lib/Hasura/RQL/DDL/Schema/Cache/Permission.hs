@@ -12,7 +12,7 @@ where
 import Data.Aeson
 import Data.Graph qualified as G
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
@@ -36,8 +36,8 @@ import Hasura.RQL.Types.Roles.Internal
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
 
 {- Note: [Inherited roles architecture for read queries]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -116,7 +116,7 @@ newtype OrderedRoles = OrderedRoles {_unOrderedRoles :: [Role]}
 --   the parent roles precede the inherited role R, assuming the parent roles
 --   themselves don't have any parents for the sake of this example.
 orderRoles ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   [Role] ->
   m OrderedRoles
 orderRoles allRoles = do
@@ -157,8 +157,8 @@ resolveCheckPermission checkPermission roleName inconsistentEntity = do
     CPInconsistent -> do
       let inconsistentObj =
             -- check `Conflicts while inheriting permissions` in `rfcs/inherited-roles-improvements.md`
-            Left $
-              ConflictingInheritedPermission roleName inconsistentEntity
+            Left
+              $ ConflictingInheritedPermission roleName inconsistentEntity
       tell $ Seq.singleton inconsistentObj
       pure Nothing
     CPDefined permissionDefn -> pure $ Just permissionDefn
@@ -201,18 +201,22 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
       go accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) = do
         parentRolePermissions <-
           for (toList parentRoles) $ \role ->
-            onNothing (HashMap.lookup role accumulatedRolePermMap) $
-              throw500 $
-                -- this error will ideally never be thrown, but if it's thrown then
-                -- it's possible that the permissions for the role do exist, but it's
-                -- not yet built due to wrong ordering of the roles, check `orderRoles`
-                "buildTablePermissions: table role permissions for role: " <> role <<> " not found"
+            onNothing (HashMap.lookup role accumulatedRolePermMap)
+              $ throw500
+              $
+              -- this error will ideally never be thrown, but if it's thrown then
+              -- it's possible that the permissions for the role do exist, but it's
+              -- not yet built due to wrong ordering of the roles, check `orderRoles`
+              "buildTablePermissions: table role permissions for role: "
+              <> role
+              <<> " not found"
         let combinedParentRolePermInfo = mconcat $ fmap rolePermInfoToCombineRolePermInfo parentRolePermissions
             selectPermissionsCount = length $ filter (isJust . _permSel) parentRolePermissions
             accumulatedRolePermission = HashMap.lookup roleName accumulatedRolePermMap
             roleSelectPermission =
-              onNothing (_permSel =<< accumulatedRolePermission) $
-                combinedSelPermInfoToSelPermInfo selectPermissionsCount <$> (crpiSelPerm combinedParentRolePermInfo)
+              onNothing (_permSel =<< accumulatedRolePermission)
+                $ combinedSelPermInfoToSelPermInfo selectPermissionsCount
+                <$> (crpiSelPerm combinedParentRolePermInfo)
         roleInsertPermission <- resolveCheckTablePermission (crpiInsPerm combinedParentRolePermInfo) accumulatedRolePermission _permIns roleName source table PTInsert
         roleUpdatePermission <- resolveCheckTablePermission (crpiUpdPerm combinedParentRolePermInfo) accumulatedRolePermission _permUpd roleName source table PTUpdate
         roleDeletePermission <- resolveCheckTablePermission (crpiDelPerm combinedParentRolePermInfo) accumulatedRolePermission _permDel roleName source table PTDelete
@@ -248,14 +252,14 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
           permType = reflectPermDefPermission (_pdPermission permission)
           roleName = _pdRole permission
           schemaObject =
-            SOSourceObj source $
-              AB.mkAnyBackend $
-                SOITableObj @b table $
-                  TOPerm roleName permType
+            SOSourceObj source
+              $ AB.mkAnyBackend
+              $ SOITableObj @b table
+              $ TOPerm roleName permType
           addPermContext err = "in permission for role " <> roleName <<> ": " <> err
       withRecordInconsistencyM metadataObject $ modifyErr (addTableContext @b table . addPermContext) do
-        when (_pdRole permission == adminRoleName) $
-          throw400 ConstraintViolation "cannot define permission for admin role"
+        when (_pdRole permission == adminRoleName)
+          $ throw400 ConstraintViolation "cannot define permission for admin role"
         (info, dependencies) <-
           runTableCoreCacheRT
             ( buildPermInfo
@@ -273,10 +277,10 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
     mkPermissionMetadataObject permDef =
       let permType = reflectPermDefPermission (_pdPermission permDef)
           objectId =
-            MOSourceObjId source $
-              AB.mkAnyBackend $
-                SMOTableObj @b table $
-                  MTOPerm (_pdRole permDef) permType
+            MOSourceObjId source
+              $ AB.mkAnyBackend
+              $ SMOTableObj @b table
+              $ MTOPerm (_pdRole permDef) permType
           definition = toJSON $ WithTable @b source table permDef
        in MetadataObject objectId definition
 
@@ -325,9 +329,9 @@ buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModel
             -- back to the inherited permission.
             roleSelectPermission :: Maybe (SelPermInfo b)
             roleSelectPermission =
-              onNothing (accumulatedRolePermission >>= _permSel) $
-                fmap (combinedSelPermInfoToSelPermInfo selectPermissionsCount) $
-                  crpiSelPerm combinedParentRolePermInfo
+              onNothing (accumulatedRolePermission >>= _permSel)
+                $ fmap (combinedSelPermInfoToSelPermInfo selectPermissionsCount)
+                $ crpiSelPerm combinedParentRolePermInfo
 
             rolePermInfo :: RolePermInfo b
             rolePermInfo = RolePermInfo Nothing roleSelectPermission Nothing Nothing
@@ -336,7 +340,7 @@ buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModel
 
   -- At the moment, we only support select permissions for logical models
   metadataRolePermissions <-
-    for (OMap.toHashMap selectPermissions) \selectPermission -> do
+    for (InsOrdHashMap.toHashMap selectPermissions) \selectPermission -> do
       let role :: RoleName
           role = _pdRole selectPermission
 
@@ -344,17 +348,17 @@ buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModel
           -- generate this permission.
           sourceObjId :: MetadataObjId
           sourceObjId =
-            MOSourceObjId sourceName $
-              AB.mkAnyBackend $
-                SMOLogicalModelObj @b logicalModelName $
-                  LMMOPerm role PTSelect
+            MOSourceObjId sourceName
+              $ AB.mkAnyBackend
+              $ SMOLogicalModelObj @b logicalModelName
+              $ LMMOPerm role PTSelect
 
           -- The object we're going to use to track the dependency and any
           -- potential cache inconsistencies.
           metadataObject :: MetadataObject
           metadataObject =
-            MetadataObject sourceObjId $
-              toJSON
+            MetadataObject sourceObjId
+              $ toJSON
                 WithLogicalModel
                   { _wlmSource = sourceName,
                     _wlmName = logicalModelName,
@@ -364,24 +368,27 @@ buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModel
           -- An identifier for this permission within the metadata structure.
           schemaObject :: SchemaObjId
           schemaObject =
-            SOSourceObj sourceName $
-              AB.mkAnyBackend $
-                SOILogicalModelObj @b logicalModelName $
-                  LMOPerm role PTSelect
+            SOSourceObj sourceName
+              $ AB.mkAnyBackend
+              $ SOILogicalModelObj @b logicalModelName
+              $ LMOPerm role PTSelect
 
           modifyError :: ExceptT QErr m a -> ExceptT QErr m a
           modifyError = modifyErr \err ->
-            addLogicalModelContext logicalModelName $
-              "in permission for role " <> role <<> ": " <> err
+            addLogicalModelContext logicalModelName
+              $ "in permission for role "
+              <> role
+              <<> ": "
+              <> err
 
       select <- withRecordInconsistencyM metadataObject $ modifyError do
-        when (role == adminRoleName) $
-          throw400 ConstraintViolation "cannot define permission for admin role"
+        when (role == adminRoleName)
+          $ throw400 ConstraintViolation "cannot define permission for admin role"
 
         (permissionInformation, dependencies) <-
-          flip runTableCoreCacheRT tableCache $
-            buildLogicalModelPermInfo sourceName logicalModelName logicalModelFields $
-              _pdPermission selectPermission
+          flip runTableCoreCacheRT tableCache
+            $ buildLogicalModelPermInfo sourceName logicalModelName logicalModelFields
+            $ _pdPermission selectPermission
 
         recordDependenciesM metadataObject schemaObject dependencies
         pure permissionInformation

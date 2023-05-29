@@ -82,8 +82,8 @@ tests = do
 scheduledEventsWithInvalidEnvVar :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 scheduledEventsWithInvalidEnvVar =
   describe "creating a scheduled event with invalid env var should add a failed invocation log" do
-    it "check the invocation log requests added for failed request corresponding to invalid header" $
-      \(testEnvironment, (_, _)) -> do
+    it "check the invocation log requests added for failed request corresponding to invalid header"
+      $ \(testEnvironment, (_, _)) -> do
         -- get all the scheduled event invocations
         let getScheduledEventInvocationsQuery =
               [yaml|
@@ -113,8 +113,8 @@ scheduledEventsWithInvalidEnvVar =
 postgresSetup :: TestEnvironment -> GraphqlEngine.Server -> IO ()
 postgresSetup testEnvironment webhookServer = do
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: create_scheduled_event
       args:
         webhook: #{webhookServerEchoEndpoint}

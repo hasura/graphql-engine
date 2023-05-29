@@ -21,6 +21,7 @@ import Data.Aeson
 import Hasura.Base.Error
 import Hasura.Eventing.ScheduledTrigger.Types
 import Hasura.Prelude
+import Hasura.RQL.DDL.Schema.Cache.Common (StoredIntrospection)
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.EECredentials
 import Hasura.RQL.Types.EventTrigger
@@ -54,7 +55,7 @@ TODO: Reference to open issue or rfc?
 -- This type class enables storing and managing Hasura metadata in an isolated
 -- database which will not interfere with user's database where tables/functions
 -- are defined. Hence, it'll enable support for databases of multiple backends
--- like MySQL, MSSQL etc.
+-- like MSSQL etc.
 --
 -- Error-handling is handled explicitly, with every function returning an
 -- `Either QErr`. This is inelegant, but is required: we want the caller to
@@ -92,7 +93,7 @@ TODO: Reference to open issue or rfc?
 -- It is believed that all the above three are implemented in a single storage
 -- system (ex: a Postgres database). We can split the functions into appropriate and
 -- specific type classes in future iterations if required.
-class Monad m => MonadMetadataStorage m where
+class (Monad m) => MonadMetadataStorage m where
   -- Metadata
   fetchMetadataResourceVersion :: m (Either QErr MetadataResourceVersion)
   fetchMetadata :: m (Either QErr MetadataWithResourceVersion)
@@ -104,6 +105,13 @@ class Monad m => MonadMetadataStorage m where
   -- the `setCatalogState` function is used by the console and CLI to store its state
   -- it is disabled when maintenance mode is on
   setCatalogState :: CatalogStateType -> Value -> m (Either QErr ())
+
+  -- methods for storing and retrieving source introspection which is stored in
+  -- "stored introspection" db. See 'StoredIntrospection'.
+  -- This returns a @Maybe StoredIntrospection@ as in some distributions
+  -- fetching of source introspection may not be available
+  fetchSourceIntrospection :: MetadataResourceVersion -> m (Either QErr (Maybe StoredIntrospection))
+  storeSourceIntrospection :: StoredIntrospection -> MetadataResourceVersion -> m (Either QErr ())
 
   -- get the @db_uuid@ that we store in the database.
   getMetadataDbUid :: m (Either QErr MetadataDbId)
@@ -154,6 +162,9 @@ instance (MonadMetadataStorage m, MonadTrans t, Monad (t m)) => MonadMetadataSto
   getCatalogState = lift getCatalogState
   setCatalogState a b = lift $ setCatalogState a b
 
+  fetchSourceIntrospection = lift . fetchSourceIntrospection
+  storeSourceIntrospection a b = lift $ storeSourceIntrospection a b
+
   getMetadataDbUid = lift getMetadataDbUid
   checkMetadataStorageHealth = lift checkMetadataStorageHealth
 
@@ -189,48 +200,49 @@ deriving via (TransT MetadataT m) instance (MonadMetadataStorage m) => MonadMeta
 deriving via (TransT ManagedT m) instance (MonadMetadataStorage m) => MonadMetadataStorage (ManagedT m)
 
 -- | Record a one-off event
-createOneOffScheduledEvent :: MonadMetadataStorage m => OneOffEvent -> m (Either QErr EventId)
+createOneOffScheduledEvent :: (MonadMetadataStorage m) => OneOffEvent -> m (Either QErr EventId)
 createOneOffScheduledEvent = insertOneOffScheduledEvent
 
 -- | Record a cron event
-createCronEvents :: MonadMetadataStorage m => [CronEventSeed] -> m (Either QErr ())
+createCronEvents :: (MonadMetadataStorage m) => [CronEventSeed] -> m (Either QErr ())
 createCronEvents = insertCronEvents
 
 -- | Clear cron events
-dropFutureCronEvents :: MonadMetadataStorage m => ClearCronEvents -> m (Either QErr ())
+dropFutureCronEvents :: (MonadMetadataStorage m) => ClearCronEvents -> m (Either QErr ())
 dropFutureCronEvents = clearFutureCronEvents
 
 -- | Delete async action logs
-deleteActionData :: MonadMetadataStorage m => ActionName -> m (Either QErr ())
+deleteActionData :: (MonadMetadataStorage m) => ActionName -> m (Either QErr ())
 deleteActionData = clearActionData
 
 -- | Fetch cron/oneoff scheduled event invocations
 fetchScheduledEventInvocations ::
-  MonadMetadataStorage m =>
+  (MonadMetadataStorage m) =>
   GetScheduledEventInvocations ->
   m (Either QErr (WithOptionalTotalCount [ScheduledEventInvocation]))
 fetchScheduledEventInvocations = getScheduledEventInvocations
 
 -- | Fetch cron/oneoff scheduled events
-fetchScheduledEvents :: MonadMetadataStorage m => GetScheduledEvents -> m (Either QErr Value)
+fetchScheduledEvents :: (MonadMetadataStorage m) => GetScheduledEvents -> m (Either QErr Value)
 fetchScheduledEvents GetScheduledEvents {..} = do
   let totalCountToJSON WithOptionalTotalCount {..} =
-        object $
-          ("events" .= _wtcData) : (maybe mempty (\count -> ["count" .= count]) _wtcCount)
+        object
+          $ ("events" .= _wtcData)
+          : (maybe mempty (\count -> ["count" .= count]) _wtcCount)
   case _gseScheduledEvent of
     SEOneOff -> (fmap . fmap) totalCountToJSON $ getOneOffScheduledEvents _gsePagination _gseStatus _gseGetRowsCount
     SECron name -> (fmap . fmap) totalCountToJSON $ getCronEvents name _gsePagination _gseStatus _gseGetRowsCount
 
 -- | Drop a cron/oneoff scheduled event
-dropEvent :: MonadMetadataStorage m => ScheduledEventId -> ScheduledEventType -> m (Either QErr ())
+dropEvent :: (MonadMetadataStorage m) => ScheduledEventId -> ScheduledEventType -> m (Either QErr ())
 dropEvent = deleteScheduledEvent
 
 -- | Retrieve the state from metadata storage catalog
-fetchCatalogState :: MonadMetadataStorage m => m (Either QErr CatalogState)
+fetchCatalogState :: (MonadMetadataStorage m) => m (Either QErr CatalogState)
 fetchCatalogState = getCatalogState
 
 -- | Update the state from metadata storage catalog
-updateCatalogState :: MonadMetadataStorage m => CatalogStateType -> Value -> m (Either QErr ())
+updateCatalogState :: (MonadMetadataStorage m) => CatalogStateType -> Value -> m (Either QErr ())
 updateCatalogState = setCatalogState
 
 -- | Metadata database operations for EE credentials storage.

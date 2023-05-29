@@ -92,7 +92,7 @@ buildComputedFieldInfo trackedTables table tableColumns computedField ComputedFi
   where
     mkComputedFieldInfo ::
       forall n.
-      MV.MonadValidate [ComputedFieldError] n =>
+      (MV.MonadValidate [ComputedFieldError] n) =>
       n (ComputedFieldInfo 'BigQuery)
     mkComputedFieldInfo = do
       -- Currently, we only support functions returning set of rows in computed field.
@@ -152,8 +152,10 @@ buildComputedFieldInfo trackedTables table tableColumns computedField ComputedFi
     showErrors :: [ComputedFieldError] -> Text
     showErrors allErrors =
       "the computed field "
-        <> computedField <<> " cannot be added to table "
-        <> table <<> " "
+        <> computedField
+        <<> " cannot be added to table "
+        <> table
+        <<> " "
         <> reasonMessage
       where
         reasonMessage = makeReasonMessage allErrors (showError _bqcfdFunction)

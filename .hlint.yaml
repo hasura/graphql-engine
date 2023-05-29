@@ -123,10 +123,6 @@
 ################################################################################
 # Custom rules
 
-- error: {lhs: maybe False, rhs: any}
-- error: {lhs: maybe True, rhs: all}
-- error: {lhs: either (const False), rhs: any}
-- error: {lhs: either (const True), rhs: all}
 - suggest: {lhs: onJust, rhs: for_}
 
 - group:
@@ -281,6 +277,10 @@
     - Data.HashMap.Strict
     - Data.HashMap.Strict.Extended
     as: HashMap
+  - name:
+    - Data.HashMap.Strict.InsOrd
+    - Data.HashMap.Strict.InsOrd.Extended
+    as: InsOrdHashMap
 
 ################################################################################
 # Import restrictions

@@ -40,7 +40,6 @@ library
     , managed
     , morpheus-graphql
     , mtl
-    , mysql-simple
     , network
     , odbc
     , openapi3
@@ -52,6 +51,7 @@ library
     , pretty-simple
     , process
     , refined
+    , resource-pool
     , resourcet
     , safe
     , safe-exceptions
@@ -140,7 +140,6 @@ library
     Harness.Http
     Harness.Logging
     Harness.Logging.Messages
-    Harness.PassthroughEnvVars
     Harness.Permissions
     Harness.PytestPortedCompat
     Harness.Quoter.Graphql
@@ -150,12 +149,17 @@ library
     Harness.Schema
     Harness.Schema.LogicalModel
     Harness.Schema.Name
+    Harness.Schema.NativeQuery
+    Harness.Schema.StoredProcedure
     Harness.Schema.Table
     Harness.Services.Composed
     Harness.Services.Database.Postgres
+    Harness.Services.ExternalProcess.GraphqlEngine
+    Harness.Services.ExternalProcess.DCPostgresAgent
     Harness.Services.GraphqlEngine
-    Harness.Services.Metadata
+    Harness.Services.GraphqlEngine.API
     Harness.Services.Schema
+    Harness.Services.Source.DCPostgres
     Harness.Services.Source.Postgres
     Harness.Subscriptions
     Harness.Test.BackendType

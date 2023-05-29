@@ -1,8 +1,7 @@
 import React from 'react';
-import { DriverInfo } from '../DataSource';
 import { EELiteAccess } from '../EETrial';
-import { ConnectDatabaseWrapper, FancyRadioCards } from './components';
 import { ConnectDbBody } from './ConnectDbBody';
+import { ConnectDatabaseWrapper, FancyRadioCards } from './components';
 import { DEFAULT_DRIVER } from './constants';
 import { useDatabaseConnectDrivers } from './hooks/useConnectDatabaseDrivers';
 import { DbConnectConsoleType } from './types';
@@ -32,21 +31,32 @@ export type ConnectDatabaseProps = {
 export const ConnectDatabaseV2 = (props: ConnectDatabaseProps) => {
   const { initialDriverName, eeLicenseInfo, consoleType } = props;
 
-  const [selectedDriver, setSelectedDriver] =
-    React.useState<DriverInfo>(DEFAULT_DRIVER);
+  // const [selectedDriver, setSelectedDriver] =
+  //   React.useState<DriverInfo>(DEFAULT_DRIVER);
+  const [selectedDriverName, setSelectedDriverName] = React.useState(
+    DEFAULT_DRIVER.name
+  );
 
   const { cardData, allDrivers, availableDrivers } = useDatabaseConnectDrivers({
     showEnterpriseDrivers: consoleType !== 'oss',
     onFirstSuccess: () =>
-      setSelectedDriver(
-        currentDriver =>
+      setSelectedDriverName(
+        current =>
           allDrivers.find(
             d =>
               d.name === initialDriverName &&
               (d.enterprise === false || consoleType !== 'oss')
-          ) || currentDriver
+          )?.name || current
       ),
   });
+
+  // this needs to be a reactive value hence the useMemo usage.
+  // when "allDrivers" changes due to a react query invalidation/metadata reload, the properties of the driver may change
+  // in order for this to reflect automatically, we make this value dependant on both the state of "allDrivers" array and the "selectedDriverName" string
+  const selectedDriver = React.useMemo(
+    () => allDrivers.find(d => d.name === selectedDriverName) || DEFAULT_DRIVER,
+    [allDrivers, selectedDriverName]
+  );
 
   const isDriverAvailable = (availableDrivers ?? []).some(
     d => d.name === selectedDriver.name
@@ -58,9 +68,7 @@ export const ConnectDatabaseV2 = (props: ConnectDatabaseProps) => {
         items={cardData}
         value={selectedDriver?.name}
         onChange={val => {
-          setSelectedDriver(
-            prev => allDrivers?.find(d => d.name === val) || prev
-          );
+          setSelectedDriverName(val);
         }}
       />
       <ConnectDbBody

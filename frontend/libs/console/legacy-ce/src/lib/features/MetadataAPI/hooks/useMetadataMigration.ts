@@ -8,6 +8,7 @@ import { allowedMetadataTypes, MetadataResponse } from '../types';
 
 const maxAllowedLength = 255;
 const unixEpochLength = 14;
+export const MAX_METADATA_BATCH_SIZE = 5;
 
 export const maxAllowedMigrationLength = maxAllowedLength - unixEpochLength;
 

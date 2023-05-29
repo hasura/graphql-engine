@@ -66,7 +66,8 @@ setupFunctions testEnv =
       fetch_users = Schema.unSchemaName schemaName <> ".fetch_users"
    in Fixture.SetupAction
         { Fixture.setupAction = do
-            Postgres.run_ testEnv $
+            Postgres.run_ testEnv
+              $
               -- get_age postgres function returns the age of a user calculated from the
               -- birth_year column and in_year input parameter. The in_year should be a future year
               -- from 2022 (the year when this test is being written)
@@ -87,7 +88,8 @@ setupFunctions testEnv =
                end;
                $function$
              |]
-            Postgres.run_ testEnv $
+            Postgres.run_ testEnv
+              $
               -- fetch_users postgres function returns the list of users whose age is equal to given "age" input parameter
               -- in given future "in_year" parameter. The in_year should be a future year
               -- from 2022 (the year when this test is being written) and "age" should not be a negative value.
@@ -114,9 +116,9 @@ tests :: SpecWith TestEnvironment
 tests = do
   -- Test subscriptions with two websocket clients. The database state for the following tests are shared.
   -- Tests involving computed fields
-  withSubscriptions (withSubscriptions' snd multiplexedQueryComputedFieldsSpec)
+  withSubscriptions (withSubscriptions multiplexedQueryComputedFieldsSpec)
   -- Tests involving custom functions
-  withSubscriptions (withSubscriptions' snd multiplexedQueryCustomFunctionsSpec)
+  withSubscriptions (withSubscriptions multiplexedQueryCustomFunctionsSpec)
 
 multiplexedQueryComputedFieldsSpec ::
   SpecWith (Value -> [Pair] -> IO SubscriptionHandle, (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment))

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Meta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { z } from 'zod';
 import { SimpleForm } from '../../../../new-components/Form';
 import { useTableMachine } from '../hooks/useTableMachine';
@@ -24,50 +24,59 @@ export default {
   parameters: { chromatic: { disableSnapshot: true } },
 } as Meta;
 
-export const InputCellComponent: Story<InputCellProps> = args => {
-  const machine = useTableMachine();
+export const InputCellComponent: StoryObj<InputCellProps> = {
+  render: args => {
+    const machine = useTableMachine();
 
-  return <InputCell {...args} machine={machine} />;
-};
-InputCellComponent.args = {
-  roleName: 'User',
-  isNewRole: true,
-  isSelectable: true,
-  isSelected: true,
-};
+    return <InputCell {...args} machine={machine} />;
+  },
 
-export const InputCellComponentNewRole: Story<InputCellProps> = args => {
-  const machine = useTableMachine();
-
-  return <InputCell {...args} machine={machine} />;
-};
-InputCellComponentNewRole.args = {
-  roleName: '',
-  isNewRole: true,
-  isSelectable: true,
-  isSelected: true,
+  args: {
+    roleName: 'User',
+    isNewRole: true,
+    isSelectable: true,
+    isSelected: true,
+  },
 };
 
-export const EditableCellComponent: Story<EditableCellProps> = args => (
-  <table>
-    <thead>
-      <tr>
-        <th className="px-4">Default</th>
-        <th className="px-4">Current Edit</th>
-        <th className="px-4">No Access</th>
-        <th className="px-4">Full Access</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <EditableCell {...args} />
-        <EditableCell {...{ ...args, isCurrentEdit: true }} />
-        <EditableCell {...{ ...args, access: 'noAccess' }} />
-        <EditableCell {...{ ...args, access: 'fullAccess' }} />
-      </tr>
-    </tbody>
-  </table>
-);
-EditableCellComponent.args = {
-  isEditable: true,
+export const InputCellComponentNewRole: StoryObj<InputCellProps> = {
+  render: args => {
+    const machine = useTableMachine();
+
+    return <InputCell {...args} machine={machine} />;
+  },
+
+  args: {
+    roleName: '',
+    isNewRole: true,
+    isSelectable: true,
+    isSelected: true,
+  },
+};
+
+export const EditableCellComponent: StoryObj<EditableCellProps> = {
+  render: args => (
+    <table>
+      <thead>
+        <tr>
+          <th className="px-4">Default</th>
+          <th className="px-4">Current Edit</th>
+          <th className="px-4">No Access</th>
+          <th className="px-4">Full Access</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <EditableCell {...args} />
+          <EditableCell {...{ ...args, isCurrentEdit: true }} />
+          <EditableCell {...{ ...args, access: 'noAccess' }} />
+          <EditableCell {...{ ...args, access: 'fullAccess' }} />
+        </tr>
+      </tbody>
+    </table>
+  ),
+
+  args: {
+    isEditable: true,
+  },
 };

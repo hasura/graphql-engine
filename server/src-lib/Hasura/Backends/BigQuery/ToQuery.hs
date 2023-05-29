@@ -20,12 +20,11 @@ where
 import Data.Aeson (ToJSON (..))
 import Data.Bifunctor
 import Data.Containers.ListUtils
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List (intersperse)
 import Data.List.NonEmpty qualified as NE
 import Data.String
 import Data.Text qualified as T
-import Data.Text.Extended qualified as T (toTxt)
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Builder (Builder)
 import Data.Text.Lazy.Builder qualified as LT
@@ -33,7 +32,6 @@ import Data.Tuple
 import Data.Vector qualified as V
 import Hasura.Backends.BigQuery.Types
 import Hasura.NativeQuery.Metadata (InterpolatedItem (..), InterpolatedQuery (..))
-import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude hiding (second)
 
 --------------------------------------------------------------------------------
@@ -428,8 +426,8 @@ fromArrayAgg :: ArrayAgg -> Printer
 fromArrayAgg ArrayAgg {..} =
   SeqPrinter
     [ "ARRAY_AGG(",
-      IndentPrinter 10 $
-        SepByPrinter
+      IndentPrinter 10
+        $ SepByPrinter
           " "
           [ "STRUCT(" <+> IndentPrinter 7 projections <+> ")",
             fromOrderBys
@@ -559,8 +557,8 @@ fromFrom =
             )
             selectFromFunction
         )
-    FromNativeQuery (NativeQueryName nativeQueryName) ->
-      fromNameText (T.toTxt nativeQueryName)
+    -- Native Queries are bound as CTEs, so usage sites don't do "nativeQueryName AS alias".
+    FromNativeQuery (Aliased {aliasedAlias}) -> fromNameText aliasedAlias
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableNameSchema} =
@@ -614,14 +612,14 @@ toTextFlat = LT.toStrict . LT.toLazyText . toBuilderFlat
 -- | Produces a query with holes, and a mapping for each
 renderBuilderFlat :: Printer -> (Builder, InsOrdHashMap Int Value)
 renderBuilderFlat =
-  second (OMap.fromList . map swap . OMap.toList)
+  second (InsOrdHashMap.fromList . map swap . InsOrdHashMap.toList)
     . flip runState mempty
     . runBuilderFlat
 
 -- | Produces a query with holes, and a mapping for each
 renderBuilderPretty :: Printer -> (Builder, InsOrdHashMap Int Value)
 renderBuilderPretty =
-  second (OMap.fromList . map swap . OMap.toList)
+  second (InsOrdHashMap.fromList . map swap . InsOrdHashMap.toList)
     . flip runState mempty
     . runBuilderPretty
 
@@ -647,9 +645,9 @@ runBuilderFlat = go 0
         ValuePrinter v -> do
           themap <- get
           next <-
-            OMap.lookup v themap `onNothing` do
-              next <- gets OMap.size
-              modify (OMap.insert v next)
+            InsOrdHashMap.lookup v themap `onNothing` do
+              next <- gets InsOrdHashMap.size
+              modify (InsOrdHashMap.insert v next)
               pure next
           pure ("@" <> paramName next)
     notEmpty = (/= mempty)
@@ -671,9 +669,9 @@ runBuilderPretty = go 0
         ValuePrinter v -> do
           themap <- get
           next <-
-            OMap.lookup v themap `onNothing` do
-              next <- gets OMap.size
-              modify (OMap.insert v next)
+            InsOrdHashMap.lookup v themap `onNothing` do
+              next <- gets InsOrdHashMap.size
+              modify (InsOrdHashMap.insert v next)
               pure next
           pure ("@" <> paramName next)
     indentation n = LT.fromText (T.replicate n " ")

@@ -14,6 +14,7 @@ module Hasura.RQL.Types.Source
     unsafeSourceTables,
     siConfiguration,
     siNativeQueries,
+    siStoredProcedures,
     siLogicalModels,
     siFunctions,
     siName,
@@ -63,8 +64,9 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.StoredProcedure.Cache (StoredProcedureCache)
+import Hasura.Table.Cache (DBTablesMetadata, TableCache)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -77,6 +79,7 @@ data SourceInfo b = SourceInfo
     _siTables :: TableCache b,
     _siFunctions :: FunctionCache b,
     _siNativeQueries :: NativeQueryCache b,
+    _siStoredProcedures :: StoredProcedureCache b,
     _siLogicalModels :: LogicalModelCache b,
     _siConfiguration :: ~(SourceConfig b),
     _siQueryTagsConfig :: Maybe QueryTagsConfig,
@@ -89,6 +92,7 @@ instance
     ToJSON (TableCache b),
     ToJSON (FunctionCache b),
     ToJSON (NativeQueryCache b),
+    ToJSON (StoredProcedureCache b),
     ToJSON (QueryTagsConfig),
     ToJSON (SourceCustomization)
   ) =>
@@ -100,6 +104,7 @@ instance
         "tables" .= _siTables,
         "functions" .= _siFunctions,
         "native_queries" .= _siNativeQueries,
+        "stored_procedures" .= _siStoredProcedures,
         "configuration" .= _siConfiguration,
         "query_tags_config" .= _siQueryTagsConfig
       ]
@@ -115,19 +120,19 @@ type SourceCache = HashMap SourceName BackendSourceInfo
 -- They are thus a temporary workaround as we work on generalizing code that
 -- uses the schema cache.
 
-unsafeSourceInfo :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceInfo b)
+unsafeSourceInfo :: forall b. (HasTag b) => BackendSourceInfo -> Maybe (SourceInfo b)
 unsafeSourceInfo = AB.unpackAnyBackend
 
 unsafeSourceName :: BackendSourceInfo -> SourceName
 unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi _siName
 
-unsafeSourceTables :: forall b. HasTag b => BackendSourceInfo -> Maybe (TableCache b)
+unsafeSourceTables :: forall b. (HasTag b) => BackendSourceInfo -> Maybe (TableCache b)
 unsafeSourceTables = fmap _siTables . unsafeSourceInfo @b
 
-unsafeSourceFunctions :: forall b. HasTag b => BackendSourceInfo -> Maybe (FunctionCache b)
+unsafeSourceFunctions :: forall b. (HasTag b) => BackendSourceInfo -> Maybe (FunctionCache b)
 unsafeSourceFunctions = fmap _siFunctions . unsafeSourceInfo @b
 
-unsafeSourceConfiguration :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceConfig b)
+unsafeSourceConfiguration :: forall b. (HasTag b) => BackendSourceInfo -> Maybe (SourceConfig b)
 unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
 
 --------------------------------------------------------------------------------
@@ -146,7 +151,7 @@ data DBObjectsIntrospection b = DBObjectsIntrospection
   }
   deriving (Eq, Generic)
 
-instance Backend b => FromJSON (DBObjectsIntrospection b) where
+instance (Backend b) => FromJSON (DBObjectsIntrospection b) where
   parseJSON = withObject "DBObjectsIntrospection" \o -> do
     tables <- o .: "tables"
     functions <- o .: "functions"
@@ -166,7 +171,7 @@ instance (L.ToEngineLog (DBObjectsIntrospection b) L.Hasura) where
 newtype ScalarMap b = ScalarMap (HashMap G.Name (ScalarType b))
   deriving newtype (Semigroup, Monoid)
 
-deriving stock instance Backend b => Eq (ScalarMap b)
+deriving stock instance (Backend b) => Eq (ScalarMap b)
 
 --------------------------------------------------------------------------------
 -- Source resolver

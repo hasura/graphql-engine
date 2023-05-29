@@ -61,14 +61,14 @@ mkSQLSelect jsonAggSelect annSel = do
       -- : the join tree required for relationships (built via @MonadWriter@)
       -- : any top-level Common Table Expressions needed for Native Queries
       ((selectSource, nodeExtractors), SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}) =
-        runWriter $
-          flip runReaderT strfyNum $
-            processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery annSel
+        runWriter
+          $ flip runReaderT strfyNum
+          $ processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery annSel
 
       selectNode = SelectNode nodeExtractors joinTree
       topExtractor =
-        asJsonAggExtr jsonAggSelect rootFldAls permLimitSubQuery $
-          orderByForJsonAgg selectSource
+        asJsonAggExtr jsonAggSelect rootFldAls permLimitSubQuery
+          $ orderByForJsonAgg selectSource
       arrayNode = MultiRowSelectNode [topExtractor] selectNode
   tell customSQLCTEs
 

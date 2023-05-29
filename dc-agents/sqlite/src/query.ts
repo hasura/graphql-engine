@@ -24,6 +24,8 @@ import {
     OrderByElement,
     OrderByTarget,
     ScalarValue,
+    TableRequest,
+    FunctionRelationships,
   } from "@hasura/dc-api-types";
 import { customAlphabet } from "nanoid";
 import { DEBUGGING_TAGS, QUERY_LENGTH_LIMIT } from "./environment";
@@ -109,6 +111,8 @@ export function json_object(relationships: TableRelationships[], fields: Fields,
         return `'${fieldName}', ${relationship(relationships, rel, field, tableAlias)}`;
       case "object":
         throw new Error('Unsupported field type "object"');
+      case "array":
+        throw new Error('Unsupported field type "array"');
       default:
         return unreachable(field["type"]);
     }
@@ -650,9 +654,10 @@ function offset(o: number | null): string {
   }
 }
 
-function query(request: QueryRequest): string {
+function query(request: TableRequest): string {
+  const tableRelationships = only_table_relationships(request.table_relationships);
   const result = table_query(
-    request.table_relationships,
+    tableRelationships,
     request.table,
     null,
     coerceUndefinedToNull(request.query.fields),
@@ -709,11 +714,12 @@ function foreach_ids_table_value(foreachIds: Record<string, ScalarValue>[]): str
  * SELECT table_subquery AS data
  * ```
  */
-function foreach_query(foreachIds: Record<string, ScalarValue>[], request: QueryRequest): string {
+function foreach_query(foreachIds: Record<string, ScalarValue>[], request: TableRequest): string {
   const randomSuffix = nanoid();
   const foreachTableName: TableName = [`foreach_ids_${randomSuffix}`];
   const foreachRelationshipName = "Foreach";
   const foreachTableRelationship: TableRelationships = {
+    type: 'table',
     source_table: foreachTableName,
     relationships: {
       [foreachRelationshipName]: {
@@ -732,8 +738,9 @@ function foreach_query(foreachIds: Record<string, ScalarValue>[], request: Query
   };
 
   const foreachIdsTableValue = foreach_ids_table_value(foreachIds);
+  const tableRelationships = only_table_relationships(request.table_relationships);
   const tableSubquery = table_query(
-    [foreachTableRelationship, ...request.table_relationships],
+    [foreachTableRelationship, ...(tableRelationships)],
     foreachTableName,
     null,
     foreachQueryFields,
@@ -745,6 +752,14 @@ function foreach_query(foreachIds: Record<string, ScalarValue>[], request: Query
     null,
     );
   return tag('foreach_query', `WITH ${escapeTableName(foreachTableName)} AS (${foreachIdsTableValue}) SELECT ${tableSubquery} AS data`);
+}
+
+function only_table_relationships(all: Array<TableRelationships | FunctionRelationships>): Array<TableRelationships> {
+  return all.filter(isTableRelationship);
+}
+
+function isTableRelationship(relationships: TableRelationships | FunctionRelationships,): relationships is TableRelationships {
+  return (relationships as TableRelationships).source_table !== undefined;
 }
 
 /** Function to add SQL comments to the generated SQL to tag which procedures generated what text.
@@ -805,12 +820,12 @@ function tag(t: string, s: string): string {
  * ```
  *
  */
-export async function queryData(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<QueryResponse> {
+export async function queryData(config: Config, sqlLogger: SqlLogger, request: TableRequest): Promise<QueryResponse> {
   return await withConnection(config, defaultMode, sqlLogger, async db => {
     const q =
-      queryRequest.foreach
-        ? foreach_query(queryRequest.foreach, queryRequest)
-        : query(queryRequest);
+    request.foreach
+        ? foreach_query(request.foreach, request)
+        : query(request);
 
     if(q.length > QUERY_LENGTH_LIMIT) {
       const error = new ErrorWithStatusCode(
@@ -839,9 +854,9 @@ export async function queryData(config: Config, sqlLogger: SqlLogger, queryReque
  * @param queryRequest
  * @returns
  */
-export async function explain(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<ExplainResponse> {
+export async function explain(config: Config, sqlLogger: SqlLogger, request: TableRequest): Promise<ExplainResponse> {
   return await withConnection(config, defaultMode, sqlLogger, async db => {
-    const q = query(queryRequest);
+    const q = query(request);
     const result = await db.query(`EXPLAIN QUERY PLAN ${q}`);
     return {
       query: q,
@@ -866,3 +881,4 @@ type AnalysisEntry = {
   parent: number,
   detail: string
 }
+

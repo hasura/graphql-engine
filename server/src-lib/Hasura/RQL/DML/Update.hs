@@ -3,6 +3,7 @@ module Hasura.RQL.DML.Update
   )
 where
 
+import Control.Lens ((^?))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Types
 import Data.HashMap.Strict qualified as HashMap
@@ -31,9 +32,9 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Table
 import Hasura.SQL.Types
 import Hasura.Session
+import Hasura.Table.Cache
 import Hasura.Tracing qualified as Tracing
 
 convInc ::
@@ -94,11 +95,13 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
     relWhenPgErr = "relationships can't be updated"
     throwNotUpdErr c = do
       roleName <- _uiRole <$> askUserInfo
-      throw400 NotSupported $
-        "column "
-          <> c <<> " is not updatable"
-          <> " for role "
-          <> roleName <<> "; its value is predefined in permission"
+      throw400 NotSupported
+        $ "column "
+        <> c
+        <<> " is not updatable"
+        <> " for role "
+        <> roleName
+        <<> "; its value is predefined in permission"
 
 validateUpdateQueryWith ::
   (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
@@ -126,33 +129,33 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
   -- Check if select is allowed
   selPerm <-
-    modifyErr (<> selNecessaryMsg) $
-      askSelPermInfo tableInfo
+    modifyErr (<> selNecessaryMsg)
+      $ askSelPermInfo tableInfo
 
   let fieldInfoMap = _tciFieldInfoMap coreInfo
-      allCols = getCols fieldInfoMap
+      allCols = mapMaybe (^? _SCIScalarColumn) $ getCols fieldInfoMap
       preSetObj = upiSet updPerm
       preSetCols = HashMap.keys preSetObj
 
   -- convert the object to SQL set expression
   setItems <-
-    withPathK "$set" $
-      convOp fieldInfoMap preSetCols updPerm (HashMap.toList $ uqSet uq) $
-        convSet prepValBldr
+    withPathK "$set"
+      $ convOp fieldInfoMap preSetCols updPerm (HashMap.toList $ uqSet uq)
+      $ convSet prepValBldr
 
   incItems <-
-    withPathK "$inc" $
-      convOp fieldInfoMap preSetCols updPerm (HashMap.toList $ uqInc uq) $
-        convInc prepValBldr
+    withPathK "$inc"
+      $ convOp fieldInfoMap preSetCols updPerm (HashMap.toList $ uqInc uq)
+      $ convInc prepValBldr
 
   mulItems <-
-    withPathK "$mul" $
-      convOp fieldInfoMap preSetCols updPerm (HashMap.toList $ uqMul uq) $
-        convMul prepValBldr
+    withPathK "$mul"
+      $ convOp fieldInfoMap preSetCols updPerm (HashMap.toList $ uqMul uq)
+      $ convMul prepValBldr
 
   defItems <-
-    withPathK "$default" $
-      convOp fieldInfoMap preSetCols updPerm ((,()) <$> uqDefault uq) convDefault
+    withPathK "$default"
+      $ convOp fieldInfoMap preSetCols updPerm ((,()) <$> uqDefault uq) convDefault
 
   -- convert the returning cols into sql returing exp
   mAnnRetCols <- forM mRetCols $ \retCols ->
@@ -169,30 +172,30 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
           ++ mulItems
           ++ defItems
 
-  when (null setExpItems) $
-    throw400 UnexpectedPayload "atleast one of $set, $inc, $mul has to be present"
+  when (null setExpItems)
+    $ throw400 UnexpectedPayload "atleast one of $set, $inc, $mul has to be present"
 
   -- convert the where clause
   annSQLBoolExp <-
-    withPathK "where" $
-      convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr fieldInfoMap prepValBldr
+    withPathK "where"
+      $ convBoolExp fieldInfoMap selPerm (uqWhere uq) sessVarBldr fieldInfoMap prepValBldr
 
   resolvedUpdFltr <-
-    convAnnBoolExpPartialSQL sessVarBldr $
-      upiFilter updPerm
+    convAnnBoolExpPartialSQL sessVarBldr
+      $ upiFilter updPerm
   resolvedUpdCheck <-
     fromMaybe gBoolExpTrue
       <$> traverse
         (convAnnBoolExpPartialSQL sessVarBldr)
         (upiCheck updPerm)
 
-  return $
-    AnnotatedUpdateG
+  return
+    $ AnnotatedUpdateG
       tableName
       resolvedUpdFltr
       resolvedUpdCheck
-      ( SingleBatch $
-          UpdateBatch
+      ( SingleBatch
+          $ UpdateBatch
             (HashMap.fromList $ fmap UpdateSet <$> setExpItems)
             annSQLBoolExp
       )
@@ -213,9 +216,9 @@ validateUpdateQuery ::
 validateUpdateQuery query = do
   let source = uqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
-  flip runTableCacheRT tableCache $
-    runDMLP1T $
-      validateUpdateQueryWith sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
+  flip runTableCacheRT tableCache
+    $ runDMLP1T
+    $ validateUpdateQueryWith sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 
 runUpdate ::
   forall m.
@@ -236,5 +239,5 @@ runUpdate sqlGen q = do
   let strfyNum = stringifyNum sqlGen
   validateUpdateQuery q
     >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) LegacyRQLQuery
-      . flip runReaderT emptyQueryTagsComment
-      . execUpdateQuery strfyNum Nothing userInfo
+    . flip runReaderT emptyQueryTagsComment
+    . execUpdateQuery strfyNum Nothing userInfo

@@ -23,7 +23,7 @@ import Hasura.RQL.Types.BackendTag (backendPrefix)
 
 data FunctionMetadata b = FunctionMetadata
   { _fmFunction :: FunctionName b,
-    _fmConfiguration :: FunctionConfig,
+    _fmConfiguration :: FunctionConfig b,
     _fmPermissions :: [FunctionPermissionInfo],
     _fmComment :: Maybe Text
   }
@@ -42,15 +42,15 @@ instance (Backend b) => FromJSON (FunctionMetadata b) where
   parseJSON = withObject "FunctionMetadata" $ \o ->
     FunctionMetadata
       <$> o
-        .: "function"
+      .: "function"
       <*> o
-        .:? "configuration"
-        .!= emptyFunctionConfig
+      .:? "configuration"
+      .!= emptyFunctionConfig
       <*> o
-        .:? "permissions"
-        .!= []
+      .:? "permissions"
+      .!= []
       <*> o
-        .:? "comment"
+      .:? "comment"
 
 instance (Backend b) => HasCodec (FunctionMetadata b) where
   codec =
@@ -63,14 +63,14 @@ instance (Backend b) => HasCodec (FunctionMetadata b) where
       )
       $ AC.object (backendPrefix @b <> "FunctionMetadata")
       $ FunctionMetadata
-        <$> requiredField "function" nameDoc
-          AC..= _fmFunction
+      <$> requiredField "function" nameDoc
+      AC..= _fmFunction
         <*> optionalFieldWithOmittedDefault "configuration" emptyFunctionConfig configDoc
-          AC..= _fmConfiguration
+      AC..= _fmConfiguration
         <*> optionalFieldWithOmittedDefault' "permissions" []
-          AC..= _fmPermissions
+      AC..= _fmPermissions
         <*> optionalField' "comment"
-          AC..= _fmComment
+      AC..= _fmComment
     where
       nameDoc = "Name of the SQL function"
       configDoc = "Configuration for the SQL function"

@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import YAML from 'js-yaml';
+import last from 'lodash/last';
 import { CardedTable } from '../../../../new-components/CardedTable';
 import { DropdownButton } from '../../../../new-components/DropdownButton';
 import { CodeEditorField, InputField } from '../../../../new-components/Form';
@@ -15,7 +16,12 @@ import { hasuraToast } from '../../../../new-components/Toasts';
 import { OasGeneratorActions } from './OASGeneratorActions';
 import { GeneratedAction, Operation } from '../OASGenerator/types';
 
-import { generateAction, getOperations } from '../OASGenerator/utils';
+import {
+  generateAction,
+  getOperations,
+  isOasError,
+  normalizeOperationId,
+} from '../OASGenerator/utils';
 import { UploadFile } from './UploadFile';
 
 const fillToTenRows = (data: ReactNode[][]) => {
@@ -75,7 +81,8 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
         !search ||
         op.operationId.toLowerCase().includes(search.toLowerCase()) ||
         op.path.toLowerCase().includes(search.toLowerCase()) ||
-        op.method.toLowerCase().includes(search.toLowerCase());
+        op.method.toLowerCase().includes(search.toLowerCase()) ||
+        op.description?.toLowerCase().includes(search.toLowerCase());
       const methodMatch =
         selectedMethods.length === 0 ||
         selectedMethods.includes(op.method.toUpperCase());
@@ -101,15 +108,19 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
         try {
           localParsedOas = JSON.parse(oas) as Oas3;
           // if oas is smaller that 3mb
-          if (oas.length < 1024 * 1024 * 1) {
+          if (oas.length < 1024 * 1024 * 3) {
             setIsOasTooBig(false);
             if (props.saveOas) {
               props.saveOas(oas);
             }
           } else {
             setIsOasTooBig(true);
+            if (props.saveOas) {
+              props.saveOas('');
+            }
           }
         } catch (e) {
+          console.error('ImportOAS/OAS_PARSE_ERROR', e);
           try {
             localParsedOas = YAML.load(oas) as Oas3;
           } catch (e2) {
@@ -150,9 +161,23 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
           );
         }
       } catch (e) {
-        setError('oas', {
-          message: `Invalid spec: ${(e as Error).message}`,
-        });
+        const error = e as Error;
+        console.error('ImportOAS/INVALID_SPEC_ERROR', e);
+        if (isOasError(error)) {
+          const paths =
+            error.options?.context
+              .slice()
+              .map((path: string) =>
+                path.replace(/~1/g, '/').replace(/\/\//g, '/')
+              ) ?? [];
+          setError('oas', {
+            message: `Invalid spec: ${error.message} at ${last(paths)}`,
+          });
+        } else {
+          setError('oas', {
+            message: `Invalid spec: ${error.message} `,
+          });
+        }
       }
 
       setParsedOas(localParsedOas ?? null);
@@ -205,7 +230,7 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
           title: 'Failed to generate action',
           message: (e as Error).message,
         });
-        console.error(e);
+        console.error('ImportOAS/CREATE_ACTION_ERROR/', e);
       }
     }
   };
@@ -314,7 +339,8 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
                 const isActionAlreadyCreated =
                   metadata?.metadata?.actions?.some(
                     action =>
-                      action.name.toLowerCase() === op.operationId.toLowerCase()
+                      action.name.toLowerCase() ===
+                      normalizeOperationId(op.operationId).toLowerCase()
                   );
                 return [
                   <Badge
@@ -328,7 +354,9 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
                       existing={isActionAlreadyCreated}
                       operation={op}
                       onCreate={() => createAction(op.operationId)}
-                      onDelete={() => onDelete(op.operationId)}
+                      onDelete={() =>
+                        onDelete(normalizeOperationId(op.operationId))
+                      }
                       disabled={disabled}
                     />
                   </div>,

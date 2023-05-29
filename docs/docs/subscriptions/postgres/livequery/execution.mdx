@@ -1,0 +1,260 @@
+---
+sidebar_label: Execution
+sidebar_position: 2
+description: Understanding Subscription execution in Hasura
+keywords:
+  - hasura
+  - docs
+  - subscriptions
+  - subscription architecture
+  - subscription execution
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Subscriptions Execution
+
+## Introduction
+
+Hasura Graphql Subscriptions are **live queries** executing over the Websocket protocol to fetch near real-time data
+from the database.
+
+## Execution
+
+The Hasura GraphQL Engine subscriptions are actually **live queries**, i.e. a subscription will return the latest result
+of the query being made and not the individual events leading up to the result.
+
+Subscriptions, on start, will emit the result of the underlying query. Subsequently, results will be emitted only if the
+result of the query changes underneath (via insert/update/delete on the subscribed resource).
+
+### Subscription multiplexing
+
+Hasura optimizes subscriptions by combining multiple similar subscriptions into one SQL query and getting a single
+response from the database instead of making separate SQL queries for each subscription. Each row in the response
+contains the result for a different subscription. Once Hasura gets the response from the database, it diff-checks the
+individual responses and returns the result to the clients only if there is any difference in their data.
+
+Multiplexed live queries are further split into batches which can be configured via
+`HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE` environment variable or the `--live-queries-multiplexed-batch-size`
+flag. By default this value is set to `100`.
+
+For example, with the default value, if there are 1000 subscription clients with similar queries, Hasura multiplexes 100
+subscriptions into 1 batch and make a single SQL query to the DB for that batch. So, in total there will be only 10 SQL
+queries to the DB for the 1000 subscriptions.
+
+Subscription requests are multiplexed if the following criteria are met:
+
+1. The associated Hasura roles are same.
+2. The selection set is identical and the input arguments only differ in scalar values.
+3. The connection template is resolved to the same database if [dynamic routing](/databases/database-config/dynamic-db-connection.mdx) is
+used.
+
+:::info Operation name
+
+The operation name does not prevent multiplexing.
+
+:::
+
+:::info Limitation
+
+**Subscriptions that rely on SQL functions, such as through [custom root fields](/schema/postgres/custom-functions.mdx)
+or [computed fields](/schema/postgres/computed-fields.mdx), may be at risk of multiplexing errors if they throw
+"dynamic" exceptions based on data in the underlying tables.**
+
+For example, if the SQL function throws an exception by reading rows and checking an aggregate then it may be prone to
+such multiplexing errors. On the other hand, if it throws exception based on static values (e.g. input arguments to the
+function), then it is safe from multiplexing errors. To avoid potential issues, it is important to carefully evaluate
+the use of subscriptions with such functions. You can set the env variable
+`HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE: 1` to avoid multiplexing errors.
+
+:::
+
+#### Examples of subscription multiplexing
+
+1. Subscriptions with different scalar input argument values.
+
+Consider the following requests that are both run with the Hasura role: `user`.
+
+```graphql
+subscription GetUser {
+   users(where: {id: {_eq: 1}}) {
+       id
+       name
+   }
+}
+
+```
+
+```graphql
+subscription GetUser {
+   users(where: {id: {_eq: 2}}) {
+       id
+       name
+   }
+}
+
+```
+
+Although both of these subscription queries have a different value of the `id` parameter, they will get multiplexed
+together. If the subscription queries are analyzed, both of the queries will generate the same SQL query.
+
+2. Subscriptions that select the same columns in the selection set, but one of the subscriptions has an alias for a
+column.
+
+Consider the subscription requests are made with the same role.
+
+```graphql
+subscription GetUsers {
+  users {
+     id
+     name
+  }
+}
+```
+
+```graphql
+subscription GetUsersWithAlias {
+  users {
+     id
+     name: user_name
+  }
+}
+```
+
+The above two subscription queries **won’t be multiplexed** together because the `GetUsersWithAlias` query has an alias
+for the name field.
+
+3. Subscriptions with differing values of input arguments that don't multiplex together.
+
+Consider the subscription requests are both made with the same role.
+
+```graphql
+subscription GetUserWithVariableBoolExp ($boolExp: users_bool_exp!) {
+   users(where: $boolExp) {
+      id
+      name
+    }
+}
+```
+
+In this case, whether multiplexing happens or not, depends on the value of the variable `boolExp`.
+
+If the values of `boolExp` are
+
+```json
+{
+  "id": {
+    "_eq": 2
+  }
+}
+```
+
+and
+
+```json
+{
+  "name": {
+    "_eq": "ABC"
+  }
+}
+```
+
+The subscriptions won't get multiplexed together because the arguments have different input object fields.
+
+On the other hand, If the input object values of `boolExp` are
+
+```json
+{
+  "id": {
+    "_eq": 2
+  }
+}
+```
+
+and
+
+
+```json
+{
+  "id": {
+    "_eq": 3
+  }
+}
+```
+
+The subscriptions will get multiplexed together because the arguments have the same input object fields.
+
+:::info Boolean expressions
+
+If boolean expressions are used as values in subscription queries, they will be multiplexed only if they differ in scalar values.
+
+:::
+
+4. Identical subscriptions requests made with different Hasura roles
+
+Consider the following subscription request executed with the roles, `author` and `editor`.
+
+```graphql
+subscription {
+  articles {
+    id
+    author {
+      name
+    }
+    is_public
+  }
+}
+```
+
+Even though identical subscription requests are made, **they are not multiplexed** together because the Hasura role is
+different.
+
+### Subscription Cohorts
+
+Hasura Graphql Engine further optimizes subscriptions by grouping same subscriptions into "cohorts". Cohorts are
+groups of subscriptions that are multiplexed together and share the same session and query variables.
+
+### Example
+
+A practical use of subscriptions can be for tracking the live locations of delivery agents carrying food orders in a
+food-ordering system.
+
+The setup is operating with the default Hasura params of subscription refetch interval as 1 second and multiplexed batch
+size as 100.
+
+The below figure shows multiplexing in action, where the 3 similar subscriptions differing only in the variables are
+batched into one SQL:
+
+<Thumbnail
+  src='/img/databases/postgres/subscriptions/subscription-multiplexing.png'
+  alt='Hasura subscription multiplexing AST'
+  width='900px'
+  className='no-shadow'
+/>
+
+In this case, all 3 subscriptions are multiplexed into 1 batch resulting in 1 SQL query which is run every 1 second. If
+there is an update in the location, the appropriate client gets sent the updated data.
+
+Now, let's say `user1` starts tracking the order on 2 other devices (logged in with same account). So, now there are 3
+clients subscribed to the exact same subscription (with same session and query variables). These 3 subscriptions will
+form a [cohort](#subscription-cohorts). The result of the subscription will be sent to all 3 clients using the same part
+of the SQL response. Thus, adding more clients to the cohort will not increase the database execution time.
+
+:::info Adding new subscribers to existing cohorts
+
+When a new subscriber is added to an existing cohort, the SQL query doesn't change. This optimization helps Hasura to
+avoid re-fetching the data from the database for the existing subscriptions in the cohort. The new subscriber will get
+the result of the subscription from the existing SQL response.
+
+Due to the above optimization, the database execution time for the SQL query will not increase with the increase in the
+number of subscribers in the cohort.
+
+:::
+
+## Further reading
+
+You can read more details about the implementation of subscriptions in our
+[architecture and benchmarking doc](https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md).
+
+You can also analyze the metrics about the multiplexed subscription emitted in
+`livequery-poller-log`. See details of this log in [this page](/deployment/logging.mdx#livequery-poller-log).

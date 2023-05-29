@@ -33,9 +33,11 @@ import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
-import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..))
+import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..), liveQuerySubscriptionLabel, recordSubcriptionMetric)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..))
 import Refined (unrefine)
 import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
+import System.Metrics.Prometheus.HistogramVector qualified as HistogramVector
 
 pushResultToCohort ::
   GQResult BS.ByteString ->
@@ -57,8 +59,8 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cohortSnapshot
         return (newSinks <> curSinks, mempty)
       else return (newSinks, curSinks)
   pushResultToSubscribers subscribersToPush
-  pure $
-    over
+  pure
+    $ over
       (each . each)
       ( \Subscriber {..} ->
           SubscriberExecutionDetails _sId _sMetadata
@@ -75,7 +77,7 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cohortSnapshot
 -- active 'Poller'. This needs to be async exception safe.
 pollLiveQuery ::
   forall b.
-  BackendTransport b =>
+  (BackendTransport b) =>
   PollerId ->
   STM.TVar PollerResponseState ->
   SubscriptionsOptions ->
@@ -86,9 +88,12 @@ pollLiveQuery ::
   CohortMap 'LiveQuery ->
   SubscriptionPostPollHook ->
   PrometheusMetrics ->
+  IO GranularPrometheusMetricsState ->
+  TMap.TMap (Maybe OperationName) Int ->
   ResolvedConnectionTemplate b ->
   IO ()
-pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook prometheusMetrics resolvedConnectionTemplate = do
+pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook prometheusMetrics granularPrometheusMetricsState operationNamesMap' resolvedConnectionTemplate = do
+  operationNamesMap <- STM.atomically $ TMap.getMap operationNamesMap'
   (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
     (snapshotTime, cohortBatches) <- withElapsedTime $ do
@@ -104,6 +109,15 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
     -- concurrently process each batch
     batchesDetails <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
       (queryExecutionTime, mxRes) <- runDBSubscription @b sourceConfig query (over (each . _2) C._csVariables cohorts) resolvedConnectionTemplate
+
+      let dbExecTimeMetric = submDBExecTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
+      recordSubcriptionMetric
+        granularPrometheusMetricsState
+        True
+        operationNamesMap
+        parameterizedQueryHash
+        liveQuerySubscriptionLabel
+        (flip (HistogramVector.observe dbExecTimeMetric) (realToFrac queryExecutionTime))
 
       previousPollerResponseState <- STM.readTVarIO pollerResponseState
 
@@ -124,8 +138,9 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
             case mxRes of
               Left _ -> Nothing
               Right resp -> Just $ getSum $ foldMap (Sum . BS.length . snd) resp
-      (pushTime, cohortsExecutionDetails) <- withElapsedTime $
-        A.forConcurrently operations $ \(res, cohortId, respData, snapshot) -> do
+      (pushTime, cohortsExecutionDetails) <- withElapsedTime
+        $ A.forConcurrently operations
+        $ \(res, cohortId, respData, snapshot) -> do
           (pushedSubscribers, ignoredSubscribers) <-
             pushResultToCohort res (fst <$> respData) lqMeta snapshot
           pure
@@ -144,15 +159,14 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
       let pgExecutionTime = case reify (backendTag @b) of
             Postgres Vanilla -> Just queryExecutionTime
             _ -> Nothing
-      pure $
-        BatchExecutionDetails
+      pure
+        $ BatchExecutionDetails
           pgExecutionTime
           queryExecutionTime
           pushTime
           batchId
           cohortsExecutionDetails
           batchResponseSize
-
     pure (snapshotTime, batchesDetails)
 
   let pollDetails =
@@ -169,6 +183,14 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
             _pdParameterizedQueryHash = parameterizedQueryHash
           }
   postPollHook pollDetails
+  let totalTimeMetric = submTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
+  recordSubcriptionMetric
+    granularPrometheusMetricsState
+    True
+    operationNamesMap
+    parameterizedQueryHash
+    liveQuerySubscriptionLabel
+    (flip (HistogramVector.observe totalTimeMetric) (realToFrac totalTime))
   where
     SubscriptionsOptions batchSize _ = lqOpts
 

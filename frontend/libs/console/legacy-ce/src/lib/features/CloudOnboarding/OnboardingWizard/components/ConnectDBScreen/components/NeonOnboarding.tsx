@@ -12,8 +12,11 @@ import {
   usePrefetchNeonOnboardingTemplateData,
   useEmitOnboardingEvents,
 } from '../../../hooks';
-import { NEON_TEMPLATE_BASE_PATH } from '../../../constants';
-import { persistSkippedOnboarding } from '../../../utils';
+import {
+  NEON_TEMPLATE_BASE_PATH,
+  skippedNeonOnboardingVariables,
+} from '../../../constants';
+import { emitOnboardingEvent } from '../../../utils';
 
 export function NeonOnboarding(props: {
   dispatch: Dispatch;
@@ -26,7 +29,7 @@ export function NeonOnboarding(props: {
   const { dispatch, dismiss, proceed, setStepperIndex } = props;
 
   const onSkipHandler = () => {
-    persistSkippedOnboarding();
+    emitOnboardingEvent(skippedNeonOnboardingVariables);
     dismiss();
   };
 

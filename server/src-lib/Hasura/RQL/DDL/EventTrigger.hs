@@ -54,7 +54,7 @@ import Data.Either.Combinators
 import Data.Environment qualified as Env
 import Data.Has (Has)
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
@@ -80,9 +80,10 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
+import Hasura.Table.Cache
+import Hasura.Table.Metadata (TableMetadata (..), tmEventTriggers)
 import Hasura.Tracing (TraceT)
 import Hasura.Tracing qualified as Tracing
 
@@ -107,7 +108,7 @@ data CreateEventTriggerQuery (b :: BackendType) = CreateEventTriggerQuery
 
 $(makeLenses ''CreateEventTriggerQuery)
 
-instance Backend b => FromJSON (CreateEventTriggerQuery b) where
+instance (Backend b) => FromJSON (CreateEventTriggerQuery b) where
   parseJSON = withObject "CreateEventTriggerQuery" \o -> do
     sourceName <- o .:? "source" .!= defaultSource
     name <- o .: "name"
@@ -124,12 +125,12 @@ instance Backend b => FromJSON (CreateEventTriggerQuery b) where
     requestTransform <- o .:? "request_transform"
     responseTransform <- o .:? "response_transform"
     cleanupConfig <- o .:? "cleanup_config"
-    when (isIllegalTriggerName name) $
-      fail "only alphanumeric and underscore and hyphens allowed for name"
-    unless (T.length (triggerNameToTxt name) <= maxTriggerNameLength) $
-      fail "event trigger name can be at most 42 characters"
-    unless (any isJust [insert, update, delete] || enableManual) $
-      fail "atleast one amongst insert/update/delete/enable_manual spec must be provided"
+    when (isIllegalTriggerName name)
+      $ fail "only alphanumeric and underscore and hyphens allowed for name"
+    unless (T.length (triggerNameToTxt name) <= maxTriggerNameLength)
+      $ fail "event trigger name can be at most 42 characters"
+    unless (any isJust [insert, update, delete] || enableManual)
+      $ fail "atleast one amongst insert/update/delete/enable_manual spec must be provided"
     case (webhook, webhookFromEnv) of
       (Just _, Nothing) -> return ()
       (Nothing, Just _) -> return ()
@@ -156,8 +157,11 @@ data DeleteEventTriggerQuery (b :: BackendType) = DeleteEventTriggerQuery
 instance FromJSON (DeleteEventTriggerQuery b) where
   parseJSON = withObject "DeleteEventTriggerQuery" $ \o ->
     DeleteEventTriggerQuery
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "name"
+      <$> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "name"
 
 data RedeliverEventQuery (b :: BackendType) = RedeliverEventQuery
   { _rdeqEventId :: EventId,
@@ -167,8 +171,11 @@ data RedeliverEventQuery (b :: BackendType) = RedeliverEventQuery
 instance FromJSON (RedeliverEventQuery b) where
   parseJSON = withObject "RedeliverEventQuery" $ \o ->
     RedeliverEventQuery
-      <$> o .: "event_id"
-      <*> o .:? "source" .!= defaultSource
+      <$> o
+      .: "event_id"
+      <*> o
+      .:? "source"
+      .!= defaultSource
 
 data InvokeEventTriggerQuery (b :: BackendType) = InvokeEventTriggerQuery
   { _ietqName :: TriggerName,
@@ -176,19 +183,23 @@ data InvokeEventTriggerQuery (b :: BackendType) = InvokeEventTriggerQuery
     _ietqPayload :: Value
   }
 
-instance Backend b => FromJSON (InvokeEventTriggerQuery b) where
+instance (Backend b) => FromJSON (InvokeEventTriggerQuery b) where
   parseJSON = withObject "InvokeEventTriggerQuery" $ \o ->
     InvokeEventTriggerQuery
-      <$> o .: "name"
-      <*> o .:? "source" .!= defaultSource
-      <*> o .: "payload"
+      <$> o
+      .: "name"
+      <*> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "payload"
 
 -- | This typeclass have the implementation logic for the event trigger log cleanup.
 --
 -- TODO: this doesn't belong here in the DDL folder, but should be part of
 -- Hasura.Eventing. It could even be made a Service, since the whole point of it
 -- is to implement features differently between OSS and Pro.
-class Monad m => MonadEventLogCleanup m where
+class (Monad m) => MonadEventLogCleanup m where
   -- Deletes the logs of event triggers
   runLogCleaner ::
     SourceCache -> TriggerLogCleanupConfig -> m (Either QErr EncJSON)
@@ -275,9 +286,9 @@ resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update d
 
 droppedTriggerOps :: TriggerOpsDef b -> TriggerOpsDef b -> HashSet Ops
 droppedTriggerOps oldEventTriggerOps newEventTriggerOps =
-  Set.fromList $
-    catMaybes $
-      [ (bool Nothing (Just INSERT) (isDroppedOp (tdInsert oldEventTriggerOps) (tdInsert newEventTriggerOps))),
+  Set.fromList
+    $ catMaybes
+    $ [ (bool Nothing (Just INSERT) (isDroppedOp (tdInsert oldEventTriggerOps) (tdInsert newEventTriggerOps))),
         (bool Nothing (Just UPDATE) (isDroppedOp (tdUpdate oldEventTriggerOps) (tdUpdate newEventTriggerOps))),
         (bool Nothing (Just DELETE) (isDroppedOp (tdDelete oldEventTriggerOps) (tdDelete newEventTriggerOps)))
       ]
@@ -305,10 +316,10 @@ createEventTriggerQueryMetadata q = do
       source = _cetqSource q
       triggerName = etcName triggerConf
       metadataObj =
-        MOSourceObjId source $
-          AB.mkAnyBackend $
-            SMOTableObj @b table $
-              MTOTrigger triggerName
+        MOSourceObjId source
+          $ AB.mkAnyBackend
+          $ SMOTableObj @b table
+          $ MTOTrigger triggerName
   sourceInfo <- askSourceInfo @b source
   let sourceConfig = (_siConfiguration sourceInfo)
       newConfig = _cteqCleanupConfig q
@@ -333,12 +344,13 @@ createEventTriggerQueryMetadata q = do
         else for_ newConfig \cleanupConfig -> do
           (`onLeft` logQErr) =<< generateCleanupSchedules (AB.mkAnyBackend sourceInfo) triggerName cleanupConfig
 
-  buildSchemaCacheFor metadataObj $
-    MetadataModifier $
-      tableMetadataSetter @b source table . tmEventTriggers
-        %~ if replace
-          then ix triggerName .~ triggerConf
-          else OMap.insert triggerName triggerConf
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter @b source table
+    . tmEventTriggers
+    %~ if replace
+      then ix triggerName .~ triggerConf
+      else InsOrdHashMap.insert triggerName triggerConf
 
 runCreateEventTriggerQuery ::
   forall b m r.
@@ -368,10 +380,11 @@ runDeleteEventTriggerQuery (DeleteEventTriggerQuery sourceName triggerName) = do
   sourceConfig <- askSourceConfig @b sourceName
   tableName <- (_tciName . _tiCoreInfo) <$> askTabInfoFromTrigger @b sourceName triggerName
 
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      MetadataModifier $
-        tableMetadataSetter @b sourceName tableName %~ dropEventTriggerInMetadata triggerName
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ tableMetadataSetter @b sourceName tableName
+    %~ dropEventTriggerInMetadata triggerName
 
   dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
 
@@ -430,7 +443,7 @@ askTabInfoFromTrigger sourceName triggerName = do
     errMsg = "event trigger " <> triggerName <<> " does not exist"
 
 getTabInfoFromSchemaCache ::
-  Backend b =>
+  (Backend b) =>
   SchemaCache ->
   SourceName ->
   TriggerName ->
@@ -482,13 +495,13 @@ instance ToTxt ResolveHeaderError where
   toTxt = commaSeparated . unResolveHeaderError
 
 getHeaderInfosFromConf ::
-  QErrM m =>
+  (QErrM m) =>
   Env.Environment ->
   [HeaderConf] ->
   m [EventHeaderInfo]
 getHeaderInfosFromConf env = mapM getHeader
   where
-    getHeader :: QErrM m => HeaderConf -> m EventHeaderInfo
+    getHeader :: (QErrM m) => HeaderConf -> m EventHeaderInfo
     getHeader hconf = case hconf of
       (HeaderConf _ (HVValue val)) -> return $ EventHeaderInfo hconf val
       (HeaderConf _ (HVEnv val)) -> do
@@ -514,7 +527,7 @@ getHeaderInfosFromConfEither env hConfList =
         (Right . EventHeaderInfo hconf) =<< getEnvEither env val
 
 getWebhookInfoFromConf ::
-  QErrM m =>
+  (QErrM m) =>
   Env.Environment ->
   WebhookConf ->
   m WebhookConfInfo
@@ -575,37 +588,37 @@ buildEventTriggerInfo
             triggerOnReplication
         tabDep =
           SchemaDependency
-            ( SOSourceObj source $
-                AB.mkAnyBackend $
-                  SOITable @b tableName
+            ( SOSourceObj source
+                $ AB.mkAnyBackend
+                $ SOITable @b tableName
             )
             DRParent
     pure (eTrigInfo, tabDep Seq.:<| getTrigDefDeps @b source tableName def)
 
 getTrigDefDeps ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   SourceName ->
   TableName b ->
   TriggerOpsDef b ->
   Seq SchemaDependency
 getTrigDefDeps source tableName (TriggerOpsDef mIns mUpd mDel _) =
-  mconcat $
-    Seq.fromList
-      <$> catMaybes
-        [ subsOpSpecDeps <$> mIns,
-          subsOpSpecDeps <$> mUpd,
-          subsOpSpecDeps <$> mDel
-        ]
+  mconcat
+    $ Seq.fromList
+    <$> catMaybes
+      [ subsOpSpecDeps <$> mIns,
+        subsOpSpecDeps <$> mUpd,
+        subsOpSpecDeps <$> mDel
+      ]
   where
     subsOpSpecDeps :: SubscribeOpSpec b -> [SchemaDependency]
     subsOpSpecDeps os =
       let cols = getColsFromSub $ sosColumns os
           mkColDependency dependencyReason col =
             SchemaDependency
-              ( SOSourceObj source $
-                  AB.mkAnyBackend $
-                    SOITableObj @b tableName (TOCol @b col)
+              ( SOSourceObj source
+                  $ AB.mkAnyBackend
+                  $ SOITableObj @b tableName (TOCol @b col)
               )
               dependencyReason
           colDeps = map (mkColDependency DRColumn) cols
@@ -619,24 +632,24 @@ getTrigDefDeps source tableName (TriggerOpsDef mIns mUpd mDel _) =
 getTriggersMap ::
   SourceMetadata b ->
   InsOrdHashMap TriggerName (EventTriggerConf b)
-getTriggersMap = OMap.unions . map _tmEventTriggers . OMap.elems . _smTables
+getTriggersMap = InsOrdHashMap.unions . map _tmEventTriggers . InsOrdHashMap.elems . _smTables
 
 getSourceTableAndTriggers ::
   SourceMetadata b ->
   [(TableName b, TriggerName)]
 getSourceTableAndTriggers =
-  (concatMap mkKeyValue) . OMap.toList . _smTables
+  (concatMap mkKeyValue) . InsOrdHashMap.toList . _smTables
   where
-    mkKeyValue (tableName, tableMetadata) = map (tableName,) $ OMap.keys (_tmEventTriggers tableMetadata)
+    mkKeyValue (tableName, tableMetadata) = map (tableName,) $ InsOrdHashMap.keys (_tmEventTriggers tableMetadata)
 
 getTriggerNames ::
   SourceMetadata b ->
   Set.HashSet TriggerName
-getTriggerNames = Set.fromList . OMap.keys . getTriggersMap
+getTriggerNames = Set.fromList . InsOrdHashMap.keys . getTriggersMap
 
 getTableNameFromTrigger ::
   forall b.
-  Backend b =>
+  (Backend b) =>
   SchemaCache ->
   SourceName ->
   TriggerName ->
@@ -667,14 +680,17 @@ updateCleanupStatusInMetadata ::
 updateCleanupStatusInMetadata cleanupConfig cleanupSwitch sourceName tableName triggerName = do
   let newCleanupConfig = Just $ cleanupConfig {_atlccPaused = cleanupSwitch}
       metadataObj =
-        MOSourceObjId sourceName $
-          AB.mkAnyBackend $
-            SMOTableObj @b tableName $
-              MTOTrigger triggerName
+        MOSourceObjId sourceName
+          $ AB.mkAnyBackend
+          $ SMOTableObj @b tableName
+          $ MTOTrigger triggerName
 
-  buildSchemaCacheFor metadataObj $
-    MetadataModifier $
-      tableMetadataSetter @b sourceName tableName . tmEventTriggers . ix triggerName %~ updateCleanupConfig newCleanupConfig
+  buildSchemaCacheFor metadataObj
+    $ MetadataModifier
+    $ tableMetadataSetter @b sourceName tableName
+    . tmEventTriggers
+    . ix triggerName
+    %~ updateCleanupConfig newCleanupConfig
 
 -- | Function to start/stop the cleanup action based on the event triggers supplied in
 -- TriggerLogCleanupToggleConfig conf
@@ -766,7 +782,7 @@ getAllETWithCleanupConfigInTableMetadata tMetadata =
         (triggerName,)
           <$> etcCleanupConfig triggerConf
     )
-    $ OMap.toList
+    $ InsOrdHashMap.toList
     $ _tmEventTriggers tMetadata
 
 runGetEventLogs ::

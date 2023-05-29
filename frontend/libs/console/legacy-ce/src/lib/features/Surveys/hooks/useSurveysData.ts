@@ -37,7 +37,10 @@ export function useSurveysData(
 
   const { isLoading, isError, data } = useQuery<SurveysResponseData, APIError>(
     SurveyQueryKey.fetchAllSurveyData,
-    fetchAllSurveysDataQueryFn
+    fetchAllSurveysDataQueryFn,
+    {
+      refetchOnWindowFocus: false,
+    }
   );
 
   const queryClient = useQueryClient();

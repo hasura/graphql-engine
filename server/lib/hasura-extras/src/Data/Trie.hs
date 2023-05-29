@@ -61,21 +61,21 @@ singleton ps v = foldr (\p t -> Trie (HashMap.singleton p t) Nothing) (Trie Hash
 -------------------------------------------------------------------------------
 
 -- | Find a value at the given path, if any.
-lookup :: Hashable k => [k] -> Trie k v -> Maybe v
+lookup :: (Hashable k) => [k] -> Trie k v -> Maybe v
 lookup [] (Trie _ value) = value
 lookup (p : ps) (Trie tmap _) = lookup ps =<< HashMap.lookup p tmap
 
 -- | Insert the given value at the given path.
 --
 -- If there's already a value at the given path, it is replaced.
-insert :: Hashable k => [k] -> v -> Trie k v -> Trie k v
+insert :: (Hashable k) => [k] -> v -> Trie k v -> Trie k v
 insert = insertWith const
 
 -- | Insert the value at the given path.
 --
 -- If there's already a value at the given path, the old value is replaced by
 -- the result of applying the given function to the new and old value.
-insertWith :: Hashable k => (v -> v -> v) -> [k] -> v -> Trie k v -> Trie k v
+insertWith :: (Hashable k) => (v -> v -> v) -> [k] -> v -> Trie k v -> Trie k v
 insertWith fun path newValue t = go t path
   where
     go (Trie tmap value) = \case

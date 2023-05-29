@@ -16,5 +16,5 @@ import Network.Types.Extended (TlsAllow)
 mkHttpManager :: IO [TlsAllow] -> Blocklist -> IO HTTP.Manager
 mkHttpManager currentAllow blocklist = do
   tlsSettings <- HTTP.dynamicTlsSettings currentAllow
-  HTTP.newManager $
-    Restricted.mkRestrictedManagerSettings (block blocklist) Nothing (Just tlsSettings)
+  HTTP.newManager
+    $ Restricted.mkRestrictedManagerSettings (block blocklist) Nothing (Just tlsSettings)

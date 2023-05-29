@@ -109,8 +109,8 @@ buildRemoteSchemaCall RemoteSchemaJoin {..} arguments userInfo = do
   -- for each join argument, we generate a unique field, with the alias
   -- "f" <> argumentId
   fields <- flip IntMap.traverseWithKey arguments $ \argumentId (JoinArgument argument) -> do
-    graphqlArgs <- fmap HashMap.fromList $
-      for (HashMap.toList argument) \(FieldName columnName, value) -> do
+    graphqlArgs <- fmap HashMap.fromList
+      $ for (HashMap.toList argument) \(FieldName columnName, value) -> do
         graphQLName <- parseGraphQLName columnName
         graphQLValue <- ordJSONValueToGValue value
         pure (graphQLName, graphQLValue)
@@ -128,8 +128,10 @@ buildRemoteSchemaCall RemoteSchemaJoin {..} arguments userInfo = do
   -- this constructs the actual GraphQL Request that can be sent to the remote
   for (NE.nonEmpty $ IntMap.elems fields) $ \neFields -> do
     gqlRequest <-
-      fmap fieldsToRequest . runVariableCache . for neFields $
-        \(field, _, _) -> traverse (resolveRemoteVariable userInfo) field
+      fmap fieldsToRequest
+        . runVariableCache
+        . for neFields
+        $ \(field, _, _) -> traverse (resolveRemoteVariable userInfo) field
     let customizer = foldMap (view _3) fields
         responsePath = fmap (ResponsePath . view _2) fields
     pure $ RemoteSchemaCall customizer gqlRequest responsePath
@@ -138,7 +140,7 @@ buildRemoteSchemaCall RemoteSchemaJoin {..} arguments userInfo = do
 -- selection set at the leaf of the tree we construct.
 fieldCallsToField ::
   forall m.
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   -- | user input arguments to the remote join field
   HashMap.HashMap G.Name (P.InputValue RemoteSchemaVariable) ->
   -- | Contains the values of the variables that have been defined in the remote join definition
@@ -219,7 +221,7 @@ createArguments variables (RemoteArguments arguments) =
 -- >>> combineValues (Object (fromList [("id", Number 1)]) (Object (fromList [("name", String "foo")])
 -- Object (fromList [("id", Number 1), ("name", String "foo")])
 combineValues ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   G.Name ->
   G.Value RemoteSchemaVariable ->
   G.Value RemoteSchemaVariable ->
@@ -228,14 +230,14 @@ combineValues name v1 v2 = case (v1, v2) of
   (G.VObject l, G.VObject r) -> G.VObject <$> HashMap.unionWithM combineValues l r
   (G.VList l, G.VList r) -> pure $ G.VList $ l <> r
   (l, r) ->
-    throw500 $
-      "combineValues: cannot combine values ("
-        <> tshow l
-        <> ") and ("
-        <> tshow r
-        <> ") for field "
-        <> G.unName name
-        <> "; lists can only be merged with lists, objects can only be merged with objects"
+    throw500
+      $ "combineValues: cannot combine values ("
+      <> tshow l
+      <> ") and ("
+      <> tshow r
+      <> ") for field "
+      <> G.unName name
+      <> "; lists can only be merged with lists, objects can only be merged with objects"
 
 -- | Craft a GraphQL query document from the list of fields.
 fieldsToRequest :: NonEmpty (G.Field G.NoFragments P.Variable) -> GQLReqOutgoing
@@ -283,17 +285,17 @@ executeRemoteSchemaCall networkFunction (RemoteSchemaCall customizer request _) 
   responseObject <- AO.asObject responseJSON `onLeft` throw500
   let errors = AO.lookup "errors" responseObject
   if
-      | isNothing errors || errors == Just AO.Null ->
-          case AO.lookup "data" responseObject of
-            Nothing -> throw500 "\"data\" field not found in remote response"
-            Just v ->
-              let v' = applyResultCustomizer customizer v
-               in AO.asObject v' `onLeft` throw500
-      | otherwise ->
-          throwError
-            (err400 Unexpected "Errors from remote server")
-              { qeInternal = Just $ ExtraInternal $ J.object ["errors" J..= (AO.fromOrdered <$> errors)]
-              }
+    | isNothing errors || errors == Just AO.Null ->
+        case AO.lookup "data" responseObject of
+          Nothing -> throw500 "\"data\" field not found in remote response"
+          Just v ->
+            let v' = applyResultCustomizer customizer v
+             in AO.asObject v' `onLeft` throw500
+    | otherwise ->
+        throwError
+          (err400 Unexpected "Errors from remote server")
+            { qeInternal = Just $ ExtraInternal $ J.object ["errors" J..= (AO.fromOrdered <$> errors)]
+            }
 
 -------------------------------------------------------------------------------
 -- Step 3: extracting the join index
@@ -333,9 +335,9 @@ buildJoinIndex RemoteSchemaCall {..} response =
               `onNothing` throw500 ("failed to lookup key '" <> toTxt k <> "' in response")
           go objValue ks
         _ ->
-          throw500 $
-            "unexpected non-object json value found while path not empty: "
-              <> commaSeparated path
+          throw500
+            $ "unexpected non-object json value found while path not empty: "
+            <> commaSeparated path
 
 -------------------------------------------------------------------------------
 -- Local helpers

@@ -25,7 +25,7 @@ import Data.List qualified as L
 import Data.List.NonEmpty (NonEmpty (..))
 import Prelude
 
-fromListOn :: Hashable k => (v -> k) -> [v] -> HashMap k v
+fromListOn :: (Hashable k) => (v -> k) -> [v] -> HashMap k v
 fromListOn f = HashMap.fromList . Prelude.map (\v -> (f v, v))
 
 -- | Given a 'Foldable' sequence of values and a function that extracts a key from each value,
@@ -113,7 +113,7 @@ unionsWith f = F.foldl' (HashMap.unionWith f) HashMap.empty
 
 -- | Homogenise maps, such that all maps range over the full set of
 -- keys, inserting a default value as needed.
-homogenise :: Hashable a => b -> [HashMap a b] -> (HashSet a, [HashMap a b])
+homogenise :: (Hashable a) => b -> [HashMap a b] -> (HashSet a, [HashMap a b])
 homogenise defaultValue maps =
   let ks = S.unions $ L.map HashMap.keysSet maps
       defaults = HashMap.fromList [(k, defaultValue) | k <- S.toList ks]

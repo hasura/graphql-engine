@@ -20,7 +20,6 @@ import Hasura.Function.Cache
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -40,12 +39,13 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 import Type.Reflection
 
@@ -60,7 +60,7 @@ import Type.Reflection
 class AggregationPredicatesSchema (b :: BackendType) where
   aggregationPredicatesParser ::
     forall r m n.
-    MonadBuildSourceSchema b r m n =>
+    (MonadBuildSourceSchema b r m n) =>
     TableInfo b ->
     SchemaT r m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
 
@@ -116,8 +116,9 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
             P.fieldOptional Name.__not Nothing (BoolNot <$> recur)
           ]
 
-    pure $
-      BoolAnd <$> P.object name (Just description) do
+    pure
+      $ BoolAnd
+      <$> P.object name (Just description) do
         tableFields <- map BoolField . catMaybes <$> sequenceA tableFieldParsers
         specialFields <- catMaybes <$> sequenceA connectiveFieldParsers
         aggregationPredicateFields <- map (BoolField . AVAggregationPredicates) <$> aggregationPredicatesParser'
@@ -131,25 +132,30 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
       fieldName <- hoistMaybe $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp
-        FIColumn columnInfo ->
+        FIColumn (SCIScalarColumn columnInfo) ->
           lift $ fmap (AVColumn columnInfo) <$> comparisonExps @b (ciType columnInfo)
+        FIColumn (SCIObjectColumn _) -> empty -- TODO(dmoverton)
+        FIColumn (SCIArrayColumn _) -> empty -- TODO(dmoverton)
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
-          remoteTableInfo <- askTableInfo $ riRTable relationshipInfo
-          let remoteTableFilter =
-                (fmap . fmap) partialSQLExpToUnpreparedValue $
-                  maybe annBoolExpTrue spiFilter $
-                    tableSelectPermissions roleName remoteTableInfo
-          remoteBoolExp <- lift $ tableBoolExp remoteTableInfo
-          pure $ fmap (AVRelationship relationshipInfo . andAnnBoolExps remoteTableFilter) remoteBoolExp
+          case riTarget relationshipInfo of
+            RelTargetNativeQuery _ -> error "mkField RelTargetNativeQuery"
+            RelTargetTable remoteTable -> do
+              remoteTableInfo <- askTableInfo $ remoteTable
+              let remoteTablePermissions =
+                    (fmap . fmap) (partialSQLExpToUnpreparedValue)
+                      $ maybe annBoolExpTrue spiFilter
+                      $ tableSelectPermissions roleName remoteTableInfo
+              remoteBoolExp <- lift $ tableBoolExp remoteTableInfo
+              pure $ fmap (AVRelationship relationshipInfo . RelationshipFilters remoteTablePermissions) remoteBoolExp
         FIComputedField ComputedFieldInfo {..} -> do
           let ComputedFieldFunction {..} = _cfiFunction
           -- For a computed field to qualify in boolean expression it shouldn't have any input arguments
           case toList _cffInputArgs of
             [] -> do
               let functionArgs =
-                    flip FunctionArgsExp mempty $
-                      fromComputedFieldImplicitArguments @b UVSession _cffComputedFieldImplicitArgs
+                    flip FunctionArgsExp mempty
+                      $ fromComputedFieldImplicitArguments @b UVSession _cffComputedFieldImplicitArgs
 
               fmap (AVComputedField . AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName functionArgs)
                 <$> case computedFieldReturnType @b _cfiReturnType of
@@ -162,7 +168,6 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
 
         -- Using remote relationship fields in boolean expressions is not supported.
         FIRemoteRelationship _ -> empty
-        FINestedObject _ -> empty -- TODO(dmoverton)
 
 -- |
 -- > input type_bool_exp {
@@ -201,10 +206,10 @@ logicalModelBoolExp logicalModel =
 
           memoizeKey = name
           description =
-            G.Description $
-              "Boolean expression to filter rows from the logical model for "
-                <> name
-                  <<> ". All fields are combined with a logical 'AND'."
+            G.Description
+              $ "Boolean expression to filter rows from the logical model for "
+              <> name
+              <<> ". All fields are combined with a logical 'AND'."
        in boolExpInternal gqlName fieldInfo description memoizeKey mkAggPredParser
 
 -- |
@@ -226,10 +231,10 @@ tableBoolExp tableInfo = do
   fieldInfos <- tableSelectFields tableInfo
   let mkAggPredParser = aggregationPredicatesParser tableInfo
   let description =
-        G.Description $
-          "Boolean expression to filter rows from the table "
-            <> tableInfoName tableInfo
-              <<> ". All fields are combined with a logical 'AND'."
+        G.Description
+          $ "Boolean expression to filter rows from the table "
+          <> tableInfoName tableInfo
+          <<> ". All fields are combined with a logical 'AND'."
 
   let memoizeKey = tableInfoName tableInfo
   boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser

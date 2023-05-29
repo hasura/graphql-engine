@@ -7,7 +7,7 @@ where
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Tagged qualified as Tagged
 import Hasura.Base.Error
 import Hasura.GraphQL.Context
@@ -40,7 +40,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 
 parseGraphQLQuery ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   GQLContext ->
   [G.VariableDefinition] ->
   Maybe (HashMap G.Name J.Value) ->
@@ -130,8 +130,8 @@ convertQuerySelSet
               let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
               (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of
                 AQQuery s ->
-                  ( AEPSync $
-                      resolveActionExecution
+                  ( AEPSync
+                      $ resolveActionExecution
                         httpManager
                         env
                         logger
@@ -146,5 +146,5 @@ convertQuerySelSet
               pure $ ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins
             RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles
     -- 3. Transform the 'RootFieldMap' into an execution plan
-    executionPlan <- flip OMap.traverseWithKey unpreparedQueries $ resolveExecutionSteps
-    pure (executionPlan, OMap.elems unpreparedQueries, dirMap, parameterizedQueryHash)
+    executionPlan <- flip InsOrdHashMap.traverseWithKey unpreparedQueries $ resolveExecutionSteps
+    pure (executionPlan, InsOrdHashMap.elems unpreparedQueries, dirMap, parameterizedQueryHash)

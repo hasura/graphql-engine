@@ -8,7 +8,9 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HashSet
 import Data.List (sortOn)
 import Data.Maybe (isJust, mapMaybe)
+import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
+import Hasura.Backends.DataConnector.API.V0.Relationships as API
 import Test.AgentAPI (queryGuarded)
 import Test.Data (TestData (..))
 import Test.Data qualified as Data
@@ -66,7 +68,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
   it "can combine filters using an and expression" $ do
     let where1 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (Number 58) artistIdScalarType)
     let where2 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Title" albumTitleScalarType) (Data.scalarValueComparison (String "Stormbringer") albumTitleScalarType)
-    let where' = And [where1, where2]
+    let where' = Data.mkAndExpr [where1, where2]
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -81,7 +83,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "treats an empty and expression as 'true'" $ do
-    let where' = And []
+    let where' = And mempty
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -91,7 +93,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
   it "can combine filters using an or expression" $ do
     let where1 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (Data.scalarValueComparison (Number 2) albumIdScalarType)
     let where2 = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (Data.scalarValueComparison (Number 3) albumIdScalarType)
-    let where' = Or [where1, where2]
+    let where' = Data.mkOrExpr [where1, where2]
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -102,7 +104,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "treats an empty or expression as 'false'" $ do
-    let where' = Or []
+    let where' = Or mempty
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- queryGuarded query
 
@@ -194,7 +196,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
           it "returns all rows if matching rows exist" $ do
             let where' =
                   Exists (UnrelatedTable _tdEmployeesTableName) $
-                    And
+                    Data.mkAndExpr
                       [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (Data.scalarValueComparison (Number 1) employeeIdScalarType),
                         ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "City" employeeCityScalarType) (Data.scalarValueComparison (String "Edmonton") employeeCityScalarType)
                       ]
@@ -209,7 +211,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
           it "returns no rows if matching rows do not exist" $ do
             let where' =
                   Exists (UnrelatedTable _tdEmployeesTableName) $
-                    And
+                    Data.mkAndExpr
                       [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (Data.scalarValueComparison (Number 1) employeeIdScalarType),
                         ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "City" employeeCityScalarType) (Data.scalarValueComparison (String "Calgary") employeeCityScalarType)
                       ]
@@ -227,7 +229,7 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
                 ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (String "AC/DC") artistNameScalarType)
         let query =
               albumsQueryRequest
-                & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+                & qrRelationships .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
                 & qrQuery . qWhere ?~ where'
         receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
@@ -250,11 +252,12 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
                 ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" genreNameScalarType) (Data.scalarValueComparison (String "Metal") genreNameScalarType)
         let query =
               artistsQueryRequest
-                & qrTableRelationships
-                  .~ [ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships,
-                       Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships,
-                       Data.onlyKeepRelationships [_tdGenreRelationshipName] _tdTracksTableRelationships
-                     ]
+                & qrRelationships
+                  .~ Set.fromList
+                    [ API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships,
+                      API.RTable $ Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships,
+                      API.RTable $ Data.onlyKeepRelationships [_tdGenreRelationshipName] _tdTracksTableRelationships
+                    ]
                 & qrQuery . qWhere ?~ where'
         receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
 
@@ -284,13 +287,13 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
       it "can filter by comparing against multiple columns in a related table" $ do
         let where' =
               Exists (RelatedTable _tdAlbumsRelationshipName) $
-                And
+                Data.mkAndExpr
                   [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (Data.scalarValueComparison (Number 1) albumIdScalarType),
                     ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Title" albumTitleScalarType) (Data.scalarValueComparison (String "Let There Be Rock") albumTitleScalarType)
                   ]
         let query =
               artistsQueryRequest
-                & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
+                & qrRelationships .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
                 & qrQuery . qWhere ?~ where'
         receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
 
@@ -310,13 +313,13 @@ spec TestData {..} comparisonCapabilities = describe "Filtering in Queries" $ do
     artistsQueryRequest =
       let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdArtistsTableName [] query Nothing
+       in TableQueryRequest _tdArtistsTableName mempty query Nothing
 
     albumsQueryRequest :: QueryRequest
     albumsQueryRequest =
       let fields = Data.mkFieldsMap [("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"), ("ArtistId", _tdColumnField _tdAlbumsTableName "ArtistId"), ("Title", _tdColumnField _tdAlbumsTableName "Title")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdAlbumsTableName [] query Nothing
+       in TableQueryRequest _tdAlbumsTableName mempty query Nothing
 
     albumIdScalarType = _tdFindColumnScalarType _tdAlbumsTableName "AlbumId"
     albumTitleScalarType = _tdFindColumnScalarType _tdAlbumsTableName "Title"

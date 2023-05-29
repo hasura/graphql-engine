@@ -32,7 +32,7 @@ class FromJSONKeyValue a where
 instance ToJSONKeyValue Void where
   toJSONKeyValue = absurd
 
-instance ToJSONKeyValue a => ToJSONKeyValue (Const a b) where
+instance (ToJSONKeyValue a) => ToJSONKeyValue (Const a b) where
   toJSONKeyValue = toJSONKeyValue . getConst
 
 -- | Similar to 'FromJSON', except the parser can also source data with which
@@ -62,5 +62,5 @@ mapWithJSONPath :: (a -> Parser b) -> [a] -> Parser [b]
 mapWithJSONPath parser xs =
   traverse (\(idx, item) -> parser item <?> Index idx) $ zip [0 ..] xs
 
-encodeToStrictText :: ToJSON a => a -> Text
+encodeToStrictText :: (ToJSON a) => a -> Text
 encodeToStrictText = toStrict . toLazyText . encodeToTextBuilder

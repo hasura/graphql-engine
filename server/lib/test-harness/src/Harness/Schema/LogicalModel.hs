@@ -7,7 +7,8 @@ module Harness.Schema.LogicalModel
     LogicalModelColumn (..),
     logicalModel,
     logicalModelScalar,
-    logicalModelReference,
+    logicalModelArrayReference,
+    logicalModelObjectReference,
     trackLogicalModel,
     trackLogicalModelCommand,
     untrackLogicalModel,
@@ -27,6 +28,17 @@ import Harness.Test.ScalarType
 import Harness.TestEnvironment (TestEnvironment, getBackendTypeConfig)
 import Hasura.Prelude
 
+data ReferenceType = ArrayReference | ObjectReference
+  deriving (Show, Eq)
+
+instance J.ToJSON ReferenceType where
+  toJSON ArrayReference = "array"
+  toJSON ObjectReference = "object"
+
+-- | this no longer matches the internal shape of logical models, where arrays
+-- can nest objects OR scalars
+-- however, we can defer changing this abstraction until we need to express
+-- that in our tests
 data LogicalModelColumn
   = LogicalModelScalar
       { logicalModelColumnName :: Text,
@@ -36,7 +48,8 @@ data LogicalModelColumn
       }
   | LogicalModelReference
       { logicalModelColumnName :: Text,
-        logicalModelColumnReference :: Text
+        logicalModelColumnReference :: Text,
+        logicalModelColumnReferenceType :: ReferenceType
       }
   deriving (Show, Eq)
 
@@ -49,11 +62,20 @@ logicalModelScalar name colType =
       logicalModelColumnDescription = Nothing
     }
 
-logicalModelReference :: Text -> Text -> LogicalModelColumn
-logicalModelReference name ref =
+logicalModelArrayReference :: Text -> Text -> LogicalModelColumn
+logicalModelArrayReference name ref =
   LogicalModelReference
     { logicalModelColumnName = name,
-      logicalModelColumnReference = ref
+      logicalModelColumnReference = ref,
+      logicalModelColumnReferenceType = ArrayReference
+    }
+
+logicalModelObjectReference :: Text -> Text -> LogicalModelColumn
+logicalModelObjectReference name ref =
+  LogicalModelReference
+    { logicalModelColumnName = name,
+      logicalModelColumnReference = ref,
+      logicalModelColumnReferenceType = ObjectReference
     }
 
 data LogicalModel = LogicalModel
@@ -73,27 +95,54 @@ logicalModel logicalModelName =
 
 trackLogicalModelCommand :: String -> BackendTypeConfig -> LogicalModel -> Value
 trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalModelDescription, logicalModelName, logicalModelColumns}) =
-  -- return type is an array of items
   let returnTypeToJson =
         J.Array
           . V.fromList
           . fmap
             ( \case
-                LogicalModelReference {..} ->
-                  J.object $
-                    [ ("logical_model" .= logicalModelColumnReference),
-                      ("name" .= logicalModelColumnName)
-                    ]
+                LogicalModelReference
+                  { logicalModelColumnReferenceType = ObjectReference,
+                    logicalModelColumnReference,
+                    logicalModelColumnName
+                  } ->
+                    J.object
+                      $ [ ("name" .= logicalModelColumnName),
+                          ( "type",
+                            J.object
+                              [ ("logical_model" .= logicalModelColumnReference)
+                              ]
+                          )
+                        ]
+                LogicalModelReference
+                  { logicalModelColumnReferenceType = ArrayReference,
+                    logicalModelColumnReference,
+                    logicalModelColumnName
+                  } ->
+                    J.object
+                      $ [ ("name" .= logicalModelColumnName),
+                          ( "type",
+                            J.object
+                              $ [ ( "array",
+                                    J.object
+                                      $ [ ("logical_model" .= logicalModelColumnReference)
+                                        ]
+                                  )
+                                ]
+                          )
+                        ]
                 LogicalModelScalar {..} ->
                   let descriptionPair = case logicalModelColumnDescription of
                         Just desc -> [("description" .= desc)]
                         Nothing -> []
-                   in J.object $
-                        [ ("name" .= logicalModelColumnName),
-                          ("type" .= (BackendType.backendScalarType backendTypeConfig) logicalModelColumnType),
-                          ("nullable" .= logicalModelColumnNullable)
-                        ]
-                          <> descriptionPair
+                   in -- this is the old way to encode these, but we'll keep using
+                      -- in the tests for now to ensure we remain backwards
+                      -- compatible
+                      J.object
+                        $ [ ("name" .= logicalModelColumnName),
+                            ("type" .= (BackendType.backendScalarType backendTypeConfig) logicalModelColumnType),
+                            ("nullable" .= logicalModelColumnNullable)
+                          ]
+                        <> descriptionPair
             )
 
       columns = returnTypeToJson logicalModelColumns
@@ -114,7 +163,7 @@ trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalMode
           fields: *columns
       |]
 
-trackLogicalModel :: HasCallStack => String -> LogicalModel -> TestEnvironment -> IO ()
+trackLogicalModel :: (HasCallStack) => String -> LogicalModel -> TestEnvironment -> IO ()
 trackLogicalModel sourceName ctmType testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
 
@@ -133,7 +182,7 @@ untrackLogicalModelCommand source backendTypeMetadata LogicalModel {logicalModel
         name: *logicalModelName
     |]
 
-untrackLogicalModel :: HasCallStack => String -> LogicalModel -> TestEnvironment -> IO ()
+untrackLogicalModel :: (HasCallStack) => String -> LogicalModel -> TestEnvironment -> IO ()
 untrackLogicalModel source ctmType testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
 

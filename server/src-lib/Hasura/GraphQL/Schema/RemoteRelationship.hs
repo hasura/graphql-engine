@@ -92,7 +92,8 @@ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFie
         pure (_rrfiInputValueDefinitions, _rrfiParamMap)
       else do
         (_, roleRemoteField) <-
-          afold @(Either _) $
+          afold @(Either _)
+            $
             -- TODO: this really needs to go way, we shouldn't be doing
             -- validation when building parsers
             validateToSchemaRelationship relationshipDef _rrfiLHSIdentifier _rrfiName (_rrfiRemoteSchema, introspection) lhsFields
@@ -109,37 +110,38 @@ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFie
   let typeName = G.getBaseType nestedFieldType
   fieldTypeDefinition <-
     onNothing (lookupType roleIntrospection typeName)
-    -- the below case will never happen because we get the type name
-    -- from the schema document itself i.e. if a field exists for the
-    -- given role, then it's return type also must exist
-    $
-      throw500 $
-        "unexpected: " <> typeName <<> " not found "
+      -- the below case will never happen because we get the type name
+      -- from the schema document itself i.e. if a field exists for the
+      -- given role, then it's return type also must exist
+      $ throw500
+      $ "unexpected: "
+      <> typeName
+      <<> " not found "
   -- These are the arguments that are given by the user while executing a query
   let remoteFieldUserArguments = map snd $ HashMap.toList remoteFieldParamMap
   remoteFld <-
-    withRemoteSchemaCustomization remoteSchemaCustomizer $
-      lift $
-        P.wrapFieldParser nestedFieldType
-          <$> remoteField remoteRelationshipIntrospection remoteSchemaRelationships remoteSchemaRoot fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
+    withRemoteSchemaCustomization remoteSchemaCustomizer
+      $ lift
+      $ P.wrapFieldParser nestedFieldType
+      <$> remoteField remoteRelationshipIntrospection remoteSchemaRelationships remoteSchemaRoot fieldName Nothing remoteFieldUserArguments fieldTypeDefinition
 
-  pure $
-    remoteFld
-      `P.bindField` \fld@IR.GraphQLField {IR._fArguments = args, IR._fSelectionSet = selSet, IR._fName = fname} -> do
-        let remoteArgs =
-              HashMap.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue argVal
-        let resultCustomizer =
-              applyFieldCalls fieldCalls $
-                applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls)) $
-                  makeResultCustomizer remoteSchemaCustomizer fld
-        pure $
-          IR.RemoteSchemaSelect
-            { IR._rselArgs = remoteArgs,
-              IR._rselResultCustomizer = resultCustomizer,
-              IR._rselSelection = selSet,
-              IR._rselFieldCall = fieldCalls,
-              IR._rselRemoteSchema = _rrfiRemoteSchema
-            }
+  pure
+    $ remoteFld
+    `P.bindField` \fld@IR.GraphQLField {IR._fArguments = args, IR._fSelectionSet = selSet, IR._fName = fname} -> do
+      let remoteArgs =
+            HashMap.toList args <&> \(argName, argVal) -> IR.RemoteFieldArgument argName $ P.GraphQLValue argVal
+      let resultCustomizer =
+            applyFieldCalls fieldCalls
+              $ applyAliasMapping (singletonAliasMapping fname (fcName $ NE.last fieldCalls))
+              $ makeResultCustomizer remoteSchemaCustomizer fld
+      pure
+        $ IR.RemoteSchemaSelect
+          { IR._rselArgs = remoteArgs,
+            IR._rselResultCustomizer = resultCustomizer,
+            IR._rselSelection = selSet,
+            IR._rselFieldCall = fieldCalls,
+            IR._rselRemoteSchema = _rrfiRemoteSchema
+          }
   where
     -- Apply parent field calls so that the result customizer modifies the nested field
     applyFieldCalls :: NonEmpty FieldCall -> ResultCustomizer -> ResultCustomizer
@@ -192,9 +194,10 @@ remoteRelationshipToSourceField ::
   m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField IR.UnpreparedValue) IR.UnpreparedValue tgt)]
 remoteRelationshipToSourceField context options sourceCache RemoteSourceFieldInfo {..} = do
   sourceInfo <-
-    onNothing (unsafeSourceInfo @tgt =<< HashMap.lookup _rsfiSource sourceCache) $
-      throw500 $
-        "source not found " <> dquote _rsfiSource
+    onNothing (unsafeSourceInfo @tgt =<< HashMap.lookup _rsfiSource sourceCache)
+      $ throw500
+      $ "source not found "
+      <> dquote _rsfiSource
   runSourceSchema context options sourceInfo do
     let roleName = scRole context
         tCase = _rscNamingConvention $ _siCustomization sourceInfo
@@ -209,21 +212,23 @@ remoteRelationshipToSourceField context options sourceCache RemoteSourceFieldInf
             pure $ case selectionSetParserM of
               Nothing -> []
               Just selectionSetParser ->
-                pure $
-                  P.subselection_ fieldName Nothing selectionSetParser <&> \fields ->
-                    IR.SourceRelationshipObject $
-                      IR.AnnObjectSelectG fields _rsfiTable $
-                        IR._tpFilter $
-                          tablePermissionsInfo tablePerms
+                pure
+                  $ P.subselection_ fieldName Nothing selectionSetParser
+                  <&> \fields ->
+                    IR.SourceRelationshipObject
+                      $ IR.AnnObjectSelectG fields (IR.FromTable _rsfiTable)
+                      $ IR._tpFilter
+                      $ tablePermissionsInfo tablePerms
           ArrRel -> do
             let aggFieldName = applyFieldNameCaseIdentifier tCase $ C.fromAutogeneratedTuple (fieldName, [G.convertNameToSuffix Name._aggregate])
             selectionSetParser <- selectTable tableInfo fieldName Nothing
             aggSelectionSetParser <- selectTableAggregate tableInfo aggFieldName Nothing
-            pure $
-              catMaybes
+            pure
+              $ catMaybes
                 [ selectionSetParser <&> fmap IR.SourceRelationshipArray,
                   aggSelectionSetParser <&> fmap IR.SourceRelationshipArrayAggregate
                 ]
-        pure $
-          parsers <&> fmap \select ->
+        pure
+          $ parsers
+          <&> fmap \select ->
             IR.RemoteSourceSelect _rsfiSource _rsfiSourceConfig select _rsfiMapping (soStringifyNumbers options)

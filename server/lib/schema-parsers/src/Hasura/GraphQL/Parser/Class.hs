@@ -22,8 +22,8 @@ class (Monad m, Typeable m) => MonadParse m where
   -- caught.
   parseErrorWith :: ParseErrorCode -> ErrorMessage -> m a
 
-withPath :: MonadParse m => J.JSONPath -> m a -> m a
+withPath :: (MonadParse m) => J.JSONPath -> m a -> m a
 withPath path action = foldr withKey action path
 
-parseError :: MonadParse m => ErrorMessage -> m a
+parseError :: (MonadParse m) => ErrorMessage -> m a
 parseError = parseErrorWith ValidationFailed

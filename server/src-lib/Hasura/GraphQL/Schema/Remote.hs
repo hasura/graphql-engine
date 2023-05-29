@@ -13,7 +13,7 @@ where
 
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Monoid (Any (..))
@@ -42,17 +42,17 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 buildRemoteParser ::
   forall r m n.
-  MonadBuildRemoteSchema r m n =>
+  (MonadBuildRemoteSchema r m n) =>
   IntrospectionResult ->
   RemoteSchemaRelationships ->
   RemoteSchemaInfo ->
   SchemaT r m (RemoteSchemaParser n)
 buildRemoteParser introspectionResult remoteRelationships remoteSchemaInfo@RemoteSchemaInfo {..} = do
   (rawQueryParsers, rawMutationParsers, rawSubscriptionParsers) <-
-    withRemoteSchemaCustomization rsCustomizer $
-      buildRawRemoteParser introspectionResult remoteRelationships remoteSchemaInfo
-  pure $
-    RemoteSchemaParser
+    withRemoteSchemaCustomization rsCustomizer
+      $ buildRawRemoteParser introspectionResult remoteRelationships remoteSchemaInfo
+  pure
+    $ RemoteSchemaParser
       (customizeRemoteNamespace remoteSchemaInfo (irQueryRoot introspectionResult) rawQueryParsers)
       (customizeRemoteNamespace remoteSchemaInfo <$> irMutationRoot introspectionResult <*> rawMutationParsers)
       (customizeRemoteNamespace remoteSchemaInfo <$> irSubscriptionRoot introspectionResult <*> rawSubscriptionParsers)
@@ -60,8 +60,8 @@ buildRemoteParser introspectionResult remoteRelationships remoteSchemaInfo@Remot
 makeResultCustomizer ::
   RemoteSchemaCustomizer -> IR.GraphQLField (IR.RemoteRelationshipField IR.UnpreparedValue) RemoteSchemaVariable -> ResultCustomizer
 makeResultCustomizer remoteSchemaCustomizer IR.GraphQLField {..} =
-  modifyFieldByName _fAlias $
-    if _fName == GName.___typename
+  modifyFieldByName _fAlias
+    $ if _fName == GName.___typename
       then customizeTypeNameString (_rscCustomizeTypeName remoteSchemaCustomizer)
       else resultCustomizerFromSelection _fSelectionSet
   where
@@ -84,7 +84,7 @@ makeResultCustomizer remoteSchemaCustomizer IR.GraphQLField {..} =
 
 buildRawRemoteParser ::
   forall r m n.
-  MonadBuildRemoteSchema r m n =>
+  (MonadBuildRemoteSchema r m n) =>
   IntrospectionResult ->
   RemoteSchemaRelationships ->
   RemoteSchemaInfo ->
@@ -260,7 +260,7 @@ newtype Altered = Altered {getAltered :: Bool}
 -- unmodified.
 inputValueDefinitionParser ::
   forall r m n.
-  MonadBuildRemoteSchema r m n =>
+  (MonadBuildRemoteSchema r m n) =>
   RemoteSchemaIntrospection ->
   G.InputValueDefinition ->
   SchemaT r m (InputFieldsParser n (Maybe (Altered, G.Value RemoteSchemaVariable)))
@@ -269,7 +269,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
   where
     doNullability ::
       forall a k.
-      'Input <: k =>
+      ('Input <: k) =>
       G.Nullability ->
       Parser k n (Maybe a) ->
       Parser k n (Maybe a)
@@ -278,7 +278,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
 
     fieldConstructor ::
       forall k.
-      'Input <: k =>
+      ('Input <: k) =>
       Parser k n (Maybe (Altered, G.Value RemoteSchemaVariable)) ->
       InputFieldsParser n (Maybe (Altered, G.Value RemoteSchemaVariable))
     fieldConstructor (shortCircuitIfUnaltered -> parser) =
@@ -291,7 +291,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
 
     buildField ::
       ( forall k.
-        'Input <: k =>
+        ('Input <: k) =>
         Parser k n (Maybe (Altered, G.Value RemoteSchemaVariable)) ->
         InputFieldsParser n (Maybe (Altered, G.Value RemoteSchemaVariable))
       ) ->
@@ -357,7 +357,7 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
 -- If the value contains a variable with a customized type name then we need to consider it to be
 -- altered to ensure that the original type name is passed to the remote server.
 remoteFieldScalarParser ::
-  MonadParse n =>
+  (MonadParse n) =>
   MkTypename ->
   G.ScalarTypeDefinition ->
   P.Parser 'Both n (Altered, G.Value RemoteSchemaVariable)
@@ -385,7 +385,7 @@ remoteFieldScalarParser customizeTypename (G.ScalarTypeDefinition description na
       G.TypeList n l -> G.TypeList n $ mkRemoteGType l
 
 remoteFieldEnumParser ::
-  MonadParse n =>
+  (MonadParse n) =>
   MkTypename ->
   G.EnumTypeDefinition ->
   Parser 'Both n (Altered, G.Value RemoteSchemaVariable)
@@ -422,7 +422,7 @@ remoteFieldEnumParser customizeTypename (G.EnumTypeDefinition desc name _directi
 -- memoization: we know for sure that the preset fields won't generate a recursive call!
 remoteInputObjectParser ::
   forall r m n.
-  MonadBuildRemoteSchema r m n =>
+  (MonadBuildRemoteSchema r m n) =>
   RemoteSchemaIntrospection ->
   G.InputObjectTypeDefinition RemoteSchemaInputValueDefinition ->
   SchemaT
@@ -469,8 +469,9 @@ shortCircuitIfUnaltered parser =
           -- The parser did yield a value, and it was unmodified by presets
           -- we can short-circuit by transforming the input value, therefore
           -- "unpeeling" variables and avoiding extraneous JSON variables.
-          Just (Altered False, _) -> Just $
-            (Altered False,) $ case castWith (P.inputParserInput @k) value of
+          Just (Altered False, _) -> Just
+            $ (Altered False,)
+            $ case castWith (P.inputParserInput @k) value of
               -- The input was a GraphQL value: just forward it.
               GraphQLValue v -> QueryVariable <$> v
               -- The input value was already a JSON value: we still have to create
@@ -522,7 +523,7 @@ shortCircuitIfUnaltered parser =
 -- contains values that contain presets further down, then this result is labelled as altered.
 argumentsParser ::
   forall r m n.
-  MonadBuildRemoteSchema r m n =>
+  (MonadBuildRemoteSchema r m n) =>
   G.ArgumentsDefinition RemoteSchemaInputValueDefinition ->
   RemoteSchemaIntrospection ->
   SchemaT r m (InputFieldsParser n (Altered, HashMap G.Name (G.Value RemoteSchemaVariable)))
@@ -562,12 +563,12 @@ aggregateListAndAlteration = first mconcat . unzip . catMaybes
 
 remoteSchemaRelationships ::
   forall r n m.
-  MonadBuildRemoteSchema r m n =>
+  (MonadBuildRemoteSchema r m n) =>
   RemoteSchemaRelationships ->
   G.Name ->
   SchemaT r m [FieldParser n (IR.SchemaRemoteRelationshipSelect (IR.RemoteRelationshipField IR.UnpreparedValue))]
 remoteSchemaRelationships relationships typeName =
-  case OMap.lookup typeName relationships of
+  case InsOrdHashMap.lookup typeName relationships of
     Nothing -> pure []
     Just rels ->
       concat <$> for (toList rels) \remoteFieldInfo -> do
@@ -579,7 +580,7 @@ remoteSchemaRelationships relationships typeName =
 -- | 'remoteSchemaObject' returns a output parser for a given 'ObjectTypeDefinition'.
 remoteSchemaObject ::
   forall r m n.
-  MonadBuildRemoteSchema r m n =>
+  (MonadBuildRemoteSchema r m n) =>
   RemoteSchemaIntrospection ->
   RemoteSchemaRelationships ->
   G.ObjectTypeDefinition RemoteSchemaInputValueDefinition ->
@@ -594,22 +595,22 @@ remoteSchemaObject schemaDoc remoteRelationships defn@(G.ObjectTypeDefinition de
     traverse_ validateImplementsFields interfaceDefs
     typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
     let allFields = map (fmap IR.FieldGraphQL) subFieldParsers <> map (fmap IR.FieldRemote) remoteJoinParsers
-    pure $
-      P.selectionSetObject typename description allFields implements
-        <&> OMap.mapWithKey \alias ->
-          handleTypename $
-            const $
-              IR.FieldGraphQL $
-                IR.mkGraphQLField (Just alias) GName.___typename mempty mempty IR.SelectionSetNone
+    pure
+      $ P.selectionSetObject typename description allFields implements
+      <&> InsOrdHashMap.mapWithKey \alias ->
+        handleTypename
+          $ const
+          $ IR.FieldGraphQL
+          $ IR.mkGraphQLField (Just alias) GName.___typename mempty mempty IR.SelectionSetNone
   where
     getInterface :: G.Name -> SchemaT r m (G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition)
     getInterface interfaceName =
-      onNothing (lookupInterface schemaDoc interfaceName) $
-        throw400 RemoteSchemaError $
-          "Could not find interface "
-            <> squote interfaceName
-            <> " implemented by Object type "
-            <> squote name
+      onNothing (lookupInterface schemaDoc interfaceName)
+        $ throw400 RemoteSchemaError
+        $ "Could not find interface "
+        <> squote interfaceName
+        <> " implemented by Object type "
+        <> squote name
     validateImplementsFields :: G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition -> SchemaT r m ()
     validateImplementsFields interface =
       traverse_ (validateImplementsField (G._itdName interface)) (G._itdFieldsDefinition interface)
@@ -617,30 +618,30 @@ remoteSchemaObject schemaDoc remoteRelationships defn@(G.ObjectTypeDefinition de
     validateImplementsField interfaceName interfaceField =
       case lookup (G._fldName interfaceField) (zip (fmap G._fldName subFields) subFields) of
         Nothing ->
-          throw400 RemoteSchemaError $
-            "Interface field "
-              <> squote interfaceName
-              <> "."
-              <> dquote (G._fldName interfaceField)
-              <> " expected, but "
-              <> squote name
-              <> " does not provide it"
+          throw400 RemoteSchemaError
+            $ "Interface field "
+            <> squote interfaceName
+            <> "."
+            <> dquote (G._fldName interfaceField)
+            <> " expected, but "
+            <> squote name
+            <> " does not provide it"
         Just f -> do
-          unless (validateSubType (G._fldType f) (G._fldType interfaceField)) $
-            throw400 RemoteSchemaError $
-              "The type of Object field "
-                <> squote name
-                <> "."
-                <> dquote (G._fldName f)
-                <> " ("
-                <> G.showGT (G._fldType f)
-                <> ") is not the same type/sub type of Interface field "
-                <> squote interfaceName
-                <> "."
-                <> dquote (G._fldName interfaceField)
-                <> " ("
-                <> G.showGT (G._fldType interfaceField)
-                <> ")"
+          unless (validateSubType (G._fldType f) (G._fldType interfaceField))
+            $ throw400 RemoteSchemaError
+            $ "The type of Object field "
+            <> squote name
+            <> "."
+            <> dquote (G._fldName f)
+            <> " ("
+            <> G.showGT (G._fldType f)
+            <> ") is not the same type/sub type of Interface field "
+            <> squote interfaceName
+            <> "."
+            <> dquote (G._fldName interfaceField)
+            <> " ("
+            <> G.showGT (G._fldType interfaceField)
+            <> ")"
           traverse_
             ( validateArgument
                 (map _rsitdDefinition (G._fldArgumentsDefinition f))
@@ -658,56 +659,56 @@ remoteSchemaObject schemaDoc remoteRelationships defn@(G.ObjectTypeDefinition de
             validateArgument objectFieldArgs ifaceArgument =
               case lookup (G._ivdName ifaceArgument) (zip (fmap G._ivdName objectFieldArgs) objectFieldArgs) of
                 Nothing ->
-                  throw400 RemoteSchemaError $
-                    "Interface field argument "
-                      <> squote interfaceName
-                      <> "."
-                      <> dquote (G._fldName interfaceField)
-                      <> "("
-                      <> dquote (G._ivdName ifaceArgument)
-                      <> ":) required, but Object field "
-                      <> squote name
-                      <> "."
-                      <> dquote (G._fldName f)
-                      <> " does not provide it"
+                  throw400 RemoteSchemaError
+                    $ "Interface field argument "
+                    <> squote interfaceName
+                    <> "."
+                    <> dquote (G._fldName interfaceField)
+                    <> "("
+                    <> dquote (G._ivdName ifaceArgument)
+                    <> ":) required, but Object field "
+                    <> squote name
+                    <> "."
+                    <> dquote (G._fldName f)
+                    <> " does not provide it"
                 Just a ->
-                  unless (G._ivdType a == G._ivdType ifaceArgument) $
-                    throw400 RemoteSchemaError $
-                      "Interface field argument "
-                        <> squote interfaceName
-                        <> "."
-                        <> dquote (G._fldName interfaceField)
-                        <> "("
-                        <> dquote (G._ivdName ifaceArgument)
-                        <> ":) expects type "
-                        <> G.showGT (G._ivdType ifaceArgument)
-                        <> ", but "
-                        <> squote name
-                        <> "."
-                        <> dquote (G._fldName f)
-                        <> "("
-                        <> dquote (G._ivdName ifaceArgument)
-                        <> ":) has type "
-                        <> G.showGT (G._ivdType a)
+                  unless (G._ivdType a == G._ivdType ifaceArgument)
+                    $ throw400 RemoteSchemaError
+                    $ "Interface field argument "
+                    <> squote interfaceName
+                    <> "."
+                    <> dquote (G._fldName interfaceField)
+                    <> "("
+                    <> dquote (G._ivdName ifaceArgument)
+                    <> ":) expects type "
+                    <> G.showGT (G._ivdType ifaceArgument)
+                    <> ", but "
+                    <> squote name
+                    <> "."
+                    <> dquote (G._fldName f)
+                    <> "("
+                    <> dquote (G._ivdName ifaceArgument)
+                    <> ":) has type "
+                    <> G.showGT (G._ivdType a)
             validateNoExtraNonNull :: [G.InputValueDefinition] -> G.InputValueDefinition -> SchemaT r m ()
             validateNoExtraNonNull ifaceArguments objectFieldArg =
               case lookup (G._ivdName objectFieldArg) (zip (fmap G._ivdName ifaceArguments) ifaceArguments) of
                 Just _ -> pure ()
                 Nothing ->
-                  unless (G.isNullable (G._ivdType objectFieldArg)) $
-                    throw400 RemoteSchemaError $
-                      "Object field argument "
-                        <> squote name
-                        <> "."
-                        <> dquote (G._fldName f)
-                        <> "("
-                        <> dquote (G._ivdName objectFieldArg)
-                        <> ":) is of required type "
-                        <> G.showGT (G._ivdType objectFieldArg)
-                        <> ", but is not provided by Interface field "
-                        <> squote interfaceName
-                        <> "."
-                        <> dquote (G._fldName interfaceField)
+                  unless (G.isNullable (G._ivdType objectFieldArg))
+                    $ throw400 RemoteSchemaError
+                    $ "Object field argument "
+                    <> squote name
+                    <> "."
+                    <> dquote (G._fldName f)
+                    <> "("
+                    <> dquote (G._ivdName objectFieldArg)
+                    <> ":) is of required type "
+                    <> G.showGT (G._ivdType objectFieldArg)
+                    <> ", but is not provided by Interface field "
+                    <> squote interfaceName
+                    <> "."
+                    <> dquote (G._fldName interfaceField)
     validateSubType :: G.GType -> G.GType -> Bool
     -- TODO this ignores nullability which is probably wrong, even though the GraphQL spec is ambiguous
     validateSubType (G.TypeList _ x) (G.TypeList _ y) = validateSubType x y
@@ -779,7 +780,7 @@ constructed query.
 --   Also check Note [Querying remote schema interfaces]
 remoteSchemaInterface ::
   forall r m n.
-  MonadBuildRemoteSchema r m n =>
+  (MonadBuildRemoteSchema r m n) =>
   RemoteSchemaIntrospection ->
   RemoteSchemaRelationships ->
   G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition ->
@@ -791,40 +792,41 @@ remoteSchemaInterface schemaDoc remoteRelationships defn@(G.InterfaceTypeDefinit
     -- In the Draft GraphQL spec (> June 2018), interfaces can themselves
     -- implement superinterfaces.  In the future, we may need to support this
     -- here.
-    when (null subFieldParsers) $
-      throw400 RemoteSchemaError $
-        "List of fields cannot be empty for interface " <> squote name
+    when (null subFieldParsers)
+      $ throw400 RemoteSchemaError
+      $ "List of fields cannot be empty for interface "
+      <> squote name
     -- TODO: another way to obtain 'possibleTypes' is to lookup all the object
     -- types in the schema document that claim to implement this interface.  We
     -- should have a check that expresses that that collection of objects is equal
     -- to 'possibleTypes'.
     typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
     let allFields = map (fmap IR.FieldGraphQL) subFieldParsers
-    pure $
-      P.selectionSetInterface typename description allFields objs
-        <&> IR.mkInterfaceSelectionSet (Set.fromList $ map G._fldName fields)
+    pure
+      $ P.selectionSetInterface typename description allFields objs
+      <&> IR.mkInterfaceSelectionSet (Set.fromList $ map G._fldName fields)
   where
     getObject :: G.Name -> SchemaT r m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
     getObject objectName =
-      onNothing (lookupObject schemaDoc objectName) $
-        case lookupInterface schemaDoc objectName of
+      onNothing (lookupObject schemaDoc objectName)
+        $ case lookupInterface schemaDoc objectName of
           Nothing ->
-            throw400 RemoteSchemaError $
-              "Could not find type "
-                <> squote objectName
-                <> ", which is defined as a member type of Interface "
-                <> squote name
+            throw400 RemoteSchemaError
+              $ "Could not find type "
+              <> squote objectName
+              <> ", which is defined as a member type of Interface "
+              <> squote name
           Just _ ->
-            throw400 RemoteSchemaError $
-              "Interface type "
-                <> squote name
-                <> " can only include object types. It cannot include "
-                <> squote objectName
+            throw400 RemoteSchemaError
+              $ "Interface type "
+              <> squote name
+              <> " can only include object types. It cannot include "
+              <> squote objectName
 
 -- | 'remoteSchemaUnion' returns a output parser for a given 'UnionTypeDefinition'.
 remoteSchemaUnion ::
   forall r m n.
-  MonadBuildRemoteSchema r m n =>
+  (MonadBuildRemoteSchema r m n) =>
   RemoteSchemaIntrospection ->
   RemoteSchemaRelationships ->
   G.UnionTypeDefinition ->
@@ -832,32 +834,33 @@ remoteSchemaUnion ::
 remoteSchemaUnion schemaDoc remoteRelationships defn@(G.UnionTypeDefinition description name _directives objectNames) =
   P.memoizeOn 'remoteSchemaObject defn do
     objs <- traverse (getObjectParser schemaDoc remoteRelationships getObject) objectNames
-    when (null objs) $
-      throw400 RemoteSchemaError $
-        "List of member types cannot be empty for union type " <> squote name
+    when (null objs)
+      $ throw400 RemoteSchemaError
+      $ "List of member types cannot be empty for union type "
+      <> squote name
     typename <- asks getter <&> \mkTypename -> runMkTypename mkTypename name
     pure $ P.selectionSetUnion typename description objs <&> IR.mkUnionSelectionSet
   where
     getObject :: G.Name -> SchemaT r m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)
     getObject objectName =
-      onNothing (lookupObject schemaDoc objectName) $
-        case lookupInterface schemaDoc objectName of
+      onNothing (lookupObject schemaDoc objectName)
+        $ case lookupInterface schemaDoc objectName of
           Nothing ->
-            throw400 RemoteSchemaError $
-              "Could not find type "
-                <> squote objectName
-                <> ", which is defined as a member type of Union "
-                <> squote name
+            throw400 RemoteSchemaError
+              $ "Could not find type "
+              <> squote objectName
+              <> ", which is defined as a member type of Union "
+              <> squote name
           Just _ ->
-            throw400 RemoteSchemaError $
-              "Union type "
-                <> squote name
-                <> " can only include object types. It cannot include "
-                <> squote objectName
+            throw400 RemoteSchemaError
+              $ "Union type "
+              <> squote name
+              <> " can only include object types. It cannot include "
+              <> squote objectName
 
 remoteFieldFromDefinition ::
   forall r m n.
-  MonadBuildRemoteSchema r m n =>
+  (MonadBuildRemoteSchema r m n) =>
   RemoteSchemaIntrospection ->
   G.Name ->
   RemoteSchemaRelationships ->
@@ -892,7 +895,7 @@ remoteFieldFromDefinition schemaDoc parentTypeName remoteRelationships (G.FieldD
 --   in the 'RemoteSchemaIntrospection'.
 remoteFieldFromName ::
   forall r m n.
-  MonadBuildRemoteSchema r m n =>
+  (MonadBuildRemoteSchema r m n) =>
   RemoteSchemaIntrospection ->
   RemoteSchemaRelationships ->
   G.Name ->
@@ -911,7 +914,7 @@ remoteFieldFromName sdoc remoteRelationships parentTypeName fieldName descriptio
 --   GraphQL 'Input' kind is provided, then error will be thrown.
 remoteField ::
   forall r m n.
-  MonadBuildRemoteSchema r m n =>
+  (MonadBuildRemoteSchema r m n) =>
   RemoteSchemaIntrospection ->
   RemoteSchemaRelationships ->
   G.Name ->
@@ -981,7 +984,7 @@ remoteField sdoc remoteRelationships parentTypeName fieldName description argsDe
 --   reason 'getObject' is an argument to this function
 getObjectParser ::
   forall r m n.
-  MonadBuildRemoteSchema r m n =>
+  (MonadBuildRemoteSchema r m n) =>
   RemoteSchemaIntrospection ->
   RemoteSchemaRelationships ->
   (G.Name -> SchemaT r m (G.ObjectTypeDefinition RemoteSchemaInputValueDefinition)) ->
@@ -1002,7 +1005,9 @@ customizeRemoteNamespace remoteSchemaInfo@RemoteSchemaInfo {..} rootTypeName fie
   customizeNamespace (_rscNamespaceFieldName rsCustomizer) fromParsedSelection mkNamespaceTypename fieldParsers
   where
     fromParsedSelection alias =
-      handleTypename . const $
+      handleTypename
+        . const
+        $
         -- In P.selectionSet we lose the resultCustomizer from __typename fields so we need to put it back
         let resultCustomizer = modifyFieldByName alias $ customizeTypeNameString $ _rscCustomizeTypeName rsCustomizer
          in IR.RemoteSchemaRootField remoteSchemaInfo resultCustomizer $ IR.mkGraphQLField (Just alias) GName.___typename mempty mempty IR.SelectionSetNone

@@ -53,7 +53,7 @@ export const ConnectBigQueryWidget = (props: ConnectBigQueryWidgetProps) => {
     });
 
     if (isEditMode) {
-      editConnection(payload);
+      editConnection({ originalName: dataSourceName, ...payload });
     } else {
       createConnection(payload);
     }

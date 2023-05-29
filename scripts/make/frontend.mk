@@ -19,19 +19,19 @@ build-console-ee-assets: $(CONSOLE_EE_ASSETS_PATH)
 # `$@` refers to the target.
 
 $(CONSOLE_CE_ASSETS_PATH): frontend/node_modules
-	cd frontend && npm run server-build:ce
+	cd frontend && yarn server-build:ce
 	touch $@
 
 $(CONSOLE_EE_ASSETS_PATH): frontend/node_modules
-	cd frontend && npm run server-build:ee
+	cd frontend && yarn server-build:ee
 	touch $@
 
-# Install node_modules if package-lock.json changes
-frontend/node_modules: frontend/package-lock.json
-	cd frontend && npm install
+# Install node_modules if yarn.lock changes
+frontend/node_modules: frontend/yarn.lock
+	cd frontend && yarn install --immutable
 	touch $@
 
 # Cleanly install node_modules if package.json changes
-frontend/package-lock.json: frontend/package.json
-	cd frontend && npm ci
+frontend/yarn.lock: frontend/package.json
+	cd frontend && yarn install
 	touch $@

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import {
   registerEETrialLicenseActiveMutation,
@@ -22,69 +22,81 @@ export default {
     // desired response.
     Story => {
       const queryClient = useQueryClient();
-      queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
+      void queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
       return <Story />;
     },
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof ApiSecurityTabEELiteWrapper>;
+} as Meta<typeof ApiSecurityTabEELiteWrapper>;
 
-export const Default: ComponentStory<
-  typeof ApiSecurityTabEELiteWrapper
-> = () => {
-  return (
-    <ApiSecurityTabEELiteWrapper>
-      <SecurityTabs tabName="api_limits" />
-    </ApiSecurityTabEELiteWrapper>
-  );
-};
-Default.storyName = '💠 Default';
-Default.parameters = {
-  msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
-  consoleType: 'pro-lite',
-};
+export const Default: StoryObj<typeof ApiSecurityTabEELiteWrapper> = {
+  render: () => {
+    return (
+      <ApiSecurityTabEELiteWrapper>
+        <SecurityTabs tabName="api_limits" />
+      </ApiSecurityTabEELiteWrapper>
+    );
+  },
 
-export const LicenseActive: ComponentStory<
-  typeof ApiSecurityTabEELiteWrapper
-> = () => {
-  return (
-    <ApiSecurityTabEELiteWrapper>
-      <SecurityTabs tabName="api_limits" />
-    </ApiSecurityTabEELiteWrapper>
-  );
-};
-LicenseActive.storyName = '💠 License Active';
-LicenseActive.parameters = {
-  msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.active],
-  consoleType: 'pro-lite',
+  name: '💠 Default',
+
+  parameters: {
+    msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const LicenseExpired: ComponentStory<
-  typeof ApiSecurityTabEELiteWrapper
-> = () => {
-  return (
-    <ApiSecurityTabEELiteWrapper>
-      <SecurityTabs tabName="api_limits" />
-    </ApiSecurityTabEELiteWrapper>
-  );
-};
-LicenseExpired.storyName = '💠 License Expired';
-LicenseExpired.parameters = {
-  msw: [registerEETrialLicenseExpiredMutation, eeLicenseInfo.expired],
-  consoleType: 'pro-lite',
+export const LicenseActive: StoryObj<typeof ApiSecurityTabEELiteWrapper> = {
+  render: () => {
+    return (
+      <ApiSecurityTabEELiteWrapper>
+        <SecurityTabs tabName="api_limits" />
+      </ApiSecurityTabEELiteWrapper>
+    );
+  },
+
+  name: '💠 License Active',
+
+  parameters: {
+    msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const LicenseDeactivated: ComponentStory<
-  typeof ApiSecurityTabEELiteWrapper
-> = () => {
-  return (
-    <ApiSecurityTabEELiteWrapper>
-      <SecurityTabs tabName="api_limits" />
-    </ApiSecurityTabEELiteWrapper>
-  );
+export const LicenseExpired: StoryObj<typeof ApiSecurityTabEELiteWrapper> = {
+  render: () => {
+    return (
+      <ApiSecurityTabEELiteWrapper>
+        <SecurityTabs tabName="api_limits" />
+      </ApiSecurityTabEELiteWrapper>
+    );
+  },
+
+  name: '💠 License Expired',
+
+  parameters: {
+    msw: [registerEETrialLicenseExpiredMutation, eeLicenseInfo.expired],
+    consoleType: 'pro-lite',
+  },
 };
-LicenseDeactivated.storyName = '💠 License Deactivated';
-LicenseDeactivated.parameters = {
-  msw: [registerEETrialLicenseDeactivatedMutation, eeLicenseInfo.deactivated],
-  consoleType: 'pro-lite',
-};
+
+export const LicenseDeactivated: StoryObj<typeof ApiSecurityTabEELiteWrapper> =
+  {
+    render: () => {
+      return (
+        <ApiSecurityTabEELiteWrapper>
+          <SecurityTabs tabName="api_limits" />
+        </ApiSecurityTabEELiteWrapper>
+      );
+    },
+
+    name: '💠 License Deactivated',
+
+    parameters: {
+      msw: [
+        registerEETrialLicenseDeactivatedMutation,
+        eeLicenseInfo.deactivated,
+      ],
+      consoleType: 'pro-lite',
+    },
+  };

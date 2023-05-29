@@ -13,6 +13,7 @@ import Data.Aeson
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as HashMap
+import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.GraphQL.RemoteServer
@@ -59,18 +60,39 @@ buildRemoteSchemas env =
     -- hasn’t changed.
     buildRemoteSchema = Inc.cache proc ((invalidationKeys, orderedRoles, storedIntrospection), remoteSchema@(RemoteSchemaMetadata name defn _comment permissions relationships)) -> do
       Inc.dependOn -< Inc.selectKeyD name invalidationKeys
+      let metadataObj = mkRemoteSchemaMetadataObject remoteSchema
+      upstreamResponse <- bindA -< runExceptT (noopTrace $ addRemoteSchemaP2Setup env defn)
       remoteSchemaContextParts <-
-        (|
-          withRecordInconsistency
-            ( bindErrorA
-                -< case HashMap.lookup name =<< storedIntrospection of
-                  Nothing -> noopTrace $ addRemoteSchemaP2Setup env defn
-                  Just rawIntro -> do
-                    rsDef <- validateRemoteSchemaDef env defn
-                    (ir, rsi) <- stitchRemoteSchema rawIntro rsDef
-                    pure (ir, rawIntro, rsi)
-            )
-          |) (mkRemoteSchemaMetadataObject remoteSchema)
+        case upstreamResponse of
+          Right upstream -> returnA -< Just upstream
+          Left upstreamError -> do
+            -- If upstream is not available, try to lookup from stored introspection
+            case (HashMap.lookup name =<< storedIntrospection) of
+              Nothing ->
+                -- If no stored introspection exist, re-throw the upstream exception
+                (| withRecordInconsistency (throwA -< upstreamError) |) metadataObj
+              Just storedRawIntrospection -> do
+                processedIntrospection <-
+                  bindA
+                    -< runExceptT do
+                      rsDef <- validateRemoteSchemaDef env defn
+                      (ir, rsi) <- stitchRemoteSchema storedRawIntrospection rsDef
+                      pure (ir, storedRawIntrospection, rsi)
+                case processedIntrospection of
+                  Right processed -> do
+                    let inconsistencyMessage =
+                          T.unwords
+                            [ "remote schema " <>> name,
+                              " is inconsistent because of stale remote schema introspection is used.",
+                              "The remote schema couldn't be reached for a fresh introspection",
+                              "because we got error: " <> qeError upstreamError
+                            ]
+                    -- Still record inconsistency to notify the user obout the usage of stored stale data
+                    recordInconsistencies -< ((Just $ toJSON (qeInternal upstreamError), [metadataObj]), inconsistencyMessage)
+                    returnA -< Just processed
+                  Left _processError ->
+                    -- Unable to process stored introspection, give up and re-throw upstream exception
+                    (| withRecordInconsistency (throwA -< upstreamError) |) metadataObj
       case remoteSchemaContextParts of
         Nothing -> returnA -< Nothing
         Just (introspection, rawIntrospection, remoteSchemaInfo) -> do
@@ -125,9 +147,10 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
               rolePermission <- onNothing (HashMap.lookup roleName accumulatedRolePermMap) $ do
                 parentRolePermissions <-
                   for (toList parentRoles) $ \role ->
-                    onNothing (HashMap.lookup role accumulatedRolePermMap) $
-                      throw500 $
-                        "remote schema permissions: bad ordering of roles, could not find the permission of role: " <>> role
+                    onNothing (HashMap.lookup role accumulatedRolePermMap)
+                      $ throw500
+                      $ "remote schema permissions: bad ordering of roles, could not find the permission of role: "
+                      <>> role
                 let combinedPermission = sconcat <$> nonEmpty parentRolePermissions
                 pure $ fromMaybe CPUndefined combinedPermission
               pure $ HashMap.insert roleName rolePermission accumulatedRolePermMap
@@ -159,7 +182,8 @@ buildRemoteSchemaPermissions = proc ((remoteSchemaName, originalIntrospection, o
               recordDependencies -< (metadataObject, schemaObject, pure dependency)
               returnA -< resolvedSchemaIntrospection
           )
-        |) metadataObject
+        |)
+        metadataObject
 
     mkRemoteSchemaPermissionMetadataObject ::
       (RemoteSchemaName, RemoteSchemaPermissionMetadata) ->

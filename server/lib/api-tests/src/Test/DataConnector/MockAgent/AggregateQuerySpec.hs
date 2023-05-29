@@ -8,6 +8,7 @@ import Control.Lens ((.~), (?~))
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
+import Data.Set qualified as Set
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
@@ -114,8 +115,8 @@ tests = describe "Aggregate Query Tests" $ do
             [ [ ("ArtistIds_Id", API.mkColumnFieldValue $ J.Number 1),
                 ("ArtistNames_Name", API.mkColumnFieldValue $ J.String "AC/DC"),
                 ( "nodes_Albums",
-                  API.mkRelationshipFieldValue $
-                    mkRowsQueryResponse
+                  API.mkRelationshipFieldValue
+                    $ mkRowsQueryResponse
                       [ [("nodes_Title", API.mkColumnFieldValue $ J.String "For Those About To Rock We Salute You")],
                         [("nodes_Title", API.mkColumnFieldValue $ J.String "Let There Be Rock")]
                       ]
@@ -143,41 +144,45 @@ tests = describe "Aggregate Query Tests" $ do
 
     _mrrRecordedRequest
       `shouldBe` Just
-        ( Query $
-            mkQueryRequest
+        ( Query
+            $ mkTableRequest
               (mkTableName "Artist")
               ( emptyQuery
                   & API.qFields
-                    ?~ mkFieldsMap
-                      [ ("ArtistIds_Id", API.ColumnField (API.ColumnName "ArtistId") (API.ScalarType "number")),
-                        ("ArtistNames_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string")),
-                        ( "nodes_Albums",
-                          API.RelField
-                            ( API.RelationshipField
-                                (API.RelationshipName "Albums")
-                                ( emptyQuery
-                                    & API.qFields ?~ mkFieldsMap [("nodes_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string"))]
-                                )
-                            )
-                        )
-                      ]
-                  & API.qLimit ?~ 1
+                  ?~ mkFieldsMap
+                    [ ("ArtistIds_Id", API.ColumnField (API.ColumnName "ArtistId") (API.ScalarType "number")),
+                      ("ArtistNames_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string")),
+                      ( "nodes_Albums",
+                        API.RelField
+                          ( API.RelationshipField
+                              (API.RelationshipName "Albums")
+                              ( emptyQuery
+                                  & API.qFields
+                                  ?~ mkFieldsMap [("nodes_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string"))]
+                              )
+                          )
+                      )
+                    ]
+                    & API.qLimit
+                  ?~ 1
               )
-              & API.qrTableRelationships
-                .~ [ API.TableRelationships
-                       { _trSourceTable = mkTableName "Artist",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "Albums",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "Album",
-                                     _rRelationshipType = API.ArrayRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                                   }
-                               )
-                             ]
-                       }
-                   ]
+            & API.qrRelationships
+            .~ Set.fromList
+              [ API.RTable
+                  API.TableRelationships
+                    { _trelSourceTable = mkTableName "Artist",
+                      _trelRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "Albums",
+                              API.Relationship
+                                { _rTargetTable = mkTableName "Album",
+                                  _rRelationshipType = API.ArrayRelationship,
+                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                }
+                            )
+                          ]
+                    }
+              ]
         )
 
   mockAgentGraphqlTest "works with multiple aggregate fields and through array relations" $ \_testEnv performGraphqlRequest -> do
@@ -216,15 +221,15 @@ tests = describe "Aggregate Query Tests" $ do
           ]
         rows =
           [ [ ( "nodes_Lines",
-                API.mkRelationshipFieldValue $
-                  mkAggregatesQueryResponse
+                API.mkRelationshipFieldValue
+                  $ mkAggregatesQueryResponse
                     [ ("aggregate_count", J.Number 2)
                     ]
               )
             ],
             [ ( "nodes_Lines",
-                API.mkRelationshipFieldValue $
-                  mkAggregatesQueryResponse
+                API.mkRelationshipFieldValue
+                  $ mkAggregatesQueryResponse
                     [ ("aggregate_count", J.Number 4)
                     ]
               )
@@ -257,46 +262,50 @@ tests = describe "Aggregate Query Tests" $ do
 
     _mrrRecordedRequest
       `shouldBe` Just
-        ( Query $
-            mkQueryRequest
+        ( Query
+            $ mkTableRequest
               (mkTableName "Invoice")
               ( emptyQuery
                   & API.qFields
-                    ?~ mkFieldsMap
-                      [ ( "nodes_Lines",
-                          API.RelField
-                            ( API.RelationshipField
-                                (API.RelationshipName "InvoiceLines")
-                                ( emptyQuery & API.qAggregates ?~ mkFieldsMap [("aggregate_count", API.StarCount)]
-                                )
-                            )
-                        )
-                      ]
-                  & API.qAggregates
-                    ?~ mkFieldsMap
-                      [ ("counts_count", API.StarCount),
-                        ("counts_uniqueBillingCountries", API.ColumnCount (API.ColumnCountAggregate (API.ColumnName "BillingCountry") True)),
-                        ("ids_minimum_Id", API.SingleColumn (singleColumnAggregateMin (API.ColumnName "InvoiceId") (API.ScalarType "number"))),
-                        ("ids_max_InvoiceId", API.SingleColumn (singleColumnAggregateMax (API.ColumnName "InvoiceId") (API.ScalarType "number")))
-                      ]
-                  & API.qLimit ?~ 2
-                  & API.qAggregatesLimit ?~ 2
+                  ?~ mkFieldsMap
+                    [ ( "nodes_Lines",
+                        API.RelField
+                          ( API.RelationshipField
+                              (API.RelationshipName "InvoiceLines")
+                              ( emptyQuery & API.qAggregates ?~ mkFieldsMap [("aggregate_count", API.StarCount)]
+                              )
+                          )
+                      )
+                    ]
+                    & API.qAggregates
+                  ?~ mkFieldsMap
+                    [ ("counts_count", API.StarCount),
+                      ("counts_uniqueBillingCountries", API.ColumnCount (API.ColumnCountAggregate (API.ColumnName "BillingCountry") True)),
+                      ("ids_minimum_Id", API.SingleColumn (singleColumnAggregateMin (API.ColumnName "InvoiceId") (API.ScalarType "number"))),
+                      ("ids_max_InvoiceId", API.SingleColumn (singleColumnAggregateMax (API.ColumnName "InvoiceId") (API.ScalarType "number")))
+                    ]
+                    & API.qLimit
+                  ?~ 2
+                    & API.qAggregatesLimit
+                  ?~ 2
               )
-              & API.qrTableRelationships
-                .~ [ API.TableRelationships
-                       { _trSourceTable = mkTableName "Invoice",
-                         _trRelationships =
-                           HashMap.fromList
-                             [ ( API.RelationshipName "InvoiceLines",
-                                 API.Relationship
-                                   { _rTargetTable = mkTableName "InvoiceLine",
-                                     _rRelationshipType = API.ArrayRelationship,
-                                     _rColumnMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
-                                   }
-                               )
-                             ]
-                       }
-                   ]
+            & API.qrRelationships
+            .~ Set.fromList
+              [ API.RTable
+                  API.TableRelationships
+                    { _trelSourceTable = mkTableName "Invoice",
+                      _trelRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "InvoiceLines",
+                              API.Relationship
+                                { _rTargetTable = mkTableName "InvoiceLine",
+                                  _rRelationshipType = API.ArrayRelationship,
+                                  _rColumnMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
+                                }
+                            )
+                          ]
+                    }
+              ]
         )
 
 singleColumnAggregateMax :: API.ColumnName -> API.ScalarType -> API.SingleColumnAggregate

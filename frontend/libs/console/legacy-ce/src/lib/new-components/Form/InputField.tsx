@@ -87,6 +87,10 @@ export type InputFieldProps<T extends InputFieldDefaultType> =
      */
     inputClassName?: string;
     rightButton?: ReactElement;
+    /**
+     * Custom props to be passed to the HTML input element
+     */
+    fieldProps?: React.HTMLProps<HTMLInputElement>;
   };
 
 export const InputField = <T extends z.infer<Schema>>({
@@ -99,6 +103,7 @@ export const InputField = <T extends z.infer<Schema>>({
   prependLabel = '',
   appendLabel = '',
   dataTest,
+  dataTestId,
   inputTransform,
   renderDescriptionLineBreaks = false,
   clearButton,
@@ -170,6 +175,7 @@ export const InputField = <T extends z.infer<Schema>>({
         prependLabel={prependLabel}
         appendLabel={appendLabel}
         dataTest={dataTest}
+        dataTestId={dataTestId}
         clearButton={showClearButton}
         inputClassName={inputClassName}
         maybeError={maybeError}

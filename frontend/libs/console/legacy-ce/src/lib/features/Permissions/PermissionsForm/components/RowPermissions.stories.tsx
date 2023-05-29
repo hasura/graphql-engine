@@ -1,5 +1,6 @@
+/* eslint-disable react/jsx-pascal-case */
 import React from 'react';
-import { Meta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { SimpleForm } from '../../../../new-components/Form';
 import { z } from 'zod';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
@@ -31,13 +32,9 @@ interface Props {
   section: RowPermissionsProps;
 }
 
-export const Insert: Story<Props> = args => (
-  <RowPermissionsSectionWrapper {...args.wrapper}>
-    <RowPermissionsSection {...args.section} />
-  </RowPermissionsSectionWrapper>
-);
-Insert.args = {
+const defaultProps: Props = {
   wrapper: { roleName, queryType: 'insert', defaultOpen: true },
+
   section: {
     table: {
       schema: 'public',
@@ -45,62 +42,96 @@ Insert.args = {
     },
     dataSourceName: 'chinook',
     queryType: 'delete',
+    supportedOperators: [],
+    defaultValues: undefined,
+    permissionsKey: 'check',
+    roleName: '',
   },
 };
 
-export const Select: Story<Props> = args => (
-  <RowPermissionsSectionWrapper {...args.wrapper}>
-    <RowPermissionsSection {...args.section} />
-  </RowPermissionsSectionWrapper>
-);
-Select.args = {
-  wrapper: { roleName, queryType: 'select', defaultOpen: true },
-  section: {
-    ...Insert!.args!.section!,
-    queryType: 'select',
+export const Insert: StoryObj<Props> = {
+  render: args => (
+    <RowPermissionsSectionWrapper {...args.wrapper}>
+      <RowPermissionsSection {...args.section} />
+    </RowPermissionsSectionWrapper>
+  ),
+
+  args: {
+    ...defaultProps,
   },
 };
 
-export const Update: Story<Props> = args => (
-  <RowPermissionsSectionWrapper {...args.wrapper}>
-    <RowPermissionsSection {...args.section} />
-  </RowPermissionsSectionWrapper>
-);
-Update.args = {
-  wrapper: { roleName, queryType: 'update', defaultOpen: true },
-  section: {
-    ...(Insert?.args?.section || {}),
-    queryType: 'update',
+export const Select: StoryObj<Props> = {
+  render: args => (
+    <RowPermissionsSectionWrapper {...args.wrapper}>
+      <RowPermissionsSection {...args.section} />
+    </RowPermissionsSectionWrapper>
+  ),
+
+  args: {
+    wrapper: { roleName, queryType: 'select', defaultOpen: true },
+    section: {
+      ...defaultProps.section,
+      queryType: 'select',
+    },
   },
 };
 
-export const Delete: Story<Props> = args => (
-  <RowPermissionsSectionWrapper {...args.wrapper}>
-    <RowPermissionsSection {...args.section} />
-  </RowPermissionsSectionWrapper>
-);
-Delete.args = {
-  wrapper: { roleName, queryType: 'delete', defaultOpen: true },
-  section: {
-    ...(Insert?.args?.section || {}),
-    queryType: 'delete',
+export const Update: StoryObj<Props> = {
+  render: args => (
+    <RowPermissionsSectionWrapper {...args.wrapper}>
+      <RowPermissionsSection {...args.section} />
+    </RowPermissionsSectionWrapper>
+  ),
+
+  args: {
+    wrapper: { roleName, queryType: 'update', defaultOpen: true },
+    section: {
+      ...defaultProps.section,
+      queryType: 'update',
+    },
   },
 };
 
-type ShowcaseProps = Record<string, Props>;
+export const Delete: StoryObj<Props> = {
+  render: args => (
+    <RowPermissionsSectionWrapper {...args.wrapper}>
+      <RowPermissionsSection {...args.section} />
+    </RowPermissionsSectionWrapper>
+  ),
 
-export const Showcase: Story<ShowcaseProps> = args => (
-  <>
-    <Insert {...args.insert} />
-    <Select {...args.select} />
-    <Update {...args.update} />
-    <Delete {...args.delete} />
-  </>
-);
-Showcase.args = {
-  insert: Insert.args,
-  select: Select.args,
-  update: Update.args,
-  delete: Delete.args,
-} as ShowcaseProps;
-Showcase.parameters = { chromatic: { disableSnapshot: false } };
+  args: {
+    wrapper: { roleName, queryType: 'delete', defaultOpen: true },
+    section: {
+      ...defaultProps.section,
+      queryType: 'delete',
+    },
+  },
+};
+
+type ShowcaseProps = {
+  insert: Props;
+  select: Props;
+  update: Props;
+  delete: Props;
+};
+
+export const Showcase: StoryObj<ShowcaseProps> = {
+  render: args => (
+    <>
+      {Object.entries(args).map(([, value]) => (
+        <RowPermissionsSectionWrapper {...value.wrapper}>
+          <RowPermissionsSection {...value.section} />
+        </RowPermissionsSectionWrapper>
+      ))}
+    </>
+  ),
+
+  args: {
+    insert: Insert.args,
+    select: Select.args,
+    update: Update.args,
+    delete: Delete.args,
+  } as ShowcaseProps,
+  parameters: { chromatic: { disableSnapshot: false } },
+};

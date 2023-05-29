@@ -18,9 +18,9 @@ data ConflictTarget (b :: BackendType)
   = CTColumn [Column b]
   | CTConstraint (ConstraintName b)
 
-deriving instance Backend b => Show (ConflictTarget b)
+deriving instance (Backend b) => Show (ConflictTarget b)
 
-deriving instance Backend b => Eq (ConflictTarget b)
+deriving instance (Backend b) => Eq (ConflictTarget b)
 
 data OnConflictClauseData b v = OnConflictClauseData
   { cp1udConflictTarget :: ConflictTarget b,

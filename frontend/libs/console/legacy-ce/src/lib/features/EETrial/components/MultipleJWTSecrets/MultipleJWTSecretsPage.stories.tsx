@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import {
   registerEETrialLicenseActiveMutation,
@@ -21,51 +21,61 @@ export default {
     // desired response.
     Story => {
       const queryClient = useQueryClient();
-      queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
+      void queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
       return <Story />;
     },
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof MultipleJWTSecretsPage>;
+} as Meta<typeof MultipleJWTSecretsPage>;
 
-export const Default: ComponentStory<typeof MultipleJWTSecretsPage> = () => {
-  return <MultipleJWTSecretsPage />;
-};
-Default.storyName = '💠 Default';
-Default.parameters = {
-  msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
-  consoleType: 'pro-lite',
-};
+export const Default: StoryObj<typeof MultipleJWTSecretsPage> = {
+  render: () => {
+    return <MultipleJWTSecretsPage />;
+  },
 
-export const LicenseActive: ComponentStory<
-  typeof MultipleJWTSecretsPage
-> = () => {
-  return <MultipleJWTSecretsPage />;
-};
-LicenseActive.storyName = '💠 License Active';
-LicenseActive.parameters = {
-  msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.active],
-  consoleType: 'pro-lite',
+  name: '💠 Default',
+
+  parameters: {
+    msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const LicenseExpired: ComponentStory<
-  typeof MultipleJWTSecretsPage
-> = () => {
-  return <MultipleJWTSecretsPage />;
-};
-LicenseExpired.storyName = '💠 License Expired';
-LicenseExpired.parameters = {
-  msw: [registerEETrialLicenseExpiredMutation, eeLicenseInfo.expired],
-  consoleType: 'pro-lite',
+export const LicenseActive: StoryObj<typeof MultipleJWTSecretsPage> = {
+  render: () => {
+    return <MultipleJWTSecretsPage />;
+  },
+
+  name: '💠 License Active',
+
+  parameters: {
+    msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const LicenseDeactivated: ComponentStory<
-  typeof MultipleJWTSecretsPage
-> = () => {
-  return <MultipleJWTSecretsPage />;
+export const LicenseExpired: StoryObj<typeof MultipleJWTSecretsPage> = {
+  render: () => {
+    return <MultipleJWTSecretsPage />;
+  },
+
+  name: '💠 License Expired',
+
+  parameters: {
+    msw: [registerEETrialLicenseExpiredMutation, eeLicenseInfo.expired],
+    consoleType: 'pro-lite',
+  },
 };
-LicenseDeactivated.storyName = '💠 License Deactivated';
-LicenseDeactivated.parameters = {
-  msw: [registerEETrialLicenseDeactivatedMutation, eeLicenseInfo.deactivated],
-  consoleType: 'pro-lite',
+
+export const LicenseDeactivated: StoryObj<typeof MultipleJWTSecretsPage> = {
+  render: () => {
+    return <MultipleJWTSecretsPage />;
+  },
+
+  name: '💠 License Deactivated',
+
+  parameters: {
+    msw: [registerEETrialLicenseDeactivatedMutation, eeLicenseInfo.deactivated],
+    consoleType: 'pro-lite',
+  },
 };

@@ -24,6 +24,7 @@ module Harness.Backend.Postgres
     trackTable,
     untrackTable,
     setupTablesAction,
+    createUntrackedTablesAction,
     setupFunctionRootFieldAction,
     setupComputedFieldAction,
     -- sql generation for other postgres-like backends
@@ -94,15 +95,15 @@ backendTypeMetadata =
 -- interesting thing here is the database: in both modes, we specify an
 -- /initial/ database (returned by this function), which we use only as a way
 -- to create other databases for testing.
-defaultConnectInfo :: HasCallStack => GlobalTestEnvironment -> Postgres.ConnectInfo
+defaultConnectInfo :: (HasCallStack) => GlobalTestEnvironment -> Postgres.ConnectInfo
 defaultConnectInfo globalTestEnvironment =
   case testingMode globalTestEnvironment of
     TestNewPostgresVariant opts@Options {..} ->
       let getComponent :: forall a. String -> Last a -> a
           getComponent component =
             fromMaybe
-              ( error $
-                  unlines
+              ( error
+                  $ unlines
                     [ "Postgres URI is missing its " <> component <> " component.",
                       "Postgres options: " <> TL.unpack (pShow opts)
                     ]
@@ -129,12 +130,12 @@ defaultConnectInfo globalTestEnvironment =
 -- for this 'TestEnvironment'.
 makeFreshDbConnectionString :: TestEnvironment -> Postgres.PostgresServerUrl
 makeFreshDbConnectionString testEnvironment =
-  Postgres.PostgresServerUrl $
-    bsToTxt $
-      Postgres.postgreSQLConnectionString
-        (defaultConnectInfo (globalEnvironment testEnvironment))
-          { Postgres.connectDatabase = T.unpack (uniqueDbName (uniqueTestId testEnvironment))
-          }
+  Postgres.PostgresServerUrl
+    $ bsToTxt
+    $ Postgres.postgreSQLConnectionString
+      (defaultConnectInfo (globalEnvironment testEnvironment))
+        { Postgres.connectDatabase = T.unpack (uniqueDbName (uniqueTestId testEnvironment))
+        }
 
 -- | Default Postgres connection string that we use for our admin purposes
 -- (setting up / deleting per-test databases)
@@ -145,15 +146,15 @@ defaultPostgresConnectionString =
     . Postgres.postgreSQLConnectionString
     . defaultConnectInfo
 
-metadataLivenessCheck :: HasCallStack => IO ()
+metadataLivenessCheck :: (HasCallStack) => IO ()
 metadataLivenessCheck =
   doLivenessCheck (Postgres.PostgresServerUrl $ T.pack postgresqlMetadataConnectionString)
 
-livenessCheck :: HasCallStack => TestEnvironment -> IO ()
+livenessCheck :: (HasCallStack) => TestEnvironment -> IO ()
 livenessCheck = doLivenessCheck . makeFreshDbConnectionString
 
 -- | Check the postgres server is live and ready to accept connections.
-doLivenessCheck :: HasCallStack => Postgres.PostgresServerUrl -> IO ()
+doLivenessCheck :: (HasCallStack) => Postgres.PostgresServerUrl -> IO ()
 doLivenessCheck (Postgres.PostgresServerUrl connectionString) = loop Constants.postgresLivenessCheckAttempts
   where
     loop 0 = error ("Liveness check failed for PostgreSQL.")
@@ -172,11 +173,11 @@ doLivenessCheck (Postgres.PostgresServerUrl connectionString) = loop Constants.p
 
 -- | Run a plain SQL query.
 -- On error, print something useful for debugging.
-run_ :: HasCallStack => TestEnvironment -> Text -> IO ()
+run_ :: (HasCallStack) => TestEnvironment -> Text -> IO ()
 run_ testEnvironment =
   Postgres.run (makeFreshDbConnectionString testEnvironment, testEnvironment)
 
-runCustomDB_ :: HasCallStack => TestEnvironment -> Postgres.ConnectInfo -> Text -> IO ()
+runCustomDB_ :: (HasCallStack) => TestEnvironment -> Postgres.ConnectInfo -> Text -> IO ()
 runCustomDB_ testEnvironment connectionInfo =
   Postgres.run (postgresServerUrl connectionInfo, testEnvironment)
 
@@ -275,7 +276,7 @@ createUniqueIndexSql (SchemaName schemaName) tableName = \case
   Schema.UniqueIndexExpression ex ->
     [i| CREATE UNIQUE INDEX ON "#{ schemaName }"."#{ tableName }" ((#{ ex })) |]
 
-scalarType :: HasCallStack => Schema.ScalarType -> Text
+scalarType :: (HasCallStack) => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "integer"
   Schema.TStr -> "text"
@@ -478,6 +479,19 @@ setupTablesAction ts env =
   SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
+
+createUntrackedTables :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+createUntrackedTables tables (testEnvironment, _) = do
+  -- Setup tables
+  for_ tables $ \table -> do
+    createTable testEnvironment table
+    insertTable testEnvironment table
+
+createUntrackedTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
+createUntrackedTablesAction ts env =
+  SetupAction
+    (createUntrackedTables ts (env, ()))
+    (const $ pure ())
 
 setupFunctionRootFieldAction :: String -> TestEnvironment -> SetupAction
 setupFunctionRootFieldAction functionName env =

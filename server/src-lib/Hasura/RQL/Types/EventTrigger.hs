@@ -58,15 +58,16 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.Time.Clock qualified as Time
+import Data.Time.LocalTime (LocalTime)
 import Database.PG.Query qualified as PG
 import Hasura.Prelude
-import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (EnvRecord, InputWebhook, ResolvedWebhook, SourceName (..), TriggerOnReplication (..))
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Headers (HeaderConf (..))
+import Hasura.RQL.Types.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import System.Cron (CronSchedule)
 import Text.Regex.TDFA qualified as TDFA
 
@@ -107,27 +108,27 @@ instance Hashable Ops
 data SubscribeColumns (b :: BackendType) = SubCStar | SubCArray [Column b]
   deriving (Generic)
 
-deriving instance Backend b => Show (SubscribeColumns b)
+deriving instance (Backend b) => Show (SubscribeColumns b)
 
-deriving instance Backend b => Eq (SubscribeColumns b)
+deriving instance (Backend b) => Eq (SubscribeColumns b)
 
-instance Backend b => NFData (SubscribeColumns b)
+instance (Backend b) => NFData (SubscribeColumns b)
 
-instance Backend b => HasCodec (SubscribeColumns b) where
+instance (Backend b) => HasCodec (SubscribeColumns b) where
   codec =
     dimapCodec
       (either (const SubCStar) SubCArray)
       (\case SubCStar -> Left "*"; SubCArray cols -> Right cols)
       $ disjointEitherCodec (literalTextCodec "*") (listCodec codec)
 
-instance Backend b => FromJSON (SubscribeColumns b) where
+instance (Backend b) => FromJSON (SubscribeColumns b) where
   parseJSON (String s) = case s of
     "*" -> return SubCStar
     _ -> fail "only * or [] allowed"
   parseJSON v@(Array _) = SubCArray <$> parseJSON v
   parseJSON _ = fail "unexpected columns"
 
-instance Backend b => ToJSON (SubscribeColumns b) where
+instance (Backend b) => ToJSON (SubscribeColumns b) where
   toJSON SubCStar = "*"
   toJSON (SubCArray cols) = toJSON cols
 
@@ -142,17 +143,19 @@ data SubscribeOpSpec (b :: BackendType) = SubscribeOpSpec
 
 instance (Backend b) => NFData (SubscribeOpSpec b)
 
-instance Backend b => HasCodec (SubscribeOpSpec b) where
+instance (Backend b) => HasCodec (SubscribeOpSpec b) where
   codec =
-    AC.object (backendPrefix @b <> "SubscribeOpSpec") $
-      SubscribeOpSpec
-        <$> requiredField' "columns" AC..= sosColumns
-        <*> optionalField' "payload" AC..= sosPayload
+    AC.object (backendPrefix @b <> "SubscribeOpSpec")
+      $ SubscribeOpSpec
+      <$> requiredField' "columns"
+      AC..= sosColumns
+        <*> optionalField' "payload"
+      AC..= sosPayload
 
-instance Backend b => FromJSON (SubscribeOpSpec b) where
+instance (Backend b) => FromJSON (SubscribeOpSpec b) where
   parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
 
-instance Backend b => ToJSON (SubscribeOpSpec b) where
+instance (Backend b) => ToJSON (SubscribeOpSpec b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
 defaultNumRetries :: Int
@@ -178,11 +181,14 @@ instance NFData RetryConf
 
 instance HasCodec RetryConf where
   codec =
-    AC.object "RetryConf" $
-      RetryConf
-        <$> requiredField' "num_retries" AC..= rcNumRetries
-        <*> requiredField' "interval_sec" AC..= rcIntervalSec
-        <*> optionalField' "timeout_sec" AC..= rcTimeoutSec
+    AC.object "RetryConf"
+      $ RetryConf
+      <$> requiredField' "num_retries"
+      AC..= rcNumRetries
+        <*> requiredField' "interval_sec"
+      AC..= rcIntervalSec
+        <*> optionalField' "timeout_sec"
+      AC..= rcTimeoutSec
 
 $(deriveJSON hasuraJSON {omitNothingFields = True} ''RetryConf)
 
@@ -232,21 +238,25 @@ data TriggerOpsDef (b :: BackendType) = TriggerOpsDef
   }
   deriving (Show, Eq, Generic)
 
-instance Backend b => NFData (TriggerOpsDef b)
+instance (Backend b) => NFData (TriggerOpsDef b)
 
-instance Backend b => HasCodec (TriggerOpsDef b) where
+instance (Backend b) => HasCodec (TriggerOpsDef b) where
   codec =
-    AC.object (backendPrefix @b <> "TriggerOpsDef") $
-      TriggerOpsDef
-        <$> optionalField' "insert" AC..= tdInsert
-        <*> optionalField' "update" AC..= tdUpdate
-        <*> optionalField' "delete" AC..= tdDelete
-        <*> optionalField' "enable_manual" AC..= tdEnableManual
+    AC.object (backendPrefix @b <> "TriggerOpsDef")
+      $ TriggerOpsDef
+      <$> optionalField' "insert"
+      AC..= tdInsert
+        <*> optionalField' "update"
+      AC..= tdUpdate
+        <*> optionalField' "delete"
+      AC..= tdDelete
+        <*> optionalField' "enable_manual"
+      AC..= tdEnableManual
 
-instance Backend b => FromJSON (TriggerOpsDef b) where
+instance (Backend b) => FromJSON (TriggerOpsDef b) where
   parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
 
-instance Backend b => ToJSON (TriggerOpsDef b) where
+instance (Backend b) => ToJSON (TriggerOpsDef b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
 data EventTriggerCleanupStatus = ETCSPaused | ETCSUnpaused deriving (Show, Eq, Generic)
@@ -285,14 +295,20 @@ instance NFData AutoTriggerLogCleanupConfig
 
 instance HasCodec AutoTriggerLogCleanupConfig where
   codec =
-    AC.object "AutoTriggerLogCleanupConfig" $
-      AutoTriggerLogCleanupConfig
-        <$> requiredField' "schedule" AC..= _atlccSchedule
-        <*> optionalFieldWithDefault' "batch_size" 10000 AC..= _atlccBatchSize
-        <*> requiredField' "clear_older_than" AC..= _atlccClearOlderThan
-        <*> optionalFieldWithDefault' "timeout" 60 AC..= _atlccTimeout
-        <*> optionalFieldWithDefault' "clean_invocation_logs" False AC..= _atlccCleanInvocationLogs
-        <*> optionalFieldWithDefault' "paused" ETCSUnpaused AC..= _atlccPaused
+    AC.object "AutoTriggerLogCleanupConfig"
+      $ AutoTriggerLogCleanupConfig
+      <$> requiredField' "schedule"
+      AC..= _atlccSchedule
+        <*> optionalFieldWithDefault' "batch_size" 10000
+      AC..= _atlccBatchSize
+        <*> requiredField' "clear_older_than"
+      AC..= _atlccClearOlderThan
+        <*> optionalFieldWithDefault' "timeout" 60
+      AC..= _atlccTimeout
+        <*> optionalFieldWithDefault' "clean_invocation_logs" False
+      AC..= _atlccCleanInvocationLogs
+        <*> optionalFieldWithDefault' "paused" ETCSUnpaused
+      AC..= _atlccPaused
 
 instance FromJSON AutoTriggerLogCleanupConfig where
   parseJSON =
@@ -413,24 +429,33 @@ data EventTriggerConf (b :: BackendType) = EventTriggerConf
 
 instance (Backend b) => HasCodec (EventTriggerConf b) where
   codec =
-    AC.object (backendPrefix @b <> "EventTriggerConfEventTriggerConf") $
-      EventTriggerConf
-        <$> requiredField' "name" AC..= etcName
-        <*> requiredField' "definition" AC..= etcDefinition
-        <*> optionalField' "webhook" AC..= etcWebhook
-        <*> optionalField' "webhook_from_env" AC..= etcWebhookFromEnv
-        <*> requiredField' "retry_conf" AC..= etcRetryConf
-        <*> optionalField' "headers" AC..= etcHeaders
-        <*> optionalField' "request_transform" AC..= etcRequestTransform
-        <*> optionalField' "response_transform" AC..= etcResponseTransform
-        <*> optionalField' "cleanup_config" AC..= etcCleanupConfig
+    AC.object (backendPrefix @b <> "EventTriggerConfEventTriggerConf")
+      $ EventTriggerConf
+      <$> requiredField' "name"
+      AC..= etcName
+        <*> requiredField' "definition"
+      AC..= etcDefinition
+        <*> optionalField' "webhook"
+      AC..= etcWebhook
+        <*> optionalField' "webhook_from_env"
+      AC..= etcWebhookFromEnv
+        <*> requiredField' "retry_conf"
+      AC..= etcRetryConf
+        <*> optionalField' "headers"
+      AC..= etcHeaders
+        <*> optionalField' "request_transform"
+      AC..= etcRequestTransform
+        <*> optionalField' "response_transform"
+      AC..= etcResponseTransform
+        <*> optionalField' "cleanup_config"
+      AC..= etcCleanupConfig
         <*> triggerOnReplication
     where
       triggerOnReplication = case defaultTriggerOnReplication @b of
         Just (_, defTOR) -> optionalFieldWithOmittedDefault' "trigger_on_replication" defTOR AC..= etcTriggerOnReplication
         Nothing -> error "No default setting for trigger_on_replication is defined for backend type."
 
-instance Backend b => FromJSON (EventTriggerConf b) where
+instance (Backend b) => FromJSON (EventTriggerConf b) where
   parseJSON = withObject "EventTriggerConf" \o -> do
     name <- o .: "name"
     definition <- o .: "definition"
@@ -447,25 +472,25 @@ instance Backend b => FromJSON (EventTriggerConf b) where
     triggerOnReplication <- o .:? "trigger_on_replication" .!= defTOR
     return $ EventTriggerConf name definition webhook webhookFromEnv retryConf headers requestTransform responseTransform cleanupConfig triggerOnReplication
 
-instance Backend b => ToJSON (EventTriggerConf b) where
+instance (Backend b) => ToJSON (EventTriggerConf b) where
   toJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers requestTransform responseTransform cleanupConfig triggerOnReplication) =
-    object $
-      [ "name" .= name,
-        "definition" .= definition,
-        "retry_conf" .= retryConf
-      ]
-        <> catMaybes
-          [ "webhook" .=? webhook,
-            "webhook_from_env" .=? webhookFromEnv,
-            "headers" .=? headers,
-            "request_transform" .=? requestTransform,
-            "response_transform" .=? responseTransform,
-            "cleanup_config" .=? cleanupConfig,
-            "trigger_on_replication"
-              .=? case defaultTriggerOnReplication @b of
-                Just (_, defTOR) -> if triggerOnReplication == defTOR then Nothing else Just triggerOnReplication
-                Nothing -> Just triggerOnReplication
-          ]
+    object
+      $ [ "name" .= name,
+          "definition" .= definition,
+          "retry_conf" .= retryConf
+        ]
+      <> catMaybes
+        [ "webhook" .=? webhook,
+          "webhook_from_env" .=? webhookFromEnv,
+          "headers" .=? headers,
+          "request_transform" .=? requestTransform,
+          "response_transform" .=? responseTransform,
+          "cleanup_config" .=? cleanupConfig,
+          "trigger_on_replication"
+            .=? case defaultTriggerOnReplication @b of
+              Just (_, defTOR) -> if triggerOnReplication == defTOR then Nothing else Just triggerOnReplication
+              Nothing -> Just triggerOnReplication
+        ]
 
 updateCleanupConfig :: Maybe AutoTriggerLogCleanupConfig -> EventTriggerConf b -> EventTriggerConf b
 updateCleanupConfig cleanupConfig etConf = etConf {etcCleanupConfig = cleanupConfig}
@@ -496,16 +521,30 @@ data Event (b :: BackendType) = Event
     eTrigger :: TriggerMetadata,
     eEvent :: Value,
     eTries :: Int,
-    eCreatedAt :: Time.UTCTime,
-    eRetryAt :: Maybe Time.UTCTime
+    -- Ideally 'eCreatedAt' should have been a Time.UTCTime, but while intializing the
+    -- hdb_catalog.event_log tables for Postgres, we incorrectly created `created_at :: TIMESTAMP`
+    -- column as a Timestamp type. This means the `created_at` column for Postgres stores
+    -- the local time in which the Postgres DB is in. Hence to avoid confusion and
+    -- other time related problems, we use the `LocalTime` type for `created_at`.
+    --
+    -- Note, this problem only exists for PG sources since for MSSQL the `created_at`
+    -- stores  UTCTime. Since the `Event` type is common for all sources, we have to do
+    -- a redundant conversion of UTCTime to LocalTime for MSSQL sources while fetching
+    -- events for MSSQL source.
+    eCreatedAt :: LocalTime,
+    eRetryAt :: Maybe Time.UTCTime,
+    -- | The values `eCreatedAtUTC` and `eRetryAtUTC` are only used for
+    --   calculating the `event_processing_time` metric.
+    eCreatedAtUTC :: Time.UTCTime,
+    eRetryAtUTC :: Maybe Time.UTCTime
   }
   deriving (Generic)
 
-deriving instance Backend b => Show (Event b)
+deriving instance (Backend b) => Show (Event b)
 
-deriving instance Backend b => Eq (Event b)
+deriving instance (Backend b) => Eq (Event b)
 
-instance Backend b => FromJSON (Event b) where
+instance (Backend b) => FromJSON (Event b) where
   parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
 
 -- | The event payload processed by 'processEvent'
@@ -542,9 +581,9 @@ data EventTriggerInfo (b :: BackendType) = EventTriggerInfo
   }
   deriving (Generic, Eq)
 
-instance Backend b => NFData (EventTriggerInfo b)
+instance (Backend b) => NFData (EventTriggerInfo b)
 
-instance Backend b => ToJSON (EventTriggerInfo b) where
+instance (Backend b) => ToJSON (EventTriggerInfo b) where
   toJSON = genericToJSON hasuraJSON
 
 type EventTriggerInfoMap b = HashMap.HashMap TriggerName (EventTriggerInfo b)
@@ -586,22 +625,31 @@ data GetEventLogs (b :: BackendType) = GetEventLogs
 
 instance ToJSON (GetEventLogs b) where
   toJSON GetEventLogs {..} =
-    object $
-      [ "name" .= _gelName,
-        "source" .= _gelSourceName,
-        "limit" .= _gelLimit,
-        "offset" .= _gelOffset,
-        "status" .= _gelStatus
-      ]
+    object
+      $ [ "name" .= _gelName,
+          "source" .= _gelSourceName,
+          "limit" .= _gelLimit,
+          "offset" .= _gelOffset,
+          "status" .= _gelStatus
+        ]
 
 instance FromJSON (GetEventLogs b) where
   parseJSON = withObject "GetEventLogs" $ \o ->
     GetEventLogs
-      <$> o .: "name"
-      <*> o .:? "source" .!= SNDefault
-      <*> o .:? "limit" .!= 100
-      <*> o .:? "offset" .!= 0
-      <*> o .:? "status" .!= All
+      <$> o
+      .: "name"
+      <*> o
+      .:? "source"
+      .!= SNDefault
+      <*> o
+      .:? "limit"
+      .!= 100
+      <*> o
+      .:? "offset"
+      .!= 0
+      <*> o
+      .:? "status"
+      .!= All
 
 data EventLog = EventLog
   { elId :: EventId,
@@ -631,20 +679,27 @@ data GetEventInvocations (b :: BackendType) = GetEventInvocations
 
 instance ToJSON (GetEventInvocations b) where
   toJSON GetEventInvocations {..} =
-    object $
-      [ "name" .= _geiName,
-        "source" .= _geiSourceName,
-        "limit" .= _geiLimit,
-        "offset" .= _geiOffset
-      ]
+    object
+      $ [ "name" .= _geiName,
+          "source" .= _geiSourceName,
+          "limit" .= _geiLimit,
+          "offset" .= _geiOffset
+        ]
 
 instance FromJSON (GetEventInvocations b) where
   parseJSON = withObject "GetEventInvocations" $ \o ->
     GetEventInvocations
-      <$> o .: "name"
-      <*> o .:? "source" .!= SNDefault
-      <*> o .:? "limit" .!= 100
-      <*> o .:? "offset" .!= 0
+      <$> o
+      .: "name"
+      <*> o
+      .:? "source"
+      .!= SNDefault
+      <*> o
+      .:? "limit"
+      .!= 100
+      <*> o
+      .:? "offset"
+      .!= 0
 
 data EventInvocationLog = EventInvocationLog
   { eilId :: Text,
@@ -669,20 +724,27 @@ data GetEventById (b :: BackendType) = GetEventById
 
 instance ToJSON (GetEventById b) where
   toJSON GetEventById {..} =
-    object $
-      [ "source" .= _gebiSourceName,
-        "event_id" .= _gebiEventId,
-        "invocation_log_limit" .= _gebiInvocationLogLimit,
-        "invocation_log_offset" .= _gebiInvocationLogOffset
-      ]
+    object
+      $ [ "source" .= _gebiSourceName,
+          "event_id" .= _gebiEventId,
+          "invocation_log_limit" .= _gebiInvocationLogLimit,
+          "invocation_log_offset" .= _gebiInvocationLogOffset
+        ]
 
 instance FromJSON (GetEventById b) where
   parseJSON = withObject "GetEventById" $ \o ->
     GetEventById
-      <$> o .:? "source" .!= SNDefault
-      <*> o .: "event_id"
-      <*> o .:? "invocation_log_limit" .!= 100
-      <*> o .:? "invocation_log_offset" .!= 0
+      <$> o
+      .:? "source"
+      .!= SNDefault
+      <*> o
+      .: "event_id"
+      <*> o
+      .:? "invocation_log_limit"
+      .!= 100
+      <*> o
+      .:? "invocation_log_offset"
+      .!= 0
 
 data EventLogWithInvocations = EventLogWithInvocations
   { elwiEvent :: Maybe EventLog,

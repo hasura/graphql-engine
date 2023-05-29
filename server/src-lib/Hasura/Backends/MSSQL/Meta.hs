@@ -31,7 +31,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (OID (..))
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 
 --------------------------------------------------------------------------------
 
@@ -142,9 +142,9 @@ transformTable tableInfo =
       foreignKeysMetadata = HS.fromList $ map ForeignKeyMetadata $ coalesceKeys $ concat foreignKeys
       primaryKey = transformPrimaryKey <$> staJoinedSysPrimaryKey tableInfo
       identityColumns =
-        map (ColumnName . scName) $
-          filter scIsIdentity $
-            staJoinedSysColumn tableInfo
+        map (ColumnName . scName)
+          $ filter scIsIdentity
+          $ staJoinedSysColumn tableInfo
    in ( tableName,
         DBTableMetadata
           tableOID
@@ -167,7 +167,7 @@ transformColumn sysCol =
 
       rciIsNullable = scIsNullable sysCol
       rciDescription = Nothing
-      rciType = parseScalarType $ styName $ scJoinedSysType sysCol
+      rciType = RawColumnTypeScalar $ parseScalarType $ styName $ scJoinedSysType sysCol
       foreignKeys =
         scJoinedForeignKeyColumns sysCol <&> \foreignKeyColumn ->
           let _fkConstraint = Constraint (ConstraintName "fk_mssql") $ OID $ sfkcConstraintObjectId foreignKeyColumn

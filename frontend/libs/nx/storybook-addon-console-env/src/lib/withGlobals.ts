@@ -1,4 +1,4 @@
-import { StoryFn, StoryContext } from '@storybook/addons';
+import { StoryContext, StoryFn } from '@storybook/react';
 
 export const withGlobals =
   (

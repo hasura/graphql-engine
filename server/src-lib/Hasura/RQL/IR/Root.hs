@@ -80,7 +80,7 @@ data RemoteRelationshipField vf
   | -- | AnyBackend is used here to capture a relationship to an arbitrary target
     RemoteSourceField (AB.AnyBackend (RemoteSourceSelect (RemoteRelationshipField vf) vf))
 
-deriving instance AB.SatisfiesForAllBackends vf Show => Show (RemoteRelationshipField vf)
+deriving instance (AB.SatisfiesForAllBackends vf Show) => Show (RemoteRelationshipField vf)
 
 -- | Represents a query root field to an action
 type QueryActionRoot v =

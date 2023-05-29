@@ -35,9 +35,9 @@ listAllTables sourceName = do
 
       query :: LT.Text
       query =
-        LT.intercalate "union all" $
-          map queryPerDataset $
-            _scDatasets sourceConfig
+        LT.intercalate "union all"
+          $ map queryPerDataset
+          $ _scDatasets sourceConfig
 
   (_, recordSet) <-
     Execute.streamBigQuery (_scConnection sourceConfig) (BigQuery query mempty)

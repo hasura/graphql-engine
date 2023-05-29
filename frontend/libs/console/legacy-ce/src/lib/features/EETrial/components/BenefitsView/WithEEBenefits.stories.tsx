@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { Button } from '../../../../new-components/Button';
 import { eeLicenseInfo } from '../../mocks/http';
@@ -22,23 +22,23 @@ export default {
     // desired response.
     Story => {
       const queryClient = useQueryClient();
-      queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
+      void queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
       return <Story />;
     },
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof WithEEBenefits>;
+} as Meta<typeof WithEEBenefits>;
 
-export const ButtonWithEEBenefits: ComponentStory<
-  typeof WithEEBenefits
-> = args => (
-  <div className="w-full h-20 flex items-center justify-center bg-slate-600">
-    <WithEEBenefits id="button-with-ee-benefits">
-      <Button mode="primary">Button With EE Benefits</Button>
-    </WithEEBenefits>
-  </div>
-);
+export const ButtonWithEEBenefits: StoryObj<typeof WithEEBenefits> = {
+  render: args => (
+    <div className="w-full h-20 flex items-center justify-center bg-slate-600">
+      <WithEEBenefits id="button-with-ee-benefits">
+        <Button mode="primary">Button With EE Benefits</Button>
+      </WithEEBenefits>
+    </div>
+  ),
 
-ButtonWithEEBenefits.parameters = {
-  msw: [eeLicenseInfo.active],
+  parameters: {
+    msw: [eeLicenseInfo.active],
+  },
 };

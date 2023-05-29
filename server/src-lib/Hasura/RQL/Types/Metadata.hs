@@ -25,6 +25,7 @@ module Hasura.RQL.Types.Metadata
     functionMetadataSetter,
     logicalModelMetadataSetter,
     nativeQueryMetadataSetter,
+    storedProcedureMetadataSetter,
     metaActions,
     metaAllowlist,
     metaApiLimits,
@@ -52,9 +53,8 @@ import Control.Lens hiding (set, (.=))
 import Data.Aeson.Extended (FromJSONWithContext (..), mapWithJSONPath)
 import Data.Aeson.KeyMap (singleton)
 import Data.Aeson.Ordered qualified as AO
-import Data.Aeson.TH
 import Data.Aeson.Types
-import Data.HashMap.Strict.InsOrd.Extended qualified as OM
+import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Monoid (Dual (..), Endo (..))
 import Hasura.Function.Cache
 import Hasura.Function.Metadata (FunctionMetadata (..))
@@ -82,6 +82,19 @@ import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
+import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata)
+import Hasura.Table.Metadata
+  ( TableMetadata (..),
+    tmArrayRelationships,
+    tmComputedFields,
+    tmDeletePermissions,
+    tmEventTriggers,
+    tmInsertPermissions,
+    tmObjectRelationships,
+    tmRemoteRelationships,
+    tmSelectPermissions,
+    tmUpdatePermissions,
+  )
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.Types.Extended
@@ -150,9 +163,10 @@ $(makeLenses ''Metadata)
 instance FromJSON Metadata where
   parseJSON = withObject "Metadata" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
-    when (version /= MVVersion3) $
-      fail $
-        "unexpected metadata version from storage: " <> show version
+    when (version /= MVVersion3)
+      $ fail
+      $ "unexpected metadata version from storage: "
+      <> show version
     rawSources <- o .: "sources"
     backendConfigs <- o .:? "backend_configs" .!= mempty
     sources <- oMapFromL getSourceName <$> mapWithJSONPath parseSourceMetadata rawSources <?> Key "sources"
@@ -171,8 +185,8 @@ instance FromJSON Metadata where
       disabledSchemaIntrospectionRoles
       ) <-
       parseNonSourcesMetadata o
-    pure $
-      Metadata
+    pure
+      $ Metadata
         sources
         remoteSchemas
         queryCollections
@@ -300,6 +314,16 @@ nativeQueryMetadataSetter ::
 nativeQueryMetadataSetter source nativeQueryName =
   metaSources . ix source . toSourceMetadata . smNativeQueries . ix nativeQueryName
 
+-- | A lens setter for the metadata of a stored procedure as identified by the
+-- source name and root field name.
+storedProcedureMetadataSetter ::
+  (Backend b) =>
+  SourceName ->
+  FunctionName b ->
+  ASetter' Metadata (StoredProcedureMetadata b)
+storedProcedureMetadataSetter source storedProcedureName =
+  metaSources . ix source . toSourceMetadata . smStoredProcedures . ix storedProcedureName
+
 -- | A simple monad class which enables fetching and setting @'Metadata'
 -- in the state.
 class (Monad m) => MetadataM m where
@@ -328,9 +352,10 @@ data MetadataNoSources = MetadataNoSources
     _mnsActions :: Actions,
     _mnsCronTriggers :: CronTriggers
   }
-  deriving (Eq)
+  deriving stock (Eq, Generic)
 
-$(deriveToJSON hasuraJSON ''MetadataNoSources)
+instance ToJSON MetadataNoSources where
+  toJSON = genericToJSON hasuraJSON
 
 instance FromJSON MetadataNoSources where
   parseJSON = withObject "MetadataNoSources" $ \o -> do
@@ -340,9 +365,9 @@ instance FromJSON MetadataNoSources where
         MVVersion1 -> do
           tables <- oMapFromL _tmTable <$> o .: "tables"
           functionList <- o .:? "functions" .!= []
-          let functions = OM.fromList $
-                flip map functionList $
-                  \function -> (function, FunctionMetadata function emptyFunctionConfig mempty Nothing)
+          let functions = InsOrdHashMap.fromList
+                $ flip map functionList
+                $ \function -> (function, FunctionMetadata function emptyFunctionConfig mempty Nothing)
           pure (tables, functions)
         MVVersion2 -> do
           tables <- oMapFromL _tmTable <$> o .: "tables"
@@ -361,8 +386,8 @@ instance FromJSON MetadataNoSources where
       _
       ) <-
       parseNonSourcesMetadata o
-    pure $
-      MetadataNoSources
+    pure
+      $ MetadataNoSources
         tables
         functions
         remoteSchemas
@@ -378,7 +403,7 @@ newtype MetadataModifier = MetadataModifier {runMetadataModifier :: Metadata -> 
 dropTableInMetadata ::
   forall b. (Backend b) => SourceName -> TableName b -> MetadataModifier
 dropTableInMetadata source table =
-  MetadataModifier $ metaSources . ix source . (toSourceMetadata @b) . smTables %~ OM.delete table
+  MetadataModifier $ metaSources . ix source . (toSourceMetadata @b) . smTables %~ InsOrdHashMap.delete table
 
 dropRelationshipInMetadata ::
   RelName -> TableMetadata b -> TableMetadata b
@@ -386,25 +411,25 @@ dropRelationshipInMetadata relName =
   -- Since the name of a relationship is unique in a table, the relationship
   -- with given name may present in either array or object relationships but
   -- not in both.
-  (tmObjectRelationships %~ OM.delete relName)
-    . (tmArrayRelationships %~ OM.delete relName)
+  (tmObjectRelationships %~ InsOrdHashMap.delete relName)
+    . (tmArrayRelationships %~ InsOrdHashMap.delete relName)
 
 dropNativeQueryRelationshipInMetadata :: RelName -> NativeQueryMetadata b -> NativeQueryMetadata b
 dropNativeQueryRelationshipInMetadata relName =
-  nqmArrayRelationships %~ OM.delete relName
+  nqmArrayRelationships %~ InsOrdHashMap.delete relName
 
 dropPermissionInMetadata ::
   RoleName -> PermType -> TableMetadata b -> TableMetadata b
 dropPermissionInMetadata rn = \case
-  PTInsert -> tmInsertPermissions %~ OM.delete rn
-  PTSelect -> tmSelectPermissions %~ OM.delete rn
-  PTDelete -> tmDeletePermissions %~ OM.delete rn
-  PTUpdate -> tmUpdatePermissions %~ OM.delete rn
+  PTInsert -> tmInsertPermissions %~ InsOrdHashMap.delete rn
+  PTSelect -> tmSelectPermissions %~ InsOrdHashMap.delete rn
+  PTDelete -> tmDeletePermissions %~ InsOrdHashMap.delete rn
+  PTUpdate -> tmUpdatePermissions %~ InsOrdHashMap.delete rn
 
 dropLogicalModelPermissionInMetadata ::
   RoleName -> PermType -> LogicalModelMetadata b -> LogicalModelMetadata b
 dropLogicalModelPermissionInMetadata rn = \case
-  PTSelect -> lmmSelectPermissions %~ OM.delete rn
+  PTSelect -> lmmSelectPermissions %~ InsOrdHashMap.delete rn
   PTInsert -> error "Not implemented yet"
   PTDelete -> error "Not implemented yet"
   PTUpdate -> error "Not implemented yet"
@@ -412,26 +437,30 @@ dropLogicalModelPermissionInMetadata rn = \case
 dropComputedFieldInMetadata ::
   ComputedFieldName -> TableMetadata b -> TableMetadata b
 dropComputedFieldInMetadata name =
-  tmComputedFields %~ OM.delete name
+  tmComputedFields %~ InsOrdHashMap.delete name
 
 dropEventTriggerInMetadata :: TriggerName -> TableMetadata b -> TableMetadata b
 dropEventTriggerInMetadata name =
-  tmEventTriggers %~ OM.delete name
+  tmEventTriggers %~ InsOrdHashMap.delete name
 
 dropRemoteRelationshipInMetadata ::
   RelName -> TableMetadata b -> TableMetadata b
 dropRemoteRelationshipInMetadata name =
-  tmRemoteRelationships %~ OM.delete name
+  tmRemoteRelationships %~ InsOrdHashMap.delete name
 
 dropFunctionInMetadata ::
   forall b. (Backend b) => SourceName -> FunctionName b -> MetadataModifier
 dropFunctionInMetadata source function =
-  MetadataModifier $
-    metaSources . ix source . toSourceMetadata . (smFunctions @b) %~ OM.delete function
+  MetadataModifier
+    $ metaSources
+    . ix source
+    . toSourceMetadata
+    . (smFunctions @b)
+    %~ InsOrdHashMap.delete function
 
 dropRemoteSchemaInMetadata :: RemoteSchemaName -> MetadataModifier
 dropRemoteSchemaInMetadata name =
-  MetadataModifier $ metaRemoteSchemas %~ OM.delete name
+  MetadataModifier $ metaRemoteSchemas %~ InsOrdHashMap.delete name
 
 dropRemoteSchemaPermissionInMetadata :: RemoteSchemaName -> RoleName -> MetadataModifier
 dropRemoteSchemaPermissionInMetadata remoteSchemaName roleName =
@@ -439,13 +468,13 @@ dropRemoteSchemaPermissionInMetadata remoteSchemaName roleName =
 
 dropRemoteSchemaRemoteRelationshipInMetadata :: RemoteSchemaName -> G.Name -> RelName -> MetadataModifier
 dropRemoteSchemaRemoteRelationshipInMetadata remoteSchemaName typeName relationshipName =
-  MetadataModifier $
-    metaRemoteSchemas
-      . ix remoteSchemaName
-      . rsmRemoteRelationships
-      . ix typeName
-      . rstrsRelationships
-      %~ OM.delete relationshipName
+  MetadataModifier
+    $ metaRemoteSchemas
+    . ix remoteSchemaName
+    . rsmRemoteRelationships
+    . ix typeName
+    . rstrsRelationships
+    %~ InsOrdHashMap.delete relationshipName
 
 -- | Encode 'Metadata' to JSON with deterministic ordering (e.g. "version" being at the top).
 -- The CLI system stores metadata in files and has option to show changes in git diff style.
@@ -479,24 +508,24 @@ metadataToOrdJSON
       backendConfigs
       openTelemetryConfig
     ) =
-    AO.object $
-      [versionPair, sourcesPair]
-        <> catMaybes
-          [ remoteSchemasPair,
-            queryCollectionsPair,
-            allowlistPair,
-            actionsPair,
-            customTypesPair,
-            cronTriggersPair,
-            endpointsPair,
-            apiLimitsPair,
-            metricsConfigPair,
-            inheritedRolesPair,
-            introspectionDisabledRolesPair,
-            networkPair,
-            backendConfigsPair,
-            openTelemetryConfigPair
-          ]
+    AO.object
+      $ [versionPair, sourcesPair]
+      <> catMaybes
+        [ remoteSchemasPair,
+          queryCollectionsPair,
+          allowlistPair,
+          actionsPair,
+          customTypesPair,
+          cronTriggersPair,
+          endpointsPair,
+          apiLimitsPair,
+          metricsConfigPair,
+          inheritedRolesPair,
+          introspectionDisabledRolesPair,
+          networkPair,
+          backendConfigsPair,
+          openTelemetryConfigPair
+        ]
     where
       versionPair = ("version", AO.toOrdered currentMetadataVersion)
       sourcesPair = ("sources", AO.Array $ sourcesToOrdJSONList sources)

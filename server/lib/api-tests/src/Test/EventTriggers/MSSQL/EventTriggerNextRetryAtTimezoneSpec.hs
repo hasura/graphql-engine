@@ -77,8 +77,8 @@ tests =
     -- The test checks that the event trigger retries as expected. In the test, we fire up the event trigger by adding a
     -- row to the table. We wait for a few seconds so the event has retried completely and then see if the number of
     -- retries are 2 (the event retries once)
-    it "check: the total number of tries is (number of retries + 1)" $
-      \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+    it "check: the total number of tries is (number of retries + 1)"
+      $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
             insertQuery =
@@ -154,8 +154,8 @@ mssqlSetupWithEventTriggers testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
       webhookServerNextRetryEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/nextRetry"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: mssql_create_event_trigger
@@ -175,8 +175,8 @@ mssqlSetupWithEventTriggers testEnvironment webhookServer = do
 
 mssqlTeardown :: TestEnvironment -> IO ()
 mssqlTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: bulk
       args:
       - type: mssql_delete_event_trigger

@@ -406,12 +406,6 @@
                         },
                         "type": "array"
                     },
-                    "mysql": {
-                        "items": {
-                            "type": "null"
-                        },
-                        "type": "array"
-                    },
                     "postgres": {
                         "items": {
                             "type": "null"
@@ -777,6 +771,28 @@
                 ],
                 "type": "object"
             },
+            "BigqueryLogicalModelField": {
+                "description": "A field of a logical model",
+                "properties": {
+                    "description": {
+                        "description": "Optional description of this field",
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Name of the field",
+                        "type": "string"
+                    },
+                    "type": {
+                        "additionalProperties": true,
+                        "description": "Type of the field\nA type used in a Logical Model field\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
             "BigqueryLogicalModelMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -788,7 +804,14 @@
                         "description": "Return types for the logical model",
                         "items": {
                             "additionalProperties": true,
-                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/BigqueryLogicalModelField"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/BigqueryLogicalModelField"
+                                }
+                            ]
                         },
                         "type": "array"
                     },
@@ -824,7 +847,7 @@
                     "array_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualConfig__BigQuery"
+                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__BigQuery"
                         },
                         "type": "array"
                     },
@@ -835,6 +858,13 @@
                     "description": {
                         "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
+                    },
+                    "object_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__BigQuery"
+                        },
+                        "type": "array"
                     },
                     "returns": {
                         "description": "Return type (table) of the expression",
@@ -909,7 +939,7 @@
             "BigqueryRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/BigqueryRelManualConfig"
+                        "$ref": "#/components/schemas/BigqueryRelManualTableConfig"
                     }
                 },
                 "required": [
@@ -917,7 +947,33 @@
                 ],
                 "type": "object"
             },
-            "BigqueryRelManualConfig": {
+            "BigqueryRelManualNativeQueryConfig": {
+                "properties": {
+                    "column_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "insertion_order": {
+                        "enum": [
+                            "before_parent",
+                            "after_parent"
+                        ],
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "remote_native_query": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "remote_native_query",
+                    "column_mapping"
+                ],
+                "type": "object"
+            },
+            "BigqueryRelManualTableConfig": {
                 "properties": {
                     "column_mapping": {
                         "additionalProperties": {
@@ -1077,6 +1133,14 @@
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
                     },
+                    "stored_procedures": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/BigqueryStoredProcedureMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "tables": {
                         "items": {
                             "$ref": "#/components/schemas/BigqueryTableMetadata"
@@ -1089,6 +1153,39 @@
                     "kind",
                     "tables",
                     "configuration"
+                ],
+                "type": "object"
+            },
+            "BigqueryStoredProcedureMetadata": {
+                "description": "A stored procedure as represented in metadata.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/BigqueryNullableScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "configuration": {
+                        "$ref": "#/components/schemas/StoredProcedureConfig"
+                    },
+                    "description": {
+                        "description": "A description of the stored procedure which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
+                    },
+                    "stored_procedure": {
+                        "$ref": "#/components/schemas/BigQueryFunctionName"
+                    }
+                },
+                "required": [
+                    "stored_procedure",
+                    "configuration",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -1617,6 +1714,28 @@
                 ],
                 "type": "object"
             },
+            "CitusLogicalModelField": {
+                "description": "A field of a logical model",
+                "properties": {
+                    "description": {
+                        "description": "Optional description of this field",
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Name of the field",
+                        "type": "string"
+                    },
+                    "type": {
+                        "additionalProperties": true,
+                        "description": "Type of the field\nA type used in a Logical Model field\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
             "CitusLogicalModelMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -1628,7 +1747,14 @@
                         "description": "Return types for the logical model",
                         "items": {
                             "additionalProperties": true,
-                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/CitusLogicalModelField"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/CitusLogicalModelField"
+                                }
+                            ]
                         },
                         "type": "array"
                     },
@@ -1664,7 +1790,7 @@
                     "array_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Citus_"
+                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Citus_"
                         },
                         "type": "array"
                     },
@@ -1675,6 +1801,13 @@
                     "description": {
                         "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
+                    },
+                    "object_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Citus_"
+                        },
+                        "type": "array"
                     },
                     "returns": {
                         "description": "Return type (table) of the expression",
@@ -1766,7 +1899,7 @@
             "CitusRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/CitusRelManualConfig"
+                        "$ref": "#/components/schemas/CitusRelManualTableConfig"
                     }
                 },
                 "required": [
@@ -1774,7 +1907,33 @@
                 ],
                 "type": "object"
             },
-            "CitusRelManualConfig": {
+            "CitusRelManualNativeQueryConfig": {
+                "properties": {
+                    "column_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "insertion_order": {
+                        "enum": [
+                            "before_parent",
+                            "after_parent"
+                        ],
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "remote_native_query": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "remote_native_query",
+                    "column_mapping"
+                ],
+                "type": "object"
+            },
+            "CitusRelManualTableConfig": {
                 "properties": {
                     "column_mapping": {
                         "additionalProperties": {
@@ -1945,6 +2104,14 @@
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
                     },
+                    "stored_procedures": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CitusStoredProcedureMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "tables": {
                         "items": {
                             "$ref": "#/components/schemas/CitusTableMetadata"
@@ -1957,6 +2124,48 @@
                     "kind",
                     "tables",
                     "configuration"
+                ],
+                "type": "object"
+            },
+            "CitusStoredProcedureMetadata": {
+                "description": "A stored procedure as represented in metadata.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/CitusNullableScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "configuration": {
+                        "$ref": "#/components/schemas/StoredProcedureConfig"
+                    },
+                    "description": {
+                        "description": "A description of the stored procedure which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
+                    },
+                    "stored_procedure": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresQualified_FunctionName"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "description": "The name of the SQL stored procedure"
+                    }
+                },
+                "required": [
+                    "stored_procedure",
+                    "configuration",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -2492,6 +2701,28 @@
                 ],
                 "type": "object"
             },
+            "CockroachLogicalModelField": {
+                "description": "A field of a logical model",
+                "properties": {
+                    "description": {
+                        "description": "Optional description of this field",
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Name of the field",
+                        "type": "string"
+                    },
+                    "type": {
+                        "additionalProperties": true,
+                        "description": "Type of the field\nA type used in a Logical Model field\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
             "CockroachLogicalModelMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -2503,7 +2734,14 @@
                         "description": "Return types for the logical model",
                         "items": {
                             "additionalProperties": true,
-                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/CockroachLogicalModelField"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/CockroachLogicalModelField"
+                                }
+                            ]
                         },
                         "type": "array"
                     },
@@ -2539,7 +2777,7 @@
                     "array_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Cockroach_"
+                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Cockroach_"
                         },
                         "type": "array"
                     },
@@ -2550,6 +2788,13 @@
                     "description": {
                         "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
+                    },
+                    "object_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Cockroach_"
+                        },
+                        "type": "array"
                     },
                     "returns": {
                         "description": "Return type (table) of the expression",
@@ -2641,7 +2886,7 @@
             "CockroachRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/CockroachRelManualConfig"
+                        "$ref": "#/components/schemas/CockroachRelManualTableConfig"
                     }
                 },
                 "required": [
@@ -2649,7 +2894,33 @@
                 ],
                 "type": "object"
             },
-            "CockroachRelManualConfig": {
+            "CockroachRelManualNativeQueryConfig": {
+                "properties": {
+                    "column_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "insertion_order": {
+                        "enum": [
+                            "before_parent",
+                            "after_parent"
+                        ],
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "remote_native_query": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "remote_native_query",
+                    "column_mapping"
+                ],
+                "type": "object"
+            },
+            "CockroachRelManualTableConfig": {
                 "properties": {
                     "column_mapping": {
                         "additionalProperties": {
@@ -2820,6 +3091,14 @@
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
                     },
+                    "stored_procedures": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/CockroachStoredProcedureMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "tables": {
                         "items": {
                             "$ref": "#/components/schemas/CockroachTableMetadata"
@@ -2832,6 +3111,48 @@
                     "kind",
                     "tables",
                     "configuration"
+                ],
+                "type": "object"
+            },
+            "CockroachStoredProcedureMetadata": {
+                "description": "A stored procedure as represented in metadata.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/CockroachNullableScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "configuration": {
+                        "$ref": "#/components/schemas/StoredProcedureConfig"
+                    },
+                    "description": {
+                        "description": "A description of the stored procedure which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
+                    },
+                    "stored_procedure": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresQualified_FunctionName"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "description": "The name of the SQL stored procedure"
+                    }
+                },
+                "required": [
+                    "stored_procedure",
+                    "configuration",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -3522,6 +3843,28 @@
                 ],
                 "type": "object"
             },
+            "DataconnectorLogicalModelField": {
+                "description": "A field of a logical model",
+                "properties": {
+                    "description": {
+                        "description": "Optional description of this field",
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Name of the field",
+                        "type": "string"
+                    },
+                    "type": {
+                        "additionalProperties": true,
+                        "description": "Type of the field\nA type used in a Logical Model field\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
             "DataconnectorLogicalModelMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -3533,7 +3876,14 @@
                         "description": "Return types for the logical model",
                         "items": {
                             "additionalProperties": true,
-                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/DataconnectorLogicalModelField"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/DataconnectorLogicalModelField"
+                                }
+                            ]
                         },
                         "type": "array"
                     },
@@ -3569,7 +3919,7 @@
                     "array_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualConfig__DataConnector"
+                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__DataConnector"
                         },
                         "type": "array"
                     },
@@ -3580,6 +3930,13 @@
                     "description": {
                         "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
+                    },
+                    "object_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__DataConnector"
+                        },
+                        "type": "array"
                     },
                     "returns": {
                         "description": "Return type (table) of the expression",
@@ -3660,7 +4017,7 @@
             "DataconnectorRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/DataconnectorRelManualConfig"
+                        "$ref": "#/components/schemas/DataconnectorRelManualTableConfig"
                     }
                 },
                 "required": [
@@ -3668,7 +4025,33 @@
                 ],
                 "type": "object"
             },
-            "DataconnectorRelManualConfig": {
+            "DataconnectorRelManualNativeQueryConfig": {
+                "properties": {
+                    "column_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "insertion_order": {
+                        "enum": [
+                            "before_parent",
+                            "after_parent"
+                        ],
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "remote_native_query": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "remote_native_query",
+                    "column_mapping"
+                ],
+                "type": "object"
+            },
+            "DataconnectorRelManualTableConfig": {
                 "properties": {
                     "column_mapping": {
                         "additionalProperties": {
@@ -3836,6 +4219,14 @@
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
                     },
+                    "stored_procedures": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/DataconnectorStoredProcedureMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "tables": {
                         "items": {
                             "$ref": "#/components/schemas/DataconnectorTableMetadata"
@@ -3848,6 +4239,43 @@
                     "kind",
                     "tables",
                     "configuration"
+                ],
+                "type": "object"
+            },
+            "DataconnectorStoredProcedureMetadata": {
+                "description": "A stored procedure as represented in metadata.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/DataconnectorNullableScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "configuration": {
+                        "$ref": "#/components/schemas/StoredProcedureConfig"
+                    },
+                    "description": {
+                        "description": "A description of the stored procedure which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
+                    },
+                    "stored_procedure": {
+                        "description": "The name of the SQL stored procedure",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    }
+                },
+                "required": [
+                    "stored_procedure",
+                    "configuration",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -4152,6 +4580,9 @@
                         ],
                         "type": "string"
                     },
+                    "response": {
+                        "additionalProperties": true
+                    },
                     "session_argument": {
                         "type": "string"
                     }
@@ -4179,6 +4610,23 @@
                     "role"
                 ],
                 "type": "object"
+            },
+            "FunctionReturnType": {
+                "discriminator": {
+                    "mapping": {
+                        "inferred": "InferredFunctionResponse",
+                        "table": "TableFunctionResponse"
+                    },
+                    "propertyName": "type"
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/InferredFunctionResponse"
+                    },
+                    {
+                        "$ref": "#/components/schemas/TableFunctionResponse"
+                    }
+                ]
             },
             "GraphQLName": {
                 "type": "string"
@@ -4264,6 +4712,20 @@
                         "type": "string"
                     }
                 },
+                "type": "object"
+            },
+            "InferredFunctionResponse": {
+                "properties": {
+                    "type": {
+                        "enum": [
+                            "inferred"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "type"
+                ],
                 "type": "object"
             },
             "InputObjectFieldDefinition": {
@@ -4463,6 +4925,21 @@
                 "required": [
                     "connection_string",
                     "pool_settings"
+                ],
+                "type": "object"
+            },
+            "MSSQLFunctionName": {
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "schema": {
+                        "default": "dbo",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name"
                 ],
                 "type": "object"
             },
@@ -4921,8 +5398,16 @@
                         "$ref": "#/components/schemas/FunctionConfig"
                     },
                     "function": {
-                        "description": "Name of the SQL function",
-                        "type": "string"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MSSQLFunctionName"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "description": "Name of the SQL function"
                     },
                     "permissions": {
                         "default": [],
@@ -5022,6 +5507,28 @@
                 ],
                 "type": "object"
             },
+            "MssqlLogicalModelField": {
+                "description": "A field of a logical model",
+                "properties": {
+                    "description": {
+                        "description": "Optional description of this field",
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Name of the field",
+                        "type": "string"
+                    },
+                    "type": {
+                        "additionalProperties": true,
+                        "description": "Type of the field\nA type used in a Logical Model field\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
             "MssqlLogicalModelMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -5033,7 +5540,14 @@
                         "description": "Return types for the logical model",
                         "items": {
                             "additionalProperties": true,
-                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/MssqlLogicalModelField"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/MssqlLogicalModelField"
+                                }
+                            ]
                         },
                         "type": "array"
                     },
@@ -5069,7 +5583,7 @@
                     "array_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualConfig__MSSQL"
+                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__MSSQL"
                         },
                         "type": "array"
                     },
@@ -5080,6 +5594,13 @@
                     "description": {
                         "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
+                    },
+                    "object_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__MSSQL"
+                        },
+                        "type": "array"
                     },
                     "returns": {
                         "description": "Return type (table) of the expression",
@@ -5170,7 +5691,7 @@
             "MssqlRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/MssqlRelManualConfig"
+                        "$ref": "#/components/schemas/MssqlRelManualTableConfig"
                     }
                 },
                 "required": [
@@ -5178,7 +5699,33 @@
                 ],
                 "type": "object"
             },
-            "MssqlRelManualConfig": {
+            "MssqlRelManualNativeQueryConfig": {
+                "properties": {
+                    "column_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "insertion_order": {
+                        "enum": [
+                            "before_parent",
+                            "after_parent"
+                        ],
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "remote_native_query": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "remote_native_query",
+                    "column_mapping"
+                ],
+                "type": "object"
+            },
+            "MssqlRelManualTableConfig": {
                 "properties": {
                     "column_mapping": {
                         "additionalProperties": {
@@ -5349,6 +5896,14 @@
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
                     },
+                    "stored_procedures": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/MssqlStoredProcedureMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "tables": {
                         "items": {
                             "$ref": "#/components/schemas/MssqlTableMetadata"
@@ -5361,6 +5916,48 @@
                     "kind",
                     "tables",
                     "configuration"
+                ],
+                "type": "object"
+            },
+            "MssqlStoredProcedureMetadata": {
+                "description": "A stored procedure as represented in metadata.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/MssqlNullableScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "configuration": {
+                        "$ref": "#/components/schemas/StoredProcedureConfig"
+                    },
+                    "description": {
+                        "description": "A description of the stored procedure which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
+                    },
+                    "stored_procedure": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MSSQLFunctionName"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "description": "The name of the SQL stored procedure"
+                    }
+                },
+                "required": [
+                    "stored_procedure",
+                    "configuration",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -5595,808 +6192,6 @@
                     },
                     "permission": {
                         "$ref": "#/components/schemas/MssqlUpdPerm"
-                    },
-                    "role": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "role",
-                    "permission"
-                ],
-                "type": "object"
-            },
-            "MySQLConnPoolSettings": {
-                "properties": {
-                    "idle_timeout": {
-                        "default": 5,
-                        "maximum": 1.8446744073709551615e19,
-                        "minimum": 0,
-                        "type": "number"
-                    },
-                    "max_connections": {
-                        "default": 50,
-                        "maximum": 1.8446744073709551615e19,
-                        "minimum": 0,
-                        "type": "number"
-                    }
-                },
-                "type": "object"
-            },
-            "MySQLConnSourceConfig": {
-                "properties": {
-                    "database": {
-                        "type": "string"
-                    },
-                    "host": {
-                        "description": "Works with `127.0.0.1` but not with `localhost`: https://mariadb.com/kb/en/troubleshooting-connection-issues/#localhost-and",
-                        "type": "string"
-                    },
-                    "password": {
-                        "type": "string"
-                    },
-                    "pool_settings": {
-                        "$ref": "#/components/schemas/MySQLConnPoolSettings"
-                    },
-                    "port": {
-                        "maximum": 65535,
-                        "minimum": 0,
-                        "type": "number"
-                    },
-                    "user": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "host",
-                    "port",
-                    "user",
-                    "password",
-                    "database",
-                    "pool_settings"
-                ],
-                "type": "object"
-            },
-            "MySQLTableName": {
-                "properties": {
-                    "name": {
-                        "type": "string"
-                    },
-                    "schema": {
-                        "nullable": true,
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "name"
-                ],
-                "type": "object"
-            },
-            "MysqlArrRelUsingFKeyOnMultipleColumns": {
-                "properties": {
-                    "columns": {
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array"
-                    },
-                    "table": {
-                        "additionalProperties": true,
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/MySQLTableName"
-                            },
-                            {
-                                "type": "string"
-                            }
-                        ]
-                    }
-                },
-                "required": [
-                    "table",
-                    "columns"
-                ],
-                "type": "object"
-            },
-            "MysqlArrRelUsingFKeyOnSingleColumn": {
-                "properties": {
-                    "column": {
-                        "type": "string"
-                    },
-                    "table": {
-                        "additionalProperties": true,
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/MySQLTableName"
-                            },
-                            {
-                                "type": "string"
-                            }
-                        ]
-                    }
-                },
-                "required": [
-                    "table",
-                    "column"
-                ],
-                "type": "object"
-            },
-            "MysqlBoolExp": {
-                "additionalProperties": true
-            },
-            "MysqlComputedFieldMetadata": {
-                "properties": {
-                    "comment": {
-                        "default": null,
-                        "nullable": true,
-                        "type": "string"
-                    },
-                    "definition": {
-                        "additionalProperties": true
-                    },
-                    "name": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "name",
-                    "definition"
-                ],
-                "type": "object"
-            },
-            "MysqlDelPerm": {
-                "properties": {
-                    "backend_only": {
-                        "default": false,
-                        "type": "boolean"
-                    },
-                    "filter": {
-                        "$ref": "#/components/schemas/MysqlBoolExp"
-                    }
-                },
-                "required": [
-                    "filter"
-                ],
-                "type": "object"
-            },
-            "MysqlDeletePermDef": {
-                "properties": {
-                    "comment": {
-                        "nullable": true,
-                        "type": "string"
-                    },
-                    "permission": {
-                        "$ref": "#/components/schemas/MysqlDelPerm"
-                    },
-                    "role": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "role",
-                    "permission"
-                ],
-                "type": "object"
-            },
-            "MysqlFunctionMetadata": {
-                "description": "A custom SQL function to add to the GraphQL schema with configuration.\n\nhttps://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax\n",
-                "properties": {
-                    "comment": {
-                        "type": "string"
-                    },
-                    "configuration": {
-                        "$ref": "#/components/schemas/FunctionConfig"
-                    },
-                    "function": {
-                        "description": "Name of the SQL function",
-                        "type": "string"
-                    },
-                    "permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/FunctionPermissionInfo"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "function"
-                ],
-                "type": "object"
-            },
-            "MysqlInsPerm": {
-                "properties": {
-                    "backend_only": {
-                        "default": false,
-                        "type": "boolean"
-                    },
-                    "check": {
-                        "$ref": "#/components/schemas/MysqlBoolExp"
-                    },
-                    "columns": {
-                        "oneOf": [
-                            {
-                                "enum": [
-                                    "*"
-                                ],
-                                "type": "string"
-                            },
-                            {
-                                "items": {
-                                    "type": "string"
-                                },
-                                "type": "array"
-                            }
-                        ]
-                    },
-                    "set": {
-                        "additionalProperties": {
-                            "additionalProperties": true
-                        },
-                        "type": "object"
-                    }
-                },
-                "required": [
-                    "check"
-                ],
-                "type": "object"
-            },
-            "MysqlInsertPermDef": {
-                "properties": {
-                    "comment": {
-                        "nullable": true,
-                        "type": "string"
-                    },
-                    "permission": {
-                        "$ref": "#/components/schemas/MysqlInsPerm"
-                    },
-                    "role": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "role",
-                    "permission"
-                ],
-                "type": "object"
-            },
-            "MysqlLogicalModelMetadata": {
-                "description": "A return type.",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema.",
-                        "type": "string"
-                    },
-                    "fields": {
-                        "description": "Return types for the logical model",
-                        "items": {
-                            "additionalProperties": true,
-                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
-                        },
-                        "type": "array"
-                    },
-                    "name": {
-                        "description": "A name for a logical model",
-                        "type": "string"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlSelectPermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "fields"
-                ],
-                "type": "object"
-            },
-            "MysqlNativeQueryMetadata": {
-                "description": "A native query as represented in metadata.",
-                "properties": {
-                    "arguments": {
-                        "additionalProperties": {
-                            "$ref": "#/components/schemas/MysqlNullableScalarType"
-                        },
-                        "default": {},
-                        "description": "Free variables in the expression and their types",
-                        "type": "object"
-                    },
-                    "array_relationships": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualConfig__MySQL"
-                        },
-                        "type": "array"
-                    },
-                    "code": {
-                        "description": "Native code expression (SQL) to run\nAn interpolated query expressed in native code (SQL)",
-                        "type": "string"
-                    },
-                    "description": {
-                        "description": "A description of the native query which appears in the graphql schema",
-                        "type": "string"
-                    },
-                    "returns": {
-                        "description": "Return type (table) of the expression",
-                        "type": "string"
-                    },
-                    "root_field_name": {
-                        "description": "Root field name for the native query",
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "root_field_name",
-                    "code",
-                    "returns"
-                ],
-                "type": "object"
-            },
-            "MysqlNullableScalarType": {
-                "description": "A scalar type that can be nullable with an optional description",
-                "properties": {
-                    "description": {
-                        "description": "Optional description text which appears in the GraphQL Schema",
-                        "type": "string"
-                    },
-                    "nullable": {
-                        "default": false,
-                        "description": "Whether the type is nullable",
-                        "type": "boolean"
-                    },
-                    "type": {
-                        "description": "The base scalar type\nA MySQL scalar type.",
-                        "enum": [
-                            "DATE",
-                            "DECIMAL",
-                            "DECIMAL",
-                            "TINYINT",
-                            "SMALLINT",
-                            "INT",
-                            "FLOAT",
-                            "DOUBLE",
-                            "NULL",
-                            "TIMESTAMP",
-                            "BIGINT",
-                            "MEDIUMINT",
-                            "DATE",
-                            "TIME",
-                            "DATETIME",
-                            "YEAR",
-                            "VARCHAR",
-                            "BIT",
-                            "ENUM",
-                            "SET",
-                            "TINYBLOB",
-                            "MEDIUMBLOB",
-                            "LONGBLOB",
-                            "BLOB",
-                            "VARCHAR",
-                            "TEXT",
-                            "GEOMETRY",
-                            "JSON"
-                        ],
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "type"
-                ],
-                "type": "object"
-            },
-            "MysqlObjRelRemoteTableMultipleColumns": {
-                "properties": {
-                    "columns": {
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array"
-                    },
-                    "table": {
-                        "additionalProperties": true,
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/MySQLTableName"
-                            },
-                            {
-                                "type": "string"
-                            }
-                        ]
-                    }
-                },
-                "required": [
-                    "table",
-                    "columns"
-                ],
-                "type": "object"
-            },
-            "MysqlObjRelRemoteTableSingleColumn": {
-                "properties": {
-                    "column": {
-                        "type": "string"
-                    },
-                    "table": {
-                        "additionalProperties": true,
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/MySQLTableName"
-                            },
-                            {
-                                "type": "string"
-                            }
-                        ]
-                    }
-                },
-                "required": [
-                    "table",
-                    "column"
-                ],
-                "type": "object"
-            },
-            "MysqlRUManual": {
-                "properties": {
-                    "manual_configuration": {
-                        "$ref": "#/components/schemas/MysqlRelManualConfig"
-                    }
-                },
-                "required": [
-                    "manual_configuration"
-                ],
-                "type": "object"
-            },
-            "MysqlRelManualConfig": {
-                "properties": {
-                    "column_mapping": {
-                        "additionalProperties": {
-                            "type": "string"
-                        },
-                        "type": "object"
-                    },
-                    "insertion_order": {
-                        "enum": [
-                            "before_parent",
-                            "after_parent"
-                        ],
-                        "nullable": true,
-                        "type": "string"
-                    },
-                    "remote_table": {
-                        "additionalProperties": true,
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/MySQLTableName"
-                            },
-                            {
-                                "type": "string"
-                            }
-                        ]
-                    }
-                },
-                "required": [
-                    "remote_table",
-                    "column_mapping"
-                ],
-                "type": "object"
-            },
-            "MysqlSelPerm": {
-                "properties": {
-                    "allow_aggregations": {
-                        "default": false,
-                        "type": "boolean"
-                    },
-                    "columns": {
-                        "oneOf": [
-                            {
-                                "enum": [
-                                    "*"
-                                ],
-                                "type": "string"
-                            },
-                            {
-                                "items": {
-                                    "type": "string"
-                                },
-                                "type": "array"
-                            }
-                        ]
-                    },
-                    "computed_fields": {
-                        "default": [],
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array"
-                    },
-                    "filter": {
-                        "$ref": "#/components/schemas/MysqlBoolExp"
-                    },
-                    "limit": {
-                        "maximum": 9223372036854775807,
-                        "minimum": -9223372036854775808,
-                        "type": "number"
-                    },
-                    "query_root_fields": {
-                        "default": null,
-                        "items": {
-                            "enum": [
-                                "select",
-                                "select_by_pk",
-                                "select_aggregate"
-                            ],
-                            "type": "string"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
-                    "subscription_root_fields": {
-                        "default": null,
-                        "items": {
-                            "enum": [
-                                "select",
-                                "select_by_pk",
-                                "select_aggregate",
-                                "select_stream"
-                            ],
-                            "type": "string"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "columns",
-                    "filter"
-                ],
-                "type": "object"
-            },
-            "MysqlSelectPermDef": {
-                "properties": {
-                    "comment": {
-                        "nullable": true,
-                        "type": "string"
-                    },
-                    "permission": {
-                        "$ref": "#/components/schemas/MysqlSelPerm"
-                    },
-                    "role": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "role",
-                    "permission"
-                ],
-                "type": "object"
-            },
-            "MysqlSourceMetadata": {
-                "properties": {
-                    "configuration": {
-                        "$ref": "#/components/schemas/MySQLConnSourceConfig"
-                    },
-                    "customization": {
-                        "$ref": "#/components/schemas/SourceCustomization"
-                    },
-                    "functions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlFunctionMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
-                    "kind": {
-                        "enum": [
-                            "mysql"
-                        ],
-                        "type": "string"
-                    },
-                    "logical_models": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlLogicalModelMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "native_queries": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlNativeQueryMetadata"
-                        },
-                        "nullable": true,
-                        "type": "array"
-                    },
-                    "query_tags": {
-                        "$ref": "#/components/schemas/QueryTagsConfig"
-                    },
-                    "tables": {
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlTableMetadata"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "name",
-                    "kind",
-                    "tables",
-                    "configuration"
-                ],
-                "type": "object"
-            },
-            "MysqlTableConfig": {
-                "properties": {
-                    "column_config": {
-                        "additionalProperties": {
-                            "$ref": "#/components/schemas/ColumnConfig"
-                        },
-                        "default": {},
-                        "type": "object"
-                    },
-                    "comment": {
-                        "default": null,
-                        "nullable": true,
-                        "type": "string"
-                    },
-                    "custom_column_names": {
-                        "additionalProperties": {
-                            "$ref": "#/components/schemas/GraphQLName"
-                        },
-                        "default": {},
-                        "type": "object"
-                    },
-                    "custom_name": {
-                        "$ref": "#/components/schemas/GraphQLName"
-                    },
-                    "custom_root_fields": {
-                        "$ref": "#/components/schemas/TableCustomRootFields"
-                    }
-                },
-                "type": "object"
-            },
-            "MysqlTableMetadata": {
-                "description": "Representation of a table in metadata, 'tables.yaml' and 'metadata.json'",
-                "properties": {
-                    "apollo_federation_config": {
-                        "$ref": "#/components/schemas/ApolloFederationConfig"
-                    },
-                    "array_relationships": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/RelDef_RelUsing__MySQL__ArrRelUsingFKeyOn__MySQL_"
-                        },
-                        "type": "array"
-                    },
-                    "computed_fields": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlComputedFieldMetadata"
-                        },
-                        "type": "array"
-                    },
-                    "configuration": {
-                        "$ref": "#/components/schemas/MysqlTableConfig"
-                    },
-                    "delete_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlDeletePermDef"
-                        },
-                        "type": "array"
-                    },
-                    "insert_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlInsertPermDef"
-                        },
-                        "type": "array"
-                    },
-                    "is_enum": {
-                        "default": false,
-                        "type": "boolean"
-                    },
-                    "object_relationships": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/RelDef_RelUsing__MySQL__ObjRelUsingChoice__MySQL_"
-                        },
-                        "type": "array"
-                    },
-                    "remote_relationships": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/RemoteRelationship_RemoteRelationshipDefinition"
-                        },
-                        "type": "array"
-                    },
-                    "select_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlSelectPermDef"
-                        },
-                        "type": "array"
-                    },
-                    "table": {
-                        "additionalProperties": true,
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/MySQLTableName"
-                            },
-                            {
-                                "type": "string"
-                            }
-                        ]
-                    },
-                    "update_permissions": {
-                        "default": [],
-                        "items": {
-                            "$ref": "#/components/schemas/MysqlUpdatePermDef"
-                        },
-                        "type": "array"
-                    }
-                },
-                "required": [
-                    "table"
-                ],
-                "type": "object"
-            },
-            "MysqlUpdPerm": {
-                "properties": {
-                    "backend_only": {
-                        "default": false,
-                        "type": "boolean"
-                    },
-                    "check": {
-                        "$ref": "#/components/schemas/MysqlBoolExp"
-                    },
-                    "columns": {
-                        "description": "Allowed columns",
-                        "oneOf": [
-                            {
-                                "enum": [
-                                    "*"
-                                ],
-                                "type": "string"
-                            },
-                            {
-                                "items": {
-                                    "type": "string"
-                                },
-                                "type": "array"
-                            }
-                        ]
-                    },
-                    "filter": {
-                        "$ref": "#/components/schemas/MysqlBoolExp"
-                    },
-                    "set": {
-                        "additionalProperties": {
-                            "additionalProperties": true
-                        },
-                        "description": "Preset columns",
-                        "type": "object"
-                    }
-                },
-                "required": [
-                    "columns",
-                    "filter"
-                ],
-                "type": "object"
-            },
-            "MysqlUpdatePermDef": {
-                "properties": {
-                    "comment": {
-                        "nullable": true,
-                        "type": "string"
-                    },
-                    "permission": {
-                        "$ref": "#/components/schemas/MysqlUpdPerm"
                     },
                     "role": {
                         "type": "string"
@@ -6973,6 +6768,28 @@
                 ],
                 "type": "object"
             },
+            "PostgresLogicalModelField": {
+                "description": "A field of a logical model",
+                "properties": {
+                    "description": {
+                        "description": "Optional description of this field",
+                        "type": "string"
+                    },
+                    "name": {
+                        "description": "Name of the field",
+                        "type": "string"
+                    },
+                    "type": {
+                        "additionalProperties": true,
+                        "description": "Type of the field\nA type used in a Logical Model field\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ],
+                "type": "object"
+            },
             "PostgresLogicalModelMetadata": {
                 "description": "A return type.",
                 "properties": {
@@ -6984,7 +6801,14 @@
                         "description": "Return types for the logical model",
                         "items": {
                             "additionalProperties": true,
-                            "description": "A scalar type or reference to another logical model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/PostgresLogicalModelField"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/PostgresLogicalModelField"
+                                }
+                            ]
                         },
                         "type": "array"
                     },
@@ -7020,7 +6844,7 @@
                     "array_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Vanilla_"
+                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Vanilla_"
                         },
                         "type": "array"
                     },
@@ -7031,6 +6855,13 @@
                     "description": {
                         "description": "A description of the native query which appears in the graphql schema",
                         "type": "string"
+                    },
+                    "object_relationships": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Vanilla_"
+                        },
+                        "type": "array"
                     },
                     "returns": {
                         "description": "Return type (table) of the expression",
@@ -7197,7 +7028,7 @@
             "PostgresRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/PostgresRelManualConfig"
+                        "$ref": "#/components/schemas/PostgresRelManualTableConfig"
                     }
                 },
                 "required": [
@@ -7205,7 +7036,33 @@
                 ],
                 "type": "object"
             },
-            "PostgresRelManualConfig": {
+            "PostgresRelManualNativeQueryConfig": {
+                "properties": {
+                    "column_mapping": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object"
+                    },
+                    "insertion_order": {
+                        "enum": [
+                            "before_parent",
+                            "after_parent"
+                        ],
+                        "nullable": true,
+                        "type": "string"
+                    },
+                    "remote_native_query": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "remote_native_query",
+                    "column_mapping"
+                ],
+                "type": "object"
+            },
+            "PostgresRelManualTableConfig": {
                 "properties": {
                     "column_mapping": {
                         "additionalProperties": {
@@ -7415,6 +7272,14 @@
                     "query_tags": {
                         "$ref": "#/components/schemas/QueryTagsConfig"
                     },
+                    "stored_procedures": {
+                        "default": [],
+                        "items": {
+                            "$ref": "#/components/schemas/PostgresStoredProcedureMetadata"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                    },
                     "tables": {
                         "items": {
                             "$ref": "#/components/schemas/PostgresTableMetadata"
@@ -7427,6 +7292,48 @@
                     "kind",
                     "tables",
                     "configuration"
+                ],
+                "type": "object"
+            },
+            "PostgresStoredProcedureMetadata": {
+                "description": "A stored procedure as represented in metadata.",
+                "properties": {
+                    "arguments": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/PostgresNullableScalarType"
+                        },
+                        "default": {},
+                        "description": "Free variables in the expression and their types",
+                        "type": "object"
+                    },
+                    "configuration": {
+                        "$ref": "#/components/schemas/StoredProcedureConfig"
+                    },
+                    "description": {
+                        "description": "A description of the stored procedure which appears in the graphql schema",
+                        "type": "string"
+                    },
+                    "returns": {
+                        "description": "Return type (table) of the expression",
+                        "type": "string"
+                    },
+                    "stored_procedure": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresQualified_FunctionName"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "description": "The name of the SQL stored procedure"
+                    }
+                },
+                "required": [
+                    "stored_procedure",
+                    "configuration",
+                    "returns"
                 ],
                 "type": "object"
             },
@@ -7765,24 +7672,6 @@
                 ],
                 "type": "object"
             },
-            "RUFKeyOn_ArrRelUsingFKeyOn__MySQL": {
-                "properties": {
-                    "foreign_key_constraint_on": {
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/MysqlArrRelUsingFKeyOnSingleColumn"
-                            },
-                            {
-                                "$ref": "#/components/schemas/MysqlArrRelUsingFKeyOnMultipleColumns"
-                            }
-                        ]
-                    }
-                },
-                "required": [
-                    "foreign_key_constraint_on"
-                ],
-                "type": "object"
-            },
             "RUFKeyOn_ArrRelUsingFKeyOn___Postgres__Citus_": {
                 "properties": {
                     "foreign_key_constraint_on": {
@@ -7918,33 +7807,6 @@
                 ],
                 "type": "object"
             },
-            "RUFKeyOn_ObjRelUsingChoice__MySQL": {
-                "properties": {
-                    "foreign_key_constraint_on": {
-                        "oneOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "items": {
-                                    "type": "string"
-                                },
-                                "type": "array"
-                            },
-                            {
-                                "$ref": "#/components/schemas/MysqlObjRelRemoteTableSingleColumn"
-                            },
-                            {
-                                "$ref": "#/components/schemas/MysqlObjRelRemoteTableMultipleColumns"
-                            }
-                        ]
-                    }
-                },
-                "required": [
-                    "foreign_key_constraint_on"
-                ],
-                "type": "object"
-            },
             "RUFKeyOn_ObjRelUsingChoice___Postgres__Citus_": {
                 "properties": {
                     "foreign_key_constraint_on": {
@@ -8057,7 +7919,7 @@
                 ],
                 "type": "object"
             },
-            "RelDef_RelManualConfig__BigQuery": {
+            "RelDef_RelManualNativeQueryConfig__BigQuery": {
                 "properties": {
                     "comment": {
                         "type": "string"
@@ -8066,7 +7928,7 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/BigqueryRelManualConfig"
+                        "$ref": "#/components/schemas/BigqueryRelManualNativeQueryConfig"
                     }
                 },
                 "required": [
@@ -8075,7 +7937,7 @@
                 ],
                 "type": "object"
             },
-            "RelDef_RelManualConfig__DataConnector": {
+            "RelDef_RelManualNativeQueryConfig__DataConnector": {
                 "properties": {
                     "comment": {
                         "type": "string"
@@ -8084,7 +7946,7 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/DataconnectorRelManualConfig"
+                        "$ref": "#/components/schemas/DataconnectorRelManualNativeQueryConfig"
                     }
                 },
                 "required": [
@@ -8093,7 +7955,7 @@
                 ],
                 "type": "object"
             },
-            "RelDef_RelManualConfig__MSSQL": {
+            "RelDef_RelManualNativeQueryConfig__MSSQL": {
                 "properties": {
                     "comment": {
                         "type": "string"
@@ -8102,7 +7964,7 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/MssqlRelManualConfig"
+                        "$ref": "#/components/schemas/MssqlRelManualNativeQueryConfig"
                     }
                 },
                 "required": [
@@ -8111,7 +7973,7 @@
                 ],
                 "type": "object"
             },
-            "RelDef_RelManualConfig__MySQL": {
+            "RelDef_RelManualNativeQueryConfig___Postgres__Citus_": {
                 "properties": {
                     "comment": {
                         "type": "string"
@@ -8120,7 +7982,7 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/MysqlRelManualConfig"
+                        "$ref": "#/components/schemas/CitusRelManualNativeQueryConfig"
                     }
                 },
                 "required": [
@@ -8129,7 +7991,7 @@
                 ],
                 "type": "object"
             },
-            "RelDef_RelManualConfig___Postgres__Citus_": {
+            "RelDef_RelManualNativeQueryConfig___Postgres__Cockroach_": {
                 "properties": {
                     "comment": {
                         "type": "string"
@@ -8138,7 +8000,7 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/CitusRelManualConfig"
+                        "$ref": "#/components/schemas/CockroachRelManualNativeQueryConfig"
                     }
                 },
                 "required": [
@@ -8147,7 +8009,7 @@
                 ],
                 "type": "object"
             },
-            "RelDef_RelManualConfig___Postgres__Cockroach_": {
+            "RelDef_RelManualNativeQueryConfig___Postgres__Vanilla_": {
                 "properties": {
                     "comment": {
                         "type": "string"
@@ -8156,25 +8018,7 @@
                         "type": "string"
                     },
                     "using": {
-                        "$ref": "#/components/schemas/CockroachRelManualConfig"
-                    }
-                },
-                "required": [
-                    "name",
-                    "using"
-                ],
-                "type": "object"
-            },
-            "RelDef_RelManualConfig___Postgres__Vanilla_": {
-                "properties": {
-                    "comment": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "using": {
-                        "$ref": "#/components/schemas/PostgresRelManualConfig"
+                        "$ref": "#/components/schemas/PostgresRelManualNativeQueryConfig"
                     }
                 },
                 "required": [
@@ -8323,56 +8167,6 @@
                             },
                             {
                                 "$ref": "#/components/schemas/MssqlRUManual"
-                            }
-                        ]
-                    }
-                },
-                "required": [
-                    "name",
-                    "using"
-                ],
-                "type": "object"
-            },
-            "RelDef_RelUsing__MySQL__ArrRelUsingFKeyOn__MySQL_": {
-                "properties": {
-                    "comment": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "using": {
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/RUFKeyOn_ArrRelUsingFKeyOn__MySQL"
-                            },
-                            {
-                                "$ref": "#/components/schemas/MysqlRUManual"
-                            }
-                        ]
-                    }
-                },
-                "required": [
-                    "name",
-                    "using"
-                ],
-                "type": "object"
-            },
-            "RelDef_RelUsing__MySQL__ObjRelUsingChoice__MySQL_": {
-                "properties": {
-                    "comment": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "using": {
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/RUFKeyOn_ObjRelUsingChoice__MySQL"
-                            },
-                            {
-                                "$ref": "#/components/schemas/MysqlRUManual"
                             }
                         ]
                     }
@@ -9034,9 +8828,6 @@
                         "$ref": "#/components/schemas/BigquerySourceMetadata"
                     },
                     {
-                        "$ref": "#/components/schemas/MysqlSourceMetadata"
-                    },
-                    {
                         "$ref": "#/components/schemas/DataconnectorSourceMetadata"
                     }
                 ]
@@ -9050,6 +8841,23 @@
                         "$ref": "#/components/schemas/GraphQLName"
                     }
                 },
+                "type": "object"
+            },
+            "StoredProcedureConfig": {
+                "properties": {
+                    "custom_name": {
+                        "$ref": "#/components/schemas/GraphQLName"
+                    },
+                    "exposed_as": {
+                        "enum": [
+                            "query"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "exposed_as"
+                ],
                 "type": "object"
             },
             "TableCustomRootFields": {
@@ -9187,6 +8995,27 @@
                         ]
                     }
                 },
+                "type": "object"
+            },
+            "TableFunctionResponse": {
+                "properties": {
+                    "table": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "type": {
+                        "enum": [
+                            "table"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "table",
+                    "type"
+                ],
                 "type": "object"
             },
             "TlsAllow": {

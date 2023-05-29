@@ -6,13 +6,15 @@ export type LinkButtonProps = {
   buttonText: string;
   icon?: ReactElement;
   iconPosition?: 'start' | 'end';
+  id?: string;
 };
 
 export function LinkButton(props: LinkButtonProps) {
-  const { url, buttonText, icon, iconPosition } = props;
+  const { id, url, buttonText, icon, iconPosition } = props;
   return (
     <a href={url} target="_blank" rel="noopener noreferrer">
       <Button
+        id={id}
         mode="default"
         className="mr-sm bg-none !bg-transparent border-red-500"
         icon={icon}

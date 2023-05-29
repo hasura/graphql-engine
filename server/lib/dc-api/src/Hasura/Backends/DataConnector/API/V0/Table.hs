@@ -5,6 +5,7 @@
 module Hasura.Backends.DataConnector.API.V0.Table
   ( TableName (..),
     TableInfo (..),
+    singletonTableName,
     tableNameToText,
     tiName,
     tiType,
@@ -52,6 +53,9 @@ newtype TableName = TableName {unTableName :: NonEmpty.NonEmpty Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec TableName
+
+singletonTableName :: Text -> TableName
+singletonTableName name = TableName (NonEmpty.singleton name)
 
 tableNameToText :: TableName -> Text
 tableNameToText (TableName tns) = intercalate "." (NonEmpty.toList tns)

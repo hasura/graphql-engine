@@ -25,14 +25,15 @@ import Hasura.Server.Migrate.Version
 getCatalogVersion :: PG.TxE QErr MetadataCatalogVersion
 getCatalogVersion = do
   versionText <-
-    runIdentity . PG.getRow
+    runIdentity
+      . PG.getRow
       <$> PG.withQE
         defaultTxErrorHandler
         [PG.sql| SELECT version FROM hdb_catalog.hdb_version |]
         ()
         False
-  onLeft (readEither $ T.unpack versionText) $
-    \err -> throw500 $ "Unexpected: couldn't convert read catalog version " <> versionText <> ", err:" <> tshow err
+  onLeft (readEither $ T.unpack versionText)
+    $ \err -> throw500 $ "Unexpected: couldn't convert read catalog version " <> versionText <> ", err:" <> tshow err
 
 from3To4 :: forall m. (Backend ('Postgres 'Vanilla), MonadTx m) => m ()
 from3To4 = liftTx do
@@ -90,10 +91,10 @@ from3To4 = liftTx do
         (PG.ViaJSON $ J.toJSON etc, name)
         True
 
-setCatalogVersion :: MonadTx m => Text -> UTCTime -> m ()
+setCatalogVersion :: (MonadTx m) => Text -> UTCTime -> m ()
 setCatalogVersion ver time =
-  liftTx $
-    PG.unitQE
+  liftTx
+    $ PG.unitQE
       defaultTxErrorHandler
       [PG.sql|
     INSERT INTO hdb_catalog.hdb_version (version, upgraded_on) VALUES ($1, $2)

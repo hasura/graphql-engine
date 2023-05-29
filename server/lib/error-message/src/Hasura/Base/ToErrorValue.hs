@@ -37,17 +37,17 @@ instance ToErrorValue () where
 -- > [J.Number 1, J.Bool True, J.String "three"]
 --   Will be printed as:
 -- > "[1, true, \"three\"]"
-instance ToErrorValue a => ToErrorValue [a] where
+instance (ToErrorValue a) => ToErrorValue [a] where
   toErrorValue values = "[" <> commaSeparatedValues <> "]"
     where
       commaSeparatedValues = foldr1 (<>) $ List.intersperse (toErrorMessage ", ") (map toErrorValue values)
 
 -- | Will be printed as a list
-instance ToErrorValue a => ToErrorValue (NonEmpty a) where
+instance (ToErrorValue a) => ToErrorValue (NonEmpty a) where
   toErrorValue = toErrorValue . NonEmpty.toList
 
 -- | Will be printed as a list
-instance ToErrorValue a => ToErrorValue (HashSet a) where
+instance (ToErrorValue a) => ToErrorValue (HashSet a) where
   toErrorValue = toErrorValue . HashSet.toList
 
 -- | Will be printed with single quotes surrounding it

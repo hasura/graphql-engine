@@ -30,7 +30,7 @@ data SamplingState = SamplingDefer | SamplingDeny | SamplingAccept
 
 -- | Convert a sampling state to a value for the X-B3-Sampled header. A return
 -- value of Nothing indicates that the header should not be set.
-samplingStateToHeader :: IsString s => SamplingState -> Maybe s
+samplingStateToHeader :: (IsString s) => SamplingState -> Maybe s
 samplingStateToHeader = \case
   SamplingDefer -> Nothing
   SamplingDeny -> Just "0"

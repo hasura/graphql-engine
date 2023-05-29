@@ -37,19 +37,21 @@ data LockedEventsCtx = LockedEventsCtx
 --   event engine context
 saveLockedEvents :: (MonadIO m) => [EventId] -> TVar (Set.Set EventId) -> m ()
 saveLockedEvents eventIds lockedEvents =
-  liftIO $
-    atomically $ do
+  liftIO
+    $ atomically
+    $ do
       lockedEventsVals <- readTVar lockedEvents
-      writeTVar lockedEvents $!
-        Set.union lockedEventsVals $
-          Set.fromList eventIds
+      writeTVar lockedEvents
+        $! Set.union lockedEventsVals
+        $ Set.fromList eventIds
 
 -- | Remove an event from the 'LockedEventsCtx' after it has been processed
 removeEventFromLockedEvents ::
-  MonadIO m => EventId -> TVar (Set.Set EventId) -> m ()
+  (MonadIO m) => EventId -> TVar (Set.Set EventId) -> m ()
 removeEventFromLockedEvents eventId lockedEvents =
-  liftIO $
-    atomically $ do
+  liftIO
+    $ atomically
+    $ do
       lockedEventsVals <- readTVar lockedEvents
       writeTVar lockedEvents $! Set.delete eventId lockedEventsVals
 

@@ -48,7 +48,8 @@ tests = do
       it "does not include defaults on stand alone export" \testEnvironment -> do
         response <- postMetadata testEnvironment exportMetadata
         let response' = Object $ response CL.^. AL.key "metadata" . AL._Object & CL.sans "sources"
-            expected = [yaml| version: 3 |] -- Doesn't include defaults
+            expected = [yaml| version: 3 |]
+        -- Doesn't include defaults
         response' `shouldBe` expected
 
     describe "with metadata modifications" do
@@ -58,7 +59,8 @@ tests = do
 
         response <- postMetadata testEnvironment exportMetadata
         let response' = Object $ response CL.^. AL.key "metadata" . AL._Object & CL.sans "sources"
-            expected = [yaml| version: 3 |] -- Shouldn't include defaults
+            expected = [yaml| version: 3 |]
+        -- Shouldn't include defaults
         response' `shouldBe` expected
 
 exportMetadata :: Value

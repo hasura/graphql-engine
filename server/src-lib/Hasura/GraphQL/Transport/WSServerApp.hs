@@ -40,6 +40,7 @@ import Hasura.Server.Prometheus
     decWebsocketConnections,
     incWebsocketConnections,
   )
+import Hasura.Server.Types (MonadGetPolicies (..))
 import Hasura.Services.Network
 import Hasura.Tracing qualified as Tracing
 import Network.WebSockets qualified as WS
@@ -59,7 +60,8 @@ createWSServerApp ::
     MonadQueryTags m,
     HasResourceLimits m,
     ProvidesNetwork m,
-    Tracing.MonadTrace m
+    Tracing.MonadTrace m,
+    MonadGetPolicies m
   ) =>
   HashSet (L.EngineLogType L.Hasura) ->
   WSServerEnv impl ->
@@ -92,13 +94,14 @@ createWSServerApp enabledLogTypes serverEnv connInitTimeout licenseKeyCache = \ 
       flip runReaderT serverEnv $ onConn rid rh ip (wsActions sp)
 
     onMessageHandler conn bs sp =
-      mask_ $
-        onMessage enabledLogTypes getAuthMode serverEnv conn bs (wsActions sp) licenseKeyCache
+      mask_
+        $ onMessage enabledLogTypes getAuthMode serverEnv conn bs (wsActions sp) licenseKeyCache
 
     onCloseHandler conn = mask_ do
+      granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
       liftIO $ EKG.Gauge.dec $ smWebsocketConnections serverMetrics
       liftIO $ decWebsocketConnections $ pmConnections prometheusMetrics
-      onClose logger serverMetrics prometheusMetrics (_wseSubscriptionState serverEnv) conn
+      onClose logger serverMetrics prometheusMetrics (_wseSubscriptionState serverEnv) conn granularPrometheusMetricsState
 
 stopWSServerApp :: WSServerEnv impl -> IO ()
 stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)
@@ -120,8 +123,8 @@ createWSServerEnv appStateRef = do
 
   wsServer <- liftIO $ STM.atomically $ WS.createWSServer acAuthMode acEnableAllowlist allowlist corsPolicy acSQLGenCtx acExperimentalFeatures acDefaultNamingConvention logger
 
-  pure $
-    WSServerEnv
+  pure
+    $ WSServerEnv
       (_lsLogger appEnvLoggers)
       appEnvSubscriptionState
       appStateRef
@@ -159,15 +162,15 @@ mkWSActions logger subProtocol =
         GraphQLWS -> sendCloseWithMsg logger wsConn (WS.mkWSServerErrorCode mErrMsg err) (Just $ SMConnErr err) Nothing
 
     mkConnectionCloseAction wsConn opId errMsg =
-      when (subProtocol == GraphQLWS) $
-        sendCloseWithMsg logger wsConn (GenericError4400 errMsg) (Just . SMErr $ ErrorMsg opId $ toJSON (pack errMsg)) (Just 1000)
+      when (subProtocol == GraphQLWS)
+        $ sendCloseWithMsg logger wsConn (GenericError4400 errMsg) (Just . SMErr $ ErrorMsg opId $ toJSON (pack errMsg)) (Just 1000)
 
     getServerMsgType = case subProtocol of
       Apollo -> SMData
       GraphQLWS -> SMNext
 
-    keepAliveAction wsConn = sendMsg wsConn $
-      case subProtocol of
+    keepAliveAction wsConn = sendMsg wsConn
+      $ case subProtocol of
         Apollo -> SMConnKeepAlive
         GraphQLWS -> SMPing . Just $ keepAliveMessage
 

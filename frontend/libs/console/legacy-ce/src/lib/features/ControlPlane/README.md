@@ -1,4 +1,4 @@
-To generate GraphQL types, Run `npm run generate-control-plane-gql-types` from the `/frontend` directory
+To generate GraphQL types, Run `yarn generate-control-plane-gql-types` from the `/frontend` directory
 
 Note: The command uses the config file `frontend/control-plane-graphql-codegen.yml`. It uses the lux localdev endpoint and the localdev admin secret. Make sure
 those reflect the current localdev environment. Please update it accordingly if needed.

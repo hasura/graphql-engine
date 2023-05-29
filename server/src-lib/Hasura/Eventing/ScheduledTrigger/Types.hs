@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.Eventing.ScheduledTrigger.Types
   ( CronTriggerStats (CronTriggerStats, _ctsMaxScheduledTime, _ctsName),
     FetchedCronTriggerStats (..),
@@ -17,7 +15,6 @@ where
 
 import Control.FoldDebounce qualified as FDebounce
 import Data.Aeson qualified as J
-import Data.Aeson.TH qualified as J
 import Data.Time.Clock
 import Hasura.Base.Error
 import Hasura.Eventing.HTTP
@@ -40,17 +37,21 @@ data CronTriggerStats = CronTriggerStats
     _ctsUpcomingEventsCount :: !Int,
     _ctsMaxScheduledTime :: !UTCTime
   }
-  deriving (Eq)
+  deriving (Eq, Generic)
 
-$(J.deriveToJSON hasuraJSON ''CronTriggerStats)
+instance J.ToJSON CronTriggerStats where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data FetchedCronTriggerStats = FetchedCronTriggerStats
   { _fctsCronTriggers :: [CronTriggerStats],
     _fctsNumFetches :: Int
   }
-  deriving (Eq)
+  deriving (Eq, Generic)
 
-$(J.deriveToJSON hasuraJSON ''FetchedCronTriggerStats)
+instance J.ToJSON FetchedCronTriggerStats where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 instance L.ToEngineLog FetchedCronTriggerStats L.Hasura where
   toEngineLog stats =
@@ -87,9 +88,11 @@ data ScheduledEventWebhookPayload = ScheduledEventWebhookPayload
     sewpRequestTransform :: !(Maybe RequestTransform),
     sewpResponseTransform :: !(Maybe MetadataResponseTransform)
   }
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
+instance J.ToJSON ScheduledEventWebhookPayload where
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
 
 data ScheduledEventOp
   = SEOpRetry !UTCTime
@@ -108,9 +111,11 @@ data FetchedScheduledEventsStats = FetchedScheduledEventsStats
     _fsesNumOneOffScheduledEventsFetched :: OneOffScheduledEventsCount,
     _fsesNumFetches :: Int
   }
-  deriving (Eq, Show)
+  deriving (Eq, Generic, Show)
 
-$(J.deriveToJSON hasuraJSON ''FetchedScheduledEventsStats)
+instance J.ToJSON FetchedScheduledEventsStats where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 instance L.ToEngineLog FetchedScheduledEventsStats L.Hasura where
   toEngineLog stats =

@@ -51,31 +51,31 @@ data Options w = Options
   { connectionString ::
       w
         ::: String
-        <?> "Postgres connection string"
+          <?> "Postgres connection string"
           <!> "postgresql://hasura:hasura@127.0.0.1:65002/hasura",
     output ::
       w
         ::: FilePath
-        <?> "Feature matrix output file path"
+          <?> "Feature matrix output file path"
           <!> "/tmp/feature_matrix_tool_output.html",
     overrideOutputFile ::
       w
         ::: Bool
-        <?> "Override output file if exists",
+          <?> "Override output file if exists",
     createDirectory ::
       w
         ::: Bool
-        <?> "Create directory if not exists",
+          <?> "Create directory if not exists",
     -- this is just a flag, we take care of splitting the arguments ourselves.
     noAsk ::
       w
         ::: Bool
-        <?> "Do not ask to override output file or create a directory if missing",
+          <?> "Do not ask to override output file or create a directory if missing",
     -- this is just a flag, we take care of splitting the arguments ourselves.
     hspec ::
       w
         ::: Bool
-        <?> "arguments for hspec"
+          <?> "arguments for hspec"
   }
   deriving (Generic)
 

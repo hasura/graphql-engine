@@ -41,6 +41,7 @@ backendTypeConfig =
             comparisons:
               subquery:
                 supports_relations: true
+            user_defined_functions: {}
             scalar_types:
               DateTime:
                 comparison_operators:

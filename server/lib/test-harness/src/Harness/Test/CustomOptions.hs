@@ -27,7 +27,7 @@ data Options = Options
 --
 -- NOTE: This function throws an impure exception if the options are
 -- irreconcilable.
-combineOptions :: HasCallStack => Maybe Options -> Maybe Options -> Maybe Options
+combineOptions :: (HasCallStack) => Maybe Options -> Maybe Options -> Maybe Options
 combineOptions (Just lhs) (Just rhs) =
   let -- 'stringifyNumbers' can only be unified if both sides have the same value.
       stringifyNumbers =

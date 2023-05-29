@@ -17,6 +17,8 @@ module Hasura.Server.Types
     getRequestId,
     ApolloFederationStatus (..),
     isApolloFederationEnabled,
+    GranularPrometheusMetricsState (..),
+    MonadGetPolicies (..),
   )
 where
 
@@ -24,6 +26,7 @@ import Data.Aeson
 import Data.Text (intercalate, unpack)
 import Database.PG.Query qualified as PG
 import Hasura.Prelude hiding (intercalate)
+import Hasura.RQL.Types.ApiLimit
 import Hasura.Server.Init.FeatureFlag (CheckFeatureFlag (..))
 import Hasura.Server.Utils
 import Network.HTTP.Types qualified as HTTP
@@ -101,9 +104,9 @@ instance FromJSON ExperimentalFeature where
   parseJSON = withText "ExperimentalFeature" $ \case
     k | Just (_, ef) <- find ((== k) . fst) experimentalFeatures -> return $ ef
     _ ->
-      fail $
-        "ExperimentalFeature can only be one of these values: "
-          <> unpack (intercalate "," (map fst experimentalFeatures))
+      fail
+        $ "ExperimentalFeature can only be one of these values: "
+        <> unpack (intercalate "," (map fst experimentalFeatures))
     where
       experimentalFeatures :: [(Text, ExperimentalFeature)]
       experimentalFeatures =
@@ -119,8 +122,9 @@ data MaintenanceMode a = MaintenanceModeEnabled a | MaintenanceModeDisabled
 
 instance FromJSON (MaintenanceMode ()) where
   parseJSON =
-    withBool "MaintenanceMode" $
-      pure . bool MaintenanceModeDisabled (MaintenanceModeEnabled ())
+    withBool "MaintenanceMode"
+      $ pure
+      . bool MaintenanceModeDisabled (MaintenanceModeEnabled ())
 
 instance ToJSON (MaintenanceMode ()) where
   toJSON = Bool . (== MaintenanceModeEnabled ())
@@ -153,3 +157,48 @@ isApolloFederationEnabled = \case
 
 instance ToJSON ApolloFederationStatus where
   toJSON = toJSON . isApolloFederationEnabled
+
+-- | Whether or not to enable granular metrics for Prometheus.
+--
+-- `GranularMetricsOn` will enable the dynamic labels for the metrics.
+-- `GranularMetricsOff` will disable the dynamic labels for the metrics.
+--
+-- **Warning**: Enabling dynamic labels for Prometheus metrics can cause cardinality
+-- issues and can cause memory usage to increase.
+data GranularPrometheusMetricsState
+  = GranularMetricsOff
+  | GranularMetricsOn
+  deriving (Eq, Show)
+
+instance FromJSON GranularPrometheusMetricsState where
+  parseJSON = withBool "GranularPrometheusMetricsState" $ \case
+    False -> pure GranularMetricsOff
+    True -> pure GranularMetricsOn
+
+instance ToJSON GranularPrometheusMetricsState where
+  toJSON = \case
+    GranularMetricsOff -> Bool False
+    GranularMetricsOn -> Bool True
+
+class (Monad m) => MonadGetPolicies m where
+  runGetApiTimeLimit ::
+    m (Maybe MaxTime)
+
+  -- 'GranularPrometheusMetricsState' is used to decide if dynamic labels needs to be
+  -- added when emitting the prometheus metric. The state of this can be dynamically
+  -- changed via policies. Hence we need to fetch the value from the policy everytime
+  -- before emitting the metric. Thus we create an IO action which fetches the value.
+  runGetPrometheusMetricsGranularity ::
+    m (IO GranularPrometheusMetricsState)
+
+instance (MonadGetPolicies m) => MonadGetPolicies (ReaderT r m) where
+  runGetApiTimeLimit = lift runGetApiTimeLimit
+  runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
+
+instance (MonadGetPolicies m) => MonadGetPolicies (ExceptT e m) where
+  runGetApiTimeLimit = lift runGetApiTimeLimit
+  runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
+
+instance (MonadGetPolicies m) => MonadGetPolicies (StateT w m) where
+  runGetApiTimeLimit = lift runGetApiTimeLimit
+  runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity

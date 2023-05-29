@@ -75,40 +75,40 @@ descColumn = Expect.mkColumnInfo descColumnBuilder
 
 textOld :: UnpreparedValue PG
 textOld =
-  UVParameter Unknown $
-    ColumnValue
+  UVParameter Unknown
+    $ ColumnValue
       { cvType = ColumnScalar PGText,
         cvValue = PGValText "old name"
       }
 
 textNew :: UnpreparedValue PG
 textNew =
-  UVParameter Unknown $
-    ColumnValue
+  UVParameter Unknown
+    $ ColumnValue
       { cvType = ColumnScalar PGText,
         cvValue = PGValText "new name"
       }
 
 textOther :: UnpreparedValue PG
 textOther =
-  UVParameter Unknown $
-    ColumnValue
+  UVParameter Unknown
+    $ ColumnValue
       { cvType = ColumnScalar PGText,
         cvValue = PGValText "other"
       }
 
 integerOne :: UnpreparedValue PG
 integerOne =
-  UVParameter Unknown $
-    ColumnValue
+  UVParameter Unknown
+    $ ColumnValue
       { cvType = ColumnScalar PGInteger,
         cvValue = PGValInteger 1
       }
 
 integerTwo :: UnpreparedValue PG
 integerTwo =
-  UVParameter Unknown $
-    ColumnValue
+  UVParameter Unknown
+    $ ColumnValue
       { cvType = ColumnScalar PGInteger,
         cvValue = PGValInteger 2
       }

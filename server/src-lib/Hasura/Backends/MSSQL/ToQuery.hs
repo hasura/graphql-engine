@@ -243,15 +243,15 @@ fromInsert Insert {..} =
   SepByPrinter
     NewlinePrinter
     $ ["INSERT INTO " <+> fromTableName insertTable]
-      <> [ "(" <+> SepByPrinter ", " (map (fromNameText . columnNameText) insertColumns) <+> ")"
-           | not (null insertColumns)
-         ]
-      <> [ fromInsertOutput insertOutput,
-           "INTO " <+> fromTempTable insertTempTable,
-           if null insertColumns
-             then "VALUES " <+> SepByPrinter ", " (map (const "(DEFAULT)") insertValues)
-             else fromValuesList insertValues
-         ]
+    <> [ "(" <+> SepByPrinter ", " (map (fromNameText . columnNameText) insertColumns) <+> ")"
+         | not (null insertColumns)
+       ]
+    <> [ fromInsertOutput insertOutput,
+         "INTO " <+> fromTempTable insertTempTable,
+         if null insertColumns
+           then "VALUES " <+> SepByPrinter ", " (map (const "(DEFAULT)") insertValues)
+           else fromValuesList insertValues
+       ]
 
 fromSetValue :: SetValue -> Printer
 fromSetValue = \case
@@ -300,8 +300,8 @@ fromMergeUsing MergeUsing {..} =
       let alias = "merge_temptable"
           columnNameToProjection ColumnName {columnNameText} =
             -- merge_temptable.column_name AS column_name
-            FieldNameProjection $
-              Aliased
+            FieldNameProjection
+              $ Aliased
                 { aliasedThing = FieldName columnNameText alias,
                   aliasedAlias = columnNameText
                 }
@@ -342,8 +342,8 @@ fromMergeWhenMatched (MergeWhenMatched updateColumns updateCondition updatePrese
 
     updateSet :: UpdateSet
     updateSet =
-      HashMap.fromList $
-        map
+      HashMap.fromList
+        $ map
           ( \cn@ColumnName {..} ->
               ( cn,
                 UpdateSet $ ColumnExpression $ FieldName columnNameText mergeSourceAlias
@@ -455,14 +455,28 @@ fromTempTableDDL = \case
         fromColumnName name
           <+> " "
           <+> fromString (T.unpack (scalarTypeDBName DataLengthMax ty))
-  InsertTemp tempTableName interpolatedQuery ->
-    "INSERT INTO "
-      <+> fromTempTableName tempTableName
-      <+> " "
-      <+> renderInterpolatedQuery interpolatedQuery
+          <+> " null"
+  InsertTemp declares tempTableName interpolatedQuery ->
+    SepByPrinter
+      NewlinePrinter
+      ( map fromDeclare declares
+          <> [ "INSERT INTO "
+                 <+> fromTempTableName tempTableName
+                 <+> " "
+                 <+> renderInterpolatedQuery interpolatedQuery
+             ]
+      )
   DropTemp tempTableName ->
     "DROP TABLE "
       <+> fromTempTableName tempTableName
+
+fromDeclare :: Declare -> Printer
+fromDeclare (Declare dName dType dValue) =
+  SepByPrinter
+    NewlinePrinter
+    [ "DECLARE @" <+> fromRawUnescapedText dName <+> " " <+> fromRawUnescapedText (scalarTypeDBName DataLengthMax dType) <+> ";",
+      "SET @" <+> fromRawUnescapedText dName <+> " = " <+> fromExpression dValue <+> ";"
+    ]
 
 -- | Converts `SelectIntoTempTable`.
 --
@@ -484,14 +498,14 @@ fromSelectIntoTempTable SelectIntoTempTable {sittTempTableName, sittColumns, sit
         "FROM " <+> fromTableName sittFromTableName,
         "WHERE " <+> falsePrinter
       ]
-      <> case sittConstraints of
-        RemoveConstraints ->
-          [ "UNION ALL SELECT " <+> columns,
-            "FROM " <+> fromTableName sittFromTableName,
-            "WHERE " <+> falsePrinter
-          ]
-        KeepConstraints ->
-          []
+    <> case sittConstraints of
+      RemoveConstraints ->
+        [ "UNION ALL SELECT " <+> columns,
+          "FROM " <+> fromTableName sittFromTableName,
+          "WHERE " <+> falsePrinter
+        ]
+      KeepConstraints ->
+        []
   where
     -- column names separated by commas
     columns =
@@ -536,26 +550,26 @@ fromSelect Select {..} = fmap fromWith selectWith ?<+> result
                     (map fromProjection (toList selectProjections))
                 )
           ]
-          <> ["FROM " <+> IndentPrinter 5 (fromFrom f) | Just f <- [selectFrom]]
-          <> [ SepByPrinter
-                 NewlinePrinter
-                 ( map
-                     ( \Join {..} ->
-                         SeqPrinter
-                           [ "OUTER APPLY (",
-                             IndentPrinter 13 (fromJoinSource joinSource),
-                             ") ",
-                             NewlinePrinter,
-                             "AS ",
-                             fromJoinAlias joinJoinAlias
-                           ]
-                     )
-                     selectJoins
-                 ),
-               fromWhere selectWhere,
-               fromOrderBys selectTop selectOffset selectOrderBy,
-               fromFor selectFor
-             ]
+        <> ["FROM " <+> IndentPrinter 5 (fromFrom f) | Just f <- [selectFrom]]
+        <> [ SepByPrinter
+               NewlinePrinter
+               ( map
+                   ( \Join {..} ->
+                       SeqPrinter
+                         [ "OUTER APPLY (",
+                           IndentPrinter 13 (fromJoinSource joinSource),
+                           ") ",
+                           NewlinePrinter,
+                           "AS ",
+                           fromJoinAlias joinJoinAlias
+                         ]
+                   )
+                   selectJoins
+               ),
+             fromWhere selectWhere,
+             fromOrderBys selectTop selectOffset selectOrderBy,
+             fromFor selectFor
+           ]
 
 fromWith :: With -> Printer
 fromWith (With withSelects) =

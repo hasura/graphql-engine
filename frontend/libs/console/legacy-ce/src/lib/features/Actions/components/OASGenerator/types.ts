@@ -4,6 +4,17 @@ import z from 'zod';
 import { formSchema } from './OASGeneratorPage';
 
 export type SchemaType = z.infer<typeof formSchema>;
+
+export type RequestTransform =
+  | {
+      type: 'json';
+      value: string;
+    }
+  | {
+      type: 'x-www-form-urlencoded';
+      value: Record<string, string>;
+    };
+
 export type GeneratedAction = {
   operationId: string;
   actionType: 'query' | 'mutation';
@@ -13,7 +24,7 @@ export type GeneratedAction = {
   method: RequestTransformMethod;
   baseUrl: string;
   path: string;
-  requestTransforms: string;
+  requestTransforms?: RequestTransform;
   responseTransforms: string;
   sampleInput: string;
   headers: string[];
@@ -27,3 +38,10 @@ export type DataDefinition = Operation['responseDefinition'];
 export type SubDefinition = Operation['responseDefinition']['subDefinitions'];
 
 export type OperationParameters = Operation['parameters'];
+
+export interface OASError extends Error {
+  message: string;
+  options: {
+    context: string[];
+  };
+}

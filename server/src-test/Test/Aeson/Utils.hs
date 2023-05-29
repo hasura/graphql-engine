@@ -33,19 +33,22 @@ showType = show $ typeRep (Proxy :: Proxy a)
 
 testFromJSON :: (HasCallStack, Eq a, Show a, FromJSON a) => a -> Value -> Spec
 testFromJSON a v = do
-  it "parses from JSON" $
-    parseEither parseJSON v `shouldBe` Right a
+  it "parses from JSON"
+    $ parseEither parseJSON v
+    `shouldBe` Right a
 
 testToFromJSON :: (HasCallStack, Eq a, Show a, FromJSON a, ToJSON a) => a -> Value -> Spec
 testToFromJSON a v = do
   testFromJSON a v
-  it "encodes to JSON" $
-    toJSON a `shouldBe` v
+  it "encodes to JSON"
+    $ toJSON a
+    `shouldBe` v
 
 validateToJSONOpenApi :: (HasCallStack, ToJSON a, ToSchema a) => a -> Spec
 validateToJSONOpenApi a = do
-  it "value validates against OpenAPI schema" $
-    validatePrettyToJSON a `shouldBe` Nothing
+  it "value validates against OpenAPI schema"
+    $ validatePrettyToJSON a
+    `shouldBe` Nothing
 
 testToFromJSONToSchema :: (HasCallStack, Eq a, Show a, FromJSON a, ToJSON a, ToSchema a) => a -> Value -> Spec
 testToFromJSONToSchema a v = do
@@ -54,15 +57,17 @@ testToFromJSONToSchema a v = do
 
 jsonRoundTrip :: forall a. (HasCallStack, Typeable a, Eq a, Show a, FromJSON a, ToJSON a) => Gen a -> Spec
 jsonRoundTrip gen =
-  it ("JSON roundtrips " <> showType @a) $
-    hedgehog $ do
+  it ("JSON roundtrips " <> showType @a)
+    $ hedgehog
+    $ do
       a <- forAll gen
       tripping a toJSON (parseEither parseJSON)
 
 jsonEncodingEqualsValue :: (HasCallStack, Show a, ToJSON a) => Gen a -> Spec
 jsonEncodingEqualsValue gen =
-  it "JSON encoding equals value" $
-    hedgehog $ do
+  it "JSON encoding equals value"
+    $ hedgehog
+    $ do
       a <- forAll gen
       let encoded = encode a
           decoded = decode encoded :: Maybe Value
@@ -75,8 +80,9 @@ jsonProperties gen = do
 
 validateAgainstOpenApiSchema :: (HasCallStack, Show a, ToJSON a, ToSchema a) => Gen a -> Spec
 validateAgainstOpenApiSchema gen = do
-  it "ToJSON validates against OpenAPI schema" $
-    hedgehog $ do
+  it "ToJSON validates against OpenAPI schema"
+    $ hedgehog
+    $ do
       a <- forAll gen
       validatePrettyToJSON a === Nothing
 
@@ -85,14 +91,14 @@ jsonOpenApiProperties gen = do
   jsonProperties gen
   validateAgainstOpenApiSchema gen
 
-genKeyMap :: MonadGen m => m value -> m (KM.KeyMap value)
+genKeyMap :: (MonadGen m) => m value -> m (KM.KeyMap value)
 genKeyMap genKMValue =
   KM.fromList . map (first K.fromText) <$> Gen.list (linear 0 5) ((,) <$> Gen.text (linear 0 5) Gen.unicode <*> genKMValue)
 
-genObject :: MonadGen m => m Object
+genObject :: (MonadGen m) => m Object
 genObject = genKeyMap genValue
 
-genValue :: MonadGen m => m Value
+genValue :: (MonadGen m) => m Value
 genValue =
   Gen.recursive
     Gen.choice

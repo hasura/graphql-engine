@@ -64,7 +64,7 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
     });
 
     if (isEditMode) {
-      editConnection(payload);
+      editConnection({ originalName: dataSourceName, ...payload });
     } else {
       createConnection(payload);
     }

@@ -17,7 +17,6 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 <div className="badge-container">
   <ProductBadge free standard pro ee />
-  <div className="badge badge-gray heading-badge">Beta</div>
 </div>
 
 ## Introduction
@@ -27,16 +26,17 @@ the easiest way to set up Hasura Engine and the MySQL GraphQL Data Connector.
 
 :::tip Supported versions:
 
-1.  Hasura GraphQL Engine `v2.19.0` onwards
-2.  MySQL version 8.0 and higher
-3.  Currently only standard implementations of MySQL are supported. PlanetScale and certain other providers are
-    unsupported.
+1.  Hasura GraphQL Engine `v2.24.0` onwards
+2.  Hasura supports most databases with standard implementations of **MySQL 8.0 and higher** including: Amazon RDS,
+    Amazon Aurora, Google Cloud SQL and Digital Ocean.
+3.  PlanetScale and certain other providers are unsupported.
 
 :::
 
 :::tip Supported features
 
-Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and permissions on MySQL.
+Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and
+permissions on MySQL.
 
 Note that Hasura doesn't yet support the ability to modify the database schema for MySQL, so the database you connect to
 should already contain tables and data. You should also ideally have access to it outside of Hasura to modify the
@@ -66,8 +66,7 @@ From the Console, click the `Data` tab:
 
 <Thumbnail src="/img/getting-started/connect-db-console.png" alt="Connect database" width="1000px" />
 
-Select the MySQL (Beta) data source driver. Enter a database display name and the JDBC Connection URL for your MySQL
-instance.
+Select the MySQL data source driver. Enter a database display name and the JDBC Connection URL for your MySQL instance.
 
 The JDBC connection URL should look like this:
 
@@ -88,7 +87,7 @@ For more information see
 
 Click `Connect Database`.
 
-### Step 7: Track tables and run GraphQL API queries
+### Step 3: Track tables and run GraphQL API queries
 
 Now that you have successfully connected your MySQL database to Hasura, you can track tables and use Hasura to
 automatically build a GraphQL API on top of it.

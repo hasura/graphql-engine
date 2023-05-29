@@ -22,10 +22,10 @@ data Network = Network
 
 instance HasCodec Network where
   codec =
-    AC.object "Network" $
-      Network
-        <$> optionalFieldWithDefault' "tls_allowlist" []
-        AC..= networkTlsAllowlist
+    AC.object "Network"
+      $ Network
+      <$> optionalFieldWithDefault' "tls_allowlist" []
+      AC..= networkTlsAllowlist
 
 instance FromJSON Network where
   parseJSON = withObject "Network" $ \o -> Network <$> o .:? "tls_allowlist" .!= []
@@ -45,14 +45,14 @@ data TlsAllow = TlsAllow
 
 instance HasCodec TlsAllow where
   codec =
-    AC.object "TlsAllow" $
-      TlsAllow
-        <$> requiredField' "host"
-        AC..= taHost
+    AC.object "TlsAllow"
+      $ TlsAllow
+      <$> requiredField' "host"
+      AC..= taHost
         <*> optionalField' "suffix"
-        AC..= taSuffix
+      AC..= taSuffix
         <*> optionalField' "permissions"
-        AC..= taPermit
+      AC..= taPermit
 
 instance FromJSON TlsAllow where
   parseJSON j = aString j <|> anObject j
@@ -65,9 +65,12 @@ instance FromJSON TlsAllow where
 
       anObject = withObject "TlsAllow" $ \o ->
         TlsAllow
-          <$> o .: "host"
-          <*> o .:? "suffix"
-          <*> o .:? "permissions"
+          <$> o
+          .: "host"
+          <*> o
+          .:? "suffix"
+          <*> o
+          .:? "permissions"
 
 instance ToJSON TlsAllow where
   toJSON (TlsAllow h p a) =
@@ -88,8 +91,9 @@ instance HasCodec TlsPermission where
 instance FromJSON TlsPermission where
   parseJSON (String "self-signed") = pure SelfSigned
   parseJSON _ =
-    fail $
-      "TlsPermission expecting one of " <> intercalate ", " (map (show :: TlsPermission -> String) [minBound .. maxBound])
+    fail
+      $ "TlsPermission expecting one of "
+      <> intercalate ", " (map (show :: TlsPermission -> String) [minBound .. maxBound])
 
 instance ToJSON TlsPermission where
   toJSON SelfSigned = String "self-signed"
@@ -105,8 +109,10 @@ data DropHostFromTLSAllowlist = DropHostFromTLSAllowlist
 instance FromJSON DropHostFromTLSAllowlist where
   parseJSON = withObject "DropHostFromTLSAllowlist" $ \o ->
     DropHostFromTLSAllowlist
-      <$> o .: "host"
-      <*> o .:? "suffix"
+      <$> o
+      .: "host"
+      <*> o
+      .:? "suffix"
 
 instance ToJSON DropHostFromTLSAllowlist where
   toJSON (DropHostFromTLSAllowlist h p) =

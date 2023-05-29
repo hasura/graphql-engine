@@ -13,6 +13,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     cursorsSelectAliasIdentifier,
     encodeBase64,
     fromTableRowArgs,
+    fromTableRowArgsDon'tAddBase,
     selectFromToFromItem,
     functionToIdentifier,
     withJsonBuildObj,
@@ -65,8 +66,8 @@ mkFirstElementExp expIdentifier =
 mkLastElementExp :: S.SQLExp -> S.SQLExp
 mkLastElementExp expIdentifier =
   let arrayExp = S.SEFnApp "array_agg" [expIdentifier] Nothing
-   in S.SEArrayIndex arrayExp $
-        S.SEFnApp "array_length" [arrayExp, S.intToSQLExp 1] Nothing
+   in S.SEArrayIndex arrayExp
+        $ S.SEFnApp "array_length" [arrayExp, S.intToSQLExp 1] Nothing
 
 cursorIdentifier :: Identifier
 cursorIdentifier = Identifier "__cursor"
@@ -118,17 +119,30 @@ fromTableRowArgs prefix = toFunctionArgs . fmap toSQLExp
         (S.mkQIdenExp baseTableIdentifier . Identifier)
     baseTableIdentifier = mkBaseTableIdentifier prefix
 
+-- Like `fromTableRowArgs`, but we don't add `mkBaseTableIdentifier`
+fromTableRowArgsDon'tAddBase ::
+  TableIdentifier -> FunctionArgsExpG (ArgumentExp S.SQLExp) -> S.FunctionArgs
+fromTableRowArgsDon'tAddBase prefix = toFunctionArgs . fmap toSQLExp
+  where
+    toFunctionArgs (FunctionArgsExp positional named) =
+      S.FunctionArgs positional named
+    toSQLExp =
+      onArgumentExp
+        (S.SERowIdentifier (tableIdentifierToIdentifier prefix))
+        (S.mkQIdenExp prefix . Identifier)
+
 selectFromToFromItem :: TableIdentifier -> SelectFrom ('Postgres pgKind) -> S.FromItem
 selectFromToFromItem prefix = \case
   FromTable tn -> S.FISimple tn Nothing
   FromIdentifier i -> S.FIIdentifier $ TableIdentifier $ unFIIdentifier i
   FromFunction qf args defListM ->
-    S.FIFunc $
-      S.FunctionExp qf (fromTableRowArgs prefix args) $
-        Just $
-          S.mkFunctionAlias
-            qf
-            (fmap (fmap (first S.toColumnAlias)) defListM)
+    S.FIFunc
+      $ S.FunctionExp qf (fromTableRowArgs prefix args)
+      $ Just
+      $ S.mkFunctionAlias
+        qf
+        (fmap (fmap (first S.toColumnAlias)) defListM)
+  FromStoredProcedure {} -> error "selectFromToFromItem: FromStoredProcedure"
   FromNativeQuery lm ->
     S.FIIdentifier (S.tableAliasToIdentifier $ nativeQueryNameToAlias (nqRootFieldName lm))
 

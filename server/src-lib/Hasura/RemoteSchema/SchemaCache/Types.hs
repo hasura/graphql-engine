@@ -200,9 +200,10 @@ validateRemoteSchemaCustomization (Just RemoteSchemaCustomization {..}) =
   for_ _rscFieldNames $ \fieldCustomizations ->
     for_ fieldCustomizations $ \RemoteFieldCustomization {..} ->
       for_ (HashMap.keys _rfcMapping) $ \fieldName ->
-        when (isReservedName fieldName) $
-          throw400 InvalidParams $
-            "attempt to customize reserved field name " <>> fieldName
+        when (isReservedName fieldName)
+          $ throw400 InvalidParams
+          $ "attempt to customize reserved field name "
+          <>> fieldName
   where
     isReservedName = ("__" `T.isPrefixOf`) . G.unName
 
@@ -412,10 +413,10 @@ $(J.deriveJSON hasuraJSON ''RemoteSchemaInfo)
 
 instance (J.ToJSON remoteFieldInfo) => J.ToJSON (RemoteSchemaCtxG remoteFieldInfo) where
   toJSON RemoteSchemaCtx {..} =
-    J.object $
-      [ "name" J..= _rscName,
-        "info" J..= J.toJSON _rscInfo
-      ]
+    J.object
+      $ [ "name" J..= _rscName,
+          "info" J..= J.toJSON _rscInfo
+        ]
 
 instance J.ToJSON RemoteSchemaFieldInfo where
   toJSON RemoteSchemaFieldInfo {..} =

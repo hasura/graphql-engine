@@ -20,11 +20,13 @@ module Hasura.Backends.DataConnector.Adapter.Types
     ConstraintName (..),
     ColumnName (..),
     FunctionName (..),
+    FunctionReturnType (..),
     CountAggregate (..),
     Literal (..),
     OrderDirection (..),
     API.GraphQLType (..),
     ScalarType (..),
+    ArgumentExp (..),
     mkScalarType,
     fromGQLType,
     ExtraTableMetadata (..),
@@ -44,6 +46,7 @@ import Data.Aeson.Types (parseEither, toJSONKeyText)
 import Data.Environment (Environment)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
+import Data.OpenApi (ToSchema)
 import Data.Text qualified as Text
 import Data.Text.Extended (ToTxt (..))
 import Hasura.Backends.DataConnector.API qualified as API
@@ -85,11 +88,14 @@ instance HasCodec ConnSourceConfig where
   codec = AC.bimapCodec dec enc $ AC.possiblyJointEitherCodec withValueProp inlineConfig
     where
       withValueProp =
-        AC.object "DataConnectorConnSourceConfig" $
-          ConnSourceConfig
-            <$> requiredField' "value" AC..= value
-            <*> optionalField' "template" AC..= template
-            <*> optionalField' "timeout" AC..= timeout
+        AC.object "DataConnectorConnSourceConfig"
+          $ ConnSourceConfig
+          <$> requiredField' "value"
+          AC..= value
+            <*> optionalField' "template"
+          AC..= template
+            <*> optionalField' "timeout"
+          AC..= timeout
       inlineConfig = codec @API.Config
 
       dec (Left config) = Right config
@@ -116,9 +122,9 @@ sourceTimeoutMicroseconds = \case
 
 instance HasCodec SourceTimeout where
   codec =
-    AC.dimapCodec dec enc $
-      AC.disjointEitherCodec secondsCodec $
-        AC.disjointEitherCodec millisecondsCodec microsecondsCodec
+    AC.dimapCodec dec enc
+      $ AC.disjointEitherCodec secondsCodec
+      $ AC.disjointEitherCodec millisecondsCodec microsecondsCodec
     where
       secondsCodec = AC.object "DataConnectorSourceTimeoutSeconds" $ requiredFieldWith' "seconds" AC.scientificCodec
       millisecondsCodec = AC.object "DataConnectorSourceTimeoutMilliseconds" $ requiredFieldWith' "milliseconds" AC.scientificCodec
@@ -162,13 +168,20 @@ data SourceConfig = SourceConfig
 
 instance Eq SourceConfig where
   SourceConfig ep1 capabilities1 config1 template1 _ timeout1 dcName1 env1 == SourceConfig ep2 capabilities2 config2 template2 _ timeout2 dcName2 env2 =
-    ep1 == ep2
-      && capabilities1 == capabilities2
-      && config1 == config2
-      && template1 == template2
-      && timeout1 == timeout2
-      && dcName1 == dcName2
-      && env1 == env2
+    ep1
+      == ep2
+      && capabilities1
+      == capabilities2
+      && config1
+      == config2
+      && template1
+      == template2
+      && timeout1
+      == timeout2
+      && dcName1
+      == dcName2
+      && env1
+      == env2
 
 instance Show SourceConfig where
   show _ = "SourceConfig"
@@ -178,6 +191,40 @@ instance J.ToJSON SourceConfig where
 
 --------------------------------------------------------------------------------
 
+-- | This represents what information can be known about the return type of a user-defined function.
+--   For now, either the return type will be the name of a table that exists in the schema,
+--   or "Unknown" - implying that this information can be derived from another source,
+--   or if there is no other source, then it is an error.
+--   In future, this type may be extended with additional constructors including scalar and row types
+--   from the Logical Models feature.
+--
+--   Note: This is very similar to ComputedFieldReturnType defined above.
+--         The two types may be unified in future.
+data FunctionReturnType
+  = FunctionReturnsTable TableName
+  | FunctionReturnsUnknown
+  deriving (Show, Eq, NFData, Hashable, Generic)
+  deriving (ToSchema, ToJSON, FromJSON) via AC.Autodocodec FunctionReturnType
+
+instance AC.HasCodec FunctionReturnType where
+  codec =
+    AC.named "FunctionReturnType"
+      $ AC.object "FunctionReturnType"
+      $ AC.discriminatedUnionCodec "type" enc dec
+    where
+      typeField = pure ()
+      tableField = AC.requiredField' "table"
+      enc = \case
+        FunctionReturnsTable rt -> ("table", AC.mapToEncoder rt tableField)
+        FunctionReturnsUnknown -> ("inferred", AC.mapToEncoder () typeField) -- We hook into the type field because it's madatory
+      dec =
+        HashMap.fromList
+          [ ("table", ("TableFunctionResponse", AC.mapToDecoder FunctionReturnsTable tableField)),
+            ("inferred", ("InferredFunctionResponse", AC.mapToDecoder (const FunctionReturnsUnknown) typeField))
+          ]
+
+------------
+
 data DataConnectorOptions = DataConnectorOptions
   { _dcoUri :: BaseUrl,
     _dcoDisplayName :: Maybe Text
@@ -186,10 +233,12 @@ data DataConnectorOptions = DataConnectorOptions
 
 instance HasCodec DataConnectorOptions where
   codec =
-    AC.object "DataConnectorOptions" $
-      DataConnectorOptions
-        <$> requiredFieldWith' "uri" baseUrlCodec AC..= _dcoUri
-        <*> optionalField' "display_name" AC..= _dcoDisplayName
+    AC.object "DataConnectorOptions"
+      $ DataConnectorOptions
+      <$> requiredFieldWith' "uri" baseUrlCodec
+      AC..= _dcoUri
+        <*> optionalField' "display_name"
+      AC..= _dcoDisplayName
 
 instance FromJSON DataConnectorOptions where
   parseJSON = genericParseJSON hasuraJSON
@@ -228,7 +277,8 @@ instance HasCodec TableName where
 
 instance FromJSON TableName where
   parseJSON value =
-    TableName <$> J.parseJSON value
+    TableName
+      <$> J.parseJSON value
       -- Fallback parsing of a single string to support older metadata
       <|> J.withText "TableName" (\text -> pure . TableName $ text :| []) value
 
@@ -251,7 +301,7 @@ instance ToErrorValue TableName where
 
 newtype ConstraintName = ConstraintName {unConstraintName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving newtype (NFData, Hashable, FromJSON, ToJSON)
+  deriving newtype (NFData, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey)
 
 instance Witch.From API.ConstraintName ConstraintName where
   from (API.ConstraintName n) = ConstraintName n
@@ -292,6 +342,12 @@ newtype FunctionName = FunctionName {unFunctionName :: NonEmpty Text}
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving newtype (FromJSON, Hashable, NFData, ToJSON)
 
+instance Witch.From FunctionName API.FunctionName
+
+instance Witch.From API.FunctionName FunctionName
+
+instance Witch.From (NonEmpty Text) FunctionName
+
 instance HasCodec FunctionName where
   codec = AC.dimapCodec FunctionName unFunctionName codec
 
@@ -303,6 +359,21 @@ instance ToTxt FunctionName where
 
 instance ToErrorValue FunctionName where
   toErrorValue = ErrorValue.squote . toTxt
+
+-- Modified from Hasura.Backends.Postgres.Types.Function
+-- Initially just handles literal input arguments.
+data ArgumentExp a
+  = -- | Table row accessor
+    --   AETableRow
+    -- | -- | Hardcoded reference to @hdb_catalog.hdb_action_log.response_payload@
+    --   AEActionResponsePayload
+    -- | -- | JSON/JSONB hasura session variable object
+    --   AESession a
+    -- |
+    AEInput a
+  deriving stock (Eq, Show, Functor, Foldable, Traversable, Generic)
+
+instance (Hashable a) => Hashable (ArgumentExp a)
 
 --------------------------------------------------------------------------------
 

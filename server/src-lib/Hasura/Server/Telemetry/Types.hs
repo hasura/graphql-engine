@@ -9,6 +9,8 @@ module Hasura.Server.Telemetry.Types
     PermissionMetric (..),
     ActionMetric (..),
     NativeQueriesMetrics (..),
+    StoredProceduresMetrics (..),
+    LogicalModelsMetrics (..),
     Metrics (..),
     SourceMetadata (..),
     HasuraTelemetry (..),
@@ -37,6 +39,7 @@ where
 import CI qualified
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
+import Data.Monoid (Sum (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Metadata.Instances ()
@@ -91,6 +94,31 @@ instance Monoid NativeQueriesMetrics where
 
 $(J.deriveToJSON hasuraJSON ''NativeQueriesMetrics)
 
+data StoredProceduresMetrics = StoredProceduresMetrics
+  { _spmWithParameters :: Int,
+    _spmWithoutParameters :: Int
+  }
+  deriving (Show, Eq)
+
+instance Semigroup StoredProceduresMetrics where
+  a <> b =
+    StoredProceduresMetrics
+      (_spmWithParameters a + _spmWithParameters b)
+      (_spmWithoutParameters a + _spmWithoutParameters b)
+
+instance Monoid StoredProceduresMetrics where
+  mempty = StoredProceduresMetrics 0 0
+
+$(J.deriveToJSON hasuraJSON ''StoredProceduresMetrics)
+
+newtype LogicalModelsMetrics = LogicalModelsMetrics
+  { _lmmCount :: Int
+  }
+  deriving (Show, Eq)
+  deriving (Semigroup, Monoid) via Sum Int
+
+$(J.deriveToJSON hasuraJSON ''LogicalModelsMetrics)
+
 data Metrics = Metrics
   { _mtTables :: Int,
     _mtViews :: Int,
@@ -102,7 +130,9 @@ data Metrics = Metrics
     _mtRemoteSchemas :: Maybe Int,
     _mtServiceTimings :: Maybe ServiceTimingMetrics,
     _mtActions :: Maybe ActionMetric,
-    _mtNativeQueries :: NativeQueriesMetrics
+    _mtNativeQueries :: NativeQueriesMetrics,
+    _mtStoredProcedures :: StoredProceduresMetrics,
+    _mtLogicalModels :: LogicalModelsMetrics
   }
   deriving (Show, Eq)
 

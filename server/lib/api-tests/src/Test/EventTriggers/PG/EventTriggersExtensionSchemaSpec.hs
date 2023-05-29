@@ -76,8 +76,8 @@ authorsTable tableName =
 tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests =
   describe "event triggers should work when extensions are created in different schema using 'extensions_schema'" do
-    it "check: inserting a new row invokes a event trigger" $
-      \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+    it "check: inserting a new row invokes a event trigger"
+      $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
         let insertQuery =
@@ -169,7 +169,7 @@ tests =
 
 -- ** Setup and teardown override
 
-postgresSetup :: HasCallStack => TestEnvironment -> GraphqlEngine.Server -> IO ()
+postgresSetup :: (HasCallStack) => TestEnvironment -> GraphqlEngine.Server -> IO ()
 postgresSetup testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
@@ -186,8 +186,8 @@ postgresSetup testEnvironment webhookServer = do
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
 
   -- create a new source
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: pg_add_source
       args:
         name: *sourceName
@@ -200,8 +200,8 @@ postgresSetup testEnvironment webhookServer = do
     Schema.trackTable sourceName theTable testEnvironment
 
   -- create the event trigger
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger
@@ -216,10 +216,10 @@ postgresSetup testEnvironment webhookServer = do
             columns: "*"
     |]
 
-postgresTeardown :: HasCallStack => TestEnvironment -> IO ()
+postgresTeardown :: (HasCallStack) => TestEnvironment -> IO ()
 postgresTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: bulk
       args:
       - type: pg_delete_event_trigger
@@ -228,8 +228,8 @@ postgresTeardown testEnvironment = do
           source: hge_test
     |]
 
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: bulk
       args:
       - type: pg_drop_source

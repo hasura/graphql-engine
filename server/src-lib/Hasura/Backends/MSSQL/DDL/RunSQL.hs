@@ -32,15 +32,15 @@ import Hasura.RQL.DDL.Schema.Diff
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Metadata hiding (tmTable)
+import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils (quoteRegex)
+import Hasura.Table.Cache
 import Text.Regex.TDFA qualified as TDFA
 
 data MSSQLRunSQL = MSSQLRunSQL
@@ -81,8 +81,8 @@ runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
       then do
         (results, metadataUpdater) <- runTx _siConfiguration $ withMetadataCheck _siTables
         -- Build schema cache with updated metadata
-        withNewInconsistentObjsCheck $
-          buildSchemaCacheWithInvalidations mempty {ciSources = HS.singleton _mrsSource} metadataUpdater
+        withNewInconsistentObjsCheck
+          $ buildSchemaCacheWithInvalidations mempty {ciSources = HS.singleton _mrsSource} metadataUpdater
         pure results
       else runTx _siConfiguration sqlQueryTx
   pure $ encJFromJValue $ toResult results

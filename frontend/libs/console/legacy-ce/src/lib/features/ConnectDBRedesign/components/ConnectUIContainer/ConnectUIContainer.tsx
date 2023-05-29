@@ -5,7 +5,7 @@ import { ConnectGDCSourceWidget } from '../ConnectGDCSourceWidget/ConnectGDCSour
 import { ConnectMssqlWidget } from '../ConnectMssqlWidget/ConnectMssqlWidget';
 import { ConnectPostgresWidget } from '../ConnectPostgresWidget/ConnectPostgresWidget';
 
-const getEditDatasourceName = (): string | undefined => {
+const getDataSourceNameFromUrlParams = (): string | undefined => {
   const urlParams = new URLSearchParams(window.location.search);
 
   const database = urlParams.get('database');
@@ -13,7 +13,7 @@ const getEditDatasourceName = (): string | undefined => {
   return database ?? undefined;
 };
 
-const getDriverName = (): string | undefined => {
+const getDriverNameFromUrlParams = (): string | undefined => {
   const urlParams = new URLSearchParams(window.location.search);
 
   const driver = urlParams.get('driver');
@@ -22,8 +22,8 @@ const getDriverName = (): string | undefined => {
 };
 
 const ConnectDatabaseWrapper = () => {
-  const dataSourceName = getEditDatasourceName();
-  const driver = getDriverName();
+  const dataSourceName = getDataSourceNameFromUrlParams();
+  const driver = getDriverNameFromUrlParams();
 
   if (!driver) return <div>Error. No driver found.</div>;
 
@@ -68,7 +68,7 @@ const ConnectDatabaseWrapper = () => {
 };
 
 export const ConnectUIContainer = () => {
-  const driver = getDriverName();
+  const driver = getDriverNameFromUrlParams();
   return (
     <div className="p-4">
       <BreadCrumb

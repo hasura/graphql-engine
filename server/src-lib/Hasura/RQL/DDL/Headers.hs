@@ -15,7 +15,7 @@ import Network.HTTP.Types qualified as HTTP
 
 -- | Resolve configuration headers
 makeHeadersFromConf ::
-  MonadError QErr m => Env.Environment -> [HeaderConf] -> m [HTTP.Header]
+  (MonadError QErr m) => Env.Environment -> [HeaderConf] -> m [HTTP.Header]
 makeHeadersFromConf env = mapM getHeader
   where
     getHeader hconf =

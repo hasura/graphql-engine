@@ -23,9 +23,6 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
-  -- TODO: this test causes an internal server error for MySQL, even if we add
-  -- "SERIAL" as the 'Schema.defaultSerialType' for MySQL.
-
   Fixture.run
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)

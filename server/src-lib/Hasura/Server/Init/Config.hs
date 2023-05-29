@@ -88,11 +88,11 @@ import Data.URL.Template qualified as Template
 import Database.PG.Query qualified as Query
 import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata (MetadataDefaults)
+import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.Schema.Options qualified as Schema.Options
 import Hasura.Server.Auth qualified as Auth
@@ -224,29 +224,29 @@ instance FromJSON PostgresConnDetailsRaw where
 
 instance ToJSON PostgresConnDetailsRaw where
   toJSON PostgresConnDetailsRaw {..} =
-    J.object $
-      [ "host" .= connHost,
-        "port" .= connPort,
-        "user" .= connUser,
-        "password" .= connPassword,
-        "database" .= connDatabase
-      ]
-        <> catMaybes [fmap ("options" .=) connOptions]
+    J.object
+      $ [ "host" .= connHost,
+          "port" .= connPort,
+          "user" .= connUser,
+          "password" .= connPassword,
+          "database" .= connDatabase
+        ]
+      <> catMaybes [fmap ("options" .=) connOptions]
 
 rawConnDetailsToUrlText :: PostgresConnDetailsRaw -> Text
 rawConnDetailsToUrlText PostgresConnDetailsRaw {..} =
-  Text.pack $
-    "postgresql://"
-      <> connUser
-      <> ":"
-      <> connPassword
-      <> "@"
-      <> connHost
-      <> ":"
-      <> show connPort
-      <> "/"
-      <> connDatabase
-      <> maybe "" ("?options=" <>) connOptions
+  Text.pack
+    $ "postgresql://"
+    <> connUser
+    <> ":"
+    <> connPassword
+    <> "@"
+    <> connHost
+    <> ":"
+    <> show connPort
+    <> "/"
+    <> connDatabase
+    <> maybe "" ("?options=" <>) connOptions
 
 --------------------------------------------------------------------------------
 

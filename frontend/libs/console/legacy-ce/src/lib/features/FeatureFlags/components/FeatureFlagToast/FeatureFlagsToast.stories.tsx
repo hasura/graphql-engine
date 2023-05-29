@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentMeta } from '@storybook/react';
+import { Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { FeatureFlagToast } from './FeatureFlagToast';
 import { FeatureFlagDefinition } from '../../types';
@@ -8,7 +8,7 @@ export default {
   title: 'features/FeatureFlags/FeatureFlagToast',
   component: FeatureFlagToast,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof FeatureFlagToast>;
+} as Meta<typeof FeatureFlagToast>;
 
 const additionalFlags: FeatureFlagDefinition[] = [
   {

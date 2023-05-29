@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RQL.DDL.Schema.Source
   ( -- * Add Source
     AddSource,
@@ -22,9 +20,17 @@ module Hasura.RQL.DDL.Schema.Source
     GetSourceTables (..),
     runGetSourceTables,
 
-    -- * Get Table Name
+    -- * Get Source Functions
+    GetSourceTrackables (..),
+    runGetSourceTrackables,
+
+    -- * Get Table Info
     GetTableInfo (..),
     runGetTableInfo,
+
+    -- * Legacy Get Table Info
+    GetTableInfo_ (..),
+    runGetTableInfo_,
   )
 where
 
@@ -34,13 +40,11 @@ import Control.Lens (at, (.~), (^.))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Extended
-import Data.Aeson.TH
 import Data.Bifunctor (bimap)
 import Data.Environment qualified as Env
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HashSet
 import Data.Semigroup.Foldable (Foldable1 (..))
@@ -59,7 +63,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Backend qualified as RQL.Types
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.BackendType qualified as Backend
-import Hasura.RQL.Types.Column (ColumnMutability (..), RawColumnInfo (..))
+import Hasura.RQL.Types.Column (ColumnMutability (..), RawColumnInfo (..), RawColumnType (..))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.HealthCheck (HealthCheckConfig)
@@ -73,12 +77,12 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table (Constraint (..), DBTableMetadata (..), ForeignKey (..), ForeignKeyMetadata (..), PrimaryKey (..))
 import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.AnyBackend qualified as AnyBackend
 import Hasura.Server.Logging (MetadataLog (..))
 import Hasura.Services
+import Hasura.Table.Cache (Constraint (..), DBTableMetadata (..), ForeignKey (..), ForeignKeyMetadata (..), PrimaryKey (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Witch qualified
 
@@ -98,18 +102,18 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (AddSource b) 
   parseJSONWithContext backendKind = withObject "AddSource" $ \o ->
     AddSource
       <$> o
-        .: "name"
+      .: "name"
       <*> pure backendKind
       <*> o
-        .: "configuration"
+      .: "configuration"
       <*> o
-        .:? "replace_configuration"
-        .!= False
+      .:? "replace_configuration"
+      .!= False
       <*> o
-        .:? "customization"
-        .!= emptySourceCustomization
+      .:? "customization"
+      .!= emptySourceCustomization
       <*> o
-        .:? "health_check"
+      .:? "health_check"
 
 runAddSource ::
   forall m b.
@@ -138,7 +142,7 @@ runAddSource env (AddSource name backendKind sourceConfig replaceConfiguration s
         else do
           let sourceMetadata =
                 mkSourceMetadata @b name backendKind sourceConfig sourceCustomization healthCheckConfig
-          pure $ metaSources %~ OMap.insert name sourceMetadata
+          pure $ metaSources %~ InsOrdHashMap.insert name sourceMetadata
 
   buildSchemaCacheFor (MOSource name) metadataModifier
   pure successMsg
@@ -150,8 +154,10 @@ data RenameSource = RenameSource
   { _rmName :: SourceName,
     _rmNewName :: SourceName
   }
+  deriving stock (Generic)
 
-$(deriveFromJSON hasuraJSON ''RenameSource)
+instance FromJSON RenameSource where
+  parseJSON = genericParseJSON hasuraJSON
 
 runRenameSource ::
   forall m.
@@ -161,17 +167,21 @@ runRenameSource ::
 runRenameSource RenameSource {..} = do
   sources <- scSources <$> askSchemaCache
 
-  unless (HashMap.member _rmName sources) $
-    throw400 NotExists $
-      "Could not find source with name " <>> _rmName
+  unless (HashMap.member _rmName sources)
+    $ throw400 NotExists
+    $ "Could not find source with name "
+    <>> _rmName
 
-  when (HashMap.member _rmNewName sources) $
-    throw400 AlreadyExists $
-      "Source with name " <> _rmNewName <<> " already exists"
+  when (HashMap.member _rmNewName sources)
+    $ throw400 AlreadyExists
+    $ "Source with name "
+    <> _rmNewName
+    <<> " already exists"
 
   let metadataModifier =
-        MetadataModifier $
-          metaSources %~ renameBackendSourceMetadata _rmName _rmNewName
+        MetadataModifier
+          $ metaSources
+          %~ renameBackendSourceMetadata _rmName _rmNewName
   buildSchemaCacheFor (MOSource _rmNewName) metadataModifier
 
   pure successMsg
@@ -179,13 +189,13 @@ runRenameSource RenameSource {..} = do
     renameBackendSourceMetadata ::
       SourceName ->
       SourceName ->
-      OMap.InsOrdHashMap SourceName BackendSourceMetadata ->
-      OMap.InsOrdHashMap SourceName BackendSourceMetadata
+      InsOrdHashMap.InsOrdHashMap SourceName BackendSourceMetadata ->
+      InsOrdHashMap.InsOrdHashMap SourceName BackendSourceMetadata
     renameBackendSourceMetadata oldKey newKey m =
-      case OMap.lookup oldKey m of
+      case InsOrdHashMap.lookup oldKey m of
         Just val ->
           let renamedSource = BackendSourceMetadata (AB.mapBackend (unBackendSourceMetadata val) (renameSource newKey))
-           in OMap.insert newKey renamedSource $ OMap.delete oldKey $ m
+           in InsOrdHashMap.insert newKey renamedSource $ InsOrdHashMap.delete oldKey $ m
         Nothing -> m
 
     renameSource :: forall b. SourceName -> SourceMetadata b -> SourceMetadata b
@@ -224,10 +234,12 @@ runDropSource dropSourceInfo@(DropSource name cascade) = do
       AB.dispatchAnyBackend @BackendMetadata backendSourceInfo $ dropSource dropSourceInfo
     Nothing -> do
       metadata <- getMetadata
-      void $
-        onNothing (metadata ^. metaSources . at name) $
-          throw400 NotExists $
-            "source with name " <> name <<> " does not exist"
+      void
+        $ onNothing (metadata ^. metaSources . at name)
+        $ throw400 NotExists
+        $ "source with name "
+        <> name
+        <<> " does not exist"
       if cascade
         then -- Without sourceInfo we can't cascade, so throw an error
           throw400 Unexpected $ "source with name " <> name <<> " is inconsistent"
@@ -236,7 +248,7 @@ runDropSource dropSourceInfo@(DropSource name cascade) = do
   pure successMsg
 
 dropSourceMetadataModifier :: SourceName -> MetadataModifier
-dropSourceMetadataModifier sourceName = MetadataModifier $ metaSources %~ OMap.delete sourceName
+dropSourceMetadataModifier sourceName = MetadataModifier $ metaSources %~ InsOrdHashMap.delete sourceName
 
 dropSource ::
   forall m r b.
@@ -256,8 +268,8 @@ dropSource (DropSource sourceName cascade) sourceInfo = do
   schemaCache <- askSchemaCache
   let remoteDeps = getRemoteDependencies schemaCache sourceName
 
-  unless (cascade || null remoteDeps) $
-    reportDependentObjectsExist remoteDeps
+  unless (cascade || null remoteDeps)
+    $ reportDependentObjectsExist remoteDeps
 
   metadataModifier <- execWriterT $ do
     traverse_ purgeSourceAndSchemaDependencies remoteDeps
@@ -309,13 +321,13 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (UpdateSource 
   parseJSONWithContext _ = withObject "UpdateSource" $ \o ->
     UpdateSource
       <$> o
-        .: "name"
+      .: "name"
       <*> o
-        .:? "configuration"
+      .:? "configuration"
       <*> o
-        .:? "customization"
+      .:? "customization"
       <*> o
-        .:? "health_check"
+      .:? "health_check"
 
 runUpdateSource ::
   forall m b.
@@ -350,6 +362,31 @@ instance FromJSON (GetSourceTables b) where
     pure $ GetSourceTables {..}
 
 -- | Fetch a list of tables for the request data source.
+runGetSourceTrackables ::
+  forall b m r.
+  ( BackendMetadata b,
+    CacheRM m,
+    MonadError Error.QErr m,
+    Metadata.MetadataM m,
+    MonadIO m,
+    MonadBaseControl IO m,
+    MonadReader r m,
+    Has (L.Logger L.Hasura) r,
+    ProvidesNetwork m
+  ) =>
+  GetSourceTrackables b ->
+  m EncJSON
+runGetSourceTrackables GetSourceTrackables {..} = do
+  fmap EncJSON.encJFromJValue (listAllTrackables @b _gstrSourceName)
+
+newtype GetSourceTrackables (b :: BackendType) = GetSourceTrackables {_gstrSourceName :: SourceName}
+
+instance FromJSON (GetSourceTrackables b) where
+  parseJSON = J.withObject "GetSourceFunctions" \o -> do
+    _gstrSourceName <- o .: "source"
+    pure $ GetSourceTrackables {..}
+
+-- | Fetch a list of tables for the request data source.
 runGetSourceTables ::
   forall b m r.
   ( BackendMetadata b,
@@ -369,41 +406,67 @@ runGetSourceTables GetSourceTables {..} = do
 
 --------------------------------------------------------------------------------
 
-data GetTableInfo = GetTableInfo
-  { _gtiSourceName :: Common.SourceName,
-    _gtiTableName :: API.TableName
+data GetTableInfo_ = GetTableInfo_
+  { _gtiSourceName_ :: Common.SourceName,
+    _gtiTableName_ :: API.TableName
   }
 
-instance FromJSON GetTableInfo where
-  parseJSON = J.withObject "GetSourceTables" \o -> do
-    _gtiSourceName <- o .: "source"
-    _gtiTableName <- o .: "table"
-    pure $ GetTableInfo {..}
+instance FromJSON GetTableInfo_ where
+  parseJSON = J.withObject "GetTableInfo_" \o -> do
+    _gtiSourceName_ <- o .: "source"
+    _gtiTableName_ <- o .: "table"
+    pure $ GetTableInfo_ {..}
 
--- | Fetch a schema information about a table for the requested data source. Currently
--- this is only supported for Data Connectors.
-runGetTableInfo ::
+-- | Legacy data connector command. This doesn't use the DataConnector
+-- 'ScalarType' to represent types.
+runGetTableInfo_ ::
   ( CacheRM m,
     MonadError Error.QErr m,
     Metadata.MetadataM m
   ) =>
-  GetTableInfo ->
+  GetTableInfo_ ->
   m EncJSON
-runGetTableInfo GetTableInfo {..} = do
+runGetTableInfo_ GetTableInfo_ {..} = do
   metadata <- Metadata.getMetadata
 
   let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
-  abSourceMetadata <- lookupSourceMetadata _gtiSourceName sources
+  abSourceMetadata <- lookupSourceMetadata _gtiSourceName_ sources
 
   AnyBackend.dispatchAnyBackend @RQL.Types.Backend abSourceMetadata $ \Metadata.SourceMetadata {_smKind, _smConfiguration} -> do
     case _smKind of
       Backend.DataConnectorKind _dcName -> do
-        sourceInfo <- askSourceInfo @'DataConnector _gtiSourceName
-        let tableName = Witch.from _gtiTableName
+        sourceInfo <- askSourceInfo @'DataConnector _gtiSourceName_
+        let tableName = Witch.from _gtiTableName_
         let table = HashMap.lookup tableName $ _rsTables $ _siDbObjectsIntrospection sourceInfo
         pure . EncJSON.encJFromJValue $ convertTableMetadataToTableInfo tableName <$> table
       backend ->
         Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
+
+data GetTableInfo (b :: BackendType) = GetTableInfo
+  { _gtiSourceName :: Common.SourceName,
+    _gtiTableName :: TableName b
+  }
+
+instance (Backend b) => FromJSON (GetTableInfo b) where
+  parseJSON = J.withObject "GetTableInfo_" \o -> do
+    _gtiSourceName <- o .: "source"
+    _gtiTableName <- o .: "table"
+    pure $ GetTableInfo {..}
+
+-- | Get information about the given table.
+runGetTableInfo ::
+  forall b m.
+  ( BackendMetadata b,
+    CacheRM m,
+    MonadError Error.QErr m,
+    Metadata.MetadataM m,
+    MonadBaseControl IO m,
+    MonadIO m
+  ) =>
+  GetTableInfo b ->
+  m EncJSON
+runGetTableInfo GetTableInfo {..} = do
+  fmap EncJSON.encJFromJValue (getTableInfo @b _gtiSourceName _gtiTableName)
 
 --------------------------------------------------------------------------------
 -- Internal helper functions
@@ -427,11 +490,17 @@ convertTableMetadataToTableInfo tableName DBTableMetadata {..} =
       _tiDeletable = all viIsDeletable _ptmiViewInfo
     }
   where
+    convertRawColumnType :: RawColumnType 'DataConnector -> API.ColumnType
+    convertRawColumnType = \case
+      RawColumnTypeScalar scalarType -> API.ColumnTypeScalar $ Witch.from scalarType
+      RawColumnTypeObject _ name -> API.ColumnTypeObject name
+      RawColumnTypeArray _ columnType isNullable -> API.ColumnTypeArray (convertRawColumnType columnType) isNullable
+
     convertColumn :: RawColumnInfo 'DataConnector -> API.ColumnInfo
     convertColumn RawColumnInfo {..} =
       API.ColumnInfo
         { _ciName = Witch.from rciName,
-          _ciType = Witch.from rciType,
+          _ciType = convertRawColumnType rciType,
           _ciNullable = rciIsNullable,
           _ciDescription = G.unDescription <$> rciDescription,
           _ciInsertable = _cmIsInsertable rciMutability,

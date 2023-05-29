@@ -22,7 +22,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
   const { allAvailableRoles, newRoles, setNewRoles, enabledRoles } =
     useEnabledRolesFromAllowListState(collectionName);
 
-  const { data: isCollectionInAllowlist } = useMetadata(
+  const { data: isCollectionInAllowlist, isLoading } = useMetadata(
     MetadataSelector.isCollectionInAllowlist(collectionName)
   );
 
@@ -35,6 +35,10 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
   const { fireNotification } = useFireNotification();
 
   const [updatingRoles, setUpdatingRoles] = React.useState<string[]>([]);
+
+  if (isLoading) {
+    return null;
+  }
 
   const handleToggle = (roleName: string) => {
     setUpdatingRoles([...updatingRoles, roleName]);
@@ -162,6 +166,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
                     <Switch
                       checked={enabledRoles.includes(roleName)}
                       onCheckedChange={() => handleToggle(roleName)}
+                      data-testid={roleName}
                     />
                   )}
                 </td>
@@ -188,6 +193,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
                       onCheckedChange={
                         newRole !== '' ? () => handleToggle(newRole) : () => {}
                       }
+                      data-testid={newRole}
                     />
                   )}
                 </td>

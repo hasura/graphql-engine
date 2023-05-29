@@ -1,4 +1,4 @@
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { FamiliaritySurveyTheme } from './FamiliaritySurveyTheme';
 import { mockFetchAllSurveysData } from '../../__mocks__/surveys.mock';
@@ -10,17 +10,19 @@ export default {
   // disable chromatic snapshots as chromatic will show diff on each build
   // as the questions and options are randomly arranged on each render.
   chromatic: { disableSnapshot: true },
-} as ComponentMeta<typeof FamiliaritySurveyTheme>;
+} as Meta<typeof FamiliaritySurveyTheme>;
 
-export const Base: Story = () => (
-  <FamiliaritySurveyTheme
-    orderedSurveyQuestionData={
-      mockFetchAllSurveysData?.data?.survey_v2?.[2].survey_questions ?? []
-    }
-    handleSubmit={() => {}}
-  />
-);
+export const Base: StoryObj = {
+  render: () => (
+    <FamiliaritySurveyTheme
+      orderedSurveyQuestionData={
+        mockFetchAllSurveysData?.data?.survey_v2?.[2].survey_questions ?? []
+      }
+      handleSubmit={() => {}}
+    />
+  ),
 
-Base.parameters = {
-  chromatic: { disableSnapshot: true },
+  parameters: {
+    chromatic: { disableSnapshot: true },
+  },
 };

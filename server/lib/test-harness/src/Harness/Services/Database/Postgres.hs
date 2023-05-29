@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | This module houses low-level functions and types to help access and work
@@ -10,6 +11,7 @@ module Harness.Services.Database.Postgres
     createDatabase,
     dropDatabase,
     mkFreshPostgresDb,
+    mkFreshPostgresDbIO,
     mkFreshDbConnectionString,
     withFreshPostgresDb,
     createTable,
@@ -42,6 +44,9 @@ import Test.Hspec
 
 newtype PostgresServerUrl = PostgresServerUrl {getPostgresServerUrl :: Text}
   deriving newtype (ToJSON)
+  deriving (Eq, Generic)
+
+instance Hashable PostgresServerUrl
 
 newtype FreshPostgresDb = FreshPostgresDb {freshDbName :: Text}
 
@@ -84,25 +89,31 @@ run testEnv query = do
 
 mkFreshPostgresDb :: (Has Logger testEnvironment, Has PostgresServerUrl testEnvironment) => testEnvironment -> Managed FreshPostgresDb
 mkFreshPostgresDb testEnv = do
-  freshDbName <- liftIO $ drawFreshDbName
-  managed $
-    bracket
-      (createDatabase testEnv freshDbName)
-      (\_ -> dropDatabase testEnv freshDbName)
-  return $ FreshPostgresDb freshDbName
+  (res, cleanup) <- liftIO $ mkFreshPostgresDbIO testEnv
+  managed_ (<* cleanup)
+  return res
+
+mkFreshPostgresDbIO :: (Has Logger testEnvironment, Has PostgresServerUrl testEnvironment) => testEnvironment -> IO (FreshPostgresDb, IO ())
+mkFreshPostgresDbIO testEnv = do
+  freshDbName <- drawFreshDbName
+  createDatabase testEnv freshDbName
+  return
+    $ ( FreshPostgresDb freshDbName,
+        dropDatabase testEnv freshDbName
+      )
   where
     drawFreshDbName :: IO Text
     drawFreshDbName = do
       uuid <- tshow <$> liftIO UUID.nextRandom
-      return $
-        "freshdb_"
-          <> T.map
-            ( \a ->
-                if Data.Char.isAlphaNum a
-                  then a
-                  else '_'
-            )
-            uuid
+      return
+        $ "freshdb_"
+        <> T.map
+          ( \a ->
+              if Data.Char.isAlphaNum a
+                then a
+                else '_'
+          )
+          uuid
 
 mkFreshDbConnectionString :: PostgresServerUrl -> FreshPostgresDb -> PostgresServerUrl
 mkFreshDbConnectionString (PostgresServerUrl pgUrl) (FreshPostgresDb db) =
@@ -248,7 +259,7 @@ createUniqueIndexSql (SchemaName schemaName) tableName = \case
 wrapIdentifier :: Text -> Text
 wrapIdentifier identifier = "\"" <> identifier <> "\""
 
-scalarType :: HasCallStack => Schema.ScalarType -> Text
+scalarType :: (HasCallStack) => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "integer"
   Schema.TStr -> "varchar"

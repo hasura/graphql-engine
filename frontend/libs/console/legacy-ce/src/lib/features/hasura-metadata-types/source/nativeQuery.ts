@@ -9,6 +9,6 @@ export type NativeQuery = {
   code: string;
   returns: string;
   arguments?: Record<string, NativeQueryArgument>;
-  type?: 'query';
+  type?: 'query' | 'mutation'; // only query supported for now
   comment?: string;
 };

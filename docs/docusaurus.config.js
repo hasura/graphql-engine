@@ -176,6 +176,7 @@ const config = {
           {
             to: 'https://hasura.io/changelog',
             label: "What's New",
+            id: 'whats-new-link',
             position: 'left',
           },
           {

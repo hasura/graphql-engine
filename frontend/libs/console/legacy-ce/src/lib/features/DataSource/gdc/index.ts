@@ -12,6 +12,7 @@ import {
   getSupportedOperators,
   getFKRelationships,
   getDriverCapabilities,
+  getTrackableObjects,
 } from './introspection';
 import { getTableRows } from './query';
 
@@ -21,6 +22,7 @@ import { getTableRows } from './query';
  * you'd have just the table name -> ["Album"] but in a db with schemas -> ["Public", "Album"].
  */
 export type GDCTable = string[];
+export type GDCFunction = string[];
 
 export const gdc: Database = {
   ...defaultDatabaseProps,
@@ -30,6 +32,7 @@ export const gdc: Database = {
     getDatabaseConfiguration,
     getDriverCapabilities,
     getTrackableTables,
+    getTrackableObjects,
     getDatabaseHierarchy: async () => Feature.NotImplemented,
     getTableColumns,
     getFKRelationships,

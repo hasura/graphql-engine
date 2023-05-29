@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { eeLicenseInfo } from '../mocks/http';
 
@@ -17,90 +17,100 @@ export default {
     // desired response.
     Story => {
       const queryClient = useQueryClient();
-      queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
+      void queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
       return <Story />;
     },
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof EnterpriseButton>;
+} as Meta<typeof EnterpriseButton>;
 
-export const Loading: ComponentStory<typeof EnterpriseButton> = args => (
-  <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
-    <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
-  </div>
-);
-Loading.parameters = {
-  consoleType: 'pro-lite',
+export const Loading: StoryObj<typeof EnterpriseButton> = {
+  render: args => (
+    <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
+      <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
+    </div>
+  ),
+
+  parameters: {
+    consoleType: 'pro-lite',
+  },
 };
 
-export const NoEnterpriseLicense: ComponentStory<
-  typeof EnterpriseButton
-> = args => (
-  <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
-    <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
-  </div>
-);
-NoEnterpriseLicense.parameters = {
-  msw: [eeLicenseInfo.none],
-  consoleType: 'pro-lite',
+export const NoEnterpriseLicense: StoryObj<typeof EnterpriseButton> = {
+  render: args => (
+    <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
+      <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
+    </div>
+  ),
+
+  parameters: {
+    msw: [eeLicenseInfo.none],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const ActiveEnterpriceLicense: ComponentStory<
-  typeof EnterpriseButton
-> = args => (
-  <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
-    <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
-  </div>
-);
-ActiveEnterpriceLicense.parameters = {
-  msw: [eeLicenseInfo.active],
-  consoleType: 'pro-lite',
+export const ActiveEnterpriceLicense: StoryObj<typeof EnterpriseButton> = {
+  render: args => (
+    <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
+      <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
+    </div>
+  ),
+
+  parameters: {
+    msw: [eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const ExpiredEnterpriseLicenseWithGrace: ComponentStory<
+export const ExpiredEnterpriseLicenseWithGrace: StoryObj<
   typeof EnterpriseButton
-> = args => (
-  <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
-    <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
-  </div>
-);
-ExpiredEnterpriseLicenseWithGrace.parameters = {
-  msw: [eeLicenseInfo.expired],
-  consoleType: 'pro-lite',
+> = {
+  render: args => (
+    <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
+      <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
+    </div>
+  ),
+
+  parameters: {
+    msw: [eeLicenseInfo.expiredWithoutGrace],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const ExpiredEnterpriseLicenseWithoutGrace: ComponentStory<
+export const ExpiredEnterpriseLicenseWithoutGrace: StoryObj<
   typeof EnterpriseButton
-> = args => (
-  <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
-    <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
-  </div>
-);
-ExpiredEnterpriseLicenseWithGrace.parameters = {
-  msw: [eeLicenseInfo.expiredWithoutGrace],
-  consoleType: 'pro-lite',
+> = {
+  render: args => (
+    <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
+      <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
+    </div>
+  ),
 };
 
-export const ExpiredEnterpriseLicenseAfterGrace: ComponentStory<
+export const ExpiredEnterpriseLicenseAfterGrace: StoryObj<
   typeof EnterpriseButton
-> = args => (
-  <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
-    <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
-  </div>
-);
-ExpiredEnterpriseLicenseAfterGrace.parameters = {
-  msw: [eeLicenseInfo.expiredAfterGrace],
-  consoleType: 'pro-lite',
+> = {
+  render: args => (
+    <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
+      <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
+    </div>
+  ),
+
+  parameters: {
+    msw: [eeLicenseInfo.expiredAfterGrace],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const DeactivatedEnterpriseLicense: ComponentStory<
-  typeof EnterpriseButton
-> = args => (
-  <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
-    <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
-  </div>
-);
-DeactivatedEnterpriseLicense.parameters = {
-  msw: [eeLicenseInfo.deactivated],
-  consoleType: 'pro-lite',
+export const DeactivatedEnterpriseLicense: StoryObj<typeof EnterpriseButton> = {
+  render: args => (
+    <div className="w-full h-20 bg-slate-700 flex justify-center items-center">
+      <EnterpriseButton globals={{ consoleType: 'pro-lite' } as any} />
+    </div>
+  ),
+
+  parameters: {
+    msw: [eeLicenseInfo.deactivated],
+    consoleType: 'pro-lite',
+  },
 };

@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | Types related to metadata management API
 module Hasura.RQL.DDL.Metadata.Types
   ( -- * Export Metadata
@@ -42,7 +40,6 @@ import Control.Lens qualified as Lens
 import Data.Aeson (FromJSON, ToJSON, (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KeyMap
-import Data.Aeson.TH qualified as J.TH
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
@@ -65,9 +62,11 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 -- https://hasura.io/docs/latest/api-reference/metadata-api/manage-metadata/#metadata-clear-metadata
 data ClearMetadata
   = ClearMetadata
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.TH.deriveToJSON J.TH.defaultOptions ''ClearMetadata)
+instance J.ToJSON ClearMetadata where
+  toJSON = J.genericToJSON J.defaultOptions
+  toEncoding = J.genericToEncoding J.defaultOptions
 
 instance FromJSON ClearMetadata where
   parseJSON _ = return ClearMetadata
@@ -130,25 +129,37 @@ data ReloadMetadata = ReloadMetadata
     _rmRecreateEventTriggers :: ReloadSources,
     _rmReloadDataConnectors :: ReloadDataConnectors
   }
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.TH.deriveToJSON hasuraJSON ''ReloadMetadata)
+instance J.ToJSON ReloadMetadata where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 instance FromJSON ReloadMetadata where
   parseJSON = J.withObject "ReloadMetadata" $ \o ->
     ReloadMetadata
-      <$> o .:? "reload_remote_schemas" .!= reloadAllRemoteSchemas
-      <*> o .:? "reload_sources" .!= reloadAllSources
-      <*> o .:? "recreate_event_triggers" .!= RSReloadList mempty
-      <*> o .:? "reload_data_connectors" .!= reloadAllDataConnectors
+      <$> o
+      .:? "reload_remote_schemas"
+      .!= reloadAllRemoteSchemas
+      <*> o
+      .:? "reload_sources"
+      .!= reloadAllSources
+      <*> o
+      .:? "recreate_event_triggers"
+      .!= RSReloadList mempty
+      <*> o
+      .:? "reload_data_connectors"
+      .!= reloadAllDataConnectors
 
 -- | Undocumented Metadata API action which serializes the entire
 -- 'SchemaCache'.
 data DumpInternalState
   = DumpInternalState
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.TH.deriveToJSON J.TH.defaultOptions ''DumpInternalState)
+instance J.ToJSON DumpInternalState where
+  toJSON = J.genericToJSON J.defaultOptions
+  toEncoding = J.genericToEncoding J.defaultOptions
 
 instance FromJSON DumpInternalState where
   parseJSON _ = return DumpInternalState
@@ -158,9 +169,11 @@ instance FromJSON DumpInternalState where
 -- https://hasura.io/docs/latest/api-reference/schema-metadata-api/manage-metadata/#schema-metadata-get-inconsistent-metadata
 data GetInconsistentMetadata
   = GetInconsistentMetadata
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.TH.deriveToJSON J.TH.defaultOptions ''GetInconsistentMetadata)
+instance J.ToJSON GetInconsistentMetadata where
+  toJSON = J.genericToJSON J.defaultOptions
+  toEncoding = J.genericToEncoding J.defaultOptions
 
 instance FromJSON GetInconsistentMetadata where
   parseJSON _ = return GetInconsistentMetadata
@@ -171,9 +184,11 @@ instance FromJSON GetInconsistentMetadata where
 -- https://hasura.io/docs/latest/api-reference/metadata-api/manage-metadata/#metadata-drop-inconsistent-metadata
 data DropInconsistentMetadata
   = DropInconsistentMetadata
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(J.TH.deriveToJSON J.TH.defaultOptions ''DropInconsistentMetadata)
+instance J.ToJSON DropInconsistentMetadata where
+  toJSON = J.genericToJSON J.defaultOptions
+  toEncoding = J.genericToEncoding J.defaultOptions
 
 instance FromJSON DropInconsistentMetadata where
   parseJSON _ = return DropInconsistentMetadata
@@ -185,8 +200,9 @@ data AllowInconsistentMetadata
 
 instance FromJSON AllowInconsistentMetadata where
   parseJSON =
-    J.withBool "AllowInconsistentMetadata" $
-      pure . bool NoAllowInconsistentMetadata AllowInconsistentMetadata
+    J.withBool "AllowInconsistentMetadata"
+      $ pure
+      . bool NoAllowInconsistentMetadata AllowInconsistentMetadata
 
 instance ToJSON AllowInconsistentMetadata where
   toJSON = J.toJSON . toBool
@@ -225,9 +241,14 @@ data ReplaceMetadataV2 = ReplaceMetadataV2
 instance FromJSON ReplaceMetadataV2 where
   parseJSON = J.withObject "ReplaceMetadataV2" $ \o ->
     ReplaceMetadataV2
-      <$> o .:? "allow_inconsistent_metadata" .!= NoAllowInconsistentMetadata
-      <*> o .:? "allow_warnings" .!= AllowWarnings
-      <*> o .: "metadata"
+      <$> o
+      .:? "allow_inconsistent_metadata"
+      .!= NoAllowInconsistentMetadata
+      <*> o
+      .:? "allow_warnings"
+      .!= AllowWarnings
+      <*> o
+      .: "metadata"
 
 instance ToJSON ReplaceMetadataV2 where
   toJSON ReplaceMetadataV2 {..} =

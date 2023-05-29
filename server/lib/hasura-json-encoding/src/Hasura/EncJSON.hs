@@ -30,7 +30,7 @@ import Data.ByteString.Builder qualified as BB
 import Data.ByteString.Builder.Extra qualified as BB
 import Data.ByteString.Builder.Internal qualified as BB
 import Data.ByteString.Lazy qualified as BL
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Encoding qualified as TE
 import Data.Text.NonEmpty (NonEmptyText)
 import Data.Text.NonEmpty qualified as NET
@@ -80,6 +80,13 @@ removeSOH uncons bs =
 -- `EncJSON`.
 instance J.FromJSON EncJSON where
   parseJSON = pure . encJFromJValue
+
+instance J.ToJSON EncJSON where
+  toJSON j =
+    let parsed = J.decode' $ encJToLBS j
+     in case parsed of
+          Nothing -> error "EncJSON contained syntactically invalid JSON!"
+          Just x -> x
 
 -- No other instances for `EncJSON`. In particular, because:
 --
@@ -139,7 +146,7 @@ encJFromLBS :: BL.ByteString -> EncJSON
 encJFromLBS = EncJSON . BB.lazyByteString
 {-# INLINE encJFromLBS #-}
 
-encJFromJValue :: J.ToJSON a => a -> EncJSON
+encJFromJValue :: (J.ToJSON a) => a -> EncJSON
 encJFromJValue = encJFromBuilder . J.fromEncoding . J.toEncoding
 {-# INLINE encJFromJValue #-}
 
@@ -181,7 +188,7 @@ encJFromAssocList =
         builder' (t, v) = J.fromEncoding (J.text t) <> ":" <> unEncJSON v
 
 encJFromInsOrdHashMap :: InsOrdHashMap Text EncJSON -> EncJSON
-encJFromInsOrdHashMap = encJFromAssocList . OMap.toList
+encJFromInsOrdHashMap = encJFromAssocList . InsOrdHashMap.toList
 
 -- | Encode a 'JO.Value' as 'EncJSON'.
 encJFromOrderedValue :: JO.Value -> EncJSON

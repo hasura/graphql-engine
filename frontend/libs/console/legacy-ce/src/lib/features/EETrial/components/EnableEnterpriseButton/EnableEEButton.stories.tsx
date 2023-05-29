@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { registerEETrialLicenseActiveMutation } from '../../mocks/registration.mock';
 import { EnableEEButtonWrapper } from './EnableEEButton';
@@ -12,13 +12,16 @@ export default {
     msw: [registerEETrialLicenseActiveMutation],
   },
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof EnableEEButtonWrapper>;
+} as Meta<typeof EnableEEButtonWrapper>;
 
-export const Demo: ComponentStory<typeof EnableEEButtonWrapper> = () => (
-  <EnableEEButtonWrapper showBenefitsView>
-    <Button type="submit" mode="primary">
-      Enable Enterprise
-    </Button>
-  </EnableEEButtonWrapper>
-);
-Demo.storyName = '💠 Demo';
+export const Demo: StoryObj<typeof EnableEEButtonWrapper> = {
+  render: () => (
+    <EnableEEButtonWrapper showBenefitsView>
+      <Button type="submit" mode="primary">
+        Enable Enterprise
+      </Button>
+    </EnableEEButtonWrapper>
+  ),
+
+  name: '💠 Demo',
+};

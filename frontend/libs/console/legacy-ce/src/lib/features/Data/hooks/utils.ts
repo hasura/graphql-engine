@@ -4,6 +4,7 @@ import { useMutation } from 'react-query';
 import { Feature, RunSQLAPIError, RunSQLResponse } from '../../DataSource';
 import { parseRunSQLErrors } from '../errorUtils';
 import { hasuraToast } from '../../../new-components/Toasts';
+import { Source } from '../../hasura-metadata-types';
 
 /**
  *
@@ -40,3 +41,6 @@ export const handleRunSqlError = (err: AxiosError<RunSQLAPIError>) => {
     message,
   });
 };
+
+export const getSourceDriver = (sources: Source[], dataSourceName: string) =>
+  sources.find(source => source.name === dataSourceName)?.kind;

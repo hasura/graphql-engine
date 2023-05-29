@@ -1,11 +1,11 @@
 import React from 'react';
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { StepperNavbar } from './StepperNavbar';
 
 export default {
   title: 'features/CloudOnboarding/Onboarding Wizard/Stepper Navbar',
   component: StepperNavbar,
-} as ComponentMeta<typeof StepperNavbar>;
+} as Meta<typeof StepperNavbar>;
 
 const stepperNavSteps = [
   {
@@ -30,6 +30,6 @@ const stepperNavSteps = [
   },
 ];
 
-export const Base: Story = () => (
+export const Base: StoryFn = () => (
   <StepperNavbar activeIndex={1} steps={stepperNavSteps} />
 );

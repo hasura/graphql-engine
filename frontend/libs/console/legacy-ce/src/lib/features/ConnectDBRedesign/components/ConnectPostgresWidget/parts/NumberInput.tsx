@@ -48,6 +48,7 @@ export const NumberInputField = ({
           )}
           data-testid={name}
           value={localValue}
+          onWheelCapture={e => e.currentTarget.blur()}
         />
       </div>
     </FieldWrapper>

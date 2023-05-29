@@ -6,7 +6,7 @@ import Autodocodec (parseJSONViaCodec, toJSONViaCodec)
 import Data.Aeson qualified as J
 import Data.Aeson.Types (parseEither)
 import Data.Aeson.Types qualified as J
-import Data.HashMap.Strict.InsOrd.Extended qualified as OM
+import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.HashSet qualified as S
 import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromJust)
@@ -48,7 +48,7 @@ spec = do
         mkCollection collName queries =
           (collName, CreateCollection collName (CollectionDef queries) Nothing)
         collections =
-          OM.fromList
+          InsOrdHashMap.fromList
             [ mkCollection coll1 [lquery1],
               mkCollection coll2 [lquery2],
               mkCollection coll3 [lquery3, lquery1b],
@@ -61,7 +61,7 @@ spec = do
           (collName, AllowlistEntry collName (AllowlistScopeRoles roles))
         emptyAllowlist = mempty
         complexAllowlist =
-          OM.fromList
+          InsOrdHashMap.fromList
             [ mkAllowGlobal coll2,
               mkAllowRoles coll1 (role1 NE.:| [role4]),
               mkAllowRoles coll3 (role2 NE.:| [role3]),
@@ -116,13 +116,14 @@ spec = do
 
     it "round-trips roles when serializing via codecs" do
       let expected =
-            maybeToEither "nonempty" $
-              AllowlistScopeRoles <$> traverse mkRoleName ["viewer", "admin"]
+            maybeToEither "nonempty"
+              $ AllowlistScopeRoles
+              <$> traverse mkRoleName ["viewer", "admin"]
       let json = toJSONViaCodec <$> expected
       let actual = parseEither parseJSONViaCodec =<< json
       actual `shouldBe` expected
 
-mustJSON :: J.FromJSON a => J.Value -> a
+mustJSON :: (J.FromJSON a) => J.Value -> a
 mustJSON v = case J.parseEither J.parseJSON v of
   Left err -> error err
   Right x -> x

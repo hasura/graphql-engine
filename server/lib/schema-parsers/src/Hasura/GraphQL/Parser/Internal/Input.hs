@@ -48,10 +48,10 @@ import Language.GraphQL.Draft.Syntax hiding (Definition)
 
 -- ure that out on its own, so we have to be explicit to give
 -- it a little help.
-inputParserInput :: forall k. 'Input <: k => ParserInput k :~: InputValue Variable
+inputParserInput :: forall k. ('Input <: k) => ParserInput k :~: InputValue Variable
 inputParserInput = case subKind @'Input @k of KRefl -> Refl; KBoth -> Refl
 
-pInputParser :: forall origin k m a. 'Input <: k => Parser origin k m a -> InputValue Variable -> m a
+pInputParser :: forall origin k m a. ('Input <: k) => Parser origin k m a -> InputValue Variable -> m a
 pInputParser = gcastWith (inputParserInput @k) pParser
 
 -- | Parses some collection of input fields. Build an 'InputFieldsParser' using
@@ -74,7 +74,7 @@ instance (Functor m) => Functor (InputFieldsParser origin m) where
   {-# INLINE fmap #-}
   fmap f = \(InputFieldsParser d p) -> InputFieldsParser d (fmap (fmap f) p)
 
-instance Applicative m => Applicative (InputFieldsParser origin m) where
+instance (Applicative m) => Applicative (InputFieldsParser origin m) where
   {-# INLINE pure #-}
   pure v = InputFieldsParser [] (const $ pure v)
   {-# INLINE (<*>) #-}
@@ -321,7 +321,7 @@ fieldWithDefault name description defaultValue parser =
 -- combinators
 
 enum ::
-  MonadParse m =>
+  (MonadParse m) =>
   Name ->
   Maybe Description ->
   NonEmpty (Definition origin EnumValueInfo, a) ->
@@ -359,7 +359,7 @@ enum name description values =
 -- This would prevent the creation of an object with no fields, which is against
 -- the spec.
 object ::
-  MonadParse m =>
+  (MonadParse m) =>
   Name ->
   Maybe Description ->
   InputFieldsParser origin m a ->

@@ -6,7 +6,13 @@ import { generateQueryKeys } from '../../DatabaseRelationships/utils/queryClient
 import { useMetadataMigration } from '../../MetadataAPI';
 import { DatabaseConnection } from '../types';
 import { usePushRoute } from './usePushRoute';
-import { transformErrorResponse } from '../utils';
+import {
+  sendConnectDatabaseTelemetryEvent,
+  transformErrorResponse,
+} from '../utils';
+import { useHttpClient } from '../../Network';
+import { Driver } from '../../../dataSources';
+import { useMetadata } from '../../hasura-metadata-api';
 
 export const useManageDatabaseConnection = ({
   onSuccess,
@@ -16,11 +22,13 @@ export const useManageDatabaseConnection = ({
   onError?: (err: Error) => void;
 }) => {
   const queryClient = useQueryClient();
-  const { mutate, ...rest } = useMetadataMigration({
+  const { mutateAsync, ...rest } = useMetadataMigration({
     errorTransform: transformErrorResponse,
   });
+  const { data: resource_version } = useMetadata(m => m.resource_version);
   const push = usePushRoute();
   const dispatch = useAppDispatch();
+  const httpClient = useHttpClient();
 
   const mutationOptions = useMemo(
     () => ({
@@ -42,7 +50,7 @@ export const useManageDatabaseConnection = ({
 
   const createConnection = useCallback(
     async (databaseConnection: DatabaseConnection) => {
-      mutate(
+      await mutateAsync(
         {
           query: {
             type: `${databaseConnection.driver}_add_source`,
@@ -55,28 +63,54 @@ export const useManageDatabaseConnection = ({
         },
         mutationOptions
       );
+      sendConnectDatabaseTelemetryEvent({
+        httpClient,
+        driver: databaseConnection.driver as Driver,
+        dataSourceName: databaseConnection.details.name,
+      });
     },
-    [mutate, mutationOptions]
+    [httpClient, mutateAsync, mutationOptions]
   );
 
   const editConnection = useCallback(
-    async (databaseConnection: DatabaseConnection) => {
-      mutate(
+    async (
+      databaseConnection: DatabaseConnection & { originalName: string }
+    ) => {
+      const renameConnectionPayload = {
+        type: 'rename_source',
+        args: {
+          name: databaseConnection.originalName,
+          new_name: databaseConnection.details.name,
+        },
+      };
+
+      const updateConfigurationPayload = {
+        type: `${databaseConnection.driver}_add_source`,
+        args: {
+          name: databaseConnection.details.name,
+          configuration: databaseConnection.details.configuration,
+          customization: databaseConnection.details.customization,
+          replace_configuration: true,
+        },
+      };
+
+      mutateAsync(
         {
           query: {
-            type: `${databaseConnection.driver}_add_source`,
-            args: {
-              name: databaseConnection.details.name,
-              configuration: databaseConnection.details.configuration,
-              customization: databaseConnection.details.customization,
-              replace_configuration: true,
-            },
+            type: 'bulk',
+            source: databaseConnection.originalName,
+            resource_version,
+            args:
+              databaseConnection.details.name ===
+              databaseConnection.originalName
+                ? [updateConfigurationPayload]
+                : [renameConnectionPayload, updateConfigurationPayload],
           },
         },
         mutationOptions
       );
     },
-    [mutate, mutationOptions]
+    [mutateAsync, mutationOptions, resource_version]
   );
 
   return { createConnection, editConnection, ...rest };

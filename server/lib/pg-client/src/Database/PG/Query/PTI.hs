@@ -19,7 +19,7 @@ import Prelude
 mkOid :: Word32 -> PQ.Oid
 mkOid = PQ.Oid . fromIntegral
 
-unOid :: Integral n => PQ.Oid -> n
+unOid :: (Integral n) => PQ.Oid -> n
 unOid (PQ.Oid oid') = fromIntegral oid'
 
 -- * Constants

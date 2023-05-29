@@ -26,7 +26,7 @@ import Hasura.Session
 -- Top-level planner
 
 planNoPlan ::
-  MonadError E.QErr m =>
+  (MonadError E.QErr m) =>
   FromIrConfig ->
   UserInfo ->
   QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
@@ -44,7 +44,7 @@ planNoPlan fromIrConfig userInfo queryDB = do
   let nativeQueries :: Maybe With
       nativeQueries = do
         ctes <- NE.nonEmpty (Map.toList fromIrWriterNativeQueries)
-        pure (With [Aliased query (toTxt name) | (name, query) <- ctes])
+        pure (With [Aliased query aliasedAlias | (Aliased {aliasedAlias}, query) <- ctes])
 
   pure select {selectWith = nativeQueries <> selectWith select}
 

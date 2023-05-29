@@ -13,7 +13,7 @@ import Hasura.Prelude
 import Hasura.QuickCheck.Instances ()
 import Hasura.RQL.Types.BackendType (BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Common (Comment (..))
-import Hasura.RQL.Types.Table (ColumnConfig (..), CustomRootField (..), TableConfig (..), TableCustomRootFields (..), emptyCustomRootFields, emptyTableConfig)
+import Hasura.Table.Cache (ColumnConfig (..), CustomRootField (..), TableConfig (..), TableCustomRootFields (..), emptyCustomRootFields, emptyTableConfig)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Test.Hspec
 import Test.Hspec.QuickCheck

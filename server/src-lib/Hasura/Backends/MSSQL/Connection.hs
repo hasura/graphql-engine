@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | MSSQL Connection
@@ -32,7 +31,6 @@ import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control
 import Data.Aeson
 import Data.Aeson qualified as J
-import Data.Aeson.TH
 import Data.Environment qualified as Env
 import Data.Text (pack, unpack)
 import Data.Time (localTimeToUTC)
@@ -44,19 +42,19 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.ResizePool
 
-class MonadError QErr m => MonadMSSQLTx m where
+class (MonadError QErr m) => MonadMSSQLTx m where
   liftMSSQLTx :: MSTx.TxE QErr a -> m a
 
-instance MonadMSSQLTx m => MonadMSSQLTx (ReaderT s m) where
+instance (MonadMSSQLTx m) => MonadMSSQLTx (ReaderT s m) where
   liftMSSQLTx = lift . liftMSSQLTx
 
-instance MonadMSSQLTx m => MonadMSSQLTx (StateT s m) where
+instance (MonadMSSQLTx m) => MonadMSSQLTx (StateT s m) where
   liftMSSQLTx = lift . liftMSSQLTx
 
 instance (Monoid w, MonadMSSQLTx m) => MonadMSSQLTx (WriterT w m) where
   liftMSSQLTx = lift . liftMSSQLTx
 
-instance MonadIO m => MonadMSSQLTx (MSTx.TxET QErr m) where
+instance (MonadIO m) => MonadMSSQLTx (MSTx.TxET QErr m) where
   liftMSSQLTx = hoist liftIO
 
 -- | ODBC connection string for MSSQL server
@@ -109,22 +107,31 @@ instance Hashable MSSQLPoolSettings
 
 instance NFData MSSQLPoolSettings
 
-$(deriveToJSON hasuraJSON ''MSSQLPoolSettings)
+instance ToJSON MSSQLPoolSettings where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 instance FromJSON MSSQLPoolSettings where
   parseJSON = withObject "MSSQL pool settings" $ \o ->
     MSSQLPoolSettings
-      <$> o .:? "max_connections"
-      <*> o .:? "total_max_connections"
-      <*> o .:? "idle_timeout" .!= _mpsIdleTimeout defaultMSSQLPoolSettings
+      <$> o
+      .:? "max_connections"
+      <*> o
+      .:? "total_max_connections"
+      <*> o
+      .:? "idle_timeout"
+      .!= _mpsIdleTimeout defaultMSSQLPoolSettings
 
 instance HasCodec MSSQLPoolSettings where
   codec =
-    AC.object "MSSQLPoolSettings" $
-      MSSQLPoolSettings
-        <$> optionalFieldWithDefault' "max_connections" (Just defaultMSSQLMaxConnections) AC..= _mpsMaxConnections
-        <*> optionalFieldOrNull' "total_max_connections" AC..= _mpsTotalMaxConnections
-        <*> optionalFieldWithDefault' "idle_timeout" (_mpsIdleTimeout defaultMSSQLPoolSettings) AC..= _mpsIdleTimeout
+    AC.object "MSSQLPoolSettings"
+      $ MSSQLPoolSettings
+      <$> optionalFieldWithDefault' "max_connections" (Just defaultMSSQLMaxConnections)
+      AC..= _mpsMaxConnections
+        <*> optionalFieldOrNull' "total_max_connections"
+      AC..= _mpsTotalMaxConnections
+        <*> optionalFieldWithDefault' "idle_timeout" (_mpsIdleTimeout defaultMSSQLPoolSettings)
+      AC..= _mpsIdleTimeout
 
 defaultMSSQLMaxConnections :: Int
 defaultMSSQLMaxConnections = 50
@@ -149,18 +156,24 @@ instance NFData MSSQLConnectionInfo
 
 instance HasCodec MSSQLConnectionInfo where
   codec =
-    AC.object "MSSQLConnectionInfo" $
-      MSSQLConnectionInfo
-        <$> requiredField' "connection_string" AC..= _mciConnectionString
-        <*> requiredField' "pool_settings" AC..= _mciPoolSettings
+    AC.object "MSSQLConnectionInfo"
+      $ MSSQLConnectionInfo
+      <$> requiredField' "connection_string"
+      AC..= _mciConnectionString
+        <*> requiredField' "pool_settings"
+      AC..= _mciPoolSettings
 
-$(deriveToJSON hasuraJSON ''MSSQLConnectionInfo)
+instance ToJSON MSSQLConnectionInfo where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 instance FromJSON MSSQLConnectionInfo where
   parseJSON = withObject "Object" $ \o ->
     MSSQLConnectionInfo
       <$> ((o .: "database_url") <|> (o .: "connection_string"))
-      <*> o .:? "pool_settings" .!= defaultMSSQLPoolSettings
+      <*> o
+      .:? "pool_settings"
+      .!= defaultMSSQLPoolSettings
 
 data MSSQLConnConfiguration = MSSQLConnConfiguration
   { _mccConnectionInfo :: MSSQLConnectionInfo,
@@ -174,16 +187,23 @@ instance NFData MSSQLConnConfiguration
 
 instance HasCodec MSSQLConnConfiguration where
   codec =
-    AC.object "MSSQLConnConfiguration" $
-      MSSQLConnConfiguration
-        <$> requiredField' "connection_info" AC..= _mccConnectionInfo
-        <*> optionalFieldOrNull' "read_replicas" AC..= _mccReadReplicas
+    AC.object "MSSQLConnConfiguration"
+      $ MSSQLConnConfiguration
+      <$> requiredField' "connection_info"
+      AC..= _mccConnectionInfo
+        <*> optionalFieldOrNull' "read_replicas"
+      AC..= _mccReadReplicas
 
-$(deriveJSON hasuraJSON {omitNothingFields = True} ''MSSQLConnConfiguration)
+instance FromJSON MSSQLConnConfiguration where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+
+instance ToJSON MSSQLConnConfiguration where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 createMSSQLPool ::
-  MonadIO m =>
-  QErrM m =>
+  (MonadIO m) =>
+  (QErrM m) =>
   InputConnectionString ->
   MSPool.ConnectionOptions ->
   Env.Environment ->
@@ -194,7 +214,7 @@ createMSSQLPool iConnString connOptions env = do
   pure (connString, pool)
 
 resolveInputConnectionString ::
-  QErrM m =>
+  (QErrM m) =>
   Env.Environment ->
   InputConnectionString ->
   m MSPool.ConnectionString
@@ -203,7 +223,7 @@ resolveInputConnectionString env =
     (RawString cs) -> pure cs
     (FromEnvironment envVar) -> MSPool.ConnectionString <$> getEnv env envVar
 
-getEnv :: QErrM m => Env.Environment -> Text -> m Text
+getEnv :: (QErrM m) => Env.Environment -> Text -> m Text
 getEnv env k = do
   let mEnv = Env.lookupEnv env (unpack k)
   case mEnv of
@@ -246,8 +266,8 @@ mkMSSQLExecCtx pool resizeStrategy =
       -- Resize the primary pool
       resizeMSSQLPool pool maxConnections serverReplicas
       -- Return the summary. Only the primary pool is resized
-      pure $
-        SourceResizePoolSummary
+      pure
+        $ SourceResizePoolSummary
           { _srpsPrimaryResized = True,
             _srpsReadReplicasResized = False,
             _srpsConnectionSet = []

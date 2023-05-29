@@ -118,8 +118,8 @@ mkPGExecCtx defaultIsoLevel pool resizeStrategy =
       -- Resize the pool
       resizePostgresPool pool maxConnections serverReplicas
       -- Return the summary. Only the primary pool is resized
-      pure $
-        SourceResizePoolSummary
+      pure
+        $ SourceResizePoolSummary
           { _srpsPrimaryResized = True,
             _srpsReadReplicasResized = False,
             _srpsConnectionSet = []

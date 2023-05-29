@@ -1,12 +1,12 @@
 import React from 'react';
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { DialogContainer } from './DialogContainer';
 import { dialogHeader, familiaritySurveySubHeader } from '../../constants';
 
 export default {
   title: 'features/CloudOnboarding/Onboarding Wizard/Dialog Container',
   component: DialogContainer,
-} as ComponentMeta<typeof DialogContainer>;
+} as Meta<typeof DialogContainer>;
 
 const ExampleChildren = () => {
   return <div>Hello world!</div>;
@@ -35,7 +35,7 @@ const stepperNavSteps = [
   },
 ];
 
-export const Base: Story = () => (
+export const Base: StoryFn = () => (
   <DialogContainer
     header={dialogHeader}
     subHeader={familiaritySurveySubHeader}

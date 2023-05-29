@@ -51,14 +51,14 @@ data GeneratedQuery = GeneratedQuery
 
 instance J.ToJSON QueryLog where
   toJSON (QueryLog gqlQuery generatedQuery reqId kind) =
-    J.object $
-      [ "query" J..= gqlQuery,
-        -- NOTE: this customizes the default JSON instance of a pair
-        "generated_sql" J..= fmap fromPair generatedQuery,
-        "request_id" J..= reqId,
-        "kind" J..= kind
-      ]
-        <> maybe [] (\val -> ["connection_template" J..= val]) (getResolvedConnectionTemplate kind)
+    J.object
+      $ [ "query" J..= gqlQuery,
+          -- NOTE: this customizes the default JSON instance of a pair
+          "generated_sql" J..= fmap fromPair generatedQuery,
+          "request_id" J..= reqId,
+          "kind" J..= kind
+        ]
+      <> maybe [] (\val -> ["connection_template" J..= val]) (getResolvedConnectionTemplate kind)
     where
       fromPair p = HashMap.fromList [first toTxt p]
       getResolvedConnectionTemplate :: QueryLogKind -> Maybe (BackendResolvedConnectionTemplate)
@@ -75,17 +75,17 @@ instance J.ToJSON GeneratedQuery where
 instance L.ToEngineLog QueryLog L.Hasura where
   toEngineLog ql = (L.LevelInfo, L.ELTQueryLog, J.toJSON ql)
 
-class Monad m => MonadQueryLog m where
+class (Monad m) => MonadQueryLog m where
   logQueryLog ::
     L.Logger L.Hasura ->
     QueryLog ->
     m ()
 
-instance MonadQueryLog m => MonadQueryLog (ExceptT e m) where
+instance (MonadQueryLog m) => MonadQueryLog (ExceptT e m) where
   logQueryLog logger l = lift $ logQueryLog logger l
 
-instance MonadQueryLog m => MonadQueryLog (ReaderT r m) where
+instance (MonadQueryLog m) => MonadQueryLog (ReaderT r m) where
   logQueryLog logger l = lift $ logQueryLog logger l
 
-instance MonadQueryLog m => MonadQueryLog (TraceT m) where
+instance (MonadQueryLog m) => MonadQueryLog (TraceT m) where
   logQueryLog logger l = lift $ logQueryLog logger l

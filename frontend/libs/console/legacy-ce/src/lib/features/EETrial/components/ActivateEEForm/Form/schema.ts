@@ -27,8 +27,17 @@ export const registrationSchema = z.object({
     .boolean()
     .refine(
       value => value === true,
-      'Please agree our Terms of Service and Privacy Policy'
+      'Please agree to our Terms of Service and Privacy Policy'
     ),
+  hasuraUseCase: z
+    .object({
+      label: z.string(),
+      value: z.string(),
+    })
+    .transform(val => val.value),
+  eeUseCase: z.array(z.string()).nonempty({
+    message: 'Please select at least one use case',
+  }),
 });
 
 export const activationSchema = z.object({

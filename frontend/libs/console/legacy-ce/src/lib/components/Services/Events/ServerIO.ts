@@ -651,7 +651,7 @@ export const getEventLogs =
         const invocationsKeys = [
           'id',
           'event_id',
-          'status',
+          'http_status',
           'created_at',
           'request',
           'response',

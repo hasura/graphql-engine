@@ -54,6 +54,20 @@ export const RetryConfiguration = () => {
           />
         </div>
       </div>
+      <div className="grid grid-cols-12 gap-3">
+        <div className="col-span-6 flex items-center">
+          <label className="block">Tolerance in seconds</label>
+          <IconTooltip message="Number of seconds between scheduled time and actual delivery time that is acceptable" />
+        </div>
+        <div className="col-span-6">
+          <input
+            type="number"
+            className={inputStyes}
+            aria-label="tolerance_seconds"
+            {...register('tolerance_seconds')}
+          />
+        </div>
+      </div>
     </div>
   );
 };

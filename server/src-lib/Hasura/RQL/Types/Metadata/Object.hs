@@ -80,7 +80,7 @@ data LogicalModelMetadataObjId
 
 instance Hashable LogicalModelMetadataObjId
 
--- | the logical model should probably also link to its logical model
+-- | the native query should probably also link to its logical model
 data NativeQueryMetadataObjId
   = NQMORel RelName RelType
   deriving (Show, Eq, Ord, Generic)
@@ -94,6 +94,7 @@ data SourceMetadataObjId b
   | SMOTableObj (TableName b) TableMetadataObjId
   | SMONativeQuery NativeQueryName
   | SMONativeQueryObj NativeQueryName NativeQueryMetadataObjId
+  | SMOStoredProcedure (FunctionName b)
   | SMOLogicalModel LogicalModelName
   | SMOLogicalModelObj LogicalModelName LogicalModelMetadataObjId
   deriving (Generic)
@@ -159,6 +160,7 @@ moiTypeName = \case
       SMONativeQuery _ -> "native_query"
       SMONativeQueryObj _ nativeQueryObjId -> case nativeQueryObjId of
         NQMORel _ relType -> relTypeToTxt relType <> "_relation"
+      SMOStoredProcedure _ -> "stored_procedure"
       SMOLogicalModel _ -> "custom_type"
       SMOLogicalModelObj _ logicalModelObjectId -> case logicalModelObjectId of
         LMMOPerm _ permType -> permTypeToCode permType <> "_permission"
@@ -200,7 +202,7 @@ moiName objectId =
   where
     handleSourceObj ::
       forall b.
-      Backend b =>
+      (Backend b) =>
       SourceName ->
       SourceMetadataObjId b ->
       Text
@@ -217,6 +219,7 @@ moiName objectId =
       SMONativeQueryObj nativeQueryName nativeQueryObjId ->
         case nativeQueryObjId of
           NQMORel name _ -> toTxt name <> " in " <> toTxt nativeQueryName
+      SMOStoredProcedure name -> toTxt name <> " in source " <> toTxt source
       SMOLogicalModel name -> toTxt name <> " in source " <> toTxt source
       SMOLogicalModelObj logicalModelName logicalModelObjectId -> do
         let objectName :: Text
@@ -225,9 +228,9 @@ moiName objectId =
 
             sourceObjectId :: MetadataObjId
             sourceObjectId =
-              MOSourceObjId source $
-                AB.mkAnyBackend $
-                  SMOLogicalModel @b logicalModelName
+              MOSourceObjId source
+                $ AB.mkAnyBackend
+                $ SMOLogicalModel @b logicalModelName
 
         objectName <> " in " <> moiName sourceObjectId
       SMOTableObj tableName tableObjectId ->
@@ -240,9 +243,9 @@ moiName objectId =
          in tableObjectName
               <> " in "
               <> moiName
-                ( MOSourceObjId source $
-                    AB.mkAnyBackend $
-                      SMOTable @b tableName
+                ( MOSourceObjId source
+                    $ AB.mkAnyBackend
+                    $ SMOTable @b tableName
                 )
 
 data MetadataObject = MetadataObject
@@ -258,10 +261,10 @@ $(makeLenses ''MetadataObject)
 data InconsistentRoleEntity
   = InconsistentTablePermission
       SourceName
-      Text
-      -- ^ Table name -- using `Text` here instead of `TableName b` for simplification,
+      -- | Table name -- using `Text` here instead of `TableName b` for simplification,
       -- Otherwise, we'll have to create a newtype wrapper around `TableName b` and then
       -- use it with `AB.AnyBackend`
+      Text
       PermType
   | InconsistentRemoteSchemaPermission RemoteSchemaName
   deriving stock (Show, Eq, Ord, Generic)

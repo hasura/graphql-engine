@@ -137,13 +137,16 @@ instance FromCol TimeOfDay where
 instance FromCol UTCTime where
   fromCol = fromColHelper PD.timestamptz_int
 
+instance FromCol LocalTime where
+  fromCol = fromColHelper PD.timestamp_int
+
 instance FromCol Bool where
   fromCol = fromColHelper PD.bool
 
 instance FromCol UUID where
   fromCol = fromColHelper PD.uuid
 
-instance FromCol a => FromCol (Maybe a) where
+instance (FromCol a) => FromCol (Maybe a) where
   fromCol Nothing = return Nothing
   fromCol bs = Just <$> fromCol bs
 
@@ -195,21 +198,21 @@ buildMat r = do
     VM.unsafeWrite mvx (rowInt ir) vy
   V.unsafeFreeze mvx
 
-instance FromRow a => FromRes [a] where
+instance (FromRow a) => FromRes [a] where
   fromRes (ResultOkEmpty _) =
     throwError "Expecting data. Instead, status is 'CommandOk'"
   fromRes (ResultOkData res) = do
     rm <- liftIO $ buildMat res
     ExceptT $ return $ fmap V.toList $ sequence $ V.map fromRow rm
 
-instance FromRow a => FromRes (V.Vector a) where
+instance (FromRow a) => FromRes (V.Vector a) where
   fromRes (ResultOkEmpty _) =
     throwError "Expecting data. Instead, status is 'CommandOk'"
   fromRes (ResultOkData res) = do
     rm <- liftIO $ buildMat res
     ExceptT $ return $ sequence $ V.map fromRow rm
 
-instance FromRow a => FromRes (SingleRow a) where
+instance (FromRow a) => FromRes (SingleRow a) where
   fromRes (ResultOkEmpty _) =
     throwError "Expecting data. Instead, status is 'CommandOk'"
   fromRes (ResultOkData res) = do
@@ -218,7 +221,7 @@ instance FromRow a => FromRes (SingleRow a) where
       then ExceptT $ return $ SingleRow <$> fromRow (rm V.! 0)
       else throwError "Rows returned != 1"
 
-instance FromRow a => FromRes (Maybe a) where
+instance (FromRow a) => FromRes (Maybe a) where
   fromRes (ResultOkEmpty _) =
     throwError "Expecting data. Instead, status is 'CommandOk'"
   fromRes (ResultOkData res) = do
@@ -238,7 +241,7 @@ colMismatch expected actual =
         show actual
       ]
 
-instance FromCol a => FromRow (Identity a) where
+instance (FromCol a) => FromRow (Identity a) where
   fromRow row = case V.length row of
     1 -> fmap Identity $ fromCol $ row V.! 0
     c -> throwError $ colMismatch 1 c

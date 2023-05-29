@@ -205,8 +205,8 @@ convertRemoteSourceRelationship
 
       argumentIdField =
         ( fromCol @b argumentIdColumn,
-          AFColumn $
-            AnnColumnField
+          AFColumn
+            $ AnnColumnField
               { _acfColumn = argumentIdColumn,
                 _acfType = argumentIdColumnType,
                 _acfAsText = False,

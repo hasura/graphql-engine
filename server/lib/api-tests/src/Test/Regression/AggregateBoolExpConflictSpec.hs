@@ -76,8 +76,8 @@ schema =
 
 serialInt :: Schema.ScalarType
 serialInt =
-  Schema.TCustomType $
-    Schema.defaultBackendScalarType
+  Schema.TCustomType
+    $ Schema.defaultBackendScalarType
       { Schema.bstCitus = Just "INT",
         Schema.bstPostgres = Just "INT",
         Schema.bstCockroach = Just "INT4"

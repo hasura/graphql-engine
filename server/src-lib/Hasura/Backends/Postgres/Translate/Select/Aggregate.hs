@@ -50,9 +50,9 @@ mkAggregateSelect annAggSel = do
   let ( (selectSource, nodeExtractors, topExtractor),
         SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}
         ) =
-          runWriter $
-            flip runReaderT strfyNum $
-              processAnnAggregateSelect sourcePrefixes rootFieldName annAggSel
+          runWriter
+            $ flip runReaderT strfyNum
+            $ processAnnAggregateSelect sourcePrefixes rootFieldName annAggSel
       -- select the relevant columns and subquery we want to aggregate
       selectNode = SelectNode nodeExtractors joinTree
       -- aggregate the results into a top-level return value

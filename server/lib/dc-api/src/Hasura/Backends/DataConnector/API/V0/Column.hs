@@ -3,6 +3,7 @@
 
 module Hasura.Backends.DataConnector.API.V0.Column
   ( ColumnName (..),
+    ColumnType (..),
     ColumnInfo (..),
     ciName,
     ciType,
@@ -29,6 +30,7 @@ import Data.OpenApi (ToSchema)
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Scalar qualified as API.V0.Scalar
+import Language.GraphQL.Draft.Syntax qualified as G
 import Prelude
 
 --------------------------------------------------------------------------------
@@ -44,9 +46,41 @@ instance HasCodec ColumnName where
 
 --------------------------------------------------------------------------------
 
+data ColumnType
+  = ColumnTypeScalar API.V0.Scalar.ScalarType
+  | ColumnTypeObject G.Name
+  | ColumnTypeArray ColumnType Bool
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ColumnType
+
+instance HasCodec ColumnType where
+  codec =
+    named "ColumnType" $
+      matchChoiceCodec
+        (dimapCodec ColumnTypeScalar id codec)
+        (object "ColumnTypeNonScalar" $ discriminatedUnionCodec "type" enc dec)
+        \case
+          ColumnTypeScalar scalar -> Left scalar
+          ct -> Right ct
+    where
+      enc = \case
+        ColumnTypeScalar _ -> error "unexpected ColumnTypeScalar"
+        ColumnTypeObject objectName -> ("object", mapToEncoder objectName columnTypeObjectCodec)
+        ColumnTypeArray columnType isNullable -> ("array", mapToEncoder (columnType, isNullable) columnTypeArrayCodec)
+      dec =
+        HashMap.fromList
+          [ ("object", ("ColumnTypeObject", mapToDecoder ColumnTypeObject columnTypeObjectCodec)),
+            ("array", ("ColumnTypeArray", mapToDecoder (uncurry ColumnTypeArray) columnTypeArrayCodec))
+          ]
+      columnTypeObjectCodec = requiredField' "name"
+      columnTypeArrayCodec = (,) <$> requiredField' "element_type" .= fst <*> requiredField' "nullable" .= snd
+
+--------------------------------------------------------------------------------
+
 data ColumnInfo = ColumnInfo
   { _ciName :: ColumnName,
-    _ciType :: API.V0.Scalar.ScalarType,
+    _ciType :: ColumnType,
     _ciNullable :: Bool,
     _ciDescription :: Maybe Text,
     _ciInsertable :: Bool,

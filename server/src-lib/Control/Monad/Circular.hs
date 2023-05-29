@@ -115,7 +115,7 @@ instance MonadTrans (CircularT k v) where
 
 -- | Allow code in 'CircularT' to have access to any underlying state
 -- capabilities, hiding the fact that 'CircularT' itself is a state monad.
-instance MonadState s m => MonadState s (CircularT k v m) where
+instance (MonadState s m) => MonadState s (CircularT k v m) where
   get = lift get
   put x = lift $ put x
 

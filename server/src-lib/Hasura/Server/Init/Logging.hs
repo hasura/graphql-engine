@@ -79,7 +79,7 @@ connInfoToLog connInfo =
             ]
 
 -- | Generate a 'StartupLog' from the final 'ServeOptions'.
-serveOptsToLog :: ToJSON (Logging.EngineLogType impl) => Config.ServeOptions impl -> Server.Logging.StartupLog
+serveOptsToLog :: (ToJSON (Logging.EngineLogType impl)) => Config.ServeOptions impl -> Server.Logging.StartupLog
 serveOptsToLog so =
   Server.Logging.StartupLog Logging.LevelInfo "server_configuration" infoVal
   where
@@ -120,7 +120,7 @@ serveOptsToLog so =
           "enable_metadata_query_logging" .= Config.soEnableMetadataQueryLogging so
         ]
 
-mkGenericLog :: ToJSON a => Logging.LogLevel -> Text -> a -> Server.Logging.StartupLog
+mkGenericLog :: (ToJSON a) => Logging.LogLevel -> Text -> a -> Server.Logging.StartupLog
 mkGenericLog logLevel k msg =
   Server.Logging.StartupLog logLevel k $ J.toJSON msg
 

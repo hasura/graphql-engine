@@ -32,6 +32,10 @@ export type CollapsibleProps = {
    * Disabled wrapping trigger children in a span
    */
   doNotWrapChildren?: boolean;
+  /**
+   * A way to attach code to openChange handler
+   */
+  onOpenChange?: (open: boolean) => void;
 } & Pick<RadixCollapsible.CollapsibleProps, 'defaultOpen'>;
 
 export const Collapsible: React.VFC<CollapsibleProps> = ({
@@ -43,6 +47,7 @@ export const Collapsible: React.VFC<CollapsibleProps> = ({
   animationSpeed = 'default',
   triggerClassName,
   doNotWrapChildren = false,
+  onOpenChange,
 }) => {
   const [open, setOpen] = React.useState(false);
 
@@ -57,7 +62,10 @@ export const Collapsible: React.VFC<CollapsibleProps> = ({
   return (
     <RadixCollapsible.Root
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={open => {
+        setOpen(open);
+        onOpenChange?.(open);
+      }}
       disabled={disabled}
     >
       <RadixCollapsible.Trigger

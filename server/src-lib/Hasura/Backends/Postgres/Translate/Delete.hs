@@ -17,7 +17,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 
 mkDelete ::
-  Backend ('Postgres pgKind) =>
+  (Backend ('Postgres pgKind)) =>
   AnnDel ('Postgres pgKind) ->
   S.SQLDelete
 mkDelete (AnnDel tn (fltr, wc) _ _ _) =

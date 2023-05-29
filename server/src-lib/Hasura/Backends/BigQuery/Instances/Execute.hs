@@ -5,7 +5,7 @@ module Hasura.Backends.BigQuery.Instances.Execute () where
 import Data.Aeson qualified as J
 import Data.Aeson.Text qualified as J
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Builder qualified as LT
@@ -96,7 +96,7 @@ recordSetToEncJSON cardinality DataLoader.RecordSet {rows} =
     BigQuery.Many -> encJFromList (toList (fmap encJFromRecord rows))
   where
     encJFromRecord =
-      encJFromInsOrdHashMap . fmap encJFromOutputValue . OMap.mapKeys coerce
+      encJFromInsOrdHashMap . fmap encJFromOutputValue . InsOrdHashMap.mapKeys coerce
     encJFromOutputValue outputValue =
       case outputValue of
         DataLoader.NullOutputValue -> encJFromJValue J.Null
@@ -140,7 +140,7 @@ bqDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf _headers
 -- explain
 
 bqDBQueryExplain ::
-  MonadError E.QErr m =>
+  (MonadError E.QErr m) =>
   RootFieldAlias ->
   UserInfo ->
   SourceName ->
@@ -152,22 +152,22 @@ bqDBQueryExplain ::
 bqDBQueryExplain fieldName userInfo sourceName sourceConfig qrf _ _ = do
   select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
   let textSQL = selectSQLTextForExplain select
-  pure $
-    AB.mkAnyBackend $
-      DBStepInfo @'BigQuery
-        sourceName
-        sourceConfig
-        Nothing
-        ( OnBaseMonad $
-            pure $
-              withNoStatistics $
-                encJFromJValue $
-                  ExplainPlan
-                    fieldName
-                    (Just $ textSQL)
-                    (Just $ T.lines $ textSQL)
-        )
-        ()
+  pure
+    $ AB.mkAnyBackend
+    $ DBStepInfo @'BigQuery
+      sourceName
+      sourceConfig
+      Nothing
+      ( OnBaseMonad
+          $ pure
+          $ withNoStatistics
+          $ encJFromJValue
+          $ ExplainPlan
+            fieldName
+            (Just $ textSQL)
+            (Just $ T.lines $ textSQL)
+      )
+      ()
 
 -- | Get the SQL text for a select, with parameters left as $1, $2, .. holes.
 selectSQLTextForExplain :: BigQuery.Select -> Text
@@ -225,10 +225,11 @@ bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
 
     rowsArgument :: UnpreparedValue 'BigQuery
     rowsArgument =
-      UVParameter IR.Unknown $
-        ColumnValue (ColumnScalar BigQuery.StringScalarType) $
-          BigQuery.StringValue . LT.toStrict $
-            J.encodeToLazyText lhs
+      UVParameter IR.Unknown
+        $ ColumnValue (ColumnScalar BigQuery.StringScalarType)
+        $ BigQuery.StringValue
+        . LT.toStrict
+        $ J.encodeToLazyText lhs
 
     recordSetDefinitionList =
       (coerceToColumn argumentId, BigQuery.IntegerScalarType) : HashMap.toList (fmap snd joinColumnMapping)

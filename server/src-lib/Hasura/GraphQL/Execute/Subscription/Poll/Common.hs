@@ -93,8 +93,8 @@ newtype SubscriberMetadata = SubscriberMetadata {unSubscriberMetadata :: J.Value
 
 mkSubscriberMetadata :: WS.WSId -> OperationId -> Maybe OperationName -> RequestId -> SubscriberMetadata
 mkSubscriberMetadata websocketId operationId operationName reqId =
-  SubscriberMetadata $
-    J.object
+  SubscriberMetadata
+    $ J.object
       [ "websocket_id" J..= websocketId,
         "operation_id" J..= operationId,
         "operation_name" J..= operationName,
@@ -198,8 +198,8 @@ dumpCohortMap cohortMap = do
   cohorts <- STM.atomically $ TMap.toList cohortMap
   fmap J.toJSON . forM cohorts $ \(variableValues, cohort) -> do
     cohortJ <- dumpCohort cohort
-    return $
-      J.object
+    return
+      $ J.object
         [ "variables" J..= variableValues,
           "cohort" J..= cohortJ
         ]
@@ -209,8 +209,8 @@ dumpCohortMap cohortMap = do
         prevResHash <- STM.readTVar respTV
         curOpIds <- TMap.toList curOps
         newOpIds <- TMap.toList newOps
-        return $
-          J.object
+        return
+          $ J.object
             [ "resp_id" J..= respId,
               "current_ops" J..= map fst curOpIds,
               "new_ops" J..= map fst newOpIds,
@@ -247,7 +247,11 @@ data Poller streamCursor = Poller
     -- This var is "write once", moving monotonically from empty to full.
     -- TODO this could probably be tightened up to something like
     -- 'STM PollerIOState'
-    _pIOState :: STM.TMVar PollerIOState
+    _pIOState :: STM.TMVar PollerIOState,
+    _pParameterizedQueryHash :: ParameterizedQueryHash,
+    -- The operation names of the subscriptions that are part of this poller. This is
+    -- used while emitting subscription metrics
+    _pOperationNamesMap :: TMap.TMap (Maybe OperationName) Int
   }
 
 data PollerIOState = PollerIOState
@@ -291,21 +295,22 @@ dumpPollerMap :: Bool -> PollerMap streamCursor -> IO J.Value
 dumpPollerMap extended pollerMap =
   fmap J.toJSON $ do
     entries <- STM.atomically $ ListT.toList $ STMMap.listT pollerMap
-    forM entries $ \(pollerKey, Poller cohortsMap _responseState ioState) ->
+    forM entries $ \(pollerKey, Poller cohortsMap _responseState ioState _paramQueryHash _opNames) ->
       AB.dispatchAnyBackend @Backend (unBackendPollerKey pollerKey) $ \(PollerKey source role query _connectionKey) -> do
         PollerIOState threadId pollerId <- STM.atomically $ STM.readTMVar ioState
         cohortsJ <-
           if extended
             then Just <$> dumpCohortMap cohortsMap
             else return Nothing
-        return $
-          J.object
+        return
+          $ J.object
             [ "source" J..= source,
               "role" J..= role,
               "thread_id" J..= show (Immortal.threadId threadId),
               "poller_id" J..= pollerId,
               "multiplexed_query" J..= query,
-              "cohorts" J..= cohortsJ
+              "cohorts" J..= cohortsJ,
+              "parameterized_query_hash" J..= _paramQueryHash
             ]
 
 -- | An ID to track unique 'Poller's, so that we can gather metrics about each

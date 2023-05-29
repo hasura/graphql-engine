@@ -56,8 +56,8 @@ spec = do
                 [ BigQuery.setupTablesAction schema testEnvironment
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
             },

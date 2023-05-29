@@ -57,7 +57,7 @@ newtype NameSuffix = Suffix {unNameSuffix :: Text}
   deriving stock (Eq, Lift, Ord, Show)
   deriving newtype (Semigroup, Hashable, NFData, Pretty, J.ToJSONKey, J.ToJSON)
 
-parseName :: MonadFail m => Text -> m Name
+parseName :: (MonadFail m) => Text -> m Name
 parseName text = maybe (fail errorMessage) pure $ mkName text
   where
     errorMessage = T.unpack text <> " is not valid GraphQL name"
@@ -106,7 +106,7 @@ convertNameToSuffix = coerce
 unsafeMkName :: Text -> Name
 unsafeMkName = Name
 
-parseSuffix :: MonadFail m => Text -> m NameSuffix
+parseSuffix :: (MonadFail m) => Text -> m NameSuffix
 parseSuffix text = maybe (fail errorMessage) pure $ mkNameSuffix text
   where
     errorMessage = T.unpack text <> " is not valid GraphQL suffix"

@@ -40,7 +40,7 @@ module.exports = {
             .get('globals')
             .split(';')
             .filter(global => global.includes('adminSecretSet'))[0]
-            ?.split(':')[1] === 'true';
+            ?.split(':')[1] === '!true';
       }
 
       window.__env = {

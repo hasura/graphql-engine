@@ -24,6 +24,7 @@ import Hasura.Metadata.Class
 import Hasura.NativeQuery.API qualified as NativeQueries
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.DDL.Action
+import Hasura.RQL.DDL.Action.Lenses (caDefinition, uaDefinition)
 import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.ConnectionTemplate
@@ -70,6 +71,7 @@ import Hasura.Server.Logging (SchemaSyncLog (..), SchemaSyncThreadType (TTMetada
 import Hasura.Server.Types
 import Hasura.Services
 import Hasura.Session
+import Hasura.StoredProcedure.API qualified as StoredProcedures
 import Hasura.Tracing qualified as Tracing
 
 -- | The payload for the @/v1/metadata@ endpoint. See:
@@ -98,7 +100,7 @@ runMetadataQuery ::
     MonadResolveSource m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m,
+    MonadGetPolicies m,
     UserInfoM m
   ) =>
   AppContext ->
@@ -106,7 +108,7 @@ runMetadataQuery ::
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
 runMetadataQuery appContext schemaCache RQLMetadata {..} = do
-  appEnv@AppEnv {..} <- askAppEnv
+  AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
   MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   let exportsMetadata = \case
@@ -132,7 +134,7 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
         if (exportsMetadata _rqlMetadata || queryModifiesMetadata _rqlMetadata)
           then emptyMetadataDefaults
           else acMetadataDefaults appContext
-  dynamicConfig <- buildCacheDynamicConfig appEnv appContext
+  let dynamicConfig = buildCacheDynamicConfig appContext
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
     runMetadataQueryM
       (acEnvironment appContext)
@@ -149,32 +151,34 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
     then case (appEnvEnableMaintenanceMode, appEnvEnableReadOnlyMode) of
       (MaintenanceModeDisabled, ReadOnlyModeDisabled) -> do
         -- set modified metadata in storage
-        L.unLogger logger $
-          SchemaSyncLog L.LevelInfo TTMetadataApi $
-            String $
-              "Attempting to insert new metadata in storage"
+        L.unLogger logger
+          $ SchemaSyncLog L.LevelInfo TTMetadataApi
+          $ String
+          $ "Attempting to insert new metadata in storage"
         newResourceVersion <-
-          Tracing.newSpan "setMetadata" $
-            liftEitherM $
-              setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
-        L.unLogger logger $
-          SchemaSyncLog L.LevelInfo TTMetadataApi $
-            String $
-              "Successfully inserted new metadata in storage with resource version: " <> showMetadataResourceVersion newResourceVersion
+          Tracing.newSpan "setMetadata"
+            $ liftEitherM
+            $ setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+        L.unLogger logger
+          $ SchemaSyncLog L.LevelInfo TTMetadataApi
+          $ String
+          $ "Successfully inserted new metadata in storage with resource version: "
+          <> showMetadataResourceVersion newResourceVersion
 
         -- notify schema cache sync
-        Tracing.newSpan "notifySchemaCacheSync" $
-          liftEitherM $
-            notifySchemaCacheSync newResourceVersion appEnvInstanceId cacheInvalidations
-        L.unLogger logger $
-          SchemaSyncLog L.LevelInfo TTMetadataApi $
-            String $
-              "Inserted schema cache sync notification at resource version:" <> showMetadataResourceVersion newResourceVersion
+        Tracing.newSpan "notifySchemaCacheSync"
+          $ liftEitherM
+          $ notifySchemaCacheSync newResourceVersion appEnvInstanceId cacheInvalidations
+        L.unLogger logger
+          $ SchemaSyncLog L.LevelInfo TTMetadataApi
+          $ String
+          $ "Inserted schema cache sync notification at resource version:"
+          <> showMetadataResourceVersion newResourceVersion
 
         (_, modSchemaCache', _) <-
-          Tracing.newSpan "setMetadataResourceVersionInSchemaCache" $
-            setMetadataResourceVersionInSchemaCache newResourceVersion
-              & runCacheRWT dynamicConfig modSchemaCache
+          Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
+            $ setMetadataResourceVersionInSchemaCache newResourceVersion
+            & runCacheRWT dynamicConfig modSchemaCache
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->
@@ -209,12 +213,17 @@ queryModifiesMetadata = \case
       RMGetSourceKindCapabilities _ -> False
       RMListSourceKinds _ -> False
       RMGetSourceTables _ -> False
+      RMGetSourceTrackables _ -> False
       RMGetTableInfo _ -> False
+      RMGetTableInfo_ _ -> False
       RMTestConnectionTemplate _ -> False
       RMSuggestRelationships _ -> False
       RMGetNativeQuery _ -> False
       RMTrackNativeQuery _ -> True
       RMUntrackNativeQuery _ -> True
+      RMGetStoredProcedure _ -> False
+      RMTrackStoredProcedure _ -> True
+      RMUntrackStoredProcedure _ -> True
       RMGetLogicalModel _ -> False
       RMTrackLogicalModel _ -> True
       RMUntrackLogicalModel _ -> True
@@ -229,7 +238,9 @@ queryModifiesMetadata = \case
       RMRenameSource _ -> True
       RMUpdateSource _ -> True
       RMTrackTable _ -> True
+      RMTrackTables _ -> True
       RMUntrackTable _ -> True
+      RMUntrackTables _ -> True
       RMSetTableCustomization _ -> True
       RMSetApolloFederationConfig _ -> True
       RMPgSetTableIsEnum _ -> True
@@ -326,7 +337,7 @@ runMetadataQueryM ::
     MonadError QErr m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m,
+    MonadGetPolicies m,
     HasFeatureFlagChecker m
   ) =>
   Env.Environment ->
@@ -340,11 +351,11 @@ runMetadataQueryM env checkFeatureFlag remoteSchemaPerms currentResourceVersion 
     -- NOTE: This is a good place to install tracing, since it's involved in
     -- the recursive case via "bulk":
     RMV1 q ->
-      Tracing.newSpan ("v1 " <> T.pack (constrName q)) $
-        runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersion q
+      Tracing.newSpan ("v1 " <> T.pack (constrName q))
+        $ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersion q
     RMV2 q ->
-      Tracing.newSpan ("v2 " <> T.pack (constrName q)) $
-        runMetadataQueryV2M currentResourceVersion q
+      Tracing.newSpan ("v2 " <> T.pack (constrName q))
+        $ runMetadataQueryV2M currentResourceVersion q
 
 runMetadataQueryV1M ::
   forall m r.
@@ -360,7 +371,7 @@ runMetadataQueryV1M ::
     MonadError QErr m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m,
+    MonadGetPolicies m,
     HasFeatureFlagChecker m
   ) =>
   Env.Environment ->
@@ -377,9 +388,13 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMListSourceKinds q -> runListSourceKinds q
   RMGetSourceKindCapabilities q -> runGetSourceKindCapabilities q
   RMGetSourceTables q -> dispatchMetadata runGetSourceTables q
-  RMGetTableInfo q -> runGetTableInfo q
+  RMGetSourceTrackables q -> dispatchMetadata runGetSourceTrackables q
+  RMGetTableInfo q -> dispatchMetadata runGetTableInfo q
+  RMGetTableInfo_ q -> runGetTableInfo_ q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
+  RMTrackTables q -> dispatchMetadata runTrackTablesQ q
   RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q
+  RMUntrackTables q -> dispatchMetadataAndEventTrigger runUntrackTablesQ q
   RMSetFunctionCustomization q -> dispatchMetadata Functions.runSetFunctionCustomization q
   RMSetTableCustomization q -> dispatchMetadata runSetTableCustomization q
   RMSetApolloFederationConfig q -> dispatchMetadata runSetApolloFederationConfig q
@@ -412,6 +427,9 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMGetNativeQuery q -> dispatchMetadata NativeQueries.runGetNativeQuery q
   RMTrackNativeQuery q -> dispatchMetadata (NativeQueries.runTrackNativeQuery env) q
   RMUntrackNativeQuery q -> dispatchMetadata NativeQueries.runUntrackNativeQuery q
+  RMGetStoredProcedure q -> dispatchMetadata StoredProcedures.runGetStoredProcedure q
+  RMTrackStoredProcedure q -> dispatchMetadata (StoredProcedures.runTrackStoredProcedure env) q
+  RMUntrackStoredProcedure q -> dispatchMetadata StoredProcedures.runUntrackStoredProcedure q
   RMGetLogicalModel q -> dispatchMetadata LogicalModel.runGetLogicalModel q
   RMTrackLogicalModel q -> dispatchMetadata LogicalModel.runTrackLogicalModel q
   RMUntrackLogicalModel q -> dispatchMetadata LogicalModel.runUntrackLogicalModel q
@@ -517,17 +535,20 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
     results <-
       commands & indexedMapM \command ->
         runMetadataQueryM env checkFeatureFlag remoteSchemaPerms currentResourceVersion command
+          -- Because changes to the metadata are maintained in MetadataT, which is a state monad
+          -- that is layered above the QErr error monad, this catchError causes any changes to
+          -- the metadata made during running the failed API function to be rolled back
           `catchError` \qerr -> pure (encJFromJValue qerr)
 
     pure (encJFromList results)
   where
     dispatchMetadata ::
-      (forall b. BackendMetadata b => i b -> a) ->
+      (forall b. (BackendMetadata b) => i b -> a) ->
       AnyBackend i ->
       a
     dispatchMetadata f x = dispatchAnyBackend @BackendMetadata x f
 
-    dispatchEventTrigger :: (forall b. BackendEventTrigger b => i b -> a) -> AnyBackend i -> a
+    dispatchEventTrigger :: (forall b. (BackendEventTrigger b) => i b -> a) -> AnyBackend i -> a
     dispatchEventTrigger f x = dispatchAnyBackend @BackendEventTrigger x f
 
     dispatchMetadataAndEventTrigger ::
@@ -546,7 +567,7 @@ runMetadataQueryV2M ::
     Has (L.Logger L.Hasura) r,
     MonadError QErr m,
     MonadEventLogCleanup m,
-    MonadGetApiTimeLimit m
+    MonadGetPolicies m
   ) =>
   MetadataResourceVersion ->
   RQLMetadataV2 ->

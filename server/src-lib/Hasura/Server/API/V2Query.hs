@@ -20,7 +20,6 @@ import Hasura.Backends.BigQuery.DDL.RunSQL qualified as BigQuery
 import Hasura.Backends.DataConnector.Adapter.RunSQL qualified as DataConnector
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName, mkDataConnectorName)
 import Hasura.Backends.MSSQL.DDL.RunSQL qualified as MSSQL
-import Hasura.Backends.MySQL.SQL qualified as MySQL
 import Hasura.Backends.Postgres.DDL.RunSQL qualified as Postgres
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -63,7 +62,6 @@ data RQLQuery
   | RQMssqlRunSql !MSSQL.MSSQLRunSQL
   | RQCitusRunSql !Postgres.RunSQL
   | RQCockroachRunSql !Postgres.RunSQL
-  | RQMysqlRunSql !MySQL.RunSQL
   | RQBigqueryRunSql !BigQuery.BigQueryRunSQL
   | RQDataConnectorRunSql !DataConnectorName !DataConnector.DataConnectorRunSQL
   | RQBigqueryDatabaseInspection !BigQuery.BigQueryRunSQL
@@ -79,7 +77,7 @@ data RQLQuery
 instance FromJSON RQLQuery where
   parseJSON = withObject "RQLQuery" \o -> do
     t <- o .: "type"
-    let args :: forall a. FromJSON a => Parser a
+    let args :: forall a. (FromJSON a) => Parser a
         args = o .: "args"
         dcNameFromRunSql = T.stripSuffix "_run_sql" >=> GQL.mkName >=> preview _Right . mkDataConnectorName
     case t of
@@ -95,7 +93,6 @@ instance FromJSON RQLQuery where
       "mssql_run_sql" -> RQMssqlRunSql <$> args
       "citus_run_sql" -> RQCitusRunSql <$> args
       "cockroach_run_sql" -> RQCockroachRunSql <$> args
-      "mysql_run_sql" -> RQMysqlRunSql <$> args
       "bigquery_run_sql" -> RQBigqueryRunSql <$> args
       (dcNameFromRunSql -> Just t') -> RQDataConnectorRunSql t' <$> args
       "bigquery_database_inspection" -> RQBigqueryDatabaseInspection <$> args
@@ -121,11 +118,11 @@ runQuery ::
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
 runQuery appContext schemaCache rqlQuery = do
-  appEnv@AppEnv {..} <- askAppEnv
-  when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery) $
-    throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
+  AppEnv {..} <- askAppEnv
+  when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB rqlQuery)
+    $ throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
-  dynamicConfig <- buildCacheDynamicConfig appEnv appContext
+  let dynamicConfig = buildCacheDynamicConfig appContext
   MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
   ((result, updatedMetadata), updatedCache, invalidations) <-
     runQueryM (acSQLGenCtx appContext) rqlQuery
@@ -137,13 +134,13 @@ runQuery appContext schemaCache rqlQuery = do
       MaintenanceModeDisabled -> do
         -- set modified metadata in storage
         newResourceVersion <-
-          Tracing.newSpan "setMetadata" $
-            liftEitherM $
-              setMetadata currentResourceVersion updatedMetadata
+          Tracing.newSpan "setMetadata"
+            $ liftEitherM
+            $ setMetadata currentResourceVersion updatedMetadata
         -- notify schema cache sync
-        Tracing.newSpan "notifySchemaCacheSync" $
-          liftEitherM $
-            notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
+        Tracing.newSpan "notifySchemaCacheSync"
+          $ liftEitherM
+          $ notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
       MaintenanceModeEnabled () ->
         throw500 "metadata cannot be modified in maintenance mode"
   pure (result, updatedCache)
@@ -159,7 +156,6 @@ queryModifiesSchema = \case
   RQCitusRunSql q -> Postgres.isSchemaCacheBuildRequiredRunSQL q
   RQCockroachRunSql q -> Postgres.isSchemaCacheBuildRequiredRunSQL q
   RQMssqlRunSql q -> MSSQL.isSchemaCacheBuildRequiredRunSQL q
-  RQMysqlRunSql _ -> False
   RQBigqueryRunSql _ -> False
   RQDataConnectorRunSql _ _ -> False
   RQBigqueryDatabaseInspection _ -> False
@@ -187,7 +183,6 @@ runQueryM sqlGen rq = Tracing.newSpan (T.pack $ constrName rq) $ case rq of
   RQCount q -> runCount q
   RQRunSql q -> Postgres.runRunSQL @'Vanilla sqlGen q
   RQMssqlRunSql q -> MSSQL.runSQL q
-  RQMysqlRunSql q -> MySQL.runSQL q
   RQCitusRunSql q -> Postgres.runRunSQL @'Citus sqlGen q
   RQCockroachRunSql q -> Postgres.runRunSQL @'Cockroach sqlGen q
   RQBigqueryRunSql q -> BigQuery.runSQL q
@@ -195,8 +190,8 @@ runQueryM sqlGen rq = Tracing.newSpan (T.pack $ constrName rq) $ case rq of
   RQBigqueryDatabaseInspection q -> BigQuery.runDatabaseInspection q
   RQBulk l -> encJFromList <$> indexedMapM (runQueryM sqlGen) l
   RQConcurrentBulk l -> do
-    when (queryModifiesSchema rq) $
-      throw500 "Only read-only queries are allowed in a concurrent_bulk"
+    when (queryModifiesSchema rq)
+      $ throw500 "Only read-only queries are allowed in a concurrent_bulk"
     encJFromList <$> mapConcurrently (runQueryM sqlGen) l
 
 queryModifiesUserDB :: RQLQuery -> Bool
@@ -210,7 +205,6 @@ queryModifiesUserDB = \case
   RQCitusRunSql runsql -> not (Postgres.isReadOnly runsql)
   RQCockroachRunSql runsql -> not (Postgres.isReadOnly runsql)
   RQMssqlRunSql _ -> True
-  RQMysqlRunSql _ -> True
   RQBigqueryRunSql _ -> True
   RQDataConnectorRunSql _ _ -> True
   RQBigqueryDatabaseInspection _ -> False

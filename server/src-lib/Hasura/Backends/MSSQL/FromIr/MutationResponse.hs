@@ -106,8 +106,8 @@ selectMutationOutputAndCheckCondition alias mutationOutputSelect checkBoolExp =
         ExpressionProjection $ Aliased (SelectExpression mutationOutputSelect) "mutation_response"
       checkConstraintProjection =
         -- apply ISNULL() to avoid check constraint select statement yielding empty rows
-        ExpressionProjection $
-          Aliased (FunctionApplicationExpression $ FunExpISNULL (SelectExpression checkConstraintSelect) (ValueExpression (ODBC.IntValue 0))) "check_constraint_select"
+        ExpressionProjection
+          $ Aliased (FunctionApplicationExpression $ FunExpISNULL (SelectExpression checkConstraintSelect) (ValueExpression (ODBC.IntValue 0))) "check_constraint_select"
    in emptySelect {selectProjections = [mutationOutputProjection, checkConstraintProjection]}
   where
     checkConstraintSelect =
@@ -116,8 +116,8 @@ selectMutationOutputAndCheckCondition alias mutationOutputSelect checkBoolExp =
           sumAggregate =
             OpAggregate
               "SUM"
-              [ ColumnExpression $
-                  FieldName
+              [ ColumnExpression
+                  $ FieldName
                     { fieldNameEntity = subQueryAlias,
                       fieldName = checkEvaluationFieldName
                     }

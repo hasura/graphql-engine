@@ -93,11 +93,15 @@ describe('Check different configurations of Onboarding wizard depending on onboa
     );
   });
 
-  it('should show wizard as user activity is empty', async () => {
+  it('should not show wizard', async () => {
     server.use(onboardingDataEmptyActivity);
     render(<Root />, { wrapper });
 
-    await screen.findByText('Welcome to your new Hasura project!');
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Welcome to your new Hasura project!')
+      ).not.toBeInTheDocument()
+    );
   });
 
   it('should hide wizard as onboarding skipped by user', async () => {

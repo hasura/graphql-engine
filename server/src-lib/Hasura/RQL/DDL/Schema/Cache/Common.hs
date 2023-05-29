@@ -9,7 +9,6 @@ module Hasura.RQL.DDL.Schema.Cache.Common
   ( ApolloFederationConfig (..),
     ApolloFederationVersion (..),
     BackendInvalidationKeysWrapper (..),
-    BackendIntrospection (..),
     BuildOutputs (..),
     CacheBuild,
     CacheBuildParams (CacheBuildParams),
@@ -46,11 +45,11 @@ where
 
 import Control.Arrow.Extended
 import Control.Arrow.Interpret
-import Control.Lens
+import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Extended
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
@@ -61,7 +60,6 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
-import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata
@@ -76,25 +74,25 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RemoteSchema.Metadata
-import Hasura.SQL.AnyBackend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Services
+import Hasura.Table.Metadata (TableMetadata (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 newtype BackendInvalidationKeysWrapper (b :: BackendType) = BackendInvalidationKeysWrapper
   { unBackendInvalidationKeysWrapper :: BackendInvalidationKeys b
   }
 
-deriving newtype instance Eq (BackendInvalidationKeys b) => Eq (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Eq (BackendInvalidationKeys b)) => Eq (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Ord (BackendInvalidationKeys b) => Ord (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Ord (BackendInvalidationKeys b)) => Ord (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Show (BackendInvalidationKeys b) => Show (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Show (BackendInvalidationKeys b)) => Show (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Semigroup (BackendInvalidationKeys b) => Semigroup (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Semigroup (BackendInvalidationKeys b)) => Semigroup (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Monoid (BackendInvalidationKeys b) => Monoid (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Monoid (BackendInvalidationKeys b)) => Monoid (BackendInvalidationKeysWrapper b)
 
 instance Inc.Select (BackendInvalidationKeysWrapper b)
 
@@ -124,7 +122,7 @@ invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
     }
   where
     invalidate ::
-      Hashable a =>
+      (Hashable a) =>
       a ->
       HashMap a Inc.InvalidationKey ->
       HashMap a Inc.InvalidationKey
@@ -134,50 +132,28 @@ invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
     invalidateDataConnectors (BackendInvalidationKeysWrapper invalidationKeys) =
       BackendInvalidationKeysWrapper $ foldl' (flip invalidate) invalidationKeys ciDataConnectors
 
-data BackendIntrospection (b :: BackendType) = BackendIntrospection
-  { biMetadata :: DBObjectsIntrospection b,
-    biEnumValues :: HashMap (TableName b) EnumValues
+data StoredIntrospection = StoredIntrospection
+  { -- Just catalog introspection - not including enums
+    siBackendIntrospection :: HashMap SourceName EncJSON,
+    siRemotes :: HashMap RemoteSchemaName EncJSON
   }
   deriving stock (Generic)
 
-instance Backend b => FromJSON (BackendIntrospection b) where
-  parseJSON = withObject "BackendIntrospection" \o -> do
-    metadata <- o .: "metadata"
-    enumValues <- o .: "enum_values"
-    pure $ BackendIntrospection metadata (HashMap.fromList enumValues)
-
-deriving stock instance BackendMetadata b => Eq (BackendIntrospection b)
-
-data StoredIntrospection = StoredIntrospection
-  { siBackendIntrospection :: HashMap SourceName (AnyBackend BackendIntrospection),
-    -- We'd prefer to pass the results of introspecting remote GraphQL schemas
-    -- as a structured Haskell type, rather than the opaque `EncJSON`.  What
-    -- makes this complicated is that, in the `introspect_remote_schema` API, we
-    -- need to return the result of the specific introspection query stored in
-    -- `server/src-rsr/introspection.json`.  That has a very specific format
-    -- (see e.g. `fragment TypeRef`).  Additionally, it requires us to return
-    -- introspection results for directives, which so far we have avoided
-    -- parsing entirely (for better or for worse).
-    --
-    -- In the future, perhaps we can change the implementation of
-    -- `introspect_remote_schema` to be backed by Stored Introspection directly.
-    -- Then we could pass around highly structured data internally here, but
-    -- also return the original raw introspection to the user on request.  But
-    -- this approach would require a wholesale commitment to Stored
-    -- Introspection.
-    siRemotes :: HashMap RemoteSchemaName EncJSON
-  }
-
+-- Note that we don't want to introduce an `Eq EncJSON` instance, as this is a
+-- bit of a footgun. But for Stored Introspection purposes, it's fine: the
+-- worst-case effect of a semantically inaccurate `Eq` instance is that we
+-- rebuild the Schema Cache too often.
+--
+-- However, this does mean that we have to spell out this instance a bit.
 instance Eq StoredIntrospection where
-  -- compare introspected remotes as serialized values, not as JSON value equality
-  StoredIntrospection bi1 r1 == StoredIntrospection bi2 r2 = bi1 == bi2 && (encJToBS <$> r1) == (encJToBS <$> r2)
+  StoredIntrospection bs1 rs1 == StoredIntrospection bs2 rs2 =
+    (encJToLBS <$> bs1) == (encJToLBS <$> bs2) && (encJToLBS <$> rs1) == (encJToLBS <$> rs2)
 
 instance FromJSON StoredIntrospection where
-  parseJSON = withObject "StoredIntrospection" \o -> do
-    -- Use of `parseJSONKeyValue` here means that the backend type is specified as a key
-    backendIntrospection <- traverse parseJSONKeyValue =<< o .: "backend_introspection"
-    remotes <- o .: "remotes"
-    pure $ StoredIntrospection backendIntrospection remotes
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON StoredIntrospection where
+  toJSON = genericToJSON hasuraJSON
 
 data TableBuildInput b = TableBuildInput
   { _tbiName :: TableName b,
@@ -220,17 +196,17 @@ mkTableInputs TableMetadata {..} =
     nonColumns =
       NonColumnTableInputs
         _tmTable
-        (OMap.elems _tmObjectRelationships)
-        (OMap.elems _tmArrayRelationships)
-        (OMap.elems _tmComputedFields)
-        (OMap.elems _tmRemoteRelationships)
+        (InsOrdHashMap.elems _tmObjectRelationships)
+        (InsOrdHashMap.elems _tmArrayRelationships)
+        (InsOrdHashMap.elems _tmComputedFields)
+        (InsOrdHashMap.elems _tmRemoteRelationships)
     permissions =
       TablePermissionInputs
         _tmTable
-        (OMap.elems _tmInsertPermissions)
-        (OMap.elems _tmSelectPermissions)
-        (OMap.elems _tmUpdatePermissions)
-        (OMap.elems _tmDeletePermissions)
+        (InsOrdHashMap.elems _tmInsertPermissions)
+        (InsOrdHashMap.elems _tmSelectPermissions)
+        (InsOrdHashMap.elems _tmUpdatePermissions)
+        (InsOrdHashMap.elems _tmDeletePermissions)
 
 -- | The direct output of 'buildSchemaCacheRule'. Contains most of the things necessary to build a
 -- schema cache, but dependencies and inconsistent metadata objects are collected via a separate
@@ -363,7 +339,8 @@ buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) -> do
               Nothing -> returnA -< Nothing
               Just info -> buildInfo -< (e, info)
         )
-      |) groupedInfos
+      |)
+      groupedInfos
   returnA -< catMaybes infoMapMaybes
 {-# INLINEABLE buildInfoMap #-}
 

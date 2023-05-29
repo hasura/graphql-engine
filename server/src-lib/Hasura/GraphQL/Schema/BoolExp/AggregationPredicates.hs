@@ -20,7 +20,6 @@ import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
-import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -36,13 +35,14 @@ import Hasura.RQL.Types.Backend qualified as B
 import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (relNameToTxt)
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Schema.Options (IncludeAggregationPredicates (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source (SourceInfo (..))
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | This function is meant to serve as the default schema for Aggregation
@@ -70,9 +70,14 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
   aggregationFunctions <- fails $ return $ nonEmpty aggFns
   roleName <- retrieve scRole
 
-  collectOptionalFieldsNE . succeedingBranchesNE $
-    arrayRelationships <&> \rel -> do
-      relTable <- askTableInfo $ riRTable rel
+  collectOptionalFieldsNE
+    . succeedingBranchesNE
+    $ arrayRelationships
+    <&> \rel -> do
+      relTableName <- case riTarget rel of
+        RelTargetNativeQuery _ -> error "defaultAggregationPredicatesParser RelTargetNativeQuery"
+        RelTargetTable tn -> pure tn
+      relTable <- askTableInfo relTableName
       selectPermissions <- hoistMaybe $ tableSelectPermissions roleName relTable
       guard $ spiAllowAgg selectPermissions
       let rowPermissions = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions
@@ -95,10 +100,12 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
                   -- existing on the table.
                   case fnArguments of
                     ArgumentsStar ->
-                      maybe AggregationPredicateArgumentsStar AggregationPredicateArguments . nonEmpty
+                      maybe AggregationPredicateArgumentsStar AggregationPredicateArguments
+                        . nonEmpty
                         <$> fuse (fieldOptionalDefault Name._arguments Nothing [] . P.list <$> fails (tableSelectColumnsEnum relTable))
                     SingleArgument typ ->
-                      AggregationPredicateArguments . (NE.:| [])
+                      AggregationPredicateArguments
+                        . (NE.:| [])
                         <$> fuse
                           ( P.field Name._arguments Nothing
                               <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar typ)) relFunGqlName relTable)
@@ -160,13 +167,13 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
     --   where
 
     -- Collect all the non-failed branches, failing if all branches failed.
-    succeedingBranchesNE :: forall f a. Applicative f => NonEmpty (MaybeT f a) -> MaybeT f (NonEmpty a)
+    succeedingBranchesNE :: forall f a. (Applicative f) => NonEmpty (MaybeT f a) -> MaybeT f (NonEmpty a)
     succeedingBranchesNE xs = MaybeT $ NE.nonEmpty . catMaybes . NE.toList <$> sequenceA (xs <&> runMaybeT)
 
     -- Collect a non-empty list of input field parsers into one input field
     -- parser parsing a non-empty list of the specified values.
     collectFieldsNE ::
-      Functor f =>
+      (Functor f) =>
       MaybeT f (NonEmpty (InputFieldsParser n c)) ->
       MaybeT f (InputFieldsParser n (NonEmpty c))
     collectFieldsNE = fmap sequenceA
@@ -174,7 +181,7 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
     -- Collect a non-empty list of optional input field parsers into one input field
     -- parser parsing a list of the specified values.
     collectOptionalFieldsNE ::
-      Functor f =>
+      (Functor f) =>
       MaybeT f (NonEmpty (InputFieldsParser n (Maybe a))) ->
       MaybeT f (InputFieldsParser n [a])
     collectOptionalFieldsNE = fmap $ fmap (catMaybes . NE.toList) . sequenceA

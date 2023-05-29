@@ -49,8 +49,8 @@ spec =
 
 jsonType :: Schema.ScalarType
 jsonType =
-  Schema.TCustomType $
-    Schema.defaultBackendScalarType
+  Schema.TCustomType
+    $ Schema.defaultBackendScalarType
       { Schema.bstPostgres = Just "JSON",
         Schema.bstCitus = Just "JSON",
         Schema.bstCockroach = Just "JSON"
@@ -58,8 +58,8 @@ jsonType =
 
 jsonbType :: Schema.ScalarType
 jsonbType =
-  Schema.TCustomType $
-    Schema.defaultBackendScalarType
+  Schema.TCustomType
+    $ Schema.defaultBackendScalarType
       { Schema.bstPostgres = Just "JSONB",
         Schema.bstCitus = Just "JSONB",
         Schema.bstCockroach = Just "JSONB"
@@ -67,8 +67,8 @@ jsonbType =
 
 mkJsonValue :: Text -> Schema.ScalarValue
 mkJsonValue json =
-  Schema.VCustomValue $
-    Schema.defaultBackendScalarValue
+  Schema.VCustomValue
+    $ Schema.defaultBackendScalarValue
       { Schema.bsvPostgres = Just (Schema.Quoted json),
         Schema.bsvCitus = Just (Schema.Quoted json),
         Schema.bsvCockroach = Just (Schema.Quoted json)

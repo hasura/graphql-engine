@@ -30,7 +30,7 @@ latestSourceCatalogVersion = Version.SourceCatalogVersion 4
 previousSourceCatalogVersions :: [SourceCatalogVersion]
 previousSourceCatalogVersions = [initialSourceCatalogVersion .. pred latestSourceCatalogVersion]
 
-setSourceCatalogVersion :: MonadMSSQLTx m => SourceCatalogVersion -> m ()
+setSourceCatalogVersion :: (MonadMSSQLTx m) => SourceCatalogVersion -> m ()
 setSourceCatalogVersion (Version.SourceCatalogVersion version) =
   liftMSSQLTx $ unitQueryE HGE.defaultMSSQLTxErrorHandler setSourceCatalogVersionQuery
   where
@@ -50,7 +50,7 @@ setSourceCatalogVersion (Version.SourceCatalogVersion version) =
         COMMIT TRANSACTION
       |]
 
-getSourceCatalogVersion :: MonadMSSQLTx m => m SourceCatalogVersion
+getSourceCatalogVersion :: (MonadMSSQLTx m) => m SourceCatalogVersion
 getSourceCatalogVersion =
   Version.SourceCatalogVersion
     <$> liftMSSQLTx (singleRowQueryE HGE.defaultMSSQLTxErrorHandler [ODBC.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |])

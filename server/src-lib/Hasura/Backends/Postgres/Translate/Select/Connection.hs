@@ -58,17 +58,17 @@ mkConnectionSelect connectionSelect = do
   let ( (connectionSource, topExtractor, nodeExtractors),
         SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}
         ) =
-          runWriter $
-            flip runReaderT strfyNum $
-              processConnectionSelect
-                sourcePrefixes
-                rootFieldName
-                (S.toTableAlias rootIdentifier)
-                mempty
-                connectionSelect
+          runWriter
+            $ flip runReaderT strfyNum
+            $ processConnectionSelect
+              sourcePrefixes
+              rootFieldName
+              (S.toTableAlias rootIdentifier)
+              mempty
+              connectionSelect
       selectNode =
-        MultiRowSelectNode [topExtractor] $
-          SelectNode nodeExtractors joinTree
+        MultiRowSelectNode [topExtractor]
+          $ SelectNode nodeExtractors joinTree
       selectWith =
         connectionToSelectWith (S.toTableAlias rootIdentifier) connectionSource selectNode
   tell customSQLCTEs

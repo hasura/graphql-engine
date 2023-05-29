@@ -107,17 +107,17 @@ graphQLFieldNameCodec :: JSONCodec G.Name
 graphQLFieldNameCodec = named "GraphQLName" $ bimapCodec dec enc codec
   where
     dec text =
-      maybeToEither ("invalid GraphQL field name '" <> T.unpack text <> "'") $
-        G.mkName text
+      maybeToEither ("invalid GraphQL field name '" <> T.unpack text <> "'")
+        $ G.mkName text
     enc = G.unName
 
 graphQLFieldDescriptionCodec :: JSONCodec G.Description
 graphQLFieldDescriptionCodec = dimapCodec G.Description G.unDescription codec
 
-graphQLValueCodec :: forall var. Typeable var => JSONCodec var -> JSONCodec (G.Value var)
+graphQLValueCodec :: forall var. (Typeable var) => JSONCodec var -> JSONCodec (G.Value var)
 graphQLValueCodec varCodec =
-  named ("GraphQLValue_" <> typeableName @var) $
-    matchChoicesCodec
+  named ("GraphQLValue_" <> typeableName @var)
+    $ matchChoicesCodec
       [ (isVVariable, dimapCodec G.VVariable fromVVariable varCodec), -- The VVariable case must be first in case its codec overlaps with other cases
         (isVNull, dimapCodec (const G.VNull) (const ()) nullCodec),
         (isVInt, dimapCodec (G.VInt . toInteger) fromVInt integerCodec), -- It's important to try VInt first because the Scientific codec will match integers
@@ -169,10 +169,10 @@ hashSetCodec = hashSetCodecWith codec
 -- | Serializes a hash set by converting it to a list. This matches the FromJSON
 -- and ToJSON instances in aeson. This version accepts a codec for individual
 -- set values as an argument.
-hashSetCodecWith :: Hashable a => JSONCodec a -> JSONCodec (HashSet a)
+hashSetCodecWith :: (Hashable a) => JSONCodec a -> JSONCodec (HashSet a)
 hashSetCodecWith elemCodec =
-  dimapCodec HashSet.fromList HashSet.toList $
-    listCodec elemCodec
+  dimapCodec HashSet.fromList HashSet.toList
+    $ listCodec elemCodec
 
 -- | Codec for integral numbers with specified lower and upper bounds.
 integralWithBoundsCodec :: (Integral i, Bounded i) => NumberBounds -> JSONCodec i
@@ -186,14 +186,14 @@ integralWithBoundsCodec bounds =
 -- | Codec for integral numbers with specified lower bound.
 integralWithLowerBoundCodec :: forall i. (Integral i, Bounded i) => i -> JSONCodec i
 integralWithLowerBoundCodec minInt =
-  integralWithBoundsCodec $
-    NumberBounds (fromIntegral minInt) (fromIntegral (maxBound @i))
+  integralWithBoundsCodec
+    $ NumberBounds (fromIntegral minInt) (fromIntegral (maxBound @i))
 
 -- | Codec for integral numbers with specified lower bound.
 integralWithUpperBoundCodec :: forall i. (Integral i, Bounded i) => i -> JSONCodec i
 integralWithUpperBoundCodec maxInt =
-  integralWithBoundsCodec $
-    NumberBounds (fromIntegral (minBound @i)) (fromIntegral maxInt)
+  integralWithBoundsCodec
+    $ NumberBounds (fromIntegral (minBound @i)) (fromIntegral maxInt)
 
 -- | Codec for integer with a generous bounds check that matches the behavior of
 -- aeson integer deserialization.
@@ -221,7 +221,7 @@ parseIntegralFromScientific s = case floatingOrInteger @Float s of
 -- function omits the field during serialization if the Haskell value is
 -- @Nothing@. This version includes the field with a serialized value of @null@.
 optionalFieldOrIncludedNull ::
-  HasCodec output =>
+  (HasCodec output) =>
   -- | Key
   Text ->
   -- | Documentation
@@ -236,7 +236,7 @@ optionalFieldOrIncludedNull key doc = optionalFieldOrIncludedNullWith key codec 
 -- function omits the field during serialization if the Haskell value is
 -- @Nothing@. This version includes the field with a serialized value of @null@.
 optionalFieldOrIncludedNull' ::
-  HasCodec output =>
+  (HasCodec output) =>
   -- | Key
   Text ->
   ObjectCodec (Maybe output) (Maybe output)
@@ -257,8 +257,8 @@ optionalFieldOrIncludedNullWith ::
   Text ->
   ObjectCodec (Maybe output) (Maybe output)
 optionalFieldOrIncludedNullWith key c doc =
-  orIncludedNullHelper $
-    OptionalKeyCodec key (maybeCodec c) (Just doc)
+  orIncludedNullHelper
+    $ OptionalKeyCodec key (maybeCodec c) (Just doc)
 
 -- | An optional field that might be @null@ where a @Nothing@ value should be
 -- represented as @null@ on serialization instead of omitting the field.
@@ -273,8 +273,8 @@ optionalFieldOrIncludedNullWith' ::
   JSONCodec output ->
   ObjectCodec (Maybe output) (Maybe output)
 optionalFieldOrIncludedNullWith' key c =
-  orIncludedNullHelper $
-    OptionalKeyCodec key (maybeCodec c) Nothing
+  orIncludedNullHelper
+    $ OptionalKeyCodec key (maybeCodec c) Nothing
 
 orIncludedNullHelper :: ObjectCodec (Maybe (Maybe input)) (Maybe (Maybe output)) -> ObjectCodec (Maybe input) (Maybe output)
 orIncludedNullHelper = dimapCodec dec enc
@@ -317,7 +317,7 @@ refinedCodec = refinedCodecWith codec
 -- package.
 --
 -- This version requires a codec to be provided for the underlying value type.
-refinedCodecWith :: R.Predicate p a => JSONCodec a -> JSONCodec (R.Refined p a)
+refinedCodecWith :: (R.Predicate p a) => JSONCodec a -> JSONCodec (R.Refined p a)
 refinedCodecWith underlyingCodec = bimapCodec dec enc underlyingCodec
   where
     dec = mapLeft show . R.refine
@@ -357,7 +357,7 @@ disjointMatchChoicesNECodec l = go l
 -- | Map a fixed set of two values to boolean values when serializing. The first
 -- argument is the value to map to @True@, the second is the value to map to
 -- @False@.
-boolConstCodec :: Eq a => a -> a -> JSONCodec a
+boolConstCodec :: (Eq a) => a -> a -> JSONCodec a
 boolConstCodec trueCase falseCase =
   dimapCodec
     (bool trueCase falseCase)
@@ -411,16 +411,16 @@ optionalVersionField v =
 -- discriminator field is @Text@.
 discriminatorField :: Text -> Text -> ObjectCodec a ()
 discriminatorField name value =
-  dimapCodec (const ()) (const value) $
-    requiredFieldWith' name (literalTextCodec value)
+  dimapCodec (const ()) (const value)
+    $ requiredFieldWith' name (literalTextCodec value)
 
 -- | Useful in an object codec for a field that indicates the type of the
 -- object within a union. This version assumes that the type of the
 -- discriminator field is @Bool@.
 discriminatorBoolField :: Text -> Bool -> ObjectCodec a ()
 discriminatorBoolField name value =
-  dimapCodec (const ()) (const value) $
-    requiredFieldWith' name (EqCodec value boolCodec)
+  dimapCodec (const ()) (const value)
+    $ requiredFieldWith' name (EqCodec value boolCodec)
 
 -- | Represents a text field wrapped in an object with a single property
 -- named @from_env@.

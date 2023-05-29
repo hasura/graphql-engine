@@ -83,8 +83,8 @@ articlesTable tableName =
 tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests =
   describe "verify trigger status when logical replication is used" do
-    it "verify trigger is enabled on logical replication" $
-      \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
+    it "verify trigger is enabled on logical replication"
+      $ \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
         mssqlSetupWithEventTriggers testEnvironment webhookServer "True"
         let getTriggerInfoQuery =
               [interpolateYaml|
@@ -116,8 +116,8 @@ tests =
           (GraphqlEngine.postV2Query 200 testEnvironment getTriggerInfoQuery)
           expectedResponseForEnablingTriggers
 
-    it "verify trigger is disabled on logical replication" $
-      \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
+    it "verify trigger is disabled on logical replication"
+      $ \(testEnvironment, (webhookServer, (Webhook.EventsQueue _eventsQueue))) -> do
         mssqlSetupWithEventTriggers testEnvironment webhookServer "False"
         let getTriggerInfoQuery =
               [interpolateYaml|
@@ -158,8 +158,8 @@ mssqlSetupWithEventTriggers testEnvironment webhookServer triggerOnReplication =
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: mssql_create_event_trigger
@@ -181,8 +181,8 @@ mssqlSetupWithEventTriggers testEnvironment webhookServer triggerOnReplication =
 
 mssqlTeardown :: TestEnvironment -> IO ()
 mssqlTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: mssql_delete_event_trigger
       args:
         name: author_trigger

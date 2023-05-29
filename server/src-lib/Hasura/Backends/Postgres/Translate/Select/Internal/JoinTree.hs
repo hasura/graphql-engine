@@ -72,8 +72,8 @@ withWriteArrayRelation action =
   where
     updateJoinTree joinTree (source, topExtractor, nodeExtractors) =
       let arraySelectNode =
-            MultiRowSelectNode [topExtractor] $
-              SelectNode nodeExtractors joinTree
+            MultiRowSelectNode [topExtractor]
+              $ SelectNode nodeExtractors joinTree
        in mempty {_jtArrayRelations = HashMap.singleton source arraySelectNode}
 
 withWriteArrayConnection ::
@@ -92,8 +92,8 @@ withWriteArrayConnection action =
   where
     updateJoinTree joinTree (source, topExtractor, nodeExtractors) =
       let arraySelectNode =
-            MultiRowSelectNode [topExtractor] $
-              SelectNode nodeExtractors joinTree
+            MultiRowSelectNode [topExtractor]
+              $ SelectNode nodeExtractors joinTree
        in mempty {_jtArrayConnections = HashMap.singleton source arraySelectNode}
 
 withWriteComputedFieldTableSet ::

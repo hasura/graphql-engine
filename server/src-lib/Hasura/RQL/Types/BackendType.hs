@@ -39,7 +39,6 @@ data BackendType
   = Postgres PostgresKind
   | MSSQL
   | BigQuery
-  | MySQL
   | DataConnector
   deriving stock (Show, Eq, Ord, Generic)
   deriving anyclass (Hashable)
@@ -51,7 +50,6 @@ instance Witch.From BackendType NonEmptyText where
   from (Postgres Cockroach) = [nonEmptyTextQQ|cockroach|]
   from MSSQL = [nonEmptyTextQQ|mssql|]
   from BigQuery = [nonEmptyTextQQ|bigquery|]
-  from MySQL = [nonEmptyTextQQ|mysql|]
   from DataConnector = [nonEmptyTextQQ|dataconnector|]
 
 instance ToTxt BackendType where
@@ -78,7 +76,6 @@ data BackendSourceKind (b :: BackendType) where
   PostgresCockroachKind :: BackendSourceKind ('Postgres 'Cockroach)
   MSSQLKind :: BackendSourceKind 'MSSQL
   BigQueryKind :: BackendSourceKind 'BigQuery
-  MySQLKind :: BackendSourceKind 'MySQL
   DataConnectorKind :: DataConnectorName -> BackendSourceKind 'DataConnector
 
 deriving instance Show (BackendSourceKind b)
@@ -95,7 +92,6 @@ instance Witch.From (BackendSourceKind b) NonEmptyText where
   from k@PostgresCockroachKind = Witch.into @NonEmptyText $ backendTypeFromBackendSourceKind k
   from k@MSSQLKind = Witch.into @NonEmptyText $ backendTypeFromBackendSourceKind k
   from k@BigQueryKind = Witch.into @NonEmptyText $ backendTypeFromBackendSourceKind k
-  from k@MySQLKind = Witch.into @NonEmptyText $ backendTypeFromBackendSourceKind k
   from (DataConnectorKind dataConnectorName) = Witch.into @NonEmptyText dataConnectorName
 
 instance ToTxt (BackendSourceKind b) where
@@ -122,9 +118,6 @@ instance FromJSON (BackendSourceKind ('MSSQL)) where
 
 instance FromJSON (BackendSourceKind ('BigQuery)) where
   parseJSON = mkParseStaticBackendSourceKind BigQueryKind
-
-instance FromJSON (BackendSourceKind ('MySQL)) where
-  parseJSON = mkParseStaticBackendSourceKind MySQLKind
 
 instance FromJSON (BackendSourceKind ('DataConnector)) where
   parseJSON v = DataConnectorKind <$> parseJSON v
@@ -153,9 +146,6 @@ instance HasCodec (BackendSourceKind ('MSSQL)) where
 instance HasCodec (BackendSourceKind ('BigQuery)) where
   codec = mkCodecStaticBackendSourceKind BigQueryKind
 
-instance HasCodec (BackendSourceKind ('MySQL)) where
-  codec = mkCodecStaticBackendSourceKind MySQLKind
-
 instance HasCodec (BackendSourceKind ('DataConnector)) where
   codec = bimapCodec dec enc gqlNameCodec
     where
@@ -177,8 +167,8 @@ instance HasCodec (BackendSourceKind ('DataConnector)) where
 
 mkCodecStaticBackendSourceKind :: BackendSourceKind b -> JSONCodec (BackendSourceKind b)
 mkCodecStaticBackendSourceKind backendSourceKind =
-  bimapCodec dec enc $
-    parseAlternatives (literalTextCodec longName) (literalTextCodec <$> aliases)
+  bimapCodec dec enc
+    $ parseAlternatives (literalTextCodec longName) (literalTextCodec <$> aliases)
   where
     dec text =
       if text `elem` validValues
@@ -205,7 +195,6 @@ supportedBackends =
     Postgres Cockroach,
     MSSQL,
     BigQuery,
-    MySQL,
     DataConnector
   ]
 
@@ -239,5 +228,4 @@ backendTypeFromBackendSourceKind = \case
   PostgresCockroachKind -> Postgres Cockroach
   MSSQLKind -> MSSQL
   BigQueryKind -> BigQuery
-  MySQLKind -> MySQL
   DataConnectorKind _ -> DataConnector

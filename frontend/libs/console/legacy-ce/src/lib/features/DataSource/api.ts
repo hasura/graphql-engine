@@ -208,5 +208,32 @@ export const runIntrospectionQuery = async ({ httpClient }: NetworkArgs) => {
   });
 };
 
+export const runReadOnlySQLBulk = async ({
+  source,
+  sqlQueries,
+  httpClient,
+}: {
+  source: Pick<Source, 'kind' | 'name'>;
+  sqlQueries: string[];
+} & NetworkArgs): Promise<RunSQLResponse[]> => {
+  const type = getRunSqlType(source.kind as NativeDrivers);
+
+  const result = await runQuery<RunSQLResponse>({
+    httpClient,
+    body: {
+      type: 'concurrent_bulk',
+      source: source.name,
+      args: sqlQueries.map(sql => ({
+        type,
+        args: {
+          sql,
+          source: source.name,
+        },
+      })),
+    },
+  });
+  return result;
+};
+
 export const getDriverPrefix = (driver: SupportedDrivers) =>
   isPostgres(driver as NativeDrivers) ? 'pg' : driver;

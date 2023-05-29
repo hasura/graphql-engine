@@ -65,20 +65,32 @@ data OpenTelemetryConfig = OpenTelemetryConfig
 
 instance HasCodec OpenTelemetryConfig where
   codec =
-    AC.object "OpenTelemetryConfig" $
-      OpenTelemetryConfig
-        <$> optionalFieldWithDefault' "status" defaultOtelStatus AC..= _ocStatus
-        <*> optionalFieldWithDefault' "data_types" defaultOtelEnabledDataTypes AC..= _ocEnabledDataTypes
-        <*> optionalFieldWithDefault' "exporter_otlp" defaultOtelExporterConfig AC..= _ocExporterOtlp
-        <*> optionalFieldWithDefault' "batch_span_processor" defaultOtelBatchSpanProcessorConfig AC..= _ocBatchSpanProcessor
+    AC.object "OpenTelemetryConfig"
+      $ OpenTelemetryConfig
+      <$> optionalFieldWithDefault' "status" defaultOtelStatus
+      AC..= _ocStatus
+        <*> optionalFieldWithDefault' "data_types" defaultOtelEnabledDataTypes
+      AC..= _ocEnabledDataTypes
+        <*> optionalFieldWithDefault' "exporter_otlp" defaultOtelExporterConfig
+      AC..= _ocExporterOtlp
+        <*> optionalFieldWithDefault' "batch_span_processor" defaultOtelBatchSpanProcessorConfig
+      AC..= _ocBatchSpanProcessor
 
 instance FromJSON OpenTelemetryConfig where
   parseJSON = J.withObject "OpenTelemetryConfig" $ \o ->
     OpenTelemetryConfig
-      <$> o .:? "status" .!= defaultOtelStatus
-      <*> o .:? "data_types" .!= defaultOtelEnabledDataTypes
-      <*> o .:? "exporter_otlp" .!= defaultOtelExporterConfig
-      <*> o .:? "batch_span_processor" .!= defaultOtelBatchSpanProcessorConfig
+      <$> o
+      .:? "status"
+      .!= defaultOtelStatus
+      <*> o
+      .:? "data_types"
+      .!= defaultOtelEnabledDataTypes
+      <*> o
+      .:? "exporter_otlp"
+      .!= defaultOtelExporterConfig
+      <*> o
+      .:? "batch_span_processor"
+      .!= defaultOtelBatchSpanProcessorConfig
 
 -- No `ToJSON` instance: use `openTelemetryConfigToOrdJSON` from
 -- Hasura.RQL.Types.Metadata.Serialization
@@ -123,8 +135,8 @@ instance FromJSON OtelStatus where
 
 instance ToJSON OtelStatus where
   toJSON status =
-    J.String $
-      case status of
+    J.String
+      $ case status of
         OtelEnabled -> "enabled"
         OtelDisabled -> "disabled"
 
@@ -165,12 +177,16 @@ data OtelExporterConfig = OtelExporterConfig
 
 instance HasCodec OtelExporterConfig where
   codec =
-    AC.object "OtelExporterConfig" $
-      OtelExporterConfig
-        <$> optionalField "otlp_traces_endpoint" tracesEndpointDoc AC..= _oecTracesEndpoint
-        <*> optionalFieldWithDefault "protocol" defaultOtelExporterProtocol protocolDoc AC..= _oecProtocol
-        <*> optionalFieldWithDefault "headers" defaultOtelExporterHeaders headersDoc AC..= _oecHeaders
-        <*> optionalFieldWithDefault "resource_attributes" defaultOtelExporterResourceAttributes attrsDoc AC..= _oecResourceAttributes
+    AC.object "OtelExporterConfig"
+      $ OtelExporterConfig
+      <$> optionalField "otlp_traces_endpoint" tracesEndpointDoc
+      AC..= _oecTracesEndpoint
+        <*> optionalFieldWithDefault "protocol" defaultOtelExporterProtocol protocolDoc
+      AC..= _oecProtocol
+        <*> optionalFieldWithDefault "headers" defaultOtelExporterHeaders headersDoc
+      AC..= _oecHeaders
+        <*> optionalFieldWithDefault "resource_attributes" defaultOtelExporterResourceAttributes attrsDoc
+      AC..= _oecResourceAttributes
     where
       tracesEndpointDoc = "Target URL to which the exporter is going to send traces. No default."
       protocolDoc = "The transport protocol"
@@ -191,8 +207,8 @@ instance FromJSON OtelExporterConfig where
 
 instance ToJSON OtelExporterConfig where
   toJSON (OtelExporterConfig otlpTracesEndpoint protocol headers resourceAttributes) =
-    J.object $
-      catMaybes
+    J.object
+      $ catMaybes
         [ ("otlp_traces_endpoint" .=) <$> otlpTracesEndpoint,
           Just $ "protocol" .= protocol,
           Just $ "headers" .= headers,
@@ -246,8 +262,10 @@ instance HasCodec NameValue where
     AC.object
       "OtelNameValue"
       ( NameValue
-          <$> requiredField' "name" AC..= nv_name
-          <*> requiredField' "value" AC..= nv_value
+          <$> requiredField' "name"
+          AC..= nv_name
+            <*> requiredField' "value"
+          AC..= nv_value
       )
       <?> "Internal helper type for JSON lists of key-value pairs"
 
@@ -283,16 +301,19 @@ newtype OtelBatchSpanProcessorConfig = OtelBatchSpanProcessorConfig
 
 instance HasCodec OtelBatchSpanProcessorConfig where
   codec =
-    AC.object "OtelBatchSpanProcessorConfig" $
-      OtelBatchSpanProcessorConfig
-        <$> optionalFieldWithDefault "max_export_batch_size" defaultMaxExportBatchSize maxSizeDoc AC..= _obspcMaxExportBatchSize
+    AC.object "OtelBatchSpanProcessorConfig"
+      $ OtelBatchSpanProcessorConfig
+      <$> optionalFieldWithDefault "max_export_batch_size" defaultMaxExportBatchSize maxSizeDoc
+      AC..= _obspcMaxExportBatchSize
     where
       maxSizeDoc = "The maximum batch size of every export. It must be smaller or equal to maxQueueSize (not yet configurable). Default 512."
 
 instance FromJSON OtelBatchSpanProcessorConfig where
   parseJSON = J.withObject "OtelBatchSpanProcessorConfig" $ \o ->
     OtelBatchSpanProcessorConfig
-      <$> o .:? "max_export_batch_size" .!= defaultMaxExportBatchSize
+      <$> o
+      .:? "max_export_batch_size"
+      .!= defaultMaxExportBatchSize
 
 instance ToJSON OtelBatchSpanProcessorConfig where
   toJSON (OtelBatchSpanProcessorConfig maxExportBatchSize) =

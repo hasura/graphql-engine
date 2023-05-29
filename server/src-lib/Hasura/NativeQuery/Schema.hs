@@ -1,14 +1,15 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 -- | Schema parsers for native queries.
-module Hasura.NativeQuery.Schema (defaultBuildNativeQueryRootFields) where
+module Hasura.NativeQuery.Schema
+  ( defaultSelectNativeQuery,
+    defaultSelectNativeQueryObject,
+    defaultBuildNativeQueryRootFields,
+  )
+where
 
 import Data.Has (Has (getter))
 import Data.HashMap.Strict qualified as HashMap
-import Data.Monoid (Ap (Ap, getAp))
 import Hasura.GraphQL.Schema.Backend
   ( BackendLogicalModelSelectSchema (..),
-    BackendSchema (columnParser),
     MonadBuildSchema,
   )
 import Hasura.GraphQL.Schema.Common
@@ -16,16 +17,17 @@ import Hasura.GraphQL.Schema.Common
     retrieve,
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
-import Hasura.LogicalModel.Schema
+import Hasura.LogicalModel.Schema (buildLogicalModelFields, buildLogicalModelIR, buildLogicalModelPermissions)
+import Hasura.LogicalModelResolver.Schema (argumentsSchema)
 import Hasura.NativeQuery.Cache (NativeQueryInfo (..))
 import Hasura.NativeQuery.IR (NativeQuery (..))
-import Hasura.NativeQuery.Metadata (InterpolatedQuery (..), NativeQueryArgumentName (..))
+import Hasura.NativeQuery.Metadata (ArgumentName (..), InterpolatedQuery (..))
 import Hasura.NativeQuery.Types (NullableScalarType (..), getNativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Select (QueryDB (QDBMultipleRows))
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Value (Provenance (FromInternal), UnpreparedValue (UVParameter), openValueOrigin)
+import Hasura.RQL.IR.Value (Provenance (FromInternal), UnpreparedValue (UVParameter))
 import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.Metadata.Object qualified as MO
 import Hasura.RQL.Types.Schema.Options qualified as Options
@@ -37,7 +39,128 @@ import Hasura.RQL.Types.SourceCustomization
   )
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Language.GraphQL.Draft.Syntax qualified as G
-import Language.GraphQL.Draft.Syntax.QQ qualified as G
+
+defaultSelectNativeQueryObject ::
+  forall b r m n.
+  ( MonadBuildSchema b r m n,
+    BackendLogicalModelSelectSchema b
+  ) =>
+  -- native query info
+  NativeQueryInfo b ->
+  -- field name
+  G.Name ->
+  -- field description, if any
+  Maybe G.Description ->
+  SchemaT
+    r
+    m
+    (Maybe (P.FieldParser n (IR.AnnObjectSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+defaultSelectNativeQueryObject NativeQueryInfo {..} fieldName description = runMaybeT $ do
+  nativeQueryArgsParser <-
+    nativeQueryArgumentsSchema @b @r @m @n fieldName _nqiArguments
+
+  sourceInfo :: SourceInfo b <- asks getter
+
+  let sourceName = _siName sourceInfo
+
+  logicalModelPermissions <-
+    MaybeT
+      . fmap Just
+      $ buildLogicalModelPermissions @b @r @m @n _nqiReturns
+
+  selectionSetParser <-
+    MaybeT $ logicalModelSelectionSet _nqiRelationships _nqiReturns
+
+  let sourceObj =
+        MO.MOSourceObjId
+          sourceName
+          (mkAnyBackend $ MO.SMONativeQuery @b _nqiRootFieldName)
+
+  pure
+    $ P.setFieldParserOrigin sourceObj
+    $ P.subselection
+      fieldName
+      description
+      nativeQueryArgsParser
+      selectionSetParser
+    <&> \(nqArgs, fields) ->
+      IR.AnnObjectSelectG
+        fields
+        ( IR.FromNativeQuery
+            NativeQuery
+              { nqRootFieldName = _nqiRootFieldName,
+                nqInterpolatedQuery = interpolatedQuery _nqiCode nqArgs,
+                nqLogicalModel = buildLogicalModelIR _nqiReturns
+              }
+        )
+        (IR._tpFilter logicalModelPermissions)
+
+-- | select a native query - implementation is the same for root fields and
+-- array relationships
+defaultSelectNativeQuery ::
+  forall b r m n.
+  ( MonadBuildSchema b r m n,
+    BackendLogicalModelSelectSchema b
+  ) =>
+  -- native query info
+  NativeQueryInfo b ->
+  -- field name
+  G.Name ->
+  -- field description, if any
+  Maybe G.Description ->
+  SchemaT
+    r
+    m
+    (Maybe (P.FieldParser n (IR.AnnSimpleSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+defaultSelectNativeQuery NativeQueryInfo {..} fieldName description = runMaybeT $ do
+  nativeQueryArgsParser <-
+    nativeQueryArgumentsSchema @b @r @m @n fieldName _nqiArguments
+
+  sourceInfo :: SourceInfo b <- asks getter
+
+  let sourceName = _siName sourceInfo
+      tCase = _rscNamingConvention $ _siCustomization sourceInfo
+
+  stringifyNumbers <- retrieve Options.soStringifyNumbers
+
+  logicalModelPermissions <-
+    MaybeT
+      . fmap Just
+      $ buildLogicalModelPermissions @b @r @m @n _nqiReturns
+
+  (selectionListParser, logicalModelsArgsParser) <-
+    MaybeT $ buildLogicalModelFields _nqiRelationships _nqiReturns
+
+  let sourceObj =
+        MO.MOSourceObjId
+          sourceName
+          (mkAnyBackend $ MO.SMONativeQuery @b _nqiRootFieldName)
+
+  pure
+    $ P.setFieldParserOrigin sourceObj
+    $ P.subselection
+      fieldName
+      description
+      ( (,)
+          <$> logicalModelsArgsParser
+          <*> nativeQueryArgsParser
+      )
+      selectionListParser
+    <&> \((lmArgs, nqArgs), fields) ->
+      IR.AnnSelectG
+        { IR._asnFields = fields,
+          IR._asnFrom =
+            IR.FromNativeQuery
+              NativeQuery
+                { nqRootFieldName = _nqiRootFieldName,
+                  nqInterpolatedQuery = interpolatedQuery _nqiCode nqArgs,
+                  nqLogicalModel = buildLogicalModelIR _nqiReturns
+                },
+          IR._asnPerm = logicalModelPermissions,
+          IR._asnArgs = lmArgs,
+          IR._asnStrfyNum = stringifyNumbers,
+          IR._asnNamingConvention = Just tCase
+        }
 
 defaultBuildNativeQueryRootFields ::
   forall b r m n.
@@ -49,111 +172,33 @@ defaultBuildNativeQueryRootFields ::
     r
     m
     (Maybe (P.FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-defaultBuildNativeQueryRootFields NativeQueryInfo {..} = runMaybeT $ do
+defaultBuildNativeQueryRootFields nqi@NativeQueryInfo {..} = do
   let fieldName = getNativeQueryName _nqiRootFieldName
-
-  nativeQueryArgsParser <-
-    nativeQueryArgumentsSchema @b @r @m @n fieldName _nqiArguments
-
-  sourceInfo :: SourceInfo b <- asks getter
-
-  let sourceName = _siName sourceInfo
-      tCase = _rscNamingConvention $ _siCustomization sourceInfo
       description = G.Description <$> _nqiDescription
-
-  stringifyNumbers <- retrieve Options.soStringifyNumbers
-
-  logicalModelPermissions <-
-    MaybeT . fmap Just $
-      buildLogicalModelPermissions @b @r @m @n _nqiReturns
-
-  (selectionSetParser, logicalModelsArgsParser) <-
-    MaybeT $ buildLogicalModelFields _nqiArrayRelationships _nqiReturns
-
-  let interpolatedQuery nqArgs =
-        InterpolatedQuery $
-          (fmap . fmap)
-            ( \var@(NativeQueryArgumentName name) -> case HashMap.lookup var nqArgs of
-                Just arg -> UVParameter (FromInternal name) arg
-                Nothing ->
-                  -- the `nativeQueryArgsParser` will already have checked
-                  -- we have all the args the query needs so this _should
-                  -- not_ happen
-                  error $ "No native query arg passed for " <> show var
-            )
-            (getInterpolatedQuery _nqiCode)
-
-  let sourceObj =
-        MO.MOSourceObjId
-          sourceName
-          (mkAnyBackend $ MO.SMONativeQuery @b _nqiRootFieldName)
-
-  pure $
-    P.setFieldParserOrigin sourceObj $
-      P.subselection
-        fieldName
-        description
-        ( (,)
-            <$> logicalModelsArgsParser
-            <*> nativeQueryArgsParser
-        )
-        selectionSetParser
-        <&> \((lmArgs, nqArgs), fields) ->
-          QDBMultipleRows $
-            IR.AnnSelectG
-              { IR._asnFields = fields,
-                IR._asnFrom =
-                  IR.FromNativeQuery
-                    NativeQuery
-                      { nqRootFieldName = _nqiRootFieldName,
-                        nqArgs,
-                        nqInterpolatedQuery = interpolatedQuery nqArgs,
-                        nqLogicalModel = buildLogicalModelIR _nqiReturns
-                      },
-                IR._asnPerm = logicalModelPermissions,
-                IR._asnArgs = lmArgs,
-                IR._asnStrfyNum = stringifyNumbers,
-                IR._asnNamingConvention = Just tCase
-              }
+  (fmap . fmap . fmap) QDBMultipleRows (defaultSelectNativeQuery nqi fieldName description)
 
 nativeQueryArgumentsSchema ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   G.Name ->
-  HashMap NativeQueryArgumentName (NullableScalarType b) ->
-  MaybeT (SchemaT r m) (P.InputFieldsParser n (HashMap NativeQueryArgumentName (Column.ColumnValue b)))
-nativeQueryArgumentsSchema nativeQueryName argsSignature = do
-  -- Lift 'SchemaT r m (InputFieldsParser ..)' into a monoid using Applicative.
-  -- This lets us use 'foldMap' + monoid structure of hashmaps to avoid awkwardly
-  -- traversing the arguments and building the resulting parser.
-  argsParser <-
-    getAp $
-      foldMap
-        ( \(name, NullableScalarType {nstType, nstNullable, nstDescription}) -> Ap do
-            argValueParser <-
-              fmap (HashMap.singleton name . openValueOrigin)
-                <$> lift (columnParser (Column.ColumnScalar nstType) (G.Nullability nstNullable))
-            -- TODO: Naming conventions?
-            -- TODO: Custom fields? (Probably not)
-            argName <- hoistMaybe (G.mkName (getNativeQueryArgumentName name))
-            let description = case nstDescription of
-                  Just desc -> G.Description desc
-                  Nothing -> G.Description ("Native query argument " <> getNativeQueryArgumentName name)
-            pure $
-              P.field
-                argName
-                (Just description)
-                argValueParser
-        )
-        (HashMap.toList argsSignature)
+  HashMap ArgumentName (NullableScalarType b) ->
+  MaybeT (SchemaT r m) (P.InputFieldsParser n (HashMap ArgumentName (Column.ColumnValue b)))
+nativeQueryArgumentsSchema = argumentsSchema "Native Query"
 
-  let desc = Just $ G.Description $ G.unName nativeQueryName <> " Native Query Arguments"
-
-  pure $
-    if null argsSignature
-      then mempty
-      else
-        P.field
-          [G.name|args|]
-          desc
-          (P.object (nativeQueryName <> [G.name|_arguments|]) desc argsParser)
+-- | swap the template names in our query for unprepared values
+interpolatedQuery ::
+  InterpolatedQuery ArgumentName ->
+  HashMap ArgumentName (Column.ColumnValue b) ->
+  InterpolatedQuery (UnpreparedValue b)
+interpolatedQuery nqiCode nqArgs =
+  InterpolatedQuery
+    $ (fmap . fmap)
+      ( \var@(ArgumentName name) -> case HashMap.lookup var nqArgs of
+          Just arg -> UVParameter (FromInternal name) arg
+          Nothing ->
+            -- the `nativeQueryArgsParser` will already have checked
+            -- we have all the args the query needs so this _should
+            -- not_ happen
+            error $ "No native query arg passed for " <> show var
+      )
+      (getInterpolatedQuery nqiCode)

@@ -82,8 +82,8 @@ schema = [dummyTable]
 tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests =
   describe "special characters of different languages in event trigger payload are encoded in UTF-8" do
-    it "check: inserting a new row invokes a event trigger" $
-      \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+    it "check: inserting a new row invokes a event trigger"
+      $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ getBackendTypeConfig testEnvironment
             sourceName = BackendType.backendSourceName backendTypeMetadata
             schemaName = Schema.getSchemaName testEnvironment
@@ -166,8 +166,8 @@ dbSetup testEnvironment webhookServer = do
 
   -- Track table using custom_name for the special character column since GraphQL
   -- spec does not support special characters
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: #{backendPrefix}_track_table

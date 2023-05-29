@@ -7,6 +7,7 @@ import EditThisPage from '@theme/EditThisPage';
 import TagsListInline from '@theme/TagsListInline';
 import styles from './styles.module.css';
 import { Feedback } from '@site/src/components/Feedback/Feedback';
+import {HasuraReleaseNotification} from "@site/src/components/HasuraReleaseNotification/HasuraReleaseNotification";
 function TagsRow(props) {
   return (
     <div className={clsx(ThemeClassNames.docs.docFooterTagsRow, 'row margin-bottom--sm')}>
@@ -45,6 +46,7 @@ export default function DocItemFooter() {
   return (
     <>
       <Feedback metadata={metadata}/>
+      <HasuraReleaseNotification/>
       <footer className={clsx(ThemeClassNames.docs.docFooter, 'docusaurus-mt-lg')}>
         {canDisplayTagsRow && <TagsRow tags={tags} />}
         {canDisplayEditMetaRow && (

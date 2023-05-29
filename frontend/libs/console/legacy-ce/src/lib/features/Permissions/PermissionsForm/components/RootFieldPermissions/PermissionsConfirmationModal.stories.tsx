@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import {
   PermissionsConfirmationModal,
   Props,
@@ -12,13 +12,11 @@ export default {
     onSubmit: { action: true },
     onClose: { action: true },
   },
-} as ComponentMeta<typeof PermissionsConfirmationModal>;
+} as Meta<typeof PermissionsConfirmationModal>;
 
-export const Base: Story<Props> = args => (
-  <PermissionsConfirmationModal {...args} />
-);
-
-Base.args = {
-  title: <>title</>,
-  description: <>description</>,
+export const Base: StoryObj<Props> = {
+  args: {
+    title: <>title</>,
+    description: <>description</>,
+  },
 };

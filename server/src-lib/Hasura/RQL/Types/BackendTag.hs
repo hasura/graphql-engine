@@ -21,7 +21,6 @@ data BackendTag (b :: BackendType) where
   PostgresCockroachTag :: BackendTag ('Postgres 'Cockroach)
   MSSQLTag :: BackendTag 'MSSQL
   BigQueryTag :: BackendTag 'BigQuery
-  MySQLTag :: BackendTag 'MySQL
   DataConnectorTag :: BackendTag 'DataConnector
 
 -- Derive GEq and GCompare instances for BackendTag.
@@ -49,9 +48,6 @@ instance HasTag 'MSSQL where
 instance HasTag 'BigQuery where
   backendTag = BigQueryTag
 
-instance HasTag 'MySQL where
-  backendTag = MySQLTag
-
 instance HasTag 'DataConnector where
   backendTag = DataConnectorTag
 
@@ -62,7 +58,6 @@ reify PostgresCitusTag = Postgres Citus
 reify PostgresCockroachTag = Postgres Cockroach
 reify MSSQLTag = MSSQL
 reify BigQueryTag = BigQuery
-reify MySQLTag = MySQL
 reify DataConnectorTag = DataConnector
 
 -- | Provides a title-cased name for a database kind, inferring the appropriate

@@ -1,10 +1,10 @@
 import React from 'react';
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { NeonDashboardLink } from './NeonDashboardLink';
 
 export default {
   title: 'features/Neon Integration/Neon Dashboard Link',
   component: NeonDashboardLink,
-} as ComponentMeta<typeof NeonDashboardLink>;
+} as Meta<typeof NeonDashboardLink>;
 
-export const Base: Story = () => <NeonDashboardLink />;
+export const Base: StoryFn = () => <NeonDashboardLink />;

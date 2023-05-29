@@ -17,7 +17,7 @@ import Data.HashSet qualified as HS
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Casing qualified as C
 import Hasura.Backends.Postgres.Instances.Schema ()
-import Hasura.Backends.Postgres.SQL.Types (ConstraintName (..), QualifiedObject (..), QualifiedTable, TableName (..), unsafePGCol)
+import Hasura.Backends.Postgres.SQL.Types (ConstraintName (..), PGExtraTableMetadata (..), QualifiedObject (..), QualifiedTable, TableName (..), unsafePGCol)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common (Scenario (Frontend))
 import Hasura.GraphQL.Schema.Parser (FieldParser)
@@ -27,12 +27,13 @@ import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
 import Hasura.RQL.Types.BackendType (BackendType (Postgres), PostgresKind (Vanilla))
-import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..))
+import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..), StructuredColumnInfo (..))
 import Hasura.RQL.Types.Common (Comment (..), FieldName (..), OID (..))
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Permission (AllowedRootFields (..))
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..), fromRel)
-import Hasura.RQL.Types.Table (Constraint (..), CustomRootField (..), FieldInfo (..), PrimaryKey (..), RolePermInfo (..), SelPermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..))
+import Hasura.RQL.Types.Source.Table (SourceTableType (Table))
+import Hasura.Table.Cache (Constraint (..), CustomRootField (..), FieldInfo (..), PrimaryKey (..), RolePermInfo (..), SelPermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..))
 import Language.GraphQL.Draft.Syntax (unsafeMkName)
 import Test.Parser.Monad
 
@@ -143,7 +144,7 @@ buildTableInfo TableInfoBuilder {..} = tableInfo
           _tciViewInfo = Nothing,
           _tciEnumValues = Nothing,
           _tciCustomConfig = tableConfig,
-          _tciExtraTableMetadata = (),
+          _tciExtraTableMetadata = PGExtraTableMetadata Table,
           _tciApolloFederationConfig = Nothing,
           _tciCustomObjectTypes = mempty
         }
@@ -181,7 +182,7 @@ buildTableInfo TableInfoBuilder {..} = tableInfo
         $ columns
 
     toCIHashPair :: ColumnInfoBuilder -> (FieldName, FieldInfo PG)
-    toCIHashPair cib = (coerce $ cibName cib, FIColumn $ mkColumnInfo cib)
+    toCIHashPair cib = (coerce $ cibName cib, FIColumn $ SCIScalarColumn $ mkColumnInfo cib)
 
     toRelHashPair :: RelInfo PG -> (FieldName, FieldInfo PG)
     toRelHashPair ri = (fromRel $ riName ri, FIRelationship ri)

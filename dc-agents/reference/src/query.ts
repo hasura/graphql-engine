@@ -1,6 +1,7 @@
-﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, Aggregate, SingleColumnAggregate, ColumnCountAggregate, TableName, OrderByElement, OrderByRelation, ExistsInTable, ExistsExpression, ScalarValue } from "@hasura/dc-api-types";
-import { coerceUndefinedToNull, filterIterable, mapIterable, reduceAndIterable, reduceOrIterable, skipIterable, tableNameEquals, takeIterable, unreachable } from "./util";
+﻿﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, Aggregate, SingleColumnAggregate, ColumnCountAggregate, TableName, OrderByElement, OrderByRelation, ExistsInTable, ExistsExpression, ScalarValue, FunctionName, FunctionRelationships } from "@hasura/dc-api-types";
+import { coerceUndefinedToNull, filterIterable, mapIterable, nameEquals, reduceAndIterable, reduceOrIterable, skipIterable, takeIterable, unreachable } from "./util";
 import * as math from "mathjs";
+import { respondToFunction } from "./functions";
 
 type RelationshipName = string
 
@@ -109,7 +110,7 @@ const prettyPrintComparisonValue = (comparisonValue: ComparisonValue): string =>
   }
 };
 
-const prettyPrintTableName = (tableName: TableName): string => {
+export const prettyPrintTableName = (tableName: TableName): string => {
   return tableName.map(t => `[${t}]`).join(".");
 };
 
@@ -370,12 +371,38 @@ const paginateRows = (rows: Iterable<Record<string, RawScalarValue>>, offset: nu
   return limit !== null ? takeIterable(skipped, limit) : skipped;
 };
 
-const makeFindRelationship = (allTableRelationships: TableRelationships[], tableName: TableName) => (relationshipName: RelationshipName): Relationship => {
-  const relationship = allTableRelationships.find(r => tableNameEquals(r.source_table)(tableName))?.relationships?.[relationshipName];
-  if (relationship === undefined)
-    throw `No relationship named ${relationshipName} found for table ${tableName}`;
-  else
-    return relationship;
+const makeFindRelationship = (type: 'table' | 'function', request: QueryRequest, name: TableName) => (relationshipName: RelationshipName): Relationship => {
+  const relationships = (() => {
+    switch(request.type) {
+      case 'table':
+        return request.table_relationships;
+      case 'function':
+        return request.relationships;
+  }})();
+
+  for(var r of relationships) {
+    switch(type) {
+      case 'table':
+        if(r.type === 'table') {
+          if(nameEquals(r.source_table)(name)) {
+            const relationship = r.relationships[relationshipName];
+            if(relationship) {
+              return relationship;
+            }
+          }
+        }
+      case 'function':
+        if(r.type === 'function') {
+          if(nameEquals(r.source_function)(name)) {
+            const relationship = r.relationships[relationshipName];
+            if(relationship) {
+              return relationship;
+            }
+          }
+        }
+    }
+  }
+  throw `No relationship named ${relationshipName} found for ${type} ${name}`;
 };
 
 const createFilterExpressionForRelationshipJoin = (row: Record<string, RawScalarValue>, relationship: Relationship): Expression | null => {
@@ -454,6 +481,9 @@ const projectRow = (fields: Record<string, Field>, findRelationship: (relationsh
 
       case "object":
         throw new Error('Unsupported field type "object"');
+
+      case "array":
+        throw new Error('Unsupported field type "array"');
 
       default:
         return unreachable(field["type"]);
@@ -565,16 +595,18 @@ const makeForeachFilterExpression = (foreachFilterIds: Record<string, ScalarValu
     : { type: "and", expressions };
 }
 
+export type Rows = Record<string, RawScalarValue>[]; // Record<string, ScalarValue>[];
+
 export const queryData = (getTable: (tableName: TableName) => Record<string, RawScalarValue>[] | undefined, queryRequest: QueryRequest): QueryResponse => {
-  const performQuery = (parentQueryRowChain: Record<string, RawScalarValue>[], tableName: TableName, query: Query): QueryResponse => {
-    const rows = getTable(tableName);
+  const performQuery = (parentQueryRowChain: Record<string, RawScalarValue>[], tableName: TableName, query: Query, previousResults: Rows | null): QueryResponse => {
+    const rows = previousResults ?? getTable(tableName);
     if (rows === undefined) {
       throw `${tableName} is not a valid table`;
     }
     const performSubquery = (sourceRow: Record<string, RawScalarValue>, tableName: TableName, query: Query): QueryResponse => {
-      return performQuery([...parentQueryRowChain, sourceRow], tableName, query);
+      return performQuery([...parentQueryRowChain, sourceRow], tableName, query, null);
     };
-    const findRelationship = makeFindRelationship(queryRequest.table_relationships, tableName);
+    const findRelationship = makeFindRelationship(previousResults ? 'function' : 'table', queryRequest, tableName);
     const getComparisonColumnValue = makeGetComparisonColumnValue(parentQueryRowChain);
     const performExistsSubquery = makePerformExistsSubquery(findRelationship, performSubquery);
     const getOrderByElementValue = makeGetOrderByElementValue(findRelationship, performNewQuery);
@@ -603,28 +635,37 @@ export const queryData = (getTable: (tableName: TableName) => Record<string, Raw
       rows: projectedRows,
     }
   }
-  const performNewQuery = (tableName: TableName, query: Query): QueryResponse => performQuery([], tableName, query);
 
-  if (queryRequest.foreach) {
-    return {
-      rows: queryRequest.foreach.map(foreachFilterIds => {
-        const foreachFilter = makeForeachFilterExpression(foreachFilterIds);
-        const where: Expression = queryRequest.query.where
-            ? { type: "and", expressions: [foreachFilter, queryRequest.query.where] }
-            : foreachFilter;
+  const performNewQuery = (tableName: TableName, query: Query, previousResults: Rows|null = null): QueryResponse => performQuery([], tableName, query, previousResults);
 
-        const filteredQuery = {
-          ... queryRequest.query,
-          where
-        }
-        const queryResponse = performNewQuery(queryRequest.table, filteredQuery);
+  switch(queryRequest.type) {
+    case 'function':
+      const rows = respondToFunction(queryRequest, queryRequest.function);
+      const result = performNewQuery(queryRequest.function, queryRequest.query, rows);
+      return result;
+
+    case 'table':
+      if (queryRequest.foreach) {
         return {
-          "query": queryResponse,
+          rows: queryRequest.foreach.map(foreachFilterIds => {
+            const foreachFilter = makeForeachFilterExpression(foreachFilterIds);
+            const where: Expression = queryRequest.query.where
+                ? { type: "and", expressions: [foreachFilter, queryRequest.query.where] }
+                : foreachFilter;
+
+            const filteredQuery = {
+              ... queryRequest.query,
+              where
+            }
+            const queryResponse = performNewQuery(queryRequest.table, filteredQuery);
+            return {
+              "query": queryResponse,
+            };
+          })
         };
-      })
-    };
-  } else {
-    return performNewQuery(queryRequest.table, queryRequest.query);
+      } else {
+        return performNewQuery(queryRequest.table, queryRequest.query);
+      }
   }
 };
 

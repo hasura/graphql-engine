@@ -25,7 +25,6 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.DDL.Action
-import Hasura.RQL.DDL.ApiLimit
 import Hasura.RQL.DDL.ComputedField
 import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.Endpoint
@@ -189,7 +188,7 @@ runQuery ::
     MonadQueryTags m,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m,
+    MonadGetPolicies m,
     UserInfoM m
   ) =>
   AppContext ->
@@ -197,10 +196,10 @@ runQuery ::
   RQLQuery ->
   m (EncJSON, RebuildableSchemaCache)
 runQuery appContext sc query = do
-  appEnv@AppEnv {..} <- askAppEnv
+  AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
-  when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB query) $
-    throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
+  when ((appEnvEnableReadOnlyMode == ReadOnlyModeEnabled) && queryModifiesUserDB query)
+    $ throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
   let exportsMetadata = \case
         RQV1 (RQExportMetadata _) -> True
@@ -209,7 +208,7 @@ runQuery appContext sc query = do
         if (exportsMetadata query)
           then emptyMetadataDefaults
           else acMetadataDefaults appContext
-  dynamicConfig <- buildCacheDynamicConfig appEnv appContext
+  let dynamicConfig = buildCacheDynamicConfig appContext
 
   MetadataWithResourceVersion metadata currentResourceVersion <- liftEitherM fetchMetadata
   ((result, updatedMetadata), updatedCache, invalidations) <-
@@ -402,7 +401,7 @@ runQueryM ::
     Has (L.Logger L.Hasura) r,
     MonadEventLogCleanup m,
     ProvidesHasuraServices m,
-    MonadGetApiTimeLimit m
+    MonadGetPolicies m
   ) =>
   Env.Environment ->
   SQLGenCtx ->

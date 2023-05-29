@@ -1,15 +1,14 @@
-import * as React from 'react';
+import type { Meta, StoryObj } from '@storybook/react';
 import type { ComponentPropsWithoutRef } from 'react';
-import type { ComponentStory, ComponentMeta } from '@storybook/react';
 
-import { expect } from '@storybook/jest';
-import { useEffect, useState } from 'react';
 import { action } from '@storybook/addon-actions';
+import { expect } from '@storybook/jest';
 import { waitFor, within } from '@storybook/testing-library';
+import { useEffect, useState } from 'react';
 
-import { defaultValues as defaultFormValues } from './components/Form/schema';
-import { OpenTelemetry } from './OpenTelemetry';
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
+import { OpenTelemetry } from './OpenTelemetry';
+import { defaultValues as defaultFormValues } from './components/Form/schema';
 
 // --------------------------------------------------
 // NOT TESTED
@@ -22,54 +21,23 @@ export default {
   title: 'Features/OpenTelemetry/OpenTelemetry',
   component: OpenTelemetry,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof OpenTelemetry>;
+} as Meta<typeof OpenTelemetry>;
 
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// DISABLED STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
+export const Disabled: StoryObj<typeof OpenTelemetry> = {
+  render: args => {
+    return <OpenTelemetry {...args} />;
+  },
 
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const Disabled: ComponentStory<typeof OpenTelemetry> = args => {
-  return <OpenTelemetry {...args} />;
+  name: '💠 Disabled',
 };
 
-Disabled.storyName = '💠 Disabled';
+export const DisabledWithoutLicense: StoryObj<typeof OpenTelemetry> = {
+  render: args => {
+    return <OpenTelemetry {...args} />;
+  },
 
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// DISABLED WITHOUT LICENSE STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const DisabledWithoutLicense: ComponentStory<
-  typeof OpenTelemetry
-> = args => {
-  return <OpenTelemetry {...args} />;
-};
-
-DisabledWithoutLicense.storyName = '💠 Disabled without license';
-
-// --------------------------------------------------
-// PROPS
-// --------------------------------------------------
-// Explicitly defining the story' args allows leveraging TS protection over them since story.args is
-// a Partial<Props> and then developers cannot know that they break the story by changing the
-// component props
-const disabledWithLicenseArgs: ComponentPropsWithoutRef<typeof OpenTelemetry> =
-  {
+  name: '💠 Disabled without license',
+  args: {
     isFirstTimeSetup: true,
 
     setOpenTelemetry: (...args) => {
@@ -92,99 +60,59 @@ const disabledWithLicenseArgs: ComponentPropsWithoutRef<typeof OpenTelemetry> =
     },
 
     withoutLicense: true,
-  };
-DisabledWithoutLicense.args = disabledWithLicenseArgs;
-
-// #endregion
-
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// ENABLED STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const Enabled: ComponentStory<typeof OpenTelemetry> = args => {
-  return <OpenTelemetry {...args} />;
-};
-
-Enabled.storyName = '💠 Enabled';
-
-// --------------------------------------------------
-// PROPS
-// --------------------------------------------------
-// Explicitly defining the story' args allows leveraging TS protection over them since story.args is
-// a Partial<Props> and then developers cannot know that they break the story by changing the
-// component props
-const enabledArgs: ComponentPropsWithoutRef<typeof OpenTelemetry> = {
-  isFirstTimeSetup: true,
-
-  setOpenTelemetry: (...args) => {
-    action('setOpenTelemetry')(...args);
-
-    // Fake the server loading
-    return new Promise(resolve => setTimeout(resolve, 1000));
-  },
-
-  skeletonMode: false,
-  metadataFormValues: {
-    enabled: true,
-
-    headers: [],
-    endpoint: '',
-    batchSize: 512,
-    attributes: [],
-    dataType: ['traces'],
-    connectionType: 'http/protobuf',
   },
 };
-Enabled.args = enabledArgs;
 
-// #endregion
-
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// SKELETON STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const Skeleton: ComponentStory<typeof OpenTelemetry> = args => {
-  return <OpenTelemetry {...args} />;
-};
-
-Skeleton.storyName = '💠 Skeleton';
-
-// --------------------------------------------------
-// PROPS
-// --------------------------------------------------
-// Explicitly defining the story' args allows leveraging TS protection over them since story.args is
-// a Partial<Props> and then developers cannot know that they break the story by changing the
-// component props
-const skeletonArgs: ComponentPropsWithoutRef<typeof OpenTelemetry> = {
-  isFirstTimeSetup: true,
-
-  setOpenTelemetry: (...args) => {
-    action('updateOpenT')(...args);
-
-    // Fake the server loading
-    return new Promise(resolve => setTimeout(resolve, 1000));
+export const Enabled: StoryObj<typeof OpenTelemetry> = {
+  render: args => {
+    return <OpenTelemetry {...args} />;
   },
 
-  skeletonMode: true,
-  metadataFormValues: defaultFormValues,
+  name: '💠 Enabled',
+  args: {
+    isFirstTimeSetup: true,
+
+    setOpenTelemetry: (...args) => {
+      action('setOpenTelemetry')(...args);
+
+      // Fake the server loading
+      return new Promise(resolve => setTimeout(resolve, 1000));
+    },
+
+    skeletonMode: false,
+    metadataFormValues: {
+      enabled: true,
+
+      headers: [],
+      endpoint: '',
+      batchSize: 512,
+      attributes: [],
+      dataType: ['traces'],
+      connectionType: 'http/protobuf',
+    },
+  },
 };
-Skeleton.args = skeletonArgs;
+
+export const Skeleton: StoryObj<typeof OpenTelemetry> = {
+  render: args => {
+    return <OpenTelemetry {...args} />;
+  },
+
+  name: '💠 Skeleton',
+  args: {
+    isFirstTimeSetup: true,
+
+    setOpenTelemetry: (...args) => {
+      action('updateOpenT')(...args);
+
+      // Fake the server loading
+      return new Promise(resolve => setTimeout(resolve, 1000));
+    },
+
+    skeletonMode: true,
+    metadataFormValues: defaultFormValues,
+  },
+};
 
 // #endregion
 
@@ -202,12 +130,14 @@ Skeleton.args = skeletonArgs;
 // --------------------------------------------------
 const loadingMetadataProps: ComponentPropsWithoutRef<typeof OpenTelemetry> = {
   skeletonMode: true,
+  eeAccess: 'active',
   isFirstTimeSetup: false,
   setOpenTelemetry: () => Promise.resolve(),
   metadataFormValues: defaultFormValues,
 };
 
 const metadataLoadedProps: ComponentPropsWithoutRef<typeof OpenTelemetry> = {
+  eeAccess: 'active',
   skeletonMode: false,
   isFirstTimeSetup: false,
 
@@ -228,55 +158,53 @@ const metadataLoadedProps: ComponentPropsWithoutRef<typeof OpenTelemetry> = {
   },
 };
 
-export const DefaultValues: ComponentStory<never> = () => {
-  // Initial placeholder props
-  const [props, setProps] =
-    useState<ComponentPropsWithoutRef<typeof OpenTelemetry>>(
-      loadingMetadataProps
+export const DefaultValues: StoryObj = {
+  render: () => {
+    // Initial placeholder props
+    const [props, setProps] =
+      useState<ComponentPropsWithoutRef<typeof OpenTelemetry>>(
+        loadingMetadataProps
+      );
+
+    // Simulate passing from the loading to the default state
+    useEffect(() => {
+      const timeoutId = setTimeout(() => {
+        setProps(metadataLoadedProps);
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
+    }, []);
+
+    return <OpenTelemetry {...props} />;
+  },
+
+  name: '🧪 Testing - When a configuration is available, must use it as the default values',
+
+  parameters: {
+    chromatic: { disableSnapshot: true },
+  },
+
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // STEP: Ensure the props used for the test are different from the default ones
+    expect(metadataLoadedProps.metadataFormValues).not.toEqual(
+      defaultFormValues
     );
 
-  // Simulate passing from the loading to the default state
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setProps(metadataLoadedProps);
-    }, 100);
+    // STEP: Wait until the metadata has been loaded (through waiting for the submit button being enabled)
+    const submitButton = await canvas.findByRole('button', { name: 'Update' });
+    await waitFor(() => {
+      expect(submitButton).toBeEnabled();
+    });
 
-    return () => clearTimeout(timeoutId);
-  }, []);
+    // STEP: check the default value of the Batch Size
+    const batchSizeInputField = await canvas.findByLabelText('Batch Size', {
+      selector: 'input',
+    });
+    expect(batchSizeInputField).toHaveValue(99);
 
-  return <OpenTelemetry {...props} />;
+    // All the other input fields are not tested since if one input field has the correct default value
+    // all of the other input fields have the correct default value.
+  },
 };
-
-DefaultValues.storyName =
-  '🧪 Testing - When a configuration is available, must use it as the default values';
-
-DefaultValues.parameters = {
-  chromatic: { disableSnapshot: true },
-};
-
-// --------------------------------------------------
-// INTERACTION TEST
-// --------------------------------------------------
-DefaultValues.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-
-  // STEP: Ensure the props used for the test are different from the default ones
-  expect(metadataLoadedProps.metadataFormValues).not.toEqual(defaultFormValues);
-
-  // STEP: Wait until the metadata has been loaded (through waiting for the submit button being enabled)
-  const submitButton = await canvas.findByRole('button', { name: 'Update' });
-  await waitFor(() => {
-    expect(submitButton).toBeEnabled();
-  });
-
-  // STEP: check the default value of the Batch Size
-  const batchSizeInputField = await canvas.findByLabelText('Batch Size', {
-    selector: 'input',
-  });
-  expect(batchSizeInputField).toHaveValue(99);
-
-  // All the other input fields are not tested since if one input field has the correct default value
-  // all of the other input fields have the correct default value.
-};
-
-// #endregion

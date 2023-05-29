@@ -74,8 +74,8 @@ authorsTable tableName =
 tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests =
   describe "untrack a table with event triggers should remove the SQL triggers created on the table" do
-    it "check: inserting a new row invokes a event trigger" $
-      \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+    it "check: inserting a new row invokes a event trigger"
+      $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
             insertQuery =
@@ -114,8 +114,8 @@ tests =
 
         eventPayload `shouldBeYaml` expectedEventPayload
 
-    it "untrack table, check the SQL triggers are deleted from the table" $
-      \(testEnvironment, _) -> do
+    it "untrack table, check the SQL triggers are deleted from the table"
+      $ \(testEnvironment, _) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
             untrackTableQuery =
@@ -178,8 +178,8 @@ mssqlSetup testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: mssql_create_event_trigger

@@ -3,7 +3,7 @@
 {-# LANGUAGE CPP #-}
 -- NOTE: This module previously used Template Haskell to generate its instances,
 -- but additional restrictions on Template Haskell splices introduced in GHC 9.0 impose an ordering
--- on the generated instances that is difficult to satisfy (see ../MySQL/Types/Instances.hs).
+-- on the generated instances that is difficult to satisfy
 -- To avoid these difficulties, we now use CPP.
 
 -- | MSSQL Types Instances
@@ -51,7 +51,6 @@ INSTANCE_CLUMP_1(UnifiedColumn)
 INSTANCE_CLUMP_1(TempTableName)
 INSTANCE_CLUMP_1(SomeTableName)
 INSTANCE_CLUMP_1(ConstraintName)
-INSTANCE_CLUMP_1(FunctionName)
 
 
 #define INSTANCE_CLUMP_2(name) \
@@ -80,6 +79,7 @@ INSTANCE_CLUMP_2(NullsOrder)
 INSTANCE_CLUMP_2(Order)
 INSTANCE_CLUMP_2(ScalarType)
 INSTANCE_CLUMP_2(TableName)
+INSTANCE_CLUMP_2(FunctionName)
 INSTANCE_CLUMP_2(Select)
 INSTANCE_CLUMP_2(With)
 INSTANCE_CLUMP_2(CTEBody)
@@ -113,9 +113,11 @@ INSTANCE_CLUMP_2(MergeWhenMatched)
 INSTANCE_CLUMP_2(MergeWhenNotMatched)
 
 deriving instance Ord TableName
+deriving instance Ord FunctionName
 deriving instance Ord ScalarType
 
 deriving instance Lift TableName
+deriving instance Lift FunctionName
 deriving instance Lift NullsOrder
 deriving instance Lift Order
 
@@ -140,7 +142,7 @@ instance ToErrorValue ColumnName where
   toErrorValue = ErrorValue.squote . columnNameText
 
 instance ToErrorValue FunctionName where
-  toErrorValue = ErrorValue.squote . functionNameText
+  toErrorValue = ErrorValue.squote . tshow
 
 instance ToTxt ScalarType where
   toTxt = tshow -- TODO: include schema
@@ -151,14 +153,17 @@ instance ToTxt TableName where
       then tableName
       else tableSchema <> "." <> tableName
 
+instance ToTxt FunctionName where
+  toTxt (FunctionName functionName (SchemaName functionSchema)) =
+    if functionSchema == "dbo"
+      then functionName
+      else functionSchema <> "." <> functionName
+
 instance ToTxt ColumnName where
   toTxt = columnNameText
 
 instance ToTxt ConstraintName where
   toTxt = constraintNameText
-
-instance ToTxt FunctionName where
-  toTxt = functionNameText
 
 #define INSTANCE_CLUMP_3(name) \
          instance ToJSON name where \
@@ -185,7 +190,31 @@ deriving instance ToJSON ColumnName
 
 deriving instance ToJSON ConstraintName
 
-deriving instance ToJSON FunctionName
+instance ToJSON FunctionName where
+  toJSON = genericToJSON hasuraJSON
+
+instance HasCodec FunctionName where
+  codec = parseAlternative objCodec strCodec
+    where
+      objCodec =
+        AC.object "MSSQLFunctionName" $
+          FunctionName
+            <$> requiredField' "name" AC..= functionName
+            <*> optionalFieldWithDefault' "schema" "dbo" AC..= functionSchema
+      strCodec = flip FunctionName "dbo" <$> codec
+
+instance FromJSON FunctionName where
+  parseJSON v@(String _) =
+    FunctionName <$> parseJSON v <*> pure "dbo"
+  parseJSON (Object o) =
+    FunctionName
+      <$> o .: "name"
+      <*> o .:? "schema" .!= "dbo"
+  parseJSON _ =
+    fail "expecting a string/object for FunctionName"
+
+instance ToJSONKey FunctionName where
+  toJSONKey = toJSONKeyText $ \(FunctionName name (SchemaName schema)) -> schema <> "." <> name
 
 instance HasCodec TableName where
   codec = parseAlternative objCodec strCodec
@@ -224,8 +253,6 @@ deriving newtype instance ToJSONKey ColumnName
 
 deriving newtype instance FromJSONKey ColumnName
 
-deriving newtype instance ToJSONKey FunctionName
-
 --------------------------------------------------------------------------------
 -- Manual instances
 
@@ -246,9 +273,6 @@ instance ToJSON n => ToJSON (Countable n)
 instance FromJSON n => FromJSON (Countable n)
 
 deriving instance Ord ColumnName
-
-instance HasCodec FunctionName where
-  codec = dimapCodec FunctionName functionNameText codec
 
 deriving instance Monoid Where
 

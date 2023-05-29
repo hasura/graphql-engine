@@ -5,7 +5,7 @@ import { HasuraMetadataV3 } from '../../../metadata/types';
 import { reactQueryClient } from '../../../lib/reactQuery';
 import { programmaticallyTraceError } from '../../Analytics';
 import {
-  skippedOnboardingVariables,
+  skippedNeonOnboardingVariables,
   onboardingCompleteVariables,
   templateSummaryRunQueryClickVariables,
   templateSummaryRunQuerySkipVariables,
@@ -16,6 +16,9 @@ import {
   fetchAllOnboardingDataQueryVariables,
   oneClickDeploymentOnboardingShown,
   useCaseExperimentOnboarding,
+  skippedOnboardingThroughURLParamVariables,
+  skippedUseCaseExperimentOnboarding,
+  skippedNeonOnboardingToConnectOtherDB,
 } from './constants';
 import { WizardState } from './hooks/useWizardState';
 import { OnboardingResponseData, UserOnboarding } from './types';
@@ -25,7 +28,12 @@ export function shouldShowOnboarding(onboardingData: UserOnboarding) {
   const userActivity = onboardingData?.activity;
 
   if (
-    userActivity?.[skippedOnboardingVariables.kind]?.value === 'true' ||
+    userActivity?.[skippedNeonOnboardingVariables.kind]?.value === 'true' ||
+    userActivity?.[skippedUseCaseExperimentOnboarding.kind]?.value === 'true' ||
+    userActivity?.[skippedOnboardingThroughURLParamVariables.kind]?.value ===
+      'true' ||
+    userActivity?.[skippedNeonOnboardingToConnectOtherDB.kind]?.value ===
+      'true' ||
     userActivity?.[onboardingCompleteVariables.kind]?.value === 'true' ||
     userActivity?.[hasuraSourceCreationStartVariables.kind]?.value === 'true' ||
     userActivity?.[templateSummaryRunQuerySkipVariables.kind]?.value ===
@@ -33,8 +41,13 @@ export function shouldShowOnboarding(onboardingData: UserOnboarding) {
     userActivity?.[templateSummaryRunQueryClickVariables.kind]?.value ===
       'true' ||
     userActivity?.[oneClickDeploymentOnboardingShown.kind]?.value === 'true' ||
-    userActivity?.[useCaseExperimentOnboarding.kind]?.value === 'true'
+    userActivity?.[useCaseExperimentOnboarding.kind]?.value === 'true' ||
+    userActivity?.[oneClickDeploymentOnboardingShown.kind]?.value === 'true'
   ) {
+    return false;
+  }
+  if (getLSItem(LS_KEYS.skipOnboarding) === 'true') {
+    emitOnboardingEvent(skippedOnboardingThroughURLParamVariables);
     return false;
   }
   return true;
@@ -77,11 +90,8 @@ export function getWizardState(
   // transform the onboarding data if present, to a consumable format
   const transformedOnboardingData = onboardingDataTransformFn(onboardingData);
   if (shouldShowOnboarding(transformedOnboardingData)) {
-    if (getLSItem(LS_KEYS.useCaseExperimentOnboarding)) {
-      return 'use-case-onboarding';
-    }
     if (showFamiliaritySurvey) return 'familiarity-survey';
-    return 'landing-page';
+    return 'use-case-onboarding';
   }
   return 'hidden';
 }
@@ -96,19 +106,6 @@ type ResponseDataOnMutation = {
 
 const cloudHeaders = {
   'content-type': 'application/json',
-};
-
-// persist skipped onboarding in the database
-export const persistSkippedOnboarding = () => {
-  // mutate server data
-  cloudDataServiceApiClient<ResponseDataOnMutation, ResponseDataOnMutation>(
-    trackOnboardingActivityMutation,
-    skippedOnboardingVariables,
-    cloudHeaders
-  ).catch(error => {
-    programmaticallyTraceError(error);
-    throw error;
-  });
 };
 
 export const emitOnboardingEvent = (variables: Record<string, unknown>) => {

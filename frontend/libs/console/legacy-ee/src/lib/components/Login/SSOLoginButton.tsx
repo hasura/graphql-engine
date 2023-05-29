@@ -30,7 +30,7 @@ const SSOLoginButton = ({
   };
 
   return (
-    <div className="w-full max-w-md space-y-md px-md py-sm">
+    <div className="w-full max-w-md">
       <button
         type="button"
         onClick={onClick}

@@ -46,10 +46,10 @@ import Language.GraphQL.Draft.Syntax hiding (Definition)
 --      were to change.  We no longer cache execution plans; but we might do it
 --      again in the future, which is why we haven't removed some of the code
 --      that deals with re-usability.
-peelVariable :: MonadParse m => GType -> InputValue Variable -> m (InputValue Variable)
+peelVariable :: (MonadParse m) => GType -> InputValue Variable -> m (InputValue Variable)
 peelVariable = peelVariableWith False
 
-peelVariableWith :: MonadParse m => Bool -> GType -> InputValue Variable -> m (InputValue Variable)
+peelVariableWith :: (MonadParse m) => Bool -> GType -> InputValue Variable -> m (InputValue Variable)
 peelVariableWith locationHasDefaultValue locationType = \case
   GraphQLValue (VVariable var) -> do
     typeCheck locationHasDefaultValue locationType var
@@ -73,7 +73,7 @@ peelVariableWith locationHasDefaultValue locationType = \case
 -- might allow a nullable variable at a non-nullable location: when either side
 -- has a non-null default value. That's because GraphQL conflates nullability
 -- and optionality. See also Note [When are fields optional?].
-typeCheck :: MonadParse m => Bool -> GType -> Variable -> m ()
+typeCheck :: (MonadParse m) => Bool -> GType -> Variable -> m ()
 typeCheck locationHasDefaultValue locationType variable@Variable {vInfo, vType} =
   unless (isVariableUsageAllowed locationHasDefaultValue locationType variable) $
     parseError $

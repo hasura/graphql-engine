@@ -13,6 +13,7 @@ import { SERVER_CONSOLE_MODE } from '../../../../constants';
 import { loadAdminSecretState } from '../../../AppState';
 
 import { getSchemeLuxUrl } from './utils';
+import clsx from 'clsx';
 
 /* function which instantiates relevant wasm code and sends them
  * as props to the component
@@ -173,9 +174,9 @@ const RunTests = props => {
           title="Run tests from CLI"
         >
           <div className={`p-sm ${styles.modalWrapper}`}>
-            <div className={styles.modalContainer}>
-              <div>
-                You can run tests from the CLI also. See <br />
+            <div className={clsx(styles.modalContainer, 'flex flex-col')}>
+              <div className={clsx(' bg-slate-50 px-2 pb-4 pt-0')}>
+                You can run tests from the CLI also. See{' '}
                 <a
                   href="https://docs.pro.hasura.io/cli/regression-tests/"
                   target="_blank"

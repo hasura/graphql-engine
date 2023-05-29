@@ -21,6 +21,8 @@ export type RegisterEeTrialMutationVariables = {
   organization: string;
   phone: string;
   password: string;
+  hasuraUseCase: string;
+  eeUseCase: string[];
 };
 
 const registerEETrialMutationFn = (formData: RegisterEEFormSchema) => {
@@ -36,6 +38,8 @@ const registerEETrialMutationFn = (formData: RegisterEEFormSchema) => {
     phone: formData.phoneNumber as string,
     // password: formData.password
     password: formData.password,
+    hasuraUseCase: formData.hasuraUseCase,
+    eeUseCase: formData.eeUseCase,
   });
 };
 

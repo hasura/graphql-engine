@@ -21,9 +21,12 @@ data MetadataV1 = MetadataV1
 
 instance HasCodec MetadataV1 where
   codec =
-    object "MetadataV1" $
-      MetadataV1
-        <$ optionalVersionField 1
-        <*> optionalField "functions" "user-defined SQL functions" .= metaV1Functions
-        <*> optionalField "remote_schemas" "merge remote GraphQL schemas and provide a unified GraphQL API" .= metaV1RemoteSchemas
-        <*> requiredField "tables" "configured database tables" .= metaV1Tables
+    object "MetadataV1"
+      $ MetadataV1
+      <$ optionalVersionField 1
+      <*> optionalField "functions" "user-defined SQL functions"
+      .= metaV1Functions
+        <*> optionalField "remote_schemas" "merge remote GraphQL schemas and provide a unified GraphQL API"
+      .= metaV1RemoteSchemas
+        <*> requiredField "tables" "configured database tables"
+      .= metaV1Tables

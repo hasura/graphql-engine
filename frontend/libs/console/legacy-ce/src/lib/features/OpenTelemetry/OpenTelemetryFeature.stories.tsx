@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { rest, DelayMode } from 'msw';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
@@ -93,56 +93,74 @@ export default {
       </QueryClientProvider>
     ),
   ],
-} as ComponentMeta<typeof OpenTelemetryFeature>;
+} as Meta<typeof OpenTelemetryFeature>;
 
-export const DisabledWithoutLicense: ComponentStory<
-  typeof OpenTelemetryFeature
-> = () => {
-  return OpenTelemetryFeature() || <div></div>;
-};
-DisabledWithoutLicense.storyName = '💠 Demo Feature Disabled without license';
-DisabledWithoutLicense.parameters = {
-  msw: [
-    mockMetadataHandler(false, 1),
-    eeLicenseInfo.noneOnce,
-    registerEETrialLicenseActiveMutation,
-    eeLicenseInfo.active,
-  ],
-  consoleType: 'pro-lite',
-};
+export const DisabledWithoutLicense: StoryObj<typeof OpenTelemetryFeature> = {
+  render: () => {
+    return OpenTelemetryFeature() || <div></div>;
+  },
 
-export const Loading: ComponentStory<typeof OpenTelemetryFeature> = () => {
-  return OpenTelemetryFeature() || <div></div>;
-};
-Loading.storyName = '💠 Demo Feature Loading';
-Loading.parameters = {
-  msw: [mockMetadataHandler(true, 'infinite'), eeLicenseInfo.active],
-  consoleType: 'pro-lite',
+  name: '💠 Demo Feature Disabled without license',
+
+  parameters: {
+    msw: [
+      mockMetadataHandler(false, 1),
+      eeLicenseInfo.noneOnce,
+      registerEETrialLicenseActiveMutation,
+      eeLicenseInfo.active,
+    ],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const Enabled: ComponentStory<typeof OpenTelemetryFeature> = () => {
-  return OpenTelemetryFeature() || <div></div>;
-};
-Enabled.storyName = '💠 Demo Feature Enabled';
-Enabled.parameters = {
-  msw: [mockMetadataHandler(true, 1), eeLicenseInfo.active],
-  consoleType: 'pro-lite',
+export const Loading: StoryObj<typeof OpenTelemetryFeature> = {
+  render: () => {
+    return OpenTelemetryFeature() || <div></div>;
+  },
+
+  name: '💠 Demo Feature Loading',
+
+  parameters: {
+    msw: [mockMetadataHandler(true, 'infinite'), eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const Disabled: ComponentStory<typeof OpenTelemetryFeature> = () => {
-  return OpenTelemetryFeature() || <div></div>;
-};
-Disabled.storyName = '💠 Demo Feature Disabled';
-Disabled.parameters = {
-  msw: [mockMetadataHandler(false, 1), eeLicenseInfo.active],
-  consoleType: 'pro-lite',
+export const Enabled: StoryObj<typeof OpenTelemetryFeature> = {
+  render: () => {
+    return OpenTelemetryFeature() || <div></div>;
+  },
+
+  name: '💠 Demo Feature Enabled',
+
+  parameters: {
+    msw: [mockMetadataHandler(true, 1), eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const Error: ComponentStory<typeof OpenTelemetryFeature> = () => {
-  return OpenTelemetryFeature() || <div></div>;
+export const Disabled: StoryObj<typeof OpenTelemetryFeature> = {
+  render: () => {
+    return OpenTelemetryFeature() || <div></div>;
+  },
+
+  name: '💠 Demo Feature Disabled',
+
+  parameters: {
+    msw: [mockMetadataHandler(false, 1), eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };
-Error.storyName = '💠 Demo Feature Error';
-Error.parameters = {
-  msw: [mockMetadataHandler(false, 1, 500), eeLicenseInfo.active],
-  consoleType: 'pro-lite',
+
+export const Error: StoryObj<typeof OpenTelemetryFeature> = {
+  render: () => {
+    return OpenTelemetryFeature() || <div></div>;
+  },
+
+  name: '💠 Demo Feature Error',
+
+  parameters: {
+    msw: [mockMetadataHandler(false, 1, 500), eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };

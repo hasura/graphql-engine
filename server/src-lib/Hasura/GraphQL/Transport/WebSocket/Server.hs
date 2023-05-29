@@ -59,12 +59,13 @@ import Data.Word (Word16)
 import GHC.AssertNF.CPP
 import GHC.Int (Int64)
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
-import Hasura.GraphQL.Schema.NamingCase (NamingCase (..), hasNamingConventionChanged)
+import Hasura.GraphQL.Schema.NamingCase (hasNamingConventionChanged)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.WebSocket.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (MetricsConfig (..), SQLGenCtx (..))
+import Hasura.RQL.Types.NamingCase (NamingCase (..))
 import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Auth (AuthMode, compareAuthMode)
 import Hasura.Server.Cors (CorsPolicy)
@@ -157,15 +158,15 @@ $( J.deriveToJSON
      ''WSLog
  )
 
-class Monad m => MonadWSLog m where
+class (Monad m) => MonadWSLog m where
   -- | Takes WS server log data and logs it
   -- logWSServer
   logWSLog :: L.Logger L.Hasura -> WSLog -> m ()
 
-instance MonadWSLog m => MonadWSLog (ExceptT e m) where
+instance (MonadWSLog m) => MonadWSLog (ExceptT e m) where
   logWSLog l ws = lift $ logWSLog l ws
 
-instance MonadWSLog m => MonadWSLog (ReaderT r m) where
+instance (MonadWSLog m) => MonadWSLog (ReaderT r m) where
   logWSLog l ws = lift $ logWSLog l ws
 
 instance L.ToEngineLog WSLog L.Hasura where
@@ -213,13 +214,13 @@ closeConn wsConn = closeConnWithCode wsConn 1000 -- 1000 is "normal close"
 
 -- | Closes a connection with code 1012, which means "Server is restarting"
 -- good clients will implement a retry logic with a backoff of a few seconds
-forceConnReconnect :: MonadIO m => WSConn a -> BL.ByteString -> m ()
+forceConnReconnect :: (MonadIO m) => WSConn a -> BL.ByteString -> m ()
 forceConnReconnect wsConn bs = liftIO $ closeConnWithCode wsConn 1012 bs
 
 closeConnWithCode :: WSConn a -> Word16 -> BL.ByteString -> IO ()
 closeConnWithCode wsConn code bs = do
-  ((\x -> L.unLogger x) . _wcLogger) wsConn $
-    WSLog (_wcConnId wsConn) (ECloseSent $ SB.fromLBS bs) Nothing
+  ((\x -> L.unLogger x) . _wcLogger) wsConn
+    $ WSLog (_wcConnId wsConn) (ECloseSent $ SB.fromLBS bs) Nothing
   WS.sendCloseCode (_wcConnRaw wsConn) code bs
 
 sendMsgAndCloseConn :: WSConn a -> Word16 -> BL.ByteString -> ServerMsg -> IO ()
@@ -375,10 +376,10 @@ websocketConnectionReaper getLatestConfig getSchemaCache (WSServer (L.Logger wri
       (SecuritySensitiveUserConfig -> SecuritySensitiveUserConfig) ->
       IO ()
     closeAllConnectionsWithReason logMsg reason updateConf = do
-      writeLog $
-        WSReaperThreadLog $
-          fromString $
-            logMsg
+      writeLog
+        $ WSReaperThreadLog
+        $ fromString
+        $ logMsg
       conns <- STM.atomically $ do
         STM.modifyTVar' userConfRef updateConf
         flushConnMap serverStatus
@@ -415,71 +416,71 @@ websocketConnectionReaper getLatestConfig getSchemaCache (WSServer (L.Logger wri
             hasHideStreamFieldsChanged = (EFHideStreamFields `elem` currExperimentalFeatures) && (EFHideStreamFields `elem` prevExperimentalFeatures)
             hasDefaultNamingCaseChanged = hasNamingConventionChanged (prevExperimentalFeatures, prevDefaultNamingCase) (currExperimentalFeatures, currDefaultNamingCase)
         if
-            -- if CORS policy has changed, close all connections
-            | hasCorsPolicyChanged ->
-                closeAllConnectionsWithReason
-                  "closing all websocket connections as the cors policy changed"
-                  "cors policy changed"
-                  (\conf -> conf {ssucCorsPolicy = currCorsPolicy})
-            -- if any auth config has changed, close all connections
-            | hasAuthModeChanged ->
-                closeAllConnectionsWithReason
-                  "closing all websocket connections as the auth mode changed"
-                  "auth mode changed"
-                  (\conf -> conf {ssucAuthMode = currAuthMode})
-            -- In case of allowlist, we need to check if the allowlist has changed.
-            -- If the allowlist is disabled, we keep all the connections as is.
-            -- If the allowlist is enabled from a disabled state, we need to close all the
-            -- connections.
-            | hasAllowlistEnabled ->
-                closeAllConnectionsWithReason
-                  "closing all websocket connections as allow list is enabled"
-                  "allow list enabled"
-                  (\conf -> conf {ssucEnableAllowlist = currEnableAllowlist})
-            -- If the allowlist is already enabled and there are any changes made to the
-            -- allowlist, we need to close all the connections.
-            | hasAllowlistUpdated ->
-                closeAllConnectionsWithReason
-                  "closing all websocket connections as the allow list has been updated"
-                  "allow list updated"
-                  (\conf -> conf {ssucAllowlist = currAllowlist})
-            -- if HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES has changed, close all connections
-            | hasStringifyNumChanged ->
-                closeAllConnectionsWithReason
-                  "closing all websocket connections as the HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES setting changed"
-                  "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES env var changed"
-                  (\conf -> conf {ssucSQLGenCtx = currSqlGenCtx})
-            -- if HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE has changed, close all connections
-            | hasDangerousBooleanCollapseChanged ->
-                closeAllConnectionsWithReason
-                  "closing all websocket connections as the HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE setting changed"
-                  "HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE env var changed"
-                  (\conf -> conf {ssucSQLGenCtx = currSqlGenCtx})
-            -- if 'bigquery_string_numeric_input' option added/removed from experimental features, close all connections
-            | hasBigqueryStringNumericInputChanged ->
-                closeAllConnectionsWithReason
-                  "closing all websocket connections as the 'bigquery_string_numeric_input' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
-                  "'bigquery_string_numeric_input' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var"
-                  (\conf -> conf {ssucSQLGenCtx = currSqlGenCtx})
-            -- if 'hide_aggregation_predicates' option added/removed from experimental features, close all connections
-            | hasHideAggregationPredicatesChanged ->
-                closeAllConnectionsWithReason
-                  "closing all websocket connections as the 'hide-aggregation-predicates' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
-                  "'hide-aggregation-predicates' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var"
-                  (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures})
-            -- if 'hide_stream_fields' option added/removed from experimental features, close all connections
-            | hasHideStreamFieldsChanged ->
-                closeAllConnectionsWithReason
-                  "closing all websocket connections as the 'hide-stream-fields' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
-                  "'hide-stream-fields' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var"
-                  (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures})
-            -- if naming convention has been changed, close all connections
-            | hasDefaultNamingCaseChanged ->
-                closeAllConnectionsWithReason
-                  "closing all websocket connections as the 'naming_convention' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES and the HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION has changed"
-                  "naming convention has been changed"
-                  (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures, ssucDefaultNamingCase = currDefaultNamingCase})
-            | otherwise -> pure ()
+          -- if CORS policy has changed, close all connections
+          | hasCorsPolicyChanged ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as the cors policy changed"
+                "cors policy changed"
+                (\conf -> conf {ssucCorsPolicy = currCorsPolicy})
+          -- if any auth config has changed, close all connections
+          | hasAuthModeChanged ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as the auth mode changed"
+                "auth mode changed"
+                (\conf -> conf {ssucAuthMode = currAuthMode})
+          -- In case of allowlist, we need to check if the allowlist has changed.
+          -- If the allowlist is disabled, we keep all the connections as is.
+          -- If the allowlist is enabled from a disabled state, we need to close all the
+          -- connections.
+          | hasAllowlistEnabled ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as allow list is enabled"
+                "allow list enabled"
+                (\conf -> conf {ssucEnableAllowlist = currEnableAllowlist})
+          -- If the allowlist is already enabled and there are any changes made to the
+          -- allowlist, we need to close all the connections.
+          | hasAllowlistUpdated ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as the allow list has been updated"
+                "allow list updated"
+                (\conf -> conf {ssucAllowlist = currAllowlist})
+          -- if HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES has changed, close all connections
+          | hasStringifyNumChanged ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as the HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES setting changed"
+                "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES env var changed"
+                (\conf -> conf {ssucSQLGenCtx = currSqlGenCtx})
+          -- if HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE has changed, close all connections
+          | hasDangerousBooleanCollapseChanged ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as the HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE setting changed"
+                "HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE env var changed"
+                (\conf -> conf {ssucSQLGenCtx = currSqlGenCtx})
+          -- if 'bigquery_string_numeric_input' option added/removed from experimental features, close all connections
+          | hasBigqueryStringNumericInputChanged ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as the 'bigquery_string_numeric_input' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
+                "'bigquery_string_numeric_input' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var"
+                (\conf -> conf {ssucSQLGenCtx = currSqlGenCtx})
+          -- if 'hide_aggregation_predicates' option added/removed from experimental features, close all connections
+          | hasHideAggregationPredicatesChanged ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as the 'hide-aggregation-predicates' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
+                "'hide-aggregation-predicates' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var"
+                (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures})
+          -- if 'hide_stream_fields' option added/removed from experimental features, close all connections
+          | hasHideStreamFieldsChanged ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as the 'hide-stream-fields' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
+                "'hide-stream-fields' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var"
+                (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures})
+          -- if naming convention has been changed, close all connections
+          | hasDefaultNamingCaseChanged ->
+              closeAllConnectionsWithReason
+                "closing all websocket connections as the 'naming_convention' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES and the HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION has changed"
+                "naming convention has been changed"
+                (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures, ssucDefaultNamingCase = currDefaultNamingCase})
+          | otherwise -> pure ()
 
 createServerApp ::
   (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m), MonadWSLog m) =>
@@ -526,16 +527,18 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
             -- Refer: https://hackage.haskell.org/package/warp-3.3.24/docs/src/Network.Wai.Handler.Warp.Settings.html#defaultShouldDisplayException
             Handler $ \(_ :: TM.TimeoutThread) -> pure (),
             Handler $ \(e :: Warp.InvalidRequest) -> do
-              writeLog $
-                L.UnstructuredLog L.LevelError $
-                  fromString $
-                    "Client exception: " <> show e
+              writeLog
+                $ L.UnstructuredLog L.LevelError
+                $ fromString
+                $ "Client exception: "
+                <> show e
               throwIO e,
             Handler $ \(e :: SomeException) -> do
-              writeLog $
-                L.UnstructuredLog L.LevelError $
-                  fromString $
-                    "Unexpected exception raised in websocket. Please report this as a bug: " <> show e
+              writeLog
+                $ L.UnstructuredLog L.LevelError
+                $ fromString
+                $ "Unexpected exception raised in websocket. Please report this as a bug: "
+                <> show e
               throwIO e
           ]
 
@@ -561,8 +564,9 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
       --      Adding `package` stanzas with -Xstrict -XStrictData for those two packages
       --      helped, cutting the number of thunks approximately in half.
       liftIO $ $assertNFHere wsConn -- so we don't write thunks to mutable vars
-      let whenAcceptingInsertConn = liftIO $
-            STM.atomically $ do
+      let whenAcceptingInsertConn = liftIO
+            $ STM.atomically
+            $ do
               status <- STM.readTVar serverStatus
               case status of
                 ShuttingDown -> pure ()
@@ -585,21 +589,22 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
                   shouldCaptureVariables <- liftIO $ _mcAnalyzeQueryVariables <$> getMetricsConfig
                   -- Process all messages serially (important!), in a separate thread:
                   msg <-
-                    liftIO $
+                    liftIO
+                      $
                       -- Re-throw "receiveloop: resource vanished (Connection reset by peer)" :
                       --   https://github.com/yesodweb/wai/blob/master/warp/Network/Wai/Handler/Warp/Recv.hs#L112
                       -- as WS exception signaling cleanup below. It's not clear why exactly this gets
                       -- raised occasionally; I suspect an equivalent handler is missing from WS itself.
                       -- Regardless this should be safe:
-                      handleJust (guard . E.isResourceVanishedError) (\() -> throw WS.ConnectionClosed) $
-                        WS.receiveData conn
+                      handleJust (guard . E.isResourceVanishedError) (\() -> throw WS.ConnectionClosed)
+                      $ WS.receiveData conn
                   let messageLength = BL.length msg
                       censoredMessage =
                         MessageDetails
                           (SB.fromLBS (if shouldCaptureVariables then msg else "<censored>"))
                           messageLength
-                  liftIO $
-                    Prometheus.Counter.add
+                  liftIO
+                    $ Prometheus.Counter.add
                       (pmWebSocketBytesReceived prometheusMetrics)
                       messageLength
                   logWSLog logger $ WSLog wsId (EMessageReceived censoredMessage) Nothing
@@ -628,9 +633,9 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
                   LA.withAsync (liftIO $ onJwtExpiry wsConn) $ \onJwtExpiryRef -> do
                     -- once connection is accepted, check the status of the timer, and if it's expired, close the connection for `graphql-ws`
                     timeoutStatus <- liftIO $ getWSTimerState wsConnInitTimer
-                    when (timeoutStatus == Done && subProtocol == GraphQLWS) $
-                      liftIO $
-                        closeConnWithCode wsConn 4408 "Connection initialisation timed out"
+                    when (timeoutStatus == Done && subProtocol == GraphQLWS)
+                      $ liftIO
+                      $ closeConnWithCode wsConn 4408 "Connection initialisation timed out"
 
                     -- terminates on WS.ConnectionException and JWT expiry
                     let waitOnRefs = [keepAliveRef, onJwtExpiryRef, rcvRef, sendRef]

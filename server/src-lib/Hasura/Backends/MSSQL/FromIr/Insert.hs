@@ -75,17 +75,16 @@ toMerge ::
   FromIr Merge
 toMerge tableName insertRows allColumns IfMatched {..} = do
   let insertColumnNames =
-        HS.toList $
-          HashMap.keysSet _imColumnPresets
-            <> HS.unions (map (HashMap.keysSet . HashMap.fromList . IR.getInsertColumns) insertRows)
+        HS.toList
+          $ HashMap.keysSet _imColumnPresets
+          <> HS.unions (map (HashMap.keysSet . HashMap.fromList . IR.getInsertColumns) insertRows)
       allColumnNames = map IR.ciColumn allColumns
 
   matchConditions <-
-    flip runReaderT (EntityAlias "target") $ -- the table is aliased as "target" in MERGE sql
-      fromGBoolExp _imConditions
-
-  pure $
-    Merge
+    flip runReaderT (EntityAlias "target")
+      $ fromGBoolExp _imConditions -- the table is aliased as "target" in MERGE sql
+  pure
+    $ Merge
       { mergeTargetTable = tableName,
         mergeUsing = MergeUsing tempTableNameValues insertColumnNames,
         mergeOn = MergeOn _imMatchColumns,

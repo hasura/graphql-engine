@@ -38,8 +38,8 @@ import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Constructs the parser for the node interface.
@@ -65,30 +65,31 @@ nodeInterface sourceCache = NodeInterfaceParserBuilder $ \context options -> mem
               tablePkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
               selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
               annotatedFieldsParser <- MaybeT $ tableSelectionSet tableInfo
-              pure $
-                annotatedFieldsParser <&> \fields ->
+              pure
+                $ annotatedFieldsParser
+                <&> \fields ->
                   ( sourceName,
-                    AB.mkAnyBackend $
-                      TableMap $
-                        HashMap.singleton tableName $
-                          NodeInfo sourceInfo selectPermissions tablePkeyColumns fields
+                    AB.mkAnyBackend
+                      $ TableMap
+                      $ HashMap.singleton tableName
+                      $ NodeInfo sourceInfo selectPermissions tablePkeyColumns fields
                   )
-  pure $
-    HashMap.fromListWith fuseAnyMaps
-      <$> P.selectionSetInterface
-        Name._Node
-        (Just nodeInterfaceDescription)
-        [idField]
-        tables
+  pure
+    $ HashMap.fromListWith fuseAnyMaps
+    <$> P.selectionSetInterface
+      Name._Node
+      (Just nodeInterfaceDescription)
+      [idField]
+      tables
   where
     -- this can only ever fail if somehow, within the same source, we ran into
     -- two tables of a different type b; in other words, it is impossible.
     fuseAnyMaps :: AB.AnyBackend TableMap -> AB.AnyBackend TableMap -> AB.AnyBackend TableMap
     fuseAnyMaps m1 m2 =
-      AB.composeAnyBackend @Backend fuseMaps m1 m2 $
-        error "panic: two tables of a different backend type within the same source"
+      AB.composeAnyBackend @Backend fuseMaps m1 m2
+        $ error "panic: two tables of a different backend type within the same source"
 
-    fuseMaps :: forall b. Backend b => TableMap b -> TableMap b -> AB.AnyBackend TableMap
+    fuseMaps :: forall b. (Backend b) => TableMap b -> TableMap b -> AB.AnyBackend TableMap
     fuseMaps (TableMap m1) (TableMap m2) = AB.mkAnyBackend @b $ TableMap $ HashMap.union m1 m2
 
 -- | Creates a field parser for the top-level "node" field in the QueryRoot.
@@ -110,8 +111,9 @@ nodeField sourceCache context options = do
   nodeObject <- case scSchemaKind context of
     HasuraSchema -> throw500 "internal error: the node field should only be built for the Relay schema"
     RelaySchema nodeBuilder -> runNodeBuilder nodeBuilder context options
-  pure $
-    P.subselection Name._node Nothing idArgument nodeObject `P.bindField` \(ident, parseds) -> do
+  pure
+    $ P.subselection Name._node Nothing idArgument nodeObject
+    `P.bindField` \(ident, parseds) -> do
       nodeId <- parseNodeId ident
       case nodeId of
         NodeIdV1 (V1NodeId tableName pKeys) -> do
@@ -129,11 +131,11 @@ nodeField sourceCache context options = do
             [nodeValue] -> createRootField stringifyNumbers tableName nodeValue pKeys
             [] -> throwInvalidNodeId $ "no such table found: " <> toErrorValue tableName
             l ->
-              throwInvalidNodeId $
-                "this V1 node id matches more than one table across different sources: "
-                  <> toErrorValue tableName
-                  <> " exists in sources "
-                  <> toErrorValue (_siName . nvSourceInfo <$> l)
+              throwInvalidNodeId
+                $ "this V1 node id matches more than one table across different sources: "
+                <> toErrorValue tableName
+                <> " exists in sources "
+                <> toErrorValue (_siName . nvSourceInfo <$> l)
         NodeIdV2 nodev2 ->
           -- Node id V2.
           --
@@ -156,7 +158,7 @@ nodeField sourceCache context options = do
     -- that all backends that support relay use the same IR for single row
     -- selection.
     createRootField ::
-      Backend b =>
+      (Backend b) =>
       Options.StringifyNumbers ->
       TableName b ->
       NodeInfo b ->
@@ -164,33 +166,33 @@ nodeField sourceCache context options = do
       n (IR.QueryRootField IR.UnpreparedValue)
     createRootField stringifyNumbers tableName (NodeInfo sourceInfo perms pKeys fields) columnValues = do
       whereExp <- buildNodeIdBoolExp columnValues pKeys
-      pure $
-        IR.RFDB (_siName sourceInfo) $
-          AB.mkAnyBackend $
-            IR.SourceConfigWith (_siConfiguration sourceInfo) Nothing $
-              IR.QDBR $
-                IR.QDBSingleRow $
-                  IR.AnnSelectG
-                    { IR._asnFields = fields,
-                      IR._asnFrom = IR.FromTable tableName,
-                      IR._asnPerm = tablePermissionsInfo perms,
-                      IR._asnArgs =
-                        IR.SelectArgs
-                          { IR._saWhere = Just whereExp,
-                            IR._saOrderBy = Nothing,
-                            IR._saLimit = Nothing,
-                            IR._saOffset = Nothing,
-                            IR._saDistinct = Nothing
-                          },
-                      IR._asnStrfyNum = stringifyNumbers,
-                      IR._asnNamingConvention = Just $ _rscNamingConvention $ _siCustomization sourceInfo
-                    }
+      pure
+        $ IR.RFDB (_siName sourceInfo)
+        $ AB.mkAnyBackend
+        $ IR.SourceConfigWith (_siConfiguration sourceInfo) Nothing
+        $ IR.QDBR
+        $ IR.QDBSingleRow
+        $ IR.AnnSelectG
+          { IR._asnFields = fields,
+            IR._asnFrom = IR.FromTable tableName,
+            IR._asnPerm = tablePermissionsInfo perms,
+            IR._asnArgs =
+              IR.SelectArgs
+                { IR._saWhere = Just whereExp,
+                  IR._saOrderBy = Nothing,
+                  IR._saLimit = Nothing,
+                  IR._saOffset = Nothing,
+                  IR._saDistinct = Nothing
+                },
+            IR._asnStrfyNum = stringifyNumbers,
+            IR._asnNamingConvention = Just $ _rscNamingConvention $ _siCustomization sourceInfo
+          }
 
     -- Craft the 'where' condition of the query by making an `AEQ` entry for
     -- each primary key. This might fail if the given node id doesn't exactly
     -- have a valid entry for each primary key.
     buildNodeIdBoolExp ::
-      Backend b =>
+      (Backend b) =>
       NESeq.NESeq J.Value ->
       NESeq.NESeq (ColumnInfo b) ->
       n (IR.AnnBoolExp b (IR.UnpreparedValue b))
@@ -200,13 +202,16 @@ nodeField sourceCache context options = do
           (nonAlignedPkColumns, nonAlignedColumnValues, alignedTuples) =
             partitionThese $ toList $ align remainingPkColumns remainingColumns
 
-      unless (null nonAlignedPkColumns) $
-        throwInvalidNodeId $
-          "primary key columns " <> toErrorValue (map ciColumn nonAlignedPkColumns) <> " are missing"
+      unless (null nonAlignedPkColumns)
+        $ throwInvalidNodeId
+        $ "primary key columns "
+        <> toErrorValue (map ciColumn nonAlignedPkColumns)
+        <> " are missing"
 
-      unless (null nonAlignedColumnValues) $
-        throwInvalidNodeId $
-          "unexpected column values " <> toErrorValue nonAlignedColumnValues
+      unless (null nonAlignedColumnValues)
+        $ throwInvalidNodeId
+        $ "unexpected column values "
+        <> toErrorValue nonAlignedColumnValues
 
       let allTuples = (firstPkColumn, firstColumnValue) : alignedTuples
       IR.BoolAnd <$> for allTuples \(columnInfo, columnValue) -> do
@@ -214,8 +219,8 @@ nodeField sourceCache context options = do
         parsedValue <-
           parseScalarValueColumnType columnType columnValue `onLeft` \e ->
             P.parseErrorWith P.ParseFailed $ "value of column " <> toErrorValue (ciColumn columnInfo) <> " in node id: " <> toErrorMessage (qeError e)
-        pure $
-          IR.BoolField $
-            IR.AVColumn
-              columnInfo
-              [IR.AEQ True $ IR.UVParameter IR.Unknown $ ColumnValue columnType parsedValue]
+        pure
+          $ IR.BoolField
+          $ IR.AVColumn
+            columnInfo
+            [IR.AEQ True $ IR.UVParameter IR.Unknown $ ColumnValue columnType parsedValue]

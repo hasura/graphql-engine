@@ -19,8 +19,10 @@ import {
   getTableColumns,
   getTablesListAsTree,
   getIsTableView,
+  getStoredProcedures,
 } from './introspection';
 import { getTableRows } from './query';
+import { DataTypeToSQLTypeMap } from './utils';
 
 export type MssqlTable = { schema: string; name: string };
 
@@ -87,6 +89,8 @@ export const mssql: Database = {
     getSupportedOperators,
     getDatabaseSchemas,
     getIsTableView,
+    getSupportedDataTypes: async () => DataTypeToSQLTypeMap,
+    getStoredProcedures,
   },
   modify: {
     defaultQueryRoot: async () => Feature.NotImplemented,

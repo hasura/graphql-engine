@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
-
 -- | Types and subroutines related to constructing transformations on
 -- HTTP requests.
 module Hasura.RQL.DDL.Webhook.Transform.Request
@@ -27,7 +25,6 @@ where
 
 import Control.Arrow (left)
 import Control.Lens qualified as Lens
-import Data.Aeson (FromJSON, ToJSON, (.=))
 import Data.Aeson qualified as J
 import Data.Aeson.Kriti.Functions qualified as KFunc
 import Data.Bifunctor
@@ -36,33 +33,11 @@ import Data.Text.Encoding qualified as TE
 import Data.Validation (Validation, fromEither)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class (Template (..), TemplatingEngine (..), TransformErrorBundle (..), UnescapedTemplate, encodeScalar, wrapUnescapedTemplate)
+import Hasura.RQL.Types.Webhook.Transform.Request (RequestTransformCtx (..), Version (..))
 import Hasura.Session (SessionVariables)
 import Kriti.Error qualified as Kriti
 import Kriti.Parser qualified as Kriti
 import Network.HTTP.Client.Transformable qualified as HTTP
-
--------------------------------------------------------------------------------
-
--- | Common context that is made available to all request transformations.
-data RequestTransformCtx = RequestTransformCtx
-  { rtcBaseUrl :: Maybe J.Value,
-    rtcBody :: J.Value,
-    rtcSessionVariables :: Maybe SessionVariables,
-    rtcQueryParams :: Maybe J.Value,
-    rtcEngine :: TemplatingEngine
-  }
-
-instance ToJSON RequestTransformCtx where
-  toJSON RequestTransformCtx {..} =
-    let required =
-          [ "body" .= rtcBody,
-            "session_variables" .= rtcSessionVariables
-          ]
-        optional =
-          [ ("base_url" .=) <$> rtcBaseUrl,
-            ("query_params" .=) <$> rtcQueryParams
-          ]
-     in J.object (required <> catMaybes optional)
 
 -- | A smart constructor for constructing the 'RequestTransformCtx'
 --
@@ -134,28 +109,6 @@ validateRequestTemplateTransform' engine =
 
 -------------------------------------------------------------------------------
 
--- | 'RequestTransform' Versioning
-data Version
-  = V1
-  | V2
-  deriving stock (Eq, Generic, Show)
-  deriving anyclass (Hashable, NFData)
-
-instance FromJSON Version where
-  parseJSON v = do
-    version :: Int <- J.parseJSON v
-    case version of
-      1 -> pure V1
-      2 -> pure V2
-      i -> fail $ "expected 1 or 2, encountered " ++ show i
-
-instance ToJSON Version where
-  toJSON = \case
-    V1 -> J.toJSON @Int 1
-    V2 -> J.toJSON @Int 2
-
--------------------------------------------------------------------------------
-
 -- | A helper function for executing Kriti transformations from a
 -- 'UnescapedTemplate' and a 'RequestTrasformCtx'.
 --
@@ -180,8 +133,8 @@ runUnescapedRequestTemplateTransform' ::
   UnescapedTemplate ->
   Validation TransformErrorBundle ByteString
 runUnescapedRequestTemplateTransform' context unescapedTemplate =
-  fromEither $
-    runUnescapedRequestTemplateTransform context unescapedTemplate
+  fromEither
+    $ runUnescapedRequestTemplateTransform context unescapedTemplate
 
 -- TODO: Should this live in 'Hasura.RQL.DDL.Webhook.Transform.Validation'?
 validateRequestUnescapedTemplateTransform ::

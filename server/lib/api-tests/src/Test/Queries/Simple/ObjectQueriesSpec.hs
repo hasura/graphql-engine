@@ -24,6 +24,7 @@ import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
 import Harness.Services.GraphqlEngine
 import Harness.Services.Schema
+import Harness.Services.Source.DCPostgres qualified as DC
 import Harness.Services.Source.Postgres
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Protocol (withEachProtocol)
@@ -34,14 +35,19 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
-  withHge emptyHgeConfig $
-    withPostgresSource "postgres-source" $
-      withSchemaName "test_schema" $
-        withPostgresSchema schema $
-          tests
+  withHge emptyHgeConfig $ do
+    withPostgresSource "postgres-source"
+      $ withSchemaName "test_schema"
+      $ withPostgresSchema schema
+      $ tests
 
-  withEachProtocol $
-    Fixture.run
+    DC.withDcPostgresSource "dc-postgres-source"
+      $ withSchemaName "test_schema"
+      $ DC.withDcPostgresSchema schema
+      $ tests
+
+  withEachProtocol
+    $ Fixture.run
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnvironment, _) ->
@@ -63,8 +69,8 @@ spec = do
                   [ BigQuery.setupTablesAction schema testEnvironment
                   ],
                 Fixture.customOptions =
-                  Just $
-                    Fixture.defaultOptions
+                  Just
+                    $ Fixture.defaultOptions
                       { Fixture.stringifyNumbers = True
                       }
               },

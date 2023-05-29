@@ -18,7 +18,7 @@ import Hasura.Tracing.TraceId
 --------------------------------------------------------------------------------
 -- MonadTrace
 
-class Monad m => MonadTrace m where
+class (Monad m) => MonadTrace m where
   -- | Trace the execution of a block of code, attaching a human-readable
   -- name. This starts a new trace and its corresponding root span, to which
   -- subsequent spans will be attached.
@@ -49,25 +49,25 @@ class Monad m => MonadTrace m where
   -- | Log some arbitrary metadata to be attached to the current span, if any.
   attachMetadata :: TraceMetadata -> m ()
 
-instance MonadTrace m => MonadTrace (ReaderT r m) where
+instance (MonadTrace m) => MonadTrace (ReaderT r m) where
   newTraceWith c p n = mapReaderT (newTraceWith c p n)
   newSpanWith i n = mapReaderT (newSpanWith i n)
   currentContext = lift currentContext
   attachMetadata = lift . attachMetadata
 
-instance MonadTrace m => MonadTrace (StateT e m) where
+instance (MonadTrace m) => MonadTrace (StateT e m) where
   newTraceWith c p n = mapStateT (newTraceWith c p n)
   newSpanWith i n = mapStateT (newSpanWith i n)
   currentContext = lift currentContext
   attachMetadata = lift . attachMetadata
 
-instance MonadTrace m => MonadTrace (ExceptT e m) where
+instance (MonadTrace m) => MonadTrace (ExceptT e m) where
   newTraceWith c p n = mapExceptT (newTraceWith c p n)
   newSpanWith i n = mapExceptT (newSpanWith i n)
   currentContext = lift currentContext
   attachMetadata = lift . attachMetadata
 
-instance MonadTrace m => MonadTrace (MaybeT m) where
+instance (MonadTrace m) => MonadTrace (MaybeT m) where
   newTraceWith c p n = mapMaybeT (newTraceWith c p n)
   newSpanWith i n = mapMaybeT (newSpanWith i n)
   currentContext = lift currentContext

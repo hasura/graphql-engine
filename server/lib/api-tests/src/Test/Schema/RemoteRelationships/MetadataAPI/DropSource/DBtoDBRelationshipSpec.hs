@@ -90,8 +90,8 @@ tests = describe "drop-source-metadata-tests" do
       let sources = key "sources" . values
           -- Extract the 'source' DB info from the sources field in metadata
           sourceDB =
-            Unsafe.fromJust $
-              findOf
+            Unsafe.fromJust
+              $ findOf
                 sources
                 (has $ key "name" . _String . only "source")
                 metadata

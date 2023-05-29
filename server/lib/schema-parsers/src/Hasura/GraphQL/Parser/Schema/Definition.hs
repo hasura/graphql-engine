@@ -266,7 +266,7 @@ data k1 :<: k2 where
 class k1 <: k2 where
   subKind :: k1 :<: k2
 
-instance k1 ~ k2 => k1 <: k2 where
+instance (k1 ~ k2) => k1 <: k2 where
   subKind = KRefl
 
 instance {-# OVERLAPPING #-} k <: 'Both where
@@ -591,11 +591,11 @@ data Definition origin a = Definition
   }
   deriving (Functor, Foldable, Traversable, Generic)
 
-instance Hashable a => Hashable (Definition origin a) where
+instance (Hashable a) => Hashable (Definition origin a) where
   hashWithSalt salt Definition {..} =
     salt `hashWithSalt` dName `hashWithSalt` dInfo
 
-instance Eq a => Eq (Definition origin a) where
+instance (Eq a) => Eq (Definition origin a) where
   (==) = eq1
 
 instance Eq1 (Definition origin) where

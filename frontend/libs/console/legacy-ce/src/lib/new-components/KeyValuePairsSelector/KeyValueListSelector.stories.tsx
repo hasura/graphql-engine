@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentMeta } from '@storybook/react';
+import { Meta } from '@storybook/react';
 import { KeyValueListSelector } from './KeyValueListSelector';
 import { SimpleForm } from '../Form';
 import { z } from 'zod';
@@ -16,7 +16,7 @@ const formSchema = z.object({
 export default {
   title: 'components/KeyValuePairsSelector',
   component: KeyValueListSelector,
-} as ComponentMeta<typeof KeyValueListSelector>;
+} as Meta<typeof KeyValueListSelector>;
 
 export const showcase = () => (
   <div className="space-y-4">

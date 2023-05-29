@@ -1,3 +1,7 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "avoid Language.GraphQL.Draft.Syntax.unsafeMkName" #-}
+
 -- | This module provides generators for the IR query selection type.
 --
 -- The generators in this module generally take the low-level Backend-specific
@@ -20,8 +24,10 @@ module Hasura.RQL.IR.Generator
   )
 where
 
+import Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes qualified as Assoc
 import Hasura.Function.Cache
 import Hasura.Generator.Common
+import Hasura.NativeQuery.Types (NativeQueryName (..))
 import Hasura.Prelude hiding (bool, choice, maybe, nonEmpty)
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy
@@ -33,16 +39,17 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
 import Hedgehog
 import Hedgehog.Gen
+import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Generate a list of pairs of field names and 'a's.
 --
 -- | See 'genFieldName' for details on generating field names.
-genFields :: MonadGen m => m a -> Range Int -> Range Int -> m (Fields a)
+genFields :: (MonadGen m) => m a -> Range Int -> Range Int -> m (Fields a)
 genFields genA fieldsRange fieldNameRange =
   list fieldsRange $ (,) <$> genFieldName fieldNameRange <*> genA
 
 genFunctionArgsExpG ::
-  MonadGen m =>
+  (MonadGen m) =>
   m a ->
   m (FunctionArgsExpG a)
 genFunctionArgsExpG genA =
@@ -51,7 +58,7 @@ genFunctionArgsExpG genA =
     <*> genHashMap (genArbitraryUnicodeText defaultRange) genA defaultRange
 
 genGExists ::
-  MonadGen m =>
+  (MonadGen m) =>
   m a ->
   m (TableName b) ->
   m (GExists b a)
@@ -59,7 +66,7 @@ genGExists aGen tableGen =
   GExists <$> tableGen <*> genAnnBoolExp aGen tableGen
 
 genAnnBoolExp ::
-  MonadGen m =>
+  (MonadGen m) =>
   m a ->
   m (TableName b) ->
   m (GBoolExp b a)
@@ -78,9 +85,9 @@ genAnnBoolExp
       boolFld = BoolField <$> aGen
 
 genAnnBoolExpFld ::
-  MonadGen m =>
-  Hashable (ScalarType b) =>
-  Hashable (Column b) =>
+  (MonadGen m) =>
+  (Hashable (ScalarType b)) =>
+  (Hashable (Column b)) =>
   m (Column b) ->
   m (TableName b) ->
   m (ScalarType b) ->
@@ -119,18 +126,32 @@ genAnnBoolExpFld
       relationship =
         AVRelationship
           <$> genRelInfo genTableName genColumn
-          <*> genAnnBoolExp
-            ( genAnnBoolExpFld
-                genColumn
-                genTableName
-                genScalarType
-                genFunctionName
-                genXComputedField
-                genBooleanOperators
-                genFunctionArgumentExp
-                genA
-            )
-            genTableName
+          <*> ( RelationshipFilters
+                  <$> genAnnBoolExp
+                    ( genAnnBoolExpFld
+                        genColumn
+                        genTableName
+                        genScalarType
+                        genFunctionName
+                        genXComputedField
+                        genBooleanOperators
+                        genFunctionArgumentExp
+                        genA
+                    )
+                    genTableName
+                  <*> genAnnBoolExp
+                    ( genAnnBoolExpFld
+                        genColumn
+                        genTableName
+                        genScalarType
+                        genFunctionName
+                        genXComputedField
+                        genBooleanOperators
+                        genFunctionArgumentExp
+                        genA
+                    )
+                    genTableName
+              )
       computedField =
         AVComputedField
           <$> genAnnComputedFieldBolExp
@@ -144,8 +165,8 @@ genAnnBoolExpFld
             genA
 
 genRelInfo ::
-  MonadGen m =>
-  Hashable (Column b) =>
+  (MonadGen m) =>
+  (Hashable (Column b)) =>
   m (TableName b) ->
   m (Column b) ->
   m (RelInfo b)
@@ -154,23 +175,33 @@ genRelInfo genTableName genColumn =
     <$> genRelName
     <*> genRelType
     <*> genHashMap genColumn genColumn defaultRange
-    <*> genTableName
+    <*> genRelTarget genTableName
     <*> bool_
     <*> genInsertOrder
 
-genRelName :: MonadGen m => m RelName
+genRelTarget :: (MonadGen m) => m (TableName b) -> m (RelTarget b)
+genRelTarget genTableName =
+  choice
+    [ RelTargetTable <$> genTableName,
+      RelTargetNativeQuery <$> genNativeQueryName
+    ]
+
+genNativeQueryName :: (MonadGen m) => m NativeQueryName
+genNativeQueryName = NativeQueryName . G.unsafeMkName <$> Assoc.genIdentifier
+
+genRelName :: (MonadGen m) => m RelName
 genRelName = RelName <$> genNonEmptyText defaultRange
 
-genRelType :: MonadGen m => m RelType
+genRelType :: (MonadGen m) => m RelType
 genRelType = element [ObjRel, ArrRel]
 
-genInsertOrder :: MonadGen m => m InsertOrder
+genInsertOrder :: (MonadGen m) => m InsertOrder
 genInsertOrder = element [BeforeParent, AfterParent]
 
 genAnnComputedFieldBolExp ::
-  MonadGen m =>
-  Hashable (ScalarType b) =>
-  Hashable (Column b) =>
+  (MonadGen m) =>
+  (Hashable (ScalarType b)) =>
+  (Hashable (Column b)) =>
   m (TableName b) ->
   m (Column b) ->
   m (ScalarType b) ->
@@ -205,9 +236,9 @@ genAnnComputedFieldBolExp
         genA
 
 genComputedFieldBoolExp ::
-  MonadGen m =>
-  Hashable (ScalarType b) =>
-  Hashable (Column b) =>
+  (MonadGen m) =>
+  (Hashable (ScalarType b)) =>
+  (Hashable (Column b)) =>
   m (TableName b) ->
   m (Column b) ->
   m (ScalarType b) ->
@@ -253,12 +284,12 @@ genComputedFieldBoolExp
             genTableName
       ]
 
-genComputedFieldName :: MonadGen m => m ComputedFieldName
+genComputedFieldName :: (MonadGen m) => m ComputedFieldName
 genComputedFieldName = ComputedFieldName <$> genNonEmptyText defaultRange
 
 genOpExpG ::
-  MonadGen m =>
-  Hashable (ScalarType b) =>
+  (MonadGen m) =>
+  (Hashable (ScalarType b)) =>
   m (TableName b) ->
   m (Column b) ->
   m (ScalarType b) ->
@@ -293,8 +324,8 @@ genOpExpG genTableName genColumn genScalarType genBooleanOperators genA =
       ACast
         <$> genHashMap
           genScalarType
-          ( list defaultRange $
-              genOpExpG
+          ( list defaultRange
+              $ genOpExpG
                 genTableName
                 genColumn
                 genScalarType
@@ -325,7 +356,7 @@ genOpExpG genTableName genColumn genScalarType genBooleanOperators genA =
     genRootOrCurrent = element [IsRoot, IsCurrent]
 
 genColumnType ::
-  MonadGen m =>
+  (MonadGen m) =>
   m (TableName b) ->
   m (ScalarType b) ->
   m (ColumnType b)
@@ -338,7 +369,7 @@ genColumnType genTableName genScalarType =
         <$> genEnumReference genTableName
 
 genEnumReference ::
-  MonadGen m =>
+  (MonadGen m) =>
   m (TableName b) ->
   m (EnumReference b)
 genEnumReference genTableName =
@@ -353,14 +384,14 @@ genEnumReference genTableName =
           defaultRange
       )
 
-genEnumValue :: MonadGen m => m EnumValue
+genEnumValue :: (MonadGen m) => m EnumValue
 genEnumValue = EnumValue <$> genGName defaultRange
 
-genEnumValueInfo :: MonadGen m => m EnumValueInfo
+genEnumValueInfo :: (MonadGen m) => m EnumValueInfo
 genEnumValueInfo = EnumValueInfo <$> maybe (genArbitraryUnicodeText defaultRange)
 
 genColumnInfo ::
-  MonadGen m =>
+  (MonadGen m) =>
   m (Column b) ->
   m (TableName b) ->
   m (ScalarType b) ->
@@ -378,11 +409,11 @@ genColumnInfo
       <*> maybe (genDescription defaultRange)
       <*> genColumnMutability
 
-genColumnMutability :: MonadGen m => m ColumnMutability
+genColumnMutability :: (MonadGen m) => m ColumnMutability
 genColumnMutability = ColumnMutability <$> bool <*> bool
 
 genAnnotatedOrderByItemG ::
-  MonadGen m =>
+  (MonadGen m) =>
   m (BasicOrderType b) ->
   m (NullsOrderType b) ->
   m a ->
@@ -394,9 +425,9 @@ genAnnotatedOrderByItemG genBasicOrderType genNullsOrderType genA =
     <*> maybe genNullsOrderType
 
 genAnnotatedOrderByElement ::
-  MonadGen m =>
-  Hashable (ScalarType b) =>
-  Hashable (Column b) =>
+  (MonadGen m) =>
+  (Hashable (ScalarType b)) =>
+  (Hashable (Column b)) =>
   m (Column b) ->
   m (TableName b) ->
   m (ScalarType b) ->
@@ -484,7 +515,7 @@ genAnnotatedOrderByElement
             genA
 
 genAnnotatedAggregateOrderBy ::
-  MonadGen m =>
+  (MonadGen m) =>
   m (Column b) ->
   m (TableName b) ->
   m (ScalarType b) ->
@@ -505,9 +536,9 @@ genAnnotatedAggregateOrderBy
       ]
 
 genComputedFieldOrderBy ::
-  MonadGen m =>
-  Hashable (ScalarType b) =>
-  Hashable (Column b) =>
+  (MonadGen m) =>
+  (Hashable (ScalarType b)) =>
+  (Hashable (Column b)) =>
   m (Column b) ->
   m (ScalarType b) ->
   m (TableName b) ->
@@ -542,9 +573,9 @@ genComputedFieldOrderBy
         genA
 
 genComputedFieldOrderByElement ::
-  MonadGen m =>
-  Hashable (ScalarType b) =>
-  Hashable (Column b) =>
+  (MonadGen m) =>
+  (Hashable (ScalarType b)) =>
+  (Hashable (Column b)) =>
   m (Column b) ->
   m (ScalarType b) ->
   m (TableName b) ->
@@ -585,5 +616,5 @@ genComputedFieldOrderByElement
             genScalarType
       ]
 
-genIdentifier :: MonadGen m => m FIIdentifier
+genIdentifier :: (MonadGen m) => m FIIdentifier
 genIdentifier = Hasura.RQL.IR.Select.FIIdentifier <$> genArbitraryUnicodeText defaultRange

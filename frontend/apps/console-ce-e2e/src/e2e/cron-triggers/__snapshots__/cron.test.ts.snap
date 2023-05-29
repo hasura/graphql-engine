@@ -1,0 +1,40 @@
+exports[`Create Cron trigger with shortest possible path > When the users create, modify to longest path and delete an Cron trigger, everything should work #0`] =
+{
+  "comment": "my comment",
+  "headers": [
+    {
+      "name": "user_id",
+      "value": "1234"
+    }
+  ],
+  "include_in_metadata": true,
+  "name": "cron_trigger_name",
+  "payload": {
+    "name": "json_payload"
+  },
+  "request_transform": {
+    "body": {
+      "action": "transform",
+      "template": "{\n  \"payload\": {{$body.payload}}\n}"
+    },
+    "method": "GET",
+    "query_params": {},
+    "request_headers": {
+      "add_headers": {},
+      "remove_headers": [
+        "content-type"
+      ]
+    },
+    "template_engine": "Kriti",
+    "url": "{{$base_url}}/transformUrl",
+    "version": 2
+  },
+  "retry_conf": {
+    "num_retries": 3,
+    "retry_interval_seconds": 20,
+    "timeout_seconds": 80,
+    "tolerance_seconds": 80
+  },
+  "schedule": "*/10 * * * *",
+  "webhook": "http://httpbin.org/post"
+};

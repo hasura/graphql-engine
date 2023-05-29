@@ -1,6 +1,6 @@
 import { Table } from '../../hasura-metadata-types';
 import { useMetadata, MetadataSelectors } from '../../hasura-metadata-api';
-import { tableRelationships } from '../utils/tableRelationships';
+import { getAllTableRelationships } from '../utils/tableRelationships';
 import { useAllSuggestedRelationships } from '../components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
 
 export const useListAllDatabaseRelationships = ({
@@ -29,7 +29,7 @@ export const useListAllDatabaseRelationships = ({
   });
 
   return {
-    data: tableRelationships(
+    data: getAllTableRelationships(
       metadataTable,
       dataSourceName,
       suggestedRelationships

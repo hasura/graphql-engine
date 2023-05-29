@@ -52,3 +52,7 @@ export function get<T extends Record<string, any>, P extends Path<T>>(
 }
 
 export const capitalize = (s: string) => s && s[0].toUpperCase() + s.slice(1);
+
+export type CreateBooleanMap<T> = {
+  [K in keyof T]?: boolean;
+};

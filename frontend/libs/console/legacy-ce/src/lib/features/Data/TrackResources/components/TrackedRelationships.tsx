@@ -319,50 +319,52 @@ export const TrackedRelationships: React.VFC<TrackedRelationshipsProps> = ({
         </CardedTable.TableHead>
 
         <CardedTable.TableBody>
-          {paginate(filteredRelationships, pageSize, pageNumber).map(
-            relationship => {
-              return (
-                <CardedTable.TableBodyRow key={relationship.name}>
-                  <td className="w-0 px-sm text-sm font-semibold text-muted uppercase tracking-wider">
-                    <input
-                      type="checkbox"
-                      className="cursor-pointer rounded border shadow-sm border-gray-400 hover:border-gray-500 focus:ring-yellow-400"
-                      value={relationship.name}
-                      checked={checkedIds.includes(relationship.name)}
-                      onChange={() => onCheck(relationship.name)}
-                    />
-                  </td>
-                  <CardedTable.TableBodyCell>
-                    {relationship.name}
-                  </CardedTable.TableBodyCell>
-                  <CardedTable.TableBodyCell>
-                    <div className="flex items-center gap-2">
-                      <TargetName relationship={relationship} />
-                    </div>
-                  </CardedTable.TableBodyCell>
-                  <CardedTable.TableBodyCell>
-                    {relationship.relationshipType}
-                  </CardedTable.TableBodyCell>
+          {paginate({
+            data: filteredRelationships,
+            pageSize,
+            pageNumber,
+          }).data.map(relationship => {
+            return (
+              <CardedTable.TableBodyRow key={relationship.name}>
+                <td className="w-0 px-sm text-sm font-semibold text-muted uppercase tracking-wider">
+                  <input
+                    type="checkbox"
+                    className="cursor-pointer rounded border shadow-sm border-gray-400 hover:border-gray-500 focus:ring-yellow-400"
+                    value={relationship.name}
+                    checked={checkedIds.includes(relationship.name)}
+                    onChange={() => onCheck(relationship.name)}
+                  />
+                </td>
+                <CardedTable.TableBodyCell>
+                  {relationship.name}
+                </CardedTable.TableBodyCell>
+                <CardedTable.TableBodyCell>
+                  <div className="flex items-center gap-2">
+                    <TargetName relationship={relationship} />
+                  </div>
+                </CardedTable.TableBodyCell>
+                <CardedTable.TableBodyCell>
+                  {relationship.relationshipType}
+                </CardedTable.TableBodyCell>
 
-                  <CardedTable.TableBodyCell>
-                    <RelationshipMapping relationship={relationship} />
-                  </CardedTable.TableBodyCell>
+                <CardedTable.TableBodyCell>
+                  <RelationshipMapping relationship={relationship} />
+                </CardedTable.TableBodyCell>
 
-                  <CardedTable.TableBodyActionCell>
-                    <RowActions
-                      relationship={relationship}
-                      onActionClick={(_relationship, _mode) => {
-                        setRelationshipAction({
-                          mode: _mode,
-                          relationship: _relationship,
-                        });
-                      }}
-                    />
-                  </CardedTable.TableBodyActionCell>
-                </CardedTable.TableBodyRow>
-              );
-            }
-          )}
+                <CardedTable.TableBodyActionCell>
+                  <RowActions
+                    relationship={relationship}
+                    onActionClick={(_relationship, _mode) => {
+                      setRelationshipAction({
+                        mode: _mode,
+                        relationship: _relationship,
+                      });
+                    }}
+                  />
+                </CardedTable.TableBodyActionCell>
+              </CardedTable.TableBodyRow>
+            );
+          })}
         </CardedTable.TableBody>
       </CardedTable.Table>
       <div>

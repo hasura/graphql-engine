@@ -3,22 +3,35 @@ import { DataNode } from 'antd/lib/tree';
 import React from 'react';
 import { FaTable, FaFolder } from 'react-icons/fa';
 import { TableColumn } from '../../types';
+import { TbMathFunction } from 'react-icons/tb';
 
 export function convertToTreeData(
   tables: string[][],
   key: string[],
-  dataSourceName: string
+  dataSourceName: string,
+  mode?: 'function'
 ): DataNode[] {
   if (tables.length === 0) return [];
 
   if (tables[0].length === 1) {
     const leafNodes: DataNode[] = tables.map(table => {
       return {
-        icon: <FaTable />,
-        key: JSON.stringify({
-          database: dataSourceName,
-          table: [...key, table[0]],
-        }),
+        icon:
+          mode === 'function' ? (
+            <TbMathFunction className="text-muted mr-xs" />
+          ) : (
+            <FaTable />
+          ),
+        key:
+          mode === 'function'
+            ? JSON.stringify({
+                database: dataSourceName,
+                function: [...key, table[0]],
+              })
+            : JSON.stringify({
+                database: dataSourceName,
+                table: [...key, table[0]],
+              }),
         title: table[0],
       };
     });

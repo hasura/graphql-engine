@@ -224,21 +224,21 @@ data EngineLog impl = EngineLog
     _elDetail :: !J.Value
   }
 
-deriving instance Show (EngineLogType impl) => Show (EngineLog impl)
+deriving instance (Show (EngineLogType impl)) => Show (EngineLog impl)
 
-deriving instance Eq (EngineLogType impl) => Eq (EngineLog impl)
+deriving instance (Eq (EngineLogType impl)) => Eq (EngineLog impl)
 
 -- Empty splice to bring all the above definitions in scope.
 --
 -- TODO: Restructure the code so that we can avoid this.
 $(pure [])
 
-instance J.ToJSON (EngineLogType impl) => J.ToJSON (EngineLog impl) where
+instance (J.ToJSON (EngineLogType impl)) => J.ToJSON (EngineLog impl) where
   toJSON = $(J.mkToJSON hasuraJSON ''EngineLog)
 
 -- | Typeclass representing any data type that can be converted to @EngineLog@ for the purpose of
 -- logging
-class EnabledLogTypes impl => ToEngineLog a impl where
+class (EnabledLogTypes impl) => ToEngineLog a impl where
   toEngineLog :: a -> (LogLevel, EngineLogType impl, J.Value)
 
 data UnstructuredLog = UnstructuredLog {_ulLevel :: !LogLevel, _ulPayload :: !SB.SerializableBlob}
@@ -327,10 +327,10 @@ mkLogger :: (J.ToJSON (EngineLogType impl)) => LoggerCtx impl -> Logger impl
 mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = Logger $ \l -> do
   localTime <- liftIO timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
-  when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy) $
-    liftIO $
-      FL.pushLogStrLn loggerSet $
-        FL.toLogStr (J.encode $ EngineLog localTime logLevel logTy logDet)
+  when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy)
+    $ liftIO
+    $ FL.pushLogStrLn loggerSet
+    $ FL.toLogStr (J.encode $ EngineLog localTime logLevel logTy logDet)
 
 nullLogger :: Logger Hasura
 nullLogger = Logger \_ -> pure ()

@@ -28,10 +28,10 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------
@@ -45,9 +45,10 @@ runSetCustomTypes ::
   CustomTypes ->
   m EncJSON
 runSetCustomTypes customTypes = do
-  buildSchemaCacheFor MOCustomTypes $
-    MetadataModifier $
-      metaCustomTypes .~ customTypes
+  buildSchemaCacheFor MOCustomTypes
+    $ MetadataModifier
+    $ metaCustomTypes
+    .~ customTypes
   pure successMsg
 
 clearCustomTypesInMetadata :: MetadataModifier
@@ -58,7 +59,7 @@ clearCustomTypesInMetadata =
 -- Cache building functions
 
 resolveCustomTypes ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SourceCache ->
   CustomTypes ->
   BackendMap ScalarMap ->
@@ -111,7 +112,7 @@ having to disambiguate type names across backends.
 -- scalars).
 validateCustomTypeDefinitions ::
   forall m.
-  MonadValidate [CustomTypeValidationError] m =>
+  (MonadValidate [CustomTypeValidationError] m) =>
   SourceCache ->
   CustomTypes ->
   -- | A map that, to each backend, associates the set of all its scalars.
@@ -125,8 +126,9 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
     mapFromL (unObjectTypeName . _aotName)
       <$> traverse validateObject objectDefinitions
   let scalarTypeMap =
-        HashMap.map NOCTScalar $
-          HashMap.map ASTCustom scalarTypes <> reusedScalars
+        HashMap.map NOCTScalar
+          $ HashMap.map ASTCustom scalarTypes
+          <> reusedScalars
       enumTypeMap = HashMap.map NOCTEnum enumTypes
       inputObjectTypeMap = HashMap.map NOCTInputObject inputObjectTypes
       nonObjectTypeMap = scalarTypeMap <> enumTypeMap <> inputObjectTypeMap
@@ -160,35 +162,35 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
       EnumTypeDefinition -> m ()
     validateEnum enumDefinition = do
       let duplicateEnumValues =
-            L.duplicates $
-              map _evdValue $
-                toList $
-                  _etdValues enumDefinition
+            L.duplicates
+              $ map _evdValue
+              $ toList
+              $ _etdValues enumDefinition
       -- check for duplicate field names
-      unless (null duplicateEnumValues) $
-        dispute $
-          pure $
-            DuplicateEnumValues
-              (_etdName enumDefinition)
-              duplicateEnumValues
+      unless (null duplicateEnumValues)
+        $ dispute
+        $ pure
+        $ DuplicateEnumValues
+          (_etdName enumDefinition)
+          duplicateEnumValues
 
     validateInputObject ::
       InputObjectTypeDefinition -> WriterT (HashMap.HashMap G.Name AnnotatedScalarType) m ()
     validateInputObject inputObjectDefinition = do
       let inputObjectTypeName = _iotdName inputObjectDefinition
           duplicateFieldNames =
-            L.duplicates $
-              map _iofdName $
-                toList $
-                  _iotdFields inputObjectDefinition
+            L.duplicates
+              $ map _iofdName
+              $ toList
+              $ _iotdFields inputObjectDefinition
 
       -- check for duplicate field names
-      unless (null duplicateFieldNames) $
-        dispute $
-          pure $
-            InputObjectDuplicateFields
-              inputObjectTypeName
-              duplicateFieldNames
+      unless (null duplicateFieldNames)
+        $ dispute
+        $ pure
+        $ InputObjectDuplicateFields
+          inputObjectTypeName
+          duplicateFieldNames
 
       let mapToSet = Set.fromList . HashMap.keys
           inputTypes =
@@ -198,122 +200,122 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
       for_ (_iotdFields inputObjectDefinition) $ \inputObjectField -> do
         let fieldBaseType = G.getBaseType $ unGraphQLType $ _iofdType inputObjectField
         if
-            | Set.member fieldBaseType inputTypes -> pure ()
-            | Just scalarInfo <- lookupBackendScalar allScalars fieldBaseType ->
-                tell $ HashMap.singleton fieldBaseType scalarInfo
-            | otherwise ->
-                refute $
-                  pure $
-                    InputObjectFieldTypeDoesNotExist
-                      (_iotdName inputObjectDefinition)
-                      (_iofdName inputObjectField)
-                      fieldBaseType
+          | Set.member fieldBaseType inputTypes -> pure ()
+          | Just scalarInfo <- lookupBackendScalar allScalars fieldBaseType ->
+              tell $ HashMap.singleton fieldBaseType scalarInfo
+          | otherwise ->
+              refute
+                $ pure
+                $ InputObjectFieldTypeDoesNotExist
+                  (_iotdName inputObjectDefinition)
+                  (_iofdName inputObjectField)
+                  fieldBaseType
 
     validateObject ::
       ObjectTypeDefinition -> m AnnotatedObjectType
     validateObject ObjectTypeDefinition {..} = do
       let fieldNames =
-            map (unObjectFieldName . _ofdName) $
-              toList _otdFields
+            map (unObjectFieldName . _ofdName)
+              $ toList _otdFields
           relNames = map (unRelationshipName . _trdName) _otdRelationships
           duplicateFieldNames = L.duplicates $ fieldNames <> relNames
 
       -- check for duplicate field names
-      unless (null duplicateFieldNames) $
-        dispute $
-          pure $
-            ObjectDuplicateFields _otdName duplicateFieldNames
+      unless (null duplicateFieldNames)
+        $ dispute
+        $ pure
+        $ ObjectDuplicateFields _otdName duplicateFieldNames
 
       fields <- for _otdFields $ \objectField -> do
         let fieldName = _ofdName objectField
         -- check that arguments are not defined
-        when (isJust $ _ofdArguments objectField) $
-          dispute $
-            pure $
-              ObjectFieldArgumentsNotAllowed
-                _otdName
-                fieldName
+        when (isJust $ _ofdArguments objectField)
+          $ dispute
+          $ pure
+          $ ObjectFieldArgumentsNotAllowed
+            _otdName
+            fieldName
 
         forM objectField $ \fieldType -> do
           let fieldBaseType = G.getBaseType $ unGraphQLType fieldType
           annotatedObjectFieldType <-
             if
-                | Just scalarDef <- HashMap.lookup fieldBaseType scalarTypes ->
-                    pure $ AOFTScalar $ ASTCustom scalarDef
-                | Just enumDef <- HashMap.lookup fieldBaseType enumTypes ->
-                    pure $ AOFTEnum enumDef
-                | HashMap.member fieldBaseType objectTypes ->
-                    pure $ AOFTObject fieldBaseType
-                | Just scalarInfo <- lookupBackendScalar allScalars fieldBaseType ->
-                    pure $ AOFTScalar scalarInfo
-                | otherwise ->
-                    refute $
-                      pure $
-                        ObjectFieldTypeDoesNotExist
-                          _otdName
-                          fieldName
-                          fieldBaseType
+              | Just scalarDef <- HashMap.lookup fieldBaseType scalarTypes ->
+                  pure $ AOFTScalar $ ASTCustom scalarDef
+              | Just enumDef <- HashMap.lookup fieldBaseType enumTypes ->
+                  pure $ AOFTEnum enumDef
+              | HashMap.member fieldBaseType objectTypes ->
+                  pure $ AOFTObject fieldBaseType
+              | Just scalarInfo <- lookupBackendScalar allScalars fieldBaseType ->
+                  pure $ AOFTScalar scalarInfo
+              | otherwise ->
+                  refute
+                    $ pure
+                    $ ObjectFieldTypeDoesNotExist
+                      _otdName
+                      fieldName
+                      fieldBaseType
           pure (unGraphQLType fieldType, annotatedObjectFieldType)
 
       let fieldsMap =
-            HashMap.fromList $
-              map (_ofdName &&& (fst . _ofdType)) $
-                toList fields
+            HashMap.fromList
+              $ map (_ofdName &&& (fst . _ofdType))
+              $ toList fields
 
-      when (Set.size (Set.fromList $ _trdSource <$> _otdRelationships) > 1) $
-        refute $
-          pure $
-            ObjectRelationshipMultiSources _otdName
+      when (Set.size (Set.fromList $ _trdSource <$> _otdRelationships) > 1)
+        $ refute
+        $ pure
+        $ ObjectRelationshipMultiSources _otdName
       annotatedRelationships <- for _otdRelationships $ \TypeRelationshipDefinition {..} -> do
         -- get the source info
         SourceInfo {..} <-
-          onNothing (unsafeSourceInfo =<< HashMap.lookup _trdSource sources) $
-            refute $
-              pure $
-                ObjectRelationshipTableDoesNotExist
-                  _otdName
-                  _trdName
-                  _trdRemoteTable
+          onNothing (unsafeSourceInfo =<< HashMap.lookup _trdSource sources)
+            $ refute
+            $ pure
+            $ ObjectRelationshipTableDoesNotExist
+              _otdName
+              _trdName
+              _trdRemoteTable
 
         -- check that the table exists
         remoteTableInfo <-
-          onNothing (HashMap.lookup _trdRemoteTable _siTables) $
-            refute $
-              pure $
-                ObjectRelationshipTableDoesNotExist
-                  _otdName
-                  _trdName
-                  _trdRemoteTable
+          onNothing (HashMap.lookup _trdRemoteTable _siTables)
+            $ refute
+            $ pure
+            $ ObjectRelationshipTableDoesNotExist
+              _otdName
+              _trdName
+              _trdRemoteTable
 
         -- check that the column mapping is sane
-        annotatedFieldMapping <- flip HashMap.traverseWithKey _trdFieldMapping $
-          \fieldName columnName -> do
+        annotatedFieldMapping <- flip HashMap.traverseWithKey _trdFieldMapping
+          $ \fieldName columnName -> do
             case HashMap.lookup fieldName fieldsMap of
               Nothing ->
-                dispute $
-                  pure $
-                    ObjectRelationshipFieldDoesNotExist
-                      _otdName
-                      _trdName
-                      fieldName
+                dispute
+                  $ pure
+                  $ ObjectRelationshipFieldDoesNotExist
+                    _otdName
+                    _trdName
+                    fieldName
               Just fieldType ->
                 -- the field should be a non-list type scalar
-                when (G.isListType fieldType) $
-                  dispute $
-                    pure $
-                      ObjectRelationshipFieldListType
-                        _otdName
-                        _trdName
-                        fieldName
+                when (G.isListType fieldType)
+                  $ dispute
+                  $ pure
+                  $ ObjectRelationshipFieldListType
+                    _otdName
+                    _trdName
+                    fieldName
 
             -- the column should be a column of the table
-            onNothing (getColumnInfoM remoteTableInfo (fromCol @('Postgres 'Vanilla) columnName)) $
-              refute $
-                pure $
-                  ObjectRelationshipColumnDoesNotExist _otdName _trdName _trdRemoteTable columnName
+            onNothing (getColumnInfoM remoteTableInfo (fromCol @('Postgres 'Vanilla) columnName))
+              $ refute
+              $ pure
+              $ ObjectRelationshipColumnDoesNotExist _otdName _trdName _trdRemoteTable columnName
 
-        pure $
-          AnnotatedTypeRelationship
+        pure
+          $ AnnotatedTypeRelationship
             _trdName
             _trdType
             _siName
@@ -321,8 +323,8 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
             (tableInfoName remoteTableInfo)
             annotatedFieldMapping
 
-      pure $
-        AnnotatedObjectType
+      pure
+        $ AnnotatedObjectType
           _otdName
           _otdDescription
           fields

@@ -39,7 +39,7 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Parser for a field name @on_conflict@ of type @tablename_on_conflict@.
@@ -101,8 +101,8 @@ conflictObjectParser tableInfo maybeUpdatePerms constraints = do
           ( partialSQLExpToUnpreparedValue <$> upiSet,
             fmap partialSQLExpToUnpreparedValue <$> upiFilter
           )
-  pure $
-    P.object objectName (Just objectDesc) do
+  pure
+    $ P.object objectName (Just objectDesc) do
       constraintField <- P.field Name._constraint Nothing constraintParser
       let updateColumnsField = P.fieldWithDefault (applyFieldNameCaseIdentifier tCase updateColumnsFieldName) Nothing (G.VList []) (P.list updateColumnsEnum)
 
@@ -115,16 +115,17 @@ conflictObjectParser tableInfo maybeUpdatePerms constraints = do
             -- this can only happen if the placeholder was used
             (parseError "erroneous column name")
 
-      pure $
-        let UniqueConstraint (Constraint {_cName}) _ = constraintField
-            constraintTarget = IR.CTConstraint _cName
-         in case updateColumns of
-              [] -> IR.OCCDoNothing $ Just constraintTarget
-              _ ->
-                IR.OCCUpdate $
-                  IR.OnConflictClauseData constraintTarget updateColumns presetColumns $
-                    IR.BoolAnd $
-                      updateFilter : maybeToList whereExp
+      pure
+        $ let UniqueConstraint (Constraint {_cName}) _ = constraintField
+              constraintTarget = IR.CTConstraint _cName
+           in case updateColumns of
+                [] -> IR.OCCDoNothing $ Just constraintTarget
+                _ ->
+                  IR.OCCUpdate
+                    $ IR.OnConflictClauseData constraintTarget updateColumns presetColumns
+                    $ IR.BoolAnd
+                    $ updateFilter
+                    : maybeToList whereExp
 
 -- | Constructs a Parser for the name of the constraints on a given table.
 --
@@ -137,7 +138,7 @@ conflictObjectParser tableInfo maybeUpdatePerms constraints = do
 -- to a GraphQL name (see hasura/graphql-engine-mono#1748).
 conflictConstraint ::
   forall pgKind r m n.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   NonEmpty (UniqueConstraint ('Postgres pgKind)) ->
   TableInfo ('Postgres pgKind) ->
   SchemaT r m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))

@@ -26,7 +26,7 @@ import Control.Lens
 import Control.Monad.Writer
 import Data.ByteString qualified as B
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.Semigroup.Generic
 import Data.Text.Extended
@@ -139,7 +139,7 @@ mkMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
     DS.PostgresAnnotatedFieldJSON pgKind
   ) =>
-  OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) Void S.SQLExp) ->
+  InsOrdHashMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) Void S.SQLExp) ->
   MultiplexedQuery
 mkMultiplexedQuery rootFields =
   MultiplexedQuery . toQuery $ selectWith
@@ -152,10 +152,10 @@ mkMultiplexedQuery rootFields =
               S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result")
             ],
           S.selFrom =
-            Just $
-              S.FromExp
-                [ S.FIJoin $
-                    S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
+            Just
+              $ S.FromExp
+                [ S.FIJoin
+                    $ S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
                 ]
         }
 
@@ -170,12 +170,12 @@ mkMultiplexedQuery rootFields =
         [S.toColumnAlias $ Identifier "result_id", S.toColumnAlias $ Identifier "result_vars"]
 
     (sqlFrom, customSQLCTEs) =
-      runWriter $
-        traverse
+      runWriter
+        $ traverse
           ( \(fieldAlias, resolvedAST) ->
               toSQLFromItem (S.mkTableAlias $ G.unName fieldAlias) resolvedAST
           )
-          (OMap.toList rootFields)
+          (InsOrdHashMap.toList rootFields)
 
     -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
     responseLateralFromItem = S.mkLateralFromItem selectRootFields fldRespAlias
@@ -189,7 +189,7 @@ mkMultiplexedQuery rootFields =
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
     rootFieldsJsonAggregate = S.SEFnApp "json_build_object" rootFieldsJsonPairs Nothing
-    rootFieldsJsonPairs = flip concatMap (OMap.keys rootFields) $ \fieldAlias ->
+    rootFieldsJsonPairs = flip concatMap (InsOrdHashMap.keys rootFields) $ \fieldAlias ->
       [ S.SELit (G.unName fieldAlias),
         mkQualifiedIdentifier (aliasToIdentifier fieldAlias) (Identifier "root")
       ]
@@ -217,10 +217,10 @@ mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
               S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "cursor")) (Just $ S.toColumnAlias $ Identifier "cursor")
             ],
           S.selFrom =
-            Just $
-              S.FromExp
-                [ S.FIJoin $
-                    S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
+            Just
+              $ S.FromExp
+                [ S.FIJoin
+                    $ S.JoinExpr subsInputFromItem S.LeftOuter responseLateralFromItem (S.JoinOn $ S.BELit True)
                 ]
         }
 
@@ -294,8 +294,8 @@ resolveMultiplexedValue allSessionVars = \case
     pure $ fromResVars (CollectableTypeScalar PGJSON) ["session"]
   where
     fromResVars pgType jPath =
-      addTypeAnnotation pgType $
-        S.SEOpApp
+      addTypeAnnotation pgType
+        $ S.SEOpApp
           (S.SQLOp "#>>")
           [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier subsIdentifier Nothing) (Identifier "result_vars"),
             S.SEArray $ map S.SELit jPath

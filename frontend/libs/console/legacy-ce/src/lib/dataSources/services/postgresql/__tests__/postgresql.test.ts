@@ -7,7 +7,6 @@ const {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   createIndexSql,
-  getDataTriggerLogsQuery,
   getDataTriggerInvocations,
 } = postgres;
 
@@ -172,67 +171,6 @@ describe('postgresql datasource tests', () => {
     });
   });
 
-  describe('getDataTriggerLogsQuery', () => {
-    if (getDataTriggerLogsQuery) {
-      it('should generate SQL query for pending event logs', () => {
-        // pending
-        const pendingLogsQuery = getDataTriggerLogsQuery(
-          'pending',
-          'new_user',
-          10,
-          10
-        );
-        expect(pendingLogsQuery).toContain(
-          'delivered=false AND error=false AND archived=false'
-        );
-        expect(pendingLogsQuery).toContain(
-          "data_table.trigger_name = 'new_user'"
-        );
-        expect(pendingLogsQuery).toContain('FROM "hdb_catalog"."event_log"');
-        expect(pendingLogsQuery).toContain('LIMIT 10');
-        expect(pendingLogsQuery).toContain('OFFSET 10');
-        expect(pendingLogsQuery).toMatchSnapshot();
-      });
-      it('should generate SQL query for processed event logs', () => {
-        // Processed
-        const processedLogsQuery = getDataTriggerLogsQuery(
-          'processed',
-          'test_event',
-          100,
-          0
-        );
-        expect(processedLogsQuery).toContain(
-          'AND (delivered=true OR error=true) AND archived=false'
-        );
-        expect(processedLogsQuery).toContain(
-          "data_table.trigger_name = 'test_event'"
-        );
-        expect(processedLogsQuery).toContain('FROM "hdb_catalog"."event_log"');
-        expect(processedLogsQuery).toContain('LIMIT 100');
-        expect(processedLogsQuery).toContain('OFFSET 0');
-        expect(processedLogsQuery).toMatchSnapshot();
-      });
-      it('should generate SQL query for event invocation logs', () => {
-        // Invocation
-        const invocationLogsQuery = getDataTriggerLogsQuery(
-          'processed',
-          'test_event',
-          100,
-          0
-        );
-        expect(invocationLogsQuery).toContain(
-          'AND (delivered=true OR error=true) AND archived=false'
-        );
-        expect(invocationLogsQuery).toContain(
-          "data_table.trigger_name = 'test_event'"
-        );
-        expect(invocationLogsQuery).toContain('FROM "hdb_catalog"."event_log"');
-        expect(invocationLogsQuery).toContain('LIMIT 100');
-        expect(invocationLogsQuery).toContain('OFFSET 0');
-        expect(invocationLogsQuery).toMatchSnapshot();
-      });
-    }
-  });
   describe('getDataTriggerInvocations', () => {
     if (getDataTriggerInvocations) {
       it('should generate SQL to fetch invocations for an event', () => {

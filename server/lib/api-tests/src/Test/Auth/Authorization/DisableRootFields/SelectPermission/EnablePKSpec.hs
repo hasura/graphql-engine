@@ -154,11 +154,9 @@ metadataValidationTests = describe "EnablePKRootField Validation test " $ do
   it "a role not having access to the primary key column(s) should not be allowed to enable the primary key root field" $ \testEnvironment -> do
     shouldReturnYaml
       testEnvironment
-      ( GraphqlEngine.postWithHeadersStatus
+      ( GraphqlEngine.postMetadataWithStatus
           400
           testEnvironment
-          "/v1/metadata"
-          mempty
           [yaml|
             type: pg_create_select_permission
             args:

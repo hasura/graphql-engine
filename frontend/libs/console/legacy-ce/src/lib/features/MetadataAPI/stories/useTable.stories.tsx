@@ -1,7 +1,7 @@
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { ReduxDecorator } from '../../../storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import React from 'react';
 import { useTables } from '../hooks/useMetadataTables';
 
@@ -16,12 +16,14 @@ function FetchTables({ database }: { database: string }) {
   );
 }
 
-export const FetchTableColumns: ComponentStory<typeof FetchTables> = args => {
-  return <FetchTables {...args} />;
-};
+export const FetchTableColumns: StoryObj<typeof FetchTables> = {
+  render: args => {
+    return <FetchTables {...args} />;
+  },
 
-FetchTableColumns.args = {
-  database: 'default',
+  args: {
+    database: 'default',
+  },
 };
 
 export default {
@@ -30,4 +32,4 @@ export default {
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof FetchTables>;
+} as Meta<typeof FetchTables>;

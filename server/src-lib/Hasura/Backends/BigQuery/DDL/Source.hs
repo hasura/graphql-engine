@@ -28,7 +28,7 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 
 defaultGlobalSelectLimit :: Int.Int64
 defaultGlobalSelectLimit = 1000
@@ -40,7 +40,7 @@ defaultRetryBaseDelay :: Microseconds
 defaultRetryBaseDelay = 500000
 
 resolveSourceConfig ::
-  MonadIO m =>
+  (MonadIO m) =>
   SourceName ->
   BigQueryConnSourceConfig ->
   BackendSourceKind 'BigQuery ->
@@ -98,8 +98,9 @@ resolveSource sourceConfig =
     let result = (,) <$> tables <*> routines
     case result of
       Left err ->
-        throw400 Unexpected $
-          "unexpected exception while connecting to database: " <> tshow err
+        throw400 Unexpected
+          $ "unexpected exception while connecting to database: "
+          <> tshow err
       Right (restTables, restRoutines) -> do
         seconds <- liftIO $ fmap systemSeconds getSystemTime
         let functions = FunctionOverloads <$> HashMap.groupOnNE (routineReferenceToFunctionName . routineReference) restRoutines
@@ -114,7 +115,7 @@ resolveSource sourceConfig =
                               [ RawColumnInfo
                                   { rciName = ColumnName name,
                                     rciPosition = position,
-                                    rciType = restTypeToScalarType type',
+                                    rciType = RawColumnTypeScalar $ restTypeToScalarType type',
                                     rciIsNullable =
                                       case mode of
                                         Nullable -> True
