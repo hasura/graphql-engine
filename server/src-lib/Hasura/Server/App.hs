@@ -27,6 +27,7 @@ where
 
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Exception (IOException, throwIO, try)
+import Control.Exception.Lifted (ErrorCall (..), catch)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -164,10 +165,15 @@ instance MonadTrans Handler where
 instance (Monad m) => UserInfoM (Handler m) where
   askUserInfo = asks hcUser
 
-runHandler :: (HasResourceLimits m, MonadBaseControl IO m) => HandlerCtx -> Handler m a -> m (Either QErr a)
-runHandler ctx (Handler r) = do
+runHandler :: (HasResourceLimits m, MonadBaseControl IO m) => L.Logger L.Hasura -> HandlerCtx -> Handler m a -> m (Either QErr a)
+runHandler logger ctx (Handler r) = do
   handlerLimit <- askHTTPHandlerLimit
-  runExceptT $ flip runReaderT ctx $ runResourceLimits handlerLimit r
+  runExceptT (runReaderT (runResourceLimits handlerLimit r) ctx)
+    `catch` \errorCallWithLoc@(ErrorCallWithLocation txt _) -> do
+      liftBase $ L.unLogger logger $ L.UnhandledInternalErrorLog errorCallWithLoc
+      pure
+        $ throw500WithDetail "Internal Server Error"
+        $ object [("error", fromString txt)]
 
 data APIResp
   = JSONResp !(HttpResponse EncJSON)
@@ -360,14 +366,14 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
       -- in the case of a simple get/post we don't have to send the webhook anything
       AHGet handler -> do
         (userInfo, authHeaders, handlerState, includeInternal, extraUserInfo) <- getInfo Nothing
-        res <- lift $ runHandler handlerState handler
+        res <- lift $ runHandler (_lsLogger appEnvLoggers) handlerState handler
         pure (res, userInfo, authHeaders, includeInternal, Nothing, extraUserInfo)
       AHPost handler -> do
         (userInfo, authHeaders, handlerState, includeInternal, extraUserInfo) <- getInfo Nothing
         (queryJSON, parsedReq) <-
           runExcept (parseBody reqBody) `onLeft` \e -> do
             logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal origHeaders extraUserInfo (qErrModifier e)
-        res <- lift $ runHandler handlerState $ handler parsedReq
+        res <- lift $ runHandler (_lsLogger appEnvLoggers) handlerState $ handler parsedReq
         pure (res, userInfo, authHeaders, includeInternal, Just queryJSON, extraUserInfo)
       -- in this case we parse the request _first_ and then send the request to the webhook for auth
       AHGraphQLRequest handler -> do
@@ -379,7 +385,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
             logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) False origHeaders extraUserInfo (qErrModifier e)
         (userInfo, authHeaders, handlerState, includeInternal, extraUserInfo) <- getInfo (Just parsedReq)
 
-        res <- lift $ runHandler handlerState $ handler parsedReq
+        res <- lift $ runHandler (_lsLogger appEnvLoggers) handlerState $ handler parsedReq
         pure (res, userInfo, authHeaders, includeInternal, Just queryJSON, extraUserInfo)
 
     -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/span-general/#general-identity-attributes

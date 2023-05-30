@@ -17,6 +17,7 @@ module Hasura.Logging
     UnstructuredLog (..),
     Logger (..),
     LogLevel (..),
+    UnhandledInternalErrorLog (..),
     mkLogger,
     nullLogger,
     LoggerCtx (..),
@@ -42,7 +43,7 @@ module Hasura.Logging
 where
 
 import Control.AutoUpdate qualified as Auto
-import Control.Exception (catch)
+import Control.Exception (ErrorCall (ErrorCallWithLocation), catch)
 import Control.FoldDebounce qualified as FDebounce
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Managed (ManagedT (..), allocate)
@@ -56,6 +57,7 @@ import Data.HashSet qualified as Set
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.SerializableBlob qualified as SB
+import Data.String (fromString)
 import Data.Text qualified as T
 import Data.Time.Clock qualified as Time
 import Data.Time.Format qualified as Format
@@ -130,6 +132,7 @@ instance J.FromJSON (EngineLogType Hasura) where
 data InternalLogTypes
   = -- | mostly for debug logs - see @debugT@, @debugBS@ and @debugLBS@ functions
     ILTUnstructured
+  | ILTUnhandledInternalError
   | ILTEventTrigger
   | ILTEventTriggerProcess
   | ILTScheduledTrigger
@@ -150,6 +153,7 @@ instance Hashable InternalLogTypes
 instance Witch.From InternalLogTypes Text where
   from = \case
     ILTUnstructured -> "unstructured"
+    ILTUnhandledInternalError -> "unhandled-internal-error"
     ILTEventTrigger -> "event-trigger"
     ILTEventTriggerProcess -> "event-trigger-process"
     ILTScheduledTrigger -> "scheduled-trigger"
@@ -263,6 +267,22 @@ data LoggerCtx impl = LoggerCtx
     _lcTimeGetter :: !(IO FormattedTime),
     _lcEnabledLogTypes :: !(Set.HashSet (EngineLogType impl))
   }
+
+-- * Unhandled Internal Errors
+
+-- | We expect situations where there are code paths that should not occur and we throw
+--   an 'error' on this code paths. If our assumptions are incorrect and infact
+--   these errors do occur, we want to log them.
+newtype UnhandledInternalErrorLog = UnhandledInternalErrorLog ErrorCall
+
+instance ToEngineLog UnhandledInternalErrorLog Hasura where
+  toEngineLog (UnhandledInternalErrorLog (ErrorCallWithLocation err loc)) =
+    ( LevelError,
+      ELTInternal ILTUnhandledInternalError,
+      J.object [("error", fromString err), ("location", fromString loc)]
+    )
+
+-- * LoggerSettings
 
 data LoggerSettings = LoggerSettings
   { -- | should current time be cached (refreshed every sec)
