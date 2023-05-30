@@ -275,12 +275,19 @@ echo '12345' > "$PROJECT_ROOT/server/CURRENT_VERSION"
 if command -v pyenv >/dev/null; then
   # Use the latest version of Python installed with `pyenv`.
   # Ensure that it is at least v3.9, so that generic types are fully supported.
-  v="$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.9 { print $1 }' | tail -n1)"
-  if [[ -z "$v" ]]; then
+  v="$(pyenv versions --bare | (grep  '^ *3' || true) | awk '{ print $1 }' | tail -n1)"
+
+  # Awk fails when you compare e.g. 3.9 and 3.10, because 3.9 is a higher
+  # number than 3.1 (having coerced both to floats). So, we convert a version
+  # like 1.20.3 to a number like 001020003000 (every section becomes a
+  # three-digit number) and we compare them instead.
+  formatted="$(printf "%03d%03d%03d%03d" $(echo $v | tr '.' ' '))"
+  if [[ "$formatted" -lt "003009000000" ]]; then
     # shellcheck disable=SC2016
-    echo_error 'Please `pyenv install` a version of python >= 3.9 so we can use it'
+    echo_error 'Please `pyenv install` a version of python >= 3.9 (found '$v')'
     exit 2
   fi
+
   echo_pretty "Pyenv found. Using Python version: $v"
   export PYENV_VERSION=$v
   python3 --version
