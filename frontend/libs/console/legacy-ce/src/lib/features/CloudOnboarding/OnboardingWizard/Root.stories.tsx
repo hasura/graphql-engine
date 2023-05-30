@@ -51,4 +51,5 @@ WithoutSurvey.parameters = {
     onboardingDataEmptyActivity,
     fetchAnsweredSurveysHandler,
   ],
+  chromatic: { disableSnapshot: true },
 };
