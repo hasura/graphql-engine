@@ -13,6 +13,7 @@ import Data.Environment (Environment)
 import Data.Has (Has (getter))
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.Extended qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HashSet
 import Data.List.NonEmpty qualified as NEList
@@ -52,6 +53,8 @@ import Hasura.Function.Common
 import Hasura.Incremental qualified as Inc
 import Hasura.Incremental.Select qualified as Inc
 import Hasura.Logging (Hasura, Logger)
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
+import Hasura.LogicalModel.Types
 import Hasura.Prelude
 import Hasura.RQL.DDL.Relationship (defaultBuildArrayRelationshipInfo, defaultBuildObjectRelationshipInfo)
 import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
@@ -59,7 +62,6 @@ import Hasura.RQL.Types.Backend (FunctionReturnType (..), functionGraphQLName)
 import Hasura.RQL.Types.BackendType (BackendSourceKind (..), BackendType (..))
 import Hasura.RQL.Types.Column qualified as RQL.T.C
 import Hasura.RQL.Types.Common (JsonAggSelect (JASMultipleRows, JASSingleObject), OID (..), SourceName, SystemDefined)
-import Hasura.RQL.Types.CustomTypes (GraphQLType (..))
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata (SourceMetadata (..))
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
@@ -312,8 +314,8 @@ resolveDatabaseMetadata' ::
   m (Either QErr (DBObjectsIntrospection 'DataConnector))
 resolveDatabaseMetadata' logger SourceMetadata {_smName} sourceConfig@DC.SourceConfig {_scCapabilities} = runExceptT do
   API.SchemaResponse {..} <- requestDatabaseSchema logger _smName sourceConfig
-  let customObjectTypes =
-        maybe mempty (HashMap.fromList . mapMaybe (toTableObjectType _scCapabilities) . toList) _srObjectTypes
+  let logicalModels =
+        maybe mempty (InsOrdHashMap.fromList . map (toLogicalModelMetadata _scCapabilities) . toList) _srObjectTypes
       tables = HashMap.fromList $ do
         API.TableInfo {..} <- _srTables
         let primaryKeyColumns = fmap Witch.from . NESeq.fromList <$> _tiPrimaryKey
@@ -347,8 +349,7 @@ resolveDatabaseMetadata' logger SourceMetadata {_smName} sourceConfig@DC.SourceC
                           _tiColumns
                             & fmap (\API.ColumnInfo {..} -> (Witch.from _ciName, DC.ExtraColumnMetadata _ciValueGenerated))
                             & HashMap.fromList
-                      },
-                  _ptmiCustomObjectTypes = Just customObjectTypes
+                      }
                 }
         pure (Witch.into _tiName, meta)
       functions =
@@ -358,10 +359,11 @@ resolveDatabaseMetadata' logger SourceMetadata {_smName} sourceConfig@DC.SourceC
               infos@(API.FunctionInfo {..} NEList.:| _) <- grouped
               pure (Witch.into _fiName, FunctionOverloads infos)
    in pure
-        $ DBObjectsIntrospection
+        DBObjectsIntrospection
           { _rsTables = tables,
             _rsFunctions = functions,
-            _rsScalars = mempty
+            _rsScalars = mempty,
+            _rsLogicalModels = logicalModels
           }
 
 requestDatabaseSchema ::
@@ -376,34 +378,34 @@ requestDatabaseSchema logger sourceName sourceConfig = do
     . flip runAgentClientT (AgentClientContext logger (DC._scEndpoint transformedSourceConfig) (DC._scManager transformedSourceConfig) (DC._scTimeoutMicroseconds transformedSourceConfig) Nothing)
     $ Client.schema sourceName (DC._scConfig transformedSourceConfig)
 
-getFieldType :: API.Capabilities -> API.ColumnType -> Maybe (RQL.T.T.TableObjectFieldType 'DataConnector)
-getFieldType capabilities = \case
-  API.ColumnTypeScalar scalarType -> RQL.T.T.TOFTScalar <$> G.mkName (API.getScalarType scalarType) <*> pure (DC.mkScalarType capabilities scalarType)
-  API.ColumnTypeObject objectTypeName -> pure $ RQL.T.T.TOFTObject objectTypeName
-  API.ColumnTypeArray columnType isNullable -> RQL.T.T.TOFTArray () <$> getFieldType capabilities columnType <*> pure isNullable
+getFieldType :: API.Capabilities -> Bool -> API.ColumnType -> LogicalModelType 'DataConnector
+getFieldType capabilities isNullable = \case
+  API.ColumnTypeScalar scalarType -> LogicalModelTypeScalar $ LogicalModelTypeScalarC (DC.mkScalarType capabilities scalarType) isNullable
+  API.ColumnTypeObject objectTypeName -> LogicalModelTypeReference $ LogicalModelTypeReferenceC (LogicalModelName objectTypeName) isNullable
+  API.ColumnTypeArray columnType isNullable' -> LogicalModelTypeArray $ LogicalModelTypeArrayC (getFieldType capabilities isNullable' columnType) isNullable
 
-getGraphQLType :: Bool -> RQL.T.T.TableObjectFieldType 'DataConnector -> G.GType
-getGraphQLType isNullable = \case
-  RQL.T.T.TOFTScalar name _ -> G.TypeNamed (G.Nullability isNullable) name
-  RQL.T.T.TOFTObject name -> G.TypeNamed (G.Nullability isNullable) name
-  RQL.T.T.TOFTArray _ fieldType isNullable' ->
-    G.TypeList (G.Nullability isNullable) $ getGraphQLType isNullable' fieldType
-
-toTableObjectType :: API.Capabilities -> API.ObjectTypeDefinition -> Maybe (G.Name, RQL.T.T.TableObjectType 'DataConnector)
-toTableObjectType capabilities API.ObjectTypeDefinition {..} =
-  (_otdName,) . RQL.T.T.TableObjectType _otdName (G.Description <$> _otdDescription) <$> traverse toTableObjectFieldDefinition _otdColumns
+toLogicalModelMetadata :: API.Capabilities -> API.ObjectTypeDefinition -> (LogicalModelName, LogicalModelMetadata 'DataConnector)
+toLogicalModelMetadata capabilities API.ObjectTypeDefinition {..} =
+  ( logicalModelName,
+    LogicalModelMetadata
+      { _lmmName = logicalModelName,
+        _lmmFields = InsOrdHashMap.fromList $ toList $ toTableObjectFieldDefinition <$> _otdColumns,
+        _lmmDescription = _otdDescription,
+        _lmmSelectPermissions = mempty
+      }
+  )
   where
-    toTableObjectFieldDefinition API.ColumnInfo {..} = do
-      fieldType <- getFieldType capabilities _ciType
-      fieldName <- G.mkName $ API.unColumnName _ciName
-      pure
-        $ RQL.T.T.TableObjectFieldDefinition
-          { _tofdColumn = Witch.from _ciName,
-            _tofdName = fieldName,
-            _tofdDescription = G.Description <$> _ciDescription,
-            _tofdGType = GraphQLType $ getGraphQLType _ciNullable fieldType,
-            _tofdFieldType = fieldType
-          }
+    logicalModelName = LogicalModelName _otdName
+    toTableObjectFieldDefinition API.ColumnInfo {..} =
+      let fieldType = getFieldType capabilities _ciNullable _ciType
+          columnName = Witch.from _ciName
+       in ( columnName,
+            LogicalModelField
+              { lmfName = columnName,
+                lmfType = fieldType,
+                lmfDescription = _ciDescription
+              }
+          )
 
 -- | Construct a 'HashSet' 'RQL.T.T.ForeignKeyMetadata'
 -- 'DataConnector' to build the foreign key constraints in the table

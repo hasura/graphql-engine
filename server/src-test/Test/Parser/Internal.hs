@@ -145,8 +145,7 @@ buildTableInfo TableInfoBuilder {..} = tableInfo
           _tciEnumValues = Nothing,
           _tciCustomConfig = tableConfig,
           _tciExtraTableMetadata = PGExtraTableMetadata Table,
-          _tciApolloFederationConfig = Nothing,
-          _tciCustomObjectTypes = mempty
+          _tciApolloFederationConfig = Nothing
         }
 
     pk :: Maybe (PrimaryKey PG (ColumnInfo PG))

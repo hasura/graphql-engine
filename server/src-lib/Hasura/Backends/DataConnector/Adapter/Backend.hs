@@ -79,7 +79,6 @@ instance Backend 'DataConnector where
   type XNestedInserts 'DataConnector = XDisable
   type XStreamingSubscription 'DataConnector = XDisable
   type XNestedObjects 'DataConnector = XEnable
-  type XNestedArrays 'DataConnector = XEnable
 
   type HealthCheckTest 'DataConnector = Void
 

@@ -702,7 +702,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       )
         `arr` (SourceInfo b)
     buildSource = proc (dynamicConfig, allSources, sourceMetadata, sourceConfig, tablesRawInfo, eventTriggerInfoMaps, dbObjectsIntrospection, remoteSchemaMap, orderedRoles) -> do
-      let DBObjectsIntrospection _dbTables dbFunctions _scalars = dbObjectsIntrospection
+      let DBObjectsIntrospection _dbTables dbFunctions _scalars introspectedLogicalModels = dbObjectsIntrospection
           SourceMetadata sourceName backendSourceKind tables functions nativeQueries storedProcedures logicalModels _ queryTagsConfig sourceCustomization _healthCheckConfig = sourceMetadata
           tablesMetadata = InsOrdHashMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
@@ -798,10 +798,14 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       -- fetch static config
       cacheStaticConfig <- bindA -< askCacheStaticConfig
 
+      -- Combine logical models that come from DB schema introspection with logical models
+      -- provided via metadata. If two logical models have the same name the one from metadata is preferred.
+      let unifiedLogicalModels = logicalModels <> introspectedLogicalModels
+
       logicalModelCacheMaybes <-
         interpretWriter
           -< for
-            (InsOrdHashMap.elems logicalModels)
+            (InsOrdHashMap.elems unifiedLogicalModels)
             \lmm@LogicalModelMetadata {..} ->
               withRecordInconsistencyM (mkLogicalModelMetadataObject lmm) $ do
                 logicalModelPermissions <-

@@ -49,6 +49,7 @@ import Control.Lens hiding ((.=))
 import Data.Aeson.Extended
 import Data.Environment
 import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.Function.Cache
@@ -63,6 +64,7 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.Instances ()
+import Hasura.RQL.Types.Metadata.Common (LogicalModels)
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.StoredProcedure.Cache (StoredProcedureCache)
@@ -147,7 +149,8 @@ unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
 data DBObjectsIntrospection b = DBObjectsIntrospection
   { _rsTables :: DBTablesMetadata b,
     _rsFunctions :: DBFunctionsMetadata b,
-    _rsScalars :: ScalarMap b
+    _rsScalars :: ScalarMap b,
+    _rsLogicalModels :: LogicalModels b
   }
   deriving (Eq, Generic)
 
@@ -156,7 +159,14 @@ instance (Backend b) => FromJSON (DBObjectsIntrospection b) where
     tables <- o .: "tables"
     functions <- o .: "functions"
     scalars <- o .: "scalars"
-    pure $ DBObjectsIntrospection (HashMap.fromList tables) (HashMap.fromList functions) (ScalarMap (HashMap.fromList scalars))
+    logicalModels <- o .:? "logical_models" .!= mempty
+    pure
+      DBObjectsIntrospection
+        { _rsTables = HashMap.fromList tables,
+          _rsFunctions = HashMap.fromList functions,
+          _rsScalars = ScalarMap $ HashMap.fromList scalars,
+          _rsLogicalModels = InsOrdHashMap.fromList logicalModels
+        }
 
 instance (L.ToEngineLog (DBObjectsIntrospection b) L.Hasura) where
   toEngineLog _ = (L.LevelDebug, L.ELTStartup, toJSON rsLog)

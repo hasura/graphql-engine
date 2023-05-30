@@ -58,6 +58,15 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename
+import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
+import Hasura.LogicalModel.Types
+  ( LogicalModelField (..),
+    LogicalModelName (..),
+    LogicalModelType (..),
+    LogicalModelTypeArray (..),
+    LogicalModelTypeReference (..),
+    LogicalModelTypeScalar (..),
+  )
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -67,7 +76,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Relationships.Local
@@ -394,6 +402,7 @@ defaultTableSelectionSet tableInfo = runMaybeT do
       customization = _siCustomization sourceInfo
       tCase = _rscNamingConvention customization
       mkTypename = runMkTypename $ _rscTypeNames customization
+      logicalModelCache = _siLogicalModels sourceInfo
   roleName <- retrieve scRole
   _selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   schemaKind <- lift $ retrieve scSchemaKind
@@ -426,7 +435,7 @@ defaultTableSelectionSet tableInfo = runMaybeT do
       concat
         <$> for
           tableFields
-          (fieldSelection tableName tableInfo)
+          (fieldSelection logicalModelCache tableName tableInfo)
 
     -- We don't check *here* that the subselection set is non-empty,
     -- even though the GraphQL specification requires that it is (see
@@ -1107,11 +1116,12 @@ fieldSelection ::
     Eq (AnnBoolExp b (IR.UnpreparedValue b)),
     MonadBuildSchema b r m n
   ) =>
+  LogicalModelCache b ->
   TableName b ->
   TableInfo b ->
   FieldInfo b ->
   SchemaT r m [FieldParser n (AnnotatedField b)]
-fieldSelection table tableInfo = \case
+fieldSelection logicalModelCache table tableInfo = \case
   FIColumn (SCIScalarColumn columnInfo) ->
     maybeToList <$> runMaybeT do
       roleName <- retrieve scRole
@@ -1153,9 +1163,9 @@ fieldSelection table tableInfo = \case
         $! P.selection fieldName (ciDescription columnInfo) pathArg field
         <&> IR.mkAnnColumnField (ciColumn columnInfo) (ciType columnInfo) caseBoolExpUnpreparedValue
   FIColumn (SCIObjectColumn nestedObjectInfo) ->
-    pure . fmap IR.AFNestedObject <$> nestedObjectFieldParser tableInfo nestedObjectInfo
+    pure . fmap IR.AFNestedObject <$> nestedObjectFieldParser nestedObjectInfo
   FIColumn (SCIArrayColumn NestedArrayInfo {..}) ->
-    fmap (nestedArrayFieldParser _naiSupportsNestedArrays _naiIsNullable) <$> fieldSelection table tableInfo (FIColumn _naiColumnInfo)
+    fmap (nestedArrayFieldParser _naiSupportsNestedArrays _naiIsNullable) <$> fieldSelection logicalModelCache table tableInfo (FIColumn _naiColumnInfo)
   FIRelationship relationshipInfo ->
     concat . maybeToList <$> relationshipField table relationshipInfo
   FIComputedField computedFieldInfo ->
@@ -1176,12 +1186,11 @@ fieldSelection table tableInfo = \case
         let lhsFields = _rfiLHS remoteFieldInfo
         pure $ map (fmap (IR.AFRemote . IR.RemoteRelationshipSelect lhsFields)) relationshipFields
   where
-    nestedObjectFieldParser :: TableInfo b -> NestedObjectInfo b -> SchemaT r m (FieldParser n (AnnotatedNestedObjectSelect b))
-    nestedObjectFieldParser TableInfo {..} NestedObjectInfo {..} = do
-      let customObjectTypes = _tciCustomObjectTypes _tiCoreInfo
-      case HashMap.lookup _noiType customObjectTypes of
+    nestedObjectFieldParser :: NestedObjectInfo b -> SchemaT r m (FieldParser n (AnnotatedNestedObjectSelect b))
+    nestedObjectFieldParser NestedObjectInfo {..} = do
+      case HashMap.lookup _noiType logicalModelCache of
         Just objectType -> do
-          parser <- nestedObjectParser _noiSupportsNestedObjects customObjectTypes objectType _noiColumn _noiIsNullable
+          parser <- nestedObjectParser _noiSupportsNestedObjects logicalModelCache objectType _noiColumn _noiIsNullable
           pure $ P.subselection_ _noiName _noiDescription parser
         _ -> throw500 $ "fieldSelection: object type " <> _noiType <<> " not found"
 
@@ -1189,51 +1198,55 @@ outputParserModifier :: Bool -> IP.Parser origin 'Output m a -> IP.Parser origin
 outputParserModifier True = P.nullableParser
 outputParserModifier False = P.nonNullableParser
 
-nestedArrayFieldParser :: forall origin m b r v. (Functor m) => XNestedArrays b -> Bool -> IP.FieldParser origin m (IR.AnnFieldG b r v) -> IP.FieldParser origin m (IR.AnnFieldG b r v)
+nestedArrayFieldParser :: forall origin m b r v. (Functor m) => XNestedObjects b -> Bool -> IP.FieldParser origin m (IR.AnnFieldG b r v) -> IP.FieldParser origin m (IR.AnnFieldG b r v)
 nestedArrayFieldParser supportsNestedArrays isNullable =
-  wrapNullable . IP.multipleField . fmap (IR.AFNestedArray @b supportsNestedArrays . IR.ANASSimple)
-  where
-    wrapNullable = if isNullable then IP.nullableField else IP.nonNullableField
+  wrapNullable isNullable . IP.multipleField . fmap (IR.AFNestedArray @b supportsNestedArrays . IR.ANASSimple)
+
+wrapNullable :: Bool -> IP.FieldParser origin m a -> IP.FieldParser origin m a
+wrapNullable isNullable = if isNullable then IP.nullableField else IP.nonNullableField
 
 nestedObjectParser ::
   forall b r m n.
   (MonadBuildSchema b r m n) =>
   XNestedObjects b ->
-  HashMap G.Name (TableObjectType b) ->
-  TableObjectType b ->
+  LogicalModelCache b ->
+  LogicalModelInfo b ->
   Column b ->
   Bool ->
   SchemaT r m (P.Parser 'Output n (AnnotatedNestedObjectSelect b))
-nestedObjectParser supportsNestedObjects objectTypes objectType column isNullable = do
-  allFieldParsers <- for (toList $ _totFields objectType) outputFieldParser
+nestedObjectParser supportsNestedObjects objectTypes LogicalModelInfo {..} column isNullable = do
+  allFieldParsers <- for (toList $ _lmiFields) outputFieldParser
+  let LogicalModelName gqlName = _lmiName
   pure
     $ outputParserModifier isNullable
-    $ P.selectionSet (_totName objectType) (_totDescription objectType) allFieldParsers
+    $ P.selectionSet gqlName (G.Description <$> _lmiDescription) allFieldParsers
     <&> IR.AnnNestedObjectSelectG supportsNestedObjects column . parsedSelectionsToFields IR.AFExpression
   where
     outputFieldParser ::
-      TableObjectFieldDefinition b ->
+      LogicalModelField b ->
       SchemaT r m (IP.FieldParser MetadataObjId n (IR.AnnFieldG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)))
-    outputFieldParser (TableObjectFieldDefinition column' name description (GraphQLType gType) objectFieldType) =
-      P.memoizeOn 'nestedObjectParser (_totName objectType, name) do
-        let go objectFieldType' =
-              case objectFieldType' of
-                TOFTScalar fieldTypeName scalarType ->
-                  wrapScalar scalarType $ customScalarParser fieldTypeName
-                TOFTObject objectName -> do
-                  objectType' <- HashMap.lookup objectName objectTypes `onNothing` throw500 ("Custom type " <> objectName <<> " not found")
-                  parser <- fmap (IR.AFNestedObject @b) <$> nestedObjectParser supportsNestedObjects objectTypes objectType' column' (G.isNullable gType)
-                  pure $ P.subselection_ name description parser
-                TOFTArray supportsNestedArrays nestedFieldType isNullable' -> do
-                  nestedArrayFieldParser supportsNestedArrays isNullable' <$> go nestedFieldType
-        go objectFieldType
+    outputFieldParser LogicalModelField {..} =
+      P.memoizeOn 'nestedObjectParser (_lmiName, lmfName) do
+        name <- textToName $ toTxt lmfName
+        let go = \case
+              LogicalModelTypeScalar LogicalModelTypeScalarC {..} -> do
+                fieldTypeName <- textToName $ toTxt lmtsScalar
+                wrapScalar lmtsNullable name lmtsScalar $ customScalarParser lmtsNullable fieldTypeName
+              LogicalModelTypeReference LogicalModelTypeReferenceC {..} -> do
+                objectType' <- HashMap.lookup lmtrReference objectTypes `onNothing` throw500 ("Custom logical model type " <> lmtrReference <<> " not found")
+                parser <- fmap (IR.AFNestedObject @b) <$> nestedObjectParser supportsNestedObjects objectTypes objectType' lmfName lmtrNullable
+                pure $ P.subselection_ name (G.Description <$> lmfDescription) parser
+              LogicalModelTypeArray LogicalModelTypeArrayC {..} -> do
+                nestedArrayFieldParser supportsNestedObjects lmtaNullable <$> go lmtaArray
+        go lmfType
       where
-        wrapScalar scalarType parser =
+        wrapScalar isNullable' name scalarType parser =
           pure
-            $ P.wrapFieldParser gType (P.selection_ name description parser)
-            $> IR.mkAnnColumnField column' (ColumnScalar scalarType) Nothing Nothing
-        customScalarParser fieldTypeName =
-          let schemaType = P.TNamed P.NonNullable $ P.Definition fieldTypeName Nothing Nothing [] P.TIScalar
+            $ wrapNullable isNullable' (P.selection_ name (G.Description <$> lmfDescription) parser)
+            $> IR.mkAnnColumnField lmfName (ColumnScalar scalarType) Nothing Nothing
+        customScalarParser isNullable' fieldTypeName =
+          let nullable = if isNullable' then P.Nullable else P.NonNullable
+              schemaType = P.TNamed nullable $ P.Definition fieldTypeName Nothing Nothing [] P.TIScalar
            in P.Parser
                 { pType = schemaType,
                   pParser = P.valueToJSON (P.toGraphQLType schemaType)

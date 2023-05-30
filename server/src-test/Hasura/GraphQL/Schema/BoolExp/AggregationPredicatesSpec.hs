@@ -327,7 +327,7 @@ spec = do
           _siConfiguration = notImplementedYet "SourceConfig",
           _siQueryTagsConfig = Nothing,
           _siCustomization = ResolvedSourceCustomization mempty mempty HasuraCase Nothing,
-          _siDbObjectsIntrospection = DBObjectsIntrospection mempty mempty mempty
+          _siDbObjectsIntrospection = DBObjectsIntrospection mempty mempty mempty mempty
         }
 
     makeTableCache :: [TableInfo ('Postgres 'Vanilla)] -> HashMap QualifiedTable (TableInfo ('Postgres 'Vanilla))

@@ -49,6 +49,7 @@ import Data.Aeson.TH
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
 import Hasura.Base.Error
+import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
@@ -186,7 +187,7 @@ parseScalarValuesColumnType columnType =
 data RawColumnType (b :: BackendType)
   = RawColumnTypeScalar (ScalarType b)
   | RawColumnTypeObject (XNestedObjects b) G.Name
-  | RawColumnTypeArray (XNestedArrays b) (RawColumnType b) Bool
+  | RawColumnTypeArray (XNestedObjects b) (RawColumnType b) Bool
   deriving stock (Generic)
 
 deriving instance (Backend b) => Eq (RawColumnType b)
@@ -211,7 +212,7 @@ instance (Backend b) => FromJSON (RawColumnType b) where
 
 -- Ideally we'd derive ToJSON and FromJSON instances from the HasCodec instance, rather than the other way around.
 -- Unfortunately, I'm not sure if it's possible to write a proper HasCodec instance in the presence
--- of the (XNestedObjects b) and (XNestedArrays b) type families, which may be Void.
+-- of the (XNestedObjects b) type family, which may be Void.
 instance (Backend b) => HasCodec (RawColumnType b) where
   codec = codecViaAeson "RawColumnType"
 
@@ -302,7 +303,7 @@ data NestedObjectInfo b = NestedObjectInfo
   { _noiSupportsNestedObjects :: XNestedObjects b,
     _noiColumn :: Column b,
     _noiName :: G.Name,
-    _noiType :: G.Name,
+    _noiType :: LogicalModelName,
     _noiIsNullable :: Bool,
     _noiDescription :: Maybe G.Description,
     _noiMutability :: ColumnMutability
@@ -324,7 +325,7 @@ instance (Backend b) => ToJSON (NestedObjectInfo b) where
   toEncoding = genericToEncoding hasuraJSON
 
 data NestedArrayInfo b = NestedArrayInfo
-  { _naiSupportsNestedArrays :: XNestedArrays b,
+  { _naiSupportsNestedArrays :: XNestedObjects b,
     _naiIsNullable :: Bool,
     _naiColumnInfo :: StructuredColumnInfo b
   }

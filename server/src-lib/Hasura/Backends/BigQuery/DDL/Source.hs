@@ -131,8 +131,7 @@ resolveSource sourceConfig =
                             _ptmiForeignKeys = mempty,
                             _ptmiViewInfo = Just $ ViewInfo False False False,
                             _ptmiDescription = Nothing,
-                            _ptmiExtraTableMetadata = (),
-                            _ptmiCustomObjectTypes = mempty
+                            _ptmiExtraTableMetadata = ()
                           }
                       )
                       | (index, RestTable {tableReference, schema}) <-
@@ -140,7 +139,8 @@ resolveSource sourceConfig =
                         let RestTableSchema fields = schema
                     ],
                 _rsFunctions = functions,
-                _rsScalars = mempty
+                _rsScalars = mempty,
+                _rsLogicalModels = mempty
               }
           )
 

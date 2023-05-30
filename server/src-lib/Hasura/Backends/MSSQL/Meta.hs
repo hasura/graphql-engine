@@ -155,7 +155,6 @@ transformTable tableInfo =
           Nothing -- no views, only tables
           Nothing -- no description
           identityColumns
-          mempty
       )
 
 transformColumn ::
