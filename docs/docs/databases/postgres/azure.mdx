@@ -20,16 +20,16 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 This guide explains how to connect a new or existing
 [Azure Postgres database](https://azure.microsoft.com/en-us/products/postgresql/) to a Hasura instance, either on
-[Hasura Cloud](https://cloud.hasura.io) or via one of our [self-hosted](/deployment/deployment-guides/index.mdx)
-solutions. If you're exploring Azure Postgres and are interested in migrating an existing Postgres database - such as
-from Heroku - check out their
+[Hasura Cloud](https://cloud.hasura.io?skip_onboarding=true) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring Azure Postgres and are interested
+in migrating an existing Postgres database - such as from Heroku - check out their
 [docs](https://learn.microsoft.com/en-us/azure/dms/tutorial-postgresql-azure-postgresql-online-portal) before continuing
 below.
 
 :::info Note
 
-If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
-already have a project running, skip to [step 3](#create-pg-db-azure).
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura
+instance and already have a project running, skip to [step 3](#create-pg-db-azure).
 
 :::
 
@@ -75,15 +75,15 @@ Then click `Next : Networking >`.
 
 ## Step 4: Allow connections to your DB from Hasura
 
-If you're using Hasura Cloud, you can quickly find your IP address from the
-`Hasura Cloud IP` field on the project's details view:
+If you're using Hasura Cloud, you can quickly find your IP address from the `Hasura Cloud IP` field on the project's
+details view:
 
 <Thumbnail src="/img/projects/hasura-cloud-ip.png" alt="Hasura Cloud IP field" />
 
 :::info Self-hosted instances
 
-If you're using a self-hosted solution, you'll need to determine the IP address
-manually depending on your hosting service.
+If you're using a self-hosted solution, you'll need to determine the IP address manually depending on your hosting
+service.
 
 :::
 
@@ -93,8 +93,8 @@ Add the Hasura IP address that you copied:
 
 Then click `Save` on the top left.
 
-Optionally, select `Allow public access from any Azure service within Azure to
-this server`, if you require intra-Azure connectivity.
+Optionally, select `Allow public access from any Azure service within Azure to this server`, if you require intra-Azure
+connectivity.
 
 Finally, click `Review + create` to review your settings, and if you're happy, create the database.
 
@@ -147,8 +147,8 @@ Then click `Connect Database`.
 :::info Note
 
 For security reasons, it is recommended to set database URLs as
-[env vars](/hasura-cloud/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the databases in place
-of the raw database URLs.
+[env vars](/hasura-cloud/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the
+databases in place of the raw database URLs.
 
 :::
 

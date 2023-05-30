@@ -21,15 +21,15 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 This guide explains how to connect a new or existing
 [EnterpriseDB](https://www.enterprisedb.com/products/biganimal-cloud-postgresql) (BigAnimal) Postgres database to a
-Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io) or
-[self-hosted](/deployment/deployment-guides/index.mdx). If you're exploring EnterpriseDB Postgres and are interested in migrating
-an existing Postgres database - such as from Heroku - check out their
+Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io?skip_onboarding=true) or
+[self-hosted](/deployment/deployment-guides/index.mdx). If you're exploring EnterpriseDB Postgres and are interested in
+migrating an existing Postgres database - such as from Heroku - check out their
 [docs](https://www.enterprisedb.com/docs/biganimal/latest/migration/cold_migration/) before continuing below.
 
 :::info Note
 
-If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
-already have a project running, skip to [step 3](#create-pg-db-enterprisedb).
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura
+instance and already have a project running, skip to [step 3](#create-pg-db-enterprisedb).
 
 :::
 
@@ -152,8 +152,8 @@ Then click `Connect Database`.
 :::info Note
 
 For security reasons, it is recommended to set database URLs as
-[env vars](/hasura-cloud/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the databases in place
-of the raw database URLs.
+[env vars](/hasura-cloud/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the
+databases in place of the raw database URLs.
 
 :::
 

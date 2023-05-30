@@ -23,14 +23,15 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 This guide explains how to connect a new or existing
 [MS SQL database on Azure](https://azure.microsoft.com/en-us/products/azure-sql/database/) to a Hasura instance, either
-on [Hasura Cloud](https://cloud.hasura.io) or via one of our [self-hosted](/deployment/deployment-guides/index.mdx)
-solutions. If you're exploring MS SQL on Azure, and are interested in migrating an existing MS SQL database, check out
-their [docs](https://learn.microsoft.com/en-us/azure/dms/tutorial-sql-server-to-azure-sql) before continuing below.
+on [Hasura Cloud](https://cloud.hasura.io?skip_onboarding=true) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring MS SQL on Azure, and are
+interested in migrating an existing MS SQL database, check out their
+[docs](https://learn.microsoft.com/en-us/azure/dms/tutorial-sql-server-to-azure-sql) before continuing below.
 
 :::info Note
 
-If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
-already have a project running, skip to [step 3](#create-pg-db-mssql).
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura
+instance and already have a project running, skip to [step 3](#create-pg-db-mssql).
 
 :::
 
@@ -110,8 +111,8 @@ paste the Hasura instance's IP address on both the `Start IP` and `End IP` input
 
 <Thumbnail src="/img/cloud-dbs/mssql/add-ip-and-save.png" alt="Add IP to firewall" width="1000px" />
 
-After entering the IP of your Hasura instance, click on `OK` and then click on `Save` at end of the page for the
-changes to take effect.
+After entering the IP of your Hasura instance, click on `OK` and then click on `Save` at end of the page for the changes
+to take effect.
 
 ## Step 5: Create database {#create-db-on-mssql-instance}
 
@@ -159,8 +160,8 @@ Then click `Connect Database`.
 
 :::info Note
 
-For security reasons, it is recommended to set database URLs as [env vars](/hasura-cloud/projects/env-vars.mdx) and using the env
-vars to connect to the databases in place of the raw database URLs.
+For security reasons, it is recommended to set database URLs as [env vars](/hasura-cloud/projects/env-vars.mdx) and
+using the env vars to connect to the databases in place of the raw database URLs.
 
 :::
 
@@ -181,7 +182,6 @@ Voilà. You are ready to start developing.
 
 :::info Note
 
-For more information on which SQL Server features we support, check out
-[this page]/databases/supported-databases.mdx).
+For more information on which SQL Server features we support, check out [this page]/databases/supported-databases.mdx).
 
 :::

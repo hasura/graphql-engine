@@ -21,14 +21,14 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 ## Introduction
 
 This guide explains how to connect a new or existing [Google AlloyDB Postgres](https://cloud.google.com/alloydb)
-database to a Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our
-[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring AlloyDB Postgres, check out
-their [docs](https://cloud.google.com/alloydb/docs) before continuing below.
+database to a Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io?skip_onboarding=true) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring AlloyDB Postgres, check out their
+[docs](https://cloud.google.com/alloydb/docs) before continuing below.
 
 :::info Note
 
-If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
-already have a project running, skip to [step 3](#create-pg-db-alloy).
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura
+instance and already have a project running, skip to [step 3](#create-pg-db-alloy).
 
 :::
 
@@ -45,7 +45,9 @@ On the Hasura Cloud dashboard, create a new project:
 
 After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
-On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Select AlloyDB from the `Data Source Driver` dropdown. Hasura will prompt you for a Postgres Database URL. We'll create this in the next step and then come back here.
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Select AlloyDB from the
+`Data Source Driver` dropdown. Hasura will prompt you for a Postgres Database URL. We'll create this in the next step
+and then come back here.
 
 <Thumbnail src="/img/cloud-dbs/alloy/alloy-existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
 
@@ -90,7 +92,8 @@ Under the Networking tab, you'll be prompted to set up a list of IP addresses fo
 
 :::info Note
 
-If you work within a company project, you might need extra permissions to ensure that you can choose a specific network. Please contact your Google Cloud admin.
+If you work within a company project, you might need extra permissions to ensure that you can choose a specific network.
+Please contact your Google Cloud admin.
 
 :::
 
@@ -208,8 +211,8 @@ Then click `Connect Database`.
 
 :::info Note
 
-For security reasons, it is recommended to set database URLs as [env vars](/hasura-cloud/projects/env-vars.mdx) and using the env
-vars to connect to the databases in place of the raw database URLs.
+For security reasons, it is recommended to set database URLs as [env vars](/hasura-cloud/projects/env-vars.mdx) and
+using the env vars to connect to the databases in place of the raw database URLs.
 
 :::
 

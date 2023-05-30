@@ -19,15 +19,15 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 ## Introduction
 
 This guide explains how to connect a new or existing [Crunchy Postgres](https://www.crunchydata.com/) database to a
-Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our
+Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io?skip_onboarding=true) or via one of our
 [self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring Crunchy Postgres and are
 interested in migrating an existing Postgres database - such as from Heroku - check out their
 [docs](https://www.crunchydata.com/migrate-from-heroku) before continuing below.
 
 :::info Note
 
-If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
-already have a project running, skip to [step 3](#create-pg-db-crunchy).
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura
+instance and already have a project running, skip to [step 3](#create-pg-db-crunchy).
 
 :::
 
@@ -40,14 +40,14 @@ and sign up or log in.
 
 On the Hasura Cloud dashboard, create a new project:
 
-<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' />
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" />
 
 After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
 On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
 Postgres Database URL. We'll create this in the next step and then come back here.
 
-<Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
+<Thumbnail src="/img/cloud-dbs/existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
 
 ## Step 3: Create a Postgres DB on Crunchy {#create-pg-db-crunchy}
 
@@ -55,14 +55,14 @@ Log into [Crunchy](https://crunchybridge.com/dashboard).
 
 From your dashboard, click `Create Cluster`:
 
-<Thumbnail src='/img/cloud-dbs/crunchy/crunchy-dashboard.png' alt='Crunchy dashboard' width='700px' />
+<Thumbnail src="/img/cloud-dbs/crunchy/crunchy-dashboard.png" alt="Crunchy dashboard" width="700px" />
 
 Fill in the necessary information and click `Create Cluster`:
 
 <Thumbnail
-  src='/img/cloud-dbs/crunchy/crunchy-create-cluster.png'
-  alt='Create a new cluster with Crunchy'
-  width='700px'
+  src="/img/cloud-dbs/crunchy/crunchy-create-cluster.png"
+  alt="Create a new cluster with Crunchy"
+  width="700px"
 />
 
 :::info Note
@@ -87,25 +87,25 @@ postgres://<user-name>:<password>@<host-server>:<port>/<database-name>
 Click on the Hasura card to see your connection string:
 
 <Thumbnail
-  src='/img/cloud-dbs/crunchy/crunchy-cluster-dashboard.png'
-  alt='Create a new cluster with Crunchy'
-  width='700px'
+  src="/img/cloud-dbs/crunchy/crunchy-cluster-dashboard.png"
+  alt="Create a new cluster with Crunchy"
+  width="700px"
 />
 
 At the bottom of the instructions, we'll select `Superuser` (which will be `postgres`) for our role:
 
 <Thumbnail
-  src='/img/cloud-dbs/crunchy/crunchy-connection-string-user.png'
-  alt='Create a new cluster with Crunchy'
-  width='700px'
+  src="/img/cloud-dbs/crunchy/crunchy-connection-string-user.png"
+  alt="Create a new cluster with Crunchy"
+  width="700px"
 />
 
 Copy the connection string:
 
 <Thumbnail
-  src='/img/cloud-dbs/crunchy/crunchy-connection-string-full.png'
-  alt='Create a new cluster with Crunchy'
-  width='700px'
+  src="/img/cloud-dbs/crunchy/crunchy-connection-string-full.png"
+  alt="Create a new cluster with Crunchy"
+  width="700px"
 />
 
 ## Step 5: Finish connecting the database
@@ -113,9 +113,9 @@ Copy the connection string:
 Back on the Hasura Console, enter the database URL that we retrieved in the previous step:
 
 <Thumbnail
-  src='/img/cloud-dbs/render/render-connect-db.png'
-  alt='Connect the database on Hasura Console'
-  width='700px'
+  src="/img/cloud-dbs/render/render-connect-db.png"
+  alt="Connect the database on Hasura Console"
+  width="700px"
 />
 
 Then click `Connect Database`.
@@ -123,14 +123,14 @@ Then click `Connect Database`.
 :::info Note
 
 For security reasons, it is recommended to set database URLs as
-[env vars](/hasura-cloud/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the databases in place
-of the raw database URLs.
+[env vars](/hasura-cloud/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the
+databases in place of the raw database URLs.
 
 :::
 
 Voilà. You are ready to start developing.
 
-<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura Console' />
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura Console" />
 
 ## Next steps
 
@@ -142,7 +142,7 @@ Voilà. You are ready to start developing.
   [env vars](/hasura-cloud/projects/env-vars.mdx#manage-project-env-vars) or
   [custom domains](/hasura-cloud/projects/domains.mdx#manage-project-domains)).
 
-<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
 
 :::info Note
 

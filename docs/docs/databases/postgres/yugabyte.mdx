@@ -19,7 +19,7 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 ## Introduction
 
 This guide explains how to connect a new or existing [Yugabyte Postgres database](https://www.yugabyte.com/) to a Hasura
-instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our
+instance, either on [Hasura Cloud](https://cloud.hasura.io?skip_onboarding=true) or via one of our
 [self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring Yugabyte Postgres and are
 interested in migrating an existing Postgres database - such as from Heroku - check out their
 [docs](https://docs.yugabyte.com/preview/migrate/migrate-steps/) before continuing below.
@@ -104,8 +104,7 @@ If using Hasura Cloud, from your project's dashboard, copy the Hasura Cloud IP a
 If you're using a self-hosted solution, you'll need to determine the IP address manually depending on your hosting
 service.
 
-:::
-Enter the Hasura IP address that you copied:
+::: Enter the Hasura IP address that you copied:
 
 <Thumbnail
   src="/img/cloud-dbs/yugabyte/yb-step-3f.png"
@@ -150,8 +149,8 @@ Then click `Connect Database`.
 
 :::info Note
 
-For security reasons, it is recommended to set database URLs as [env vars](/hasura-cloud/projects/env-vars.mdx) and using the env
-vars to connect to the databases in place of the raw database URLs.
+For security reasons, it is recommended to set database URLs as [env vars](/hasura-cloud/projects/env-vars.mdx) and
+using the env vars to connect to the databases in place of the raw database URLs.
 
 :::
 
