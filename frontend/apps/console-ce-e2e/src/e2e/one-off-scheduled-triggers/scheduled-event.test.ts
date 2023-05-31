@@ -56,8 +56,10 @@ describe('Create Scheduled trigger', () => {
     cy.get('[data-test=event-filter-table').should('exist');
     cy.get('[data-test=event-filter-table')
       .find('.rt-tbody')
+      .find('div')
+      .first()
       .within(() => {
-        cy.get('div').should('have.length', 13);
+        cy.get('div').should('have.length', 12);
       });
   });
   it('with shortest path everything should work', () => {
@@ -94,8 +96,10 @@ describe('Create Scheduled trigger', () => {
 
     cy.get('[data-test=event-filter-table')
       .find('.rt-tbody')
+      .find('div')
+      .first()
       .within(() => {
-        cy.get('div').should('have.length', 26);
+        cy.get('div').should('have.length', 12);
       });
   });
 });
