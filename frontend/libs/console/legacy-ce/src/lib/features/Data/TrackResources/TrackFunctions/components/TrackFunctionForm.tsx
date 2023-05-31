@@ -40,14 +40,19 @@ export type TrackFunctionFormProps = {
   defaultValues?: TrackFunctionFormSchema;
 };
 
-export const TrackFunctionForm = (props: TrackFunctionFormProps) => {
-  const { data: untrackedFunctions = [] } = useUntrackedFunctions(
-    props.dataSourceName
-  );
+export const TrackFunctionForm = ({
+  dataSourceName,
+  onSuccess,
+  onClose,
+  defaultValues,
+}: TrackFunctionFormProps) => {
+  const { data: untrackedFunctions = [] } =
+    useUntrackedFunctions(dataSourceName);
 
   const { trackFunction, isLoading: isTrackingInProgress } = useTrackFunction({
-    dataSourceName: props.dataSourceName,
+    dataSourceName: dataSourceName,
     onSuccess: () => {
+      onClose();
       hasuraToast({
         type: 'success',
         title: 'Success',
@@ -72,12 +77,12 @@ export const TrackFunctionForm = (props: TrackFunctionFormProps) => {
   } = useConsoleForm({
     schema: validationSchema,
     options: {
-      defaultValues: props.defaultValues,
+      defaultValues: defaultValues,
     },
   });
 
   const { data: tableOptions = [] } = useMetadata(m =>
-    MetadataSelectors.findSource(props.dataSourceName)(m)?.tables.map(t => ({
+    MetadataSelectors.findSource(dataSourceName)(m)?.tables.map(t => ({
       label: getQualifiedTable(t.table).join(' / '),
       value: JSON.stringify(t.table),
     }))
@@ -88,7 +93,7 @@ export const TrackFunctionForm = (props: TrackFunctionFormProps) => {
   if (untrackedFunctions === Feature.NotImplemented)
     return (
       <IndicatorCard headline="Feature is not implemented">
-        This feature is not available for {props.dataSourceName}
+        This feature is not available for {dataSourceName}
       </IndicatorCard>
     );
 
@@ -116,14 +121,14 @@ export const TrackFunctionForm = (props: TrackFunctionFormProps) => {
     <Dialog
       hasBackdrop
       title="Track Function"
-      onClose={props.onClose}
+      onClose={onClose}
       footer={
         <Dialog.Footer
           onSubmit={() => {
             handleSubmit(onHandleSubmit)();
           }}
           isLoading={isTrackingInProgress}
-          onClose={props.onClose}
+          onClose={onClose}
           callToDeny="Cancel"
           callToAction="Track Function"
           onSubmitAnalyticsName="actions-tab-generate-types-submit"

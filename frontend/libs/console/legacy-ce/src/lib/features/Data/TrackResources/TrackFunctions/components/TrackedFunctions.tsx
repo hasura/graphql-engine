@@ -44,7 +44,7 @@ export const TrackedFunctions = (props: TrackedFunctionsProps) => {
 
   const invalidateMetadata = useInvalidateMetadata();
 
-  const { untrackFunction, isLoading: isUntrackingInProgreess } =
+  const { untrackFunction, isLoading: isUntrackingInProgress } =
     useTrackFunction({
       dataSourceName,
       onError: err => {
@@ -100,7 +100,7 @@ export const TrackedFunctions = (props: TrackedFunctionsProps) => {
             },
           });
         }}
-        isLoading={isLoading}
+        isLoading={isUntrackingInProgress}
         {...listProps}
         showButton
       />
@@ -189,7 +189,7 @@ export const TrackedFunctions = (props: TrackedFunctionsProps) => {
                         },
                       });
                     }}
-                    isLoading={activeRow === index && isUntrackingInProgreess}
+                    isLoading={activeRow === index && isUntrackingInProgress}
                     loadingText="Please wait"
                   >
                     Untrack
