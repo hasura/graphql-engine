@@ -80,6 +80,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       loadingText,
       disabled,
       full,
+
       ...otherHtmlAttributes
     } = props;
 
@@ -87,9 +88,20 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const styles = twButtonStyles;
 
-    const buttonAttributes = {
+    const buttonAttributes: typeof props = {
       type,
       ...otherHtmlAttributes,
+      onClick: e => {
+        if (
+          e.target instanceof HTMLElement &&
+          e.target.closest('fieldset:disabled')
+        ) {
+          //this prevents clicks when a fieldset enclosing this button is set to disabled.
+          // this is due to a bug in react that's been documented here: https://github.com/facebook/react/issues/7711
+          return;
+        }
+        props?.onClick?.(e);
+      },
       disabled: isDisabled,
       className: clsx(
         styles.all,

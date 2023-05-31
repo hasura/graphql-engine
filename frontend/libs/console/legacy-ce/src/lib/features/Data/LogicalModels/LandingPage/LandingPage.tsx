@@ -1,30 +1,25 @@
-import { Tabs } from '../../../../new-components/Tabs';
-import { useMetadata } from '../../../hasura-metadata-api';
-import { ListLogicalModels } from './components/ListLogicalModels';
-import { ListNativeQueries } from './components/ListNativeQueries';
-import { extractModelsAndQueriesFromMetadata } from '../utils';
-import {
-  useDestructiveAlert,
-  useHasuraAlert,
-} from '../../../../new-components/Alert';
-import { LogicalModelWithSource, NativeQueryWithSource } from '../types';
-import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
-import { useTrackLogicalModel } from '../../hooks/useTrackLogicalModel';
-import { hasuraToast } from '../../../../new-components/Toasts';
 import { useState } from 'react';
 import { InjectedRouter, Link, withRouter } from 'react-router';
-import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
+import { useDestructiveAlert } from '../../../../new-components/Alert';
 import { Button } from '../../../../new-components/Button';
+import { Tabs } from '../../../../new-components/Tabs';
+import { hasuraToast } from '../../../../new-components/Toasts';
+import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
+import { useMetadata } from '../../../hasura-metadata-api';
+import { useTrackLogicalModel } from '../../hooks/useTrackLogicalModel';
+import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
+import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
 import { RouteWrapper } from '../components/RouteWrapper';
-import { ListStoredProcedures } from './components/ListStoredProcedures';
 
-export const LandingPage = ({
-  push,
-  pathname,
-}: {
-  pathname: string | undefined;
-  push?: (to: string) => void;
-}) => {
+import { LogicalModelWithSource, NativeQueryWithSource } from '../types';
+import { extractModelsAndQueriesFromMetadata } from '../utils';
+import { ListLogicalModels } from './components/ListLogicalModels';
+import { ListNativeQueries } from './components/ListNativeQueries';
+import { ListStoredProcedures } from './components/ListStoredProcedures';
+import { NATIVE_QUERY_ROUTES } from '../constants';
+
+export const LandingPage = ({ pathname }: { pathname: string }) => {
+  const push = usePushRoute();
   const { data, isLoading } = useMetadata(m =>
     extractModelsAndQueriesFromMetadata(m)
   );
@@ -43,8 +38,6 @@ export const LandingPage = ({
 
   const [isLogicalModelsDialogOpen, setIsLogicalModelsDialogOpen] =
     useState(false);
-
-  const { hasuraAlert } = useHasuraAlert();
 
   const { destructiveConfirm } = useDestructiveAlert();
 
@@ -133,12 +126,10 @@ export const LandingPage = ({
                   <ListNativeQueries
                     nativeQueries={nativeQueries}
                     isLoading={isLoading}
-                    onEditClick={() => {
-                      hasuraAlert({
-                        title: 'Not Implemented',
-                        message:
-                          'Editing is not implemented in the alpha release',
-                      });
+                    onEditClick={query => {
+                      push?.(
+                        `data/native-queries/native-query/${query.source.name}/${query.root_field_name}`
+                      );
                     }}
                     onRemoveClick={handleRemoveNativeQuery}
                   />
@@ -202,8 +193,8 @@ export const LandingPageRoute = withRouter<{
   router: InjectedRouter;
 }>(({ location, router }) => {
   return (
-    <RouteWrapper pathname={location.pathname} push={router.push}>
-      <LandingPage pathname={location.pathname} push={router.push} />
+    <RouteWrapper route={location.pathname as keyof typeof NATIVE_QUERY_ROUTES}>
+      <LandingPage pathname={location.pathname} />
     </RouteWrapper>
   );
 });

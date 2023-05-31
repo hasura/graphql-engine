@@ -92,7 +92,7 @@ export const Basic: Story = {
 
 export const WithRouteWrapper: Story = {
   render: args => (
-    <RouteWrapper pathname={'/data/native-queries/create'}>
+    <RouteWrapper route={'/data/native-queries/create'}>
       <AddNativeQuery {...args} />
     </RouteWrapper>
   ),

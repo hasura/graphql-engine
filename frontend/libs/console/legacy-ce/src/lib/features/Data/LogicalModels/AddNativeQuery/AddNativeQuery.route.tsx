@@ -7,8 +7,8 @@ export const AddNativeQueryRoute = withRouter<{
   router: InjectedRouter;
 }>(({ location, router }) => {
   return (
-    <RouteWrapper pathname={location.pathname} push={router.push}>
-      <AddNativeQuery push={router.push} />
+    <RouteWrapper route={'/data/native-queries/create'}>
+      <AddNativeQuery />
     </RouteWrapper>
   );
 });

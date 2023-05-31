@@ -1,5 +1,8 @@
-import { NativeQueryForm } from './types';
-import { NativeQuery as NativeQueryMetadataType } from '../../../hasura-metadata-types';
+import {
+  NativeQueryArgument,
+  NativeQuery as NativeQueryMetadataType,
+} from '../../../hasura-metadata-types';
+import { NativeQueryArgumentNormalized, NativeQueryForm } from './types';
 
 export const transformFormOutputToMetadata = (
   formValues: NativeQueryForm
@@ -28,3 +31,11 @@ export const transformFormOutputToMetadata = (
     type,
   };
 };
+
+export const normalizeArguments = (
+  args: Record<string, NativeQueryArgument>
+): NativeQueryArgumentNormalized[] =>
+  Object.entries(args).map(([name, argument]) => ({
+    name,
+    ...argument,
+  }));

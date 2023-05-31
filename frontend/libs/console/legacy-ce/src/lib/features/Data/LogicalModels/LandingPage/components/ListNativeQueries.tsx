@@ -4,10 +4,12 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import React from 'react';
+import { CgDetailsMore } from 'react-icons/cg';
+import { FaTrash } from 'react-icons/fa';
 import Skeleton from 'react-loading-skeleton';
 import { Button } from '../../../../../new-components/Button';
-import { NativeQueryWithSource } from '../../types';
 import { CardedTableFromReactTable } from '../../components/CardedTableFromReactTable';
+import { NativeQueryWithSource } from '../../types';
 
 const columnHelper = createColumnHelper<NativeQueryWithSource>();
 
@@ -44,10 +46,18 @@ export const ListNativeQueries = ({
         header: 'Actions',
         cell: ({ cell, row }) => (
           <div className="flex flex-row gap-2">
-            {/* Re add once we implement Edit functionality */}
-            {/* <Button onClick={() => onEditClick(row.original)}>Edit</Button> */}
+            <Button
+              // icon={<FaEdit />}
+              icon={<CgDetailsMore />}
+              onClick={() => onEditClick(row.original)}
+            >
+              {/* Edit */}
+              {/* Change back to Edit once we support it */}
+              View
+            </Button>
             <Button
               mode="destructive"
+              icon={<FaTrash />}
               onClick={() => onRemoveClick(row.original)}
             >
               Remove

@@ -1,9 +1,11 @@
-import Skeleton from 'react-loading-skeleton';
-import { LimitedFeatureWrapper } from '../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
-import { useServerConfig } from '../../../../hooks';
-import { ReactNode } from 'react';
-import { Breadcrumbs } from '../../../../new-components/Breadcrumbs';
 import startCase from 'lodash/startCase';
+import { ReactNode } from 'react';
+import Skeleton from 'react-loading-skeleton';
+import { useServerConfig } from '../../../../hooks';
+import { Breadcrumbs } from '../../../../new-components/Breadcrumbs';
+import { LimitedFeatureWrapper } from '../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
+import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
+import { NATIVE_QUERY_ROUTES } from '../constants';
 
 function NativeQueriesFeatureFlag({ children }: { children: ReactNode }) {
   const { data: serverConfig, isLoading: isLoadingServerConfig } =
@@ -32,53 +34,21 @@ function NativeQueriesFeatureFlag({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-type AllowedTabs =
-  | 'logical-models'
-  | 'native-queries'
-  | 'stored-procedures'
-  | 'create';
-const getTitleAndSubtitle = (tabType: AllowedTabs) => {
-  if (tabType === 'logical-models')
-    return {
-      title: 'Logical Models',
-      subtitle:
-        'Creating Logical Models in advance can help generate Native Queries faster',
-    };
-  if (tabType === 'native-queries')
-    return {
-      title: 'Native Queries',
-      subtitle:
-        'Access more queries and operators through SQL on your database',
-    };
-  if (tabType === 'stored-procedures')
-    return {
-      title: 'Stored Procedures',
-      subtitle: 'Add support for stored procedures on SQL over a GraphQL API',
-    };
-  if (tabType === 'create')
-    return {
-      title: 'Create Native Query',
-      subtitle:
-        'Access more queries and operators through SQL on your database',
-    };
-  return {
-    title: 'Not a valid path',
-    subtitle: '',
-  };
-};
+export const RouteWrapper: React.FC<{
+  route: keyof typeof NATIVE_QUERY_ROUTES;
+  itemSourceName?: string;
+  itemName?: string;
+}> = ({ children, route, itemSourceName, itemName }) => {
+  const paths =
+    route
+      ?.split('/')
+      .filter(Boolean)
+      .filter(p => p !== '{{source}}') ?? [];
 
-export const RouteWrapper = ({
-  children,
-  pathname,
-  push,
-}: {
-  children: ReactNode;
-  pathname: string | undefined;
-  push?: (to: string) => void;
-}) => {
-  const paths = pathname?.split('/').filter(Boolean) ?? [];
-  const tabType = paths[paths.length - 1] as AllowedTabs;
-  const { title, subtitle } = getTitleAndSubtitle(tabType);
+  const { title, subtitle } = NATIVE_QUERY_ROUTES[route];
+
+  const push = usePushRoute();
+
   return (
     <div className="py-md px-md w-full">
       <LimitedFeatureWrapper
@@ -91,19 +61,26 @@ export const RouteWrapper = ({
             <Breadcrumbs
               items={paths.map((path: string, index) => {
                 return {
-                  title: startCase(path),
+                  title: startCase(
+                    path
+                      // we don't need to display source
+                      .replace('{{source}}', itemSourceName ?? '')
+                      .replace('{{name}}', itemName ?? '')
+                  ),
                   onClick:
                     index === paths.length - 1
                       ? undefined
                       : () => {
-                          push?.(`/${paths.slice(0, index + 1).join('/')}`);
+                          push(`/${paths.slice(0, index + 1).join('/')}`);
                         },
                 };
               })}
             />
             <div className="flex w-full justify-between px-2">
               <div className="mb-sm">
-                <div className="text-xl font-bold mt-2">{title}</div>
+                <div className="text-xl font-bold mt-2">
+                  {title.replace('{{name}}', itemName ?? '')}
+                </div>
                 <div className="text-muted">{subtitle}</div>
               </div>
             </div>
