@@ -171,3 +171,8 @@ instance
   type SourceConnConfiguration ('Postgres pgKind) = Postgres.PostgresConnConfiguration
   sourceConfigNumReadReplicas = Postgres.sourceConfigNumReadReplicas
   sourceConfigConnectonTemplateEnabled = Postgres.sourceConfigConnectonTemplateEnabled
+  sourceConfigBackendSourceKind _sourceConfig =
+    case backendTag @('Postgres pgKind) of
+      PostgresVanillaTag -> PostgresVanillaKind
+      PostgresCitusTag -> PostgresCitusKind
+      PostgresCockroachTag -> PostgresCockroachKind

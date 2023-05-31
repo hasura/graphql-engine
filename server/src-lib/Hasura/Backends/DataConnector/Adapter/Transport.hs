@@ -58,7 +58,7 @@ runDBQuery' ::
   Maybe DataConnectorPreparedQuery ->
   ResolvedConnectionTemplate 'DataConnector ->
   m (DiffTime, EncJSON)
-runDBQuery' requestId query fieldName _userInfo logger licenseKeyCacheMaybe SourceConfig {..} action queryRequest _ = do
+runDBQuery' requestId query fieldName _userInfo logger licenseKeyCacheMaybe sourceConfig@SourceConfig {..} action queryRequest _ = do
   agentAuthKey <-
     for licenseKeyCacheMaybe \licenseKeyCache -> do
       (key, _requestKeyRefresh) <- liftIO $ atomically $ getCredential licenseKeyCache
@@ -73,6 +73,7 @@ runDBQuery' requestId query fieldName _userInfo logger licenseKeyCacheMaybe Sour
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
     . Tracing.newSpan ("Data Connector backend query for root field " <>> fieldName)
+    . (<* Tracing.attachSourceConfigAttributes @'DataConnector sourceConfig)
     . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds agentAuthKey)
     . runOnBaseMonad
     . fmap snd
@@ -134,7 +135,7 @@ runDBMutation' ::
   Maybe DataConnectorPreparedQuery ->
   ResolvedConnectionTemplate 'DataConnector ->
   m (DiffTime, a)
-runDBMutation' requestId query fieldName _userInfo logger licenseKeyCacheMaybe SourceConfig {..} action queryRequest _ = do
+runDBMutation' requestId query fieldName _userInfo logger licenseKeyCacheMaybe sourceConfig@SourceConfig {..} action queryRequest _ = do
   agentAuthKey <-
     for licenseKeyCacheMaybe \licenseKeyCache -> do
       (key, _requestKeyRefresh) <- liftIO $ atomically $ getCredential licenseKeyCache
@@ -149,6 +150,7 @@ runDBMutation' requestId query fieldName _userInfo logger licenseKeyCacheMaybe S
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
     . Tracing.newSpan ("Data Connector backend mutation for root field " <>> fieldName)
+    . (<* Tracing.attachSourceConfigAttributes @'DataConnector sourceConfig)
     . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds agentAuthKey)
     . runOnBaseMonad
     $ action

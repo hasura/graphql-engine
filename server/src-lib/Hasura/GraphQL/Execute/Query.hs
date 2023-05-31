@@ -9,6 +9,7 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Tagged qualified as Tagged
+import Data.Text.Extended ((<>>))
 import Hasura.Base.Error
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Execute.Action
@@ -36,6 +37,8 @@ import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (RequestId (..))
 import Hasura.Services.Network
 import Hasura.Session
+import Hasura.Tracing (MonadTrace)
+import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 
@@ -60,6 +63,8 @@ parseGraphQLQuery gqlContext varDefs varValsM directives fields = do
 convertQuerySelSet ::
   forall m.
   ( MonadError QErr m,
+    MonadTrace m,
+    MonadIO m,
     MonadGQLExecutionCheck m,
     MonadQueryTags m,
     ProvidesNetwork m
@@ -95,14 +100,14 @@ convertQuerySelSet
   maybeOperationName = do
     -- 1. Parse the GraphQL query into the 'RootFieldMap' and a 'SelectionSet'
     (unpreparedQueries, normalizedDirectives, normalizedSelectionSet) <-
-      parseGraphQLQuery gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
+      Tracing.newSpan "Parse query IR" $ parseGraphQLQuery gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
 
     -- 2. Parse directives on the query
     dirMap <- toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)
 
     let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
 
-        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = do
+        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = Tracing.newSpan ("Resolve execution step for " <>> rootFieldName) do
           case rootFieldUnpreparedValue of
             RFMulti lst -> do
               allSteps <- traverse (resolveExecutionSteps rootFieldName) lst
@@ -111,6 +116,7 @@ convertQuerySelSet
               AB.dispatchAnyBackend @BackendExecute
                 exists
                 \(SourceConfigWith (sourceConfig :: (SourceConfig b)) queryTagsConfig (QDBR db)) -> do
+                  Tracing.attachSourceConfigAttributes @b sourceConfig
                   let mReqId =
                         case _qtcOmitRequestId <$> queryTagsConfig of
                           -- we include the request id only if a user explicitly wishes for it to be included.

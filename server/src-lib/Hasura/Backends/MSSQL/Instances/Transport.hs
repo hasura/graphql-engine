@@ -75,10 +75,11 @@ runQuery ::
   ResolvedConnectionTemplate 'MSSQL ->
   -- | Also return the time spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
-runQuery reqId query fieldName _userInfo logger _ _sourceConfig tx genSql _ = do
+runQuery reqId query fieldName _userInfo logger _ sourceConfig tx genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId
   withElapsedTime
     $ newSpan ("MSSQL Query for root field " <>> fieldName)
+    $ (<* attachSourceConfigAttributes @'MSSQL sourceConfig)
     $ fmap snd (run tx)
 
 runQueryExplain ::
@@ -112,10 +113,11 @@ runMutation ::
   -- | Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
-runMutation reqId query fieldName _userInfo logger _ _sourceConfig tx _genSql _ = do
+runMutation reqId query fieldName _userInfo logger _ sourceConfig tx _genSql _ = do
   logQueryLog logger $ mkQueryLog query fieldName Nothing reqId
   withElapsedTime
     $ newSpan ("MSSQL Mutation for root field " <>> fieldName)
+    $ (<* attachSourceConfigAttributes @'MSSQL sourceConfig)
     $ run tx
 
 runSubscription ::

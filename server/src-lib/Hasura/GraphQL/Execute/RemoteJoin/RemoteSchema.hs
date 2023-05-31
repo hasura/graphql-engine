@@ -29,7 +29,7 @@ import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.IntMap.Strict qualified as IntMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
-import Data.Text.Extended (commaSeparated, toTxt, (<<>))
+import Data.Text.Extended (commaSeparated, toTxt, (<<>), (<>>))
 import Data.Validation (Validation (..), toEither)
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (fromErrorMessage)
@@ -47,6 +47,8 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.Session
+import Hasura.Tracing (MonadTrace)
+import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
@@ -54,26 +56,32 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Construct and execute a call to a remote schema for a remote join.
 makeRemoteSchemaJoinCall ::
-  (MonadError QErr m) =>
+  (MonadError QErr m, MonadTrace m, MonadIO m) =>
   -- | Function to send a request over the network.
   (GQLReqOutgoing -> m BL.ByteString) ->
   -- | User information.
   UserInfo ->
   -- | Information about that remote join.
   RemoteSchemaJoin ->
+  -- | Name of the field from the join arguments.
+  FieldName ->
   -- | Mapping from 'JoinArgumentId' to its corresponding 'JoinArgument'.
   IntMap.IntMap JoinArgument ->
   -- | The resulting join index (see 'buildJoinIndex') if any.
   m (Maybe (IntMap.IntMap AO.Value))
-makeRemoteSchemaJoinCall networkFunction userInfo remoteSchemaJoin joinArguments = do
-  -- step 1: construct the internal intermediary representation
-  maybeRemoteCall <- buildRemoteSchemaCall remoteSchemaJoin joinArguments userInfo
-  -- if there actually is a remote call:
-  for maybeRemoteCall \remoteCall -> do
-    -- step 2: execute it over the network
-    responseValue <- executeRemoteSchemaCall networkFunction remoteCall
-    -- step 3: build the join index
-    buildJoinIndex remoteCall responseValue
+makeRemoteSchemaJoinCall networkFunction userInfo remoteSchemaJoin jaFieldName joinArguments = do
+  Tracing.newSpan ("Remote join to remote schema for field " <>> jaFieldName) do
+    -- step 1: construct the internal intermediary representation
+    maybeRemoteCall <-
+      Tracing.newSpan "Resolve execution step for remote join field"
+        $ buildRemoteSchemaCall remoteSchemaJoin joinArguments userInfo
+    -- if there actually is a remote call:
+    for maybeRemoteCall \remoteCall -> do
+      -- step 2: execute it over the network
+      responseValue <- executeRemoteSchemaCall networkFunction remoteCall
+      -- step 3: build the join index
+      Tracing.newSpan "Build remote join index"
+        $ buildJoinIndex remoteCall responseValue
 
 -------------------------------------------------------------------------------
 -- Internal representation

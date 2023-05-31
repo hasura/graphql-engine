@@ -7,6 +7,7 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Tagged qualified as Tagged
+import Data.Text.Extended ((<>>))
 import Hasura.Base.Error
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Execute.Action
@@ -112,16 +113,15 @@ convertMutationSelectionSet
 
     (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe HashMap.empty (GH._grVariables gqlUnparsed)) directives fields
     -- Parse the GraphQL query into the RQL AST
-    unpreparedQueries ::
-      RootFieldMap (MutationRootField UnpreparedValue) <-
-      liftEither $ mutationParser resolvedSelSet
+    (unpreparedQueries :: RootFieldMap (MutationRootField UnpreparedValue)) <-
+      Tracing.newSpan "Parse mutation IR" $ liftEither $ mutationParser resolvedSelSet
 
     -- Process directives on the mutation
     _dirMap <- toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
 
     let parameterizedQueryHash = calculateParameterizedQueryHash resolvedSelSet
 
-        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = do
+        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = Tracing.newSpan ("Resolve execution step for " <>> rootFieldName) do
           case rootFieldUnpreparedValue of
             RFDB sourceName exists ->
               AB.dispatchAnyBackend @BackendExecute

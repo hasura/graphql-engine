@@ -4,12 +4,15 @@
 -- here in the core engine code.
 module Hasura.Tracing.Utils
   ( traceHTTPRequest,
+    attachSourceConfigAttributes,
   )
 where
 
 import Control.Lens
 import Data.String
+import Data.Text.Extended (toTxt)
 import Hasura.Prelude
+import Hasura.RQL.Types.SourceConfiguration (HasSourceConfiguration (..))
 import Hasura.Tracing.Class
 import Hasura.Tracing.Context
 import Hasura.Tracing.Sampling
@@ -47,3 +50,8 @@ traceHTTPRequest req f = do
           ("X-B3-ParentSpanId",) . spanIdToHex <$> tcCurrentParent,
           ("X-B3-Sampled",) <$> samplingStateToHeader tcSamplingState
         ]
+
+attachSourceConfigAttributes :: forall b m. (HasSourceConfiguration b, MonadTrace m) => SourceConfig b -> m ()
+attachSourceConfigAttributes sourceConfig = do
+  let backendSourceKind = sourceConfigBackendSourceKind @b sourceConfig
+  attachMetadata [("source.kind", toTxt $ backendSourceKind)]

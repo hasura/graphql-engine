@@ -76,7 +76,7 @@ processRemoteJoins ::
   GQLReqUnparsed ->
   m EncJSON
 processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo lhs maybeJoinTree gqlreq =
-  forRemoteJoins maybeJoinTree lhs \joinTree -> do
+  Tracing.newSpan "Process remote joins" $ forRemoteJoins maybeJoinTree lhs \joinTree -> do
     lhsParsed <-
       JO.eitherDecode (encJToLBS lhs)
         `onLeft` (throw500 . T.pack)
@@ -133,7 +133,9 @@ processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo 
 foldJoinTreeWith ::
   ( MonadError QErr m,
     MonadQueryTags m,
-    Traversable f
+    Traversable f,
+    Tracing.MonadTrace m,
+    MonadIO m
   ) =>
   -- | How to process a call to a source.
   (AB.AnyBackend S.SourceJoinCall -> m BL.ByteString) ->
@@ -156,7 +158,7 @@ foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree reqHeaders op
       previousStep <- case _jalJoin of
         RemoteJoinRemoteSchema remoteSchemaJoin childJoinTree -> do
           let remoteSchemaInfo = rsDef $ _rsjRemoteSchema remoteSchemaJoin
-          maybeJoinIndex <- RS.makeRemoteSchemaJoinCall (callRemoteSchema remoteSchemaInfo) userInfo remoteSchemaJoin joinArguments
+          maybeJoinIndex <- RS.makeRemoteSchemaJoinCall (callRemoteSchema remoteSchemaInfo) userInfo remoteSchemaJoin _jalFieldName joinArguments
           pure $ fmap (childJoinTree,) maybeJoinIndex
         RemoteJoinSource sourceJoin childJoinTree -> do
           maybeJoinIndex <- S.makeSourceJoinCall callSource userInfo sourceJoin _jalFieldName joinArguments reqHeaders operationName
@@ -173,7 +175,8 @@ foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree reqHeaders op
               reqHeaders
               operationName
           pure $ IntMap.fromAscList $ zip (IntMap.keys joinIndex) results
-  joinResults joinIndices compositeValue
+  Tracing.newSpan "Join remote join results"
+    $ joinResults joinIndices compositeValue
 
 -------------------------------------------------------------------------------
 

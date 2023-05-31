@@ -41,6 +41,7 @@ import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.DDL.ConnectionTemplate (BackendResolvedConnectionTemplate (..), ResolvedConnectionTemplateWrapper (..))
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (HasTag)
 import Hasura.RQL.Types.BackendType
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId)
@@ -53,14 +54,16 @@ instance
   ) =>
   BackendTransport ('Postgres pgKind)
   where
-  runDBQuery = runPGQuery
-  runDBMutation = runPGMutation
+  runDBQuery = runPGQuery @pgKind
+  runDBMutation = runPGMutation @pgKind
   runDBSubscription = runPGSubscription
   runDBStreamingSubscription = runPGStreamingSubscription
   runDBQueryExplain = runPGQueryExplain
 
 runPGQuery ::
-  ( MonadIO m,
+  forall pgKind m.
+  ( HasTag ('Postgres pgKind),
+    MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadQueryLog m,
@@ -83,11 +86,14 @@ runPGQuery reqId query fieldName _userInfo logger _ sourceConfig tx genSql resol
   logQueryLog logger $ mkQueryLog query fieldName genSql reqId (resolvedConnectionTemplate <$ resolvedConnectionTemplate)
   withElapsedTime
     $ newSpan ("Postgres Query for root field " <>> fieldName)
+    $ (<* attachSourceConfigAttributes @('Postgres pgKind) sourceConfig)
     $ runQueryTx (_pscExecCtx sourceConfig) (GraphQLQuery resolvedConnectionTemplate)
     $ fmap snd (runOnBaseMonad tx)
 
 runPGMutation ::
-  ( MonadIO m,
+  forall pgKind m.
+  ( HasTag ('Postgres pgKind),
+    MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadQueryLog m,
@@ -109,6 +115,7 @@ runPGMutation reqId query fieldName userInfo logger _ sourceConfig tx _genSql re
   logQueryLog logger $ mkQueryLog query fieldName Nothing reqId (resolvedConnectionTemplate <$ resolvedConnectionTemplate)
   withElapsedTime
     $ newSpan ("Postgres Mutation for root field " <>> fieldName)
+    $ (<* attachSourceConfigAttributes @('Postgres pgKind) sourceConfig)
     $ runTxWithCtxAndUserInfo userInfo (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate)
     $ runOnBaseMonad tx
 
@@ -176,7 +183,9 @@ mkQueryLog gqlQuery fieldName preparedSql requestId resolvedConnectionTemplate =
 -- see Note [Backwards-compatible transaction optimisation]
 
 runPGMutationTransaction ::
-  ( MonadIO m,
+  forall pgKind m.
+  ( HasTag ('Postgres pgKind),
+    MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadQueryLog m,
@@ -196,6 +205,7 @@ runPGMutationTransaction reqId query userInfo logger sourceConfig resolvedConnec
     $ runTxWithCtxAndUserInfo userInfo (_pscExecCtx sourceConfig) (Tx PG.ReadWrite Nothing) (GraphQLQuery resolvedConnectionTemplate)
     $ flip InsOrdHashMap.traverseWithKey mutations \fieldName dbsi ->
       newSpan ("Postgres Mutation for root field " <>> fieldName)
+        $ (<* attachSourceConfigAttributes @('Postgres pgKind) sourceConfig)
         $ fmap arResult
         $ runOnBaseMonad
         $ dbsiAction dbsi
