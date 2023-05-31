@@ -165,7 +165,7 @@ trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalMode
         type: *requestType
         args:
           source: *sourceName
-          description: *description 
+          description: *description
           name: *logicalModelName
           fields: *columns
       |]

@@ -204,6 +204,7 @@ fromRemoteRelationFieldsG existingJoins joinColumns (IR.FieldName name, field) =
       IR.AnnRelationSelectG
         (IR.RelName $ mkNonEmptyTextUnsafe name)
         joinColumns
+        IR.Nullable
         annotatedRelationship
 
 -- | Top/root-level 'Select'. All descendent/sub-translations are collected to produce a root TSQL.Select.

@@ -130,7 +130,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
                       (tableIdentifierToIdentifier relSourcePrefix)
                       (S.FISimple relTable Nothing)
                       (toSQLBoolExp (S.QualTable relTable) relFilter)
-                  relSource = ObjectRelationSource relName colMapping selectSource
+                  relSource = ObjectRelationSource relName colMapping selectSource Nullable
               pure
                 ( relSource,
                   HashMap.singleton relOrderByAlias relOrdByExp,

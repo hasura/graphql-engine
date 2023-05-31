@@ -1448,7 +1448,7 @@ relationshipField table ri = runMaybeT do
         $ P.subselection_ relFieldName desc selectionSetParser
         <&> \fields ->
           IR.AFObjectRelation
-            $ IR.AnnRelationSelectG (riName ri) (riMapping ri)
+            $ IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable
             $ IR.AnnObjectSelectG fields (IR.FromTable otherTableName)
             $ deduplicatePermissions
             $ IR._tpFilter
@@ -1460,7 +1460,7 @@ relationshipField table ri = runMaybeT do
             otherTableParser <&> \selectExp ->
               IR.AFArrayRelation
                 $ IR.ASSimple
-                $ IR.AnnRelationSelectG (riName ri) (riMapping ri)
+                $ IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable
                 $ deduplicatePermissions' selectExp
           relAggFieldName = applyFieldNameCaseCust tCase $ relFieldName <> Name.__aggregate
           relAggDesc = Just $ G.Description "An aggregate relationship"
@@ -1479,8 +1479,8 @@ relationshipField table ri = runMaybeT do
       pure
         $ catMaybes
           [ Just arrayRelField,
-            fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG (riName ri) (riMapping ri)) <$> remoteAggField,
-            fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG (riName ri) (riMapping ri)) <$> remoteConnectionField
+            fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable) <$> remoteAggField,
+            fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable) <$> remoteConnectionField
           ]
 
 tablePermissionsInfo :: (Backend b) => SelPermInfo b -> TablePerms b

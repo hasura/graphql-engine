@@ -291,7 +291,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
         AFNodeId _ sn tn pKeys -> pure $ mkNodeId sn tn pKeys
         AFColumn c -> toSQLCol c
         AFObjectRelation objSel -> withWriteObjectRelation $ do
-          let AnnRelationSelectG relName relMapping annObjSel = objSel
+          let AnnRelationSelectG relName relMapping nullable annObjSel = objSel
               AnnObjectSelectG objAnnFields target targetFilter = annObjSel
               objRelSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
               sourcePrefixes = mkSourcePrefixes objRelSourcePrefix
@@ -314,7 +314,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
                       (_pfThis sourcePrefixes)
                       (S.FIIdentifier nativeQueryIdentifier)
                       (toSQLBoolExp (S.QualifiedIdentifier nativeQueryIdentifier Nothing) targetFilter)
-                  objRelSource = ObjectRelationSource relName relMapping selectSource
+                  objRelSource = ObjectRelationSource relName relMapping selectSource nullable
               pure
                 ( objRelSource,
                   HashMap.fromList [annFieldsExtr],
@@ -326,7 +326,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
                       (_pfThis sourcePrefixes)
                       (S.FISimple tableFrom Nothing)
                       (toSQLBoolExp (S.QualTable tableFrom) targetFilter)
-                  objRelSource = ObjectRelationSource relName relMapping selectSource
+                  objRelSource = ObjectRelationSource relName relMapping selectSource Nullable
               pure
                 ( objRelSource,
                   HashMap.fromList [annFieldsExtr],
@@ -496,7 +496,7 @@ processArrayRelation ::
 processArrayRelation sourcePrefixes fieldAlias relAlias arrSel _tCase =
   case arrSel of
     ASSimple annArrRel -> withWriteArrayRelation $ do
-      let AnnRelationSelectG _ colMapping sel = annArrRel
+      let AnnRelationSelectG _ colMapping _ sel = annArrRel
           permLimitSubQuery =
             maybe PLSQNotRequired PLSQRequired $ _tpLimit $ _asnPerm sel
       (source, nodeExtractors) <-
@@ -514,7 +514,7 @@ processArrayRelation sourcePrefixes fieldAlias relAlias arrSel _tCase =
           ()
         )
     ASAggregate aggSel -> withWriteArrayRelation $ do
-      let AnnRelationSelectG _ colMapping sel = aggSel
+      let AnnRelationSelectG _ colMapping _ sel = aggSel
       (source, nodeExtractors, topExtr) <-
         processAnnAggregateSelect sourcePrefixes fieldAlias sel
       pure
@@ -524,7 +524,7 @@ processArrayRelation sourcePrefixes fieldAlias relAlias arrSel _tCase =
           ()
         )
     ASConnection connSel -> withWriteArrayConnection $ do
-      let AnnRelationSelectG _ colMapping sel = connSel
+      let AnnRelationSelectG _ colMapping _ sel = connSel
       (source, topExtractor, nodeExtractors) <-
         processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping sel
       pure

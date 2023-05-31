@@ -200,11 +200,11 @@ parseLogicalModelField relationshipInfo column logimoField = do
     ( LogicalModelField
         { lmfType =
             LogicalModelTypeReference
-              (LogicalModelTypeReferenceC {lmtrReference})
+              (LogicalModelTypeReferenceC {lmtrNullable, lmtrReference})
         }
       ) -> do
-        -- we currently ignore nullability and assume the field is nullable
         relName <- hoistMaybe $ columnToRelName @b column
+
         -- lookup the reference in the data source
         relationship <-
           InsOrdHashMap.lookup relName relationshipInfo
@@ -215,14 +215,14 @@ parseLogicalModelField relationshipInfo column logimoField = do
                   <> commaSeparated (map relNameToTxt (InsOrdHashMap.keys relationshipInfo))
                   <> "]."
               )
-        logicalModelObjectRelationshipField @b @r @m @n lmtrReference relationship
+        logicalModelObjectRelationshipField @b @r @m @n lmtrReference (nullableFromBool lmtrNullable) relationship
     ( LogicalModelField
         { lmfType =
             LogicalModelTypeArray
               ( LogicalModelTypeArrayC
                   { lmtaArray =
-                      LogicalModelTypeReference (LogicalModelTypeReferenceC {lmtrReference}),
-                    lmtaNullable
+                      LogicalModelTypeReference (LogicalModelTypeReferenceC {lmtrReference, lmtrNullable = innerNullability}),
+                    lmtaNullable = arrayNullability
                   }
                 )
         }
@@ -232,9 +232,12 @@ parseLogicalModelField relationshipInfo column logimoField = do
         relName <- hoistMaybe $ columnToRelName @b column
         -- lookup the reference in the data source
         relationship <- hoistMaybe $ InsOrdHashMap.lookup relName relationshipInfo
-        let nullability = if lmtaNullable then Nullable else NotNullable
 
-        logicalModelArrayRelationshipField @b @r @m @n lmtrReference nullability relationship
+        logicalModelArrayRelationshipField @b @r @m @n
+          lmtrReference
+          (nullableFromBool arrayNullability)
+          (nullableFromBool innerNullability)
+          relationship
     ( LogicalModelField
         { lmfType =
             LogicalModelTypeArray
@@ -249,6 +252,10 @@ parseLogicalModelField relationshipInfo column logimoField = do
         }
       ) ->
         throw500 "Nested arrays are not currently implemented"
+
+nullableFromBool :: Bool -> Nullable
+nullableFromBool True = Nullable
+nullableFromBool False = NotNullable
 
 defaultLogicalModelSelectionSet ::
   forall b r m n.
@@ -421,9 +428,10 @@ logicalModelObjectRelationshipField ::
     MonadBuildSchema b r m n
   ) =>
   LogicalModelName ->
+  Nullable ->
   RelInfo b ->
   MaybeT (SchemaT r m) (FieldParser n (AnnotatedField b))
-logicalModelObjectRelationshipField logicalModelName ri | riType ri == ObjRel =
+logicalModelObjectRelationshipField logicalModelName nullability ri | riType ri == ObjRel =
   case riTarget ri of
     RelTargetNativeQuery nativeQueryName -> do
       nativeQueryInfo <- lift $ askNativeQueryInfo nativeQueryName
@@ -443,16 +451,22 @@ logicalModelObjectRelationshipField logicalModelName ri | riType ri == ObjRel =
       relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
 
       let objectRelDesc = Just $ G.Description "An object relationship"
-
       nativeQueryParser <- MaybeT $ selectNativeQueryObject nativeQueryInfo relFieldName objectRelDesc
 
+      -- this only affects the generated GraphQL type
+      let nullabilityModifier =
+            case nullability of
+              Nullable -> id
+              NotNullable -> IP.nonNullableField
+
       pure
+        $ nullabilityModifier
         $ nativeQueryParser
         <&> \selectExp ->
-          IR.AFObjectRelation (IR.AnnRelationSelectG (riName ri) (riMapping ri) selectExp)
+          IR.AFObjectRelation (IR.AnnRelationSelectG (riName ri) (riMapping ri) nullability selectExp)
     RelTargetTable _otherTableName -> do
       throw500 "Object relationships from logical models to tables are not implemented"
-logicalModelObjectRelationshipField _ _ =
+logicalModelObjectRelationshipField _ _ _ =
   hoistMaybe Nothing -- the target logical model expected an object relationship, but this was an array
 
 -- | Field parsers for a logical model relationship
@@ -463,9 +477,10 @@ logicalModelArrayRelationshipField ::
   ) =>
   LogicalModelName ->
   Nullable ->
+  Nullable ->
   RelInfo b ->
   MaybeT (SchemaT r m) (FieldParser n (AnnotatedField b))
-logicalModelArrayRelationshipField logicalModelName nullability ri | riType ri == ArrRel =
+logicalModelArrayRelationshipField logicalModelName arrayNullability innerNullability ri | riType ri == ArrRel =
   case riTarget ri of
     RelTargetNativeQuery nativeQueryName -> do
       nativeQueryInfo <- lift $ askNativeQueryInfo nativeQueryName
@@ -485,15 +500,15 @@ logicalModelArrayRelationshipField logicalModelName nullability ri | riType ri =
 
       let objectRelDesc = Just $ G.Description "An array relationship"
 
-      nativeQueryParser <- MaybeT $ selectNativeQuery nativeQueryInfo relFieldName nullability objectRelDesc
+      nativeQueryParser <- MaybeT $ selectNativeQuery nativeQueryInfo relFieldName arrayNullability objectRelDesc
 
       pure
         $ nativeQueryParser
         <&> \selectExp ->
           IR.AFArrayRelation
             $ IR.ASSimple
-            $ IR.AnnRelationSelectG (riName ri) (riMapping ri) selectExp
+            $ IR.AnnRelationSelectG (riName ri) (riMapping ri) innerNullability selectExp
     RelTargetTable _otherTableName -> do
       throw500 "Array relationships from logical models to tables are not implemented"
-logicalModelArrayRelationshipField _ _ _ =
+logicalModelArrayRelationshipField _ _ _ _ =
   hoistMaybe Nothing -- the target logical model expected an array relationship, but this was an object

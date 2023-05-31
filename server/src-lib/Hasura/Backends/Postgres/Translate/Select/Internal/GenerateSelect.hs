@@ -31,6 +31,7 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
 import Hasura.Backends.Postgres.Translate.Types
 import Hasura.Prelude
 import Hasura.RQL.IR.Select (ConnectionSlice (SliceFirst, SliceLast))
+import Hasura.RQL.Types.Relationships.Local (Nullable (..))
 
 generateSQLSelect ::
   -- | Pre join condition for lateral joins
@@ -86,9 +87,9 @@ generateSQLSelect joinCondition selectSource selectNode =
       S.WhereFrag $ S.simplifyBoolExp $ S.BEBin S.AndOp joinCond whereCond
 
     -- function to create a joined from item from two from items
-    leftOuterJoin current new =
+    leftOuterJoin current (new, joinType) =
       S.FIJoin
-        $ S.JoinExpr current S.LeftOuter new
+        $ S.JoinExpr current joinType new
         $ S.JoinOn
         $ S.BELit True
 
@@ -102,33 +103,40 @@ generateSQLSelect joinCondition selectSource selectNode =
         <> map computedFieldToFromItem (HashMap.toList computedFields)
 
     objectRelationToFromItem ::
-      (ObjectRelationSource, SelectNode) -> S.FromItem
+      (ObjectRelationSource, SelectNode) -> (S.FromItem, S.JoinType)
     objectRelationToFromItem (objectRelationSource, node) =
-      let ObjectRelationSource _ colMapping objectSelectSource = objectRelationSource
+      let ObjectRelationSource
+            { _orsRelationMapping = colMapping,
+              _orsSelectSource = objectSelectSource,
+              _orsNullable = nullable
+            } = objectRelationSource
           alias = S.toTableAlias $ _ossPrefix objectSelectSource
           source = objectSelectSourceToSelectSource objectSelectSource
           select = generateSQLSelect (mkJoinCond baseSelectIdentifier colMapping) source node
-       in S.mkLateralFromItem select alias
+          joinType = case nullable of
+            Nullable -> S.LeftOuter
+            NotNullable -> S.Inner
+       in (S.mkLateralFromItem select alias, joinType)
 
     arrayRelationToFromItem ::
-      (ArrayRelationSource, MultiRowSelectNode) -> S.FromItem
+      (ArrayRelationSource, MultiRowSelectNode) -> (S.FromItem, S.JoinType)
     arrayRelationToFromItem (arrayRelationSource, arraySelectNode) =
       let ArrayRelationSource _ colMapping source = arrayRelationSource
           alias = S.toTableAlias $ _ssPrefix source
           select =
             generateSQLSelectFromArrayNode source arraySelectNode
               $ mkJoinCond baseSelectIdentifier colMapping
-       in S.mkLateralFromItem select alias
+       in (S.mkLateralFromItem select alias, S.LeftOuter)
 
     arrayConnectionToFromItem ::
-      (ArrayConnectionSource, MultiRowSelectNode) -> S.FromItem
+      (ArrayConnectionSource, MultiRowSelectNode) -> (S.FromItem, S.JoinType)
     arrayConnectionToFromItem (arrayConnectionSource, arraySelectNode) =
       let selectWith = connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode
           alias = S.toTableAlias $ _ssPrefix $ _acsSource arrayConnectionSource
-       in S.FISelectWith (S.Lateral True) selectWith alias
+       in (S.FISelectWith (S.Lateral True) selectWith alias, S.LeftOuter)
 
     computedFieldToFromItem ::
-      (ComputedFieldTableSetSource, MultiRowSelectNode) -> S.FromItem
+      (ComputedFieldTableSetSource, MultiRowSelectNode) -> (S.FromItem, S.JoinType)
     computedFieldToFromItem (computedFieldTableSource, node) =
       let ComputedFieldTableSetSource _ source = computedFieldTableSource
           internalSelect = generateSQLSelect (S.BELit True) source $ _mrsnSelectNode node
@@ -138,7 +146,7 @@ generateSQLSelect joinCondition selectSource selectNode =
               { S.selExtr = _mrsnTopExtractors node,
                 S.selFrom = Just $ S.FromExp [S.mkSelFromItem internalSelect alias]
               }
-       in S.mkLateralFromItem select alias
+       in (S.mkLateralFromItem select alias, S.LeftOuter)
 
 -- | Create a select query
 generateSQLSelectFromArrayNode ::

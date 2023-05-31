@@ -292,7 +292,7 @@ convExtRel sqlGen fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
       when misused $ throw400 UnexpectedPayload objRelMisuseMsg
       pure
         $ Left
-        $ AnnRelationSelectG (fromMaybe relName mAlias) colMapping
+        $ AnnRelationSelectG (fromMaybe relName mAlias) colMapping Nullable
         $ AnnObjectSelectG (_asnFields annSel) (FromTable relTableName)
         $ _tpFilter
         $ _asnPerm annSel
@@ -303,6 +303,7 @@ convExtRel sqlGen fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
         $ AnnRelationSelectG
           (fromMaybe relName mAlias)
           colMapping
+          Nullable
           annSel
   where
     pgWhenRelErr = "only relationships can be expanded"

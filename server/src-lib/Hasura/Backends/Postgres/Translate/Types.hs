@@ -12,7 +12,7 @@ module Hasura.Backends.Postgres.Translate.Types
     DistinctAndOrderByExpr (ASorting),
     JoinTree (..),
     MultiRowSelectNode (..),
-    ObjectRelationSource (ObjectRelationSource),
+    ObjectRelationSource (..),
     ObjectSelectSource (ObjectSelectSource, _ossPrefix),
     PermissionLimitSubQuery (..),
     SelectNode (SelectNode),
@@ -38,6 +38,7 @@ import Hasura.NativeQuery.Metadata (InterpolatedQuery)
 import Hasura.Prelude
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Relationships.Local (Nullable)
 
 data SourcePrefixes = SourcePrefixes
   { -- | Current source prefix
@@ -169,7 +170,8 @@ objectSelectSourceToSelectSource ObjectSelectSource {..} =
 data ObjectRelationSource = ObjectRelationSource
   { _orsRelationshipName :: RelName,
     _orsRelationMapping :: HashMap.HashMap Postgres.PGCol Postgres.PGCol,
-    _orsSelectSource :: ObjectSelectSource
+    _orsSelectSource :: ObjectSelectSource,
+    _orsNullable :: Nullable
   }
   deriving (Generic, Show)
 
