@@ -1,7 +1,7 @@
-import { Oas3 } from 'openapi-to-graphql';
-import { ParameterObject } from 'openapi-to-graphql/dist/types/oas3';
+import { Oas3 } from '@dancamma/openapi-to-graphql';
+import { ParameterObject } from '@dancamma/openapi-to-graphql/dist/types/oas3';
 import petStore from './petstore.json';
-import { getOperations, generateAction, generateQueryParams } from './utils';
+import { generateAction, generateQueryParams, parseOas } from './utils';
 
 const tags: ParameterObject = {
   name: 'tags',
@@ -32,7 +32,8 @@ const status: ParameterObject = {
 
 describe('getOperations', () => {
   it('should return an array of operations', async () => {
-    const operations = await getOperations(petStore as unknown as Oas3);
+    const parsedOas = await parseOas(petStore as unknown as Oas3);
+    const operations = Object.values(parsedOas.data.operations);
     expect(operations).toHaveLength(4);
     expect(operations[0].path).toBe('/pets');
     expect(operations[0].method).toBe('get');
@@ -45,7 +46,7 @@ describe('getOperations', () => {
   });
 
   it('throws an error if the OAS is invalid', async () => {
-    await expect(getOperations({} as unknown as Oas3)).rejects.toThrow();
+    await expect(parseOas({} as unknown as Oas3)).rejects.toThrow();
   });
 });
 

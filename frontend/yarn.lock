@@ -85,6 +85,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@apidevtools/openapi-schemas@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "@apidevtools/openapi-schemas@npm:2.1.0"
+  checksum: 4a8f64935b9049ef21e41fa4b188f39f6bc3f5291cebd451701db1115451ccb246a739e46cc5ce9ecdec781671431db40db7851acdac84a990a45756e0f32de3
+  languageName: node
+  linkType: hard
+
+"@apidevtools/swagger-methods@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "@apidevtools/swagger-methods@npm:3.0.2"
+  checksum: d06b1ac5c1956613c4c6be695612ef860cd4e962b93a509ca551735a328a856cae1e33399cac1dcbf8333ba22b231746f3586074769ef0e172cf549ec9e7eaae
+  languageName: node
+  linkType: hard
+
 "@apollo/react-common@npm:^3.1.4":
   version: 3.1.4
   resolution: "@apollo/react-common@npm:3.1.4"
@@ -241,7 +255,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/code-frame@npm:^7.0.0, @babel/code-frame@npm:^7.10.4, @babel/code-frame@npm:^7.12.13, @babel/code-frame@npm:^7.16.7, @babel/code-frame@npm:^7.18.6, @babel/code-frame@npm:^7.21.4":
+"@babel/code-frame@npm:^7.0.0, @babel/code-frame@npm:^7.10.4, @babel/code-frame@npm:^7.12.13, @babel/code-frame@npm:^7.16.0, @babel/code-frame@npm:^7.16.7, @babel/code-frame@npm:^7.18.6, @babel/code-frame@npm:^7.21.4":
   version: 7.21.4
   resolution: "@babel/code-frame@npm:7.21.4"
   dependencies:
@@ -2020,6 +2034,34 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@dancamma/openapi-to-graphql@npm:^3.0.8":
+  version: 3.0.8
+  resolution: "@dancamma/openapi-to-graphql@npm:3.0.8"
+  dependencies:
+    "@readme/openapi-parser": ^2.5.0
+    cross-fetch: ^3.1.4
+    debug: ^4.2.0
+    deep-equal: ^2.0.5
+    form-data: ^4.0.0
+    form-urlencoded: ^6.0.4
+    graphql-scalars: ^1.10.0
+    graphql-subscriptions: ^2.0.0
+    graphql-upload: ^15.0.2
+    json-ptr: ^2.2.0
+    jsonpath-plus: ^6.0.1
+    jsonpointer: ^5.0.0
+    oas-validator: ^5.0.2
+    pluralize: ^8.0.0
+    swagger2openapi: ^7.0.2
+    tslib: ^2.3.0
+    url-join: 4.0.1
+    ws: ^7.5.3
+  peerDependencies:
+    graphql: ^16.0.0
+  checksum: c28b1f338a845875e4458ceeaf96f8a78cd16915c371f45db1e675eddb810d1635d7434bced7a25bb52ab85be84b4020876416cf6f60f2d5d7a3fdd8d4bd4847
+  languageName: node
+  linkType: hard
+
 "@discoveryjs/json-ext@npm:^0.5.3, @discoveryjs/json-ext@npm:^0.5.7":
   version: 0.5.7
   resolution: "@discoveryjs/json-ext@npm:0.5.7"
@@ -3420,6 +3462,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@humanwhocodes/momoa@npm:^2.0.3":
+  version: 2.0.4
+  resolution: "@humanwhocodes/momoa@npm:2.0.4"
+  checksum: ce4680e7f32394b54b29266b0059abbd8de8a980e486f10135c52f2a64359263e50548f9fb6956b1c2e8a47478e6dd4d3ede50bf68bdf1ec1bcc6e61e02d8238
+  languageName: node
+  linkType: hard
+
 "@humanwhocodes/object-schema@npm:^1.2.1":
   version: 1.2.1
   resolution: "@humanwhocodes/object-schema@npm:1.2.1"
@@ -4540,6 +4589,13 @@ __metadata:
     "@jridgewell/resolve-uri": 3.1.0
     "@jridgewell/sourcemap-codec": 1.4.14
   checksum: 0572669f855260808c16fe8f78f5f1b4356463b11d3f2c7c0b5580c8ba1cbf4ae53efe9f627595830856e57dbac2325ac17eb0c3dd0ec42102e6f227cc289c02
+  languageName: node
+  linkType: hard
+
+"@jsdevtools/ono@npm:^7.1.3":
+  version: 7.1.3
+  resolution: "@jsdevtools/ono@npm:7.1.3"
+  checksum: 2297fcd472ba810bffe8519d2249171132844c7174f3a16634f9260761c8c78bc0428a4190b5b6d72d45673c13918ab9844d706c3ed4ef8f62ab11a2627a08ad
   languageName: node
   linkType: hard
 
@@ -6310,6 +6366,53 @@ __metadata:
   version: 2.0.0
   resolution: "@react-dnd/shallowequal@npm:2.0.0"
   checksum: b5bbdc795d65945bb7ba2322bed5cf8d4c6fe91dced98c3b10e3d16822c438f558751135ff296f8d1aa1eaa9d0037dacab2b522ca5eb812175123b9996966dcb
+  languageName: node
+  linkType: hard
+
+"@readme/better-ajv-errors@npm:^1.6.0":
+  version: 1.6.0
+  resolution: "@readme/better-ajv-errors@npm:1.6.0"
+  dependencies:
+    "@babel/code-frame": ^7.16.0
+    "@babel/runtime": ^7.21.0
+    "@humanwhocodes/momoa": ^2.0.3
+    chalk: ^4.1.2
+    json-to-ast: ^2.0.3
+    jsonpointer: ^5.0.0
+    leven: ^3.1.0
+  peerDependencies:
+    ajv: 4.11.8 - 8
+  checksum: ed2a7e2b9e105f404fa1518bd4e79e3b4a9f3da6d8cb4fbdaf6664663cd32102e41723ba618619fbab6d8d966ffddabbf831a1995d541917e647da9ce4b46d48
+  languageName: node
+  linkType: hard
+
+"@readme/json-schema-ref-parser@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "@readme/json-schema-ref-parser@npm:1.2.0"
+  dependencies:
+    "@jsdevtools/ono": ^7.1.3
+    "@types/json-schema": ^7.0.6
+    call-me-maybe: ^1.0.1
+    js-yaml: ^4.1.0
+  checksum: 72c7edf1a5cff2ec5789d7930a211e032fdd79589876d5802fdb731e3d93b8b845647309dbcd7511caac4eb261a086a0ce7dc41368fb07bbca2b0a0b7caf5eb0
+  languageName: node
+  linkType: hard
+
+"@readme/openapi-parser@npm:^2.5.0":
+  version: 2.5.0
+  resolution: "@readme/openapi-parser@npm:2.5.0"
+  dependencies:
+    "@apidevtools/openapi-schemas": ^2.1.0
+    "@apidevtools/swagger-methods": ^3.0.2
+    "@jsdevtools/ono": ^7.1.3
+    "@readme/better-ajv-errors": ^1.6.0
+    "@readme/json-schema-ref-parser": ^1.2.0
+    ajv: ^8.12.0
+    ajv-draft-04: ^1.0.0
+    call-me-maybe: ^1.0.1
+  peerDependencies:
+    openapi-types: ">=7"
+  checksum: c917feb531f9e49ee1c3c51009d00e62a8833663fb1fe0c5f267b82b9f649f60b5eafdb9ab422a9910712e21fd06070cb597b446bf4f45dfc8e55049122394aa
   languageName: node
   linkType: hard
 
@@ -9582,6 +9685,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/busboy@npm:^1.5.0":
+  version: 1.5.0
+  resolution: "@types/busboy@npm:1.5.0"
+  dependencies:
+    "@types/node": "*"
+  checksum: ffa7bf25c0395f6927526b7d97e70cd2df789e4ca0d231e41855fb08542fa236891ce457d83cc50cac6e5cef6be092ab80597070dcf1413f736462690a23e987
+  languageName: node
+  linkType: hard
+
 "@types/cacheable-request@npm:^6.0.1":
   version: 6.0.3
   resolution: "@types/cacheable-request@npm:6.0.3"
@@ -9964,7 +10076,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/json-schema@npm:*, @types/json-schema@npm:^7.0.5, @types/json-schema@npm:^7.0.8, @types/json-schema@npm:^7.0.9":
+"@types/json-schema@npm:*, @types/json-schema@npm:^7.0.5, @types/json-schema@npm:^7.0.6, @types/json-schema@npm:^7.0.8, @types/json-schema@npm:^7.0.9":
   version: 7.0.11
   resolution: "@types/json-schema@npm:7.0.11"
   checksum: 527bddfe62db9012fccd7627794bd4c71beb77601861055d87e3ee464f2217c85fca7a4b56ae677478367bbd248dbde13553312b7d4dbc702a2f2bbf60c4018d
@@ -10166,6 +10278,13 @@ __metadata:
   version: 4.1.4
   resolution: "@types/npmlog@npm:4.1.4"
   checksum: 740f7431ccfc0e127aa8d162fe05c6ce8aa71290be020d179b2824806d19bd2c706c7e0c9a3c9963cefcdf2ceacb1dec6988c394c3694451387759dafe0aa927
+  languageName: node
+  linkType: hard
+
+"@types/object-path@npm:^0.11.1":
+  version: 0.11.1
+  resolution: "@types/object-path@npm:0.11.1"
+  checksum: 007e819d1d9dc830491b60023b1502ef1e421416d9953d6fefcda7d06eb91548eef8ee30073a9cfb6a834ac977042f6e1a761cde2d6a7973b06ddca753be91e3
   languageName: node
   linkType: hard
 
@@ -11676,6 +11795,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ajv-draft-04@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "ajv-draft-04@npm:1.0.0"
+  peerDependencies:
+    ajv: ^8.5.0
+  peerDependenciesMeta:
+    ajv:
+      optional: true
+  checksum: 3f11fa0e7f7359bef6608657f02ab78e9cc62b1fb7bdd860db0d00351b3863a1189c1a23b72466d2d82726cab4eb20725c76f5e7c134a89865e2bfd0e6828137
+  languageName: node
+  linkType: hard
+
 "ajv-formats@npm:^2.1.1":
   version: 2.1.1
   resolution: "ajv-formats@npm:2.1.1"
@@ -11722,7 +11853,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ajv@npm:^8.0.0, ajv@npm:^8.9.0":
+"ajv@npm:^8.0.0, ajv@npm:^8.12.0, ajv@npm:^8.9.0":
   version: 8.12.0
   resolution: "ajv@npm:8.12.0"
   dependencies:
@@ -13741,15 +13872,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"busboy@npm:^0.3.1":
-  version: 0.3.1
-  resolution: "busboy@npm:0.3.1"
-  dependencies:
-    dicer: 0.3.0
-  checksum: d2bcb788c4595edca4ea2168ab8bf7f9558b627ddcec2fb6bbaf0aa6a10b63da48dce35ce56936570f330c5268a3204f7037021a310a895a8b1a223568e0cc1b
-  languageName: node
-  linkType: hard
-
 "busboy@npm:^1.6.0":
   version: 1.6.0
   resolution: "busboy@npm:1.6.0"
@@ -14527,6 +14649,13 @@ __metadata:
   version: 4.6.0
   resolution: "co@npm:4.6.0"
   checksum: 5210d9223010eb95b29df06a91116f2cf7c8e0748a9013ed853b53f362ea0e822f1e5bb054fb3cefc645239a4cf966af1f6133a3b43f40d591f3b68ed6cf0510
+  languageName: node
+  linkType: hard
+
+"code-error-fragment@npm:0.0.230":
+  version: 0.0.230
+  resolution: "code-error-fragment@npm:0.0.230"
+  checksum: 6c5e800d6d70b30938cc85a2fc2c6069f028eadb58bceb65716b995ce6228c99906302f2c438ba50115fd81a1ee15dd95dc7d317b16a6c590e311ac7e50613f3
   languageName: node
   linkType: hard
 
@@ -16139,15 +16268,6 @@ __metadata:
   version: 0.0.2
   resolution: "diacritic@npm:0.0.2"
   checksum: 0242731039aefa2ef4b81cc9a2687ed0f6257d23c1aa78c052aad60f3e3851863e2344fa4c7ead094d59d6086ce5f2581a1f544bfd1c5db90267317acdd02222
-  languageName: node
-  linkType: hard
-
-"dicer@npm:0.3.0":
-  version: 0.3.0
-  resolution: "dicer@npm:0.3.0"
-  dependencies:
-    streamsearch: 0.1.2
-  checksum: 9f61aea61fcd81457f1b43967af7e66415b7a31d393336fa05a29b221b5ba065b99e5cac46476b2da36eb7af7665bf8dad6f9500409116dc6a35ada183841598
   languageName: node
   linkType: hard
 
@@ -18652,6 +18772,7 @@ __metadata:
     "@babel/preset-typescript": 7.12.13
     "@babel/register": 7.9.0
     "@babel/runtime": 7.14.8
+    "@dancamma/openapi-to-graphql": ^3.0.8
     "@faker-js/faker": ^7.6.0
     "@graphql-codegen/cli": 2.13.8
     "@graphql-codegen/core": ^1.17.8
@@ -18840,6 +18961,7 @@ __metadata:
     highlight.js: 9.15.8
     history: 3.3.0
     hoist-non-react-statics: 1.2.0
+    https-browserify: ^1.0.0
     husky: ^8.0.3
     identity-obj-proxy: ^3.0.0
     ignore-loader: 0.1.2
@@ -18872,7 +18994,6 @@ __metadata:
     nx: 15.8.1
     nyc: 15.0.1
     octokit: ^2.0.14
-    openapi-to-graphql: ^2.6.3
     os-browserify: ^0.3.0
     path-browserify: ^1.0.1
     piping: 0.3.2
@@ -19784,14 +19905,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-subscriptions@npm:^1.1.0":
-  version: 1.2.1
-  resolution: "graphql-subscriptions@npm:1.2.1"
+"graphql-subscriptions@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "graphql-subscriptions@npm:2.0.0"
   dependencies:
     iterall: ^1.3.0
   peerDependencies:
-    graphql: ^0.10.5 || ^0.11.3 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0
-  checksum: 2b9533c6774e7be46acd6fbee528aab06429f15dc222eabd991e82c02bf74e390b638dffa1a3fd86c1e26212c40a42a0418d7f4a7c3a1edf0534978ef128e528
+    graphql: ^15.7.2 || ^16.0.0
+  checksum: 4735ef86462967bca2f549c5e5e30ca63fb6ddde19a81d8601f38fb12f8bda2b5f1203b33df8fd8d1154ffa3eadc2820d407e64b8fda73e319559256c508af21
   languageName: node
   linkType: hard
 
@@ -19806,17 +19927,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-upload@npm:^13.0.0":
-  version: 13.0.0
-  resolution: "graphql-upload@npm:13.0.0"
+"graphql-upload@npm:^15.0.2":
+  version: 15.0.2
+  resolution: "graphql-upload@npm:15.0.2"
   dependencies:
-    busboy: ^0.3.1
+    "@types/busboy": ^1.5.0
+    "@types/node": "*"
+    "@types/object-path": ^0.11.1
+    busboy: ^1.6.0
     fs-capacitor: ^6.2.0
-    http-errors: ^1.8.1
+    http-errors: ^2.0.0
     object-path: ^0.11.8
   peerDependencies:
-    graphql: 0.13.1 - 16
-  checksum: 3b4b7dd717d5cfcd1d59f3656bcc7281dbe1aaa0d64b5404eb7333db913976154349dd65cf9774a9efc3a6478b1578335c83dd0696c041e3f63efff589d7d457
+    "@types/express": ^4.0.29
+    "@types/koa": ^2.11.4
+    graphql: ^16.3.0
+  peerDependenciesMeta:
+    "@types/express":
+      optional: true
+    "@types/koa":
+      optional: true
+  checksum: 635db84b50b5a5ff09bfe14e23eda374eaa7bd4496ebfcd6abcdb887ac1a489f80ced22b987ebc9691cfde44e487b4c632da708f0fcfe9e63502f6530043d599
   languageName: node
   linkType: hard
 
@@ -20342,7 +20473,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"http-errors@npm:2.0.0":
+"http-errors@npm:2.0.0, http-errors@npm:^2.0.0":
   version: 2.0.0
   resolution: "http-errors@npm:2.0.0"
   dependencies:
@@ -20352,19 +20483,6 @@ __metadata:
     statuses: 2.0.1
     toidentifier: 1.0.1
   checksum: 9b0a3782665c52ce9dc658a0d1560bcb0214ba5699e4ea15aefb2a496e2ca83db03ebc42e1cce4ac1f413e4e0d2d736a3fd755772c556a9a06853ba2a0b7d920
-  languageName: node
-  linkType: hard
-
-"http-errors@npm:^1.8.1":
-  version: 1.8.1
-  resolution: "http-errors@npm:1.8.1"
-  dependencies:
-    depd: ~1.1.2
-    inherits: 2.0.4
-    setprototypeof: 1.2.0
-    statuses: ">= 1.5.0 < 2"
-    toidentifier: 1.0.1
-  checksum: d3c7e7e776fd51c0a812baff570bdf06fe49a5dc448b700ab6171b1250e4cf7db8b8f4c0b133e4bfe2451022a5790c1ca6c2cae4094dedd6ac8304a1267f91d2
   languageName: node
   linkType: hard
 
@@ -20486,6 +20604,13 @@ __metadata:
     quick-lru: ^5.1.1
     resolve-alpn: ^1.0.0
   checksum: 74160b862ec699e3f859739101ff592d52ce1cb207b7950295bf7962e4aa1597ef709b4292c673bece9c9b300efad0559fc86c71b1409c7a1e02b7229456003e
+  languageName: node
+  linkType: hard
+
+"https-browserify@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "https-browserify@npm:1.0.0"
+  checksum: 09b35353e42069fde2435760d13f8a3fb7dd9105e358270e2e225b8a94f811b461edd17cb57594e5f36ec1218f121c160ddceeec6e8be2d55e01dcbbbed8cbae
   languageName: node
   linkType: hard
 
@@ -23201,6 +23326,16 @@ __metadata:
   version: 5.0.1
   resolution: "json-stringify-safe@npm:5.0.1"
   checksum: 48ec0adad5280b8a96bb93f4563aa1667fd7a36334f79149abd42446d0989f2ddc58274b479f4819f1f00617957e6344c886c55d05a4e15ebb4ab931e4a6a8ee
+  languageName: node
+  linkType: hard
+
+"json-to-ast@npm:^2.0.3":
+  version: 2.1.0
+  resolution: "json-to-ast@npm:2.1.0"
+  dependencies:
+    code-error-fragment: 0.0.230
+    grapheme-splitter: ^1.0.4
+  checksum: 1e9b051505b218573b39f3fec9054d75772413aefc2fee3e763d9033276664faa7eec26b945a71f70b9ce29685b2f13259df7dd3243e15eacf4672c62d5ba7ce
   languageName: node
   linkType: hard
 
@@ -26588,33 +26723,6 @@ __metadata:
     is-docker: ^2.1.1
     is-wsl: ^2.2.0
   checksum: 6388bfff21b40cb9bd8f913f9130d107f2ed4724ea81a8fd29798ee322b361ca31fa2cdfb491a5c31e43a3996cfe9566741238c7a741ada8d7af1cb78d85cf26
-  languageName: node
-  linkType: hard
-
-"openapi-to-graphql@npm:^2.6.3":
-  version: 2.6.3
-  resolution: "openapi-to-graphql@npm:2.6.3"
-  dependencies:
-    cross-fetch: ^3.1.4
-    debug: ^4.2.0
-    deep-equal: ^2.0.5
-    form-data: ^4.0.0
-    form-urlencoded: ^6.0.4
-    graphql-scalars: ^1.10.0
-    graphql-subscriptions: ^1.1.0
-    graphql-upload: ^13.0.0
-    json-ptr: ^2.2.0
-    jsonpath-plus: ^6.0.1
-    jsonpointer: ^5.0.0
-    oas-validator: ^5.0.2
-    pluralize: ^8.0.0
-    swagger2openapi: ^7.0.2
-    tslib: ^2.3.0
-    url-join: 4.0.1
-    ws: ^7.5.3
-  peerDependencies:
-    graphql: ^14.0.0 || ^15.0.0
-  checksum: d3dba6e0b5ff63c1deee81366c1643218aeeba99278e862b6c1c84aeb05cc9b389bbcf0ed9d982a704282228498be2dd3e3721a789d476536b41ddbbecf5c041
   languageName: node
   linkType: hard
 
@@ -32354,7 +32462,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"statuses@npm:>= 1.4.0 < 2, statuses@npm:>= 1.5.0 < 2":
+"statuses@npm:>= 1.4.0 < 2":
   version: 1.5.0
   resolution: "statuses@npm:1.5.0"
   checksum: c469b9519de16a4bb19600205cffb39ee471a5f17b82589757ca7bd40a8d92ebb6ed9f98b5a540c5d302ccbc78f15dc03cc0280dd6e00df1335568a5d5758a5c
@@ -32492,13 +32600,6 @@ __metadata:
     end-of-stream: ~1.1.0
     stream-to-array: ~2.3.0
   checksum: 2c9ddb69c34d10ad27eb06197abc93fd1b1cd5f9597ead28ade4d6c57f4110d948a2ef14530f2f7b3b967f74f3554b57c38a4501b72a13b27fc8745bd7190d1d
-  languageName: node
-  linkType: hard
-
-"streamsearch@npm:0.1.2":
-  version: 0.1.2
-  resolution: "streamsearch@npm:0.1.2"
-  checksum: d2db57cbfbf7947ab9c75a7b4c80a8ef8d24850cf0a1a24258bb6956c97317ce1eab7dbcbf9c5aba3e6198611af1053b02411057bbedb99bf9c64b8275248997
   languageName: node
   linkType: hard
 

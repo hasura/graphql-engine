@@ -8,21 +8,24 @@ import { FaExclamationTriangle, FaFilter, FaSearch } from 'react-icons/fa';
 import { trackCustomEvent } from '../../../Analytics';
 import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
 import { Badge, BadgeColor } from '../../../../new-components/Badge';
-import { Oas3 } from 'openapi-to-graphql';
+import { Oas3 } from '@dancamma/openapi-to-graphql';
 import { useIsUnmounted } from '../../../../components/Services/Data/Common/tsUtils';
 import { useFormContext } from 'react-hook-form';
 import { useMetadata } from '../../../MetadataAPI';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { OasGeneratorActions } from './OASGeneratorActions';
 import { GeneratedAction, Operation } from '../OASGenerator/types';
+import uniq from 'lodash/uniq';
 
 import {
   generateAction,
-  getOperations,
   isOasError,
   normalizeOperationId,
+  parseOas,
 } from '../OASGenerator/utils';
 import { UploadFile } from './UploadFile';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { Button } from '../../../../new-components/Button';
 
 const fillToTenRows = (data: ReactNode[][]) => {
   const rowsToFill = 10 - data.length;
@@ -61,8 +64,11 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
   const [operations, setOperations] = React.useState<Operation[]>([]);
   const [parsedOas, setParsedOas] = React.useState<Oas3 | null>(null);
   const [isOasTooBig, setIsOasTooBig] = React.useState(false);
+  const [showEditor, setShowEditor] = React.useState(false);
 
   const [selectedMethods, setSelectedMethods] = React.useState<string[]>([]);
+
+  const [validationErrors, setValidationErrors] = React.useState<string[]>([]);
 
   const { data: metadata } = useMetadata();
 
@@ -138,7 +144,15 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
           } else {
             trigger('url');
           }
-          const ops = await getOperations(localParsedOas);
+          const parsedOas = await parseOas(localParsedOas);
+          const ops = Object.values(parsedOas.data.operations);
+
+          if (parsedOas.report.validationErrors?.length) {
+            setValidationErrors(uniq(parsedOas.report.validationErrors));
+          } else {
+            setValidationErrors([]);
+          }
+
           setOperations(ops);
 
           // send number of operations and file length
@@ -183,7 +197,7 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
       setParsedOas(localParsedOas ?? null);
     },
     400,
-    [oas, clearErrors, setError, setValue, url]
+    [oas, clearErrors, setError, setValue, url, setValidationErrors]
   );
 
   const createAction = async (operation: string) => {
@@ -318,15 +332,29 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
       <div className="grid grid-cols-2 gap-6">
         <div>
           <div className="h-[400px] mb-4" data-testid="oas-editor">
-            <CodeEditorField
-              noErrorPlaceholder
-              name="oas"
-              placeholder="1. Paste OpenAPI spec in raw text (JSON / YAML) here"
-              editorOptions={editorOptions}
-              editorProps={{
-                className: 'rounded`-r-none',
-              }}
-            />
+            {!isOasTooBig || showEditor ? (
+              <CodeEditorField
+                noErrorPlaceholder
+                name="oas"
+                placeholder="1. Paste OpenAPI spec in raw text (JSON / YAML) here"
+                editorOptions={editorOptions}
+                editorProps={{
+                  className: 'rounded`-r-none',
+                }}
+              />
+            ) : (
+              <div className="flex flex-col h-full items-center justify-center gap-2">
+                <div>Editor is disabled because the spec is too large</div>
+
+                <Button
+                  onClick={() => {
+                    setShowEditor(true);
+                  }}
+                >
+                  Enable Editor
+                </Button>
+              </div>
+            )}
           </div>
         </div>
         <div>
@@ -370,6 +398,20 @@ export const OasGeneratorForm = (props: OasGeneratorFormProps) => {
         <div>
           <FaExclamationTriangle className="text-yellow-500" /> The spec is
           larger than 3MB. It won't be saved for future use.
+        </div>
+      )}
+
+      {validationErrors.length > 0 && (
+        <div className="text-red-500">
+          {validationErrors.map(error => (
+            <IndicatorCard
+              className="mb-2"
+              status="negative"
+              headline="There is a validation error in your spec. Some operations cannot be imported."
+            >
+              {error}
+            </IndicatorCard>
+          ))}
         </div>
       )}
       <div>
