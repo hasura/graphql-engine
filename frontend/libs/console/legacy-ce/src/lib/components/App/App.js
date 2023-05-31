@@ -13,6 +13,8 @@ import { AlertProvider } from '../../new-components/Alert/AlertProvider';
 
 import { theme } from '../UIKit/theme';
 import { trackCustomEvent } from '../../features/Analytics';
+import { withLDProvider } from 'launchdarkly-react-client-sdk';
+import { isCloudConsole } from '../../utils';
 
 export const GlobalContext = React.createContext(globals);
 
@@ -107,4 +109,24 @@ const mapStateToProps = state => {
   };
 };
 
-export default hot(module)(connect(mapStateToProps)(App));
+const LAUNCHDARKLY_CLIENT_ID = globals.launchDarklyClientId;
+
+export default isCloudConsole(globals)
+  ? withLDProvider({
+      // initialize with the dev key if env is not production
+      clientSideID: LAUNCHDARKLY_CLIENT_ID,
+      options: {
+        diagnosticOptOut: true,
+        // allow settting up a streaming connection
+        streaming: true,
+        // information to help track events from this app on LD
+        application: {
+          id: 'hasura-cloud-console',
+        },
+      },
+      reactOptions: {
+        sendEventsOnFlagRead: true,
+        useCamelCaseFlagKeys: false,
+      },
+    })(hot(module)(connect(mapStateToProps)(App)))
+  : hot(module)(connect(mapStateToProps)(App));
