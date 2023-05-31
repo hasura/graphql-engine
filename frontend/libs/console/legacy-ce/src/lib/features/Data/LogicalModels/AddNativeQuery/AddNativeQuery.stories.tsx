@@ -1,5 +1,5 @@
 import { expect } from '@storybook/jest';
-import { StoryObj } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react';
 import { screen, userEvent, within } from '@storybook/testing-library';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { dismissToast } from '../../../../utils/StoryUtils';
@@ -19,7 +19,7 @@ export default {
     }),
     layout: 'fullscreen',
   },
-};
+} satisfies Meta<typeof AddNativeQuery>;
 
 const fillAndSubmitForm: Story['play'] = async ({ canvasElement }) => {
   const c = within(canvasElement);

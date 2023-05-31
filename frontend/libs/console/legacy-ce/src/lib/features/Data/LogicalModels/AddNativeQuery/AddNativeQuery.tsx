@@ -59,7 +59,7 @@ export const AddNativeQuery = ({
     s => s.name === selectedSource
   )?.logical_models;
 
-  const { trackNativeQuery } = useTrackNativeQuery();
+  const { trackNativeQuery, isLoading } = useTrackNativeQuery();
 
   const [isLogicalModelsDialogOpen, setIsLogicalModelsDialogOpen] =
     React.useState(false);
@@ -208,7 +208,12 @@ export const AddNativeQuery = ({
               Slack thread: https://hasurahq.slack.com/archives/C04LV93JNSH/p1682965503376129
           */}
         {/* <Button icon={<FaPlay />}>Validate</Button> */}
-        <Button type="submit" icon={<FaSave />} mode="primary">
+        <Button
+          type="submit"
+          icon={<FaSave />}
+          mode="primary"
+          isLoading={isLoading}
+        >
           Save
         </Button>
       </div>

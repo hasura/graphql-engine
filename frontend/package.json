@@ -112,6 +112,7 @@
     "react": "17.0.2",
     "react-ace": "8.0.0",
     "react-apollo": "^3.0.1",
+    "react-arborist": "^3.0.2",
     "react-autosize-textarea": "7.1.0",
     "react-autosuggest": "10.0.2",
     "react-bootstrap": "0.32.4",
