@@ -21,6 +21,7 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value (Provenance (FromInternal), UnpreparedValue (UVParameter))
 import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.Metadata.Object qualified as MO
+import Hasura.RQL.Types.Relationships.Local (Nullable (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
   ( SourceInfo (_siCustomization, _siName),
@@ -65,7 +66,7 @@ defaultBuildStoredProcedureRootFields StoredProcedureInfo {..} = runMaybeT $ do
       $ buildLogicalModelPermissions @b @r @m @n _spiReturns
 
   (selectionSetParser, logicalModelsArgsParser) <-
-    MaybeT $ buildLogicalModelFields mempty _spiReturns
+    MaybeT $ buildLogicalModelFields mempty NotNullable _spiReturns
 
   let arguments spArgs =
         HashMap.mapWithKey

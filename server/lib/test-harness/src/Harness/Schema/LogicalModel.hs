@@ -49,6 +49,7 @@ data LogicalModelColumn
   | LogicalModelReference
       { logicalModelColumnName :: Text,
         logicalModelColumnReference :: Text,
+        logicalModelColumnNullable :: Bool,
         logicalModelColumnReferenceType :: ReferenceType
       }
   deriving (Show, Eq)
@@ -67,6 +68,7 @@ logicalModelArrayReference name ref =
   LogicalModelReference
     { logicalModelColumnName = name,
       logicalModelColumnReference = ref,
+      logicalModelColumnNullable = False,
       logicalModelColumnReferenceType = ArrayReference
     }
 
@@ -75,6 +77,7 @@ logicalModelObjectReference name ref =
   LogicalModelReference
     { logicalModelColumnName = name,
       logicalModelColumnReference = ref,
+      logicalModelColumnNullable = False,
       logicalModelColumnReferenceType = ObjectReference
     }
 
@@ -103,20 +106,23 @@ trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalMode
                 LogicalModelReference
                   { logicalModelColumnReferenceType = ObjectReference,
                     logicalModelColumnReference,
-                    logicalModelColumnName
+                    logicalModelColumnName,
+                    logicalModelColumnNullable
                   } ->
                     J.object
                       $ [ ("name" .= logicalModelColumnName),
                           ( "type",
                             J.object
-                              [ ("logical_model" .= logicalModelColumnReference)
+                              [ "logical_model" .= logicalModelColumnReference,
+                                "nullable" .= logicalModelColumnNullable
                               ]
                           )
                         ]
                 LogicalModelReference
                   { logicalModelColumnReferenceType = ArrayReference,
                     logicalModelColumnReference,
-                    logicalModelColumnName
+                    logicalModelColumnName,
+                    logicalModelColumnNullable
                   } ->
                     J.object
                       $ [ ("name" .= logicalModelColumnName),
@@ -126,7 +132,8 @@ trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalMode
                                     J.object
                                       $ [ ("logical_model" .= logicalModelColumnReference)
                                         ]
-                                  )
+                                  ),
+                                  "nullable" .= logicalModelColumnNullable
                                 ]
                           )
                         ]

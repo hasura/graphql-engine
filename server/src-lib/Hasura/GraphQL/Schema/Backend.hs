@@ -331,9 +331,10 @@ class (BackendLogicalModelSelectSchema b) => BackendNativeQuerySelectSchema (b :
     (MonadBuildSourceSchema b r m n) =>
     NativeQueryInfo b ->
     G.Name ->
+    Nullable ->
     Maybe G.Description ->
     SchemaT r m (Maybe (FieldParser n (AnnSimpleSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-  selectNativeQuery _ _ _ = pure Nothing
+  selectNativeQuery _ _ _ _ = pure Nothing
 
   selectNativeQueryObject ::
     (MonadBuildSchema b r m n) =>

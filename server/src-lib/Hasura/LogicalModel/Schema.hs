@@ -66,7 +66,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (RelName (..), RelType (..), relNameToTxt)
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission qualified as Permission
-import Hasura.RQL.Types.Relationships.Local (RelInfo (..), RelTarget (..))
+import Hasura.RQL.Types.Relationships.Local (Nullable (..), RelInfo (..), RelTarget (..))
 import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
@@ -128,6 +128,7 @@ buildLogicalModelFields ::
     BackendLogicalModelSelectSchema b
   ) =>
   InsOrdHashMap RelName (RelInfo b) ->
+  Nullable ->
   LogicalModelInfo b ->
   SchemaT
     r
@@ -137,8 +138,8 @@ buildLogicalModelFields ::
           P.InputFieldsParser n (IR.SelectArgsG b (IR.UnpreparedValue b))
         )
     )
-buildLogicalModelFields relationshipInfo logicalModel = runMaybeT $ do
-  selectionSetParser <- MaybeT $ logicalModelSelectionList @b @r @m @n relationshipInfo logicalModel
+buildLogicalModelFields relationshipInfo nullability logicalModel = runMaybeT $ do
+  selectionSetParser <- MaybeT $ logicalModelSelectionList @b @r @m @n relationshipInfo nullability logicalModel
   logicalModelsArgsParser <- lift $ logicalModelArguments @b @r @m @n logicalModel
 
   pure (selectionSetParser, logicalModelsArgsParser)
@@ -220,7 +221,8 @@ parseLogicalModelField relationshipInfo column logimoField = do
             LogicalModelTypeArray
               ( LogicalModelTypeArrayC
                   { lmtaArray =
-                      LogicalModelTypeReference (LogicalModelTypeReferenceC {lmtrReference})
+                      LogicalModelTypeReference (LogicalModelTypeReferenceC {lmtrReference}),
+                    lmtaNullable
                   }
                 )
         }
@@ -230,7 +232,9 @@ parseLogicalModelField relationshipInfo column logimoField = do
         relName <- hoistMaybe $ columnToRelName @b column
         -- lookup the reference in the data source
         relationship <- hoistMaybe $ InsOrdHashMap.lookup relName relationshipInfo
-        logicalModelArrayRelationshipField @b @r @m @n lmtrReference relationship
+        let nullability = if lmtaNullable then Nullable else NotNullable
+
+        logicalModelArrayRelationshipField @b @r @m @n lmtrReference nullability relationship
     ( LogicalModelField
         { lmfType =
             LogicalModelTypeArray
@@ -286,15 +290,26 @@ defaultLogicalModelSelectionSet relationshipInfo logicalModel = runMaybeT $ do
 logicalModelSelectionList ::
   (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) =>
   InsOrdHashMap RelName (RelInfo b) ->
+  Nullable ->
   LogicalModelInfo b ->
   SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
-logicalModelSelectionList relationshipInfo logicalModel =
-  fmap nonNullableObjectList <$> logicalModelSelectionSet relationshipInfo logicalModel
+logicalModelSelectionList relationshipInfo nullability logicalModel =
+  fmap nullabilityModifier <$> logicalModelSelectionSet relationshipInfo logicalModel
+  where
+    nullabilityModifier =
+      case nullability of
+        Nullable -> nullableObjectList
+        NotNullable -> nonNullableObjectList
 
--- | Converts an output type parser from object_type to [object_type!]!
-nonNullableObjectList :: Parser 'Output m a -> Parser 'Output m a
-nonNullableObjectList =
-  P.nonNullableParser . P.multiple . P.nonNullableParser
+    -- \| Converts an output type parser from object_type to [object_type!]!
+    nonNullableObjectList :: Parser 'Output m a -> Parser 'Output m a
+    nonNullableObjectList =
+      P.nonNullableParser . P.multiple . P.nonNullableParser
+
+    -- \| Converts an output type parser from object_type to [object_type!]
+    nullableObjectList :: Parser 'Output m a -> Parser 'Output m a
+    nullableObjectList =
+      P.multiple . P.nonNullableParser
 
 -- | Argument to filter rows returned from table selection
 -- > where: table_bool_exp
@@ -447,9 +462,10 @@ logicalModelArrayRelationshipField ::
     MonadBuildSchema b r m n
   ) =>
   LogicalModelName ->
+  Nullable ->
   RelInfo b ->
   MaybeT (SchemaT r m) (FieldParser n (AnnotatedField b))
-logicalModelArrayRelationshipField logicalModelName ri | riType ri == ArrRel =
+logicalModelArrayRelationshipField logicalModelName nullability ri | riType ri == ArrRel =
   case riTarget ri of
     RelTargetNativeQuery nativeQueryName -> do
       nativeQueryInfo <- lift $ askNativeQueryInfo nativeQueryName
@@ -469,7 +485,7 @@ logicalModelArrayRelationshipField logicalModelName ri | riType ri == ArrRel =
 
       let objectRelDesc = Just $ G.Description "An array relationship"
 
-      nativeQueryParser <- MaybeT $ selectNativeQuery nativeQueryInfo relFieldName objectRelDesc
+      nativeQueryParser <- MaybeT $ selectNativeQuery nativeQueryInfo relFieldName nullability objectRelDesc
 
       pure
         $ nativeQueryParser
@@ -479,5 +495,5 @@ logicalModelArrayRelationshipField logicalModelName ri | riType ri == ArrRel =
             $ IR.AnnRelationSelectG (riName ri) (riMapping ri) selectExp
     RelTargetTable _otherTableName -> do
       throw500 "Array relationships from logical models to tables are not implemented"
-logicalModelArrayRelationshipField _ _ =
+logicalModelArrayRelationshipField _ _ _ =
   hoistMaybe Nothing -- the target logical model expected an array relationship, but this was an object

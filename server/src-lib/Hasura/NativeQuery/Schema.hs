@@ -30,6 +30,7 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value (Provenance (FromInternal), UnpreparedValue (UVParameter))
 import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.Metadata.Object qualified as MO
+import Hasura.RQL.Types.Relationships.Local (Nullable (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
   ( SourceInfo (_siCustomization, _siName),
@@ -106,13 +107,15 @@ defaultSelectNativeQuery ::
   NativeQueryInfo b ->
   -- field name
   G.Name ->
+  -- are fields nullable?
+  Nullable ->
   -- field description, if any
   Maybe G.Description ->
   SchemaT
     r
     m
     (Maybe (P.FieldParser n (IR.AnnSimpleSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-defaultSelectNativeQuery NativeQueryInfo {..} fieldName description = runMaybeT $ do
+defaultSelectNativeQuery NativeQueryInfo {..} fieldName nullability description = runMaybeT $ do
   nativeQueryArgsParser <-
     nativeQueryArgumentsSchema @b @r @m @n fieldName _nqiArguments
 
@@ -129,7 +132,7 @@ defaultSelectNativeQuery NativeQueryInfo {..} fieldName description = runMaybeT 
       $ buildLogicalModelPermissions @b @r @m @n _nqiReturns
 
   (selectionListParser, logicalModelsArgsParser) <-
-    MaybeT $ buildLogicalModelFields _nqiRelationships _nqiReturns
+    MaybeT $ buildLogicalModelFields _nqiRelationships nullability _nqiReturns
 
   let sourceObj =
         MO.MOSourceObjId
@@ -175,7 +178,7 @@ defaultBuildNativeQueryRootFields ::
 defaultBuildNativeQueryRootFields nqi@NativeQueryInfo {..} = do
   let fieldName = getNativeQueryName _nqiRootFieldName
       description = G.Description <$> _nqiDescription
-  (fmap . fmap . fmap) QDBMultipleRows (defaultSelectNativeQuery nqi fieldName description)
+  (fmap . fmap . fmap) QDBMultipleRows (defaultSelectNativeQuery nqi fieldName NotNullable description)
 
 nativeQueryArgumentsSchema ::
   forall b r m n.
