@@ -19,7 +19,7 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..))
 import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..), txtEncoder, withScalarTypeAnn)
 import Hasura.Prelude
-import Hasura.RQL.IR.Value (Provenance (Unknown), UnpreparedValue (..))
+import Hasura.RQL.IR.Value (Provenance (FreshVar), UnpreparedValue (..))
 import Hasura.RQL.Types.BackendType (BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnInfo, ColumnType (..), ColumnValue (..))
 import Test.Parser.Expectation qualified as Expect
@@ -75,7 +75,7 @@ descColumn = Expect.mkColumnInfo descColumnBuilder
 
 textOld :: UnpreparedValue PG
 textOld =
-  UVParameter Unknown
+  UVParameter FreshVar
     $ ColumnValue
       { cvType = ColumnScalar PGText,
         cvValue = PGValText "old name"
@@ -83,7 +83,7 @@ textOld =
 
 textNew :: UnpreparedValue PG
 textNew =
-  UVParameter Unknown
+  UVParameter FreshVar
     $ ColumnValue
       { cvType = ColumnScalar PGText,
         cvValue = PGValText "new name"
@@ -91,7 +91,7 @@ textNew =
 
 textOther :: UnpreparedValue PG
 textOther =
-  UVParameter Unknown
+  UVParameter FreshVar
     $ ColumnValue
       { cvType = ColumnScalar PGText,
         cvValue = PGValText "other"
@@ -99,7 +99,7 @@ textOther =
 
 integerOne :: UnpreparedValue PG
 integerOne =
-  UVParameter Unknown
+  UVParameter FreshVar
     $ ColumnValue
       { cvType = ColumnScalar PGInteger,
         cvValue = PGValInteger 1
@@ -107,7 +107,7 @@ integerOne =
 
 integerTwo :: UnpreparedValue PG
 integerTwo =
-  UVParameter Unknown
+  UVParameter FreshVar
     $ ColumnValue
       { cvType = ColumnScalar PGInteger,
         cvValue = PGValInteger 2

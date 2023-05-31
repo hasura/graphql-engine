@@ -800,7 +800,7 @@ tableConnectionArgs pkeyColumns tableInfo = do
               iResultToMaybe (executeJSONPath columnJsonPath cursorValue)
                 `onNothing` throwInvalidCursor
             pgValue <- liftQErr $ parseScalarValueColumnType columnType columnValue
-            let unresolvedValue = IR.UVParameter IR.Unknown $ ColumnValue columnType pgValue
+            let unresolvedValue = IR.UVParameter IR.FreshVar $ ColumnValue columnType pgValue
             pure
               $ IR.ConnectionSplit splitKind unresolvedValue
               $ IR.OrderByItemG Nothing (IR.AOCColumn columnInfo) Nothing
@@ -812,7 +812,7 @@ tableConnectionArgs pkeyColumns tableInfo = do
               iResultToMaybe (executeJSONPath (map (J.Key . K.fromText) (getPathFromOrderBy annObCol)) cursorValue)
                 `onNothing` throwInvalidCursor
             pgValue <- liftQErr $ parseScalarValueColumnType columnType orderByItemValue
-            let unresolvedValue = IR.UVParameter IR.Unknown $ ColumnValue columnType pgValue
+            let unresolvedValue = IR.UVParameter IR.FreshVar $ ColumnValue columnType pgValue
             pure
               $ IR.ConnectionSplit splitKind unresolvedValue
               $ IR.OrderByItemG orderType annObCol nullsOrder
