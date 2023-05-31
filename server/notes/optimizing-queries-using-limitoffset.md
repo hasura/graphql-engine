@@ -1,6 +1,6 @@
 This note is in [Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Select/Internal/OrderBy.hs#L58).
 It is referenced at:
-  - line 72 of [Hasura.Backends.Postgres.Translate.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Types.hs#L72)
+  - line 74 of [Hasura.Backends.Postgres.Translate.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Types.hs#L74)
 
 # Optimizing queries using limit/offset
 
