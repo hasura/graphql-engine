@@ -22,7 +22,7 @@ import Language.Haskell.TH.Syntax (Code, Lift, Q, bindCode, lift)
 import Test.QuickCheck qualified as QC
 
 newtype NonEmptyText = NonEmptyText {unNonEmptyText :: Text}
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, PG.ToPrepArg, ToTxt, Generic, NFData)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, PG.ToPrepArg, ToTxt, Generic, NFData, Semigroup)
 
 instance QC.Arbitrary NonEmptyText where
   arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)

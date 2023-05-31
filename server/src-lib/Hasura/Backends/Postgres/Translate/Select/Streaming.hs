@@ -30,6 +30,7 @@ import Hasura.Backends.Postgres.Translate.Types
     SelectNode (SelectNode),
     SelectWriter (..),
     SourcePrefixes (SourcePrefixes),
+    initialNativeQueryFreshIdStore,
     orderByForJsonAgg,
   )
 import Hasura.Backends.Postgres.Types.Column (unsafePGColumnToBackend)
@@ -107,6 +108,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) = do
       ((selectSource, nodeExtractors), SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}) =
         runWriter
           $ flip runReaderT strfyNum
+          $ flip evalStateT initialNativeQueryFreshIdStore
           $ processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery sqlSelect
       selectNode = SelectNode nodeExtractors joinTree
       topExtractor =

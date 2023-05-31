@@ -63,6 +63,7 @@ mkSQLSelect jsonAggSelect annSel = do
       ((selectSource, nodeExtractors), SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}) =
         runWriter
           $ flip runReaderT strfyNum
+          $ flip evalStateT initialNativeQueryFreshIdStore
           $ processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery annSel
 
       selectNode = SelectNode nodeExtractors joinTree

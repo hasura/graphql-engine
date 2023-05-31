@@ -19,11 +19,12 @@ import Hasura.Session (SessionVariable)
 -- | Where did this variable come from?
 data Provenance
   = FromGraphQL VariableInfo
-  | -- | An internal source (e.g. a native query argument)
+  | -- | An internal source
     FromInternal Text
   | -- | A unique, fresh occurrence of a variable.
-    -- E.g. generated values that benefit from being
-    -- prepared rather than inlined.
+    -- E.g. a native query argument, or generated
+    -- values that benefit from being prepared rather
+    -- than inlined.
     FreshVar
   deriving stock (Eq, Show)
 

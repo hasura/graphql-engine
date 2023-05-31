@@ -11,6 +11,7 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
   ( IsIdentifier (toIdentifier),
     PGCol (..),
+    QualifiedFunction,
     TableIdentifier (..),
     qualifiedObjectToText,
     tableIdentifierToIdentifier,
@@ -31,16 +32,15 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
   ( aggregateFieldsToExtractorExps,
     mkAggregateOrderByExtractorAndFields,
   )
-import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
-  ( fromTableRowArgs,
-    selectFromToFromItem,
-  )
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (fromTableRowArgs)
 import Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
   ( withWriteArrayRelation,
     withWriteComputedFieldTableSet,
     withWriteObjectRelation,
   )
 import Hasura.Backends.Postgres.Translate.Types
+import Hasura.Backends.Postgres.Types.Function (ArgumentExp)
+import Hasura.Function.Cache (FunctionArgsExpG (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.OrderBy
   ( OrderByItemG (OrderByItemG, obiColumn),
@@ -174,8 +174,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
                   computedFieldSourcePrefix = mkComputedFieldTableIdentifier sourcePrefix fieldName
                   (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
                   fromItem =
-                    selectFromToFromItem sourcePrefix
-                      $ FromFunction _cfobFunction _cfobFunctionArgsExp Nothing
+                    functionToFromItem sourcePrefix _cfobFunction _cfobFunctionArgsExp
                   functionQual = S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText _cfobFunction) Nothing
                   selectSource =
                     SelectSource
@@ -190,6 +189,13 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
                   HashMap.fromList $ aggregateFieldsToExtractorExps computedFieldSourcePrefix fields,
                   S.mkQIdenExp computedFieldSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
                 )
+
+    functionToFromItem :: TableIdentifier -> QualifiedFunction -> FunctionArgsExpG (ArgumentExp S.SQLExp) -> S.FromItem
+    functionToFromItem prefix qf args =
+      S.FIFunc
+        $ S.FunctionExp qf (fromTableRowArgs prefix args)
+        $ Just
+        $ S.mkFunctionAlias qf Nothing
 
     generateSorting ::
       NE.NonEmpty (OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.ColumnAlias, SQLExpression ('Postgres pgKind)))) ->

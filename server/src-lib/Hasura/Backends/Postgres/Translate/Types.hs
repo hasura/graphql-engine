@@ -9,6 +9,8 @@ module Hasura.Backends.Postgres.Translate.Types
     ArrayRelationSource (ArrayRelationSource),
     ComputedFieldTableSetSource (ComputedFieldTableSetSource),
     CustomSQLCTEs (..),
+    NativeQueryFreshIdStore (..),
+    initialNativeQueryFreshIdStore,
     DistinctAndOrderByExpr (ASorting),
     JoinTree (..),
     MultiRowSelectNode (..),
@@ -274,3 +276,11 @@ instance Semigroup SelectWriter where
 
 instance Monoid SelectWriter where
   mempty = SelectWriter mempty mempty
+
+----
+
+newtype NativeQueryFreshIdStore = NativeQueryFreshIdStore {nqNextFreshId :: Int}
+  deriving newtype (Eq, Show, Enum)
+
+initialNativeQueryFreshIdStore :: NativeQueryFreshIdStore
+initialNativeQueryFreshIdStore = NativeQueryFreshIdStore 0

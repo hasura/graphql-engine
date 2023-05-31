@@ -27,7 +27,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Select (QueryDB (QDBMultipleRows))
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Value (Provenance (FromInternal), UnpreparedValue (UVParameter))
+import Hasura.RQL.IR.Value (Provenance (FreshVar), UnpreparedValue (UVParameter))
 import Hasura.RQL.Types.Column qualified as Column
 import Hasura.RQL.Types.Metadata.Object qualified as MO
 import Hasura.RQL.Types.Relationships.Local (Nullable (..))
@@ -196,8 +196,8 @@ interpolatedQuery ::
 interpolatedQuery nqiCode nqArgs =
   InterpolatedQuery
     $ (fmap . fmap)
-      ( \var@(ArgumentName name) -> case HashMap.lookup var nqArgs of
-          Just arg -> UVParameter (FromInternal name) arg
+      ( \var -> case HashMap.lookup var nqArgs of
+          Just arg -> UVParameter FreshVar arg
           Nothing ->
             -- the `nativeQueryArgsParser` will already have checked
             -- we have all the args the query needs so this _should
