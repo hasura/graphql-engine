@@ -99,6 +99,10 @@ export { default as Spinner } from './lib/components/Common/Spinner/Spinner';
 export { CommonScss };
 export * from './lib/components/Services/Settings';
 export {
+  SchemaRegistryContainer,
+  SchemaDetailsView,
+} from './lib/features/SchemaRegistry';
+export {
   loadInconsistentObjects,
   exportMetadata,
 } from './lib/metadata/actions';
