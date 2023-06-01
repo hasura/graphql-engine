@@ -67,6 +67,7 @@ library
     , graphql-parser
     , text
     , unordered-containers
+    , containers
   if flag(profiling)
     cpp-options: -DPROFILING
   if flag(optimize-hasura)

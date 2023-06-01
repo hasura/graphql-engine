@@ -8,6 +8,8 @@ where
 
 import Autodocodec (HasCodec (codec), dimapCodec)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
+import Hasura.Base.ErrorValue (squote)
+import Hasura.Base.ToErrorValue
 import Hasura.LogicalModel.NullableScalarType
 import Hasura.Prelude hiding (first)
 
@@ -17,6 +19,9 @@ newtype ArgumentName = ArgumentName
   }
   deriving newtype (Eq, Ord, Show, Hashable)
   deriving stock (Generic)
+
+instance ToErrorValue ArgumentName where
+  toErrorValue (ArgumentName txt) = squote txt
 
 instance HasCodec ArgumentName where
   codec = dimapCodec ArgumentName getArgumentName codec

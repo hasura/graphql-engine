@@ -35,6 +35,7 @@ import Hasura.NativeQuery.Metadata
     NativeQueryMetadata (..),
   )
 import Hasura.NativeQuery.Types (NullableScalarType (nstType))
+import Hasura.NativeQuery.Validation (validateArgumentDeclaration)
 import Hasura.Prelude
 import Hasura.RQL.Types.BackendType
 
@@ -49,6 +50,7 @@ validateNativeQuery ::
   NativeQueryMetadata ('Postgres pgKind) ->
   m ()
 validateNativeQuery pgTypeOidMapping env connConf logicalModel model = do
+  validateArgumentDeclaration model
   (prepname, preparedQuery) <- nativeQueryToPreparedStatement logicalModel model
   description <- runCheck prepname (PG.fromText preparedQuery)
   let returnColumns = bimap toTxt nstType <$> InsOrdHashMap.toList (columnsFromFields $ _lmmFields logicalModel)

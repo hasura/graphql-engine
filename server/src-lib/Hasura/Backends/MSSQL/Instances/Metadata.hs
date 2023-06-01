@@ -9,6 +9,7 @@ module Hasura.Backends.MSSQL.Instances.Metadata () where
 import Hasura.Backends.MSSQL.DDL qualified as MSSQL
 import Hasura.Backends.MSSQL.Schema.Introspection qualified as MSSQL (listAllTables)
 import Hasura.Base.Error (Code (UnexpectedPayload), throw400, throw500)
+import Hasura.NativeQuery.Validation (validateArgumentDeclaration)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Relationship (defaultBuildArrayRelationshipInfo, defaultBuildObjectRelationshipInfo)
 import Hasura.RQL.Types.BackendType
@@ -34,6 +35,6 @@ instance BackendMetadata 'MSSQL where
   listAllTrackables _ =
     throw500 "Computed fields are not yet defined for MSSQL backends"
   getTableInfo _ _ = throw400 UnexpectedPayload "get_table_info not yet supported in MSSQL!"
-  validateNativeQuery _ _ _ _ = pure () -- for now, all queries are valid
+  validateNativeQuery _ _ _ = validateArgumentDeclaration -- for now, all queries are valid
   validateStoredProcedure _ _ _ _ = pure () -- for now, all stored procedures are valid
   getStoredProcedureGraphqlName = MSSQL.getStoredProcedureGraphqlName
