@@ -35,6 +35,7 @@ import Data.IORef
 import Data.Pool
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8)
+import Data.Text.IO qualified as T
 import Data.Vector (fromList)
 import Harness.Exceptions
 import Harness.Http qualified as Http
@@ -328,8 +329,9 @@ instance LoggableMessage HgeStdErrLogMessage where
 hgeStdErrRelayThread :: Logger -> Handle -> IO (IO ())
 hgeStdErrRelayThread logger hgeOutput = do
   async <- Async.async $ forever $ do
-    nextChunk <- BS.hGetLine hgeOutput
-    runLogger logger $ HgeStdErrLogMessage (decodeUtf8 nextChunk)
+    nextChunk <- decodeUtf8 <$> BS.hGetLine hgeOutput
+    T.putStrLn nextChunk
+    runLogger logger $ HgeStdErrLogMessage nextChunk
   return $ Async.cancel async
 
 -- | A thread that reads from the engine's StdOut handle and makes one test-log
