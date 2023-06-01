@@ -156,6 +156,7 @@ data DBObjectsIntrospection b = DBObjectsIntrospection
 
 instance (Backend b) => FromJSON (DBObjectsIntrospection b) where
   parseJSON = withObject "DBObjectsIntrospection" \o -> do
+    -- "tables": [["<table-1>", "<table-metadata-1>"], ["<table-2>", "<table-metadata-2>"]]
     tables <- o .: "tables"
     functions <- o .: "functions"
     scalars <- o .: "scalars"
@@ -167,6 +168,16 @@ instance (Backend b) => FromJSON (DBObjectsIntrospection b) where
           _rsScalars = ScalarMap $ HashMap.fromList scalars,
           _rsLogicalModels = InsOrdHashMap.fromList logicalModels
         }
+
+instance (Backend b) => ToJSON (DBObjectsIntrospection b) where
+  toJSON (DBObjectsIntrospection tables functions (ScalarMap scalars) logicalModels) =
+    -- "tables": [["<table-1>", "<table-metadata-1>"], ["<table-2>", "<table-metadata-2>"]]
+    object
+      [ "tables" .= HashMap.toList tables,
+        "functions" .= HashMap.toList functions,
+        "scalars" .= HashMap.toList scalars,
+        "logical_models" .= InsOrdHashMap.toList logicalModels
+      ]
 
 instance (L.ToEngineLog (DBObjectsIntrospection b) L.Hasura) where
   toEngineLog _ = (L.LevelDebug, L.ELTStartup, toJSON rsLog)

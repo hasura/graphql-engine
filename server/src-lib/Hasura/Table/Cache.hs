@@ -1115,6 +1115,16 @@ instance (Backend b) => FromJSON (ForeignKeyMetadata b) where
                 $ NE.zip columns foreignColumns
           }
 
+instance (Backend b) => ToJSON (ForeignKeyMetadata b) where
+  toJSON (ForeignKeyMetadata (ForeignKey constraint foreignTable columnMapping)) =
+    let (columns, foreignColumns) = NE.unzip $ NEHashMap.toList columnMapping
+     in object
+          [ "constraint" .= constraint,
+            "foreign_table" .= foreignTable,
+            "columns" .= columns,
+            "foreign_columns" .= foreignColumns
+          ]
+
 -- | Metadata of any Backend table which is being extracted from source database
 data DBTableMetadata (b :: BackendType) = DBTableMetadata
   { _ptmiOid :: OID,
@@ -1137,6 +1147,9 @@ instance (Backend b) => NFData (DBTableMetadata b)
 
 instance (Backend b) => FromJSON (DBTableMetadata b) where
   parseJSON = genericParseJSON hasuraJSON
+
+instance (Backend b) => ToJSON (DBTableMetadata b) where
+  toJSON = genericToJSON hasuraJSON
 
 type DBTablesMetadata b = HashMap (TableName b) (DBTableMetadata b)
 

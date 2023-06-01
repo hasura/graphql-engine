@@ -147,7 +147,7 @@ orderRoles allRoles = do
 -- | `resolveCheckPermission` is a helper function which will convert the indermediate
 --    type `CheckPermission` to its original type. It will record any metadata inconsistencies, if exists.
 resolveCheckPermission ::
-  (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
+  (MonadWriter (Seq CollectItem) m) =>
   CheckPermission p ->
   RoleName ->
   InconsistentRoleEntity ->
@@ -157,7 +157,7 @@ resolveCheckPermission checkPermission roleName inconsistentEntity = do
     CPInconsistent -> do
       let inconsistentObj =
             -- check `Conflicts while inheriting permissions` in `rfcs/inherited-roles-improvements.md`
-            Left
+            CollectInconsistentMetadata
               $ ConflictingInheritedPermission roleName inconsistentEntity
       tell $ Seq.singleton inconsistentObj
       pure Nothing
@@ -165,7 +165,7 @@ resolveCheckPermission checkPermission roleName inconsistentEntity = do
     CPUndefined -> pure Nothing
 
 resolveCheckTablePermission ::
-  ( MonadWriter (Seq (Either InconsistentMetadata md)) m,
+  ( MonadWriter (Seq CollectItem) m,
     BackendMetadata b
   ) =>
   CheckPermission perm ->
@@ -186,7 +186,7 @@ resolveCheckTablePermission inheritedRolePermission accumulatedRolePermInfo perm
 buildTablePermissions ::
   forall b m.
   ( MonadError QErr m,
-    MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
+    MonadWriter (Seq CollectItem) m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b
   ) =>
@@ -289,7 +289,7 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
 buildLogicalModelPermissions ::
   forall b m.
   ( MonadError QErr m,
-    MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
+    MonadWriter (Seq CollectItem) m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b
   ) =>

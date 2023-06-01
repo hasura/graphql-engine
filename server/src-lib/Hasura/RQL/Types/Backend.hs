@@ -135,6 +135,7 @@ class
     ToJSON (FunctionArgument b),
     ToJSON (FunctionName b),
     ToJSON (FunctionReturnType b),
+    ToJSON (RawFunctionInfo b),
     ToJSON (ScalarType b),
     ToJSON (TableName b),
     ToJSON (ExtraTableMetadata b),

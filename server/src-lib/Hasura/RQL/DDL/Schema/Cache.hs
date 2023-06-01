@@ -173,7 +173,7 @@ buildRebuildableSchemaCacheWithReason reason logger env metadataWithVersion dyna
     flip runReaderT reason
       $ Inc.build (buildSchemaCacheRule logger env mSchemaRegistryContext) (metadataWithVersion, dynamicConfig, initialInvalidationKeys, Nothing)
 
-  pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
+  pure $ RebuildableSchemaCache (fst $ Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
 newtype CacheRWT m a
   = -- The CacheInvalidations component of the state could actually be collected
@@ -253,7 +253,7 @@ instance
       runCacheBuildM
         $ flip runReaderT buildReason
         $ Inc.build rule (metadataWithVersion, dynamicConfig, newInvalidationKeys, storedIntrospection)
-    let schemaCache = Inc.result result
+    let (schemaCache, _storedIntrospectionStatus) = Inc.result result
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
         !newInvalidations = oldInvalidations <> invalidations
@@ -315,6 +315,45 @@ buildSourcePingCache sources =
           connection = _smConfiguration sourceMetadata
        in SourcePingInfo sourceName connection
 
+partitionCollectedInfo ::
+  Seq CollectItem -> ([InconsistentMetadata], [MetadataDependency], [StoredIntrospectionItem])
+partitionCollectedInfo =
+  let go item = case item of
+        CollectInconsistentMetadata inconsistentMetadata ->
+          _1 %~ ([inconsistentMetadata] <>)
+        CollectMetadataDependency dependency ->
+          _2 %~ ([dependency] <>)
+        CollectStoredIntrospection storedIntrospection ->
+          _3 %~ ([storedIntrospection] <>)
+   in foldr go ([], [], []) . toList
+
+buildStoredIntrospectionStatus ::
+  Sources -> RemoteSchemas -> [StoredIntrospectionItem] -> StoredIntrospectionStatus
+buildStoredIntrospectionStatus sourcesMetadata remoteSchemasMetadata = \case
+  [] -> StoredIntrospectionUnchanged
+  items ->
+    let go item (sources, remoteSchemas) = case item of
+          SourceIntrospectionItem name introspection ->
+            (sources <> [(name, introspection)], remoteSchemas)
+          RemoteSchemaIntrospectionItem name introspection ->
+            (sources, remoteSchemas <> [(name, introspection)])
+        (allSources, allRemoteSchemas) = foldr go ([], []) items
+        storedIntrospection = StoredIntrospection (HashMap.fromList allSources) (HashMap.fromList allRemoteSchemas)
+     in if allSourcesAndRemoteSchemasCollected allSources allRemoteSchemas
+          then StoredIntrospectionChangedFull storedIntrospection
+          else StoredIntrospectionChangedPartial storedIntrospection
+  where
+    allSourcesAndRemoteSchemasCollected ::
+      [(SourceName, sourceIntrospection)] ->
+      [(RemoteSchemaName, remoteSchemaIntrospection)] ->
+      Bool
+    allSourcesAndRemoteSchemasCollected sources remoteSchemas =
+      allPresent sourcesMetadata (map fst sources)
+        && allPresent remoteSchemasMetadata (map fst remoteSchemas)
+
+    allPresent :: (Hashable a) => InsOrdHashMap a b -> [a] -> Bool
+    allPresent hashMap = all (`InsOrdHashMap.member` hashMap)
+
 {- Note [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 There are many Metadata operations that don't influence the GraphQL schema.  So
@@ -359,17 +398,18 @@ buildSchemaCacheRule ::
   Logger Hasura ->
   Env.Environment ->
   Maybe SchemaRegistryContext ->
-  (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) `arr` SchemaCache
+  (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) `arr` (SchemaCache, StoredIntrospectionStatus)
 buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResourceVersion metadataNoDefaults metadataResourceVersion, dynamicConfig, invalidationKeys, storedIntrospection) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
   let metadataDefaults = _cdcMetadataDefaults dynamicConfig
       metadata@Metadata {..} = overrideMetadataDefaults metadataNoDefaults metadataDefaults
   metadataDep <- Inc.newDependency -< metadata
 
-  (inconsistentObjects, (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies), ((adminIntrospection, gqlContext, gqlContextUnauth, inconsistentRemoteSchemas), (relayContext, relayContextUnauth), schemaRegistryAction)) <-
+  (inconsistentObjects, storedIntrospections, (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies), ((adminIntrospection, gqlContext, gqlContextUnauth, inconsistentRemoteSchemas), (relayContext, relayContextUnauth), schemaRegistryAction)) <-
     Inc.cache buildOutputsAndSchema -< (metadataDep, dynamicConfig, invalidationKeysDep, storedIntrospection)
 
-  let (resolvedEndpoints, endpointCollectedInfo) = runIdentity $ runWriterT $ buildRESTEndpoints _metaQueryCollections (InsOrdHashMap.elems _metaRestEndpoints)
+  let storedIntrospectionStatus = buildStoredIntrospectionStatus _metaSources _metaRemoteSchemas storedIntrospections
+      (resolvedEndpoints, endpointCollectedInfo) = runIdentity $ runWriterT $ buildRESTEndpoints _metaQueryCollections (InsOrdHashMap.elems _metaRestEndpoints)
       (cronTriggersMap, cronTriggersCollectedInfo) = runIdentity $ runWriterT $ buildCronTriggers (InsOrdHashMap.elems _metaCronTriggers)
       (openTelemetryInfo, openTelemetryCollectedInfo) = runIdentity $ runWriterT $ buildOpenTelemetry _metaOpenTelemetryConfig
 
@@ -408,13 +448,13 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       globalAllowLists = HS.toList . iaGlobal $ inlinedAllowlist
 
       -- Endpoints don't generate any dependencies
-      endpointInconsistencies = either id absurd <$> toList endpointCollectedInfo
+      (endpointInconsistencies, _, _) = partitionCollectedInfo endpointCollectedInfo
 
       -- Cron triggers don't generate any dependencies
-      cronTriggersInconsistencies = either id absurd <$> toList cronTriggersCollectedInfo
+      (cronTriggersInconsistencies, _, _) = partitionCollectedInfo cronTriggersCollectedInfo
 
       -- OpenTelemerty doesn't generate any dependencies
-      openTelemetryInconsistencies = either id absurd <$> toList openTelemetryCollectedInfo
+      (openTelemetryInconsistencies, _, _) = partitionCollectedInfo openTelemetryCollectedInfo
 
       inconsistentQueryCollections = getInconsistentQueryCollections adminIntrospection _metaQueryCollections listedQueryObjects endpoints globalAllowLists
 
@@ -425,53 +465,53 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
         for_ schemaRegistryAction $ \action -> do
           liftIO $ action metadataResourceVersion
 
-  returnA
-    -<
-      SchemaCache
-        { scSources = _boSources resolvedOutputs,
-          scActions = _boActions resolvedOutputs,
-          -- TODO this is not the right value: we should track what part of the schema
-          -- we can stitch without consistencies, I think.
-          scRemoteSchemas = fmap fst (_boRemoteSchemas resolvedOutputs), -- remoteSchemaMap
-          scAllowlist = inlinedAllowlist,
-          -- , scCustomTypes = _boCustomTypes resolvedOutputs
-          scAdminIntrospection = adminIntrospection,
-          scGQLContext = gqlContext,
-          scUnauthenticatedGQLContext = gqlContextUnauth,
-          scRelayContext = relayContext,
-          scUnauthenticatedRelayContext = relayContextUnauth,
-          -- , scGCtxMap = gqlSchema
-          -- , scDefaultRemoteGCtx = remoteGQLSchema
-          scDepMap = resolvedDependencies,
-          scCronTriggers = cronTriggersMap,
-          scEndpoints = endpoints,
-          scInconsistentObjs =
-            inconsistentObjects
-              <> dependencyInconsistentObjects
-              <> toList inconsistentRemoteSchemas
-              <> duplicateRestVariables
-              <> invalidRestSegments
-              <> ambiguousRestEndpoints
-              <> endpointInconsistencies
-              <> cronTriggersInconsistencies
-              <> openTelemetryInconsistencies
-              <> inconsistentQueryCollections,
-          scApiLimits = _metaApiLimits,
-          scMetricsConfig = _metaMetricsConfig,
-          scMetadataResourceVersion = metadataResourceVersion,
-          scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions,
-          scTlsAllowlist = networkTlsAllowlist _metaNetwork,
-          scQueryCollections = _metaQueryCollections,
-          scBackendCache = _boBackendCache resolvedOutputs,
-          scSourceHealthChecks = buildHealthCheckCache _metaSources,
-          scSourcePingConfig = buildSourcePingCache _metaSources,
-          scOpenTelemetryConfig = openTelemetryInfo
-        }
+  let schemaCache =
+        SchemaCache
+          { scSources = _boSources resolvedOutputs,
+            scActions = _boActions resolvedOutputs,
+            -- TODO this is not the right value: we should track what part of the schema
+            -- we can stitch without consistencies, I think.
+            scRemoteSchemas = fmap fst (_boRemoteSchemas resolvedOutputs), -- remoteSchemaMap
+            scAllowlist = inlinedAllowlist,
+            -- , scCustomTypes = _boCustomTypes resolvedOutputs
+            scAdminIntrospection = adminIntrospection,
+            scGQLContext = gqlContext,
+            scUnauthenticatedGQLContext = gqlContextUnauth,
+            scRelayContext = relayContext,
+            scUnauthenticatedRelayContext = relayContextUnauth,
+            -- , scGCtxMap = gqlSchema
+            -- , scDefaultRemoteGCtx = remoteGQLSchema
+            scDepMap = resolvedDependencies,
+            scCronTriggers = cronTriggersMap,
+            scEndpoints = endpoints,
+            scInconsistentObjs =
+              inconsistentObjects
+                <> dependencyInconsistentObjects
+                <> toList inconsistentRemoteSchemas
+                <> duplicateRestVariables
+                <> invalidRestSegments
+                <> ambiguousRestEndpoints
+                <> endpointInconsistencies
+                <> cronTriggersInconsistencies
+                <> openTelemetryInconsistencies
+                <> inconsistentQueryCollections,
+            scApiLimits = _metaApiLimits,
+            scMetricsConfig = _metaMetricsConfig,
+            scMetadataResourceVersion = metadataResourceVersion,
+            scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions,
+            scTlsAllowlist = networkTlsAllowlist _metaNetwork,
+            scQueryCollections = _metaQueryCollections,
+            scBackendCache = _boBackendCache resolvedOutputs,
+            scSourceHealthChecks = buildHealthCheckCache _metaSources,
+            scSourcePingConfig = buildSourcePingCache _metaSources,
+            scOpenTelemetryConfig = openTelemetryInfo
+          }
+  returnA -< (schemaCache, storedIntrospectionStatus)
   where
     -- See Note [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata]
     buildOutputsAndSchema = proc (metadataDep, dynamicConfig, invalidationKeysDep, storedIntrospection) -> do
       (outputs, collectedInfo) <- runWriterA buildAndCollectInfo -< (dynamicConfig, metadataDep, invalidationKeysDep, storedIntrospection)
-      let (inconsistentObjects, unresolvedDependencies) = partitionEithers $ toList collectedInfo
+      let (inconsistentObjects, unresolvedDependencies, storedIntrospections) = partitionCollectedInfo collectedInfo
       out2@(resolvedOutputs, _dependencyInconsistentObjects, _resolvedDependencies) <- resolveDependencies -< (outputs, unresolvedDependencies)
       out3 <-
         bindA
@@ -488,7 +528,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
               (_boCustomTypes resolvedOutputs)
               mSchemaRegistryContext
               logger
-      returnA -< (inconsistentObjects, out2, out3)
+      returnA -< (inconsistentObjects, storedIntrospections, out2, out3)
 
     resolveBackendInfo' ::
       forall arr m b.
@@ -496,7 +536,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
         ArrowChoice arr,
         Inc.ArrowCache m arr,
         Inc.ArrowDistribute arr,
-        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+        ArrowWriter (Seq CollectItem) arr,
         MonadIO m,
         MonadBaseControl IO m,
         ProvidesNetwork m
@@ -514,7 +554,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       ( ArrowChoice arr,
         Inc.ArrowCache m arr,
         Inc.ArrowDistribute arr,
-        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+        ArrowWriter (Seq CollectItem) arr,
         MonadIO m,
         MonadBaseControl IO m,
         ProvidesNetwork m,
@@ -534,7 +574,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       forall b arr m.
       ( ArrowChoice arr,
         Inc.ArrowCache m arr,
-        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+        ArrowWriter (Seq CollectItem) arr,
         MonadIO m,
         MonadBaseControl IO m,
         MonadResolveSource m,
@@ -567,7 +607,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       forall b arr m.
       ( ArrowChoice arr,
         Inc.ArrowCache m arr,
-        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+        ArrowWriter (Seq CollectItem) arr,
         MonadIO m,
         MonadBaseControl IO m,
         MonadResolveSource m,
@@ -589,7 +629,10 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
         Just sourceConfig -> do
           databaseResponse <- bindA -< resolveDatabaseMetadata logger _bcasmSourceMetadata sourceConfig
           case databaseResponse of
-            Right databaseMetadata -> returnA -< Just (sourceConfig, databaseMetadata)
+            Right databaseMetadata -> do
+              -- Collect database introspection to persist in the storage
+              tellA -< pure (CollectStoredIntrospection $ SourceIntrospectionItem sourceName $ encJFromJValue databaseMetadata)
+              returnA -< Just (sourceConfig, databaseMetadata)
             Left databaseError ->
               -- If database exception occurs, try to lookup from stored introspection
               case sourceIntrospection >>= decode' of
@@ -626,7 +669,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       forall b arr m.
       ( ArrowChoice arr,
         Inc.ArrowCache m arr,
-        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+        ArrowWriter (Seq CollectItem) arr,
         MonadIO m,
         BackendMetadata b,
         MonadBaseControl IO m,
@@ -684,7 +727,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       forall b arr m.
       ( ArrowChoice arr,
         ArrowKleisli m arr,
-        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+        ArrowWriter (Seq CollectItem) arr,
         MonadError QErr m,
         HasCacheStaticConfig m,
         BackendMetadata b,
@@ -962,7 +1005,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       ( ArrowChoice arr,
         Inc.ArrowDistribute arr,
         Inc.ArrowCache m arr,
-        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+        ArrowWriter (Seq CollectItem) arr,
         MonadIO m,
         MonadError QErr m,
         MonadReader BuildReason m,
@@ -1165,7 +1208,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
             }
 
     buildOpenTelemetry ::
-      (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
+      (MonadWriter (Seq CollectItem) m) =>
       OpenTelemetryConfig ->
       m OpenTelemetryInfo
     buildOpenTelemetry OpenTelemetryConfig {..} = do
@@ -1194,7 +1237,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
               )
 
     buildRESTEndpoints ::
-      (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
+      (MonadWriter (Seq CollectItem) m) =>
       QueryCollections ->
       [CreateEndpoint] ->
       m (HashMap EndpointName (EndpointMetadata GQLQueryWithText))
@@ -1284,7 +1327,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       forall arr m b.
       ( ArrowChoice arr,
         Inc.ArrowDistribute arr,
-        ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+        ArrowWriter (Seq CollectItem) arr,
         Inc.ArrowCache m arr,
         MonadIO m,
         MonadBaseControl IO m,
@@ -1422,7 +1465,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                       primaryKey
 
     buildCronTriggers ::
-      (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
+      (MonadWriter (Seq CollectItem) m) =>
       [CronTriggerMetadata] ->
       m (HashMap TriggerName CronTriggerInfo)
     buildCronTriggers = buildInfoMapM ctName mkCronTriggerMetadataObject buildCronTrigger
@@ -1435,7 +1478,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
             $ resolveCronTrigger env cronTrigger
 
     buildInheritedRoles ::
-      (MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m) =>
+      (MonadWriter (Seq CollectItem) m) =>
       HashSet RoleName ->
       [InheritedRole] ->
       m (HashMap RoleName Role)
@@ -1451,7 +1494,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
             pure resolvedInheritedRole
 
     buildActions ::
-      (MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m) =>
+      (MonadWriter (Seq CollectItem) m) =>
       AnnotatedCustomTypes ->
       BackendMap ScalarMap ->
       OrderedRoles ->
@@ -1471,7 +1514,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
             return $ ActionInfo name (outputType, outObject) resolvedDef permissionsMap forwardClientHeaders comment
 
 buildRemoteSchemaRemoteRelationship ::
-  (MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m) =>
+  (MonadWriter (Seq CollectItem) m) =>
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
   PartiallyResolvedRemoteSchemaMap ->
   RemoteSchemaName ->

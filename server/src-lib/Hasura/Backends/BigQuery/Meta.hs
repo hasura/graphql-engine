@@ -185,6 +185,24 @@ instance FromJSON RestType where
       "STRUCT" -> pure STRUCT
       _ -> fail ("invalid type " ++ show s)
 
+instance ToJSON RestType where
+  toJSON =
+    String . \case
+      STRING -> "STRING"
+      BYTES -> "BYTES"
+      INTEGER -> "INTEGER"
+      FLOAT -> "FLOAT"
+      BOOL -> "BOOLEAN"
+      TIMESTAMP -> "TIMESTAMP"
+      DATE -> "DATE"
+      TIME -> "TIME"
+      DATETIME -> "DATETIME"
+      GEOGRAPHY -> "GEOGRAPHY"
+      DECIMAL -> "DECIMAL"
+      BIGDECIMAL -> "BIGDECIMAL"
+      JSON -> "JSON"
+      STRUCT -> "STRUCT"
+
 --------------------------------------------------------------------------------
 -- REST request
 
@@ -304,6 +322,8 @@ data RestRoutineType
 
 instance FromJSON RestRoutineType
 
+instance ToJSON RestRoutineType
+
 -- | Input argument of a function/routine.
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#Argument
 data RestArgument = RestArgument
@@ -330,6 +350,13 @@ instance FromJSON RestArgument where
           type' <- mapM (.: "typeKind") typeObject <|> pure Nothing
           pure $ RestArgument name type'
       )
+
+instance ToJSON RestArgument where
+  toJSON (RestArgument name ty) =
+    object
+      [ "name" .= name,
+        "dataType" .= object ["typeKind" .= ty]
+      ]
 
 -- | A field or a column.
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/StandardSqlField
@@ -358,6 +385,10 @@ instance FromJSON RestStandardSqlField where
           pure $ RestStandardSqlField name type'
       )
 
+instance ToJSON RestStandardSqlField where
+  toJSON (RestStandardSqlField name ty) =
+    object ["name" .= name, "type" .= (object ["typeKind" .= ty])]
+
 -- | A table type, which has only list of columns with names and types.
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#StandardSqlTableType
 data RestStandardSqlTableType = RestStandardSqlTableType
@@ -367,6 +398,9 @@ data RestStandardSqlTableType = RestStandardSqlTableType
 
 instance FromJSON RestStandardSqlTableType where
   parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON RestStandardSqlTableType where
+  toJSON = genericToJSON hasuraJSON
 
 -- | Id path of a routine.
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines#RoutineReference
@@ -378,6 +412,8 @@ data RestRoutineReference = RestRoutineReference
   deriving (Eq, Show, Generic)
 
 instance FromJSON RestRoutineReference
+
+instance ToJSON RestRoutineReference
 
 routineReferenceToFunctionName :: RestRoutineReference -> FunctionName
 routineReferenceToFunctionName RestRoutineReference {..} =
@@ -398,6 +434,8 @@ data RestRoutine = RestRoutine
   deriving (Eq, Show, Generic)
 
 instance FromJSON RestRoutine
+
+instance ToJSON RestRoutine
 
 -- | List of routines
 -- Ref: https://cloud.google.com/bigquery/docs/reference/rest/v2/routines/list

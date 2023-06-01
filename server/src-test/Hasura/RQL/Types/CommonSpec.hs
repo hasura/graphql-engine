@@ -15,7 +15,6 @@ import Hasura.Generator.Common
 import Hasura.Prelude
 import Hasura.QuickCheck.Instances ()
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Generic
@@ -97,7 +96,7 @@ withRecordInconsistencyEqualSpec =
     prop "Should equal withRecordInconsistencyM"
       $ \inputMetadata (errOrUnit :: Either QErr ()) ->
         let arrowInputArr = ErrorA (arr (const errOrUnit))
-            arrow = withRecordInconsistency @_ @InconsistentMetadata arrowInputArr
+            arrow = withRecordInconsistency arrowInputArr
             arrowOutput =
               runWriter $ runKleisli arrow ((), (inputMetadata, ()))
             monadInput = liftEither errOrUnit

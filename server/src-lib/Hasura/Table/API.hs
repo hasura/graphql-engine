@@ -691,7 +691,7 @@ buildTableCache ::
   forall arr m b.
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+    ArrowWriter (Seq CollectItem) arr,
     Inc.ArrowCache m arr,
     MonadIO m,
     MonadBaseControl IO m,

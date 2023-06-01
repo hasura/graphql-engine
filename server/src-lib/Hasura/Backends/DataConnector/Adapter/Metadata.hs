@@ -217,7 +217,7 @@ resolveBackendInfo' ::
   ( ArrowChoice arr,
     Inc.ArrowCache m arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+    ArrowWriter (Seq CollectItem) arr,
     MonadIO m,
     MonadBaseControl IO m,
     ProvidesNetwork m
