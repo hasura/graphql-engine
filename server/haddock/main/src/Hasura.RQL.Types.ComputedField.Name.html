@@ -13,9 +13,9 @@
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier">FieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span><span>
-</span><span id="line-16"></span><span id="local-6989586621691002987"><span id="local-6989586621691002988"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ComputedFieldName"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.Name.html#ComputedFieldName"><span class="hs-identifier hs-var">ComputedFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ComputedFieldName"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.Name.html#ComputedFieldName"><span class="hs-identifier hs-var">ComputedFieldName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unComputedFieldName"><span class="annot"><span class="annottext">ComputedFieldName -&gt; NonEmptyText
+</span><span id="line-16"></span><span id="local-6989586621691038415"><span id="local-6989586621691038416"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ComputedFieldName"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.Name.html#ComputedFieldName"><span class="hs-identifier hs-var">ComputedFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ComputedFieldName"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.Name.html#ComputedFieldName"><span class="hs-identifier hs-var">ComputedFieldName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unComputedFieldName"><span class="annot"><span class="annottext">ComputedFieldName -&gt; NonEmptyText
 </span><a href="Hasura.RQL.Types.ComputedField.Name.html#unComputedFieldName"><span class="hs-identifier hs-var hs-var">unComputedFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmptyText</span></span><span class="hs-special">}</span><span>
-</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691002975"><span id="local-6989586621691002977"><span id="local-6989586621691002983"><span class="annot"><span class="annottext">Int -&gt; ComputedFieldName -&gt; ShowS
+</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691038403"><span id="local-6989586621691038405"><span id="local-6989586621691038411"><span class="annot"><span class="annottext">Int -&gt; ComputedFieldName -&gt; ShowS
 [ComputedFieldName] -&gt; ShowS
 ComputedFieldName -&gt; String
 forall a.
@@ -26,13 +26,13 @@ show :: ComputedFieldName -&gt; String
 $cshow :: ComputedFieldName -&gt; String
 showsPrec :: Int -&gt; ComputedFieldName -&gt; ShowS
 $cshowsPrec :: Int -&gt; ComputedFieldName -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691002967"><span id="local-6989586621691002972"><span class="annot"><span class="annottext">ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691038395"><span id="local-6989586621691038400"><span class="annot"><span class="annottext">ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
 $c/= :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
 == :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
 $c== :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691002934"><span id="local-6989586621691002938"><span id="local-6989586621691002942"><span id="local-6989586621691002946"><span id="local-6989586621691002950"><span id="local-6989586621691002954"><span id="local-6989586621691002959"><span class="annot"><span class="annottext">Eq ComputedFieldName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691038362"><span id="local-6989586621691038366"><span id="local-6989586621691038370"><span id="local-6989586621691038374"><span id="local-6989586621691038378"><span id="local-6989586621691038382"><span id="local-6989586621691038387"><span class="annot"><span class="annottext">Eq ComputedFieldName
 ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
 ComputedFieldName -&gt; ComputedFieldName -&gt; Ordering
 ComputedFieldName -&gt; ComputedFieldName -&gt; ComputedFieldName
@@ -60,11 +60,11 @@ $c&lt;= :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
 $c&lt; :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
 compare :: ComputedFieldName -&gt; ComputedFieldName -&gt; Ordering
 $ccompare :: ComputedFieldName -&gt; ComputedFieldName -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691002928"><span class="annot"><span class="annottext">ComputedFieldName -&gt; ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691038356"><span class="annot"><span class="annottext">ComputedFieldName -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ComputedFieldName -&gt; ()
 $crnf :: ComputedFieldName -&gt; ()
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691002916"><span id="local-6989586621691002921"><span class="annot"><span class="annottext">Value -&gt; Parser [ComputedFieldName]
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691038344"><span id="local-6989586621691038349"><span class="annot"><span class="annottext">Value -&gt; Parser [ComputedFieldName]
 Value -&gt; Parser ComputedFieldName
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -72,7 +72,7 @@ parseJSONList :: Value -&gt; Parser [ComputedFieldName]
 $cparseJSONList :: Value -&gt; Parser [ComputedFieldName]
 parseJSON :: Value -&gt; Parser ComputedFieldName
 $cparseJSON :: Value -&gt; Parser ComputedFieldName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691002897"><span id="local-6989586621691002901"><span id="local-6989586621691002905"><span id="local-6989586621691002910"><span class="annot"><span class="annottext">[ComputedFieldName] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691038325"><span id="local-6989586621691038329"><span id="local-6989586621691038333"><span id="local-6989586621691038338"><span class="annot"><span class="annottext">[ComputedFieldName] -&gt; Value
 [ComputedFieldName] -&gt; Encoding
 ComputedFieldName -&gt; Value
 ComputedFieldName -&gt; Encoding
@@ -90,7 +90,7 @@ toEncoding :: ComputedFieldName -&gt; Encoding
 $ctoEncoding :: ComputedFieldName -&gt; Encoding
 toJSON :: ComputedFieldName -&gt; Value
 $ctoJSON :: ComputedFieldName -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691002886"><span id="local-6989586621691002891"><span class="annot"><span class="annottext">ToJSONKeyFunction [ComputedFieldName]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691038314"><span id="local-6989586621691038319"><span class="annot"><span class="annottext">ToJSONKeyFunction [ComputedFieldName]
 ToJSONKeyFunction ComputedFieldName
 forall a.
 ToJSONKeyFunction a -&gt; ToJSONKeyFunction [a] -&gt; ToJSONKey a
@@ -98,15 +98,15 @@ toJSONKeyList :: ToJSONKeyFunction [ComputedFieldName]
 $ctoJSONKeyList :: ToJSONKeyFunction [ComputedFieldName]
 toJSONKey :: ToJSONKeyFunction ComputedFieldName
 $ctoJSONKey :: ToJSONKeyFunction ComputedFieldName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691002880"><span class="annot"><span class="annottext">ComputedFieldName -&gt; PrepArg
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691038308"><span class="annot"><span class="annottext">ComputedFieldName -&gt; PrepArg
 forall a. (a -&gt; PrepArg) -&gt; ToPrepArg a
 toPrepVal :: ComputedFieldName -&gt; PrepArg
 $ctoPrepVal :: ComputedFieldName -&gt; PrepArg
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.ToPrepArg</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691002873"><span class="annot"><span class="annottext">ComputedFieldName -&gt; Text
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.ToPrepArg</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691038301"><span class="annot"><span class="annottext">ComputedFieldName -&gt; Text
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: ComputedFieldName -&gt; Text
 $ctoTxt :: ComputedFieldName -&gt; Text
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691002859"><span id="local-6989586621691002864"><span class="annot"><span class="annottext">Eq ComputedFieldName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691038287"><span id="local-6989586621691038292"><span class="annot"><span class="annottext">Eq ComputedFieldName
 Int -&gt; ComputedFieldName -&gt; Int
 ComputedFieldName -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -114,7 +114,7 @@ hash :: ComputedFieldName -&gt; Int
 $chash :: ComputedFieldName -&gt; Int
 hashWithSalt :: Int -&gt; ComputedFieldName -&gt; Int
 $chashWithSalt :: Int -&gt; ComputedFieldName -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691002853"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text ComputedFieldName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691038281"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text ComputedFieldName
 forall a. (Maybe ByteString -&gt; Either Text a) -&gt; FromCol a
 fromCol :: Maybe ByteString -&gt; Either Text ComputedFieldName
 $cfromCol :: Maybe ByteString -&gt; Either Text ComputedFieldName
@@ -126,9 +126,9 @@ $cto :: forall x. Rep ComputedFieldName x -&gt; ComputedFieldName
 $cfrom :: forall x. ComputedFieldName -&gt; Rep ComputedFieldName x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691002841"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.Name.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-20"></span><span>  </span><span id="local-6989586621691002837"><span class="annot"><span class="annottext">codec :: JSONCodec ComputedFieldName
-</span><a href="#local-6989586621691002837"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691038269"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.Name.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-20"></span><span>  </span><span id="local-6989586621691038265"><span class="annot"><span class="annottext">codec :: JSONCodec ComputedFieldName
+</span><a href="#local-6989586621691038265"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
