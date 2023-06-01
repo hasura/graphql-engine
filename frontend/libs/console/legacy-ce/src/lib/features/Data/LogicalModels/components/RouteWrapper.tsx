@@ -1,5 +1,5 @@
 import startCase from 'lodash/startCase';
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import { useServerConfig } from '../../../../hooks';
 import { Breadcrumbs } from '../../../../new-components/Breadcrumbs';

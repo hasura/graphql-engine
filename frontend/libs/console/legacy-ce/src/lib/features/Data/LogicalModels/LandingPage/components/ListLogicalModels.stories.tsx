@@ -1,7 +1,7 @@
 import { StoryObj, Meta } from '@storybook/react';
 import { buildMetadata } from '../../mocks/metadata';
-import { extractModelsAndQueriesFromMetadata } from '../../utils';
 import { ListLogicalModels } from './ListLogicalModels';
+import { extractModelsAndQueriesFromMetadata } from '../../../../hasura-metadata-api/selectors';
 
 export default {
   component: ListLogicalModels,

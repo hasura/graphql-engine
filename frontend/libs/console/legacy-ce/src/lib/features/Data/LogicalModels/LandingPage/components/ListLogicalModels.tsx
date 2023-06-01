@@ -39,8 +39,9 @@ export const ListLogicalModels = ({
         header: 'Actions',
         cell: ({ cell, row }) => (
           <div className="flex flex-row gap-2">
-            {/* Re add once we implement Edit functionality */}
-            {/* <Button onClick={() => onEditClick(row.original)}>Edit</Button> */}
+            <Button onClick={() => onEditClick(row.original)}>
+              Edit Permissions
+            </Button>
             <Button
               mode="destructive"
               onClick={() => onRemoveClick(row.original)}

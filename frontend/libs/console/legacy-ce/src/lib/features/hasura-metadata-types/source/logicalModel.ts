@@ -7,4 +7,11 @@ export type LogicalModelField = {
 export type LogicalModel = {
   fields: LogicalModelField[];
   name: string;
+  select_permissions?: {
+    permission: {
+      columns: string[];
+      filter: Record<string, any>;
+    };
+    role: string;
+  }[];
 };

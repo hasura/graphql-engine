@@ -67,17 +67,19 @@ export const useFormData = ({
         dataSourceName,
       })) as Operator[];
 
-      const defaultValues = createDefaultValues({
-        queryType,
-        roleName,
-        dataSourceName,
-        metadata,
-        table,
-        tableColumns,
-        defaultQueryRoot,
-        metadataSource,
-        supportedOperators: supportedOperators ?? [],
-      });
+      const defaultValues = {
+        ...createDefaultValues({
+          queryType,
+          roleName,
+          dataSourceName,
+          metadata,
+          table,
+          tableColumns,
+          defaultQueryRoot,
+          metadataSource,
+          supportedOperators: supportedOperators ?? [],
+        }),
+      };
 
       const formData = createFormData({
         dataSourceName,

@@ -5,6 +5,7 @@ import { isColumnComparator } from './utils';
 import { ColumnComparatorEntry } from './EntryTypes/ColumnComparatorEntry';
 import { useOperators } from './utils/comparatorsFromSchema';
 import { ValueInput } from './ValueInput';
+import { useForbiddenFeatures } from './ForbiddenFeaturesProvider';
 
 export const EntryType = ({
   k,
@@ -17,6 +18,7 @@ export const EntryType = ({
 }) => {
   const operators = useOperators({ path });
   const operator = operators.find(o => o.name === k);
+  const { hasFeature } = useForbiddenFeatures();
   if (isColumnComparator(k)) {
     return <ColumnComparatorEntry k={k} path={path} v={v} />;
   }
@@ -27,6 +29,9 @@ export const EntryType = ({
     return <ArrayEntry k={k} v={v} path={path} />;
   }
   if (k === '_exists') {
+    if (!hasFeature('exists')) {
+      return null;
+    }
     return <ExistsEntry k={k} v={v} path={path} />;
   }
   if (

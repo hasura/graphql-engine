@@ -49,4 +49,9 @@ export const NATIVE_QUERY_ROUTES = {
     title: 'Track Stored Procedure',
     subtitle: 'Expose your stored SQL procedures via the GraphQL API',
   },
+  '/data/native-queries/logical-models/{{source}}/{{name}}/permissions': {
+    title: 'Logical Models Permissions',
+    subtitle:
+      'Add permissions to your Logical Models to control access to your data',
+  },
 };

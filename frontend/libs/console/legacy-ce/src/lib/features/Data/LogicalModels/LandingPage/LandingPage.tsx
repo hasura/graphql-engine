@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { InjectedRouter, Link, withRouter } from 'react-router';
 import { useDestructiveAlert } from '../../../../new-components/Alert';
 import { Button } from '../../../../new-components/Button';
@@ -9,14 +9,14 @@ import { useMetadata } from '../../../hasura-metadata-api';
 import { useTrackLogicalModel } from '../../hooks/useTrackLogicalModel';
 import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
 import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
-import { RouteWrapper } from '../components/RouteWrapper';
 
 import { LogicalModelWithSource, NativeQueryWithSource } from '../types';
-import { extractModelsAndQueriesFromMetadata } from '../utils';
 import { ListLogicalModels } from './components/ListLogicalModels';
 import { ListNativeQueries } from './components/ListNativeQueries';
 import { ListStoredProcedures } from './components/ListStoredProcedures';
 import { NATIVE_QUERY_ROUTES } from '../constants';
+import { extractModelsAndQueriesFromMetadata } from '../../../hasura-metadata-api/selectors';
+import { RouteWrapper } from '../components/RouteWrapper';
 
 export const LandingPage = ({ pathname }: { pathname: string }) => {
   const push = usePushRoute();
@@ -149,8 +149,10 @@ export const LandingPage = ({ pathname }: { pathname: string }) => {
                   <ListLogicalModels
                     logicalModels={logicalModels}
                     isLoading={isLoading}
-                    onEditClick={() => {
-                      push?.('/data/native-queries/logical-models/permissions');
+                    onEditClick={model => {
+                      push?.(
+                        `/data/native-queries/logical-models/${model.source.name}/${model.name}/permissions`
+                      );
                     }}
                     onRemoveClick={handleRemoveLogicalModel}
                   />

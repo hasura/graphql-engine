@@ -41,6 +41,8 @@ export const RowPermissionBuilder = ({
         }}
         table={table}
         tables={tables}
+        logicalModel={undefined}
+        logicalModels={[]}
         permissions={value}
         comparators={comparators}
       />
