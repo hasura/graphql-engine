@@ -30,6 +30,7 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
+import Hasura.RQL.Types.QueryTags
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId (..))
 import Hasura.Session
@@ -108,7 +109,12 @@ convertQuerySelSet
               AB.dispatchAnyBackend @BackendExecute
                 exists
                 \(SourceConfigWith (sourceConfig :: (SourceConfig b)) queryTagsConfig (QDBR db)) -> do
-                  let queryTagsAttributes = encodeQueryTags $ QTQuery $ QueryMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
+                  let mReqId =
+                        case _qtcOmitRequestId <$> queryTagsConfig of
+                          -- we include the request id only if a user explicitly wishes for it to be included.
+                          Just False -> Just reqId
+                          _ -> Nothing
+                      queryTagsAttributes = encodeQueryTags $ QTQuery $ QueryMetadata mReqId maybeOperationName rootFieldName parameterizedQueryHash
                       queryTagsComment = Tagged.untag $ createQueryTags @m queryTagsAttributes queryTagsConfig
                       (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsQueryDB db
                   dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo env sourceName sourceConfig noRelsDBAST

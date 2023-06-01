@@ -43,6 +43,7 @@ spec = describe "Remote Relationship Metadata" do
   spec_Metadata_examples
   spec_RQLQuery_examples
   spec_RQLMetadataV1_examples
+  spec_query_tags_examples
 
 -------------------------------------------------------------------------------
 
@@ -183,6 +184,41 @@ spec_RQLMetadataV1_examples = describe "RQLMetadataV1" do
         rejectsJSON @RQLMetadataV1
           "expects exactly one of: to_source, to_remote_schema"
           $ mk_pg_remote_relationship_old_new_argument action
+
+-------------------------------------------------------------------------------
+
+-- |
+-- > type: 'set_query_tags'
+-- > args:
+-- >   source_name: # Name of the source | Required
+-- >   disabled: # Optional Field | Type: Bool | Values: true or false
+-- >   format: # Optional Field  | Values: standard or sqlcommenter
+-- >   omit_request_id: # Optional Field | Type: Bool | Values: true or false
+spec_query_tags_examples :: Spec
+spec_query_tags_examples =
+  describe "RQLMetadataV1 set_query_tags" do
+    for_
+      [ (disabled, format, omit_request_id)
+        | disabled <- Nothing : map Just (enumerate @Bool),
+          format <- Nothing : map Just ["standard", "sqlcommenter"],
+          omit_request_id <- Nothing : map Just (enumerate @Bool)
+      ]
+      \(mdisabled, mformat, momit_request_id) ->
+        it ("decodes with (disabled, format, omit_request_id) set to " <> show (mdisabled, mformat, momit_request_id)) do
+          decodesJSON @RQLMetadataV1 $
+            Aeson.object
+              [ "type" Aeson..= Aeson.String "set_query_tags",
+                "args"
+                  Aeson..= Aeson.object
+                    ( ["source_name" Aeson..= Aeson.String "postgres"]
+                        <> ["disabled" Aeson..= Aeson.Bool disabled | Just disabled <- [mdisabled]]
+                        <> ["format" Aeson..= Aeson.String format | Just format <- [mformat]]
+                        <> ["omit_request_id" Aeson..= Aeson.Bool omit_request_id | Just omit_request_id <- [momit_request_id]]
+                    )
+              ]
+
+enumerate :: (Enum a, Bounded a) => [a]
+enumerate = [minBound .. maxBound]
 
 -------------------------------------------------------------------------------
 -- Example YAML fragments for the metadata and query tests above.

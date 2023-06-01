@@ -74,7 +74,7 @@ The following information is present in query tags for the GraphQL operations.
 
 ### Query and Mutation
 
-1.  Request ID (`request_id`)
+1.  Request ID (`request_id`) - can be added by setting the `omit_request_id` flag to `false`
 2.  Operation Name (`operation_name`)
 3.  (Root) field name (alias if provided) (`field_name`)
 4.  Parameterized Query Hash (`parameterized_query_hash`)
@@ -92,7 +92,8 @@ sources:
   configuration:
   query_tags: # Optional Field
     disabled: # Optional Field | Type: Bool | Values: true or false
-    format: # Optinal Field  | Values: standard or sqlcommenter
+    format: # Optional Field  | Values: standard or sqlcommenter
+    omit_request_id: # Optional Field | Type: Bool | Values: true or false
 ```
 
 :::info
@@ -107,6 +108,16 @@ In the above metadata spec:
     tags is enabled for the source and the format used is <em>standard</em>.
 2.  To disable query tags for any source, set the value of <em>disabled</em> field to <em>true</em>.
 3.  To override the default format (<em>Standard</em>) for query tags, use the <em>format</em> field.
+4.  To add the `request_id` part of the query tags for any source, set the value of <em>omit_request_id</em> field to
+    <em>false</em>.
+
+:::info
+
+When the `use_prepared_statements` flag for a Postgres source is enabled,
+omitting the `request_id` part of the query tags is recommended.
+
+:::
+
 
 ## Example Metadata Specification
 
@@ -121,6 +132,7 @@ sources:
       configuration:
       query_tags:
         format: sqlcommenter
+        omit_request_id: false
 
   - name: hasura_db_2
       configuration:
@@ -137,4 +149,5 @@ args:
   source_name: # Name of the source | Required
   disabled: # Optional Field | Type: Bool | Values: true or false
   format: # Optional Field  | Values: standard or sqlcommenter
+  omit_request_id: # Optional Field | Type: Bool | Values: true or false
 ```
