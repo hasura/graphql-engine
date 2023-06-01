@@ -161,6 +161,7 @@ export const eventsPrefix = 'events';
 export const scheduledEventsPrefix = 'cron';
 export const adhocEventsPrefix = 'one-off-scheduled-events';
 export const dataEventsPrefix = 'data';
+export const schemaRegsitryPrefix = 'sh';
 
 export const getSTRoute = (type: string | undefined, relativeRoute: string) => {
   if (type === 'relative') {

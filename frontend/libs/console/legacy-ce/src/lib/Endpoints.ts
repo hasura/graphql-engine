@@ -33,6 +33,7 @@ export const getEndpoints = (globals: typeof consoleGlobals) => {
     }/v1/graphql`,
     prometheusUrl: `${baseUrl}/v1/metrics`,
     registerEETrial: `https://licensing.pro.hasura.io/v1/graphql`,
+    schemaRegistry: 'http://schema-registry.lux-dev.hasura.me/v1/graphql',
     // registerEETrial: `http://licensing.lux-dev.hasura.me/v1/graphql`,
   };
 
