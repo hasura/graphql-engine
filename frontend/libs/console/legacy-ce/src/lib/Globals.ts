@@ -162,6 +162,7 @@ export type EnvVars = {
   userId?: string;
   cdnAssets?: boolean;
   consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
+  launchDarklyClientId?: string;
 } & (
   | OSSServerEnv
   | CloudServerEnv
@@ -223,6 +224,7 @@ const globals = {
     ? parseConsoleType(window.__env?.consoleType)
     : ('' as ConsoleType),
   eeMode: window.__env?.eeMode === 'true',
+  launchDarklyClientId: window.__env?.launchDarklyClientId, // launchDarkly client ID
 };
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (!window.__env?.dataApiUrl) {
