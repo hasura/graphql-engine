@@ -120,8 +120,8 @@ CREATE TABLE todos (
 ALTER TABLE "users" ADD COLUMN country VARCHAR(255);
 
 INSERT INTO "users" (name, email, password, country) VALUES
-    ('John', 'john@example.com', 'password123', "US"),
-    ('Jane', 'jane@example.com', 'password456', "GB");
+    ('John', 'john@example.com', 'password123', 'US'),
+    ('Jane', 'jane@example.com', 'password456', 'GB');
 
 INSERT INTO todos (title, description, user_id) VALUES
     ('Buy groceries', 'Milk, eggs, bread', 1),
