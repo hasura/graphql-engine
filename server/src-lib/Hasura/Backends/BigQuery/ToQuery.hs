@@ -201,6 +201,8 @@ fromSelect Select {..} = finalExpression
               | Aliased thing alias <- toList expressions
             ]
       Nothing -> ""
+    fromJoinType LeftOuter = "LEFT OUTER JOIN "
+    fromJoinType Inner = "INNER JOIN "
     inner =
       SepByPrinter
         NewlinePrinter
@@ -214,7 +216,7 @@ fromSelect Select {..} = finalExpression
             ( map
                 ( \Join {..} ->
                     SeqPrinter
-                      [ "LEFT OUTER JOIN "
+                      [ fromJoinType joinType
                           <+> IndentPrinter 16 (fromJoinSource joinSource),
                         NewlinePrinter,
                         "AS " <+> fromJoinAlias joinAlias,

@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 
--- | Types for Transact-SQL aka T-SQL; the language of SQL Server.
+-- | Types for BigQuery
 module Hasura.Backends.BigQuery.Types
   ( Aggregate (..),
     Aliased (..),
@@ -29,6 +29,7 @@ module Hasura.Backends.BigQuery.Types
     Join (..),
     JoinProvenance (ArrayAggregateJoinProvenance, ArrayJoinProvenance, ObjectJoinProvenance, OrderByJoinProvenance),
     JoinSource (..),
+    JoinType (..),
     JsonPath (..),
     NullsOrder (..),
     Op (..),
@@ -213,6 +214,10 @@ data WindowFunction
   deriving stock (Eq, Show, Generic, Data, Lift, Ord)
   deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
 
+data JoinType = LeftOuter | Inner
+  deriving stock (Eq, Show, Generic, Data, Lift, Ord)
+  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
+
 data Join = Join
   { joinSource :: JoinSource,
     joinAlias :: EntityAlias,
@@ -220,7 +225,8 @@ data Join = Join
     joinProvenance :: JoinProvenance,
     joinFieldName :: Text,
     joinExtractPath :: Maybe Text,
-    joinRightTable :: EntityAlias
+    joinRightTable :: EntityAlias,
+    joinType :: JoinType
   }
   deriving stock (Eq, Ord, Show, Generic, Data, Lift)
   deriving anyclass (Hashable, NFData)
