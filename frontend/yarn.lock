@@ -13186,7 +13186,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"base64-js@npm:^1.3.1":
+"base64-js@npm:^1.3.0, base64-js@npm:^1.3.1":
   version: 1.5.1
   resolution: "base64-js@npm:1.5.1"
   checksum: 669632eb3745404c2f822a18fc3a0122d2f9a7a13f7fb8b5823ee19d1d2ff9ee5b52c53367176ea4ad093c332fd5ab4bd0ebae5a8e27917a4105a4cfc86b1005
@@ -17907,6 +17907,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fast-deep-equal@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "fast-deep-equal@npm:2.0.1"
+  checksum: b701835a87985e0ec4925bdf1f0c1e7eb56309b5d12d534d5b4b69d95a54d65bb16861c081781ead55f73f12d6c60ba668713391ee7fbf6b0567026f579b7b0b
+  languageName: node
+  linkType: hard
+
 "fast-glob@npm:3.2.7":
   version: 3.2.7
   resolution: "fast-glob@npm:3.2.7"
@@ -18856,6 +18863,7 @@ __metadata:
     jsonc-eslint-parser: ^2.1.0
     jsonwebtoken: 8.5.1
     jwt-decode: ^3.0.0
+    launchdarkly-react-client-sdk: ^3.0.6
     less: 3.11.1
     lint-staged: ^13.2.0
     lodash: ^4.17.21
@@ -23563,6 +23571,41 @@ __metadata:
     picocolors: ^1.0.0
     shell-quote: ^1.7.3
   checksum: 48e4230643e8fdb5c14c11314706d58d9f3fbafe2606be3d6e37da1918ad8bfe39dd87875c726a1b59b9f4da99d87ec3e36d4c528464f0b820f9e91e5cb1c02d
+  languageName: node
+  linkType: hard
+
+"launchdarkly-js-client-sdk@npm:^3.1.3":
+  version: 3.1.3
+  resolution: "launchdarkly-js-client-sdk@npm:3.1.3"
+  dependencies:
+    escape-string-regexp: ^4.0.0
+    launchdarkly-js-sdk-common: 5.0.3
+  checksum: 9681eb563f6f13d253f6e0aaaf8352579e5de71ff828b3e271130be9e10a8d1f6d976e79e9ea62883f11568fd573d49200fc7e4acc380b907fb5494ca0f052eb
+  languageName: node
+  linkType: hard
+
+"launchdarkly-js-sdk-common@npm:5.0.3":
+  version: 5.0.3
+  resolution: "launchdarkly-js-sdk-common@npm:5.0.3"
+  dependencies:
+    base64-js: ^1.3.0
+    fast-deep-equal: ^2.0.1
+    uuid: ^8.0.0
+  checksum: 69f03217e1810f4a8a1d7f72035022902b96aa0fe4b6a45fe29b9430120a7becdb3540c3a0ffcf2044f88d62aaebef9bc1bb068a59ddc1cacfd447be988aa97f
+  languageName: node
+  linkType: hard
+
+"launchdarkly-react-client-sdk@npm:^3.0.6":
+  version: 3.0.6
+  resolution: "launchdarkly-react-client-sdk@npm:3.0.6"
+  dependencies:
+    hoist-non-react-statics: ^3.3.2
+    launchdarkly-js-client-sdk: ^3.1.3
+    lodash.camelcase: ^4.3.0
+  peerDependencies:
+    react: ^16.6.3 || ^17.0.0 || ^18.0.0
+    react-dom: ^16.8.4 || ^17.0.0 || ^18.0.0
+  checksum: 7a765d8aaee8791f343d9cf2aee34fe5d540e86cd739a2dc5e7c111dff77fed81d8e28e17cabe1ea50049082c5a01041a56d4b6027380a388b6148eb58759650
   languageName: node
   linkType: hard
 
@@ -34664,7 +34707,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:8.3.2, uuid@npm:^8.3.0, uuid@npm:^8.3.2":
+"uuid@npm:8.3.2, uuid@npm:^8.0.0, uuid@npm:^8.3.0, uuid@npm:^8.3.2":
   version: 8.3.2
   resolution: "uuid@npm:8.3.2"
   bin:
