@@ -21176,6 +21176,7 @@ apolloRootFields :: ApolloFederationStatus -> [(Name, Parser 'Output Parse (Apol
 --   we fallback to the experimental feature flag
 getApolloFederationStatus :: HashSet ExperimentalFeature -> Maybe ApolloFederationStatus -> ApolloFederationStatus
 generateSDLWithAllTypes :: SchemaIntrospection -> Text
+generateSDL :: SchemaIntrospection -> Text
 instance GHC.Show.Show Hasura.GraphQL.ApolloFederation.ApolloFederationAnyType
 instance GHC.Classes.Eq Hasura.GraphQL.ApolloFederation.GenerateSDLType
 

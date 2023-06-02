@@ -477,7 +477,7 @@ Logger impl
 </span><a href="#local-6989586621691394848"><span class="hs-identifier hs-var">adminErrs</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-209"></span><span>                    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; RoleName -&gt; SchemaHash
 </span><a href="Hasura.RQL.DDL.SchemaRegistry.html#calculateSchemaSDLHash"><span class="hs-identifier hs-var">calculateSchemaSDLHash</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaIntrospection -&gt; Text
-</span><a href="Hasura.GraphQL.ApolloFederation.html#generateSDLWithAllTypes"><span class="hs-identifier hs-var">generateSDLWithAllTypes</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection
+</span><a href="Hasura.GraphQL.ApolloFederation.html#generateSDL"><span class="hs-identifier hs-var">generateSDL</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection
 </span><a href="#local-6989586621691394847"><span class="hs-identifier hs-var">adminIntrospection</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="Hasura.RQL.Types.Roles.html#adminRoleName"><span class="hs-identifier hs-var">adminRoleName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-210"></span><span>                    </span><span class="annot"><span class="annottext">MetadataResourceVersion
@@ -572,7 +572,7 @@ Logger impl
 </span><a href="#local-6989586621691394800"><span class="hs-identifier hs-var">schemaIntrospection</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-238"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691394799"><span class="annot"><span class="annottext">schemaSdl :: Text
 </span><a href="#local-6989586621691394799"><span class="hs-identifier hs-var hs-var">schemaSdl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection -&gt; Text
-</span><a href="Hasura.GraphQL.ApolloFederation.html#generateSDLWithAllTypes"><span class="hs-identifier hs-var">generateSDLWithAllTypes</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection
+</span><a href="Hasura.GraphQL.ApolloFederation.html#generateSDL"><span class="hs-identifier hs-var">generateSDL</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaIntrospection
 </span><a href="#local-6989586621691394800"><span class="hs-identifier hs-var">schemaIntrospection</span></a></span><span>
 </span><span id="line-239"></span><span>           </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaSDL -&gt; SchemaHash -&gt; GQLSchemaInformation
 </span><a href="Hasura.RQL.DDL.SchemaRegistry.html#GQLSchemaInformation"><span class="hs-identifier hs-var">GQLSchemaInformation</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; SchemaSDL
