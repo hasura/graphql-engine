@@ -41,6 +41,7 @@ idColumnBuilder :: Expect.ColumnInfoBuilder
 idColumnBuilder =
   Expect.ColumnInfoBuilder
     { cibName = "id",
+      cibPosition = 0,
       cibType = ColumnScalar PGInteger,
       cibNullable = False,
       cibIsPrimaryKey = True
@@ -50,6 +51,7 @@ nameColumnBuilder :: Expect.ColumnInfoBuilder
 nameColumnBuilder =
   Expect.ColumnInfoBuilder
     { cibName = "name",
+      cibPosition = 1,
       cibType = ColumnScalar PGText,
       cibNullable = False,
       cibIsPrimaryKey = False
@@ -59,6 +61,7 @@ descColumnBuilder :: Expect.ColumnInfoBuilder
 descColumnBuilder =
   Expect.ColumnInfoBuilder
     { cibName = "description",
+      cibPosition = 2,
       cibType = ColumnScalar PGText,
       cibNullable = False,
       cibIsPrimaryKey = False

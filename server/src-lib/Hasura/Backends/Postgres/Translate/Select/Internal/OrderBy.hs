@@ -5,7 +5,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy
 where
 
 import Control.Lens ((^?))
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
@@ -133,7 +133,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
                   relSource = ObjectRelationSource relName colMapping selectSource Nullable
               pure
                 ( relSource,
-                  HashMap.singleton relOrderByAlias relOrdByExp,
+                  InsOrdHashMap.singleton relOrderByAlias relOrdByExp,
                   S.mkQIdenExp relSourcePrefix relOrderByAlias
                 )
         AOCArrayAggregation relInfo relFilter aggOrderBy -> withWriteArrayRelation $ do
@@ -160,7 +160,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
               pure
                 ( relSource,
                   topExtractor,
-                  HashMap.fromList $ aggregateFieldsToExtractorExps relSourcePrefix fields,
+                  InsOrdHashMap.fromList $ aggregateFieldsToExtractorExps relSourcePrefix fields,
                   S.mkQIdenExp relSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
                 )
         AOCComputedField ComputedFieldOrderBy {..} ->
@@ -186,7 +186,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
               pure
                 ( source,
                   topExtractor,
-                  HashMap.fromList $ aggregateFieldsToExtractorExps computedFieldSourcePrefix fields,
+                  InsOrdHashMap.fromList $ aggregateFieldsToExtractorExps computedFieldSourcePrefix fields,
                   S.mkQIdenExp computedFieldSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
                 )
 

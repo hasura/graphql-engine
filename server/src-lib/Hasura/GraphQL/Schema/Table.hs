@@ -258,7 +258,7 @@ tableSelectFields tableInfo = do
 tableColumns ::
   forall b. TableInfo b -> [ColumnInfo b]
 tableColumns tableInfo =
-  mapMaybe columnInfo . HashMap.elems . _tciFieldInfoMap . _tiCoreInfo $ tableInfo
+  sortOn ciPosition . mapMaybe columnInfo . HashMap.elems . _tciFieldInfoMap . _tiCoreInfo $ tableInfo
   where
     columnInfo (FIColumn (SCIScalarColumn ci)) = Just ci
     columnInfo _ = Nothing

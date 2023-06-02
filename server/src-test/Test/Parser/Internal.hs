@@ -55,6 +55,8 @@ mkTable name =
 data ColumnInfoBuilder = ColumnInfoBuilder
   { -- | name of the column
     cibName :: Text,
+    -- | column position
+    cibPosition :: Int,
     -- | Column type, e.g.
     --
     -- > ColumnScalar PGText
@@ -73,7 +75,7 @@ mkColumnInfo ColumnInfoBuilder {..} =
   ColumnInfo
     { ciColumn = unsafePGCol cibName,
       ciName = unsafeMkName cibName,
-      ciPosition = 0,
+      ciPosition = cibPosition,
       ciType = cibType,
       ciIsNullable = cibNullable,
       ciDescription = Nothing,

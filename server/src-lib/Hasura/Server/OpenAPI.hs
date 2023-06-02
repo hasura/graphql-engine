@@ -122,7 +122,7 @@ buildEndpoint schemaTypes method EndpointMetadata {..} = do
 -- We expect one optional parameter per known scalar variable.
 collectParams :: Structure -> EndpointUrl -> [Referenced Param]
 collectParams (Structure _ vars) eURL = do
-  (G.unName -> varName, VariableInfo {..}) <- HashMap.toList vars
+  (G.unName -> varName, VariableInfo {..}) <- sortOn fst $ HashMap.toList vars
   case _viTypeInfo of
     -- we do not allow input objects or enums in parameters
     InputFieldObjectInfo _ -> empty

@@ -24,6 +24,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Process
 where
 
 import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended (ToTxt (toTxt))
 import Data.Text.NonEmpty qualified as TNE
@@ -205,7 +206,7 @@ processAnnAggregateSelect ::
   AnnAggregateSelect ('Postgres pgKind) ->
   m
     ( SelectSource,
-      HashMap.HashMap S.ColumnAlias S.SQLExp,
+      InsOrdHashMap S.ColumnAlias S.SQLExp,
       S.Extractor
     )
 processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
@@ -247,7 +248,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
           $ flip concatMap (map (second snd) processedFields)
           $ \(FieldName fieldText, fieldExp) -> [S.SELit fieldText, fieldExp]
       nodeExtractors =
-        HashMap.fromList
+        InsOrdHashMap.fromList
           $ concatMap (fst . snd) processedFields
           <> orderByAndDistinctExtrs
 
@@ -347,7 +348,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
           annFieldsExtr <- processAnnFields (identifierToTableIdentifier $ _pfThis sourcePrefixes) fieldName HashMap.empty objAnnFields tCase
           pure
             ( objRelSource,
-              HashMap.fromList [annFieldsExtr],
+              uncurry InsOrdHashMap.singleton annFieldsExtr,
               S.mkQIdenExp objRelSourcePrefix fieldName
             )
         AFArrayRelation arrSel -> do
@@ -602,7 +603,7 @@ processAnnSimpleSelect ::
   AnnSimpleSelect ('Postgres pgKind) ->
   m
     ( SelectSource,
-      HashMap.HashMap S.ColumnAlias S.SQLExp
+      InsOrdHashMap S.ColumnAlias S.SQLExp
     )
 processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel = do
   (selectSource, orderByAndDistinctExtrs, _) <-
@@ -621,7 +622,7 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
       similarArrayFields
       annSelFields
       tCase
-  let allExtractors = HashMap.fromList $ annFieldsExtr : orderByAndDistinctExtrs
+  let allExtractors = InsOrdHashMap.fromList $ annFieldsExtr : orderByAndDistinctExtrs
   pure (selectSource, allExtractors)
   where
     AnnSelectG annSelFields tableFrom tablePermissions tableArgs _ tCase = annSimpleSel
@@ -644,7 +645,7 @@ processConnectionSelect ::
   m
     ( ArrayConnectionSource,
       S.Extractor,
-      HashMap.HashMap S.ColumnAlias S.SQLExp
+      InsOrdHashMap S.ColumnAlias S.SQLExp
     )
 processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connectionSelect = do
   (selectSource, orderByAndDistinctExtrs, maybeOrderByCursor) <-
@@ -666,7 +667,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
           mkCursorExtractor primaryKeyColumnsObjectExp : primaryKeyColumnExtractors
   (topExtractorExp, exps) <- flip runStateT [] $ processFields selectSource
   let topExtractor = S.Extractor topExtractorExp $ Just $ S.toColumnAlias fieldIdentifier
-      allExtractors = HashMap.fromList $ cursorExtractors <> exps <> orderByAndDistinctExtrs
+      allExtractors = InsOrdHashMap.fromList $ cursorExtractors <> exps <> orderByAndDistinctExtrs
       arrayConnectionSource =
         ArrayConnectionSource
           relAlias

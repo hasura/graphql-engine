@@ -11,6 +11,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect
 where
 
 import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
@@ -42,7 +43,7 @@ generateSQLSelect ::
 generateSQLSelect joinCondition selectSource selectNode =
   S.mkSelect
     { S.selExtr =
-        case [S.Extractor e $ Just a | (a, e) <- HashMap.toList extractors] of
+        case [S.Extractor e $ Just a | (a, e) <- InsOrdHashMap.toList extractors] of
           -- If the select list is empty we will generated code which looks like this:
           -- > SELECT FROM ...
           -- This works for postgres, but not for cockroach, which expects a non-empty

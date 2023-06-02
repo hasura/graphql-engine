@@ -159,7 +159,6 @@ parseScalarValueColumnType ::
 parseScalarValueColumnType columnType value = case columnType of
   ColumnScalar scalarType -> liftEither $ parseScalarValue @b scalarType value
   ColumnEnumReference (EnumReference tableName enumValues _) ->
-    -- maybe (pure $ PGNull PGText) parseEnumValue =<< decodeValue value
     parseEnumValue =<< decodeValue value
     where
       parseEnumValue :: Maybe G.Name -> m (ScalarValue b)
@@ -169,7 +168,7 @@ parseScalarValueColumnType columnType value = case columnType of
           unless (evn `elem` enums)
             $ throw400 UnexpectedPayload
             $ "expected one of the values "
-            <> dquoteList enums
+            <> dquoteList (sort enums)
             <> " for type "
             <> snakeCaseTableName @b tableName
             <<> ", given "

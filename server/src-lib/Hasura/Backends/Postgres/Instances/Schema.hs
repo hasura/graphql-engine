@@ -450,7 +450,7 @@ columnParser columnType nullability = case columnType of
                   `onLeft` (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError)
         }
   ColumnEnumReference (EnumReference tableName enumValues tableCustomName) ->
-    case nonEmpty (HashMap.toList enumValues) of
+    case nonEmpty . sortOn fst $ HashMap.toList enumValues of
       Just enumValuesList ->
         peelWithOrigin
           . fmap (ColumnValue columnType)

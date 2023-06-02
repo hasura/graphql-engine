@@ -24,6 +24,7 @@ import Data.Function ((&))
 import Data.Functor ((<&>))
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as S
 import Data.Hashable (Hashable)
@@ -175,7 +176,7 @@ selectionSet ::
   Name ->
   Maybe Description ->
   [FieldParser origin m a] ->
-  Parser origin 'Output m (InsOrdHashMap.InsOrdHashMap Name (ParsedSelection a))
+  Parser origin 'Output m (InsOrdHashMap Name (ParsedSelection a))
 selectionSet name desc fields = selectionSetObject name desc fields []
 
 safeSelectionSet ::
@@ -184,7 +185,7 @@ safeSelectionSet ::
   Name ->
   Maybe Description ->
   [FieldParser origin m a] ->
-  n (Parser origin 'Output m (InsOrdHashMap.InsOrdHashMap Name (ParsedSelection a)))
+  n (Parser origin 'Output m (InsOrdHashMap Name (ParsedSelection a)))
 {-# INLINE safeSelectionSet #-}
 safeSelectionSet name description fields =
   case duplicatesList of
@@ -194,10 +195,14 @@ safeSelectionSet name description fields =
     -- plural
     printedDuplicates -> throwError $ "Encountered conflicting definitions in the selection set for " <> toErrorValue name <> " for fields: " <> toErrorValue printedDuplicates <> ". Fields must not be defined more than once across all sources."
   where
-    namesOrigins :: HashMap Name [Maybe origin]
-    namesOrigins = HashMap.fromListWith (<>) $ (dName &&& (pure . dOrigin)) . fDefinition <$> fields
-    duplicates :: HashMap Name [Maybe origin]
-    duplicates = HashMap.filter ((> 1) . length) namesOrigins
+    namesOrigins :: InsOrdHashMap Name [Maybe origin]
+    namesOrigins =
+      foldr
+        (uncurry (InsOrdHashMap.insertWith (<>)))
+        InsOrdHashMap.empty
+        ((dName &&& (pure . dOrigin)) . fDefinition <$> fields)
+    duplicates :: InsOrdHashMap Name [Maybe origin]
+    duplicates = InsOrdHashMap.filter ((> 1) . length) namesOrigins
     uniques = S.toList . S.fromList
     printEntry (fieldName, originsM) =
       let origins = uniques $ catMaybes originsM
@@ -207,7 +212,7 @@ safeSelectionSet name description fields =
                 toErrorValue fieldName <> " defined in " <> toErrorValue origins <> " and of unknown origin"
             | otherwise ->
                 toErrorValue fieldName <> " defined in " <> toErrorValue origins
-    duplicatesList = printEntry <$> HashMap.toList duplicates
+    duplicatesList = printEntry <$> InsOrdHashMap.toList duplicates
 
 -- Should this rather take a non-empty `FieldParser` list?
 -- See also Note [Selectability of tables].

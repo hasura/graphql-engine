@@ -44,13 +44,7 @@ import Test.Hspec
 import Test.Hspec.Extended
 import Test.Parser.Field qualified as GQL
 import Test.Parser.Internal
-  ( ColumnInfoBuilder
-      ( ColumnInfoBuilder,
-        cibIsPrimaryKey,
-        cibName,
-        cibNullable,
-        cibType
-      ),
+  ( ColumnInfoBuilder (..),
     TableInfoBuilder (columns, relations),
     buildTableInfo,
     mkTable,
@@ -255,12 +249,14 @@ spec = do
             { columns =
                 [ ColumnInfoBuilder
                     { cibName = "id",
+                      cibPosition = 0,
                       cibType = ColumnScalar PGInteger,
                       cibNullable = False,
                       cibIsPrimaryKey = True
                     },
                   ColumnInfoBuilder
                     { cibName = "title",
+                      cibPosition = 1,
                       cibType = ColumnScalar PGText,
                       cibNullable = False,
                       cibIsPrimaryKey = False
@@ -277,24 +273,28 @@ spec = do
             { columns =
                 [ ColumnInfoBuilder
                     { cibName = "id",
+                      cibPosition = 0,
                       cibType = ColumnScalar PGInteger,
                       cibNullable = False,
                       cibIsPrimaryKey = True
                     },
                   ColumnInfoBuilder
                     { cibName = "title",
+                      cibPosition = 1,
                       cibType = ColumnScalar PGText,
                       cibNullable = False,
                       cibIsPrimaryKey = False
                     },
                   ColumnInfoBuilder
                     { cibName = "duration_seconds",
+                      cibPosition = 2,
                       cibType = ColumnScalar PGInteger,
                       cibNullable = False,
                       cibIsPrimaryKey = False
                     },
                   ColumnInfoBuilder
                     { cibName = "album_id",
+                      cibPosition = 3,
                       cibType = ColumnScalar PGInteger,
                       cibNullable = False,
                       cibIsPrimaryKey = False

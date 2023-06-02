@@ -136,7 +136,7 @@ applySortingAndSlicing SortingAndSlicing {..} =
               ApplySortingAndSlicing (Nothing, noSlicing, Nothing) (Just nodeOrderBy, _sasSlicing, nodeDistinctOn)
 
 data SelectNode = SelectNode
-  { _snExtractors :: HashMap.HashMap Postgres.ColumnAlias Postgres.SQLExp,
+  { _snExtractors :: InsOrdHashMap Postgres.ColumnAlias Postgres.SQLExp,
     _snJoinTree :: JoinTree
   }
   deriving stock (Eq, Show)
