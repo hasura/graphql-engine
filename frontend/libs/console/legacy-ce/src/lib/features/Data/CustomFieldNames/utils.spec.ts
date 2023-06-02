@@ -58,10 +58,10 @@ describe('getTrackingTableFormPlaceholders', () => {
       insert_one: 'insert_customizeTableName_one (default)',
 
       update: 'update_customizeTableName (default)',
-      update_by_pk: 'update_by_pk_customizeTableName (default)',
+      update_by_pk: 'update_customizeTableName_by_pk (default)',
 
       delete: 'delete_customizeTableName (default)',
-      delete_by_pk: 'delete_by_pk_customizeTableName (default)',
+      delete_by_pk: 'delete_customizeTableName_by_pk (default)',
 
       update_many: 'update_many_customizeTableName (default)',
     };
