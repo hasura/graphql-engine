@@ -23,7 +23,7 @@ import Data.Text.Lazy.Encoding qualified as LazyText
 import Data.Text.Lazy.IO qualified as LazyText
 import Network.HTTP.Client qualified as HttpClient
 import Network.HTTP.Types (Header, Status (..))
-import Servant.Client (BaseUrl, showBaseUrl)
+import Servant.Client (BaseUrl (baseUrlPath), showBaseUrl)
 import System.FilePath ((</>))
 import Prelude
 
@@ -43,7 +43,7 @@ writeRequest baseUrl request fileNamePrefix testFolder = do
     requestLine = method <> " " <> requestBaseUrl <> requestPath <> "\n"
 
     requestBaseUrl :: TextBuilder.Builder
-    requestBaseUrl = TextBuilder.fromString $ showBaseUrl baseUrl
+    requestBaseUrl = TextBuilder.fromString $ showBaseUrl (baseUrl {baseUrlPath = ""})
 
     requestPath :: TextBuilder.Builder
     requestPath = bsToBuilder $ HttpClient.path request
