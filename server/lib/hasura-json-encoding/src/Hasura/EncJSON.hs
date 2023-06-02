@@ -7,6 +7,7 @@ module Hasura.EncJSON
     encJToLBS,
     encJToBS,
     encJFromJValue,
+    encJFromJEncoding,
     encJFromChar,
     encJFromText,
     encJFromNonEmptyText,
@@ -149,6 +150,10 @@ encJFromLBS = EncJSON . BB.lazyByteString
 encJFromJValue :: (J.ToJSON a) => a -> EncJSON
 encJFromJValue = encJFromBuilder . J.fromEncoding . J.toEncoding
 {-# INLINE encJFromJValue #-}
+
+encJFromJEncoding :: J.Encoding -> EncJSON
+encJFromJEncoding = encJFromBuilder . J.fromEncoding
+{-# INLINE encJFromJEncoding #-}
 
 encJFromChar :: Char -> EncJSON
 encJFromChar = EncJSON . BB.charUtf8

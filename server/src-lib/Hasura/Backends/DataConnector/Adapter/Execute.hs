@@ -21,7 +21,7 @@ import Hasura.Backends.DataConnector.Plan.MutationPlan qualified as Plan
 import Hasura.Backends.DataConnector.Plan.QueryPlan qualified as Plan
 import Hasura.Backends.DataConnector.Plan.RemoteRelationshipPlan qualified as Plan
 import Hasura.Base.Error (Code (..), QErr, throw400)
-import Hasura.EncJSON (EncJSON, encJFromBuilder, encJFromJValue)
+import Hasura.EncJSON (EncJSON, encJFromJEncoding, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend (BackendExecute (..), DBStepInfo (..), ExplainPlan (..), OnBaseMonad (..), withNoStatistics)
 import Hasura.GraphQL.Namespace qualified as GQL
 import Hasura.Prelude
@@ -114,7 +114,7 @@ buildQueryAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceNa
 buildQueryAction sourceName SourceConfig {..} Plan {..} = do
   queryResponse <- Client.query sourceName _scConfig _pRequest
   reshapedResponse <- Tracing.newSpan "QueryResponse reshaping" $ _pResponseReshaper queryResponse
-  pure . encJFromBuilder $ J.fromEncoding reshapedResponse
+  pure $ encJFromJEncoding reshapedResponse
 
 -- Delegates the generation to the Agent's /explain endpoint if it has that capability,
 -- otherwise, returns the IR sent to the agent.
@@ -139,4 +139,4 @@ buildMutationAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.Sourc
 buildMutationAction sourceName SourceConfig {..} Plan {..} = do
   mutationResponse <- Client.mutation sourceName _scConfig _pRequest
   reshapedResponse <- Tracing.newSpan "MutationResponse reshaping" $ _pResponseReshaper mutationResponse
-  pure . encJFromBuilder $ J.fromEncoding reshapedResponse
+  pure $ encJFromJEncoding reshapedResponse

@@ -674,7 +674,7 @@ extractFieldFromResponse fieldName resultCustomizer resp = do
   return fieldVal
   where
     do400 = withExceptT Right . throw400 RemoteSchemaError
-    doGQExecError = withExceptT Left . throwError . GQExecError
+    doGQExecError = withExceptT Left . throwError . GQExecError . fmap J.toEncoding
 
 buildRaw :: (Applicative m) => JO.Value -> m AnnotatedResponsePart
 buildRaw json = do
@@ -740,7 +740,7 @@ runGQBatched env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logg
           removeHeaders =
             flip HttpResponse []
               . encJFromList
-              . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
+              . map (either (encJFromJEncoding . encodeGQErr includeInternal) _hrBody)
       responses <- for reqs \req -> fmap (req,) $ try $ (fmap . fmap . fmap) snd $ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
       let requestsOperationLogs = map fst $ rights $ map snd responses
           batchOperationLogs =

@@ -26,6 +26,7 @@ import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control qualified as MC
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
+import Data.Aeson.Encoding qualified as J
 import Data.Aeson.TH qualified as J
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as LBS
@@ -356,7 +357,7 @@ onConn wsId requestHead ipAddress onConnHActions = do
           (HTTP.statusCode $ qeStatus qErr)
           (HTTP.statusMessage $ qeStatus qErr)
           []
-          (LBS.toStrict $ J.encode $ encodeGQLErr False qErr)
+          (LBS.toStrict $ J.encodingToLazyByteString $ encodeGQLErr False qErr)
 
     checkPath = case WS.requestPath requestHead of
       "/v1alpha1/graphql" -> return (ERTLegacy, E.QueryHasura)

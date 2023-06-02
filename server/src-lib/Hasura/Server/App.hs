@@ -33,6 +33,7 @@ import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson hiding (json)
 import Data.Aeson qualified as J
+import Data.Aeson.Encoding qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types qualified as J
@@ -292,7 +293,7 @@ mkSpockAction ::
   ) =>
   AppStateRef impl ->
   -- | `QErr` JSON encoder function
-  (Bool -> QErr -> Value) ->
+  (Bool -> QErr -> Encoding) ->
   -- | `QErr` modifier
   (QErr -> QErr) ->
   APIHandler m a ->
@@ -416,7 +417,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
     logErrorAndResp userInfo reqId waiReq req includeInternal headers extraUserInfo qErr = do
       AppEnv {..} <- lift askAppEnv
       let httpLogMetadata = buildHttpLogMetadata @m emptyHttpLogGraphQLInfo extraUserInfo
-          jsonResponse = J.encode $ qErrEncoder includeInternal qErr
+          jsonResponse = J.encodingToLazyByteString $ qErrEncoder includeInternal qErr
           contentLength = ("Content-Length", B8.toStrict $ BB.toLazyByteString $ BB.int64Dec $ BL.length jsonResponse)
           allHeaders = [contentLength, jsonHeader]
       -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#common-attributes
@@ -1102,7 +1103,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore = do
     spockAction ::
       forall a.
       (FromJSON a) =>
-      (Bool -> QErr -> Value) ->
+      (Bool -> QErr -> Encoding) ->
       (QErr -> QErr) ->
       APIHandler m a ->
       Spock.ActionT m ()
@@ -1152,7 +1153,8 @@ onlyWhenApiEnabled isEnabled appStateRef endpointAction = do
     else do
       let qErr = err404 NotFound "resource does not exist"
       Spock.setStatus $ qeStatus qErr
-      Spock.json $ encodeQErr False qErr
+      setHeader jsonHeader
+      Spock.lazyBytes . J.encodingToLazyByteString $ encodeQErr False qErr
 
 raiseGenericApiError ::
   forall m.
