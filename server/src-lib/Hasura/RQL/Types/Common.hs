@@ -170,7 +170,7 @@ instance ToJSON JsonAggSelect where
     JASSingleObject -> "single_row"
 
 data InsertOrder = BeforeParent | AfterParent
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData InsertOrder
 

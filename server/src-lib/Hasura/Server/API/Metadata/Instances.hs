@@ -96,6 +96,7 @@ instance FromJSON RQLMetadataV1 where
       "get_feature_flag" -> RMGetFeatureFlag <$> args
       "bulk" -> RMBulk <$> args
       "bulk_keep_going" -> RMBulkKeepGoing <$> args
+      "bulk_atomic" -> RMBulkAtomic <$> args
       -- Backend prefixed metadata actions:
       _ -> do
         -- 1) Parse the backend source kind and metadata command:

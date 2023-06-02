@@ -102,10 +102,10 @@ trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryOb
       |]
 
 trackNativeQuery :: (HasCallStack) => String -> NativeQuery -> TestEnvironment -> IO ()
-trackNativeQuery sourceName logMod testEnvironment = do
+trackNativeQuery sourceName naqu testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
 
-  let command = trackNativeQueryCommand sourceName backendTypeMetadata logMod
+  let command = trackNativeQueryCommand sourceName backendTypeMetadata naqu
 
   GraphqlEngine.postMetadata_ testEnvironment command
 

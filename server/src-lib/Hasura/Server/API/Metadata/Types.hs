@@ -204,6 +204,9 @@ data RQLMetadataV1
   | -- Bulk metadata queries, but don't stop if something fails - return all
     -- successes and failures as separate items
     RMBulkKeepGoing [RQLMetadataRequest]
+  | -- | Bulk metadata queries, running a single schema cache resolve at the
+    -- end. Only works for a subset of commands.
+    RMBulkAtomic [RQLMetadataRequest]
   deriving (Generic)
 
 data RQLMetadataV2

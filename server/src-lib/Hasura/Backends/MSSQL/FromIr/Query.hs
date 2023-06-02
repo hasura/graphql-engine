@@ -342,8 +342,7 @@ fromNativeQuery :: IR.NativeQuery 'MSSQL Expression -> FromIr TSQL.From
 fromNativeQuery nativeQuery = do
   let nativeQueryName = IR.nqRootFieldName nativeQuery
       nativeQuerySql = IR.nqInterpolatedQuery nativeQuery
-      cteName = T.toTxt (getNativeQueryName nativeQueryName)
-  tellCTE (Aliased nativeQuerySql cteName)
+  cteName <- tellCTE nativeQueryName nativeQuerySql
   pure $ TSQL.FromIdentifier cteName
 
 fromStoredProcedure :: IR.StoredProcedure 'MSSQL Expression -> FromIr TSQL.From

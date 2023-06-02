@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskellQuotes #-}
+
 -- | Schema parsers for native queries.
 module Hasura.NativeQuery.Schema
   ( defaultSelectNativeQuery,
@@ -77,24 +79,25 @@ defaultSelectNativeQueryObject NativeQueryInfo {..} fieldName description = runM
           sourceName
           (mkAnyBackend $ MO.SMONativeQuery @b _nqiRootFieldName)
 
-  pure
-    $ P.setFieldParserOrigin sourceObj
-    $ P.subselection
-      fieldName
-      description
-      nativeQueryArgsParser
-      selectionSetParser
-    <&> \(nqArgs, fields) ->
-      IR.AnnObjectSelectG
-        fields
-        ( IR.FromNativeQuery
-            NativeQuery
-              { nqRootFieldName = _nqiRootFieldName,
-                nqInterpolatedQuery = interpolatedQuery _nqiCode nqArgs,
-                nqLogicalModel = buildLogicalModelIR _nqiReturns
-              }
-        )
-        (IR._tpFilter logicalModelPermissions)
+  lift $ P.memoizeOn 'defaultSelectNativeQueryObject (sourceName, fieldName) do
+    pure
+      $ P.setFieldParserOrigin sourceObj
+      $ P.subselection
+        fieldName
+        description
+        nativeQueryArgsParser
+        selectionSetParser
+      <&> \(nqArgs, fields) ->
+        IR.AnnObjectSelectG
+          fields
+          ( IR.FromNativeQuery
+              NativeQuery
+                { nqRootFieldName = _nqiRootFieldName,
+                  nqInterpolatedQuery = interpolatedQuery _nqiCode nqArgs,
+                  nqLogicalModel = buildLogicalModelIR _nqiReturns
+                }
+          )
+          (IR._tpFilter logicalModelPermissions)
 
 -- | select a native query - implementation is the same for root fields and
 -- array relationships
