@@ -89,12 +89,3 @@ source-repository-package
   location: https://github.com/hasura/text.git
   tag: ba0fd2bf256c996a6c85dbdc8590a6fcde41b8f8
 
--- This is a version of Sandwich 0.1.2.0 but including
--- this PR https://github.com/codedownio/sandwich/pull/69
--- which adds the ability to skip tests from the command line
-source-repository-package
-  type: git
-  location: https://github.com/hasura/sandwich.git
-  tag: v0.1.2.0-incl-skipping.0
-  subdir: sandwich
-

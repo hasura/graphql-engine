@@ -131,7 +131,7 @@ test-suite tests-dc-api
     mtl,
     optparse-applicative,
     scientific,
-    sandwich,
+    sandwich >= 0.1.3.0,
     servant,
     servant-client,
     servant-client-core,
