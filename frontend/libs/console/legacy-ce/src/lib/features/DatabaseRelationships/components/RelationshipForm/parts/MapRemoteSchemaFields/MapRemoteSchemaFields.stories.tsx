@@ -6,7 +6,7 @@ import { ReactQueryDecorator } from '../../../../../../storybook/decorators/reac
 import { StoryFn, Meta } from '@storybook/react';
 import { MapRemoteSchemaFields } from './MapRemoteSchemaFields';
 import { useRemoteSchemaIntrospection } from '../../../../hooks/useRemoteSchema';
-import { handlers } from '../../../../handler.mock';
+import { handlers } from '../../../../mocks/handler.mock';
 
 export default {
   component: MapRemoteSchemaFields,

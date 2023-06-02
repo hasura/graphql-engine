@@ -1,5 +1,6 @@
-import { Metadata } from '../hasura-metadata-types';
+import { Metadata } from '../../hasura-metadata-types';
 import { rest } from 'msw';
+import { mocksTrackedArrayRelationship } from './mocks';
 
 const mockMetadata: Metadata = {
   resource_version: 143,
@@ -2156,11 +2157,43 @@ export const handlers = () => [
     return res(ctx.json({}));
   }),
   rest.post(`http://localhost:8080/v2/query`, (req, res, ctx) => {
-    // const requestBody = req.body as Record<string, any>;
-
-    // if (requestBody.type === 'export_metadata')
-    //   return res(ctx.json(mockMetadata));
-
     return res(ctx.json(mockQueryResponse));
+  }),
+];
+
+export const trackedArrayRelationshipsHandlers = () => [
+  rest.post(`http://localhost:8080/v1/metadata`, async (req, res, ctx) => {
+    const reqBody = (await req.json()) as Record<string, any>;
+
+    if (reqBody.type === 'export_metadata') {
+      return res(
+        ctx.status(200),
+        ctx.json(mocksTrackedArrayRelationship.metadata)
+      );
+    }
+
+    if (reqBody.type === 'list_source_kinds') {
+      return res(ctx.json(mocksTrackedArrayRelationship.listSourceKinds));
+    }
+
+    if (
+      reqBody.type === 'pg_suggest_relationships' &&
+      reqBody.args.omit_tracked === false
+    ) {
+      return res(
+        ctx.json(mocksTrackedArrayRelationship.suggestedRelationships)
+      );
+    }
+
+    if (
+      reqBody.type === 'pg_suggest_relationships' &&
+      reqBody.args.omit_tracked === true
+    ) {
+      return res(
+        ctx.json(
+          mocksTrackedArrayRelationship.suggestedRelationshipsOmitTracked
+        )
+      );
+    }
   }),
 ];
