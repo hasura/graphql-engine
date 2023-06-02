@@ -6,6 +6,7 @@ module Hasura.GraphQL.ApolloFederation
     convertToApolloFedParserFunc,
     getApolloFederationStatus,
     generateSDLWithAllTypes,
+    generateSDL,
   )
 where
 

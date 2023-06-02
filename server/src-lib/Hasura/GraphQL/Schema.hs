@@ -206,7 +206,7 @@ buildGQLContext
                   ProjectGQLSchemaInformation
                     schemaRegistryMap
                     (IsMetadataInconsistent $ checkMdErrs adminErrs)
-                    (calculateSchemaSDLHash (generateSDLWithAllTypes adminIntrospection) adminRoleName)
+                    (calculateSchemaSDLHash (generateSDL adminIntrospection) adminRoleName)
                     metadataResourceVersion
                     now
             pure
@@ -235,7 +235,7 @@ buildGQLContext
       generateSchemaRegistryMap :: HashMap RoleName RoleContextValue -> SchemaRegistryMap
       generateSchemaRegistryMap mpr =
         flip HashMap.mapWithKey mpr $ \r (_, _, schemaIntrospection) ->
-          let schemaSdl = generateSDLWithAllTypes schemaIntrospection
+          let schemaSdl = generateSDL schemaIntrospection
            in (GQLSchemaInformation (SchemaSDL schemaSdl) (calculateSchemaSDLHash schemaSdl r))
 
 buildSchemaOptions ::
