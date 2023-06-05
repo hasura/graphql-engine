@@ -1,0 +1,9 @@
+export const FETCH_REGISTRY_SCHEMAS_QUERY_NAME =
+  'FETCH_REGISTRY_SCHEMAS_QUERY_NAME';
+export const FETCH_REGISTRY_SCHEMA_QUERY_NAME =
+  'FETCH_REGISTRY_SCHEMA_QUERY_NAME';
+
+// 5 minutes as default stale time
+export const SCHEMA_REGISTRY_REFRESH_TIME = 5 * 60 * 1000;
+
+export const SCHEMA_REGISTRY_FEATURE_NAME = 'GraphQLSchemaRegistry';

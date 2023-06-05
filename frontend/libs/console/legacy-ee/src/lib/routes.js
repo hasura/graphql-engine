@@ -51,6 +51,8 @@ import {
   MultipleAdminSecretsPage,
   MultipleJWTSecretsPage,
   SingleSignOnPage,
+  SchemaRegistryContainer,
+  SchemaDetailsView,
 } from '@hasura/console-legacy-ce';
 
 import AccessDeniedComponent from './components/AccessDenied/AccessDenied';
@@ -369,6 +371,8 @@ const routes = store => {
         >
           <Route path="settings" component={metadataContainer(connect)}>
             <IndexRedirect to="metadata-actions" />
+            <Route path="schema-registry" component={SchemaRegistryContainer} />
+            <Route path="schema-registry/:id" component={SchemaDetailsView} />
             <Route
               path="metadata-actions"
               component={metadataOptionsContainer(connect)}
