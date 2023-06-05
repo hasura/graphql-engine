@@ -171,6 +171,17 @@ runGetNativeQuery ::
 runGetNativeQuery q = do
   throwIfFeatureDisabled
 
+  maybe
+    ( throw400 NotFound
+        $ "Source '"
+        <> sourceNameToText (gnqSource q)
+        <> "' of kind "
+        <> toTxt (reify (backendTag @b))
+        <> " not found."
+    )
+    (const $ pure ())
+    . preview (metaSources . ix (gnqSource q) . toSourceMetadata @b)
+    =<< getMetadata
   metadata <- getMetadata
 
   let nativeQuery :: Maybe (NativeQueries b)

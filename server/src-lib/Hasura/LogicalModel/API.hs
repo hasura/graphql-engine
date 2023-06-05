@@ -31,7 +31,7 @@ import Hasura.LogicalModel.Types (LogicalModelField, LogicalModelName, logicalMo
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))
-import Hasura.RQL.Types.BackendTag (backendPrefix)
+import Hasura.RQL.Types.BackendTag (backendPrefix, backendTag, reify)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (SourceName, defaultSource, sourceNameToText, successMsg)
 import Hasura.RQL.Types.Metadata
@@ -117,11 +117,23 @@ instance (Backend b) => ToJSON (GetLogicalModel b) where
 runGetLogicalModel ::
   forall b m.
   ( BackendMetadata b,
+    MonadError QErr m,
     MetadataM m
   ) =>
   GetLogicalModel b ->
   m EncJSON
 runGetLogicalModel q = do
+  maybe
+    ( throw400 NotFound
+        $ "Source '"
+        <> sourceNameToText (glmSource q)
+        <> "' of kind "
+        <> toTxt (reify (backendTag @b))
+        <> " not found."
+    )
+    (const $ pure ())
+    . preview (metaSources . ix (glmSource q) . toSourceMetadata @b)
+    =<< getMetadata
   metadata <- getMetadata
 
   let logicalModels :: Maybe (LogicalModels b)
