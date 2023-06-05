@@ -9,19 +9,26 @@ interface TabsItem {
   content: React.ReactNode;
 }
 
-interface TabsProps extends React.ComponentProps<typeof RadixTabs.Root> {
+interface TabsCustomProps extends React.ComponentProps<typeof RadixTabs.Root> {
+  headerTabBackgroundColor?: string;
+}
+interface TabsProps extends TabsCustomProps {
   items: TabsItem[];
 }
 
 export const Tabs: React.FC<TabsProps> = props => {
-  const { items, ...rest } = props;
+  const { headerTabBackgroundColor, items, ...rest } = props;
+
+  const backgroundColor = headerTabBackgroundColor ?? 'bg-legacybg';
   return (
     <RadixTabs.Root
       defaultValue={rest?.defaultValue ?? items[0]?.value}
       {...rest}
     >
       <RadixTabs.List aria-label="Tabs">
-        <div className="border-b border-gray-200 bg-legacybg flex space-x-4">
+        <div
+          className={`border-b border-gray-200 ${backgroundColor} flex space-x-4`}
+        >
           {items.map(({ value: itemValue, label, icon }) => (
             <RadixTabs.Trigger key={itemValue} value={itemValue} asChild>
               <button
