@@ -21,10 +21,10 @@
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-23"></span><span>
-</span><span id="line-24"></span><span id="local-6989586621691051446"><span id="local-6989586621691051447"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RoleName"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-var">RoleName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RoleName"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-var">RoleName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getRoleTxt"><span class="annot"><span class="annottext">RoleName -&gt; NonEmptyText
+</span><span id="line-24"></span><span id="local-6989586621691053522"><span id="local-6989586621691053523"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RoleName"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-var">RoleName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RoleName"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-var">RoleName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getRoleTxt"><span class="annot"><span class="annottext">RoleName -&gt; NonEmptyText
 </span><a href="Hasura.RQL.Types.Roles.html#getRoleTxt"><span class="hs-identifier hs-var hs-var">getRoleTxt</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmptyText</span></span><span class="hs-special">}</span><span>
 </span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span>
-</span><span id="line-26"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621691051434"><span id="local-6989586621691051436"><span id="local-6989586621691051442"><span class="annot"><span class="annottext">Int -&gt; RoleName -&gt; ShowS
+</span><span id="line-26"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621691053510"><span id="local-6989586621691053512"><span id="local-6989586621691053518"><span class="annot"><span class="annottext">Int -&gt; RoleName -&gt; ShowS
 [RoleName] -&gt; ShowS
 RoleName -&gt; String
 forall a.
@@ -36,14 +36,14 @@ $cshow :: RoleName -&gt; String
 showsPrec :: Int -&gt; RoleName -&gt; ShowS
 $cshowsPrec :: Int -&gt; RoleName -&gt; ShowS
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-27"></span><span>      </span><span id="local-6989586621691051426"><span id="local-6989586621691051431"><span class="annot"><span class="annottext">RoleName -&gt; RoleName -&gt; Bool
+</span><span id="line-27"></span><span>      </span><span id="local-6989586621691053502"><span id="local-6989586621691053507"><span class="annot"><span class="annottext">RoleName -&gt; RoleName -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: RoleName -&gt; RoleName -&gt; Bool
 $c/= :: RoleName -&gt; RoleName -&gt; Bool
 == :: RoleName -&gt; RoleName -&gt; Bool
 $c== :: RoleName -&gt; RoleName -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-28"></span><span>      </span><span id="local-6989586621691051393"><span id="local-6989586621691051397"><span id="local-6989586621691051401"><span id="local-6989586621691051405"><span id="local-6989586621691051409"><span id="local-6989586621691051413"><span id="local-6989586621691051418"><span class="annot"><span class="annottext">Eq RoleName
+</span><span id="line-28"></span><span>      </span><span id="local-6989586621691053469"><span id="local-6989586621691053473"><span id="local-6989586621691053477"><span id="local-6989586621691053481"><span id="local-6989586621691053485"><span id="local-6989586621691053489"><span id="local-6989586621691053494"><span class="annot"><span class="annottext">Eq RoleName
 RoleName -&gt; RoleName -&gt; Bool
 RoleName -&gt; RoleName -&gt; Ordering
 RoleName -&gt; RoleName -&gt; RoleName
@@ -72,7 +72,7 @@ $c&lt; :: RoleName -&gt; RoleName -&gt; Bool
 compare :: RoleName -&gt; RoleName -&gt; Ordering
 $ccompare :: RoleName -&gt; RoleName -&gt; Ordering
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-29"></span><span>      </span><span id="local-6989586621691051380"><span id="local-6989586621691051385"><span class="annot"><span class="annottext">Eq RoleName
+</span><span id="line-29"></span><span>      </span><span id="local-6989586621691053456"><span id="local-6989586621691053461"><span class="annot"><span class="annottext">Eq RoleName
 Int -&gt; RoleName -&gt; Int
 RoleName -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -81,7 +81,7 @@ $chash :: RoleName -&gt; Int
 hashWithSalt :: Int -&gt; RoleName -&gt; Int
 $chashWithSalt :: Int -&gt; RoleName -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-30"></span><span>      </span><span id="local-6989586621691051370"><span id="local-6989586621691051375"><span class="annot"><span class="annottext">FromJSONKeyFunction [RoleName]
+</span><span id="line-30"></span><span>      </span><span id="local-6989586621691053446"><span id="local-6989586621691053451"><span class="annot"><span class="annottext">FromJSONKeyFunction [RoleName]
 FromJSONKeyFunction RoleName
 forall a.
 FromJSONKeyFunction a -&gt; FromJSONKeyFunction [a] -&gt; FromJSONKey a
@@ -90,7 +90,7 @@ $cfromJSONKeyList :: FromJSONKeyFunction [RoleName]
 fromJSONKey :: FromJSONKeyFunction RoleName
 $cfromJSONKey :: FromJSONKeyFunction RoleName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-31"></span><span>      </span><span id="local-6989586621691051359"><span id="local-6989586621691051364"><span class="annot"><span class="annottext">ToJSONKeyFunction [RoleName]
+</span><span id="line-31"></span><span>      </span><span id="local-6989586621691053435"><span id="local-6989586621691053440"><span class="annot"><span class="annottext">ToJSONKeyFunction [RoleName]
 ToJSONKeyFunction RoleName
 forall a.
 ToJSONKeyFunction a -&gt; ToJSONKeyFunction [a] -&gt; ToJSONKey a
@@ -99,7 +99,7 @@ $ctoJSONKeyList :: ToJSONKeyFunction [RoleName]
 toJSONKey :: ToJSONKeyFunction RoleName
 $ctoJSONKey :: ToJSONKeyFunction RoleName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-32"></span><span>      </span><span id="local-6989586621691051348"><span id="local-6989586621691051353"><span class="annot"><span class="annottext">Value -&gt; Parser [RoleName]
+</span><span id="line-32"></span><span>      </span><span id="local-6989586621691053424"><span id="local-6989586621691053429"><span class="annot"><span class="annottext">Value -&gt; Parser [RoleName]
 Value -&gt; Parser RoleName
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -108,7 +108,7 @@ $cparseJSONList :: Value -&gt; Parser [RoleName]
 parseJSON :: Value -&gt; Parser RoleName
 $cparseJSON :: Value -&gt; Parser RoleName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-33"></span><span>      </span><span id="local-6989586621691051329"><span id="local-6989586621691051333"><span id="local-6989586621691051337"><span id="local-6989586621691051342"><span class="annot"><span class="annottext">[RoleName] -&gt; Value
+</span><span id="line-33"></span><span>      </span><span id="local-6989586621691053405"><span id="local-6989586621691053409"><span id="local-6989586621691053413"><span id="local-6989586621691053418"><span class="annot"><span class="annottext">[RoleName] -&gt; Value
 [RoleName] -&gt; Encoding
 RoleName -&gt; Value
 RoleName -&gt; Encoding
@@ -127,12 +127,12 @@ $ctoEncoding :: RoleName -&gt; Encoding
 toJSON :: RoleName -&gt; Value
 $ctoJSON :: RoleName -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-34"></span><span>      </span><span id="local-6989586621691051323"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text RoleName
+</span><span id="line-34"></span><span>      </span><span id="local-6989586621691053399"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text RoleName
 forall a. (Maybe ByteString -&gt; Either Text a) -&gt; FromCol a
 fromCol :: Maybe ByteString -&gt; Either Text RoleName
 $cfromCol :: Maybe ByteString -&gt; Either Text RoleName
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.FromCol</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-35"></span><span>      </span><span id="local-6989586621691051316"><span class="annot"><span class="annottext">RoleName -&gt; PrepArg
+</span><span id="line-35"></span><span>      </span><span id="local-6989586621691053392"><span class="annot"><span class="annottext">RoleName -&gt; PrepArg
 forall a. (a -&gt; PrepArg) -&gt; ToPrepArg a
 toPrepVal :: RoleName -&gt; PrepArg
 $ctoPrepVal :: RoleName -&gt; PrepArg
@@ -144,16 +144,16 @@ forall a.
 $cto :: forall x. Rep RoleName x -&gt; RoleName
 $cfrom :: forall x. RoleName -&gt; Rep RoleName x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-37"></span><span>      </span><span id="local-6989586621691051305"><span class="annot"><span class="annottext">RoleName -&gt; ()
+</span><span id="line-37"></span><span>      </span><span id="local-6989586621691053381"><span class="annot"><span class="annottext">RoleName -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: RoleName -&gt; ()
 $crnf :: RoleName -&gt; ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span>
 </span><span id="line-38"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-39"></span><span>
-</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691051297"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-41"></span><span>  </span><span id="local-6989586621691051295"><span class="annot"><span class="annottext">codec :: JSONCodec RoleName
-</span><a href="#local-6989586621691051295"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691053373"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621691053371"><span class="annot"><span class="annottext">codec :: JSONCodec RoleName
+</span><a href="#local-6989586621691053371"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
@@ -171,8 +171,8 @@ $crnf :: RoleName -&gt; ()
 </span><a href="Hasura.RQL.Types.Roles.html#getRoleTxt"><span class="hs-identifier hs-var">getRoleTxt</span></a></span><span>
 </span><span id="line-45"></span><span>
 </span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToTxt</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-47"></span><span>  </span><span id="local-6989586621691051290"><span class="annot"><span class="annottext">toTxt :: RoleName -&gt; Text
-</span><a href="#local-6989586621691051290"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; Text
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621691053366"><span class="annot"><span class="annottext">toTxt :: RoleName -&gt; Text
+</span><a href="#local-6989586621691053366"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; Text
 </span><a href="Hasura.RQL.Types.Roles.html#roleNameToTxt"><span class="hs-identifier hs-var">roleNameToTxt</span></a></span><span>
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#mkRoleName"><span class="hs-identifier hs-type">mkRoleName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span>
@@ -196,9 +196,9 @@ $crnf :: RoleName -&gt; ()
 </span><span class="hs-identifier hs-var">mkNonEmptyTextUnsafe</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;admin&quot;</span></span><span>
 </span><span id="line-57"></span><span>
-</span><span id="line-58"></span><span id="local-6989586621691051288"><span id="local-6989586621691051289"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ParentRoles"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-var">ParentRoles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ParentRoles"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-var">ParentRoles</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unParentRoles"><span class="annot"><span class="annottext">ParentRoles -&gt; HashSet RoleName
+</span><span id="line-58"></span><span id="local-6989586621691053364"><span id="local-6989586621691053365"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ParentRoles"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-var">ParentRoles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ParentRoles"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-var">ParentRoles</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unParentRoles"><span class="annot"><span class="annottext">ParentRoles -&gt; HashSet RoleName
 </span><a href="Hasura.RQL.Types.Roles.html#_unParentRoles"><span class="hs-identifier hs-var hs-var">_unParentRoles</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691051276"><span id="local-6989586621691051278"><span id="local-6989586621691051284"><span class="annot"><span class="annottext">Int -&gt; ParentRoles -&gt; ShowS
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691053352"><span id="local-6989586621691053354"><span id="local-6989586621691053360"><span class="annot"><span class="annottext">Int -&gt; ParentRoles -&gt; ShowS
 [ParentRoles] -&gt; ShowS
 ParentRoles -&gt; String
 forall a.
@@ -209,13 +209,13 @@ show :: ParentRoles -&gt; String
 $cshow :: ParentRoles -&gt; String
 showsPrec :: Int -&gt; ParentRoles -&gt; ShowS
 $cshowsPrec :: Int -&gt; ParentRoles -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691051268"><span id="local-6989586621691051274"><span class="annot"><span class="annottext">ParentRoles -&gt; ParentRoles -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691053344"><span id="local-6989586621691053350"><span class="annot"><span class="annottext">ParentRoles -&gt; ParentRoles -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: ParentRoles -&gt; ParentRoles -&gt; Bool
 $c/= :: ParentRoles -&gt; ParentRoles -&gt; Bool
 == :: ParentRoles -&gt; ParentRoles -&gt; Bool
 $c== :: ParentRoles -&gt; ParentRoles -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691051246"><span id="local-6989586621691051251"><span id="local-6989586621691051256"><span id="local-6989586621691051262"><span class="annot"><span class="annottext">[ParentRoles] -&gt; Value
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691053322"><span id="local-6989586621691053327"><span id="local-6989586621691053332"><span id="local-6989586621691053338"><span class="annot"><span class="annottext">[ParentRoles] -&gt; Value
 [ParentRoles] -&gt; Encoding
 ParentRoles -&gt; Value
 ParentRoles -&gt; Encoding
@@ -233,7 +233,7 @@ toEncoding :: ParentRoles -&gt; Encoding
 $ctoEncoding :: ParentRoles -&gt; Encoding
 toJSON :: ParentRoles -&gt; Value
 $ctoJSON :: ParentRoles -&gt; Value
-</span><a href="#local-6989586621691051246"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691051232"><span id="local-6989586621691051240"><span class="annot"><span class="annottext">Value -&gt; Parser [ParentRoles]
+</span><a href="#local-6989586621691053322"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691053308"><span id="local-6989586621691053316"><span class="annot"><span class="annottext">Value -&gt; Parser [ParentRoles]
 Value -&gt; Parser ParentRoles
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -241,7 +241,7 @@ parseJSONList :: Value -&gt; Parser [ParentRoles]
 $cparseJSONList :: Value -&gt; Parser [ParentRoles]
 parseJSON :: Value -&gt; Parser ParentRoles
 $cparseJSON :: Value -&gt; Parser ParentRoles
-</span><a href="#local-6989586621691051232"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep ParentRoles x -&gt; ParentRoles
+</span><a href="#local-6989586621691053308"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep ParentRoles x -&gt; ParentRoles
 forall x. ParentRoles -&gt; Rep ParentRoles x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
@@ -249,11 +249,11 @@ $cto :: forall x. Rep ParentRoles x -&gt; ParentRoles
 $cfrom :: forall x. ParentRoles -&gt; Rep ParentRoles x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691051218"><span id="local-6989586621691051220"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-type">ParentRoles</span></a></span></span></span><span>
+</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691053294"><span id="local-6989586621691053296"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-type">ParentRoles</span></a></span></span></span><span>
 </span><span id="line-62"></span><span>
-</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691051215"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-type">ParentRoles</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-64"></span><span>  </span><span id="local-6989586621691051212"><span class="annot"><span class="annottext">codec :: JSONCodec ParentRoles
-</span><a href="#local-6989586621691051212"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691053291"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-type">ParentRoles</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621691053288"><span class="annot"><span class="annottext">codec :: JSONCodec ParentRoles
+</span><a href="#local-6989586621691053288"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
@@ -269,7 +269,7 @@ $cfrom :: forall x. ParentRoles -&gt; Rep ParentRoles x
 </span><span id="line-69"></span><span class="hs-comment">--   metadata API and is also used internally</span><span>
 </span><span id="line-70"></span><span class="hs-comment">--   in the permission building</span><span>
 </span><span id="line-71"></span><span class="hs-comment">--   part of the schema cache building process</span><span>
-</span><span id="line-72"></span><span id="local-6989586621691051210"><span id="local-6989586621691051211"></span></span><span class="hs-keyword">data</span><span> </span><span id="Role"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-var">Role</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Role"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-var">Role</span></a></span></span><span>
+</span><span id="line-72"></span><span id="local-6989586621691053286"><span id="local-6989586621691053287"></span></span><span class="hs-keyword">data</span><span> </span><span id="Role"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-var">Role</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Role"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-var">Role</span></a></span></span><span>
 </span><span id="line-73"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rRoleName"><span class="annot"><span class="annottext">Role -&gt; RoleName
 </span><a href="Hasura.RQL.Types.Roles.html#_rRoleName"><span class="hs-identifier hs-var hs-var">_rRoleName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-74"></span><span>    </span><span class="hs-comment">-- | set of the parent role names, in case of</span><span>
@@ -277,7 +277,7 @@ $cfrom :: forall x. ParentRoles -&gt; Rep ParentRoles x
 </span><span id="line-76"></span><span>    </span><span id="_rParentRoles"><span class="annot"><span class="annottext">Role -&gt; ParentRoles
 </span><a href="Hasura.RQL.Types.Roles.html#_rParentRoles"><span class="hs-identifier hs-var hs-var">_rParentRoles</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-type">ParentRoles</span></a></span><span>
 </span><span id="line-77"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-78"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691051198"><span id="local-6989586621691051200"><span id="local-6989586621691051205"><span class="annot"><span class="annottext">Int -&gt; Role -&gt; ShowS
+</span><span id="line-78"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691053274"><span id="local-6989586621691053276"><span id="local-6989586621691053281"><span class="annot"><span class="annottext">Int -&gt; Role -&gt; ShowS
 [Role] -&gt; ShowS
 Role -&gt; String
 forall a.
@@ -288,7 +288,7 @@ show :: Role -&gt; String
 $cshow :: Role -&gt; String
 showsPrec :: Int -&gt; Role -&gt; ShowS
 $cshowsPrec :: Int -&gt; Role -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691051192"><span id="local-6989586621691051196"><span class="annot"><span class="annottext">Role -&gt; Role -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691053268"><span id="local-6989586621691053272"><span class="annot"><span class="annottext">Role -&gt; Role -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Role -&gt; Role -&gt; Bool
 $c/= :: Role -&gt; Role -&gt; Bool
@@ -302,11 +302,11 @@ $cto :: forall x. Rep Role x -&gt; Role
 $cfrom :: forall x. Role -&gt; Rep Role x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691051184"><span id="local-6989586621691051186"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span></span></span><span>
+</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691053260"><span id="local-6989586621691053262"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span></span></span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691051181"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-83"></span><span>  </span><span id="local-6989586621691051171"><span class="annot"><span class="annottext">codec :: JSONCodec Role
-</span><a href="#local-6989586621691051171"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-82"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691053257"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621691053247"><span class="annot"><span class="annottext">codec :: JSONCodec Role
+</span><a href="#local-6989586621691053247"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -333,17 +333,17 @@ ObjectCodec oldInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">Role -&gt; ParentRoles
 </span><a href="Hasura.RQL.Types.Roles.html#_rParentRoles"><span class="hs-identifier hs-var">_rParentRoles</span></a></span><span>
 </span><span id="line-90"></span><span>
-</span><span id="line-91"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691051161"><span id="local-6989586621691051163"><span id="local-6989586621691051165"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-92"></span><span>  </span><span id="local-6989586621691051150"><span class="annot"><span class="annottext">toJSON :: Role -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span><span> </span><span id="local-6989586621691051148"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621691051148"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span id="local-6989586621691051147"><span class="annot"><span class="annottext">ParentRoles
-</span><a href="#local-6989586621691051147"><span class="hs-identifier hs-var">parentRoles</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-91"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691053237"><span id="local-6989586621691053239"><span id="local-6989586621691053241"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621691053226"><span class="annot"><span class="annottext">toJSON :: Role -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span><span> </span><span id="local-6989586621691053224"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621691053224"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span id="local-6989586621691053223"><span class="annot"><span class="annottext">ParentRoles
+</span><a href="#local-6989586621691053223"><span class="hs-identifier hs-var">parentRoles</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-93"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span>
 </span><span id="line-94"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;role_name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621691051148"><span class="hs-identifier hs-var">roleName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621691053224"><span class="hs-identifier hs-var">roleName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-95"></span><span>        </span><span class="hs-comment">-- the key for parent roles is &quot;role_set&quot;</span><span>
 </span><span id="line-96"></span><span>        </span><span class="hs-comment">-- in the JSON encoding of the `Role` type</span><span>
 </span><span id="line-97"></span><span>        </span><span class="hs-comment">-- is because when this feature</span><span>
@@ -351,34 +351,34 @@ ObjectCodec oldInput output
 </span><span id="line-99"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;role_set&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">ParentRoles
-</span><a href="#local-6989586621691051147"><span class="hs-identifier hs-var">parentRoles</span></a></span><span>
+</span><a href="#local-6989586621691053223"><span class="hs-identifier hs-var">parentRoles</span></a></span><span>
 </span><span id="line-100"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-101"></span><span>
-</span><span id="line-102"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691051142"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-103"></span><span>  </span><span id="local-6989586621691051133"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Role
+</span><span id="line-102"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691053218"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-103"></span><span>  </span><span id="local-6989586621691053209"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Role
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Role&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691051130"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691051130"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691053206"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621691053206"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-104"></span><span>    </span><span class="annot"><span class="annottext">RoleName -&gt; ParentRoles -&gt; Role
 </span><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-var">Role</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691051130"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621691053206"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;role_name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691051130"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621691053206"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;role_set&quot;</span></span><span>
 </span><span id="line-105"></span><span>
 </span><span id="line-106"></span><span class="hs-keyword">type</span><span> </span><span id="InheritedRole"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#InheritedRole"><span class="hs-identifier hs-var">InheritedRole</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span><span>
 </span><span id="line-107"></span><span>
-</span><span id="line-108"></span><span id="local-6989586621691051127"><span id="local-6989586621691051128"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="DropInheritedRole"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#DropInheritedRole"><span class="hs-identifier hs-var">DropInheritedRole</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DropInheritedRole"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#DropInheritedRole"><span class="hs-identifier hs-var">DropInheritedRole</span></a></span></span><span>
+</span><span id="line-108"></span><span id="local-6989586621691053203"><span id="local-6989586621691053204"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="DropInheritedRole"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#DropInheritedRole"><span class="hs-identifier hs-var">DropInheritedRole</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DropInheritedRole"><span class="annot"><a href="Hasura.RQL.Types.Roles.html#DropInheritedRole"><span class="hs-identifier hs-var">DropInheritedRole</span></a></span></span><span>
 </span><span id="line-109"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ddrRoleName"><span class="annot"><span class="annottext">DropInheritedRole -&gt; RoleName
 </span><a href="Hasura.RQL.Types.Roles.html#_ddrRoleName"><span class="hs-identifier hs-var hs-var">_ddrRoleName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span>
 </span><span id="line-110"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-111"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691051117"><span id="local-6989586621691051119"><span id="local-6989586621691051123"><span class="annot"><span class="annottext">Int -&gt; DropInheritedRole -&gt; ShowS
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691053193"><span id="local-6989586621691053195"><span id="local-6989586621691053199"><span class="annot"><span class="annottext">Int -&gt; DropInheritedRole -&gt; ShowS
 [DropInheritedRole] -&gt; ShowS
 DropInheritedRole -&gt; String
 forall a.
@@ -389,7 +389,7 @@ show :: DropInheritedRole -&gt; String
 $cshow :: DropInheritedRole -&gt; String
 showsPrec :: Int -&gt; DropInheritedRole -&gt; ShowS
 $cshowsPrec :: Int -&gt; DropInheritedRole -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691051112"><span id="local-6989586621691051115"><span class="annot"><span class="annottext">DropInheritedRole -&gt; DropInheritedRole -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691053188"><span id="local-6989586621691053191"><span class="annot"><span class="annottext">DropInheritedRole -&gt; DropInheritedRole -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: DropInheritedRole -&gt; DropInheritedRole -&gt; Bool
 $c/= :: DropInheritedRole -&gt; DropInheritedRole -&gt; Bool
@@ -403,9 +403,9 @@ $cto :: forall x. Rep DropInheritedRole x -&gt; DropInheritedRole
 $cfrom :: forall x. DropInheritedRole -&gt; Rep DropInheritedRole x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-112"></span><span>
-</span><span id="line-113"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691051106"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#DropInheritedRole"><span class="hs-identifier hs-type">DropInheritedRole</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-114"></span><span>  </span><span id="local-6989586621691051038"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DropInheritedRole
-</span><a href="#local-6989586621691051038"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-113"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691053182"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#DropInheritedRole"><span class="hs-identifier hs-type">DropInheritedRole</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-114"></span><span>  </span><span id="local-6989586621691053114"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DropInheritedRole
+</span><a href="#local-6989586621691053114"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
 (Generic a, GFromJSON Zero (Rep a)) =&gt;
 Options -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">genericParseJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; ShowS -&gt; Options
@@ -413,16 +413,16 @@ Options -&gt; Value -&gt; Parser a
 </span><span class="hs-number">4</span></span><span> </span><span class="annot"><span class="annottext">ShowS
 </span><span class="hs-identifier hs-var">snakeCase</span></span><span class="hs-special">)</span><span>
 </span><span id="line-115"></span><span>
-</span><span id="line-116"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691051029"><span id="local-6989586621691051031"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#DropInheritedRole"><span class="hs-identifier hs-type">DropInheritedRole</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-117"></span><span>  </span><span id="local-6989586621691050969"><span class="annot"><span class="annottext">toJSON :: DropInheritedRole -&gt; Value
-</span><a href="#local-6989586621691050969"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-116"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691053105"><span id="local-6989586621691053107"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#DropInheritedRole"><span class="hs-identifier hs-type">DropInheritedRole</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-117"></span><span>  </span><span id="local-6989586621691053045"><span class="annot"><span class="annottext">toJSON :: DropInheritedRole -&gt; Value
+</span><a href="#local-6989586621691053045"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; ShowS -&gt; Options
 </span><span class="hs-identifier hs-var">aesonDrop</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">4</span></span><span> </span><span class="annot"><span class="annottext">ShowS
 </span><span class="hs-identifier hs-var">snakeCase</span></span><span class="hs-special">)</span><span>
-</span><span id="line-118"></span><span>  </span><span id="local-6989586621691050917"><span class="annot"><span class="annottext">toEncoding :: DropInheritedRole -&gt; Encoding
+</span><span id="line-118"></span><span>  </span><span id="local-6989586621691052993"><span class="annot"><span class="annottext">toEncoding :: DropInheritedRole -&gt; Encoding
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
 (Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Encoding
