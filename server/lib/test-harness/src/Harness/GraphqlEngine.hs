@@ -69,7 +69,7 @@ import Harness.Http qualified as Http
 import Harness.Logging
 import Harness.Quoter.Yaml (fromYaml, yaml)
 import Harness.Services.GraphqlEngine
-import Harness.TestEnvironment (Protocol (..), Server (..), TestEnvironment (..), TestingRole (..), getServer, requestProtocol, serverUrl)
+import Harness.TestEnvironment (Protocol (..), Server (..), TestEnvironment (..), TestingRole (..), getServer, requestProtocol, serverUrl, traceIf)
 import Harness.WebSockets (responseListener, sendMessages)
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
@@ -129,7 +129,7 @@ postWithHeadersStatus ::
   (HasCallStack) => Int -> TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
 postWithHeadersStatus statusCode testEnv@(getServer -> Server {urlPrefix, port}) path headers requestBody =
   withFrozenCallStack $ do
-    testLogMessage testEnv $ LogHGERequest (T.pack path) requestBody
+    testLogMessage testEnv $ LogHGERequest (T.pack path) $ traceIf testEnv requestBody
     responseBody <- Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) (addAuthzHeaders testEnv headers) requestBody
     testLogMessage testEnv $ LogHGEResponse (T.pack path) responseBody
     pure responseBody
