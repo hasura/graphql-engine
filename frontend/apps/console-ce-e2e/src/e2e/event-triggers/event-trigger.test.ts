@@ -11,9 +11,48 @@ describe('Create event trigger with shortest possible path', () => {
     cy.visit('/data/default/schema/public', {
       timeout: 10000,
     });
+
     cy.get('[data-test=add-track-table-user_table]', {
       timeout: 10000,
     }).click();
+
+    // if there is a trigger from a previous test, delete it
+    cy.visit('/events/data/event_trigger_test/modify', {
+      timeout: 10000,
+      onBeforeLoad(win) {
+        cy.stub(win, 'prompt').returns('event_trigger_test');
+      },
+    });
+
+    // wait for loading to not be visible
+    cy.get('span:contains("Loading...")', { timeout: 10000 }).should(
+      'not.be.visible'
+    );
+
+    cy.get('body').then($body => {
+      cy.log(
+        '**--- Delete the ET',
+        $body.find('button[data-test=delete-trigger]')
+      );
+      if ($body.find('button[data-test=delete-trigger]').length > 0) {
+        cy.log('**--- Delete the ET 2');
+        cy.intercept('POST', 'http://localhost:8080/v1/metadata', req => {
+          if (JSON.stringify(req.body).includes('delete_event_trigger')) {
+            req.alias = 'deleteTrigger';
+          }
+          req.continue();
+        });
+
+        cy.intercept('POST', 'http://localhost:9693/apis/migrate', req => {
+          if (JSON.stringify(req.body).includes('delete_event_trigger')) {
+            req.alias = 'deleteTrigger';
+          }
+        });
+
+        cy.get('button[data-test=delete-trigger]').click();
+        cy.wait('@deleteTrigger');
+      }
+    });
   });
   after(() => {
     // delete the table
@@ -254,6 +293,7 @@ describe('Create event trigger with logest possible path', () => {
     );
     cy.findAllByRole('button', { name: 'Edit' }).eq(1).click();
     cy.get('[name=update]').click();
+
     cy.get('[name=column-id]').click();
     cy.findByRole('button', { name: 'Save' }).click();
 
