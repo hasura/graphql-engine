@@ -10,7 +10,12 @@ keywords:
   - mutation
 ---
 
+import LeftRight from '@site/src/components/LeftRight';
+
 # API Reference - Mutation
+
+<LeftRight>
+  <section>
 
 ## **insert** (upsert) syntax {#insert-upsert-syntax}
 
@@ -32,6 +37,9 @@ mutation [<mutation-name>] {
 | mutation-response   | true     | [MutationResponse](#mutationresponse)     | Object to be returned after mutation succeeds                   |
 | on-conflict         | false    | [OnConflictClause](#postgres-on-conflict) | In Postgres, converts _insert_ to _upsert_ by handling conflict |
 | if-matched          | false    | [IfMatchedClause](#sqlserver-if-matched)  | In MS SQL Server, converts _insert_ to _upsert_ using a match   |
+
+  </section>
+  <section>
 
 **Example: Insert**
 
@@ -58,6 +66,9 @@ mutation upsert_author {
   }
 }
 ```
+
+  </section>
+</LeftRight>
 
 ## **insert_one** syntax {#insert-upsert-one-syntax}
 
