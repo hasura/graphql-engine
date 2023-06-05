@@ -2,6 +2,7 @@
 import { coerceUndefinedToNull, filterIterable, mapIterable, nameEquals, reduceAndIterable, reduceOrIterable, skipIterable, takeIterable, unreachable } from "./util";
 import * as math from "mathjs";
 import { respondToFunction } from "./functions";
+import { getConfig } from "./config";
 
 type RelationshipName = string
 
@@ -227,7 +228,13 @@ const makePerformExistsSubquery = (
   };
 
   const results = performSubquery(row, targetTable, subquery);
-  return (results.aggregates?.count ?? 0) > 0;
+  const count = results.aggregates?.count ?? 0;
+
+  if(typeof count != 'number') {
+    throw new Error(`Unexpected type of results.aggregates.count (${count}) expecting number.`);
+  }
+
+  return count > 0;
 }
 
 const buildQueryForPathedOrderByElement = (orderByElement: OrderByElement, orderByRelations: Record<RelationshipName, OrderByRelation>): Query => {
@@ -640,7 +647,7 @@ export const queryData = (getTable: (tableName: TableName) => Record<string, Raw
 
   switch(queryRequest.type) {
     case 'function':
-      const rows = respondToFunction(queryRequest, queryRequest.function);
+      const rows = respondToFunction(queryRequest, queryRequest.function, getTable);
       const result = performNewQuery(queryRequest.function, queryRequest.query, rows);
       return result;
 

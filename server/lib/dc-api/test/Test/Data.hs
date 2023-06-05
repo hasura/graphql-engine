@@ -574,19 +574,27 @@ mkEdgeCasesTestData testConfig schemaResponse =
 -- | Test data from the FunctionsTestData dataset template
 data FunctionsTestData = FunctionsTestData
   { -- = Functions
-    _ftdFunctionField :: API.FunctionName -> Text -> API.Field,
+    _ftdFibonacciField :: API.FunctionName -> Text -> API.Field, -- This is specialised to Fibonacci due to the defaulting requirements.
     _ftdFibonacciRows :: Int -> [HashMap API.FieldName API.FieldValue],
     _ftdFibonacciFunctionName :: API.FunctionName,
-    _ftdSearchArticlesFunctionName :: API.FunctionName
+    _ftdSearchArticlesField :: API.FunctionName -> Text -> API.Field,
+    _ftdSearchArticlesFunctionName :: API.FunctionName,
+    _ftdAuthorRelationshipName :: API.RelationshipName,
+    _ftdAuthorsTableName :: API.TableName,
+    _ftdColumnField :: API.TableName -> Text -> API.Field
   }
 
 mkFunctionsTestData :: API.SchemaResponse -> TestConfig -> FunctionsTestData
 mkFunctionsTestData schemaResponse testConfig =
   FunctionsTestData
-    { _ftdFunctionField = functionField schemaResponse testConfig (API.singletonTableName "Result"),
+    { _ftdFibonacciField = functionField schemaResponse testConfig (API.singletonTableName "Result"),
       _ftdFibonacciRows = mkFibonacciRows,
       _ftdFibonacciFunctionName = formatFunctionName testConfig (API.FunctionName (NonEmpty.singleton "Fibonacci")),
-      _ftdSearchArticlesFunctionName = formatFunctionName testConfig (API.FunctionName (NonEmpty.singleton "SearchArticles"))
+      _ftdSearchArticlesField = functionField schemaResponse testConfig (API.singletonTableName "Articles"),
+      _ftdSearchArticlesFunctionName = formatFunctionName testConfig (API.FunctionName (NonEmpty.singleton "SearchArticles")),
+      _ftdAuthorRelationshipName = API.RelationshipName "author",
+      _ftdAuthorsTableName = API.singletonTableName "Authors",
+      _ftdColumnField = columnField schemaResponse testConfig
     }
 
 formatTableName :: TestConfig -> API.TableName -> API.TableName
