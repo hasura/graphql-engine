@@ -2072,7 +2072,7 @@ const PermissionsWrapper = props => {
   const { data: source, isLoading: isLoadingMetadata } = useMetadata(
     MetadataSelectors.findSource(props.currentSource)
   );
-  const isBigQuery = source.kind === 'bigquery';
+  const isBigQuery = source?.kind === 'bigquery';
 
   if (isFeatureFlagsLoading || isLoadingMetadata) return <div>Loading...</div>;
 
