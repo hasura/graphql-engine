@@ -73,7 +73,7 @@ export {
 } from './lib/features/Analytics';
 export { CloudOnboarding } from './lib/features/CloudOnboarding';
 export { prefetchSurveysData } from './lib/features/Surveys';
-export { prefetchOnboardingData } from './lib/features/CloudOnboarding/OnboardingWizard';
+export { prefetchOnboardingData } from './lib/features/CloudOnboarding/NeonOnboardingWizard';
 export {
   prefetchEELicenseInfo,
   NavbarButton as EntepriseNavbarButton,

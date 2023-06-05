@@ -9,6 +9,7 @@ import {
   ProgressStateStatus,
   GitRepoDetails,
 } from './types';
+import { OnboardingKind, OnboardingResponseData } from '../types';
 
 // returns the error status if the step had an error in the latest workflow
 // returns null if the step hasn't had an error in the latest workflow
@@ -295,3 +296,19 @@ export const getSampleQueriesUrl = (gitRepoDetails: GitRepoDetails) => {
     return '';
   }
 };
+
+export const oneClickDeploymentOnboardingKind = (
+  onboardingData: OnboardingResponseData
+): OnboardingKind => ({
+  kind: 'one-click-deployment',
+  deployment: {
+    deploymentId: onboardingData.data.one_click_deployment[0].id,
+    gitRepoDetails: {
+      url: onboardingData.data.one_click_deployment[0].git_repository_url,
+      branch: onboardingData.data.one_click_deployment[0].git_repository_branch,
+      hasuraDirectory:
+        onboardingData.data.one_click_deployment[0].hasura_directory,
+    },
+  },
+  fallbackApps: onboardingData.data.one_click_deployment_sample_apps || [],
+});
