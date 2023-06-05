@@ -23,15 +23,15 @@
 </span><span id="line-23"></span><span class="hs-comment">-- | Note: Currently you should not use underscores in this name.</span><span>
 </span><span id="line-24"></span><span class="hs-comment">--         This should be enforced in instances, and the `mkDataConnectorName`</span><span>
 </span><span id="line-25"></span><span class="hs-comment">--         smart constructor is available to assist.</span><span>
-</span><span id="line-26"></span><span id="local-6989586621691032807"><span id="local-6989586621691032808"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="DataConnectorName"><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-var">DataConnectorName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DataConnectorName"><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-var">DataConnectorName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unDataConnectorName"><span class="annot"><span class="annottext">DataConnectorName -&gt; Name
+</span><span id="line-26"></span><span id="local-6989586621691034360"><span id="local-6989586621691034361"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="DataConnectorName"><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-var">DataConnectorName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DataConnectorName"><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-var">DataConnectorName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unDataConnectorName"><span class="annot"><span class="annottext">DataConnectorName -&gt; Name
 </span><a href="Hasura.RQL.Types.DataConnector.html#unDataConnectorName"><span class="hs-identifier hs-var hs-var">unDataConnectorName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">GQL.Name</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691032800"><span id="local-6989586621691032804"><span class="annot"><span class="annottext">DataConnectorName -&gt; DataConnectorName -&gt; Bool
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691034353"><span id="local-6989586621691034357"><span class="annot"><span class="annottext">DataConnectorName -&gt; DataConnectorName -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: DataConnectorName -&gt; DataConnectorName -&gt; Bool
 $c/= :: DataConnectorName -&gt; DataConnectorName -&gt; Bool
 == :: DataConnectorName -&gt; DataConnectorName -&gt; Bool
 $c== :: DataConnectorName -&gt; DataConnectorName -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691032777"><span id="local-6989586621691032779"><span id="local-6989586621691032782"><span id="local-6989586621691032785"><span id="local-6989586621691032788"><span id="local-6989586621691032791"><span id="local-6989586621691032795"><span class="annot"><span class="annottext">Eq DataConnectorName
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691034330"><span id="local-6989586621691034332"><span id="local-6989586621691034335"><span id="local-6989586621691034338"><span id="local-6989586621691034341"><span id="local-6989586621691034344"><span id="local-6989586621691034348"><span class="annot"><span class="annottext">Eq DataConnectorName
 DataConnectorName -&gt; DataConnectorName -&gt; Bool
 DataConnectorName -&gt; DataConnectorName -&gt; Ordering
 DataConnectorName -&gt; DataConnectorName -&gt; DataConnectorName
@@ -59,7 +59,7 @@ $c&lt;= :: DataConnectorName -&gt; DataConnectorName -&gt; Bool
 $c&lt; :: DataConnectorName -&gt; DataConnectorName -&gt; Bool
 compare :: DataConnectorName -&gt; DataConnectorName -&gt; Ordering
 $ccompare :: DataConnectorName -&gt; DataConnectorName -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691032766"><span id="local-6989586621691032768"><span id="local-6989586621691032774"><span class="annot"><span class="annottext">Int -&gt; DataConnectorName -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691034319"><span id="local-6989586621691034321"><span id="local-6989586621691034327"><span class="annot"><span class="annottext">Int -&gt; DataConnectorName -&gt; ShowS
 [DataConnectorName] -&gt; ShowS
 DataConnectorName -&gt; String
 forall a.
@@ -77,7 +77,7 @@ forall a.
 $cto :: forall x. Rep DataConnectorName x -&gt; DataConnectorName
 $cfrom :: forall x. DataConnectorName -&gt; Rep DataConnectorName x
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691032747"><span id="local-6989586621691032751"><span id="local-6989586621691032755"><span id="local-6989586621691032760"><span class="annot"><span class="annottext">[DataConnectorName] -&gt; Value
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691034300"><span id="local-6989586621691034304"><span id="local-6989586621691034308"><span id="local-6989586621691034313"><span class="annot"><span class="annottext">[DataConnectorName] -&gt; Value
 [DataConnectorName] -&gt; Encoding
 DataConnectorName -&gt; Value
 DataConnectorName -&gt; Encoding
@@ -95,7 +95,7 @@ toEncoding :: DataConnectorName -&gt; Encoding
 $ctoEncoding :: DataConnectorName -&gt; Encoding
 toJSON :: DataConnectorName -&gt; Value
 $ctoJSON :: DataConnectorName -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691032736"><span id="local-6989586621691032741"><span class="annot"><span class="annottext">FromJSONKeyFunction [DataConnectorName]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691034289"><span id="local-6989586621691034294"><span class="annot"><span class="annottext">FromJSONKeyFunction [DataConnectorName]
 FromJSONKeyFunction DataConnectorName
 forall a.
 FromJSONKeyFunction a -&gt; FromJSONKeyFunction [a] -&gt; FromJSONKey a
@@ -103,7 +103,7 @@ fromJSONKeyList :: FromJSONKeyFunction [DataConnectorName]
 $cfromJSONKeyList :: FromJSONKeyFunction [DataConnectorName]
 fromJSONKey :: FromJSONKeyFunction DataConnectorName
 $cfromJSONKey :: FromJSONKeyFunction DataConnectorName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691032725"><span id="local-6989586621691032730"><span class="annot"><span class="annottext">ToJSONKeyFunction [DataConnectorName]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691034278"><span id="local-6989586621691034283"><span class="annot"><span class="annottext">ToJSONKeyFunction [DataConnectorName]
 ToJSONKeyFunction DataConnectorName
 forall a.
 ToJSONKeyFunction a -&gt; ToJSONKeyFunction [a] -&gt; ToJSONKey a
@@ -111,7 +111,7 @@ toJSONKeyList :: ToJSONKeyFunction [DataConnectorName]
 $ctoJSONKeyList :: ToJSONKeyFunction [DataConnectorName]
 toJSONKey :: ToJSONKeyFunction DataConnectorName
 $ctoJSONKey :: ToJSONKeyFunction DataConnectorName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691032712"><span id="local-6989586621691032717"><span class="annot"><span class="annottext">Eq DataConnectorName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691034265"><span id="local-6989586621691034270"><span class="annot"><span class="annottext">Eq DataConnectorName
 Int -&gt; DataConnectorName -&gt; Int
 DataConnectorName -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -119,21 +119,21 @@ hash :: DataConnectorName -&gt; Int
 $chash :: DataConnectorName -&gt; Int
 hashWithSalt :: Int -&gt; DataConnectorName -&gt; Int
 $chashWithSalt :: Int -&gt; DataConnectorName -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691032706"><span class="annot"><span class="annottext">DataConnectorName -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691034259"><span class="annot"><span class="annottext">DataConnectorName -&gt; Text
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: DataConnectorName -&gt; Text
 $ctoTxt :: DataConnectorName -&gt; Text
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-29"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691032699"><span class="annot"><span class="annottext">DataConnectorName -&gt; ()
+</span><span id="line-29"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691034252"><span class="annot"><span class="annottext">DataConnectorName -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: DataConnectorName -&gt; ()
 $crnf :: DataConnectorName -&gt; ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691032695"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-type">DataConnectorName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-32"></span><span>  </span><span id="local-6989586621691032683"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DataConnectorName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span id="local-6989586621691032681"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621691032681"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
+</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691034248"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-type">DataConnectorName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621691034236"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DataConnectorName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span id="local-6989586621691034234"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621691034234"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-operator hs-var">`onLeft`</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
@@ -142,17 +142,17 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="Hasura.RQL.Types.DataConnector.html#mkDataConnectorName"><span class="hs-identifier hs-var">mkDataConnectorName</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621691032681"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621691034234"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-33"></span><span>
 </span><span id="line-34"></span><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#mkDataConnectorName"><span class="hs-identifier hs-type">mkDataConnectorName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">GQL.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-type">DataConnectorName</span></a></span><span>
 </span><span id="line-35"></span><span id="mkDataConnectorName"><span class="annot"><span class="annottext">mkDataConnectorName :: Name -&gt; Either String DataConnectorName
-</span><a href="Hasura.RQL.Types.DataConnector.html#mkDataConnectorName"><span class="hs-identifier hs-var hs-var">mkDataConnectorName</span></a></span></span><span> </span><span id="local-6989586621691032677"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621691032677"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.RQL.Types.DataConnector.html#mkDataConnectorName"><span class="hs-identifier hs-var hs-var">mkDataConnectorName</span></a></span></span><span> </span><span id="local-6989586621691034230"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621691034230"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-36"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'_'</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Text -&gt; Bool
 </span><span class="hs-operator hs-var">`Text.elem`</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">GQL.unName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621691032677"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621691034230"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span><span>    </span><span class="hs-keyword">then</span><span> </span><span class="hs-comment">-- Could return other errors in future.</span><span>
 </span><span id="line-38"></span><span>      </span><span class="annot"><span class="annottext">forall a b. a -&gt; Either a b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span> </span><span class="annot"><span class="annottext">String
@@ -160,10 +160,10 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><span id="line-39"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall a b. b -&gt; Either a b
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Right</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; DataConnectorName
 </span><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-var">DataConnectorName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621691032677"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621691034230"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-40"></span><span>
 </span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-type">DataConnectorName</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmptyText</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-42"></span><span>  </span><span id="local-6989586621691032671"><span class="annot"><span class="annottext">from :: DataConnectorName -&gt; NonEmptyText
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621691034224"><span class="annot"><span class="annottext">from :: DataConnectorName -&gt; NonEmptyText
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; NonEmptyText
 </span><span class="hs-identifier hs-var">mkNonEmptyTextUnsafe</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
@@ -172,8 +172,8 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="Hasura.RQL.Types.DataConnector.html#unDataConnectorName"><span class="hs-identifier hs-var">unDataConnectorName</span></a></span><span> </span><span class="hs-comment">-- mkNonEmptyTextUnsafe is safe here since GQL.Name is never empty</span><span>
 </span><span id="line-43"></span><span>
 </span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-type">DataConnectorName</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-45"></span><span>  </span><span id="local-6989586621691032666"><span class="annot"><span class="annottext">from :: DataConnectorName -&gt; Text
-</span><a href="#local-6989586621691032666"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621691034219"><span class="annot"><span class="annottext">from :: DataConnectorName -&gt; Text
+</span><a href="#local-6989586621691034219"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">GQL.unName</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorName -&gt; Name
 </span><a href="Hasura.RQL.Types.DataConnector.html#unDataConnectorName"><span class="hs-identifier hs-var">unDataConnectorName</span></a></span><span>
