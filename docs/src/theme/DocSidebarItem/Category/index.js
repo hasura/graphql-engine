@@ -128,6 +128,11 @@ export default function DocSidebarItemCategory({ item, onItemClick, activePath, 
       setCollapsed(true);
     }
   }, [collapsible, expandedItem, index, setCollapsed, autoCollapseCategories]);
+
+  if (groupTitles.includes(label)) {
+    return <GroupTitle>{label}</GroupTitle>;
+  }
+
   return (
     <li
       className={clsx(
@@ -201,3 +206,9 @@ export default function DocSidebarItemCategory({ item, onItemClick, activePath, 
     </li>
   );
 }
+
+function GroupTitle({ children }) {
+  return <div style={{ fontSize: '0.9em', margin: '8px 0 4px 0' }}>{children}</div>;
+}
+
+const groupTitles = ['Data API', 'Business Logic', 'Release'];
