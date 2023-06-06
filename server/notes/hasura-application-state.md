@@ -1,8 +1,8 @@
 This note is in [Hasura.App.State](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/App/State.hs#L64).
 It is referenced at:
   - line 526 of [Hasura.App](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/App.hs#L526)
-  - line 25 of [Hasura.RQL.DDL.Schema.Cache.Config](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Config.hs#L25)
-  - line 61 of [Hasura.RQL.DDL.Schema.Cache.Config](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Config.hs#L61)
+  - line 26 of [Hasura.RQL.DDL.Schema.Cache.Config](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Config.hs#L26)
+  - line 63 of [Hasura.RQL.DDL.Schema.Cache.Config](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Config.hs#L63)
 
 # Hasura Application State
 
