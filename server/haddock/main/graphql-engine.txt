@@ -21522,6 +21522,10 @@ module Hasura.GraphQL.Schema.OrderBy
 --     obj-rel: &lt;remote-table&gt;_order_by
 --   }
 --   </pre>
+--   
+--   TODO: When there are no columns accessible to a role, the
+--   `<a>table</a>_order_by` will be an empty input object. In such a case,
+--   we can avoid exposing the <tt>order_by</tt> argument.
 logicalModelOrderByExp :: forall b r m n. MonadBuildSchema b r m n => LogicalModelInfo b -> SchemaT r m (Parser 'Input n [AnnotatedOrderByItemG b (UnpreparedValue b)])
 
 -- | Corresponds to an object type for an order by.
@@ -24330,22 +24334,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) TriggerOnReplication
-cteqCleanupConfig :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) (Maybe Text)
-cetqWebhook :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) (Maybe InputWebhook)
-cetqUpdate :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) (Maybe (SubscribeOpSpec b_aGjf5))
-cetqTable :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) (TableName b_aGjf5)
-cetqSource :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) SourceName
-cetqRetryConf :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) (Maybe RequestTransform)
-cetqReplace :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) Bool
-cetqName :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) TriggerName
-cetqInsert :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) (Maybe (SubscribeOpSpec b_aGjf5))
-cetqHeaders :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) (Maybe Bool)
-cetqDelete :: forall b_aGjf5. Lens' (CreateEventTriggerQuery b_aGjf5) (Maybe (SubscribeOpSpec b_aGjf5))
+cteqTriggerOnReplication :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) TriggerOnReplication
+cteqCleanupConfig :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) (Maybe Text)
+cetqWebhook :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) (Maybe InputWebhook)
+cetqUpdate :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) (Maybe (SubscribeOpSpec b_aGjux))
+cetqTable :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) (TableName b_aGjux)
+cetqSource :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) SourceName
+cetqRetryConf :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) (Maybe RequestTransform)
+cetqReplace :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) Bool
+cetqName :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) TriggerName
+cetqInsert :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) (Maybe (SubscribeOpSpec b_aGjux))
+cetqHeaders :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) (Maybe Bool)
+cetqDelete :: forall b_aGjux. Lens' (CreateEventTriggerQuery b_aGjux) (Maybe (SubscribeOpSpec b_aGjux))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
