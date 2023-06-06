@@ -67,6 +67,9 @@ orderByOperator tCase sourceInfo = case tCase of
 -- >   coln: order_by
 -- >   obj-rel: <remote-table>_order_by
 -- > }
+-- TODO: When there are no columns accessible to a role, the
+-- `<table>_order_by` will be an empty input object. In such a case,
+-- we can avoid exposing the `order_by` argument.
 logicalModelOrderByExp ::
   forall b r m n.
   ( MonadBuildSchema b r m n
