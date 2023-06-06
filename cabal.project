@@ -24,6 +24,7 @@ jobs: $ncpus
 
 packages: server
 packages: server/lib/*/*.cabal
+packages: server/forks/*/*.cabal
 
 package *
   -- NOTE: this gets applied to both local (hasura) packages and dependencies,

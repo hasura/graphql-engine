@@ -7,7 +7,6 @@ dump.rdb
 appendonly.aof
 *.prof
 /.hpc
-Main.hs
 .stack-work
 TAGS
 stack*.yaml.lock
