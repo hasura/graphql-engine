@@ -291,6 +291,7 @@ newtype BackendPollerKey = BackendPollerKey {unBackendPollerKey :: AB.AnyBackend
 
 type PollerMap streamCursor = STMMap.Map BackendPollerKey (Poller streamCursor)
 
+-- | For dev debugging, output subject to change.
 dumpPollerMap :: Bool -> PollerMap streamCursor -> IO J.Value
 dumpPollerMap extended pollerMap =
   fmap J.toJSON $ do

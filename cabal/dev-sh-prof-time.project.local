@@ -1,5 +1,5 @@
--- THIS IS JUST A PLACEHOLDER FOR NOW. WE CAN ENABLE THIS AND INTEGRATE IT 
--- INTO DEV.SH AFTER MOVING TO GHC 9.4
+-- Enable lower distortion time profiling, powers `dev.sh graphql-engine --prof-time`
+--  See: https://downloads.haskell.org/ghc/latest/docs/users_guide/profiling.html?highlight=fprof%20late#ghc-flag--fprof-late
 import: cabal/dev-sh-optimized.project.local
 
 profiling: True
@@ -7,7 +7,10 @@ flags: +profiling
 
 package *
     profiling-detail: none
-    ghc-options: -fprof-late
     -- For each module, STG will be dumped to:
     --     dist-newstyle/**/*.dump-stg-final
     ghc-options: -ddump-stg-final -ddump-to-file
+
+-- Apply late cost centers only to all local packages to minimize distortion:
+program-options
+    ghc-options: -fprof-late

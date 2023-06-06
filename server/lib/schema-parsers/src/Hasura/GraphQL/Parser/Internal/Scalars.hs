@@ -30,7 +30,7 @@ where
 
 import Control.Monad ((>=>))
 import Data.Aeson qualified as J
-import Data.Aeson.Internal qualified as J.Internal
+import Data.Aeson.Types qualified as J.Internal
 import Data.Int (Int32, Int64)
 import Data.Scientific (Scientific)
 import Data.Scientific qualified as S

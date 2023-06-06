@@ -546,8 +546,6 @@ joinArticleTests = describe "join from article object" do
           [yaml|
           data:
             object:
-              # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Article
               title: "Article1"
           |]
     shouldReturnYaml
@@ -584,8 +582,6 @@ joinWriterTests = describe "join from writer object" do
           [yaml|
           data:
             object:
-              # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Writer
               name: "Writer1"
               articles:
                - title: Article1
@@ -625,8 +621,6 @@ joinArtistTests = describe "join from artist object" do
           [yaml|
           data:
             object:
-              # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Artist
               name: "Artist1"
               articles:
                - title: Article1
@@ -690,8 +684,6 @@ deeplyNestedJoinTests = describe "join from artist object" do
                   baz:
                   - title: Article2
                   - title: Article4
-              # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Writer
             - local_articles:
               - title: Article1
                 foo:
@@ -709,8 +701,6 @@ deeplyNestedJoinTests = describe "join from artist object" do
                   baz:
                   - title: Article3
                   - title: Article4
-              # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Artist
           |]
     shouldReturnYaml
       testEnvironment
@@ -743,14 +733,10 @@ deeplyNestedJoinTests = describe "join from artist object" do
             - bar:
               - title: Article3
               - title: Article4
-                # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Writer
             - bar:
                 baz:
                 - title: Article2
                 - title: Article4
-              # to circumvent https://github.com/morpheusgraphql/morpheus-graphql/issues/687
-              __typename: Artist
           |]
     shouldReturnYaml
       testEnvironment

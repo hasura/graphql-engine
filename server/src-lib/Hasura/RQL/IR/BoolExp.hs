@@ -47,10 +47,9 @@ where
 import Autodocodec (Codec (CommentCodec), HasCodec (codec), JSONCodec, bimapCodec, dimapCodec, named, valueCodec)
 import Control.Lens.Plated
 import Data.Aeson.Extended
-import Data.Aeson.Internal
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.Types (parseEither)
+import Data.Aeson.Types
 import Data.HashMap.Strict qualified as HashMap
 import Data.Monoid
 import Data.Text.Extended

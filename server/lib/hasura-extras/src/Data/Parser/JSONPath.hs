@@ -7,8 +7,8 @@ where
 import Control.Applicative
 import Data.Aeson (Key)
 import Data.Aeson qualified as J
-import Data.Aeson.Internal (JSONPath, JSONPathElement (..))
 import Data.Aeson.Key qualified as K
+import Data.Aeson.Types (JSONPath, JSONPathElement (..))
 import Data.Attoparsec.Text
 import Data.Bifunctor qualified as Bifunctor
 import Data.Text qualified as T

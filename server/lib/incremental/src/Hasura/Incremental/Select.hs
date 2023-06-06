@@ -30,7 +30,7 @@ import GHC.Records (HasField (..))
 import GHC.TypeLits (KnownSymbol, sameSymbol, symbolVal)
 import Hasura.Prelude
 import Unsafe.Coerce (unsafeCoerce)
-import "some" Data.GADT.Compare
+import "dependent-sum" Data.GADT.Compare
 
 -- | The 'Select' class provides a way to access subparts of a product type using a reified
 -- 'Selector'. A @'Selector' a b@ is essentially a function from @a@ to @b@, and indeed 'select'

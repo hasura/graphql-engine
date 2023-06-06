@@ -43,7 +43,7 @@ import Control.Lens ((^..))
 import Crypto.Hash qualified as Crypto
 import Data.Aeson
 import Data.Aeson qualified as J
-import Data.Aeson.Internal
+import Data.Aeson.Types
 import Data.ByteArray (convert)
 import Data.ByteString qualified as B
 import Data.ByteString.Base16 qualified as Base16

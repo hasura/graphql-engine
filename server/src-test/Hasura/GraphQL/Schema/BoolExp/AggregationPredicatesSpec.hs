@@ -37,7 +37,6 @@ import Hasura.Table.Cache
   ( TableCoreInfoG (_tciName),
     TableInfo (_tiCoreInfo),
   )
-import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Aeson.Expectation (shouldBeSubsetOf)
 import Test.Hspec

@@ -29,8 +29,8 @@ where
 
 import Control.Lens hiding (index)
 import Data.Aeson qualified as J
-import Data.Aeson.Internal qualified as J
 import Data.Aeson.Key qualified as K
+import Data.Aeson.Types qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Has
 import Data.HashMap.Strict.Extended qualified as HashMap

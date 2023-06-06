@@ -17,7 +17,7 @@ import Data.Text qualified as T
 import Data.Text.Conversions (FromText (..), ToText (..))
 import Hasura.Prelude
 import Language.Haskell.TH
-import Language.Haskell.TH.Syntax
+import Language.Haskell.TH.Syntax hiding (makeRelativeToProject) -- TODO can we ditch file-embed?
 import Text.Regex.TDFA ((=~~))
 
 data Version

@@ -61,7 +61,6 @@ import Control.Arrow.Extended
 import Control.Lens (makeLensesFor, makePrisms)
 import Data.Aeson
 import Data.Aeson.Encoding qualified as J
-import Data.Aeson.Internal
 import Data.Aeson.Key qualified as K
 import Data.Aeson.Types
 import Data.Parser.JSONPath (encodeJSONPath)

@@ -173,8 +173,9 @@ class TestRemoteSchemaBasic:
     def test_add_schema_conflicts(self, hge_ctx, gql_server):
         """add 2 remote schemas with same node or types"""
         q = mk_add_remote_q('simple 2', f'{gql_server.url}/hello-graphql')
+        # FYI: resp = ordereddict([('code', 'invalid-configuration'), ('error', "Inconsistent object: Duplicate remote field 'hello', Incons...on', "Inconsistent object: Duplicate remote field 'delayedHello'"), ('type', 'remote_schema')])]), ('path', '$.args')]) 
         resp = hge_ctx.v1q(q, expected_status_code = 400)
-        assert resp['code'] == 'unexpected'
+        assert resp['code'] == 'invalid-configuration', resp
 
     def test_remove_schema_error(self, hge_ctx):
         """remove remote schema which is not added"""

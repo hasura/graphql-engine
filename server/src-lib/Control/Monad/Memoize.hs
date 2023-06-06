@@ -19,7 +19,7 @@ import Data.IORef
 import Data.Kind qualified as K
 import Language.Haskell.TH qualified as TH
 import System.IO.Unsafe (unsafeInterleaveIO)
-import Type.Reflection (Typeable, typeRep, (:~:) (..))
+import Type.Reflection (Typeable, typeRep)
 import Prelude
 
 {- Note [Tying the knot]

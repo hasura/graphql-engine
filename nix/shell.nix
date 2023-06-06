@@ -45,9 +45,13 @@ let
         buildInputs = [ original pkgs.makeWrapper ];
         installPhase = ''
           mkdir -p "$out/bin"
-          makeWrapper ${original}/bin/ghc "$out/bin/ghc" \
-            --set LD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries} \
-            --set DYLD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries}
+          for bin in ${original}/bin/*; do
+            if [[ -x "$bin" ]]; then
+              makeWrapper "$bin" "$out/bin/$(basename "$bin")" \
+                --set LD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries} \
+                --set DYLD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries}
+            fi
+          done
         '';
       };
 
@@ -93,20 +97,18 @@ let
   haskellInputs = [
     pkgs.cabal2nix
 
-    # Ormolu is special; it's provided by our overlay.
-    pkgs.ormolu
-
     ghc
     hls
 
     pkgs.haskell.packages.${pkgs.ghcName}.alex
-    pkgs.haskell.packages.${pkgs.ghcName}.apply-refact
+    # pkgs.haskell.packages.${pkgs.ghcName}.apply-refact
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.cabal-install)
-    pkgs.haskell.packages.${pkgs.ghcName}.ghcid
+    # pkgs.haskell.packages.${pkgs.ghcName}.ghcid
     pkgs.haskell.packages.${pkgs.ghcName}.happy
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hlint)
     pkgs.haskell.packages.${pkgs.ghcName}.hoogle
     pkgs.haskell.packages.${pkgs.ghcName}.hspec-discover
+    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.ormolu_0_7_0_0)
   ];
 
   devInputs = [

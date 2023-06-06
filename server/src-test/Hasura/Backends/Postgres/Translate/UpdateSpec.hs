@@ -58,7 +58,7 @@ spec =
           expectedSQL =
             [QQ.sql|
               UPDATE "public"."test"
-                SET "name" = ('new name')::text, "description" = ('other')::text
+                SET "description" = ('other')::text, "name" = ('new name')::text
                 WHERE
                   (("public"."test"."id") = (('1')::integer))
                 RETURNING * , ('true')::boolean AS "check__constraint"
