@@ -8,6 +8,7 @@ module Hasura.RQL.DDL.Schema.Cache.Config
   )
 where
 
+import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (SQLGenCtx)
 import Hasura.RQL.Types.Metadata (MetadataDefaults)
@@ -31,6 +32,7 @@ data CacheStaticConfig = CacheStaticConfig
   { _cscMaintenanceMode :: MaintenanceMode (),
     _cscEventingMode :: EventingMode,
     _cscReadOnlyMode :: ReadOnlyMode,
+    _cscLogger :: Logger Hasura,
     -- | Native queries can be enabled or disabled on the fly via a feature
     -- flag, however we only recognise a change on a restart
     _cscAreNativeQueriesEnabled :: Bool,

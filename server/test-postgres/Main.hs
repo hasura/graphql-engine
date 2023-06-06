@@ -114,6 +114,7 @@ main = do
                 maintenanceMode
                 EventingEnabled
                 readOnlyMode
+                logger
                 False
                 False
             dynamicConfig =

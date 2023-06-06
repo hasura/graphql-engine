@@ -135,7 +135,7 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
           then emptyMetadataDefaults
           else acMetadataDefaults appContext
   let dynamicConfig = buildCacheDynamicConfig appContext
-  ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
+  ((r, modMetadata), modSchemaCache, cacheInvalidations, sourcesIntrospection) <-
     runMetadataQueryM
       (acEnvironment appContext)
       appEnvCheckFeatureFlag
@@ -165,6 +165,10 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
           $ "Successfully inserted new metadata in storage with resource version: "
           <> showMetadataResourceVersion newResourceVersion
 
+        -- save sources introspection to stored-introspection DB
+        Tracing.newSpan "storeSourcesIntrospection"
+          $ saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
+
         -- notify schema cache sync
         Tracing.newSpan "notifySchemaCacheSync"
           $ liftEitherM
@@ -175,7 +179,7 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
           $ "Inserted schema cache sync notification at resource version:"
           <> showMetadataResourceVersion newResourceVersion
 
-        (_, modSchemaCache', _) <-
+        (_, modSchemaCache', _, _) <-
           Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
             $ setMetadataResourceVersionInSchemaCache newResourceVersion
             & runCacheRWT dynamicConfig modSchemaCache

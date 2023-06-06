@@ -199,7 +199,8 @@ class (CacheRM m) => CacheRWM m where
   setMetadataResourceVersionInSchemaCache :: MetadataResourceVersion -> m ()
 
 buildSchemaCacheWithOptions :: (CacheRWM m) => BuildReason -> CacheInvalidations -> Metadata -> m ()
-buildSchemaCacheWithOptions buildReason cacheInvalidation metadata = tryBuildSchemaCacheWithOptions buildReason cacheInvalidation metadata (\_ _ -> (KeepNewSchemaCache, ()))
+buildSchemaCacheWithOptions buildReason cacheInvalidation metadata =
+  tryBuildSchemaCacheWithOptions buildReason cacheInvalidation metadata (\_ _ -> (KeepNewSchemaCache, ()))
 
 data BuildReason
   = -- | The build was triggered by an update this instance made to the catalog (in the

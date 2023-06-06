@@ -39,7 +39,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     runCacheBuild,
     runCacheBuildM,
     withRecordDependencies,
-    StoredIntrospectionStatus (..),
+    SourcesIntrospectionStatus (..),
   )
 where
 
@@ -262,18 +262,18 @@ runCacheBuildM m = do
   runCacheBuild params m
 
 -- | The status of collection of stored introspections of remote schemas and data sources.
-data StoredIntrospectionStatus
+data SourcesIntrospectionStatus
   = -- | A full introspection collection of all available remote schemas and data sources.
-    StoredIntrospectionChangedFull StoredIntrospection
+    SourcesIntrospectionChangedFull StoredIntrospection
   | -- | A partial introspection collection. Does not include all configured remote schemas and data sources, because they were not available.
-    StoredIntrospectionChangedPartial StoredIntrospection
+    SourcesIntrospectionChangedPartial StoredIntrospection
   | -- | None of remote schemas or data sources introspection is refetched.
-    StoredIntrospectionUnchanged
+    SourcesIntrospectionUnchanged
 
 data RebuildableSchemaCache = RebuildableSchemaCache
   { lastBuiltSchemaCache :: SchemaCache,
     _rscInvalidationMap :: InvalidationKeys,
-    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) (SchemaCache, StoredIntrospectionStatus)
+    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) (SchemaCache, SourcesIntrospectionStatus)
   }
 
 withRecordDependencies ::

@@ -18,6 +18,7 @@ module Hasura.RQL.DDL.Schema.Cache
     CacheRWT,
     runCacheRWT,
     mkBooleanPermissionMap,
+    saveSourcesIntrospection,
   )
 where
 
@@ -185,7 +186,7 @@ newtype CacheRWT m a
     -- passing the 'CacheDynamicConfig' to every function that builds the cache. It
     -- should ultimately be reduced to 'AppContext', or even better a relevant
     -- subset thereof.
-    CacheRWT (ReaderT CacheDynamicConfig (StateT (RebuildableSchemaCache, CacheInvalidations) m) a)
+    CacheRWT (ReaderT CacheDynamicConfig (StateT (RebuildableSchemaCache, CacheInvalidations, SourcesIntrospectionStatus) m) a)
   deriving newtype
     ( Functor,
       Applicative,
@@ -220,11 +221,11 @@ runCacheRWT ::
   CacheDynamicConfig ->
   RebuildableSchemaCache ->
   CacheRWT m a ->
-  m (a, RebuildableSchemaCache, CacheInvalidations)
+  m (a, RebuildableSchemaCache, CacheInvalidations, SourcesIntrospectionStatus)
 runCacheRWT config cache (CacheRWT m) = do
-  (v, (newCache, invalidations)) <-
-    runStateT (runReaderT m config) (cache, mempty)
-  pure (v, newCache, invalidations)
+  (v, (newCache, invalidations, introspection)) <-
+    runStateT (runReaderT m config) (cache, mempty, SourcesIntrospectionUnchanged)
+  pure (v, newCache, invalidations, introspection)
 
 instance MonadTrans CacheRWT where
   lift = CacheRWT . lift . lift
@@ -232,33 +233,70 @@ instance MonadTrans CacheRWT where
 instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . (^. _1))
 
+-- | Note: Use these functions over 'fetchSourceIntrospection' and
+-- 'storeSourceIntrospection' from 'MonadMetadataStorage' class.
+-- These are wrapper function over 'MonadMetadataStorage' methods. These functions
+-- handles errors, if any, logs them and returns empty stored introspection.
+-- This is to ensure we do not accidentally throw errors (related to
+-- fetching/storing stored introspection) in the critical code path of building
+-- the 'SchemaCache'.
+loadStoredIntrospection ::
+  (MonadMetadataStorage m, MonadIO m) =>
+  Logger Hasura ->
+  MetadataResourceVersion ->
+  m (Maybe StoredIntrospection)
+loadStoredIntrospection logger metadataVersion = do
+  fetchSourceIntrospection metadataVersion `onLeftM` \err -> do
+    unLogger logger
+      $ StoredIntrospectionLog "Could not load stored-introspection. Continuing without it" err
+    pure Nothing
+
+saveSourcesIntrospection ::
+  (MonadIO m, MonadMetadataStorage m) =>
+  Logger Hasura ->
+  SourcesIntrospectionStatus ->
+  MetadataResourceVersion ->
+  m ()
+saveSourcesIntrospection logger sourcesIntrospection metadataVersion = do
+  -- store the collected source introspection result only if we were able
+  -- to introspect all sources successfully
+  case sourcesIntrospection of
+    SourcesIntrospectionUnchanged -> pure ()
+    SourcesIntrospectionChangedPartial _ -> pure ()
+    SourcesIntrospectionChangedFull introspection ->
+      storeSourceIntrospection introspection metadataVersion `onLeftM` \err ->
+        unLogger logger $ StoredIntrospectionLog "Could not save sources introspection" err
+
 instance
   ( MonadIO m,
     MonadError QErr m,
-    MonadMetadataStorage m,
     ProvidesNetwork m,
     MonadResolveSource m,
-    HasCacheStaticConfig m
+    HasCacheStaticConfig m,
+    MonadMetadataStorage m
   ) =>
   CacheRWM (CacheRWT m)
   where
   tryBuildSchemaCacheWithOptions buildReason invalidations metadata validateNewSchemaCache = CacheRWT do
     dynamicConfig <- ask
-    (RebuildableSchemaCache lastBuiltSC invalidationKeys rule, oldInvalidations) <- get
+    staticConfig <- askCacheStaticConfig
+    (RebuildableSchemaCache lastBuiltSC invalidationKeys rule, oldInvalidations, _) <- get
     let metadataVersion = scMetadataResourceVersion lastBuiltSC
         metadataWithVersion = MetadataWithResourceVersion metadata metadataVersion
         newInvalidationKeys = invalidateKeys invalidations invalidationKeys
-    storedIntrospection <- onLeftM (fetchSourceIntrospection metadataVersion) (\_ -> pure Nothing)
+    storedIntrospection <- loadStoredIntrospection (_cscLogger staticConfig) metadataVersion
     result <-
       runCacheBuildM
         $ flip runReaderT buildReason
         $ Inc.build rule (metadataWithVersion, dynamicConfig, newInvalidationKeys, storedIntrospection)
-    let (schemaCache, _storedIntrospectionStatus) = Inc.result result
+
+    let (schemaCache, storedIntrospectionStatus) = Inc.result result
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
         !newInvalidations = oldInvalidations <> invalidations
+
     case validateNewSchemaCache lastBuiltSC schemaCache of
-      (KeepNewSchemaCache, valueToReturn) -> put (newCache, newInvalidations) >> pure valueToReturn
+      (KeepNewSchemaCache, valueToReturn) -> put (newCache, newInvalidations, storedIntrospectionStatus) >> pure valueToReturn
       (DiscardNewSchemaCache, valueToReturn) -> pure valueToReturn
     where
       -- Prunes invalidation keys that no longer exist in the schema to avoid leaking memory by
@@ -268,7 +306,7 @@ instance
         name `elem` getAllRemoteSchemas schemaCache
 
   setMetadataResourceVersionInSchemaCache resourceVersion = CacheRWT $ do
-    (rebuildableSchemaCache, invalidations) <- get
+    (rebuildableSchemaCache, invalidations, introspection) <- get
     put
       ( rebuildableSchemaCache
           { lastBuiltSchemaCache =
@@ -276,7 +314,8 @@ instance
                 { scMetadataResourceVersion = resourceVersion
                 }
           },
-        invalidations
+        invalidations,
+        introspection
       )
 
 -- | Generate health checks related cache from sources metadata
@@ -327,10 +366,10 @@ partitionCollectedInfo =
           _3 %~ ([storedIntrospection] <>)
    in foldr go ([], [], []) . toList
 
-buildStoredIntrospectionStatus ::
-  Sources -> RemoteSchemas -> [StoredIntrospectionItem] -> StoredIntrospectionStatus
-buildStoredIntrospectionStatus sourcesMetadata remoteSchemasMetadata = \case
-  [] -> StoredIntrospectionUnchanged
+buildSourcesIntrospectionStatus ::
+  Sources -> RemoteSchemas -> [StoredIntrospectionItem] -> SourcesIntrospectionStatus
+buildSourcesIntrospectionStatus sourcesMetadata remoteSchemasMetadata = \case
+  [] -> SourcesIntrospectionUnchanged
   items ->
     let go item (sources, remoteSchemas) = case item of
           SourceIntrospectionItem name introspection ->
@@ -340,8 +379,8 @@ buildStoredIntrospectionStatus sourcesMetadata remoteSchemasMetadata = \case
         (allSources, allRemoteSchemas) = foldr go ([], []) items
         storedIntrospection = StoredIntrospection (HashMap.fromList allSources) (HashMap.fromList allRemoteSchemas)
      in if allSourcesAndRemoteSchemasCollected allSources allRemoteSchemas
-          then StoredIntrospectionChangedFull storedIntrospection
-          else StoredIntrospectionChangedPartial storedIntrospection
+          then SourcesIntrospectionChangedFull storedIntrospection
+          else SourcesIntrospectionChangedPartial storedIntrospection
   where
     allSourcesAndRemoteSchemasCollected ::
       [(SourceName, sourceIntrospection)] ->
@@ -398,7 +437,7 @@ buildSchemaCacheRule ::
   Logger Hasura ->
   Env.Environment ->
   Maybe SchemaRegistryContext ->
-  (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) `arr` (SchemaCache, StoredIntrospectionStatus)
+  (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) `arr` (SchemaCache, SourcesIntrospectionStatus)
 buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResourceVersion metadataNoDefaults metadataResourceVersion, dynamicConfig, invalidationKeys, storedIntrospection) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
   let metadataDefaults = _cdcMetadataDefaults dynamicConfig
@@ -408,7 +447,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
   (inconsistentObjects, storedIntrospections, (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies), ((adminIntrospection, gqlContext, gqlContextUnauth, inconsistentRemoteSchemas), (relayContext, relayContextUnauth), schemaRegistryAction)) <-
     Inc.cache buildOutputsAndSchema -< (metadataDep, dynamicConfig, invalidationKeysDep, storedIntrospection)
 
-  let storedIntrospectionStatus = buildStoredIntrospectionStatus _metaSources _metaRemoteSchemas storedIntrospections
+  let storedIntrospectionStatus = buildSourcesIntrospectionStatus _metaSources _metaRemoteSchemas storedIntrospections
       (resolvedEndpoints, endpointCollectedInfo) = runIdentity $ runWriterT $ buildRESTEndpoints _metaQueryCollections (InsOrdHashMap.elems _metaRestEndpoints)
       (cronTriggersMap, cronTriggersCollectedInfo) = runIdentity $ runWriterT $ buildCronTriggers (InsOrdHashMap.elems _metaCronTriggers)
       (openTelemetryInfo, openTelemetryCollectedInfo) = runIdentity $ runWriterT $ buildOpenTelemetry _metaOpenTelemetryConfig

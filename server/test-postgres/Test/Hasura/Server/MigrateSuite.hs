@@ -87,13 +87,13 @@ instance
   tryBuildSchemaCacheWithOptions reason invalidations metadata validateNewSchemaCache = do
     (dynamicConfig, scVar) <- ask
     modifyMVar scVar \schemaCache -> do
-      (valueToReturn, cache, _) <- runCacheRWT dynamicConfig schemaCache (tryBuildSchemaCacheWithOptions reason invalidations metadata validateNewSchemaCache)
+      (valueToReturn, cache, _, _) <- runCacheRWT dynamicConfig schemaCache (tryBuildSchemaCacheWithOptions reason invalidations metadata validateNewSchemaCache)
       pure (cache, valueToReturn)
 
   setMetadataResourceVersionInSchemaCache resourceVersion = do
     (dynamicConfig, scVar) <- ask
     modifyMVar scVar \schemaCache -> do
-      ((), cache, _) <- runCacheRWT dynamicConfig schemaCache (setMetadataResourceVersionInSchemaCache resourceVersion)
+      ((), cache, _, _) <- runCacheRWT dynamicConfig schemaCache (setMetadataResourceVersionInSchemaCache resourceVersion)
       pure (cache, ())
 
 instance Example (MetadataT (CacheRefT m) ()) where
