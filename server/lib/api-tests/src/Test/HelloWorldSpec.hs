@@ -20,7 +20,7 @@ spec :: SpecWith GlobalTestEnvironment
 spec = do
   withHge emptyHgeConfig do
     describe "An externally hosted HGE instance" do
-      it "runs" \_te -> do
+      it "certainly runs" \_te -> do
         return @IO ()
 
   Fixture.run

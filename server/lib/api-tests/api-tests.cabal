@@ -11,8 +11,8 @@ common common-all
     -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
     -Weverything
     -Wno-missing-exported-signatures
-    -Wno-missing-import-lists
     -Wno-missed-specialisations
+    -Wno-missing-import-lists
     -Wno-all-missed-specialisations
     -Wno-unsafe
     -Wno-safe
