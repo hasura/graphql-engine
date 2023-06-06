@@ -229,7 +229,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
               aggregateFieldToExp thisSourcePrefix aggFields strfyNum
             )
         TAFNodes _ annFields -> do
-          annFieldExtr <- processAnnFields thisSourcePrefix fieldName similarArrayFields annFields tCase
+          annFieldExtr <- processAnnFields thisSourcePrefix fieldName annFields tCase
           pure
             ( [annFieldExtr],
               withJsonAggExtr permLimitSubQuery (orderByForJsonAgg selectSource)
@@ -301,11 +301,10 @@ processAnnFields ::
   ) =>
   TableIdentifier ->
   FieldName ->
-  SimilarArrayFields ->
   AnnFields ('Postgres pgKind) ->
   Maybe NamingCase ->
   m (S.ColumnAlias, S.SQLExp)
-processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
+processAnnFields sourcePrefix fieldAlias annFields tCase = do
   fieldExps <- forM annFields $ \(fieldName, field) ->
     (fieldName,)
       <$> case field of
@@ -345,15 +344,15 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
           let sourcePrefixes = mkSourcePrefixes objRelSourcePrefix
               selectSource = ObjectSelectSource (_pfThis sourcePrefixes) ident filterExp
               objRelSource = ObjectRelationSource relName relMapping selectSource nullable
-          annFieldsExtr <- processAnnFields (identifierToTableIdentifier $ _pfThis sourcePrefixes) fieldName HashMap.empty objAnnFields tCase
+          annFieldsExtr <- processAnnFields (identifierToTableIdentifier $ _pfThis sourcePrefixes) fieldName objAnnFields tCase
           pure
             ( objRelSource,
               uncurry InsOrdHashMap.singleton annFieldsExtr,
               S.mkQIdenExp objRelSourcePrefix fieldName
             )
         AFArrayRelation arrSel -> do
-          let arrRelSourcePrefix = mkArrayRelationSourcePrefix sourcePrefix fieldAlias similarArrFields fieldName
-              arrRelAlias = mkArrayRelationAlias fieldAlias similarArrFields fieldName
+          let arrRelSourcePrefix = mkArrayRelationSourcePrefix sourcePrefix fieldAlias HashMap.empty fieldName
+              arrRelAlias = mkArrayRelationAlias fieldAlias HashMap.empty fieldName
           processArrayRelation (mkSourcePrefixes arrRelSourcePrefix) fieldName arrRelAlias arrSel tCase
           pure $ S.mkQIdenExp arrRelSourcePrefix fieldName
         AFComputedField _ _ (CFSScalar scalar caseBoolExpMaybe) -> do
@@ -619,7 +618,6 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
     processAnnFields
       (identifierToTableIdentifier $ _pfThis sourcePrefixes)
       fieldAlias
-      similarArrayFields
       annSelFields
       tCase
   let allExtractors = InsOrdHashMap.fromList $ annFieldsExtr : orderByAndDistinctExtrs
@@ -785,7 +783,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
                                   <> "."
                                   <> edgeText
                               edgeFieldIdentifier = toIdentifier edgeFieldName
-                          annFieldsExtrExp <- lift $ processAnnFields thisPrefix edgeFieldName similarArrayFields annFields tCase
+                          annFieldsExtrExp <- lift $ processAnnFields thisPrefix edgeFieldName annFields tCase
                           modify' (<> [annFieldsExtrExp])
                           pure $ S.SEIdentifier edgeFieldIdentifier
 
