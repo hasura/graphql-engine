@@ -18,7 +18,7 @@
 </span><span id="line-18"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="getArgumentName"><span class="annot"><span class="annottext">ArgumentName -&gt; Text
 </span><a href="Hasura.LogicalModelResolver.Types.html#getArgumentName"><span class="hs-identifier hs-var hs-var">getArgumentName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-19"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-20"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686797892"><span id="local-6989586621686797897"><span class="annot"><span class="annottext">ArgumentName -&gt; ArgumentName -&gt; Bool
+</span><span id="line-20"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686797893"><span id="local-6989586621686797898"><span class="annot"><span class="annottext">ArgumentName -&gt; ArgumentName -&gt; Bool
 (ArgumentName -&gt; ArgumentName -&gt; Bool)
 -&gt; (ArgumentName -&gt; ArgumentName -&gt; Bool) -&gt; Eq ArgumentName
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -26,7 +26,7 @@ $c== :: ArgumentName -&gt; ArgumentName -&gt; Bool
 == :: ArgumentName -&gt; ArgumentName -&gt; Bool
 $c/= :: ArgumentName -&gt; ArgumentName -&gt; Bool
 /= :: ArgumentName -&gt; ArgumentName -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686797905"><span id="local-6989586621686797910"><span id="local-6989586621686797914"><span id="local-6989586621686797918"><span id="local-6989586621686797922"><span id="local-6989586621686797926"><span id="local-6989586621686797930"><span class="annot"><span class="annottext">Eq ArgumentName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686797906"><span id="local-6989586621686797911"><span id="local-6989586621686797915"><span id="local-6989586621686797919"><span id="local-6989586621686797923"><span id="local-6989586621686797927"><span id="local-6989586621686797931"><span class="annot"><span class="annottext">Eq ArgumentName
 Eq ArgumentName
 -&gt; (ArgumentName -&gt; ArgumentName -&gt; Ordering)
 -&gt; (ArgumentName -&gt; ArgumentName -&gt; Bool)
@@ -63,7 +63,7 @@ $cmax :: ArgumentName -&gt; ArgumentName -&gt; ArgumentName
 max :: ArgumentName -&gt; ArgumentName -&gt; ArgumentName
 $cmin :: ArgumentName -&gt; ArgumentName -&gt; ArgumentName
 min :: ArgumentName -&gt; ArgumentName -&gt; ArgumentName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686797936"><span id="local-6989586621686797941"><span id="local-6989586621686797945"><span class="annot"><span class="annottext">Int -&gt; ArgumentName -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686797937"><span id="local-6989586621686797942"><span id="local-6989586621686797946"><span class="annot"><span class="annottext">Int -&gt; ArgumentName -&gt; ShowS
 [ArgumentName] -&gt; ShowS
 ArgumentName -&gt; String
 (Int -&gt; ArgumentName -&gt; ShowS)
@@ -78,7 +78,7 @@ $cshow :: ArgumentName -&gt; String
 show :: ArgumentName -&gt; String
 $cshowList :: [ArgumentName] -&gt; ShowS
 showList :: [ArgumentName] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686797953"><span id="local-6989586621686797958"><span class="annot"><span class="annottext">Eq ArgumentName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686797954"><span id="local-6989586621686797959"><span class="annot"><span class="annottext">Eq ArgumentName
 Eq ArgumentName
 -&gt; (Int -&gt; ArgumentName -&gt; Int)
 -&gt; (ArgumentName -&gt; Int)
@@ -91,7 +91,7 @@ hashWithSalt :: Int -&gt; ArgumentName -&gt; Int
 $chash :: ArgumentName -&gt; Int
 hash :: ArgumentName -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-21"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686797964"><span id="local-6989586621686797966"><span class="annot"><span class="annottext">(forall x. ArgumentName -&gt; Rep ArgumentName x)
+</span><span id="line-21"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686797965"><span id="local-6989586621686797967"><span class="annot"><span class="annottext">(forall x. ArgumentName -&gt; Rep ArgumentName x)
 -&gt; (forall x. Rep ArgumentName x -&gt; ArgumentName)
 -&gt; Generic ArgumentName
 forall x. Rep ArgumentName x -&gt; ArgumentName
@@ -105,14 +105,14 @@ to :: forall x. Rep ArgumentName x -&gt; ArgumentName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-22"></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ToErrorValue.html#ToErrorValue"><span class="hs-identifier hs-type">ToErrorValue</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-24"></span><span>  </span><span id="local-6989586621686797972"><span class="annot"><span class="annottext">toErrorValue :: ArgumentName -&gt; ErrorMessage
-</span><a href="#local-6989586621686797972"><span class="hs-identifier hs-var hs-var hs-var hs-var">toErrorValue</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span id="local-6989586621686797974"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621686797974"><span class="hs-identifier hs-var">txt</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
+</span><span id="line-24"></span><span>  </span><span id="local-6989586621686797973"><span class="annot"><span class="annottext">toErrorValue :: ArgumentName -&gt; ErrorMessage
+</span><a href="#local-6989586621686797973"><span class="hs-identifier hs-var hs-var hs-var hs-var">toErrorValue</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span id="local-6989586621686797975"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621686797975"><span class="hs-identifier hs-var">txt</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorValue.html#squote"><span class="hs-identifier hs-var">squote</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621686797974"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><a href="#local-6989586621686797975"><span class="hs-identifier hs-var">txt</span></a></span><span>
 </span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686797977"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-27"></span><span>  </span><span id="local-6989586621686797983"><span class="annot"><span class="annottext">codec :: JSONCodec ArgumentName
+</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686797978"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-27"></span><span>  </span><span id="local-6989586621686797984"><span class="annot"><span class="annottext">codec :: JSONCodec ArgumentName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ArgumentName)
 -&gt; (ArgumentName -&gt; Text)
 -&gt; Codec Value Text Text
@@ -128,13 +128,13 @@ forall oldOutput newOutput newInput oldInput context.
 forall value. HasCodec value =&gt; JSONCodec value
 </span><span class="hs-identifier hs-var">codec</span></span><span>
 </span><span id="line-28"></span><span>
-</span><span id="line-29"></span><span id="local-6989586621686797985"><span id="local-6989586621686797990"><span id="local-6989586621686797994"><span id="local-6989586621686797998"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span></span></span></span></span><span>
+</span><span id="line-29"></span><span id="local-6989586621686797986"><span id="local-6989586621686797991"><span id="local-6989586621686797995"><span id="local-6989586621686797999"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span></span></span></span></span><span>
 </span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span id="local-6989586621686798004"><span id="local-6989586621686798009"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span></span></span><span>
+</span><span id="line-31"></span><span id="local-6989586621686798005"><span id="local-6989586621686798010"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span></span></span><span>
 </span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span id="local-6989586621686798015"><span id="local-6989586621686798020"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span></span></span><span>
+</span><span id="line-33"></span><span id="local-6989586621686798016"><span id="local-6989586621686798021"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span></span></span><span>
 </span><span id="line-34"></span><span>
-</span><span id="line-35"></span><span id="local-6989586621686798026"><span id="local-6989586621686798031"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span></span></span><span>
+</span><span id="line-35"></span><span id="local-6989586621686798027"><span id="local-6989586621686798032"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span></span></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686798037"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686798038"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span></span><span>
 </span><span id="line-38"></span></pre></body></html>
