@@ -18,63 +18,80 @@
 </span><span id="line-18"></span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span>
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec.OpenAPI</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier">Control.DeepSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier">NFData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.DeepSeq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NFData</span></span><span class="hs-special">)</span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens.TH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">makeLenses</span></span><span class="hs-special">)</span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
 </span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Hashable</span></span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.OpenApi</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToSchema</span></span><span class="hs-special">)</span><span>
 </span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Text</span></span><span class="hs-special">)</span><span>
-</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">GHC.Generics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Generics</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnType"><span class="hs-identifier">RawColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Prelude</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
 </span><span id="line-32"></span><span>
 </span><span id="line-33"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-34"></span><span>
-</span><span id="line-35"></span><span id="local-6989586621691098585"><span id="local-6989586621691098586"></span></span><span class="hs-keyword">data</span><span> </span><span id="SourceColumnInfo"><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-var">SourceColumnInfo</span></a></span></span><span> </span><span id="local-6989586621691098814"><span class="annot"><a href="#local-6989586621691098814"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceColumnInfo"><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-var">SourceColumnInfo</span></a></span></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">data</span><span> </span><span id="SourceColumnInfo"><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-var">SourceColumnInfo</span></a></span></span><span> </span><span id="local-6989586621686791550"><span class="annot"><a href="#local-6989586621686791550"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceColumnInfo"><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-var">SourceColumnInfo</span></a></span></span><span>
 </span><span id="line-36"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_sciName"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Column b
-</span><a href="Hasura.RQL.Types.Source.Column.html#_sciName"><span class="hs-identifier hs-var hs-var">_sciName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691098814"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Source.Column.html#_sciName"><span class="hs-identifier hs-var hs-var">_sciName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686791550"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-37"></span><span>    </span><span id="_sciType"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; RawColumnType b
-</span><a href="Hasura.RQL.Types.Source.Column.html#_sciType"><span class="hs-identifier hs-var hs-var">_sciType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnType"><span class="hs-identifier hs-type">RawColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691098814"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Source.Column.html#_sciType"><span class="hs-identifier hs-var hs-var">_sciType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnType"><span class="hs-identifier hs-type">RawColumnType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686791550"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-38"></span><span>    </span><span id="_sciNullable"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
-</span><a href="Hasura.RQL.Types.Source.Column.html#_sciNullable"><span class="hs-identifier hs-var hs-var">_sciNullable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Source.Column.html#_sciNullable"><span class="hs-identifier hs-var hs-var">_sciNullable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
 </span><span id="line-39"></span><span>    </span><span id="_sciDescription"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Maybe Text
-</span><a href="Hasura.RQL.Types.Source.Column.html#_sciDescription"><span class="hs-identifier hs-var hs-var">_sciDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Source.Column.html#_sciDescription"><span class="hs-identifier hs-var hs-var">_sciDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
 </span><span id="line-40"></span><span>    </span><span id="_sciInsertable"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
-</span><a href="Hasura.RQL.Types.Source.Column.html#_sciInsertable"><span class="hs-identifier hs-var hs-var">_sciInsertable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Source.Column.html#_sciInsertable"><span class="hs-identifier hs-var hs-var">_sciInsertable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
 </span><span id="line-41"></span><span>    </span><span id="_sciUpdatable"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
-</span><a href="Hasura.RQL.Types.Source.Column.html#_sciUpdatable"><span class="hs-identifier hs-var hs-var">_sciUpdatable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Source.Column.html#_sciUpdatable"><span class="hs-identifier hs-var hs-var">_sciUpdatable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
 </span><span id="line-42"></span><span>    </span><span id="_sciValueGenerated"><span class="annot"><span class="annottext">forall (b :: BackendType).
 SourceColumnInfo b -&gt; Maybe ColumnValueGenerationStrategy
-</span><a href="Hasura.RQL.Types.Source.Column.html#_sciValueGenerated"><span class="hs-identifier hs-var hs-var">_sciValueGenerated</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#ColumnValueGenerationStrategy"><span class="hs-identifier hs-type">ColumnValueGenerationStrategy</span></a></span><span>
+</span><a href="Hasura.RQL.Types.Source.Column.html#_sciValueGenerated"><span class="hs-identifier hs-var hs-var">_sciValueGenerated</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#ColumnValueGenerationStrategy"><span class="hs-identifier hs-type">ColumnValueGenerationStrategy</span></a></span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686791739"><span id="local-6989586621686791741"><span class="annot"><span class="annottext">(forall x. SourceColumnInfo b -&gt; Rep (SourceColumnInfo b) x)
+-&gt; (forall x. Rep (SourceColumnInfo b) x -&gt; SourceColumnInfo b)
+-&gt; Generic (SourceColumnInfo b)
+forall x. Rep (SourceColumnInfo b) x -&gt; SourceColumnInfo b
+forall x. SourceColumnInfo b -&gt; Rep (SourceColumnInfo b) x
+forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 forall (b :: BackendType) x.
 Rep (SourceColumnInfo b) x -&gt; SourceColumnInfo b
 forall (b :: BackendType) x.
 SourceColumnInfo b -&gt; Rep (SourceColumnInfo b) x
-$cto :: forall (b :: BackendType) x.
-Rep (SourceColumnInfo b) x -&gt; SourceColumnInfo b
 $cfrom :: forall (b :: BackendType) x.
 SourceColumnInfo b -&gt; Rep (SourceColumnInfo b) x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691098568"><span id="local-6989586621691098570"><span class="annot"><span class="annottext">forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+from :: forall x. SourceColumnInfo b -&gt; Rep (SourceColumnInfo b) x
+$cto :: forall (b :: BackendType) x.
+Rep (SourceColumnInfo b) x -&gt; SourceColumnInfo b
+to :: forall x. Rep (SourceColumnInfo b) x -&gt; SourceColumnInfo b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686791749"><span id="local-6989586621686791756"><span class="annot"><span class="annottext">Eq (SourceColumnInfo b)
+Eq (SourceColumnInfo b)
+-&gt; (Int -&gt; SourceColumnInfo b -&gt; Int)
+-&gt; (SourceColumnInfo b -&gt; Int)
+-&gt; Hashable (SourceColumnInfo b)
+Int -&gt; SourceColumnInfo b -&gt; Int
+SourceColumnInfo b -&gt; Int
+forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
 forall {b :: BackendType}. Backend b =&gt; Eq (SourceColumnInfo b)
 forall (b :: BackendType).
 Backend b =&gt;
 Int -&gt; SourceColumnInfo b -&gt; Int
 forall (b :: BackendType). Backend b =&gt; SourceColumnInfo b -&gt; Int
-hash :: SourceColumnInfo b -&gt; Int
-$chash :: forall (b :: BackendType). Backend b =&gt; SourceColumnInfo b -&gt; Int
-hashWithSalt :: Int -&gt; SourceColumnInfo b -&gt; Int
 $chashWithSalt :: forall (b :: BackendType).
 Backend b =&gt;
 Int -&gt; SourceColumnInfo b -&gt; Int
+hashWithSalt :: Int -&gt; SourceColumnInfo b -&gt; Int
+$chash :: forall (b :: BackendType). Backend b =&gt; SourceColumnInfo b -&gt; Int
+hash :: SourceColumnInfo b -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691098558"><span id="local-6989586621691098564"><span class="annot"><span class="annottext">Value -&gt; Parser [SourceColumnInfo b]
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686791797"><span id="local-6989586621686791803"><span class="annot"><span class="annottext">Value -&gt; Parser [SourceColumnInfo b]
 Value -&gt; Parser (SourceColumnInfo b)
+(Value -&gt; Parser (SourceColumnInfo b))
+-&gt; (Value -&gt; Parser [SourceColumnInfo b])
+-&gt; FromJSON (SourceColumnInfo b)
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
 forall (b :: BackendType).
@@ -83,18 +100,23 @@ Value -&gt; Parser [SourceColumnInfo b]
 forall (b :: BackendType).
 Backend b =&gt;
 Value -&gt; Parser (SourceColumnInfo b)
-parseJSONList :: Value -&gt; Parser [SourceColumnInfo b]
-$cparseJSONList :: forall (b :: BackendType).
-Backend b =&gt;
-Value -&gt; Parser [SourceColumnInfo b]
-parseJSON :: Value -&gt; Parser (SourceColumnInfo b)
 $cparseJSON :: forall (b :: BackendType).
 Backend b =&gt;
 Value -&gt; Parser (SourceColumnInfo b)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691098534"><span id="local-6989586621691098539"><span id="local-6989586621691098544"><span id="local-6989586621691098550"><span class="annot"><span class="annottext">[SourceColumnInfo b] -&gt; Value
+parseJSON :: Value -&gt; Parser (SourceColumnInfo b)
+$cparseJSONList :: forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser [SourceColumnInfo b]
+parseJSONList :: Value -&gt; Parser [SourceColumnInfo b]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686791812"><span id="local-6989586621686791818"><span id="local-6989586621686791823"><span id="local-6989586621686791828"><span class="annot"><span class="annottext">[SourceColumnInfo b] -&gt; Value
 [SourceColumnInfo b] -&gt; Encoding
 SourceColumnInfo b -&gt; Value
 SourceColumnInfo b -&gt; Encoding
+(SourceColumnInfo b -&gt; Value)
+-&gt; (SourceColumnInfo b -&gt; Encoding)
+-&gt; ([SourceColumnInfo b] -&gt; Value)
+-&gt; ([SourceColumnInfo b] -&gt; Encoding)
+-&gt; ToJSON (SourceColumnInfo b)
 forall a.
 (a -&gt; Value)
 -&gt; (a -&gt; Encoding)
@@ -111,21 +133,26 @@ forall (b :: BackendType). Backend b =&gt; SourceColumnInfo b -&gt; Value
 forall (b :: BackendType).
 Backend b =&gt;
 SourceColumnInfo b -&gt; Encoding
-toEncodingList :: [SourceColumnInfo b] -&gt; Encoding
-$ctoEncodingList :: forall (b :: BackendType).
-Backend b =&gt;
-[SourceColumnInfo b] -&gt; Encoding
-toJSONList :: [SourceColumnInfo b] -&gt; Value
-$ctoJSONList :: forall (b :: BackendType).
-Backend b =&gt;
-[SourceColumnInfo b] -&gt; Value
-toEncoding :: SourceColumnInfo b -&gt; Encoding
+$ctoJSON :: forall (b :: BackendType). Backend b =&gt; SourceColumnInfo b -&gt; Value
+toJSON :: SourceColumnInfo b -&gt; Value
 $ctoEncoding :: forall (b :: BackendType).
 Backend b =&gt;
 SourceColumnInfo b -&gt; Encoding
-toJSON :: SourceColumnInfo b -&gt; Value
-$ctoJSON :: forall (b :: BackendType). Backend b =&gt; SourceColumnInfo b -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691098522"><span class="annot"><span class="annottext">Proxy (SourceColumnInfo b)
+toEncoding :: SourceColumnInfo b -&gt; Encoding
+$ctoJSONList :: forall (b :: BackendType).
+Backend b =&gt;
+[SourceColumnInfo b] -&gt; Value
+toJSONList :: [SourceColumnInfo b] -&gt; Value
+$ctoEncodingList :: forall (b :: BackendType).
+Backend b =&gt;
+[SourceColumnInfo b] -&gt; Encoding
+toEncodingList :: [SourceColumnInfo b] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686791840"><span class="annot"><span class="annottext">Typeable (SourceColumnInfo b)
+Typeable (SourceColumnInfo b)
+-&gt; (Proxy (SourceColumnInfo b)
+    -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema (SourceColumnInfo b)
+Proxy (SourceColumnInfo b)
 -&gt; Declare (Definitions Schema) NamedSchema
 forall a.
 Typeable a
@@ -138,29 +165,44 @@ forall (b :: BackendType).
 Backend b =&gt;
 Proxy (SourceColumnInfo b)
 -&gt; Declare (Definitions Schema) NamedSchema
-declareNamedSchema :: Proxy (SourceColumnInfo b)
--&gt; Declare (Definitions Schema) NamedSchema
 $cdeclareNamedSchema :: forall (b :: BackendType).
 Backend b =&gt;
 Proxy (SourceColumnInfo b)
 -&gt; Declare (Definitions Schema) NamedSchema
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691098814"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+declareNamedSchema :: Proxy (SourceColumnInfo b)
+-&gt; Declare (Definitions Schema) NamedSchema
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686791550"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-47"></span><span>
-</span><span id="line-48"></span><span id="local-6989586621691098496"><span id="local-6989586621691098510"><span id="local-6989586621691098512"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691098512"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691098512"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-48"></span><span id="local-6989586621686791850"><span id="local-6989586621686791853"><span id="local-6989586621686791868"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686791850"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686791850"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-49"></span><span>
-</span><span id="line-50"></span><span id="local-6989586621691098454"><span id="local-6989586621691098456"><span id="local-6989586621691098459"><span id="local-6989586621691098462"><span id="local-6989586621691098465"><span id="local-6989586621691098476"><span id="local-6989586621691098490"><span id="local-6989586621691098771"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691098771"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Ord</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691098771"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-50"></span><span id="local-6989586621686791628"><span id="local-6989586621686791878"><span id="local-6989586621686791893"><span id="local-6989586621686791904"><span id="local-6989586621686791908"><span id="local-6989586621686791911"><span id="local-6989586621686791914"><span id="local-6989586621686791917"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686791628"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686791628"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span><span>
 </span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span id="local-6989586621691098432"><span id="local-6989586621691098434"><span id="local-6989586621691098450"><span id="local-6989586621691098766"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691098766"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691098766"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-52"></span><span id="local-6989586621686791634"><span id="local-6989586621686791925"><span id="local-6989586621686791942"><span id="local-6989586621686791946"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686791634"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686791634"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691098427"><span id="local-6989586621691098792"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691098792"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691098792"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-55"></span><span>  </span><span id="local-6989586621691098390"><span class="annot"><span class="annottext">codec :: JSONCodec (SourceColumnInfo b)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686791602"><span id="local-6989586621686791955"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686791602"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686791602"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621686791996"><span class="annot"><span class="annottext">codec :: JSONCodec (SourceColumnInfo b)
+</span><a href="#local-6989586621686791996"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec (SourceColumnInfo b) (SourceColumnInfo b)
+-&gt; JSONCodec (SourceColumnInfo b)
+forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;ColumnInfo&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-57"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><span class="hs-string">&quot;ColumnInfo&quot;</span></span><span> </span><span class="annot"><span class="annottext">(ObjectCodec (SourceColumnInfo b) (SourceColumnInfo b)
+ -&gt; JSONCodec (SourceColumnInfo b))
+-&gt; ObjectCodec (SourceColumnInfo b) (SourceColumnInfo b)
+-&gt; JSONCodec (SourceColumnInfo b)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-57"></span><span>      </span><span class="annot"><span class="annottext">Column b
+-&gt; RawColumnType b
+-&gt; Bool
+-&gt; Maybe Text
+-&gt; Bool
+-&gt; Bool
+-&gt; Maybe ColumnValueGenerationStrategy
+-&gt; SourceColumnInfo b
+forall (b :: BackendType).
 Column b
 -&gt; RawColumnType b
 -&gt; Bool
@@ -170,103 +212,291 @@ Column b
 -&gt; Maybe ColumnValueGenerationStrategy
 -&gt; SourceColumnInfo b
 </span><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-var">SourceColumnInfo</span></a></span><span>
-</span><span id="line-58"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+</span><span id="line-58"></span><span>        </span><span class="annot"><span class="annottext">(Column b
+ -&gt; RawColumnType b
+ -&gt; Bool
+ -&gt; Maybe Text
+ -&gt; Bool
+ -&gt; Bool
+ -&gt; Maybe ColumnValueGenerationStrategy
+ -&gt; SourceColumnInfo b)
+-&gt; Codec Object (SourceColumnInfo b) (Column b)
+-&gt; Codec
+     Object
+     (SourceColumnInfo b)
+     (RawColumnType b
+      -&gt; Bool
+      -&gt; Maybe Text
+      -&gt; Bool
+      -&gt; Bool
+      -&gt; Maybe ColumnValueGenerationStrategy
+      -&gt; SourceColumnInfo b)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; ObjectCodec (Column b) (Column b)
+forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Column name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span class="hs-string">&quot;Column name&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec (Column b) (Column b)
+-&gt; (SourceColumnInfo b -&gt; Column b)
+-&gt; Codec Object (SourceColumnInfo b) (Column b)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Column b
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Column b
+forall (b :: BackendType). SourceColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciName"><span class="hs-identifier hs-var">_sciName</span></a></span><span>
-</span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+</span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  (SourceColumnInfo b)
+  (RawColumnType b
+   -&gt; Bool
+   -&gt; Maybe Text
+   -&gt; Bool
+   -&gt; Bool
+   -&gt; Maybe ColumnValueGenerationStrategy
+   -&gt; SourceColumnInfo b)
+-&gt; Codec Object (SourceColumnInfo b) (RawColumnType b)
+-&gt; Codec
+     Object
+     (SourceColumnInfo b)
+     (Bool
+      -&gt; Maybe Text
+      -&gt; Bool
+      -&gt; Bool
+      -&gt; Maybe ColumnValueGenerationStrategy
+      -&gt; SourceColumnInfo b)
+forall a b.
+Codec Object (SourceColumnInfo b) (a -&gt; b)
+-&gt; Codec Object (SourceColumnInfo b) a
+-&gt; Codec Object (SourceColumnInfo b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; ObjectCodec (RawColumnType b) (RawColumnType b)
+forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Column type&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span class="hs-string">&quot;Column type&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec (RawColumnType b) (RawColumnType b)
+-&gt; (SourceColumnInfo b -&gt; RawColumnType b)
+-&gt; Codec Object (SourceColumnInfo b) (RawColumnType b)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; RawColumnType b
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; RawColumnType b
+forall (b :: BackendType). SourceColumnInfo b -&gt; RawColumnType b
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciType"><span class="hs-identifier hs-var">_sciType</span></a></span><span>
-</span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+</span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  (SourceColumnInfo b)
+  (Bool
+   -&gt; Maybe Text
+   -&gt; Bool
+   -&gt; Bool
+   -&gt; Maybe ColumnValueGenerationStrategy
+   -&gt; SourceColumnInfo b)
+-&gt; Codec Object (SourceColumnInfo b) Bool
+-&gt; Codec
+     Object
+     (SourceColumnInfo b)
+     (Maybe Text
+      -&gt; Bool
+      -&gt; Bool
+      -&gt; Maybe ColumnValueGenerationStrategy
+      -&gt; SourceColumnInfo b)
+forall a b.
+Codec Object (SourceColumnInfo b) (a -&gt; b)
+-&gt; Codec Object (SourceColumnInfo b) a
+-&gt; Codec Object (SourceColumnInfo b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; ObjectCodec Bool Bool
+forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;nullable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Is column nullable&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span class="hs-string">&quot;Is column nullable&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec Bool Bool
+-&gt; (SourceColumnInfo b -&gt; Bool)
+-&gt; Codec Object (SourceColumnInfo b) Bool
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Bool
+forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciNullable"><span class="hs-identifier hs-var">_sciNullable</span></a></span><span>
-</span><span id="line-61"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+</span><span id="line-61"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  (SourceColumnInfo b)
+  (Maybe Text
+   -&gt; Bool
+   -&gt; Bool
+   -&gt; Maybe ColumnValueGenerationStrategy
+   -&gt; SourceColumnInfo b)
+-&gt; Codec Object (SourceColumnInfo b) (Maybe Text)
+-&gt; Codec
+     Object
+     (SourceColumnInfo b)
+     (Bool
+      -&gt; Bool
+      -&gt; Maybe ColumnValueGenerationStrategy
+      -&gt; SourceColumnInfo b)
+forall a b.
+Codec Object (SourceColumnInfo b) (a -&gt; b)
+-&gt; Codec Object (SourceColumnInfo b) a
+-&gt; Codec Object (SourceColumnInfo b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; ObjectCodec (Maybe Text) (Maybe Text)
+forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><span class="hs-identifier hs-var">optionalFieldOrNull</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;description&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Column description&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span class="hs-string">&quot;Column description&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec (Maybe Text) (Maybe Text)
+-&gt; (SourceColumnInfo b -&gt; Maybe Text)
+-&gt; Codec Object (SourceColumnInfo b) (Maybe Text)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Maybe Text
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Maybe Text
+forall (b :: BackendType). SourceColumnInfo b -&gt; Maybe Text
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciDescription"><span class="hs-identifier hs-var">_sciDescription</span></a></span><span>
-</span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+</span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  (SourceColumnInfo b)
+  (Bool
+   -&gt; Bool
+   -&gt; Maybe ColumnValueGenerationStrategy
+   -&gt; SourceColumnInfo b)
+-&gt; Codec Object (SourceColumnInfo b) Bool
+-&gt; Codec
+     Object
+     (SourceColumnInfo b)
+     (Bool -&gt; Maybe ColumnValueGenerationStrategy -&gt; SourceColumnInfo b)
+forall a b.
+Codec Object (SourceColumnInfo b) (a -&gt; b)
+-&gt; Codec Object (SourceColumnInfo b) a
+-&gt; Codec Object (SourceColumnInfo b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool -&gt; Text -&gt; ObjectCodec Bool Bool
+forall output.
 HasCodec output =&gt;
 Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">optionalFieldWithDefault</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;insertable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Whether or not the column can be inserted into&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Whether or not the column can be inserted into&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec Bool Bool
+-&gt; (SourceColumnInfo b -&gt; Bool)
+-&gt; Codec Object (SourceColumnInfo b) Bool
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Bool
+forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciInsertable"><span class="hs-identifier hs-var">_sciInsertable</span></a></span><span>
-</span><span id="line-63"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+</span><span id="line-63"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  (SourceColumnInfo b)
+  (Bool -&gt; Maybe ColumnValueGenerationStrategy -&gt; SourceColumnInfo b)
+-&gt; Codec Object (SourceColumnInfo b) Bool
+-&gt; Codec
+     Object
+     (SourceColumnInfo b)
+     (Maybe ColumnValueGenerationStrategy -&gt; SourceColumnInfo b)
+forall a b.
+Codec Object (SourceColumnInfo b) (a -&gt; b)
+-&gt; Codec Object (SourceColumnInfo b) a
+-&gt; Codec Object (SourceColumnInfo b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool -&gt; Text -&gt; ObjectCodec Bool Bool
+forall output.
 HasCodec output =&gt;
 Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">optionalFieldWithDefault</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;updatable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Whether or not the column can be updated&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Whether or not the column can be updated&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec Bool Bool
+-&gt; (SourceColumnInfo b -&gt; Bool)
+-&gt; Codec Object (SourceColumnInfo b) Bool
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Bool
+forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciUpdatable"><span class="hs-identifier hs-var">_sciUpdatable</span></a></span><span>
-</span><span id="line-64"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+</span><span id="line-64"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  (SourceColumnInfo b)
+  (Maybe ColumnValueGenerationStrategy -&gt; SourceColumnInfo b)
+-&gt; Codec
+     Object (SourceColumnInfo b) (Maybe ColumnValueGenerationStrategy)
+-&gt; ObjectCodec (SourceColumnInfo b) (SourceColumnInfo b)
+forall a b.
+Codec Object (SourceColumnInfo b) (a -&gt; b)
+-&gt; Codec Object (SourceColumnInfo b) a
+-&gt; Codec Object (SourceColumnInfo b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Text
+-&gt; ObjectCodec
+     (Maybe ColumnValueGenerationStrategy)
+     (Maybe ColumnValueGenerationStrategy)
+forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><span class="hs-identifier hs-var">optionalFieldOrNull</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;value_generated&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Whether or not and how the value of the column can be generated by the database&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span class="hs-string">&quot;Whether or not and how the value of the column can be generated by the database&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec
+  (Maybe ColumnValueGenerationStrategy)
+  (Maybe ColumnValueGenerationStrategy)
+-&gt; (SourceColumnInfo b -&gt; Maybe ColumnValueGenerationStrategy)
+-&gt; Codec
+     Object (SourceColumnInfo b) (Maybe ColumnValueGenerationStrategy)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Maybe ColumnValueGenerationStrategy
+forall (b :: BackendType).
 SourceColumnInfo b -&gt; Maybe ColumnValueGenerationStrategy
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciValueGenerated"><span class="hs-identifier hs-var">_sciValueGenerated</span></a></span><span>
 </span><span id="line-65"></span><span>
-</span><span id="line-66"></span><span id="local-6989586621691098381"><span id="local-6989586621691098382"></span></span><span class="hs-keyword">data</span><span> </span><span id="ColumnValueGenerationStrategy"><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#ColumnValueGenerationStrategy"><span class="hs-identifier hs-var">ColumnValueGenerationStrategy</span></a></span></span><span>
+</span><span id="line-66"></span><span class="hs-keyword">data</span><span> </span><span id="ColumnValueGenerationStrategy"><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#ColumnValueGenerationStrategy"><span class="hs-identifier hs-var">ColumnValueGenerationStrategy</span></a></span></span><span>
 </span><span id="line-67"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AutoIncrement"><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#AutoIncrement"><span class="hs-identifier hs-var">AutoIncrement</span></a></span></span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UniqueIdentifier"><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#UniqueIdentifier"><span class="hs-identifier hs-var">UniqueIdentifier</span></a></span></span><span>
 </span><span id="line-69"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DefaultValue"><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#DefaultValue"><span class="hs-identifier hs-var">DefaultValue</span></a></span></span><span>
-</span><span id="line-70"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691098374"><span id="local-6989586621691098376"><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
+</span><span id="line-70"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686792008"><span id="local-6989586621686792010"><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
 -&gt; ColumnValueGenerationStrategy -&gt; Bool
+(ColumnValueGenerationStrategy
+ -&gt; ColumnValueGenerationStrategy -&gt; Bool)
+-&gt; (ColumnValueGenerationStrategy
+    -&gt; ColumnValueGenerationStrategy -&gt; Bool)
+-&gt; Eq ColumnValueGenerationStrategy
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: ColumnValueGenerationStrategy
--&gt; ColumnValueGenerationStrategy -&gt; Bool
-$c/= :: ColumnValueGenerationStrategy
+$c== :: ColumnValueGenerationStrategy
 -&gt; ColumnValueGenerationStrategy -&gt; Bool
 == :: ColumnValueGenerationStrategy
 -&gt; ColumnValueGenerationStrategy -&gt; Bool
-$c== :: ColumnValueGenerationStrategy
+$c/= :: ColumnValueGenerationStrategy
 -&gt; ColumnValueGenerationStrategy -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691098355"><span id="local-6989586621691098357"><span id="local-6989586621691098360"><span id="local-6989586621691098363"><span id="local-6989586621691098366"><span id="local-6989586621691098368"><span id="local-6989586621691098370"><span class="annot"><span class="annottext">Eq ColumnValueGenerationStrategy
+/= :: ColumnValueGenerationStrategy
+-&gt; ColumnValueGenerationStrategy -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686792015"><span id="local-6989586621686792017"><span id="local-6989586621686792019"><span id="local-6989586621686792022"><span id="local-6989586621686792025"><span id="local-6989586621686792028"><span id="local-6989586621686792031"><span class="annot"><span class="annottext">Eq ColumnValueGenerationStrategy
+Eq ColumnValueGenerationStrategy
+-&gt; (ColumnValueGenerationStrategy
+    -&gt; ColumnValueGenerationStrategy -&gt; Ordering)
+-&gt; (ColumnValueGenerationStrategy
+    -&gt; ColumnValueGenerationStrategy -&gt; Bool)
+-&gt; (ColumnValueGenerationStrategy
+    -&gt; ColumnValueGenerationStrategy -&gt; Bool)
+-&gt; (ColumnValueGenerationStrategy
+    -&gt; ColumnValueGenerationStrategy -&gt; Bool)
+-&gt; (ColumnValueGenerationStrategy
+    -&gt; ColumnValueGenerationStrategy -&gt; Bool)
+-&gt; (ColumnValueGenerationStrategy
+    -&gt; ColumnValueGenerationStrategy -&gt; ColumnValueGenerationStrategy)
+-&gt; (ColumnValueGenerationStrategy
+    -&gt; ColumnValueGenerationStrategy -&gt; ColumnValueGenerationStrategy)
+-&gt; Ord ColumnValueGenerationStrategy
 ColumnValueGenerationStrategy
 -&gt; ColumnValueGenerationStrategy -&gt; Bool
 ColumnValueGenerationStrategy
@@ -283,46 +513,57 @@ Eq a
 -&gt; (a -&gt; a -&gt; a)
 -&gt; (a -&gt; a -&gt; a)
 -&gt; Ord a
-min :: ColumnValueGenerationStrategy
--&gt; ColumnValueGenerationStrategy -&gt; ColumnValueGenerationStrategy
-$cmin :: ColumnValueGenerationStrategy
--&gt; ColumnValueGenerationStrategy -&gt; ColumnValueGenerationStrategy
-max :: ColumnValueGenerationStrategy
--&gt; ColumnValueGenerationStrategy -&gt; ColumnValueGenerationStrategy
-$cmax :: ColumnValueGenerationStrategy
--&gt; ColumnValueGenerationStrategy -&gt; ColumnValueGenerationStrategy
-&gt;= :: ColumnValueGenerationStrategy
--&gt; ColumnValueGenerationStrategy -&gt; Bool
-$c&gt;= :: ColumnValueGenerationStrategy
--&gt; ColumnValueGenerationStrategy -&gt; Bool
-&gt; :: ColumnValueGenerationStrategy
--&gt; ColumnValueGenerationStrategy -&gt; Bool
-$c&gt; :: ColumnValueGenerationStrategy
--&gt; ColumnValueGenerationStrategy -&gt; Bool
-&lt;= :: ColumnValueGenerationStrategy
--&gt; ColumnValueGenerationStrategy -&gt; Bool
-$c&lt;= :: ColumnValueGenerationStrategy
+$ccompare :: ColumnValueGenerationStrategy
+-&gt; ColumnValueGenerationStrategy -&gt; Ordering
+compare :: ColumnValueGenerationStrategy
+-&gt; ColumnValueGenerationStrategy -&gt; Ordering
+$c&lt; :: ColumnValueGenerationStrategy
 -&gt; ColumnValueGenerationStrategy -&gt; Bool
 &lt; :: ColumnValueGenerationStrategy
 -&gt; ColumnValueGenerationStrategy -&gt; Bool
-$c&lt; :: ColumnValueGenerationStrategy
+$c&lt;= :: ColumnValueGenerationStrategy
 -&gt; ColumnValueGenerationStrategy -&gt; Bool
-compare :: ColumnValueGenerationStrategy
--&gt; ColumnValueGenerationStrategy -&gt; Ordering
-$ccompare :: ColumnValueGenerationStrategy
--&gt; ColumnValueGenerationStrategy -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691098349"><span id="local-6989586621691098351"><span id="local-6989586621691098353"><span class="annot"><span class="annottext">Int -&gt; ColumnValueGenerationStrategy -&gt; ShowS
+&lt;= :: ColumnValueGenerationStrategy
+-&gt; ColumnValueGenerationStrategy -&gt; Bool
+$c&gt; :: ColumnValueGenerationStrategy
+-&gt; ColumnValueGenerationStrategy -&gt; Bool
+&gt; :: ColumnValueGenerationStrategy
+-&gt; ColumnValueGenerationStrategy -&gt; Bool
+$c&gt;= :: ColumnValueGenerationStrategy
+-&gt; ColumnValueGenerationStrategy -&gt; Bool
+&gt;= :: ColumnValueGenerationStrategy
+-&gt; ColumnValueGenerationStrategy -&gt; Bool
+$cmax :: ColumnValueGenerationStrategy
+-&gt; ColumnValueGenerationStrategy -&gt; ColumnValueGenerationStrategy
+max :: ColumnValueGenerationStrategy
+-&gt; ColumnValueGenerationStrategy -&gt; ColumnValueGenerationStrategy
+$cmin :: ColumnValueGenerationStrategy
+-&gt; ColumnValueGenerationStrategy -&gt; ColumnValueGenerationStrategy
+min :: ColumnValueGenerationStrategy
+-&gt; ColumnValueGenerationStrategy -&gt; ColumnValueGenerationStrategy
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686792034"><span id="local-6989586621686792036"><span id="local-6989586621686792039"><span class="annot"><span class="annottext">Int -&gt; ColumnValueGenerationStrategy -&gt; ShowS
 [ColumnValueGenerationStrategy] -&gt; ShowS
 ColumnValueGenerationStrategy -&gt; String
+(Int -&gt; ColumnValueGenerationStrategy -&gt; ShowS)
+-&gt; (ColumnValueGenerationStrategy -&gt; String)
+-&gt; ([ColumnValueGenerationStrategy] -&gt; ShowS)
+-&gt; Show ColumnValueGenerationStrategy
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [ColumnValueGenerationStrategy] -&gt; ShowS
-$cshowList :: [ColumnValueGenerationStrategy] -&gt; ShowS
-show :: ColumnValueGenerationStrategy -&gt; String
-$cshow :: ColumnValueGenerationStrategy -&gt; String
-showsPrec :: Int -&gt; ColumnValueGenerationStrategy -&gt; ShowS
 $cshowsPrec :: Int -&gt; ColumnValueGenerationStrategy -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x.
+showsPrec :: Int -&gt; ColumnValueGenerationStrategy -&gt; ShowS
+$cshow :: ColumnValueGenerationStrategy -&gt; String
+show :: ColumnValueGenerationStrategy -&gt; String
+$cshowList :: [ColumnValueGenerationStrategy] -&gt; ShowS
+showList :: [ColumnValueGenerationStrategy] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686792042"><span id="local-6989586621686792044"><span class="annot"><span class="annottext">(forall x.
+ ColumnValueGenerationStrategy
+ -&gt; Rep ColumnValueGenerationStrategy x)
+-&gt; (forall x.
+    Rep ColumnValueGenerationStrategy x
+    -&gt; ColumnValueGenerationStrategy)
+-&gt; Generic ColumnValueGenerationStrategy
+forall x.
 Rep ColumnValueGenerationStrategy x
 -&gt; ColumnValueGenerationStrategy
 forall x.
@@ -330,153 +571,232 @@ ColumnValueGenerationStrategy
 -&gt; Rep ColumnValueGenerationStrategy x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x.
-Rep ColumnValueGenerationStrategy x
--&gt; ColumnValueGenerationStrategy
 $cfrom :: forall x.
 ColumnValueGenerationStrategy
 -&gt; Rep ColumnValueGenerationStrategy x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691098345"><span class="annot"><span class="annottext">ColumnValueGenerationStrategy -&gt; ()
+from :: forall x.
+ColumnValueGenerationStrategy
+-&gt; Rep ColumnValueGenerationStrategy x
+$cto :: forall x.
+Rep ColumnValueGenerationStrategy x
+-&gt; ColumnValueGenerationStrategy
+to :: forall x.
+Rep ColumnValueGenerationStrategy x
+-&gt; ColumnValueGenerationStrategy
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686792047"><span class="annot"><span class="annottext">ColumnValueGenerationStrategy -&gt; ()
+(ColumnValueGenerationStrategy -&gt; ())
+-&gt; NFData ColumnValueGenerationStrategy
 forall a. (a -&gt; ()) -&gt; NFData a
-rnf :: ColumnValueGenerationStrategy -&gt; ()
 $crnf :: ColumnValueGenerationStrategy -&gt; ()
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691098338"><span id="local-6989586621691098340"><span class="annot"><span class="annottext">Eq ColumnValueGenerationStrategy
+rnf :: ColumnValueGenerationStrategy -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686792066"><span id="local-6989586621686792072"><span class="annot"><span class="annottext">Eq ColumnValueGenerationStrategy
+Eq ColumnValueGenerationStrategy
+-&gt; (Int -&gt; ColumnValueGenerationStrategy -&gt; Int)
+-&gt; (ColumnValueGenerationStrategy -&gt; Int)
+-&gt; Hashable ColumnValueGenerationStrategy
 Int -&gt; ColumnValueGenerationStrategy -&gt; Int
 ColumnValueGenerationStrategy -&gt; Int
 forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
-hash :: ColumnValueGenerationStrategy -&gt; Int
-$chash :: ColumnValueGenerationStrategy -&gt; Int
-hashWithSalt :: Int -&gt; ColumnValueGenerationStrategy -&gt; Int
 $chashWithSalt :: Int -&gt; ColumnValueGenerationStrategy -&gt; Int
-</span><a href="#local-6989586621691098338"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691098331"><span id="local-6989586621691098336"><span class="annot"><span class="annottext">Value -&gt; Parser [ColumnValueGenerationStrategy]
+hashWithSalt :: Int -&gt; ColumnValueGenerationStrategy -&gt; Int
+$chash :: ColumnValueGenerationStrategy -&gt; Int
+hash :: ColumnValueGenerationStrategy -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686792085"><span id="local-6989586621686792090"><span class="annot"><span class="annottext">Value -&gt; Parser [ColumnValueGenerationStrategy]
 Value -&gt; Parser ColumnValueGenerationStrategy
+(Value -&gt; Parser ColumnValueGenerationStrategy)
+-&gt; (Value -&gt; Parser [ColumnValueGenerationStrategy])
+-&gt; FromJSON ColumnValueGenerationStrategy
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
-parseJSONList :: Value -&gt; Parser [ColumnValueGenerationStrategy]
-$cparseJSONList :: Value -&gt; Parser [ColumnValueGenerationStrategy]
-parseJSON :: Value -&gt; Parser ColumnValueGenerationStrategy
 $cparseJSON :: Value -&gt; Parser ColumnValueGenerationStrategy
-</span><a href="#local-6989586621691098331"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691098310"><span id="local-6989586621691098315"><span id="local-6989586621691098320"><span id="local-6989586621691098325"><span class="annot"><span class="annottext">[ColumnValueGenerationStrategy] -&gt; Value
+parseJSON :: Value -&gt; Parser ColumnValueGenerationStrategy
+$cparseJSONList :: Value -&gt; Parser [ColumnValueGenerationStrategy]
+parseJSONList :: Value -&gt; Parser [ColumnValueGenerationStrategy]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686792096"><span id="local-6989586621686792101"><span id="local-6989586621686792106"><span id="local-6989586621686792111"><span class="annot"><span class="annottext">[ColumnValueGenerationStrategy] -&gt; Value
 [ColumnValueGenerationStrategy] -&gt; Encoding
 ColumnValueGenerationStrategy -&gt; Value
 ColumnValueGenerationStrategy -&gt; Encoding
+(ColumnValueGenerationStrategy -&gt; Value)
+-&gt; (ColumnValueGenerationStrategy -&gt; Encoding)
+-&gt; ([ColumnValueGenerationStrategy] -&gt; Value)
+-&gt; ([ColumnValueGenerationStrategy] -&gt; Encoding)
+-&gt; ToJSON ColumnValueGenerationStrategy
 forall a.
 (a -&gt; Value)
 -&gt; (a -&gt; Encoding)
 -&gt; ([a] -&gt; Value)
 -&gt; ([a] -&gt; Encoding)
 -&gt; ToJSON a
-toEncodingList :: [ColumnValueGenerationStrategy] -&gt; Encoding
-$ctoEncodingList :: [ColumnValueGenerationStrategy] -&gt; Encoding
-toJSONList :: [ColumnValueGenerationStrategy] -&gt; Value
-$ctoJSONList :: [ColumnValueGenerationStrategy] -&gt; Value
-toEncoding :: ColumnValueGenerationStrategy -&gt; Encoding
-$ctoEncoding :: ColumnValueGenerationStrategy -&gt; Encoding
-toJSON :: ColumnValueGenerationStrategy -&gt; Value
 $ctoJSON :: ColumnValueGenerationStrategy -&gt; Value
-</span><a href="#local-6989586621691098310"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691098302"><span class="annot"><span class="annottext">Typeable ColumnValueGenerationStrategy
+toJSON :: ColumnValueGenerationStrategy -&gt; Value
+$ctoEncoding :: ColumnValueGenerationStrategy -&gt; Encoding
+toEncoding :: ColumnValueGenerationStrategy -&gt; Encoding
+$ctoJSONList :: [ColumnValueGenerationStrategy] -&gt; Value
+toJSONList :: [ColumnValueGenerationStrategy] -&gt; Value
+$ctoEncodingList :: [ColumnValueGenerationStrategy] -&gt; Encoding
+toEncodingList :: [ColumnValueGenerationStrategy] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686792119"><span class="annot"><span class="annottext">Typeable ColumnValueGenerationStrategy
+Typeable ColumnValueGenerationStrategy
+-&gt; (Proxy ColumnValueGenerationStrategy
+    -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema ColumnValueGenerationStrategy
 Proxy ColumnValueGenerationStrategy
 -&gt; Declare (Definitions Schema) NamedSchema
 forall a.
 Typeable a
 -&gt; (Proxy a -&gt; Declare (Definitions Schema) NamedSchema)
 -&gt; ToSchema a
-declareNamedSchema :: Proxy ColumnValueGenerationStrategy
--&gt; Declare (Definitions Schema) NamedSchema
 $cdeclareNamedSchema :: Proxy ColumnValueGenerationStrategy
 -&gt; Declare (Definitions Schema) NamedSchema
-</span><a href="#local-6989586621691098302"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#ColumnValueGenerationStrategy"><span class="hs-identifier hs-type">ColumnValueGenerationStrategy</span></a></span><span>
+declareNamedSchema :: Proxy ColumnValueGenerationStrategy
+-&gt; Declare (Definitions Schema) NamedSchema
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#ColumnValueGenerationStrategy"><span class="hs-identifier hs-type">ColumnValueGenerationStrategy</span></a></span><span>
 </span><span id="line-73"></span><span>
 </span><span id="line-74"></span><span class="hs-comment">-- | We're encoding the different strategies as tagged objects rather than just strings because</span><span>
 </span><span id="line-75"></span><span class="hs-comment">-- it is anticipated that additional information may need to be added to each strategy in future.</span><span>
 </span><span id="line-76"></span><span class="hs-comment">-- For example, the actual default value (a literal), or what type of unique identifier is being</span><span>
 </span><span id="line-77"></span><span class="hs-comment">-- used (eg. a UUID). By using a tagged object, we ensure the addition of such information is not</span><span>
 </span><span id="line-78"></span><span class="hs-comment">-- a breaking change to the shape of the JSON.</span><span>
-</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691098294"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#ColumnValueGenerationStrategy"><span class="hs-identifier hs-type">ColumnValueGenerationStrategy</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-80"></span><span>  </span><span id="local-6989586621691098279"><span class="annot"><span class="annottext">codec :: JSONCodec ColumnValueGenerationStrategy
-</span><a href="#local-6989586621691098279"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686792127"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#ColumnValueGenerationStrategy"><span class="hs-identifier hs-type">ColumnValueGenerationStrategy</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621686792143"><span class="annot"><span class="annottext">codec :: JSONCodec ColumnValueGenerationStrategy
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; JSONCodec ColumnValueGenerationStrategy
+-&gt; JSONCodec ColumnValueGenerationStrategy
+forall input output.
 Text -&gt; ValueCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">named</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;ColumnValueGenerationStrategy&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+</span><span class="hs-string">&quot;ColumnValueGenerationStrategy&quot;</span></span><span> </span><span class="annot"><span class="annottext">(JSONCodec ColumnValueGenerationStrategy
+ -&gt; JSONCodec ColumnValueGenerationStrategy)
+-&gt; JSONCodec ColumnValueGenerationStrategy
+-&gt; JSONCodec ColumnValueGenerationStrategy
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec
+     ColumnValueGenerationStrategy ColumnValueGenerationStrategy
+-&gt; JSONCodec ColumnValueGenerationStrategy
+forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;ColumnValueGenerationStrategy&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+</span><span class="hs-string">&quot;ColumnValueGenerationStrategy&quot;</span></span><span> </span><span class="annot"><span class="annottext">(ObjectCodec
+   ColumnValueGenerationStrategy ColumnValueGenerationStrategy
+ -&gt; JSONCodec ColumnValueGenerationStrategy)
+-&gt; ObjectCodec
+     ColumnValueGenerationStrategy ColumnValueGenerationStrategy
+-&gt; JSONCodec ColumnValueGenerationStrategy
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; (ColumnValueGenerationStrategy
+    -&gt; (Text, ObjectCodec ColumnValueGenerationStrategy ()))
+-&gt; HashMap
+     Text (Text, ObjectCodec Void ColumnValueGenerationStrategy)
+-&gt; ObjectCodec
+     ColumnValueGenerationStrategy ColumnValueGenerationStrategy
+forall input output.
 Text
 -&gt; (input -&gt; (Text, ObjectCodec input ()))
 -&gt; HashMap Text (Text, ObjectCodec Void output)
 -&gt; ObjectCodec input output
 </span><span class="hs-identifier hs-var">discriminatedUnionCodec</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
--&gt; (Text, Codec Object ColumnValueGenerationStrategy ())
-</span><a href="#local-6989586621691098276"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap
-  Text (Text, Codec Object Void ColumnValueGenerationStrategy)
-</span><a href="#local-6989586621691098275"><span class="hs-identifier hs-var">dec</span></a></span><span>
+-&gt; (Text, ObjectCodec ColumnValueGenerationStrategy ())
+</span><a href="#local-6989586621686792146"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text (Text, ObjectCodec Void ColumnValueGenerationStrategy)
+</span><a href="#local-6989586621686792147"><span class="hs-identifier hs-var">dec</span></a></span><span>
 </span><span id="line-82"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-83"></span><span>      </span><span id="local-6989586621691098273"><span class="annot"><span class="annottext">autoIncrementCodec :: Codec Object () ()
-</span><a href="#local-6989586621691098273"><span class="hs-identifier hs-var hs-var">autoIncrementCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-84"></span><span>      </span><span id="local-6989586621691098271"><span class="annot"><span class="annottext">uniqueIdentifierCodec :: Codec Object () ()
-</span><a href="#local-6989586621691098271"><span class="hs-identifier hs-var hs-var">uniqueIdentifierCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-85"></span><span>      </span><span id="local-6989586621691098269"><span class="annot"><span class="annottext">defaultCodec :: Codec Object () ()
-</span><a href="#local-6989586621691098269"><span class="hs-identifier hs-var hs-var">defaultCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-86"></span><span>      </span><span id="local-6989586621691098276"><span class="annot"><span class="annottext">enc :: ColumnValueGenerationStrategy
--&gt; (Text, Codec Object ColumnValueGenerationStrategy ())
-</span><a href="#local-6989586621691098276"><span class="hs-identifier hs-var hs-var">enc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-83"></span><span>      </span><span id="local-6989586621686792150"><span class="annot"><span class="annottext">autoIncrementCodec :: Codec Object () ()
+</span><a href="#local-6989586621686792150"><span class="hs-identifier hs-var hs-var">autoIncrementCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">() -&gt; Codec Object () ()
+forall a. a -&gt; Codec Object () a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span>      </span><span id="local-6989586621686792153"><span class="annot"><span class="annottext">uniqueIdentifierCodec :: Codec Object () ()
+</span><a href="#local-6989586621686792153"><span class="hs-identifier hs-var hs-var">uniqueIdentifierCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">() -&gt; Codec Object () ()
+forall a. a -&gt; Codec Object () a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>      </span><span id="local-6989586621686792156"><span class="annot"><span class="annottext">defaultCodec :: Codec Object () ()
+</span><a href="#local-6989586621686792156"><span class="hs-identifier hs-var hs-var">defaultCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">() -&gt; Codec Object () ()
+forall a. a -&gt; Codec Object () a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-86"></span><span>      </span><span id="local-6989586621686792146"><span class="annot"><span class="annottext">enc :: ColumnValueGenerationStrategy
+-&gt; (Text, ObjectCodec ColumnValueGenerationStrategy ())
+</span><a href="#local-6989586621686792146"><span class="hs-identifier hs-var hs-var">enc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-87"></span><span>        </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
 </span><a href="Hasura.RQL.Types.Source.Column.html#AutoIncrement"><span class="hs-identifier hs-var">AutoIncrement</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;auto_increment&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall b context any a.
+</span><span class="hs-string">&quot;auto_increment&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">()
+-&gt; Codec Object () ()
+-&gt; ObjectCodec ColumnValueGenerationStrategy ()
+forall b context any a.
 b -&gt; Codec context b any -&gt; Codec context a ()
 </span><span class="hs-identifier hs-var">mapToEncoder</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Codec Object () ()
-</span><a href="#local-6989586621691098273"><span class="hs-identifier hs-var">autoIncrementCodec</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686792150"><span class="hs-identifier hs-var">autoIncrementCodec</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
 </span><a href="Hasura.RQL.Types.Source.Column.html#UniqueIdentifier"><span class="hs-identifier hs-var">UniqueIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;unique_identifier&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall b context any a.
+</span><span class="hs-string">&quot;unique_identifier&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">()
+-&gt; Codec Object () ()
+-&gt; ObjectCodec ColumnValueGenerationStrategy ()
+forall b context any a.
 b -&gt; Codec context b any -&gt; Codec context a ()
 </span><span class="hs-identifier hs-var">mapToEncoder</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Codec Object () ()
-</span><a href="#local-6989586621691098271"><span class="hs-identifier hs-var">uniqueIdentifierCodec</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686792153"><span class="hs-identifier hs-var">uniqueIdentifierCodec</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-89"></span><span>        </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
 </span><a href="Hasura.RQL.Types.Source.Column.html#DefaultValue"><span class="hs-identifier hs-var">DefaultValue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;default_value&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall b context any a.
+</span><span class="hs-string">&quot;default_value&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">()
+-&gt; Codec Object () ()
+-&gt; ObjectCodec ColumnValueGenerationStrategy ()
+forall b context any a.
 b -&gt; Codec context b any -&gt; Codec context a ()
 </span><span class="hs-identifier hs-var">mapToEncoder</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Codec Object () ()
-</span><a href="#local-6989586621691098269"><span class="hs-identifier hs-var">defaultCodec</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-90"></span><span>      </span><span id="local-6989586621691098275"><span class="annot"><span class="annottext">dec :: HashMap
-  Text (Text, Codec Object Void ColumnValueGenerationStrategy)
-</span><a href="#local-6989586621691098275"><span class="hs-identifier hs-var hs-var">dec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-91"></span><span>        </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><a href="#local-6989586621686792156"><span class="hs-identifier hs-var">defaultCodec</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span>      </span><span id="local-6989586621686792147"><span class="annot"><span class="annottext">dec :: HashMap Text (Text, ObjectCodec Void ColumnValueGenerationStrategy)
+</span><a href="#local-6989586621686792147"><span class="hs-identifier hs-var hs-var">dec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-91"></span><span>        </span><span class="annot"><span class="annottext">[(Text, (Text, ObjectCodec Void ColumnValueGenerationStrategy))]
+-&gt; HashMap
+     Text (Text, ObjectCodec Void ColumnValueGenerationStrategy)
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">HashMap.fromList</span></span><span>
 </span><span id="line-92"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;auto_increment&quot;</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;AutoIncrementGenerationStrategy&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall b a context any.
+</span><span class="hs-string">&quot;AutoIncrementGenerationStrategy&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(() -&gt; ColumnValueGenerationStrategy)
+-&gt; Codec Object () ()
+-&gt; ObjectCodec Void ColumnValueGenerationStrategy
+forall b a context any.
 (b -&gt; a) -&gt; Codec context any b -&gt; Codec context Void a
-</span><span class="hs-identifier hs-var">mapToDecoder</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. a -&gt; b -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
+</span><span class="hs-identifier hs-var">mapToDecoder</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
+-&gt; () -&gt; ColumnValueGenerationStrategy
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
 </span><a href="Hasura.RQL.Types.Source.Column.html#AutoIncrement"><span class="hs-identifier hs-var">AutoIncrement</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Codec Object () ()
-</span><a href="#local-6989586621691098273"><span class="hs-identifier hs-var">autoIncrementCodec</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621686792150"><span class="hs-identifier hs-var">autoIncrementCodec</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-93"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;unique_identifier&quot;</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;UniqueIdentifierGenerationStrategy&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall b a context any.
+</span><span class="hs-string">&quot;UniqueIdentifierGenerationStrategy&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(() -&gt; ColumnValueGenerationStrategy)
+-&gt; Codec Object () ()
+-&gt; ObjectCodec Void ColumnValueGenerationStrategy
+forall b a context any.
 (b -&gt; a) -&gt; Codec context any b -&gt; Codec context Void a
-</span><span class="hs-identifier hs-var">mapToDecoder</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. a -&gt; b -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
+</span><span class="hs-identifier hs-var">mapToDecoder</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
+-&gt; () -&gt; ColumnValueGenerationStrategy
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
 </span><a href="Hasura.RQL.Types.Source.Column.html#UniqueIdentifier"><span class="hs-identifier hs-var">UniqueIdentifier</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Codec Object () ()
-</span><a href="#local-6989586621691098271"><span class="hs-identifier hs-var">uniqueIdentifierCodec</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621686792153"><span class="hs-identifier hs-var">uniqueIdentifierCodec</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-94"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;default_value&quot;</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;DefaultValueGenerationStrategy&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall b a context any.
+</span><span class="hs-string">&quot;DefaultValueGenerationStrategy&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(() -&gt; ColumnValueGenerationStrategy)
+-&gt; Codec Object () ()
+-&gt; ObjectCodec Void ColumnValueGenerationStrategy
+forall b a context any.
 (b -&gt; a) -&gt; Codec context any b -&gt; Codec context Void a
-</span><span class="hs-identifier hs-var">mapToDecoder</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. a -&gt; b -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
+</span><span class="hs-identifier hs-var">mapToDecoder</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
+-&gt; () -&gt; ColumnValueGenerationStrategy
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
 </span><a href="Hasura.RQL.Types.Source.Column.html#DefaultValue"><span class="hs-identifier hs-var">DefaultValue</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Codec Object () ()
-</span><a href="#local-6989586621691098271"><span class="hs-identifier hs-var">uniqueIdentifierCodec</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686792153"><span class="hs-identifier hs-var">uniqueIdentifierCodec</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-95"></span><span>          </span><span class="hs-special">]</span><span>
 </span><span id="line-96"></span><span>
-</span><span id="line-97"></span><span class="hs-special">$</span><span id="sciValueGenerated"><span id="sciUpdatable"><span id="sciInsertable"><span id="sciDescription"><span id="sciNullable"><span id="sciType"><span id="sciName"><span id="local-6989586621691098814"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SourceColumnInfo</span><span class="hs-special">)</span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-97"></span><span class="hs-special">$</span><span id="local-6989586621686791550"><span id="sciName"><span id="sciType"><span id="sciNullable"><span id="sciDescription"><span id="sciInsertable"><span id="sciUpdatable"><span id="sciValueGenerated"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SourceColumnInfo</span><span class="hs-special">)</span></span></span></span></span></span></span></span></span><span>
 </span><span id="line-98"></span></pre></body></html>

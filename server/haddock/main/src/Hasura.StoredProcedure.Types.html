@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE OverloadedLists #-}</span><span>
 </span><span id="line-2"></span><span>
-</span><span id="line-3"></span><span class="hs-comment">-- | Types for stored procedures.</span><span>
+</span><span id="line-3"></span><span class="annot"><span class="hs-comment">-- | Types for stored procedures.</span></span><span>
 </span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.StoredProcedure.Types</span><span>
 </span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier">NullableScalarType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#nullableScalarTypeMapCodec"><span class="hs-identifier">nullableScalarTypeMapCodec</span></a></span><span class="hs-special">,</span><span>
@@ -13,206 +13,296 @@
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AC</span></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec.Extended</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">graphQLFieldNameCodec</span></span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
-</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Char</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">toLower</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Char</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">toLower</span></span><span class="hs-special">)</span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html"><span class="hs-identifier">Hasura.LogicalModel.NullableScalarType</span></a></span><span>
-</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">first</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">first</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
 </span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span class="hs-comment">-- | Tracked stored procedure configuration, and payload of the 'pg_track_stored procedure'.</span><span>
-</span><span id="line-22"></span><span id="local-6989586621691215202"><span id="local-6989586621691215203"></span></span><span class="hs-keyword">data</span><span> </span><span id="StoredProcedureConfig"><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-var">StoredProcedureConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="StoredProcedureConfig"><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-var">StoredProcedureConfig</span></a></span></span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | In which top-level field should we expose this stored procedure?</span><span>
+</span><span id="line-21"></span><span class="annot"><span class="hs-comment">-- | Tracked stored procedure configuration, and payload of the 'pg_track_stored procedure'.</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">data</span><span> </span><span id="StoredProcedureConfig"><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-var">StoredProcedureConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="StoredProcedureConfig"><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-var">StoredProcedureConfig</span></a></span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | In which top-level field should we expose this stored procedure?</span></span><span>
 </span><span id="line-24"></span><span>    </span><span id="_spcExposedAs"><span class="annot"><span class="annottext">StoredProcedureConfig -&gt; StoredProcedureExposedAs
 </span><a href="Hasura.StoredProcedure.Types.html#_spcExposedAs"><span class="hs-identifier hs-var hs-var">_spcExposedAs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureExposedAs"><span class="hs-identifier hs-type">StoredProcedureExposedAs</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-25"></span><span>    </span><span id="_spcCustomName"><span class="annot"><span class="annottext">StoredProcedureConfig -&gt; Maybe Name
-</span><a href="Hasura.StoredProcedure.Types.html#_spcCustomName"><span class="hs-identifier hs-var hs-var">_spcCustomName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span>
+</span><a href="Hasura.StoredProcedure.Types.html#_spcCustomName"><span class="hs-identifier hs-var hs-var">_spcCustomName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691215187"><span id="local-6989586621691215189"><span id="local-6989586621691215197"><span class="annot"><span class="annottext">Int -&gt; StoredProcedureConfig -&gt; ShowS
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686910725"><span id="local-6989586621686910734"><span id="local-6989586621686910738"><span class="annot"><span class="annottext">Int -&gt; StoredProcedureConfig -&gt; ShowS
 [StoredProcedureConfig] -&gt; ShowS
 StoredProcedureConfig -&gt; String
+(Int -&gt; StoredProcedureConfig -&gt; ShowS)
+-&gt; (StoredProcedureConfig -&gt; String)
+-&gt; ([StoredProcedureConfig] -&gt; ShowS)
+-&gt; Show StoredProcedureConfig
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [StoredProcedureConfig] -&gt; ShowS
-$cshowList :: [StoredProcedureConfig] -&gt; ShowS
-show :: StoredProcedureConfig -&gt; String
-$cshow :: StoredProcedureConfig -&gt; String
-showsPrec :: Int -&gt; StoredProcedureConfig -&gt; ShowS
 $cshowsPrec :: Int -&gt; StoredProcedureConfig -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691215177"><span id="local-6989586621691215183"><span class="annot"><span class="annottext">StoredProcedureConfig -&gt; StoredProcedureConfig -&gt; Bool
+showsPrec :: Int -&gt; StoredProcedureConfig -&gt; ShowS
+$cshow :: StoredProcedureConfig -&gt; String
+show :: StoredProcedureConfig -&gt; String
+$cshowList :: [StoredProcedureConfig] -&gt; ShowS
+showList :: [StoredProcedureConfig] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686910743"><span id="local-6989586621686910750"><span class="annot"><span class="annottext">StoredProcedureConfig -&gt; StoredProcedureConfig -&gt; Bool
+(StoredProcedureConfig -&gt; StoredProcedureConfig -&gt; Bool)
+-&gt; (StoredProcedureConfig -&gt; StoredProcedureConfig -&gt; Bool)
+-&gt; Eq StoredProcedureConfig
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: StoredProcedureConfig -&gt; StoredProcedureConfig -&gt; Bool
-$c/= :: StoredProcedureConfig -&gt; StoredProcedureConfig -&gt; Bool
-== :: StoredProcedureConfig -&gt; StoredProcedureConfig -&gt; Bool
 $c== :: StoredProcedureConfig -&gt; StoredProcedureConfig -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep StoredProcedureConfig x -&gt; StoredProcedureConfig
+== :: StoredProcedureConfig -&gt; StoredProcedureConfig -&gt; Bool
+$c/= :: StoredProcedureConfig -&gt; StoredProcedureConfig -&gt; Bool
+/= :: StoredProcedureConfig -&gt; StoredProcedureConfig -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686910756"><span id="local-6989586621686910758"><span class="annot"><span class="annottext">(forall x. StoredProcedureConfig -&gt; Rep StoredProcedureConfig x)
+-&gt; (forall x. Rep StoredProcedureConfig x -&gt; StoredProcedureConfig)
+-&gt; Generic StoredProcedureConfig
+forall x. Rep StoredProcedureConfig x -&gt; StoredProcedureConfig
 forall x. StoredProcedureConfig -&gt; Rep StoredProcedureConfig x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x. Rep StoredProcedureConfig x -&gt; StoredProcedureConfig
 $cfrom :: forall x. StoredProcedureConfig -&gt; Rep StoredProcedureConfig x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x. StoredProcedureConfig -&gt; Rep StoredProcedureConfig x
+$cto :: forall x. Rep StoredProcedureConfig x -&gt; StoredProcedureConfig
+to :: forall x. Rep StoredProcedureConfig x -&gt; StoredProcedureConfig
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-28"></span><span>
-</span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691215170"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-type">StoredProcedureConfig</span></a></span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686910762"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-type">StoredProcedureConfig</span></a></span></span><span>
 </span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691215166"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-type">StoredProcedureConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-32"></span><span>  </span><span id="local-6989586621691215155"><span class="annot"><span class="annottext">codec :: JSONCodec StoredProcedureConfig
-</span><a href="#local-6989586621691215155"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-33"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686910786"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-type">StoredProcedureConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621686910800"><span class="annot"><span class="annottext">codec :: JSONCodec StoredProcedureConfig
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec StoredProcedureConfig StoredProcedureConfig
+-&gt; JSONCodec StoredProcedureConfig
+forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;StoredProcedureConfig&quot;</span></span><span>
-</span><span id="line-34"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">StoredProcedureExposedAs -&gt; Maybe Name -&gt; StoredProcedureConfig
+</span><span id="line-34"></span><span>      </span><span class="annot"><span class="annottext">(ObjectCodec StoredProcedureConfig StoredProcedureConfig
+ -&gt; JSONCodec StoredProcedureConfig)
+-&gt; ObjectCodec StoredProcedureConfig StoredProcedureConfig
+-&gt; JSONCodec StoredProcedureConfig
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">StoredProcedureExposedAs -&gt; Maybe Name -&gt; StoredProcedureConfig
 </span><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-var">StoredProcedureConfig</span></a></span><span>
-</span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
+</span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">(StoredProcedureExposedAs -&gt; Maybe Name -&gt; StoredProcedureConfig)
+-&gt; Codec Object StoredProcedureConfig StoredProcedureExposedAs
+-&gt; Codec
+     Object StoredProcedureConfig (Maybe Name -&gt; StoredProcedureConfig)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec StoredProcedureExposedAs StoredProcedureExposedAs
+forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">AC.requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;exposed_as&quot;</span></span><span>
-</span><span id="line-36"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-36"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec StoredProcedureExposedAs StoredProcedureExposedAs
+-&gt; (StoredProcedureConfig -&gt; StoredProcedureExposedAs)
+-&gt; Codec Object StoredProcedureConfig StoredProcedureExposedAs
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">StoredProcedureConfig -&gt; StoredProcedureExposedAs
 </span><a href="Hasura.StoredProcedure.Types.html#_spcExposedAs"><span class="hs-identifier hs-var">_spcExposedAs</span></a></span><span>
-</span><span id="line-37"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-37"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object StoredProcedureConfig (Maybe Name -&gt; StoredProcedureConfig)
+-&gt; Codec Object StoredProcedureConfig (Maybe Name)
+-&gt; ObjectCodec StoredProcedureConfig StoredProcedureConfig
+forall a b.
+Codec Object StoredProcedureConfig (a -&gt; b)
+-&gt; Codec Object StoredProcedureConfig a
+-&gt; Codec Object StoredProcedureConfig b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ValueCodec Name Name -&gt; ObjectCodec (Maybe Name) (Maybe Name)
+forall input output.
 Text
 -&gt; ValueCodec input output
 -&gt; ObjectCodec (Maybe input) (Maybe output)
 </span><span class="hs-identifier hs-var">AC.optionalFieldWith'</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;custom_name&quot;</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec Name
+</span><span class="hs-string">&quot;custom_name&quot;</span></span><span> </span><span class="annot"><span class="annottext">ValueCodec Name Name
 </span><span class="hs-identifier hs-var">graphQLFieldNameCodec</span></span><span>
-</span><span id="line-38"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-38"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe Name) (Maybe Name)
+-&gt; (StoredProcedureConfig -&gt; Maybe Name)
+-&gt; Codec Object StoredProcedureConfig (Maybe Name)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">StoredProcedureConfig -&gt; Maybe Name
 </span><a href="Hasura.StoredProcedure.Types.html#_spcCustomName"><span class="hs-identifier hs-var">_spcCustomName</span></a></span><span>
 </span><span id="line-39"></span><span>
-</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691215147"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-type">StoredProcedureConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-41"></span><span>  </span><span id="local-6989586621691215135"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser StoredProcedureConfig
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686910808"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-type">StoredProcedureConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621686910823"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser StoredProcedureConfig
+</span><a href="#local-6989586621686910823"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser StoredProcedureConfig)
+-&gt; Value
+-&gt; Parser StoredProcedureConfig
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;StoredProcedureConfig&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691215132"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691215132"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-string">&quot;StoredProcedureConfig&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser StoredProcedureConfig)
+ -&gt; Value -&gt; Parser StoredProcedureConfig)
+-&gt; (Object -&gt; Parser StoredProcedureConfig)
+-&gt; Value
+-&gt; Parser StoredProcedureConfig
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686910826"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686910826"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">StoredProcedureExposedAs -&gt; Maybe Name -&gt; StoredProcedureConfig
 </span><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-var">StoredProcedureConfig</span></a></span><span>
-</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691215132"><span class="hs-identifier hs-var">obj</span></a></span><span>
-</span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">(StoredProcedureExposedAs -&gt; Maybe Name -&gt; StoredProcedureConfig)
+-&gt; Parser StoredProcedureExposedAs
+-&gt; Parser (Maybe Name -&gt; StoredProcedureConfig)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686910826"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser StoredProcedureExposedAs
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;exposed_as&quot;</span></span><span>
-</span><span id="line-45"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691215132"><span class="hs-identifier hs-var">obj</span></a></span><span>
-</span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><span id="line-45"></span><span>      </span><span class="annot"><span class="annottext">Parser (Maybe Name -&gt; StoredProcedureConfig)
+-&gt; Parser (Maybe Name) -&gt; Parser StoredProcedureConfig
+forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686910826"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Name)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;custom_name&quot;</span></span><span>
 </span><span id="line-47"></span><span>
-</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691215124"><span id="local-6989586621691215126"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-type">StoredProcedureConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-49"></span><span>  </span><span id="local-6989586621691215022"><span class="annot"><span class="annottext">toJSON :: StoredProcedureConfig -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686910832"><span id="local-6989586621686910836"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-type">StoredProcedureConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621686910940"><span class="annot"><span class="annottext">toJSON :: StoredProcedureConfig -&gt; Value
+</span><a href="#local-6989586621686910940"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; StoredProcedureConfig -&gt; Value
+forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
-</span><a href="#local-6989586621691215018"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-50"></span><span>  </span><span id="local-6989586621691214947"><span class="annot"><span class="annottext">toEncoding :: StoredProcedureConfig -&gt; Encoding
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
+</span><a href="#local-6989586621686910944"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">}</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621686911015"><span class="annot"><span class="annottext">toEncoding :: StoredProcedureConfig -&gt; Encoding
+</span><a href="#local-6989586621686911015"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; StoredProcedureConfig -&gt; Encoding
+forall a.
 (Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Encoding
 </span><span class="hs-identifier hs-var">genericToEncoding</span></span><span> </span><span class="annot"><span class="annottext">Options
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
-</span><a href="#local-6989586621691215018"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">}</span><span>
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
+</span><a href="#local-6989586621686910944"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">}</span><span>
 </span><span id="line-51"></span><span>
 </span><span id="line-52"></span><span class="hs-comment">-- | Indicates whether the user requested the corresponding stored procedure to be</span><span>
 </span><span id="line-53"></span><span class="hs-comment">-- tracked as a mutation or a query, in @track_stored_procedure@.</span><span>
 </span><span id="line-54"></span><span class="hs-comment">-- currently only query is supported.</span><span>
-</span><span id="line-55"></span><span id="local-6989586621691214943"><span id="local-6989586621691214944"></span></span><span class="hs-keyword">data</span><span> </span><span id="StoredProcedureExposedAs"><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureExposedAs"><span class="hs-identifier hs-var">StoredProcedureExposedAs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SPEAQuery"><span class="annot"><a href="Hasura.StoredProcedure.Types.html#SPEAQuery"><span class="hs-identifier hs-var">SPEAQuery</span></a></span></span><span>
-</span><span id="line-56"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691214936"><span id="local-6989586621691214938"><span id="local-6989586621691214940"><span class="annot"><span class="annottext">Int -&gt; StoredProcedureExposedAs -&gt; ShowS
+</span><span id="line-55"></span><span class="hs-keyword">data</span><span> </span><span id="StoredProcedureExposedAs"><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureExposedAs"><span class="hs-identifier hs-var">StoredProcedureExposedAs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SPEAQuery"><span class="annot"><a href="Hasura.StoredProcedure.Types.html#SPEAQuery"><span class="hs-identifier hs-var">SPEAQuery</span></a></span></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686911020"><span id="local-6989586621686911022"><span id="local-6989586621686911025"><span class="annot"><span class="annottext">Int -&gt; StoredProcedureExposedAs -&gt; ShowS
 [StoredProcedureExposedAs] -&gt; ShowS
 StoredProcedureExposedAs -&gt; String
+(Int -&gt; StoredProcedureExposedAs -&gt; ShowS)
+-&gt; (StoredProcedureExposedAs -&gt; String)
+-&gt; ([StoredProcedureExposedAs] -&gt; ShowS)
+-&gt; Show StoredProcedureExposedAs
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [StoredProcedureExposedAs] -&gt; ShowS
-$cshowList :: [StoredProcedureExposedAs] -&gt; ShowS
-show :: StoredProcedureExposedAs -&gt; String
-$cshow :: StoredProcedureExposedAs -&gt; String
-showsPrec :: Int -&gt; StoredProcedureExposedAs -&gt; ShowS
 $cshowsPrec :: Int -&gt; StoredProcedureExposedAs -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691214932"><span id="local-6989586621691214934"><span class="annot"><span class="annottext">StoredProcedureExposedAs -&gt; StoredProcedureExposedAs -&gt; Bool
+showsPrec :: Int -&gt; StoredProcedureExposedAs -&gt; ShowS
+$cshow :: StoredProcedureExposedAs -&gt; String
+show :: StoredProcedureExposedAs -&gt; String
+$cshowList :: [StoredProcedureExposedAs] -&gt; ShowS
+showList :: [StoredProcedureExposedAs] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686911028"><span id="local-6989586621686911030"><span class="annot"><span class="annottext">StoredProcedureExposedAs -&gt; StoredProcedureExposedAs -&gt; Bool
+(StoredProcedureExposedAs -&gt; StoredProcedureExposedAs -&gt; Bool)
+-&gt; (StoredProcedureExposedAs -&gt; StoredProcedureExposedAs -&gt; Bool)
+-&gt; Eq StoredProcedureExposedAs
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: StoredProcedureExposedAs -&gt; StoredProcedureExposedAs -&gt; Bool
-$c/= :: StoredProcedureExposedAs -&gt; StoredProcedureExposedAs -&gt; Bool
-== :: StoredProcedureExposedAs -&gt; StoredProcedureExposedAs -&gt; Bool
 $c== :: StoredProcedureExposedAs -&gt; StoredProcedureExposedAs -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x.
+== :: StoredProcedureExposedAs -&gt; StoredProcedureExposedAs -&gt; Bool
+$c/= :: StoredProcedureExposedAs -&gt; StoredProcedureExposedAs -&gt; Bool
+/= :: StoredProcedureExposedAs -&gt; StoredProcedureExposedAs -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686911033"><span id="local-6989586621686911035"><span class="annot"><span class="annottext">(forall x.
+ StoredProcedureExposedAs -&gt; Rep StoredProcedureExposedAs x)
+-&gt; (forall x.
+    Rep StoredProcedureExposedAs x -&gt; StoredProcedureExposedAs)
+-&gt; Generic StoredProcedureExposedAs
+forall x.
 Rep StoredProcedureExposedAs x -&gt; StoredProcedureExposedAs
 forall x.
 StoredProcedureExposedAs -&gt; Rep StoredProcedureExposedAs x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x.
-Rep StoredProcedureExposedAs x -&gt; StoredProcedureExposedAs
 $cfrom :: forall x.
 StoredProcedureExposedAs -&gt; Rep StoredProcedureExposedAs x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x.
+StoredProcedureExposedAs -&gt; Rep StoredProcedureExposedAs x
+$cto :: forall x.
+Rep StoredProcedureExposedAs x -&gt; StoredProcedureExposedAs
+to :: forall x.
+Rep StoredProcedureExposedAs x -&gt; StoredProcedureExposedAs
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-57"></span><span>
-</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691214928"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureExposedAs"><span class="hs-identifier hs-type">StoredProcedureExposedAs</span></a></span></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686911038"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureExposedAs"><span class="hs-identifier hs-type">StoredProcedureExposedAs</span></a></span></span><span>
 </span><span id="line-59"></span><span>
-</span><span id="line-60"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691214925"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureExposedAs"><span class="hs-identifier hs-type">StoredProcedureExposedAs</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-61"></span><span>  </span><span id="local-6989586621691214920"><span class="annot"><span class="annottext">codec :: JSONCodec StoredProcedureExposedAs
-</span><a href="#local-6989586621691214920"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall constant.
+</span><span id="line-60"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686911048"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureExposedAs"><span class="hs-identifier hs-type">StoredProcedureExposedAs</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621686911054"><span class="annot"><span class="annottext">codec :: JSONCodec StoredProcedureExposedAs
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty (StoredProcedureExposedAs, Text)
+-&gt; JSONCodec StoredProcedureExposedAs
+forall constant.
 Eq constant =&gt;
 NonEmpty (constant, Text) -&gt; JSONCodec constant
 </span><span class="hs-identifier hs-var">AC.stringConstCodec</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">StoredProcedureExposedAs
 </span><a href="Hasura.StoredProcedure.Types.html#SPEAQuery"><span class="hs-identifier hs-var">SPEAQuery</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;query&quot;</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-62"></span><span>
-</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691214916"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureExposedAs"><span class="hs-identifier hs-type">StoredProcedureExposedAs</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-64"></span><span>  </span><span id="local-6989586621691214874"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser StoredProcedureExposedAs
-</span><a href="#local-6989586621691214874"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686911058"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureExposedAs"><span class="hs-identifier hs-type">StoredProcedureExposedAs</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621686911101"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser StoredProcedureExposedAs
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser StoredProcedureExposedAs
+forall a.
 (Generic a, GFromJSON Zero (Rep a)) =&gt;
 Options -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">genericParseJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
 </span><span class="hs-identifier hs-var">defaultOptions</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">sumEncoding :: SumEncoding
-</span><a href="#local-6989586621691214871"><span class="hs-identifier hs-var">sumEncoding</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SumEncoding
+</span><a href="#local-6989586621686911104"><span class="hs-identifier hs-var">sumEncoding</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SumEncoding
 </span><span class="hs-identifier hs-var">UntaggedValue</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">constructorTagModifier :: ShowS
-</span><span class="hs-identifier hs-var">constructorTagModifier</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Char
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">toLower</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Int -&gt; [a] -&gt; [a]
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">drop</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686911106"><span class="hs-identifier hs-var">constructorTagModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Char) -&gt; ShowS
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Char
+</span><span class="hs-identifier hs-var">toLower</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS
+forall a. Int -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">4</span></span><span class="hs-special">}</span><span>
 </span><span id="line-65"></span><span>
-</span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691214861"><span id="local-6989586621691214863"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureExposedAs"><span class="hs-identifier hs-type">StoredProcedureExposedAs</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-67"></span><span>  </span><span id="local-6989586621691214826"><span class="annot"><span class="annottext">toJSON :: StoredProcedureExposedAs -&gt; Value
-</span><a href="#local-6989586621691214826"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686911112"><span id="local-6989586621686911115"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureExposedAs"><span class="hs-identifier hs-type">StoredProcedureExposedAs</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621686911151"><span class="annot"><span class="annottext">toJSON :: StoredProcedureExposedAs -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; StoredProcedureExposedAs -&gt; Value
+forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
 </span><span class="hs-identifier hs-var">defaultOptions</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">sumEncoding :: SumEncoding
-</span><a href="#local-6989586621691214871"><span class="hs-identifier hs-var">sumEncoding</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SumEncoding
+</span><a href="#local-6989586621686911104"><span class="hs-identifier hs-var">sumEncoding</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SumEncoding
 </span><span class="hs-identifier hs-var">UntaggedValue</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">constructorTagModifier :: ShowS
-</span><span class="hs-identifier hs-var">constructorTagModifier</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Char
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">toLower</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Int -&gt; [a] -&gt; [a]
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">drop</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686911106"><span class="hs-identifier hs-var">constructorTagModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Char) -&gt; ShowS
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Char
+</span><span class="hs-identifier hs-var">toLower</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS
+forall a. Int -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">4</span></span><span class="hs-special">}</span><span>
-</span><span id="line-68"></span><span>  </span><span id="local-6989586621691214795"><span class="annot"><span class="annottext">toEncoding :: StoredProcedureExposedAs -&gt; Encoding
-</span><a href="#local-6989586621691214795"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621686911182"><span class="annot"><span class="annottext">toEncoding :: StoredProcedureExposedAs -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; StoredProcedureExposedAs -&gt; Encoding
+forall a.
 (Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Encoding
 </span><span class="hs-identifier hs-var">genericToEncoding</span></span><span> </span><span class="annot"><span class="annottext">Options
 </span><span class="hs-identifier hs-var">defaultOptions</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">sumEncoding :: SumEncoding
-</span><a href="#local-6989586621691214871"><span class="hs-identifier hs-var">sumEncoding</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SumEncoding
+</span><a href="#local-6989586621686911104"><span class="hs-identifier hs-var">sumEncoding</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SumEncoding
 </span><span class="hs-identifier hs-var">UntaggedValue</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">constructorTagModifier :: ShowS
-</span><span class="hs-identifier hs-var">constructorTagModifier</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Char
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">toLower</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Int -&gt; [a] -&gt; [a]
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">drop</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686911106"><span class="hs-identifier hs-var">constructorTagModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Char) -&gt; ShowS
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Char
+</span><span class="hs-identifier hs-var">toLower</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS
+forall a. Int -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">4</span></span><span class="hs-special">}</span><span>
 </span><span id="line-69"></span></pre></body></html>

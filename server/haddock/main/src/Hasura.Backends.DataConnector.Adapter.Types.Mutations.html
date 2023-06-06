@@ -7,8 +7,8 @@
 </span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-8"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-9"></span><span>
-</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier">Hasura.Backends.DataConnector.API</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API</span></span><span>
-</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.html"><span class="hs-identifier">Hasura.Backends.DataConnector.API</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html"><span class="hs-identifier">Hasura.RQL.IR.Update.Batch</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#UpdateBatch"><span class="hs-identifier">UpdateBatch</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier">Backend</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier">BackendType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
@@ -21,17 +21,38 @@
 </span><span id="line-21"></span><span class="hs-comment">-- This is parameterised over @v@ which enables different phases of IR</span><span>
 </span><span id="line-22"></span><span class="hs-comment">-- transformation to maintain the overall structure while enriching/transforming</span><span>
 </span><span id="line-23"></span><span class="hs-comment">-- the data at the leaves.</span><span>
-</span><span id="line-24"></span><span class="hs-keyword">data</span><span> </span><span id="BackendInsert"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#BackendInsert"><span class="hs-identifier hs-var">BackendInsert</span></a></span></span><span> </span><span id="local-6989586621691176059"><span class="annot"><a href="#local-6989586621691176059"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BackendInsert"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#BackendInsert"><span class="hs-identifier hs-var">BackendInsert</span></a></span></span><span>
-</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691176053"><span id="local-6989586621691176056"><span class="annot"><span class="annottext">forall a b. a -&gt; BackendInsert b -&gt; BackendInsert a
+</span><span id="line-24"></span><span class="hs-keyword">data</span><span> </span><span id="BackendInsert"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#BackendInsert"><span class="hs-identifier hs-var">BackendInsert</span></a></span></span><span> </span><span id="local-6989586621686870498"><span class="annot"><a href="#local-6989586621686870498"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BackendInsert"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#BackendInsert"><span class="hs-identifier hs-var">BackendInsert</span></a></span></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686870501"><span id="local-6989586621686870504"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; BackendInsert a -&gt; BackendInsert b)
+-&gt; (forall a b. a -&gt; BackendInsert b -&gt; BackendInsert a)
+-&gt; Functor BackendInsert
+forall a b. a -&gt; BackendInsert b -&gt; BackendInsert a
 forall a b. (a -&gt; b) -&gt; BackendInsert a -&gt; BackendInsert b
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: forall a b. a -&gt; BackendInsert b -&gt; BackendInsert a
-$c&lt;$ :: forall a b. a -&gt; BackendInsert b -&gt; BackendInsert a
-fmap :: forall a b. (a -&gt; b) -&gt; BackendInsert a -&gt; BackendInsert b
 $cfmap :: forall a b. (a -&gt; b) -&gt; BackendInsert a -&gt; BackendInsert b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691176016"><span id="local-6989586621691176018"><span id="local-6989586621691176020"><span id="local-6989586621691176022"><span id="local-6989586621691176024"><span id="local-6989586621691176026"><span id="local-6989586621691176028"><span id="local-6989586621691176030"><span id="local-6989586621691176032"><span id="local-6989586621691176034"><span id="local-6989586621691176036"><span id="local-6989586621691176038"><span id="local-6989586621691176040"><span id="local-6989586621691176042"><span id="local-6989586621691176044"><span id="local-6989586621691176048"><span id="local-6989586621691176050"><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; BackendInsert a -&gt; Bool
+fmap :: forall a b. (a -&gt; b) -&gt; BackendInsert a -&gt; BackendInsert b
+$c&lt;$ :: forall a b. a -&gt; BackendInsert b -&gt; BackendInsert a
+&lt;$ :: forall a b. a -&gt; BackendInsert b -&gt; BackendInsert a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686870509"><span id="local-6989586621686870515"><span id="local-6989586621686870519"><span id="local-6989586621686870524"><span id="local-6989586621686870527"><span id="local-6989586621686870530"><span id="local-6989586621686870533"><span id="local-6989586621686870536"><span id="local-6989586621686870539"><span id="local-6989586621686870542"><span id="local-6989586621686870545"><span id="local-6989586621686870548"><span id="local-6989586621686870551"><span id="local-6989586621686870556"><span id="local-6989586621686870561"><span id="local-6989586621686870566"><span id="local-6989586621686870571"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; BackendInsert m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendInsert a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendInsert a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; BackendInsert a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; BackendInsert a -&gt; a)
+-&gt; (forall a. BackendInsert a -&gt; [a])
+-&gt; (forall a. BackendInsert a -&gt; Bool)
+-&gt; (forall a. BackendInsert a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; BackendInsert a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; BackendInsert a -&gt; a)
+-&gt; (forall a. Ord a =&gt; BackendInsert a -&gt; a)
+-&gt; (forall a. Num a =&gt; BackendInsert a -&gt; a)
+-&gt; (forall a. Num a =&gt; BackendInsert a -&gt; a)
+-&gt; Foldable BackendInsert
+forall a. Eq a =&gt; a -&gt; BackendInsert a -&gt; Bool
 forall a. Num a =&gt; BackendInsert a -&gt; a
 forall a. Ord a =&gt; BackendInsert a -&gt; a
 forall m. Monoid m =&gt; BackendInsert m -&gt; m
@@ -61,42 +82,57 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: forall a. Num a =&gt; BackendInsert a -&gt; a
-$cproduct :: forall a. Num a =&gt; BackendInsert a -&gt; a
-sum :: forall a. Num a =&gt; BackendInsert a -&gt; a
-$csum :: forall a. Num a =&gt; BackendInsert a -&gt; a
-minimum :: forall a. Ord a =&gt; BackendInsert a -&gt; a
-$cminimum :: forall a. Ord a =&gt; BackendInsert a -&gt; a
-maximum :: forall a. Ord a =&gt; BackendInsert a -&gt; a
-$cmaximum :: forall a. Ord a =&gt; BackendInsert a -&gt; a
-elem :: forall a. Eq a =&gt; a -&gt; BackendInsert a -&gt; Bool
-$celem :: forall a. Eq a =&gt; a -&gt; BackendInsert a -&gt; Bool
-length :: forall a. BackendInsert a -&gt; Int
-$clength :: forall a. BackendInsert a -&gt; Int
-null :: forall a. BackendInsert a -&gt; Bool
-$cnull :: forall a. BackendInsert a -&gt; Bool
-toList :: forall a. BackendInsert a -&gt; [a]
-$ctoList :: forall a. BackendInsert a -&gt; [a]
-foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; BackendInsert a -&gt; a
-$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; BackendInsert a -&gt; a
-foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; BackendInsert a -&gt; a
-$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; BackendInsert a -&gt; a
-foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
-$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
-foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
-$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
-foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
-$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
-foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
-$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
-foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendInsert a -&gt; m
-$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendInsert a -&gt; m
-foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendInsert a -&gt; m
-$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendInsert a -&gt; m
-fold :: forall m. Monoid m =&gt; BackendInsert m -&gt; m
 $cfold :: forall m. Monoid m =&gt; BackendInsert m -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691176000"><span id="local-6989586621691176002"><span id="local-6989586621691176004"><span id="local-6989586621691176009"><span class="annot"><span class="annottext">Functor BackendInsert
+fold :: forall m. Monoid m =&gt; BackendInsert m -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendInsert a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendInsert a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendInsert a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendInsert a -&gt; m
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendInsert a -&gt; b
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; BackendInsert a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; BackendInsert a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; BackendInsert a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; BackendInsert a -&gt; a
+$ctoList :: forall a. BackendInsert a -&gt; [a]
+toList :: forall a. BackendInsert a -&gt; [a]
+$cnull :: forall a. BackendInsert a -&gt; Bool
+null :: forall a. BackendInsert a -&gt; Bool
+$clength :: forall a. BackendInsert a -&gt; Int
+length :: forall a. BackendInsert a -&gt; Int
+$celem :: forall a. Eq a =&gt; a -&gt; BackendInsert a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; BackendInsert a -&gt; Bool
+$cmaximum :: forall a. Ord a =&gt; BackendInsert a -&gt; a
+maximum :: forall a. Ord a =&gt; BackendInsert a -&gt; a
+$cminimum :: forall a. Ord a =&gt; BackendInsert a -&gt; a
+minimum :: forall a. Ord a =&gt; BackendInsert a -&gt; a
+$csum :: forall a. Num a =&gt; BackendInsert a -&gt; a
+sum :: forall a. Num a =&gt; BackendInsert a -&gt; a
+$cproduct :: forall a. Num a =&gt; BackendInsert a -&gt; a
+product :: forall a. Num a =&gt; BackendInsert a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686870581"><span id="local-6989586621686870586"><span id="local-6989586621686870592"><span id="local-6989586621686870597"><span class="annot"><span class="annottext">Functor BackendInsert
 Foldable BackendInsert
+Functor BackendInsert
+-&gt; Foldable BackendInsert
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; BackendInsert a -&gt; f (BackendInsert b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    BackendInsert (f a) -&gt; f (BackendInsert a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; BackendInsert a -&gt; m (BackendInsert b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    BackendInsert (m a) -&gt; m (BackendInsert a))
+-&gt; Traversable BackendInsert
 forall (t :: * -&gt; *).
 Functor t
 -&gt; Foldable t
@@ -121,60 +157,81 @@ Monad m =&gt;
 forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; BackendInsert a -&gt; f (BackendInsert b)
-sequence :: forall (m :: * -&gt; *) a.
-Monad m =&gt;
-BackendInsert (m a) -&gt; m (BackendInsert a)
-$csequence :: forall (m :: * -&gt; *) a.
-Monad m =&gt;
-BackendInsert (m a) -&gt; m (BackendInsert a)
-mapM :: forall (m :: * -&gt; *) a b.
-Monad m =&gt;
-(a -&gt; m b) -&gt; BackendInsert a -&gt; m (BackendInsert b)
-$cmapM :: forall (m :: * -&gt; *) a b.
-Monad m =&gt;
-(a -&gt; m b) -&gt; BackendInsert a -&gt; m (BackendInsert b)
-sequenceA :: forall (f :: * -&gt; *) a.
-Applicative f =&gt;
-BackendInsert (f a) -&gt; f (BackendInsert a)
-$csequenceA :: forall (f :: * -&gt; *) a.
-Applicative f =&gt;
-BackendInsert (f a) -&gt; f (BackendInsert a)
-traverse :: forall (f :: * -&gt; *) a b.
-Applicative f =&gt;
-(a -&gt; f b) -&gt; BackendInsert a -&gt; f (BackendInsert b)
 $ctraverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; BackendInsert a -&gt; f (BackendInsert b)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; BackendInsert a -&gt; f (BackendInsert b)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+BackendInsert (f a) -&gt; f (BackendInsert a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+BackendInsert (f a) -&gt; f (BackendInsert a)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; BackendInsert a -&gt; m (BackendInsert b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; BackendInsert a -&gt; m (BackendInsert b)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+BackendInsert (m a) -&gt; m (BackendInsert a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+BackendInsert (m a) -&gt; m (BackendInsert a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span>
 </span><span id="line-27"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-28"></span><span>
-</span><span id="line-29"></span><span class="hs-keyword">data</span><span> </span><span id="DataConnectorUpdateVariant"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#DataConnectorUpdateVariant"><span class="hs-identifier hs-var">DataConnectorUpdateVariant</span></a></span></span><span> </span><span id="local-6989586621691175998"><span class="annot"><a href="#local-6989586621691175998"><span class="hs-identifier hs-type">v</span></a></span></span><span>
-</span><span id="line-30"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SingleBatch"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#SingleBatch"><span class="hs-identifier hs-var">SingleBatch</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#UpdateBatch"><span class="hs-identifier hs-type">UpdateBatch</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#UpdateOperator"><span class="hs-identifier hs-type">UpdateOperator</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691175998"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MultipleBatches"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#MultipleBatches"><span class="hs-identifier hs-var">MultipleBatches</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#UpdateBatch"><span class="hs-identifier hs-type">UpdateBatch</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#UpdateOperator"><span class="hs-identifier hs-type">UpdateOperator</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691175998"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">data</span><span> </span><span id="DataConnectorUpdateVariant"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#DataConnectorUpdateVariant"><span class="hs-identifier hs-var">DataConnectorUpdateVariant</span></a></span></span><span> </span><span id="local-6989586621686870602"><span class="annot"><a href="#local-6989586621686870602"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SingleBatch"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#SingleBatch"><span class="hs-identifier hs-var">SingleBatch</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#UpdateBatch"><span class="hs-identifier hs-type">UpdateBatch</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#UpdateOperator"><span class="hs-identifier hs-type">UpdateOperator</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870602"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MultipleBatches"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#MultipleBatches"><span class="hs-identifier hs-var">MultipleBatches</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#UpdateBatch"><span class="hs-identifier hs-type">UpdateBatch</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#UpdateOperator"><span class="hs-identifier hs-type">UpdateOperator</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870602"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span id="local-6989586621691175985"><span id="local-6989586621691175993"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Functor</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#DataConnectorUpdateVariant"><span class="hs-identifier hs-type">DataConnectorUpdateVariant</span></a></span></span></span><span>
+</span><span id="line-33"></span><span id="local-6989586621686870607"><span id="local-6989586621686870615"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Functor</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#DataConnectorUpdateVariant"><span class="hs-identifier hs-type">DataConnectorUpdateVariant</span></a></span></span></span><span>
 </span><span id="line-34"></span><span>
-</span><span id="line-35"></span><span id="local-6989586621691175927"><span id="local-6989586621691175929"><span id="local-6989586621691175931"><span id="local-6989586621691175933"><span id="local-6989586621691175935"><span id="local-6989586621691175937"><span id="local-6989586621691175943"><span id="local-6989586621691175945"><span id="local-6989586621691175947"><span id="local-6989586621691175949"><span id="local-6989586621691175951"><span id="local-6989586621691175953"><span id="local-6989586621691175955"><span id="local-6989586621691175961"><span id="local-6989586621691175963"><span id="local-6989586621691175975"><span id="local-6989586621691175977"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Foldable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#DataConnectorUpdateVariant"><span class="hs-identifier hs-type">DataConnectorUpdateVariant</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-35"></span><span id="local-6989586621686870624"><span id="local-6989586621686870630"><span id="local-6989586621686870642"><span id="local-6989586621686870647"><span id="local-6989586621686870653"><span id="local-6989586621686870656"><span id="local-6989586621686870659"><span id="local-6989586621686870662"><span id="local-6989586621686870665"><span id="local-6989586621686870668"><span id="local-6989586621686870671"><span id="local-6989586621686870677"><span id="local-6989586621686870680"><span id="local-6989586621686870685"><span id="local-6989586621686870690"><span id="local-6989586621686870695"><span id="local-6989586621686870700"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#DataConnectorUpdateVariant"><span class="hs-identifier hs-type">DataConnectorUpdateVariant</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span id="local-6989586621691175902"><span id="local-6989586621691175904"><span id="local-6989586621691175906"><span id="local-6989586621691175921"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Traversable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#DataConnectorUpdateVariant"><span class="hs-identifier hs-type">DataConnectorUpdateVariant</span></a></span></span></span></span></span><span>
+</span><span id="line-37"></span><span id="local-6989586621686870711"><span id="local-6989586621686870726"><span id="local-6989586621686870732"><span id="local-6989586621686870737"><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Traversable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#DataConnectorUpdateVariant"><span class="hs-identifier hs-type">DataConnectorUpdateVariant</span></a></span></span></span></span></span><span>
 </span><span id="line-38"></span><span>
 </span><span id="line-39"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span class="hs-comment">-- | The operators that are used to mutate specific columns on a table</span><span>
-</span><span id="line-42"></span><span class="hs-keyword">data</span><span> </span><span id="UpdateOperator"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#UpdateOperator"><span class="hs-identifier hs-var">UpdateOperator</span></a></span></span><span> </span><span id="local-6989586621691175900"><span class="annot"><a href="#local-6989586621691175900"><span class="hs-identifier hs-type">v</span></a></span></span><span>
-</span><span id="line-43"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="UpdateSet"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#UpdateSet"><span class="hs-identifier hs-var">UpdateSet</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621691175900"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-44"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateCustomOperator"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#UpdateCustomOperator"><span class="hs-identifier hs-var">UpdateCustomOperator</span></a></span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-type">API.UpdateColumnOperatorName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691175900"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691175893"><span id="local-6989586621691175895"><span class="annot"><span class="annottext">forall a b. a -&gt; UpdateOperator b -&gt; UpdateOperator a
+</span><span id="line-41"></span><span class="annot"><span class="hs-comment">-- | The operators that are used to mutate specific columns on a table</span></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">data</span><span> </span><span id="UpdateOperator"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#UpdateOperator"><span class="hs-identifier hs-var">UpdateOperator</span></a></span></span><span> </span><span id="local-6989586621686870743"><span class="annot"><a href="#local-6989586621686870743"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="UpdateSet"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#UpdateSet"><span class="hs-identifier hs-var">UpdateSet</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621686870743"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateCustomOperator"><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.Mutations.html#UpdateCustomOperator"><span class="hs-identifier hs-var">UpdateCustomOperator</span></a></span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/dc-api-1.0.0/opt/doc/html/dc-api/src/Hasura.Backends.DataConnector.API.V0.Capabilities.html#UpdateColumnOperatorName"><span class="hs-identifier hs-type">API.UpdateColumnOperatorName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870743"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686870748"><span id="local-6989586621686870750"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; UpdateOperator a -&gt; UpdateOperator b)
+-&gt; (forall a b. a -&gt; UpdateOperator b -&gt; UpdateOperator a)
+-&gt; Functor UpdateOperator
+forall a b. a -&gt; UpdateOperator b -&gt; UpdateOperator a
 forall a b. (a -&gt; b) -&gt; UpdateOperator a -&gt; UpdateOperator b
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: forall a b. a -&gt; UpdateOperator b -&gt; UpdateOperator a
-$c&lt;$ :: forall a b. a -&gt; UpdateOperator b -&gt; UpdateOperator a
-fmap :: forall a b. (a -&gt; b) -&gt; UpdateOperator a -&gt; UpdateOperator b
 $cfmap :: forall a b. (a -&gt; b) -&gt; UpdateOperator a -&gt; UpdateOperator b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691175858"><span id="local-6989586621691175860"><span id="local-6989586621691175862"><span id="local-6989586621691175864"><span id="local-6989586621691175866"><span id="local-6989586621691175868"><span id="local-6989586621691175870"><span id="local-6989586621691175872"><span id="local-6989586621691175874"><span id="local-6989586621691175876"><span id="local-6989586621691175878"><span id="local-6989586621691175880"><span id="local-6989586621691175882"><span id="local-6989586621691175884"><span id="local-6989586621691175886"><span id="local-6989586621691175889"><span id="local-6989586621691175891"><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; UpdateOperator a -&gt; Bool
+fmap :: forall a b. (a -&gt; b) -&gt; UpdateOperator a -&gt; UpdateOperator b
+$c&lt;$ :: forall a b. a -&gt; UpdateOperator b -&gt; UpdateOperator a
+&lt;$ :: forall a b. a -&gt; UpdateOperator b -&gt; UpdateOperator a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686870752"><span id="local-6989586621686870757"><span id="local-6989586621686870760"><span id="local-6989586621686870765"><span id="local-6989586621686870767"><span id="local-6989586621686870770"><span id="local-6989586621686870773"><span id="local-6989586621686870776"><span id="local-6989586621686870779"><span id="local-6989586621686870782"><span id="local-6989586621686870785"><span id="local-6989586621686870787"><span id="local-6989586621686870790"><span id="local-6989586621686870795"><span id="local-6989586621686870800"><span id="local-6989586621686870805"><span id="local-6989586621686870810"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; UpdateOperator m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a)
+-&gt; (forall a. UpdateOperator a -&gt; [a])
+-&gt; (forall a. UpdateOperator a -&gt; Bool)
+-&gt; (forall a. UpdateOperator a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; UpdateOperator a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; UpdateOperator a -&gt; a)
+-&gt; (forall a. Ord a =&gt; UpdateOperator a -&gt; a)
+-&gt; (forall a. Num a =&gt; UpdateOperator a -&gt; a)
+-&gt; (forall a. Num a =&gt; UpdateOperator a -&gt; a)
+-&gt; Foldable UpdateOperator
+forall a. Eq a =&gt; a -&gt; UpdateOperator a -&gt; Bool
 forall a. Num a =&gt; UpdateOperator a -&gt; a
 forall a. Ord a =&gt; UpdateOperator a -&gt; a
 forall m. Monoid m =&gt; UpdateOperator m -&gt; m
@@ -204,42 +261,57 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: forall a. Num a =&gt; UpdateOperator a -&gt; a
-$cproduct :: forall a. Num a =&gt; UpdateOperator a -&gt; a
-sum :: forall a. Num a =&gt; UpdateOperator a -&gt; a
-$csum :: forall a. Num a =&gt; UpdateOperator a -&gt; a
-minimum :: forall a. Ord a =&gt; UpdateOperator a -&gt; a
-$cminimum :: forall a. Ord a =&gt; UpdateOperator a -&gt; a
-maximum :: forall a. Ord a =&gt; UpdateOperator a -&gt; a
-$cmaximum :: forall a. Ord a =&gt; UpdateOperator a -&gt; a
-elem :: forall a. Eq a =&gt; a -&gt; UpdateOperator a -&gt; Bool
-$celem :: forall a. Eq a =&gt; a -&gt; UpdateOperator a -&gt; Bool
-length :: forall a. UpdateOperator a -&gt; Int
-$clength :: forall a. UpdateOperator a -&gt; Int
-null :: forall a. UpdateOperator a -&gt; Bool
-$cnull :: forall a. UpdateOperator a -&gt; Bool
-toList :: forall a. UpdateOperator a -&gt; [a]
-$ctoList :: forall a. UpdateOperator a -&gt; [a]
-foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a
-$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a
-foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a
-$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a
-foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
-$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
-foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
-$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
-foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
-$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
-foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
-$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
-foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m
-$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m
-foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m
-$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m
-fold :: forall m. Monoid m =&gt; UpdateOperator m -&gt; m
 $cfold :: forall m. Monoid m =&gt; UpdateOperator m -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691175842"><span id="local-6989586621691175844"><span id="local-6989586621691175846"><span id="local-6989586621691175852"><span class="annot"><span class="annottext">Functor UpdateOperator
+fold :: forall m. Monoid m =&gt; UpdateOperator m -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a
+$ctoList :: forall a. UpdateOperator a -&gt; [a]
+toList :: forall a. UpdateOperator a -&gt; [a]
+$cnull :: forall a. UpdateOperator a -&gt; Bool
+null :: forall a. UpdateOperator a -&gt; Bool
+$clength :: forall a. UpdateOperator a -&gt; Int
+length :: forall a. UpdateOperator a -&gt; Int
+$celem :: forall a. Eq a =&gt; a -&gt; UpdateOperator a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; UpdateOperator a -&gt; Bool
+$cmaximum :: forall a. Ord a =&gt; UpdateOperator a -&gt; a
+maximum :: forall a. Ord a =&gt; UpdateOperator a -&gt; a
+$cminimum :: forall a. Ord a =&gt; UpdateOperator a -&gt; a
+minimum :: forall a. Ord a =&gt; UpdateOperator a -&gt; a
+$csum :: forall a. Num a =&gt; UpdateOperator a -&gt; a
+sum :: forall a. Num a =&gt; UpdateOperator a -&gt; a
+$cproduct :: forall a. Num a =&gt; UpdateOperator a -&gt; a
+product :: forall a. Num a =&gt; UpdateOperator a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686870819"><span id="local-6989586621686870825"><span id="local-6989586621686870830"><span id="local-6989586621686870835"><span class="annot"><span class="annottext">Functor UpdateOperator
 Foldable UpdateOperator
+Functor UpdateOperator
+-&gt; Foldable UpdateOperator
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; UpdateOperator a -&gt; f (UpdateOperator b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    UpdateOperator (f a) -&gt; f (UpdateOperator a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; UpdateOperator a -&gt; m (UpdateOperator b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    UpdateOperator (m a) -&gt; m (UpdateOperator a))
+-&gt; Traversable UpdateOperator
 forall (t :: * -&gt; *).
 Functor t
 -&gt; Foldable t
@@ -264,29 +336,29 @@ Monad m =&gt;
 forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; UpdateOperator a -&gt; f (UpdateOperator b)
-sequence :: forall (m :: * -&gt; *) a.
-Monad m =&gt;
-UpdateOperator (m a) -&gt; m (UpdateOperator a)
-$csequence :: forall (m :: * -&gt; *) a.
-Monad m =&gt;
-UpdateOperator (m a) -&gt; m (UpdateOperator a)
-mapM :: forall (m :: * -&gt; *) a b.
-Monad m =&gt;
-(a -&gt; m b) -&gt; UpdateOperator a -&gt; m (UpdateOperator b)
-$cmapM :: forall (m :: * -&gt; *) a b.
-Monad m =&gt;
-(a -&gt; m b) -&gt; UpdateOperator a -&gt; m (UpdateOperator b)
-sequenceA :: forall (f :: * -&gt; *) a.
-Applicative f =&gt;
-UpdateOperator (f a) -&gt; f (UpdateOperator a)
-$csequenceA :: forall (f :: * -&gt; *) a.
-Applicative f =&gt;
-UpdateOperator (f a) -&gt; f (UpdateOperator a)
-traverse :: forall (f :: * -&gt; *) a b.
-Applicative f =&gt;
-(a -&gt; f b) -&gt; UpdateOperator a -&gt; f (UpdateOperator b)
 $ctraverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; UpdateOperator a -&gt; f (UpdateOperator b)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; UpdateOperator a -&gt; f (UpdateOperator b)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+UpdateOperator (f a) -&gt; f (UpdateOperator a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+UpdateOperator (f a) -&gt; f (UpdateOperator a)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; UpdateOperator a -&gt; m (UpdateOperator b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; UpdateOperator a -&gt; m (UpdateOperator b)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+UpdateOperator (m a) -&gt; m (UpdateOperator a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+UpdateOperator (m a) -&gt; m (UpdateOperator a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-46"></span></pre></body></html>

@@ -10,8 +10,8 @@
 </span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-11"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-12"></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/stm-2.5.0.2/src"><span class="hs-identifier">Control.Concurrent.STM</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">STM</span></span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier">Data.Time.Clock</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TC</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.STM</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">STM</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Clock</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TC</span></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.html"><span class="hs-identifier">Hasura.GraphQL.Execute</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">E</span></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html"><span class="hs-identifier">Hasura.GraphQL.Execute.Subscription.State</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ES</span></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html"><span class="hs-identifier">Hasura.GraphQL.Transport.HTTP.Protocol</span></a></span><span>
@@ -19,7 +19,7 @@
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html"><span class="hs-identifier">Hasura.GraphQL.Transport.WebSocket.Protocol</span></a></span><span>
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html"><span class="hs-identifier">Hasura.GraphQL.Transport.WebSocket.Server</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WS</span></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
-</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html"><span class="hs-identifier">Hasura.Server.AppStateRef</span></a></span><span>
 </span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html"><span class="hs-identifier">Hasura.Server.Cors</span></a></span><span>
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html"><span class="hs-identifier">Hasura.Server.Init.Config</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#KeepAliveDelay"><span class="hs-identifier">KeepAliveDelay</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
@@ -35,90 +35,108 @@
 </span><span id="line-35"></span><span>
 </span><span id="line-36"></span><span class="hs-keyword">newtype</span><span> </span><span id="WsHeaders"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WsHeaders"><span class="hs-identifier hs-var">WsHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WsHeaders"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WsHeaders"><span class="hs-identifier hs-var">WsHeaders</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unWsHeaders"><span class="annot"><span class="annottext">WsHeaders -&gt; [Header]
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#unWsHeaders"><span class="hs-identifier hs-var hs-var">unWsHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-37"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691463243"><span id="local-6989586621691463245"><span id="local-6989586621691463252"><span class="annot"><span class="annottext">Int -&gt; WsHeaders -&gt; ShowS
+</span><span id="line-37"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687174496"><span id="local-6989586621687174503"><span id="local-6989586621687174507"><span class="annot"><span class="annottext">Int -&gt; WsHeaders -&gt; ShowS
 [WsHeaders] -&gt; ShowS
 WsHeaders -&gt; String
+(Int -&gt; WsHeaders -&gt; ShowS)
+-&gt; (WsHeaders -&gt; String)
+-&gt; ([WsHeaders] -&gt; ShowS)
+-&gt; Show WsHeaders
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [WsHeaders] -&gt; ShowS
-$cshowList :: [WsHeaders] -&gt; ShowS
-show :: WsHeaders -&gt; String
-$cshow :: WsHeaders -&gt; String
-showsPrec :: Int -&gt; WsHeaders -&gt; ShowS
 $cshowsPrec :: Int -&gt; WsHeaders -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691463228"><span id="local-6989586621691463234"><span class="annot"><span class="annottext">WsHeaders -&gt; WsHeaders -&gt; Bool
+showsPrec :: Int -&gt; WsHeaders -&gt; ShowS
+$cshow :: WsHeaders -&gt; String
+show :: WsHeaders -&gt; String
+$cshowList :: [WsHeaders] -&gt; ShowS
+showList :: [WsHeaders] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687174517"><span id="local-6989586621687174523"><span class="annot"><span class="annottext">WsHeaders -&gt; WsHeaders -&gt; Bool
+(WsHeaders -&gt; WsHeaders -&gt; Bool)
+-&gt; (WsHeaders -&gt; WsHeaders -&gt; Bool) -&gt; Eq WsHeaders
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: WsHeaders -&gt; WsHeaders -&gt; Bool
-$c/= :: WsHeaders -&gt; WsHeaders -&gt; Bool
-== :: WsHeaders -&gt; WsHeaders -&gt; Bool
 $c== :: WsHeaders -&gt; WsHeaders -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
+== :: WsHeaders -&gt; WsHeaders -&gt; Bool
+$c/= :: WsHeaders -&gt; WsHeaders -&gt; Bool
+/= :: WsHeaders -&gt; WsHeaders -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-38"></span><span>
 </span><span id="line-39"></span><span class="hs-keyword">data</span><span> </span><span id="ErrRespType"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#ErrRespType"><span class="hs-identifier hs-var">ErrRespType</span></a></span></span><span>
 </span><span id="line-40"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ERTLegacy"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#ERTLegacy"><span class="hs-identifier hs-var">ERTLegacy</span></a></span></span><span>
 </span><span id="line-41"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ERTGraphqlCompliant"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#ERTGraphqlCompliant"><span class="hs-identifier hs-var">ERTGraphqlCompliant</span></a></span></span><span>
-</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691463208"><span id="local-6989586621691463210"><span id="local-6989586621691463212"><span class="annot"><span class="annottext">Int -&gt; ErrRespType -&gt; ShowS
+</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687174539"><span id="local-6989586621687174541"><span id="local-6989586621687174545"><span class="annot"><span class="annottext">Int -&gt; ErrRespType -&gt; ShowS
 [ErrRespType] -&gt; ShowS
 ErrRespType -&gt; String
+(Int -&gt; ErrRespType -&gt; ShowS)
+-&gt; (ErrRespType -&gt; String)
+-&gt; ([ErrRespType] -&gt; ShowS)
+-&gt; Show ErrRespType
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [ErrRespType] -&gt; ShowS
-$cshowList :: [ErrRespType] -&gt; ShowS
-show :: ErrRespType -&gt; String
-$cshow :: ErrRespType -&gt; String
-showsPrec :: Int -&gt; ErrRespType -&gt; ShowS
 $cshowsPrec :: Int -&gt; ErrRespType -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+showsPrec :: Int -&gt; ErrRespType -&gt; ShowS
+$cshow :: ErrRespType -&gt; String
+show :: ErrRespType -&gt; String
+$cshowList :: [ErrRespType] -&gt; ShowS
+showList :: [ErrRespType] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span>
 </span><span id="line-44"></span><span class="hs-keyword">data</span><span> </span><span id="WSConnState"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSConnState"><span class="hs-identifier hs-var">WSConnState</span></a></span></span><span>
-</span><span id="line-45"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | headers and IP address from the client for websockets</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | headers and IP address from the client for websockets</span></span><span>
 </span><span id="line-46"></span><span>    </span><span id="CSNotInitialised"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#CSNotInitialised"><span class="hs-identifier hs-var">CSNotInitialised</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WsHeaders"><span class="hs-identifier hs-type">WsHeaders</span></a></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Wai.IpAddress</span></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CSInitError"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#CSInitError"><span class="hs-identifier hs-var">CSInitError</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CSInitialised"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#CSInitialised"><span class="hs-identifier hs-var">CSInitialised</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WsClientState"><span class="hs-identifier hs-type">WsClientState</span></a></span><span>
-</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691463193"><span id="local-6989586621691463195"><span id="local-6989586621691463206"><span class="annot"><span class="annottext">Int -&gt; WSConnState -&gt; ShowS
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687174548"><span id="local-6989586621687174560"><span id="local-6989586621687174564"><span class="annot"><span class="annottext">Int -&gt; WSConnState -&gt; ShowS
 [WSConnState] -&gt; ShowS
 WSConnState -&gt; String
+(Int -&gt; WSConnState -&gt; ShowS)
+-&gt; (WSConnState -&gt; String)
+-&gt; ([WSConnState] -&gt; ShowS)
+-&gt; Show WSConnState
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [WSConnState] -&gt; ShowS
-$cshowList :: [WSConnState] -&gt; ShowS
-show :: WSConnState -&gt; String
-$cshow :: WSConnState -&gt; String
-showsPrec :: Int -&gt; WSConnState -&gt; ShowS
 $cshowsPrec :: Int -&gt; WSConnState -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+showsPrec :: Int -&gt; WSConnState -&gt; ShowS
+$cshow :: WSConnState -&gt; String
+show :: WSConnState -&gt; String
+$cshowList :: [WSConnState] -&gt; ShowS
+showList :: [WSConnState] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>
 </span><span id="line-51"></span><span class="hs-keyword">data</span><span> </span><span id="WsClientState"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WsClientState"><span class="hs-identifier hs-var">WsClientState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WsClientState"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WsClientState"><span class="hs-identifier hs-var">WsClientState</span></a></span></span><span>
-</span><span id="line-52"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | the 'UserInfo' required to execute the GraphQL query</span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | the 'UserInfo' required to execute the GraphQL query</span></span><span>
 </span><span id="line-53"></span><span>    </span><span id="wscsUserInfo"><span class="annot"><span class="annottext">WsClientState -&gt; UserInfo
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#wscsUserInfo"><span class="hs-identifier hs-var hs-var">wscsUserInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-54"></span><span>    </span><span class="hs-comment">-- | the JWT/token expiry time, if any</span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="hs-comment">-- | the JWT/token expiry time, if any</span></span><span>
 </span><span id="line-55"></span><span>    </span><span id="wscsTokenExpTime"><span class="annot"><span class="annottext">WsClientState -&gt; Maybe UTCTime
-</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#wscsTokenExpTime"><span class="hs-identifier hs-var hs-var">wscsTokenExpTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">TC.UTCTime</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-56"></span><span>    </span><span class="hs-comment">-- | headers from the client (in conn params) to forward to the remote schema</span><span>
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#wscsTokenExpTime"><span class="hs-identifier hs-var hs-var">wscsTokenExpTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TC.UTCTime</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="hs-comment">-- | headers from the client (in conn params) to forward to the remote schema</span></span><span>
 </span><span id="line-57"></span><span>    </span><span id="wscsReqHeaders"><span class="annot"><span class="annottext">WsClientState -&gt; [Header]
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#wscsReqHeaders"><span class="hs-identifier hs-var hs-var">wscsReqHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
-</span><span id="line-58"></span><span>    </span><span class="hs-comment">-- | IP address required for 'MonadGQLAuthorization'</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><span class="hs-comment">-- | IP address required for 'MonadGQLAuthorization'</span></span><span>
 </span><span id="line-59"></span><span>    </span><span id="wscsIpAddress"><span class="annot"><span class="annottext">WsClientState -&gt; IpAddress
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#wscsIpAddress"><span class="hs-identifier hs-var hs-var">wscsIpAddress</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Wai.IpAddress</span></span><span>
 </span><span id="line-60"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-61"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691463178"><span id="local-6989586621691463180"><span id="local-6989586621691463191"><span class="annot"><span class="annottext">Int -&gt; WsClientState -&gt; ShowS
+</span><span id="line-61"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687174568"><span id="local-6989586621687174579"><span id="local-6989586621687174582"><span class="annot"><span class="annottext">Int -&gt; WsClientState -&gt; ShowS
 [WsClientState] -&gt; ShowS
 WsClientState -&gt; String
+(Int -&gt; WsClientState -&gt; ShowS)
+-&gt; (WsClientState -&gt; String)
+-&gt; ([WsClientState] -&gt; ShowS)
+-&gt; Show WsClientState
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [WsClientState] -&gt; ShowS
-$cshowList :: [WsClientState] -&gt; ShowS
-show :: WsClientState -&gt; String
-$cshow :: WsClientState -&gt; String
-showsPrec :: Int -&gt; WsClientState -&gt; ShowS
 $cshowsPrec :: Int -&gt; WsClientState -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+showsPrec :: Int -&gt; WsClientState -&gt; ShowS
+$cshow :: WsClientState -&gt; String
+show :: WsClientState -&gt; String
+$cshowList :: [WsClientState] -&gt; ShowS
+showList :: [WsClientState] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-62"></span><span>
 </span><span id="line-63"></span><span class="hs-keyword">data</span><span> </span><span id="WSConnData"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSConnData"><span class="hs-identifier hs-var">WSConnData</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WSConnData"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSConnData"><span class="hs-identifier hs-var">WSConnData</span></a></span></span><span>
 </span><span id="line-64"></span><span>  </span><span class="hs-comment">-- the role and headers are set only on connection_init message</span><span>
 </span><span id="line-65"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_wscUser"><span class="annot"><span class="annottext">WSConnData -&gt; TVar WSConnState
-</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wscUser"><span class="hs-identifier hs-var hs-var">_wscUser</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">STM.TVar</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSConnState"><span class="hs-identifier hs-type">WSConnState</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wscUser"><span class="hs-identifier hs-var hs-var">_wscUser</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">STM.TVar</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSConnState"><span class="hs-identifier hs-type">WSConnState</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-66"></span><span>    </span><span class="hs-comment">-- we only care about subscriptions,</span><span>
 </span><span id="line-67"></span><span>    </span><span class="hs-comment">-- the other operations (query/mutations)</span><span>
 </span><span id="line-68"></span><span>    </span><span class="hs-comment">-- are not tracked here</span><span>
@@ -130,17 +148,17 @@ $cshowsPrec :: Int -&gt; WsClientState -&gt; ShowS
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wscAPIType"><span class="hs-identifier hs-var hs-var">_wscAPIType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Types.html#GraphQLQueryType"><span class="hs-identifier hs-type">E.GraphQLQueryType</span></a></span><span>
 </span><span id="line-72"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-73"></span><span>
-</span><span id="line-74"></span><span class="hs-keyword">data</span><span> </span><span id="WSServerEnv"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSServerEnv"><span class="hs-identifier hs-var">WSServerEnv</span></a></span></span><span> </span><span id="local-6989586621691463307"><span class="annot"><a href="#local-6989586621691463307"><span class="hs-identifier hs-type">impl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WSServerEnv"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSServerEnv"><span class="hs-identifier hs-var">WSServerEnv</span></a></span></span><span>
+</span><span id="line-74"></span><span class="hs-keyword">data</span><span> </span><span id="WSServerEnv"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSServerEnv"><span class="hs-identifier hs-var">WSServerEnv</span></a></span></span><span> </span><span id="local-6989586621687174453"><span class="annot"><a href="#local-6989586621687174453"><span class="hs-identifier hs-type">impl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WSServerEnv"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSServerEnv"><span class="hs-identifier hs-var">WSServerEnv</span></a></span></span><span>
 </span><span id="line-75"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_wseLogger"><span class="annot"><span class="annottext">forall impl. WSServerEnv impl -&gt; Logger Hasura
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wseLogger"><span class="hs-identifier hs-var hs-var">_wseLogger</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-76"></span><span>    </span><span id="_wseSubscriptionState"><span class="annot"><span class="annottext">forall impl. WSServerEnv impl -&gt; SubscriptionsState
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wseSubscriptionState"><span class="hs-identifier hs-var hs-var">_wseSubscriptionState</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#SubscriptionsState"><span class="hs-identifier hs-type">ES.SubscriptionsState</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-77"></span><span>    </span><span id="_wseAppStateRef"><span class="annot"><span class="annottext">forall impl. WSServerEnv impl -&gt; AppStateRef impl
-</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wseAppStateRef"><span class="hs-identifier hs-var hs-var">_wseAppStateRef</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691463307"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wseAppStateRef"><span class="hs-identifier hs-var hs-var">_wseAppStateRef</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.AppStateRef.html#AppStateRef"><span class="hs-identifier hs-type">AppStateRef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687174453"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-78"></span><span>    </span><span id="_wseHManager"><span class="annot"><span class="annottext">forall impl. WSServerEnv impl -&gt; Manager
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wseHManager"><span class="hs-identifier hs-var hs-var">_wseHManager</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span class="hs-special">,</span><span>
 </span><span id="line-79"></span><span>    </span><span id="_wseCorsPolicy"><span class="annot"><span class="annottext">forall impl. WSServerEnv impl -&gt; IO CorsPolicy
-</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wseCorsPolicy"><span class="hs-identifier hs-var hs-var">_wseCorsPolicy</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsPolicy"><span class="hs-identifier hs-type">CorsPolicy</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wseCorsPolicy"><span class="hs-identifier hs-var hs-var">_wseCorsPolicy</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsPolicy"><span class="hs-identifier hs-type">CorsPolicy</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-80"></span><span>    </span><span id="_wseReadOnlyMode"><span class="annot"><span class="annottext">forall impl. WSServerEnv impl -&gt; ReadOnlyMode
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wseReadOnlyMode"><span class="hs-identifier hs-var hs-var">_wseReadOnlyMode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#ReadOnlyMode"><span class="hs-identifier hs-type">ReadOnlyMode</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-81"></span><span>    </span><span id="_wseServer"><span class="annot"><span class="annottext">forall impl. WSServerEnv impl -&gt; WSServer
@@ -160,7 +178,7 @@ $cshowsPrec :: Int -&gt; WsClientState -&gt; ShowS
 </span><span id="line-90"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="StreamingQuerySubscriber"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#StreamingQuerySubscriber"><span class="hs-identifier hs-var">StreamingQuerySubscriber</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#StreamingSubscriberDetails"><span class="hs-identifier hs-type">ES.StreamingSubscriberDetails</span></a></span><span>
 </span><span id="line-91"></span><span>
 </span><span id="line-92"></span><span class="hs-keyword">type</span><span> </span><span id="OperationMap"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#OperationMap"><span class="hs-identifier hs-var">OperationMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-93"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">STMMap.Map</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#OperationId"><span class="hs-identifier hs-type">OperationId</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#SubscriberType"><span class="hs-identifier hs-type">SubscriberType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#OperationName"><span class="hs-identifier hs-type">OperationName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">STMMap.Map</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#OperationId"><span class="hs-identifier hs-type">OperationId</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#SubscriberType"><span class="hs-identifier hs-type">SubscriberType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#OperationName"><span class="hs-identifier hs-type">OperationName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-94"></span><span>
 </span><span id="line-95"></span><span class="hs-keyword">type</span><span> </span><span id="WSServer"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSServer"><span class="hs-identifier hs-var">WSServer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#WSServer"><span class="hs-identifier hs-type">WS.WSServer</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSConnData"><span class="hs-identifier hs-type">WSConnData</span></a></span><span>
 </span><span id="line-96"></span><span>

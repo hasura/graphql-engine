@@ -11,375 +11,686 @@
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec.Extended</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">graphQLFieldNameCodec</span></span><span class="hs-special">)</span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
 </span><span id="line-16"></span><span>
 </span><span id="line-17"></span><span class="hs-comment">-- NOTE: Prefix and suffix use 'G.Name' so that we can '&lt;&gt;' to form a new valid</span><span>
 </span><span id="line-18"></span><span class="hs-comment">-- by-construction 'G.Name'.</span><span>
-</span><span id="line-19"></span><span id="local-6989586621691070474"><span id="local-6989586621691070475"></span></span><span class="hs-keyword">data</span><span> </span><span id="RemoteTypeCustomization"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-var">RemoteTypeCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteTypeCustomization"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-var">RemoteTypeCustomization</span></a></span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteTypeCustomization"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-var">RemoteTypeCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteTypeCustomization"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-var">RemoteTypeCustomization</span></a></span></span><span>
 </span><span id="line-20"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rtcPrefix"><span class="annot"><span class="annottext">RemoteTypeCustomization -&gt; Maybe Name
-</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rtcPrefix"><span class="hs-identifier hs-var hs-var">_rtcPrefix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rtcPrefix"><span class="hs-identifier hs-var hs-var">_rtcPrefix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-21"></span><span>    </span><span id="_rtcSuffix"><span class="annot"><span class="annottext">RemoteTypeCustomization -&gt; Maybe Name
-</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rtcSuffix"><span class="hs-identifier hs-var hs-var">_rtcSuffix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rtcSuffix"><span class="hs-identifier hs-var hs-var">_rtcSuffix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-22"></span><span>    </span><span id="_rtcMapping"><span class="annot"><span class="annottext">RemoteTypeCustomization -&gt; HashMap Name Name
-</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rtcMapping"><span class="hs-identifier hs-var hs-var">_rtcMapping</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span>
+</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rtcMapping"><span class="hs-identifier hs-var hs-var">_rtcMapping</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span>
 </span><span id="line-23"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691070456"><span id="local-6989586621691070458"><span id="local-6989586621691070468"><span class="annot"><span class="annottext">Int -&gt; RemoteTypeCustomization -&gt; ShowS
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686762634"><span id="local-6989586621686762644"><span id="local-6989586621686762648"><span class="annot"><span class="annottext">Int -&gt; RemoteTypeCustomization -&gt; ShowS
 [RemoteTypeCustomization] -&gt; ShowS
 RemoteTypeCustomization -&gt; String
+(Int -&gt; RemoteTypeCustomization -&gt; ShowS)
+-&gt; (RemoteTypeCustomization -&gt; String)
+-&gt; ([RemoteTypeCustomization] -&gt; ShowS)
+-&gt; Show RemoteTypeCustomization
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [RemoteTypeCustomization] -&gt; ShowS
-$cshowList :: [RemoteTypeCustomization] -&gt; ShowS
-show :: RemoteTypeCustomization -&gt; String
-$cshow :: RemoteTypeCustomization -&gt; String
-showsPrec :: Int -&gt; RemoteTypeCustomization -&gt; ShowS
 $cshowsPrec :: Int -&gt; RemoteTypeCustomization -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691070444"><span id="local-6989586621691070452"><span class="annot"><span class="annottext">RemoteTypeCustomization -&gt; RemoteTypeCustomization -&gt; Bool
+showsPrec :: Int -&gt; RemoteTypeCustomization -&gt; ShowS
+$cshow :: RemoteTypeCustomization -&gt; String
+show :: RemoteTypeCustomization -&gt; String
+$cshowList :: [RemoteTypeCustomization] -&gt; ShowS
+showList :: [RemoteTypeCustomization] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686762653"><span id="local-6989586621686762661"><span class="annot"><span class="annottext">RemoteTypeCustomization -&gt; RemoteTypeCustomization -&gt; Bool
+(RemoteTypeCustomization -&gt; RemoteTypeCustomization -&gt; Bool)
+-&gt; (RemoteTypeCustomization -&gt; RemoteTypeCustomization -&gt; Bool)
+-&gt; Eq RemoteTypeCustomization
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: RemoteTypeCustomization -&gt; RemoteTypeCustomization -&gt; Bool
-$c/= :: RemoteTypeCustomization -&gt; RemoteTypeCustomization -&gt; Bool
-== :: RemoteTypeCustomization -&gt; RemoteTypeCustomization -&gt; Bool
 $c== :: RemoteTypeCustomization -&gt; RemoteTypeCustomization -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep RemoteTypeCustomization x -&gt; RemoteTypeCustomization
+== :: RemoteTypeCustomization -&gt; RemoteTypeCustomization -&gt; Bool
+$c/= :: RemoteTypeCustomization -&gt; RemoteTypeCustomization -&gt; Bool
+/= :: RemoteTypeCustomization -&gt; RemoteTypeCustomization -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686762667"><span id="local-6989586621686762669"><span class="annot"><span class="annottext">(forall x.
+ RemoteTypeCustomization -&gt; Rep RemoteTypeCustomization x)
+-&gt; (forall x.
+    Rep RemoteTypeCustomization x -&gt; RemoteTypeCustomization)
+-&gt; Generic RemoteTypeCustomization
+forall x. Rep RemoteTypeCustomization x -&gt; RemoteTypeCustomization
 forall x. RemoteTypeCustomization -&gt; Rep RemoteTypeCustomization x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x. Rep RemoteTypeCustomization x -&gt; RemoteTypeCustomization
 $cfrom :: forall x. RemoteTypeCustomization -&gt; Rep RemoteTypeCustomization x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x. RemoteTypeCustomization -&gt; Rep RemoteTypeCustomization x
+$cto :: forall x. Rep RemoteTypeCustomization x -&gt; RemoteTypeCustomization
+to :: forall x. Rep RemoteTypeCustomization x -&gt; RemoteTypeCustomization
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691070437"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-type">RemoteTypeCustomization</span></a></span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686762673"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-type">RemoteTypeCustomization</span></a></span></span><span>
 </span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691070430"><span id="local-6989586621691070432"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-type">RemoteTypeCustomization</span></a></span></span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686762700"><span id="local-6989586621686762707"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-type">RemoteTypeCustomization</span></a></span></span></span><span>
 </span><span id="line-29"></span><span>
-</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691070426"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-type">RemoteTypeCustomization</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-31"></span><span>  </span><span id="local-6989586621691070408"><span class="annot"><span class="annottext">codec :: JSONCodec RemoteTypeCustomization
-</span><a href="#local-6989586621691070408"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-32"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686762729"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-type">RemoteTypeCustomization</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621686762749"><span class="annot"><span class="annottext">codec :: JSONCodec RemoteTypeCustomization
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec RemoteTypeCustomization RemoteTypeCustomization
+-&gt; JSONCodec RemoteTypeCustomization
+forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;RemoteTypeCustomization&quot;</span></span><span>
-</span><span id="line-33"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><span id="line-33"></span><span>      </span><span class="annot"><span class="annottext">(ObjectCodec RemoteTypeCustomization RemoteTypeCustomization
+ -&gt; JSONCodec RemoteTypeCustomization)
+-&gt; ObjectCodec RemoteTypeCustomization RemoteTypeCustomization
+-&gt; JSONCodec RemoteTypeCustomization
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name
 -&gt; Maybe Name -&gt; HashMap Name Name -&gt; RemoteTypeCustomization
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-var">RemoteTypeCustomization</span></a></span><span>
-</span><span id="line-34"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-34"></span><span>      </span><span class="annot"><span class="annottext">(Maybe Name
+ -&gt; Maybe Name -&gt; HashMap Name Name -&gt; RemoteTypeCustomization)
+-&gt; Codec Object RemoteTypeCustomization (Maybe Name)
+-&gt; Codec
+     Object
+     RemoteTypeCustomization
+     (Maybe Name -&gt; HashMap Name Name -&gt; RemoteTypeCustomization)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ValueCodec Name Name -&gt; ObjectCodec (Maybe Name) (Maybe Name)
+forall input output.
 Text
 -&gt; ValueCodec input output
 -&gt; ObjectCodec (Maybe input) (Maybe output)
 </span><span class="hs-identifier hs-var">optionalFieldWith'</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;prefix&quot;</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec Name
+</span><span class="hs-string">&quot;prefix&quot;</span></span><span> </span><span class="annot"><span class="annottext">ValueCodec Name Name
 </span><span class="hs-identifier hs-var">graphQLFieldNameCodec</span></span><span>
-</span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe Name) (Maybe Name)
+-&gt; (RemoteTypeCustomization -&gt; Maybe Name)
+-&gt; Codec Object RemoteTypeCustomization (Maybe Name)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteTypeCustomization -&gt; Maybe Name
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rtcPrefix"><span class="hs-identifier hs-var">_rtcPrefix</span></a></span><span>
-</span><span id="line-36"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-36"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  RemoteTypeCustomization
+  (Maybe Name -&gt; HashMap Name Name -&gt; RemoteTypeCustomization)
+-&gt; Codec Object RemoteTypeCustomization (Maybe Name)
+-&gt; Codec
+     Object
+     RemoteTypeCustomization
+     (HashMap Name Name -&gt; RemoteTypeCustomization)
+forall a b.
+Codec Object RemoteTypeCustomization (a -&gt; b)
+-&gt; Codec Object RemoteTypeCustomization a
+-&gt; Codec Object RemoteTypeCustomization b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ValueCodec Name Name -&gt; ObjectCodec (Maybe Name) (Maybe Name)
+forall input output.
 Text
 -&gt; ValueCodec input output
 -&gt; ObjectCodec (Maybe input) (Maybe output)
 </span><span class="hs-identifier hs-var">optionalFieldWith'</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;suffix&quot;</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec Name
+</span><span class="hs-string">&quot;suffix&quot;</span></span><span> </span><span class="annot"><span class="annottext">ValueCodec Name Name
 </span><span class="hs-identifier hs-var">graphQLFieldNameCodec</span></span><span>
-</span><span id="line-37"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-37"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe Name) (Maybe Name)
+-&gt; (RemoteTypeCustomization -&gt; Maybe Name)
+-&gt; Codec Object RemoteTypeCustomization (Maybe Name)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteTypeCustomization -&gt; Maybe Name
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rtcSuffix"><span class="hs-identifier hs-var">_rtcSuffix</span></a></span><span>
-</span><span id="line-38"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-38"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  RemoteTypeCustomization
+  (HashMap Name Name -&gt; RemoteTypeCustomization)
+-&gt; Codec Object RemoteTypeCustomization (HashMap Name Name)
+-&gt; ObjectCodec RemoteTypeCustomization RemoteTypeCustomization
+forall a b.
+Codec Object RemoteTypeCustomization (a -&gt; b)
+-&gt; Codec Object RemoteTypeCustomization a
+-&gt; Codec Object RemoteTypeCustomization b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ValueCodec (HashMap Name Name) (HashMap Name Name)
+-&gt; ObjectCodec (HashMap Name Name) (HashMap Name Name)
+forall input output.
 Text -&gt; ValueCodec input output -&gt; ObjectCodec input output
 </span><span class="hs-identifier hs-var">requiredFieldWith'</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;mapping&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v.
+</span><span class="hs-string">&quot;mapping&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ValueCodec Name Name
+-&gt; ValueCodec (HashMap Name Name) (HashMap Name Name)
+forall k v.
 (Eq k, Hashable k, FromJSONKey k, ToJSONKey k) =&gt;
 JSONCodec v -&gt; JSONCodec (HashMap k v)
-</span><span class="hs-identifier hs-var">hashMapCodec</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec Name
+</span><span class="hs-identifier hs-var">hashMapCodec</span></span><span> </span><span class="annot"><span class="annottext">ValueCodec Name Name
 </span><span class="hs-identifier hs-var">graphQLFieldNameCodec</span></span><span class="hs-special">)</span><span>
-</span><span id="line-39"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-39"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (HashMap Name Name) (HashMap Name Name)
+-&gt; (RemoteTypeCustomization -&gt; HashMap Name Name)
+-&gt; Codec Object RemoteTypeCustomization (HashMap Name Name)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteTypeCustomization -&gt; HashMap Name Name
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rtcMapping"><span class="hs-identifier hs-var">_rtcMapping</span></a></span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span class="hs-special">$</span><span id="local-6989586621691070367"><span id="local-6989586621691070369"><span id="local-6989586621691070384"><span id="local-6989586621691070405"><span class="hs-special">(</span><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RemoteTypeCustomization</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-41"></span><span class="hs-special">$</span><span id="local-6989586621686762752"><span id="local-6989586621686762773"><span id="local-6989586621686762788"><span id="local-6989586621686762792"><span class="hs-special">(</span><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RemoteTypeCustomization</span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691070340"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-type">RemoteTypeCustomization</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621691070319"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteTypeCustomization
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span id="line-43"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686762820"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-type">RemoteTypeCustomization</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621686762843"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteTypeCustomization
+</span><a href="#local-6989586621686762843"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser RemoteTypeCustomization)
+-&gt; Value
+-&gt; Parser RemoteTypeCustomization
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;RemoteTypeCustomization&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691070316"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691070316"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-string">&quot;RemoteTypeCustomization&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser RemoteTypeCustomization)
+ -&gt; Value -&gt; Parser RemoteTypeCustomization)
+-&gt; (Object -&gt; Parser RemoteTypeCustomization)
+-&gt; Value
+-&gt; Parser RemoteTypeCustomization
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686762846"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686762846"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-45"></span><span>    </span><span class="annot"><span class="annottext">Maybe Name
 -&gt; Maybe Name -&gt; HashMap Name Name -&gt; RemoteTypeCustomization
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-var">RemoteTypeCustomization</span></a></span><span>
-</span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691070316"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">(Maybe Name
+ -&gt; Maybe Name -&gt; HashMap Name Name -&gt; RemoteTypeCustomization)
+-&gt; Parser (Maybe Name)
+-&gt; Parser
+     (Maybe Name -&gt; HashMap Name Name -&gt; RemoteTypeCustomization)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686762846"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Name)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;prefix&quot;</span></span><span>
-</span><span id="line-48"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691070316"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-49"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><span id="line-48"></span><span>      </span><span class="annot"><span class="annottext">Parser (Maybe Name -&gt; HashMap Name Name -&gt; RemoteTypeCustomization)
+-&gt; Parser (Maybe Name)
+-&gt; Parser (HashMap Name Name -&gt; RemoteTypeCustomization)
+forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686762846"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-49"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Name)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;suffix&quot;</span></span><span>
-</span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691070316"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-51"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">Parser (HashMap Name Name -&gt; RemoteTypeCustomization)
+-&gt; Parser (HashMap Name Name) -&gt; Parser RemoteTypeCustomization
+forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686762846"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-51"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe (HashMap Name Name))
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;mapping&quot;</span></span><span>
-</span><span id="line-52"></span><span>      </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
-</span><span class="hs-operator hs-var">J..!=</span></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span id="line-52"></span><span>      </span><span class="annot"><span class="annottext">Parser (Maybe (HashMap Name Name))
+-&gt; HashMap Name Name -&gt; Parser (HashMap Name Name)
+forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
+</span><span class="hs-operator hs-var">J..!=</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name Name
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span id="local-6989586621691070312"><span id="local-6989586621691070313"></span></span><span class="hs-keyword">data</span><span> </span><span id="RemoteFieldCustomization"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-var">RemoteFieldCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteFieldCustomization"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-var">RemoteFieldCustomization</span></a></span></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteFieldCustomization"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-var">RemoteFieldCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteFieldCustomization"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-var">RemoteFieldCustomization</span></a></span></span><span>
 </span><span id="line-55"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rfcParentType"><span class="annot"><span class="annottext">RemoteFieldCustomization -&gt; Name
-</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rfcParentType"><span class="hs-identifier hs-var hs-var">_rfcParentType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rfcParentType"><span class="hs-identifier hs-var hs-var">_rfcParentType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-56"></span><span>    </span><span id="_rfcPrefix"><span class="annot"><span class="annottext">RemoteFieldCustomization -&gt; Maybe Name
-</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rfcPrefix"><span class="hs-identifier hs-var hs-var">_rfcPrefix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rfcPrefix"><span class="hs-identifier hs-var hs-var">_rfcPrefix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-57"></span><span>    </span><span id="_rfcSuffix"><span class="annot"><span class="annottext">RemoteFieldCustomization -&gt; Maybe Name
-</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rfcSuffix"><span class="hs-identifier hs-var hs-var">_rfcSuffix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rfcSuffix"><span class="hs-identifier hs-var hs-var">_rfcSuffix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-58"></span><span>    </span><span id="_rfcMapping"><span class="annot"><span class="annottext">RemoteFieldCustomization -&gt; HashMap Name Name
-</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rfcMapping"><span class="hs-identifier hs-var hs-var">_rfcMapping</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span>
+</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rfcMapping"><span class="hs-identifier hs-var hs-var">_rfcMapping</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span>
 </span><span id="line-59"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691070296"><span id="local-6989586621691070298"><span id="local-6989586621691070305"><span class="annot"><span class="annottext">Int -&gt; RemoteFieldCustomization -&gt; ShowS
+</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686762855"><span id="local-6989586621686762862"><span id="local-6989586621686762866"><span class="annot"><span class="annottext">Int -&gt; RemoteFieldCustomization -&gt; ShowS
 [RemoteFieldCustomization] -&gt; ShowS
 RemoteFieldCustomization -&gt; String
+(Int -&gt; RemoteFieldCustomization -&gt; ShowS)
+-&gt; (RemoteFieldCustomization -&gt; String)
+-&gt; ([RemoteFieldCustomization] -&gt; ShowS)
+-&gt; Show RemoteFieldCustomization
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [RemoteFieldCustomization] -&gt; ShowS
-$cshowList :: [RemoteFieldCustomization] -&gt; ShowS
-show :: RemoteFieldCustomization -&gt; String
-$cshow :: RemoteFieldCustomization -&gt; String
-showsPrec :: Int -&gt; RemoteFieldCustomization -&gt; ShowS
 $cshowsPrec :: Int -&gt; RemoteFieldCustomization -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691070288"><span id="local-6989586621691070294"><span class="annot"><span class="annottext">RemoteFieldCustomization -&gt; RemoteFieldCustomization -&gt; Bool
+showsPrec :: Int -&gt; RemoteFieldCustomization -&gt; ShowS
+$cshow :: RemoteFieldCustomization -&gt; String
+show :: RemoteFieldCustomization -&gt; String
+$cshowList :: [RemoteFieldCustomization] -&gt; ShowS
+showList :: [RemoteFieldCustomization] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686762869"><span id="local-6989586621686762875"><span class="annot"><span class="annottext">RemoteFieldCustomization -&gt; RemoteFieldCustomization -&gt; Bool
+(RemoteFieldCustomization -&gt; RemoteFieldCustomization -&gt; Bool)
+-&gt; (RemoteFieldCustomization -&gt; RemoteFieldCustomization -&gt; Bool)
+-&gt; Eq RemoteFieldCustomization
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: RemoteFieldCustomization -&gt; RemoteFieldCustomization -&gt; Bool
-$c/= :: RemoteFieldCustomization -&gt; RemoteFieldCustomization -&gt; Bool
-== :: RemoteFieldCustomization -&gt; RemoteFieldCustomization -&gt; Bool
 $c== :: RemoteFieldCustomization -&gt; RemoteFieldCustomization -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x.
+== :: RemoteFieldCustomization -&gt; RemoteFieldCustomization -&gt; Bool
+$c/= :: RemoteFieldCustomization -&gt; RemoteFieldCustomization -&gt; Bool
+/= :: RemoteFieldCustomization -&gt; RemoteFieldCustomization -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686762879"><span id="local-6989586621686762881"><span class="annot"><span class="annottext">(forall x.
+ RemoteFieldCustomization -&gt; Rep RemoteFieldCustomization x)
+-&gt; (forall x.
+    Rep RemoteFieldCustomization x -&gt; RemoteFieldCustomization)
+-&gt; Generic RemoteFieldCustomization
+forall x.
 Rep RemoteFieldCustomization x -&gt; RemoteFieldCustomization
 forall x.
 RemoteFieldCustomization -&gt; Rep RemoteFieldCustomization x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x.
-Rep RemoteFieldCustomization x -&gt; RemoteFieldCustomization
 $cfrom :: forall x.
 RemoteFieldCustomization -&gt; Rep RemoteFieldCustomization x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x.
+RemoteFieldCustomization -&gt; Rep RemoteFieldCustomization x
+$cto :: forall x.
+Rep RemoteFieldCustomization x -&gt; RemoteFieldCustomization
+to :: forall x.
+Rep RemoteFieldCustomization x -&gt; RemoteFieldCustomization
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-61"></span><span>
-</span><span id="line-62"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691070284"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-type">RemoteFieldCustomization</span></a></span></span><span>
+</span><span id="line-62"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686762884"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-type">RemoteFieldCustomization</span></a></span></span><span>
 </span><span id="line-63"></span><span>
-</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691070278"><span id="local-6989586621691070280"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-type">RemoteFieldCustomization</span></a></span></span></span><span>
+</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686762907"><span id="local-6989586621686762914"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-type">RemoteFieldCustomization</span></a></span></span></span><span>
 </span><span id="line-65"></span><span>
-</span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691070275"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-type">RemoteFieldCustomization</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-67"></span><span>  </span><span id="local-6989586621691070261"><span class="annot"><span class="annottext">codec :: JSONCodec RemoteFieldCustomization
-</span><a href="#local-6989586621691070261"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-68"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686762932"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-type">RemoteFieldCustomization</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621686762948"><span class="annot"><span class="annottext">codec :: JSONCodec RemoteFieldCustomization
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec RemoteFieldCustomization RemoteFieldCustomization
+-&gt; JSONCodec RemoteFieldCustomization
+forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;RemoteFieldCustomization&quot;</span></span><span>
-</span><span id="line-69"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><span id="line-69"></span><span>      </span><span class="annot"><span class="annottext">(ObjectCodec RemoteFieldCustomization RemoteFieldCustomization
+ -&gt; JSONCodec RemoteFieldCustomization)
+-&gt; ObjectCodec RemoteFieldCustomization RemoteFieldCustomization
+-&gt; JSONCodec RemoteFieldCustomization
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Name
 -&gt; Maybe Name
 -&gt; HashMap Name Name
 -&gt; RemoteFieldCustomization
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-var">RemoteFieldCustomization</span></a></span><span>
-</span><span id="line-70"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-70"></span><span>      </span><span class="annot"><span class="annottext">(Name
+ -&gt; Maybe Name
+ -&gt; Maybe Name
+ -&gt; HashMap Name Name
+ -&gt; RemoteFieldCustomization)
+-&gt; Codec Object RemoteFieldCustomization Name
+-&gt; Codec
+     Object
+     RemoteFieldCustomization
+     (Maybe Name
+      -&gt; Maybe Name -&gt; HashMap Name Name -&gt; RemoteFieldCustomization)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ValueCodec Name Name -&gt; ObjectCodec Name Name
+forall input output.
 Text -&gt; ValueCodec input output -&gt; ObjectCodec input output
 </span><span class="hs-identifier hs-var">requiredFieldWith'</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;parent_type&quot;</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec Name
+</span><span class="hs-string">&quot;parent_type&quot;</span></span><span> </span><span class="annot"><span class="annottext">ValueCodec Name Name
 </span><span class="hs-identifier hs-var">graphQLFieldNameCodec</span></span><span>
-</span><span id="line-71"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-71"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec Name Name
+-&gt; (RemoteFieldCustomization -&gt; Name)
+-&gt; Codec Object RemoteFieldCustomization Name
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteFieldCustomization -&gt; Name
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rfcParentType"><span class="hs-identifier hs-var">_rfcParentType</span></a></span><span>
-</span><span id="line-72"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-72"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  RemoteFieldCustomization
+  (Maybe Name
+   -&gt; Maybe Name -&gt; HashMap Name Name -&gt; RemoteFieldCustomization)
+-&gt; Codec Object RemoteFieldCustomization (Maybe Name)
+-&gt; Codec
+     Object
+     RemoteFieldCustomization
+     (Maybe Name -&gt; HashMap Name Name -&gt; RemoteFieldCustomization)
+forall a b.
+Codec Object RemoteFieldCustomization (a -&gt; b)
+-&gt; Codec Object RemoteFieldCustomization a
+-&gt; Codec Object RemoteFieldCustomization b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ValueCodec Name Name -&gt; ObjectCodec (Maybe Name) (Maybe Name)
+forall input output.
 Text
 -&gt; ValueCodec input output
 -&gt; ObjectCodec (Maybe input) (Maybe output)
 </span><span class="hs-identifier hs-var">optionalFieldWith'</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;prefix&quot;</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec Name
+</span><span class="hs-string">&quot;prefix&quot;</span></span><span> </span><span class="annot"><span class="annottext">ValueCodec Name Name
 </span><span class="hs-identifier hs-var">graphQLFieldNameCodec</span></span><span>
-</span><span id="line-73"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-73"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe Name) (Maybe Name)
+-&gt; (RemoteFieldCustomization -&gt; Maybe Name)
+-&gt; Codec Object RemoteFieldCustomization (Maybe Name)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteFieldCustomization -&gt; Maybe Name
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rfcPrefix"><span class="hs-identifier hs-var">_rfcPrefix</span></a></span><span>
-</span><span id="line-74"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-74"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  RemoteFieldCustomization
+  (Maybe Name -&gt; HashMap Name Name -&gt; RemoteFieldCustomization)
+-&gt; Codec Object RemoteFieldCustomization (Maybe Name)
+-&gt; Codec
+     Object
+     RemoteFieldCustomization
+     (HashMap Name Name -&gt; RemoteFieldCustomization)
+forall a b.
+Codec Object RemoteFieldCustomization (a -&gt; b)
+-&gt; Codec Object RemoteFieldCustomization a
+-&gt; Codec Object RemoteFieldCustomization b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ValueCodec Name Name -&gt; ObjectCodec (Maybe Name) (Maybe Name)
+forall input output.
 Text
 -&gt; ValueCodec input output
 -&gt; ObjectCodec (Maybe input) (Maybe output)
 </span><span class="hs-identifier hs-var">optionalFieldWith'</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;suffix&quot;</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec Name
+</span><span class="hs-string">&quot;suffix&quot;</span></span><span> </span><span class="annot"><span class="annottext">ValueCodec Name Name
 </span><span class="hs-identifier hs-var">graphQLFieldNameCodec</span></span><span>
-</span><span id="line-75"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-75"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe Name) (Maybe Name)
+-&gt; (RemoteFieldCustomization -&gt; Maybe Name)
+-&gt; Codec Object RemoteFieldCustomization (Maybe Name)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteFieldCustomization -&gt; Maybe Name
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rfcSuffix"><span class="hs-identifier hs-var">_rfcSuffix</span></a></span><span>
-</span><span id="line-76"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-76"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  RemoteFieldCustomization
+  (HashMap Name Name -&gt; RemoteFieldCustomization)
+-&gt; Codec Object RemoteFieldCustomization (HashMap Name Name)
+-&gt; ObjectCodec RemoteFieldCustomization RemoteFieldCustomization
+forall a b.
+Codec Object RemoteFieldCustomization (a -&gt; b)
+-&gt; Codec Object RemoteFieldCustomization a
+-&gt; Codec Object RemoteFieldCustomization b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ValueCodec (HashMap Name Name) (HashMap Name Name)
+-&gt; ObjectCodec (HashMap Name Name) (HashMap Name Name)
+forall input output.
 Text -&gt; ValueCodec input output -&gt; ObjectCodec input output
 </span><span class="hs-identifier hs-var">requiredFieldWith'</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;mapping&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v.
+</span><span class="hs-string">&quot;mapping&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ValueCodec Name Name
+-&gt; ValueCodec (HashMap Name Name) (HashMap Name Name)
+forall k v.
 (Eq k, Hashable k, FromJSONKey k, ToJSONKey k) =&gt;
 JSONCodec v -&gt; JSONCodec (HashMap k v)
-</span><span class="hs-identifier hs-var">hashMapCodec</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec Name
+</span><span class="hs-identifier hs-var">hashMapCodec</span></span><span> </span><span class="annot"><span class="annottext">ValueCodec Name Name
 </span><span class="hs-identifier hs-var">graphQLFieldNameCodec</span></span><span class="hs-special">)</span><span>
-</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (HashMap Name Name) (HashMap Name Name)
+-&gt; (RemoteFieldCustomization -&gt; HashMap Name Name)
+-&gt; Codec Object RemoteFieldCustomization (HashMap Name Name)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteFieldCustomization -&gt; HashMap Name Name
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rfcMapping"><span class="hs-identifier hs-var">_rfcMapping</span></a></span><span>
 </span><span id="line-78"></span><span>
-</span><span id="line-79"></span><span class="hs-special">$</span><span id="local-6989586621691070225"><span id="local-6989586621691070227"><span id="local-6989586621691070241"><span id="local-6989586621691070259"><span class="hs-special">(</span><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RemoteFieldCustomization</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-79"></span><span class="hs-special">$</span><span id="local-6989586621686762950"><span id="local-6989586621686762968"><span id="local-6989586621686762982"><span id="local-6989586621686762986"><span class="hs-special">(</span><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RemoteFieldCustomization</span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-80"></span><span>
-</span><span id="line-81"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691070204"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-type">RemoteFieldCustomization</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-82"></span><span>  </span><span id="local-6989586621691070187"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteFieldCustomization
-</span><a href="#local-6989586621691070187"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span id="line-81"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686763008"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-type">RemoteFieldCustomization</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621686763027"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteFieldCustomization
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser RemoteFieldCustomization)
+-&gt; Value
+-&gt; Parser RemoteFieldCustomization
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;RemoteFieldCustomization&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621691070186"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691070186"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-string">&quot;RemoteFieldCustomization&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser RemoteFieldCustomization)
+ -&gt; Value -&gt; Parser RemoteFieldCustomization)
+-&gt; (Object -&gt; Parser RemoteFieldCustomization)
+-&gt; Value
+-&gt; Parser RemoteFieldCustomization
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686763028"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686763028"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-83"></span><span>    </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Name
 -&gt; Maybe Name
 -&gt; HashMap Name Name
 -&gt; RemoteFieldCustomization
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-var">RemoteFieldCustomization</span></a></span><span>
-</span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691070186"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-85"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">(Name
+ -&gt; Maybe Name
+ -&gt; Maybe Name
+ -&gt; HashMap Name Name
+ -&gt; RemoteFieldCustomization)
+-&gt; Parser Name
+-&gt; Parser
+     (Maybe Name
+      -&gt; Maybe Name -&gt; HashMap Name Name -&gt; RemoteFieldCustomization)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686763028"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-85"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Name
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;parent_type&quot;</span></span><span>
-</span><span id="line-86"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691070186"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-87"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><span id="line-86"></span><span>      </span><span class="annot"><span class="annottext">Parser
+  (Maybe Name
+   -&gt; Maybe Name -&gt; HashMap Name Name -&gt; RemoteFieldCustomization)
+-&gt; Parser (Maybe Name)
+-&gt; Parser
+     (Maybe Name -&gt; HashMap Name Name -&gt; RemoteFieldCustomization)
+forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686763028"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-87"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Name)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;prefix&quot;</span></span><span>
-</span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691070186"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-89"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">Parser
+  (Maybe Name -&gt; HashMap Name Name -&gt; RemoteFieldCustomization)
+-&gt; Parser (Maybe Name)
+-&gt; Parser (HashMap Name Name -&gt; RemoteFieldCustomization)
+forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686763028"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-89"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Name)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;suffix&quot;</span></span><span>
-</span><span id="line-90"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621691070186"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-91"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><span id="line-90"></span><span>      </span><span class="annot"><span class="annottext">Parser (HashMap Name Name -&gt; RemoteFieldCustomization)
+-&gt; Parser (HashMap Name Name) -&gt; Parser RemoteFieldCustomization
+forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686763028"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-91"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe (HashMap Name Name))
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;mapping&quot;</span></span><span>
-</span><span id="line-92"></span><span>      </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
-</span><span class="hs-operator hs-var">J..!=</span></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span>
+</span><span id="line-92"></span><span>      </span><span class="annot"><span class="annottext">Parser (Maybe (HashMap Name Name))
+-&gt; HashMap Name Name -&gt; Parser (HashMap Name Name)
+forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
+</span><span class="hs-operator hs-var">J..!=</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name Name
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
 </span><span id="line-93"></span><span>
-</span><span id="line-94"></span><span id="local-6989586621691070183"><span id="local-6989586621691070184"></span></span><span class="hs-keyword">data</span><span> </span><span id="RemoteSchemaCustomization"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteSchemaCustomization"><span class="hs-identifier hs-var">RemoteSchemaCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSchemaCustomization"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteSchemaCustomization"><span class="hs-identifier hs-var">RemoteSchemaCustomization</span></a></span></span><span>
+</span><span id="line-94"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteSchemaCustomization"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteSchemaCustomization"><span class="hs-identifier hs-var">RemoteSchemaCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSchemaCustomization"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteSchemaCustomization"><span class="hs-identifier hs-var">RemoteSchemaCustomization</span></a></span></span><span>
 </span><span id="line-95"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rscRootFieldsNamespace"><span class="annot"><span class="annottext">RemoteSchemaCustomization -&gt; Maybe Name
-</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rscRootFieldsNamespace"><span class="hs-identifier hs-var hs-var">_rscRootFieldsNamespace</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rscRootFieldsNamespace"><span class="hs-identifier hs-var hs-var">_rscRootFieldsNamespace</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-96"></span><span>    </span><span id="_rscTypeNames"><span class="annot"><span class="annottext">RemoteSchemaCustomization -&gt; Maybe RemoteTypeCustomization
-</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rscTypeNames"><span class="hs-identifier hs-var hs-var">_rscTypeNames</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-type">RemoteTypeCustomization</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rscTypeNames"><span class="hs-identifier hs-var hs-var">_rscTypeNames</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteTypeCustomization"><span class="hs-identifier hs-type">RemoteTypeCustomization</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-97"></span><span>    </span><span id="_rscFieldNames"><span class="annot"><span class="annottext">RemoteSchemaCustomization -&gt; Maybe [RemoteFieldCustomization]
-</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rscFieldNames"><span class="hs-identifier hs-var hs-var">_rscFieldNames</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-type">RemoteFieldCustomization</span></a></span><span class="hs-special">]</span><span>
+</span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rscFieldNames"><span class="hs-identifier hs-var hs-var">_rscFieldNames</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteFieldCustomization"><span class="hs-identifier hs-type">RemoteFieldCustomization</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-98"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-99"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691070166"><span id="local-6989586621691070168"><span id="local-6989586621691070177"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaCustomization -&gt; ShowS
+</span><span id="line-99"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686763035"><span id="local-6989586621686763044"><span id="local-6989586621686763048"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaCustomization -&gt; ShowS
 [RemoteSchemaCustomization] -&gt; ShowS
 RemoteSchemaCustomization -&gt; String
+(Int -&gt; RemoteSchemaCustomization -&gt; ShowS)
+-&gt; (RemoteSchemaCustomization -&gt; String)
+-&gt; ([RemoteSchemaCustomization] -&gt; ShowS)
+-&gt; Show RemoteSchemaCustomization
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [RemoteSchemaCustomization] -&gt; ShowS
-$cshowList :: [RemoteSchemaCustomization] -&gt; ShowS
-show :: RemoteSchemaCustomization -&gt; String
-$cshow :: RemoteSchemaCustomization -&gt; String
-showsPrec :: Int -&gt; RemoteSchemaCustomization -&gt; ShowS
 $cshowsPrec :: Int -&gt; RemoteSchemaCustomization -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691070154"><span id="local-6989586621691070162"><span class="annot"><span class="annottext">RemoteSchemaCustomization -&gt; RemoteSchemaCustomization -&gt; Bool
+showsPrec :: Int -&gt; RemoteSchemaCustomization -&gt; ShowS
+$cshow :: RemoteSchemaCustomization -&gt; String
+show :: RemoteSchemaCustomization -&gt; String
+$cshowList :: [RemoteSchemaCustomization] -&gt; ShowS
+showList :: [RemoteSchemaCustomization] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686763053"><span id="local-6989586621686763061"><span class="annot"><span class="annottext">RemoteSchemaCustomization -&gt; RemoteSchemaCustomization -&gt; Bool
+(RemoteSchemaCustomization -&gt; RemoteSchemaCustomization -&gt; Bool)
+-&gt; (RemoteSchemaCustomization -&gt; RemoteSchemaCustomization -&gt; Bool)
+-&gt; Eq RemoteSchemaCustomization
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: RemoteSchemaCustomization -&gt; RemoteSchemaCustomization -&gt; Bool
-$c/= :: RemoteSchemaCustomization -&gt; RemoteSchemaCustomization -&gt; Bool
-== :: RemoteSchemaCustomization -&gt; RemoteSchemaCustomization -&gt; Bool
 $c== :: RemoteSchemaCustomization -&gt; RemoteSchemaCustomization -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x.
+== :: RemoteSchemaCustomization -&gt; RemoteSchemaCustomization -&gt; Bool
+$c/= :: RemoteSchemaCustomization -&gt; RemoteSchemaCustomization -&gt; Bool
+/= :: RemoteSchemaCustomization -&gt; RemoteSchemaCustomization -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686763067"><span id="local-6989586621686763069"><span class="annot"><span class="annottext">(forall x.
+ RemoteSchemaCustomization -&gt; Rep RemoteSchemaCustomization x)
+-&gt; (forall x.
+    Rep RemoteSchemaCustomization x -&gt; RemoteSchemaCustomization)
+-&gt; Generic RemoteSchemaCustomization
+forall x.
 Rep RemoteSchemaCustomization x -&gt; RemoteSchemaCustomization
 forall x.
 RemoteSchemaCustomization -&gt; Rep RemoteSchemaCustomization x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x.
-Rep RemoteSchemaCustomization x -&gt; RemoteSchemaCustomization
 $cfrom :: forall x.
 RemoteSchemaCustomization -&gt; Rep RemoteSchemaCustomization x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x.
+RemoteSchemaCustomization -&gt; Rep RemoteSchemaCustomization x
+$cto :: forall x.
+Rep RemoteSchemaCustomization x -&gt; RemoteSchemaCustomization
+to :: forall x.
+Rep RemoteSchemaCustomization x -&gt; RemoteSchemaCustomization
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-100"></span><span>
-</span><span id="line-101"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691070148"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteSchemaCustomization"><span class="hs-identifier hs-type">RemoteSchemaCustomization</span></a></span></span><span>
+</span><span id="line-101"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686763072"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteSchemaCustomization"><span class="hs-identifier hs-type">RemoteSchemaCustomization</span></a></span></span><span>
 </span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691070142"><span id="local-6989586621691070144"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteSchemaCustomization"><span class="hs-identifier hs-type">RemoteSchemaCustomization</span></a></span></span></span><span>
+</span><span id="line-103"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686763098"><span id="local-6989586621686763105"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteSchemaCustomization"><span class="hs-identifier hs-type">RemoteSchemaCustomization</span></a></span></span></span><span>
 </span><span id="line-104"></span><span>
-</span><span id="line-105"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691070139"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteSchemaCustomization"><span class="hs-identifier hs-type">RemoteSchemaCustomization</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-106"></span><span>  </span><span id="local-6989586621691070127"><span class="annot"><span class="annottext">codec :: JSONCodec RemoteSchemaCustomization
-</span><a href="#local-6989586621691070127"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-105"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686763126"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteSchemaCustomization"><span class="hs-identifier hs-type">RemoteSchemaCustomization</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-106"></span><span>  </span><span id="local-6989586621686763140"><span class="annot"><span class="annottext">codec :: JSONCodec RemoteSchemaCustomization
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec RemoteSchemaCustomization RemoteSchemaCustomization
+-&gt; JSONCodec RemoteSchemaCustomization
+forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;RemoteSchemaCustomization&quot;</span></span><span>
-</span><span id="line-108"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><span id="line-108"></span><span>      </span><span class="annot"><span class="annottext">(ObjectCodec RemoteSchemaCustomization RemoteSchemaCustomization
+ -&gt; JSONCodec RemoteSchemaCustomization)
+-&gt; ObjectCodec RemoteSchemaCustomization RemoteSchemaCustomization
+-&gt; JSONCodec RemoteSchemaCustomization
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name
 -&gt; Maybe RemoteTypeCustomization
 -&gt; Maybe [RemoteFieldCustomization]
 -&gt; RemoteSchemaCustomization
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#RemoteSchemaCustomization"><span class="hs-identifier hs-var">RemoteSchemaCustomization</span></a></span><span>
-</span><span id="line-109"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-109"></span><span>      </span><span class="annot"><span class="annottext">(Maybe Name
+ -&gt; Maybe RemoteTypeCustomization
+ -&gt; Maybe [RemoteFieldCustomization]
+ -&gt; RemoteSchemaCustomization)
+-&gt; Codec Object RemoteSchemaCustomization (Maybe Name)
+-&gt; Codec
+     Object
+     RemoteSchemaCustomization
+     (Maybe RemoteTypeCustomization
+      -&gt; Maybe [RemoteFieldCustomization] -&gt; RemoteSchemaCustomization)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ValueCodec Name Name -&gt; ObjectCodec (Maybe Name) (Maybe Name)
+forall input output.
 Text
 -&gt; ValueCodec input output
 -&gt; ObjectCodec (Maybe input) (Maybe output)
 </span><span class="hs-identifier hs-var">optionalFieldWith'</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;root_fields_namespace&quot;</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec Name
+</span><span class="hs-string">&quot;root_fields_namespace&quot;</span></span><span> </span><span class="annot"><span class="annottext">ValueCodec Name Name
 </span><span class="hs-identifier hs-var">graphQLFieldNameCodec</span></span><span>
-</span><span id="line-110"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-110"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe Name) (Maybe Name)
+-&gt; (RemoteSchemaCustomization -&gt; Maybe Name)
+-&gt; Codec Object RemoteSchemaCustomization (Maybe Name)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaCustomization -&gt; Maybe Name
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rscRootFieldsNamespace"><span class="hs-identifier hs-var">_rscRootFieldsNamespace</span></a></span><span>
-</span><span id="line-111"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+</span><span id="line-111"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  RemoteSchemaCustomization
+  (Maybe RemoteTypeCustomization
+   -&gt; Maybe [RemoteFieldCustomization] -&gt; RemoteSchemaCustomization)
+-&gt; Codec
+     Object RemoteSchemaCustomization (Maybe RemoteTypeCustomization)
+-&gt; Codec
+     Object
+     RemoteSchemaCustomization
+     (Maybe [RemoteFieldCustomization] -&gt; RemoteSchemaCustomization)
+forall a b.
+Codec Object RemoteSchemaCustomization (a -&gt; b)
+-&gt; Codec Object RemoteSchemaCustomization a
+-&gt; Codec Object RemoteSchemaCustomization b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec
+     (Maybe RemoteTypeCustomization) (Maybe RemoteTypeCustomization)
+forall output.
 HasCodec output =&gt;
 Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><span class="hs-identifier hs-var">optionalField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;type_names&quot;</span></span><span>
-</span><span id="line-112"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-112"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec
+  (Maybe RemoteTypeCustomization) (Maybe RemoteTypeCustomization)
+-&gt; (RemoteSchemaCustomization -&gt; Maybe RemoteTypeCustomization)
+-&gt; Codec
+     Object RemoteSchemaCustomization (Maybe RemoteTypeCustomization)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaCustomization -&gt; Maybe RemoteTypeCustomization
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rscTypeNames"><span class="hs-identifier hs-var">_rscTypeNames</span></a></span><span>
-</span><span id="line-113"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+</span><span id="line-113"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  RemoteSchemaCustomization
+  (Maybe [RemoteFieldCustomization] -&gt; RemoteSchemaCustomization)
+-&gt; Codec
+     Object RemoteSchemaCustomization (Maybe [RemoteFieldCustomization])
+-&gt; ObjectCodec RemoteSchemaCustomization RemoteSchemaCustomization
+forall a b.
+Codec Object RemoteSchemaCustomization (a -&gt; b)
+-&gt; Codec Object RemoteSchemaCustomization a
+-&gt; Codec Object RemoteSchemaCustomization b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec
+     (Maybe [RemoteFieldCustomization])
+     (Maybe [RemoteFieldCustomization])
+forall output.
 HasCodec output =&gt;
 Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><span class="hs-identifier hs-var">optionalField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;field_names&quot;</span></span><span>
-</span><span id="line-114"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-114"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec
+  (Maybe [RemoteFieldCustomization])
+  (Maybe [RemoteFieldCustomization])
+-&gt; (RemoteSchemaCustomization -&gt; Maybe [RemoteFieldCustomization])
+-&gt; Codec
+     Object RemoteSchemaCustomization (Maybe [RemoteFieldCustomization])
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaCustomization -&gt; Maybe [RemoteFieldCustomization]
 </span><a href="Hasura.RemoteSchema.Metadata.Customization.html#_rscFieldNames"><span class="hs-identifier hs-var">_rscFieldNames</span></a></span><span>
 </span><span id="line-115"></span><span>
-</span><span id="line-116"></span><span class="hs-special">$</span><span id="local-6989586621691070071"><span id="local-6989586621691070073"><span id="local-6989586621691070088"><span id="local-6989586621691070107"><span id="local-6989586621691070109"><span id="local-6989586621691070125"><span class="hs-special">(</span><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RemoteSchemaCustomization</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-116"></span><span class="hs-special">$</span><span id="local-6989586621686763142"><span id="local-6989586621686763158"><span id="local-6989586621686763162"><span id="local-6989586621686763181"><span id="local-6989586621686763196"><span id="local-6989586621686763200"><span class="hs-special">(</span><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RemoteSchemaCustomization</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
 </span><span id="line-117"></span></pre></body></html>

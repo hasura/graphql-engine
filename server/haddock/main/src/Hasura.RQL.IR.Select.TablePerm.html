@@ -10,30 +10,40 @@
 </span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-11"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-12"></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span>
 </span><span id="line-17"></span><span>
 </span><span id="line-18"></span><span class="hs-comment">-- Permissions</span><span>
 </span><span id="line-19"></span><span>
-</span><span id="line-20"></span><span id="local-6989586621691176399"><span id="local-6989586621691176400"></span></span><span class="hs-keyword">data</span><span> </span><span id="TablePermG"><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-var">TablePermG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691176548"><span class="annot"><a href="#local-6989586621691176548"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621691176547"><span class="annot"><a href="#local-6989586621691176547"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TablePerm"><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePerm"><span class="hs-identifier hs-var">TablePerm</span></a></span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">data</span><span> </span><span id="TablePermG"><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-var">TablePermG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686870840"><span class="annot"><a href="#local-6989586621686870840"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621686870841"><span class="annot"><a href="#local-6989586621686870841"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TablePerm"><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePerm"><span class="hs-identifier hs-var">TablePerm</span></a></span></span><span>
 </span><span id="line-21"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3A_tpFilter%3ATablePerm"><span class="annot"><span class="annottext">forall (b :: BackendType) v. TablePermG b v -&gt; AnnBoolExp b v
-</span><a href="Hasura.RQL.IR.Select.TablePerm.html#%24sel%3A_tpFilter%3ATablePerm"><span class="hs-identifier hs-var hs-var">_tpFilter</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176548"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176547"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Select.TablePerm.html#%24sel%3A_tpFilter%3ATablePerm"><span class="hs-identifier hs-var hs-var">_tpFilter</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870840"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870841"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-22"></span><span>    </span><span id="%24sel%3A_tpLimit%3ATablePerm"><span class="annot"><span class="annottext">forall (b :: BackendType) v. TablePermG b v -&gt; Maybe Int
-</span><a href="Hasura.RQL.IR.Select.TablePerm.html#%24sel%3A_tpLimit%3ATablePerm"><span class="hs-identifier hs-var hs-var">_tpLimit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.RQL.IR.Select.TablePerm.html#%24sel%3A_tpLimit%3ATablePerm"><span class="hs-identifier hs-var hs-var">_tpLimit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
 </span><span id="line-23"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686870960"><span id="local-6989586621686870962"><span class="annot"><span class="annottext">(forall x. TablePermG b v -&gt; Rep (TablePermG b v) x)
+-&gt; (forall x. Rep (TablePermG b v) x -&gt; TablePermG b v)
+-&gt; Generic (TablePermG b v)
+forall x. Rep (TablePermG b v) x -&gt; TablePermG b v
+forall x. TablePermG b v -&gt; Rep (TablePermG b v) x
+forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 forall (b :: BackendType) v x.
 Rep (TablePermG b v) x -&gt; TablePermG b v
 forall (b :: BackendType) v x.
 TablePermG b v -&gt; Rep (TablePermG b v) x
-$cto :: forall (b :: BackendType) v x.
-Rep (TablePermG b v) x -&gt; TablePermG b v
 $cfrom :: forall (b :: BackendType) v x.
 TablePermG b v -&gt; Rep (TablePermG b v) x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691176384"><span id="local-6989586621691176390"><span class="annot"><span class="annottext">forall a b. a -&gt; TablePermG b b -&gt; TablePermG b a
+from :: forall x. TablePermG b v -&gt; Rep (TablePermG b v) x
+$cto :: forall (b :: BackendType) v x.
+Rep (TablePermG b v) x -&gt; TablePermG b v
+to :: forall x. Rep (TablePermG b v) x -&gt; TablePermG b v
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686870967"><span id="local-6989586621686870973"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; TablePermG b a -&gt; TablePermG b b)
+-&gt; (forall a b. a -&gt; TablePermG b b -&gt; TablePermG b a)
+-&gt; Functor (TablePermG b)
+forall a b. a -&gt; TablePermG b b -&gt; TablePermG b a
 forall a b. (a -&gt; b) -&gt; TablePermG b a -&gt; TablePermG b b
 forall (b :: BackendType) a b.
 Backend b =&gt;
@@ -44,16 +54,42 @@ Backend b =&gt;
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: forall a b. a -&gt; TablePermG b b -&gt; TablePermG b a
-$c&lt;$ :: forall (b :: BackendType) a b.
-Backend b =&gt;
-a -&gt; TablePermG b b -&gt; TablePermG b a
-fmap :: forall a b. (a -&gt; b) -&gt; TablePermG b a -&gt; TablePermG b b
 $cfmap :: forall (b :: BackendType) a b.
 Backend b =&gt;
 (a -&gt; b) -&gt; TablePermG b a -&gt; TablePermG b b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691176335"><span id="local-6989586621691176337"><span id="local-6989586621691176339"><span id="local-6989586621691176341"><span id="local-6989586621691176343"><span id="local-6989586621691176345"><span id="local-6989586621691176349"><span id="local-6989586621691176351"><span id="local-6989586621691176353"><span id="local-6989586621691176355"><span id="local-6989586621691176357"><span id="local-6989586621691176359"><span id="local-6989586621691176361"><span id="local-6989586621691176365"><span id="local-6989586621691176367"><span id="local-6989586621691176376"><span id="local-6989586621691176378"><span class="annot"><span class="annottext">forall a. TablePermG b a -&gt; Bool
+fmap :: forall a b. (a -&gt; b) -&gt; TablePermG b a -&gt; TablePermG b b
+$c&lt;$ :: forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; TablePermG b b -&gt; TablePermG b a
+&lt;$ :: forall a b. a -&gt; TablePermG b b -&gt; TablePermG b a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686870980"><span id="local-6989586621686870986"><span id="local-6989586621686870995"><span id="local-6989586621686871000"><span id="local-6989586621686871004"><span id="local-6989586621686871007"><span id="local-6989586621686871010"><span id="local-6989586621686871013"><span id="local-6989586621686871016"><span id="local-6989586621686871019"><span id="local-6989586621686871022"><span id="local-6989586621686871026"><span id="local-6989586621686871029"><span id="local-6989586621686871034"><span id="local-6989586621686871039"><span id="local-6989586621686871044"><span id="local-6989586621686871049"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; TablePermG b m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; TablePermG b a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; TablePermG b a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; TablePermG b a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; TablePermG b a -&gt; a)
+-&gt; (forall a. TablePermG b a -&gt; [a])
+-&gt; (forall a. TablePermG b a -&gt; Bool)
+-&gt; (forall a. TablePermG b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; TablePermG b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; TablePermG b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; TablePermG b a -&gt; a)
+-&gt; (forall a. Num a =&gt; TablePermG b a -&gt; a)
+-&gt; (forall a. Num a =&gt; TablePermG b a -&gt; a)
+-&gt; Foldable (TablePermG b)
+forall a. Eq a =&gt; a -&gt; TablePermG b a -&gt; Bool
+forall a. Num a =&gt; TablePermG b a -&gt; a
+forall a. Ord a =&gt; TablePermG b a -&gt; a
+forall m. Monoid m =&gt; TablePermG b m -&gt; m
+forall a. TablePermG b a -&gt; Bool
+forall a. TablePermG b a -&gt; Int
+forall a. TablePermG b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; TablePermG b a -&gt; a
 forall m a. Monoid m =&gt; (a -&gt; m) -&gt; TablePermG b a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
 forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
 forall (b :: BackendType) a.
 (Backend b, Eq a) =&gt;
@@ -101,69 +137,86 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: forall a. Num a =&gt; TablePermG b a -&gt; a
-$cproduct :: forall (b :: BackendType) a.
-(Backend b, Num a) =&gt;
-TablePermG b a -&gt; a
-sum :: forall a. Num a =&gt; TablePermG b a -&gt; a
-$csum :: forall (b :: BackendType) a.
-(Backend b, Num a) =&gt;
-TablePermG b a -&gt; a
-minimum :: forall a. Ord a =&gt; TablePermG b a -&gt; a
-$cminimum :: forall (b :: BackendType) a.
-(Backend b, Ord a) =&gt;
-TablePermG b a -&gt; a
-maximum :: forall a. Ord a =&gt; TablePermG b a -&gt; a
-$cmaximum :: forall (b :: BackendType) a.
-(Backend b, Ord a) =&gt;
-TablePermG b a -&gt; a
-elem :: forall a. Eq a =&gt; a -&gt; TablePermG b a -&gt; Bool
-$celem :: forall (b :: BackendType) a.
-(Backend b, Eq a) =&gt;
-a -&gt; TablePermG b a -&gt; Bool
-length :: forall a. TablePermG b a -&gt; Int
-$clength :: forall (b :: BackendType) a. Backend b =&gt; TablePermG b a -&gt; Int
-null :: forall a. TablePermG b a -&gt; Bool
-$cnull :: forall (b :: BackendType) a. Backend b =&gt; TablePermG b a -&gt; Bool
-toList :: forall a. TablePermG b a -&gt; [a]
-$ctoList :: forall (b :: BackendType) a. Backend b =&gt; TablePermG b a -&gt; [a]
-foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; TablePermG b a -&gt; a
-$cfoldl1 :: forall (b :: BackendType) a.
-Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; TablePermG b a -&gt; a
-foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; TablePermG b a -&gt; a
-$cfoldr1 :: forall (b :: BackendType) a.
-Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; TablePermG b a -&gt; a
-foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
-$cfoldl' :: forall (b :: BackendType) b a.
-Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
-foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
-$cfoldl :: forall (b :: BackendType) b a.
-Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
-foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
-$cfoldr' :: forall (b :: BackendType) a b.
-Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
-foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
-$cfoldr :: forall (b :: BackendType) a b.
-Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
-foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; TablePermG b a -&gt; m
-$cfoldMap' :: forall (b :: BackendType) m a.
-(Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; TablePermG b a -&gt; m
-foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; TablePermG b a -&gt; m
-$cfoldMap :: forall (b :: BackendType) m a.
-(Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; TablePermG b a -&gt; m
-fold :: forall m. Monoid m =&gt; TablePermG b m -&gt; m
 $cfold :: forall (b :: BackendType) m.
 (Backend b, Monoid m) =&gt;
 TablePermG b m -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691176313"><span id="local-6989586621691176315"><span id="local-6989586621691176317"><span id="local-6989586621691176328"><span class="annot"><span class="annottext">forall (b :: BackendType). Backend b =&gt; Functor (TablePermG b)
+fold :: forall m. Monoid m =&gt; TablePermG b m -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; TablePermG b a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; TablePermG b a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; TablePermG b a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; TablePermG b a -&gt; m
+$cfoldr :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; TablePermG b a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; TablePermG b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; TablePermG b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; TablePermG b a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; TablePermG b a -&gt; a
+$ctoList :: forall (b :: BackendType) a. Backend b =&gt; TablePermG b a -&gt; [a]
+toList :: forall a. TablePermG b a -&gt; [a]
+$cnull :: forall (b :: BackendType) a. Backend b =&gt; TablePermG b a -&gt; Bool
+null :: forall a. TablePermG b a -&gt; Bool
+$clength :: forall (b :: BackendType) a. Backend b =&gt; TablePermG b a -&gt; Int
+length :: forall a. TablePermG b a -&gt; Int
+$celem :: forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; TablePermG b a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; TablePermG b a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+TablePermG b a -&gt; a
+maximum :: forall a. Ord a =&gt; TablePermG b a -&gt; a
+$cminimum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+TablePermG b a -&gt; a
+minimum :: forall a. Ord a =&gt; TablePermG b a -&gt; a
+$csum :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+TablePermG b a -&gt; a
+sum :: forall a. Num a =&gt; TablePermG b a -&gt; a
+$cproduct :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+TablePermG b a -&gt; a
+product :: forall a. Num a =&gt; TablePermG b a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686871060"><span id="local-6989586621686871071"><span id="local-6989586621686871077"><span id="local-6989586621686871082"><span class="annot"><span class="annottext">Functor (TablePermG b)
+Foldable (TablePermG b)
+Functor (TablePermG b)
+-&gt; Foldable (TablePermG b)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; TablePermG b a -&gt; f (TablePermG b b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    TablePermG b (f a) -&gt; f (TablePermG b a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; TablePermG b a -&gt; m (TablePermG b b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    TablePermG b (m a) -&gt; m (TablePermG b a))
+-&gt; Traversable (TablePermG b)
+forall (b :: BackendType). Backend b =&gt; Functor (TablePermG b)
 forall (b :: BackendType). Backend b =&gt; Foldable (TablePermG b)
 forall (b :: BackendType) (m :: * -&gt; *) a.
 (Backend b, Monad m) =&gt;
@@ -189,60 +242,72 @@ Functor t
     (a -&gt; m b) -&gt; t a -&gt; m (t b))
 -&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
 -&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+TablePermG b (m a) -&gt; m (TablePermG b a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+TablePermG b (f a) -&gt; f (TablePermG b a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; TablePermG b a -&gt; m (TablePermG b b)
 forall (f :: * -&gt; *) a b.
-Applicative f =&gt;
-(a -&gt; f b) -&gt; TablePermG b a -&gt; f (TablePermG b b)
-sequence :: forall (m :: * -&gt; *) a.
-Monad m =&gt;
-TablePermG b (m a) -&gt; m (TablePermG b a)
-$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
-(Backend b, Monad m) =&gt;
-TablePermG b (m a) -&gt; m (TablePermG b a)
-mapM :: forall (m :: * -&gt; *) a b.
-Monad m =&gt;
-(a -&gt; m b) -&gt; TablePermG b a -&gt; m (TablePermG b b)
-$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
-(Backend b, Monad m) =&gt;
-(a -&gt; m b) -&gt; TablePermG b a -&gt; m (TablePermG b b)
-sequenceA :: forall (f :: * -&gt; *) a.
-Applicative f =&gt;
-TablePermG b (f a) -&gt; f (TablePermG b a)
-$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Applicative f) =&gt;
-TablePermG b (f a) -&gt; f (TablePermG b a)
-traverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; TablePermG b a -&gt; f (TablePermG b b)
 $ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Applicative f) =&gt;
 (a -&gt; f b) -&gt; TablePermG b a -&gt; f (TablePermG b b)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; TablePermG b a -&gt; f (TablePermG b b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+TablePermG b (f a) -&gt; f (TablePermG b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+TablePermG b (f a) -&gt; f (TablePermG b a)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b) -&gt; TablePermG b a -&gt; m (TablePermG b b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; TablePermG b a -&gt; m (TablePermG b b)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+TablePermG b (m a) -&gt; m (TablePermG b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+TablePermG b (m a) -&gt; m (TablePermG b a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span id="local-6989586621691176303"><span id="local-6989586621691176309"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621691176490"><span id="local-6989586621691176491"><span class="annot"><a href="#local-6989586621691176490"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176491"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-28"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176491"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176490"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span id="local-6989586621686871091"><span id="local-6989586621686871097"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621686870918"><span id="local-6989586621686870919"><span class="annot"><a href="#local-6989586621686870918"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870918"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870918"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870919"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-30"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176491"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176490"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870918"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870919"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-31"></span><span>
-</span><span id="line-32"></span><span id="local-6989586621691176289"><span id="local-6989586621691176291"><span id="local-6989586621691176299"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621691176485"><span id="local-6989586621691176486"><span class="annot"><a href="#local-6989586621691176485"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176486"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-34"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176486"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176485"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span id="local-6989586621686871105"><span id="local-6989586621686871113"><span id="local-6989586621686871117"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621686870925"><span id="local-6989586621686870926"><span class="annot"><a href="#local-6989586621686870925"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870925"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870925"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870926"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-36"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176486"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176485"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870925"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870926"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-37"></span><span>
 </span><span id="line-38"></span><span class="hs-keyword">instance</span><span>
-</span><span id="line-39"></span><span>  </span><span id="local-6989586621691176281"><span id="local-6989586621691176283"><span id="local-6989586621691176482"><span id="local-6989586621691176483"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176483"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-40"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176483"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176482"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>  </span><span id="local-6989586621686870945"><span id="local-6989586621686870946"><span id="local-6989586621686871127"><span id="local-6989586621686871134"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870945"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870945"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870946"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-41"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-42"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176483"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176482"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870945"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870946"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-43"></span><span>
-</span><span id="line-44"></span><span class="hs-keyword">type</span><span> </span><span id="TablePerm"><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePerm"><span class="hs-identifier hs-var">TablePerm</span></a></span></span><span> </span><span id="local-6989586621691176279"><span class="annot"><a href="#local-6989586621691176279"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176279"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SQLExpression"><span class="hs-identifier hs-type">SQLExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176279"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">type</span><span> </span><span id="TablePerm"><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePerm"><span class="hs-identifier hs-var">TablePerm</span></a></span></span><span> </span><span id="local-6989586621686871151"><span class="annot"><a href="#local-6989586621686871151"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686871151"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SQLExpression"><span class="hs-identifier hs-type">SQLExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686871151"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span id="local-6989586621691176480"><span id="local-6989586621691176481"><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#noTablePermissions"><span class="hs-identifier hs-type">noTablePermissions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176481"><span class="hs-identifier hs-type">backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691176480"><span class="hs-identifier hs-type">v</span></a></span></span></span><span>
+</span><span id="line-46"></span><span id="local-6989586621686870947"><span id="local-6989586621686870948"><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#noTablePermissions"><span class="hs-identifier hs-type">noTablePermissions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870947"><span class="hs-identifier hs-type">backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686870948"><span class="hs-identifier hs-type">v</span></a></span></span></span><span>
 </span><span id="line-47"></span><span id="noTablePermissions"><span class="annot"><span class="annottext">noTablePermissions :: forall (backend :: BackendType) v. TablePermG backend v
-</span><a href="Hasura.RQL.IR.Select.TablePerm.html#noTablePermissions"><span class="hs-identifier hs-var hs-var">noTablePermissions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+</span><a href="Hasura.RQL.IR.Select.TablePerm.html#noTablePermissions"><span class="hs-identifier hs-var hs-var">noTablePermissions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnBoolExp backend v -&gt; Maybe Int -&gt; TablePermG backend v
+forall (b :: BackendType) v.
 AnnBoolExp b v -&gt; Maybe Int -&gt; TablePermG b v
-</span><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePerm"><span class="hs-identifier hs-var">TablePerm</span></a></span><span> </span><span class="annot"><span class="annottext">forall (backend :: BackendType) scalar. AnnBoolExp backend scalar
-</span><a href="Hasura.RQL.IR.BoolExp.html#annBoolExpTrue"><span class="hs-identifier hs-var">annBoolExpTrue</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePerm"><span class="hs-identifier hs-var">TablePerm</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp backend v
+forall (backend :: BackendType) scalar. AnnBoolExp backend scalar
+</span><a href="Hasura.RQL.IR.BoolExp.html#annBoolExpTrue"><span class="hs-identifier hs-var">annBoolExpTrue</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-48"></span></pre></body></html>

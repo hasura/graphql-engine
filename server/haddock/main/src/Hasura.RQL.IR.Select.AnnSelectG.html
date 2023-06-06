@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DuplicateRecordFields #-}</span><span>
 </span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
 </span><span id="line-3"></span><span>
-</span><span id="line-4"></span><span class="hs-comment">-- | More leaves from `RQL.IR.Select`</span><span>
+</span><span id="line-4"></span><span class="annot"><span class="hs-comment">-- | More leaves from `RQL.IR.Select`</span></span><span>
 </span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.IR.Select.AnnSelectG</span><span>
 </span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier">AnnSelectG</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectStreamG"><span class="hs-identifier">AnnSelectStreamG</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
@@ -10,9 +10,9 @@
 </span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-11"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-12"></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Bifoldable</span></a></span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Kind</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier">Type</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Bifoldable</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html"><span class="hs-identifier">Hasura.RQL.IR.Select.Args</span></a></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.From.html"><span class="hs-identifier">Hasura.RQL.IR.Select.From</span></a></span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html"><span class="hs-identifier">Hasura.RQL.IR.Select.TablePerm</span></a></span><span>
@@ -24,27 +24,30 @@
 </span><span id="line-24"></span><span>
 </span><span id="line-25"></span><span class="hs-comment">-- Select</span><span>
 </span><span id="line-26"></span><span>
-</span><span id="line-27"></span><span class="hs-keyword">data</span><span> </span><span id="AnnSelectG"><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-var">AnnSelectG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691217295"><span class="annot"><a href="#local-6989586621691217295"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691217294"><span class="annot"><a href="#local-6989586621691217294"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691217293"><span class="annot"><a href="#local-6989586621691217293"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnSelectG"><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-var">AnnSelectG</span></a></span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">data</span><span> </span><span id="AnnSelectG"><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-var">AnnSelectG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686912329"><span class="annot"><a href="#local-6989586621686912329"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686912330"><span class="annot"><a href="#local-6989586621686912330"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686912331"><span class="annot"><a href="#local-6989586621686912331"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnSelectG"><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-var">AnnSelectG</span></a></span></span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3A_asnFields%3AAnnSelectG"><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectG b f v -&gt; Fields (f v)
-</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnFields%3AAnnSelectG"><span class="hs-identifier hs-var hs-var">_asnFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217294"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217293"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnFields%3AAnnSelectG"><span class="hs-identifier hs-var hs-var">_asnFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912330"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912331"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-29"></span><span>    </span><span id="%24sel%3A_asnFrom%3AAnnSelectG"><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectG b f v -&gt; SelectFromG b v
-</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnFrom%3AAnnSelectG"><span class="hs-identifier hs-var hs-var">_asnFrom</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.From.html#SelectFromG"><span class="hs-identifier hs-type">SelectFromG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217295"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217293"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnFrom%3AAnnSelectG"><span class="hs-identifier hs-var hs-var">_asnFrom</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.From.html#SelectFromG"><span class="hs-identifier hs-type">SelectFromG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912329"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912331"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-30"></span><span>    </span><span id="%24sel%3A_asnPerm%3AAnnSelectG"><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectG b f v -&gt; TablePermG b v
-</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnPerm%3AAnnSelectG"><span class="hs-identifier hs-var hs-var">_asnPerm</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217295"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217293"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnPerm%3AAnnSelectG"><span class="hs-identifier hs-var hs-var">_asnPerm</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912329"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912331"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-31"></span><span>    </span><span id="%24sel%3A_asnArgs%3AAnnSelectG"><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectG b f v -&gt; SelectArgsG b v
-</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnArgs%3AAnnSelectG"><span class="hs-identifier hs-var hs-var">_asnArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgsG"><span class="hs-identifier hs-type">SelectArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217295"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217293"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnArgs%3AAnnSelectG"><span class="hs-identifier hs-var hs-var">_asnArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgsG"><span class="hs-identifier hs-type">SelectArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912329"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912331"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-32"></span><span>    </span><span id="%24sel%3A_asnStrfyNum%3AAnnSelectG"><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectG b f v -&gt; StringifyNumbers
 </span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnStrfyNum%3AAnnSelectG"><span class="hs-identifier hs-var hs-var">_asnStrfyNum</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-33"></span><span>    </span><span id="%24sel%3A_asnNamingConvention%3AAnnSelectG"><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectG b f v -&gt; Maybe NamingCase
-</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnNamingConvention%3AAnnSelectG"><span class="hs-identifier hs-var hs-var">_asnNamingConvention</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span>
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnNamingConvention%3AAnnSelectG"><span class="hs-identifier hs-var hs-var">_asnNamingConvention</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span>
 </span><span id="line-34"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691216989"><span id="local-6989586621691217000"><span class="annot"><span class="annottext">forall a b. a -&gt; AnnSelectG b f b -&gt; AnnSelectG b f a
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686912554"><span id="local-6989586621686912565"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; AnnSelectG b f a -&gt; AnnSelectG b f b)
+-&gt; (forall a b. a -&gt; AnnSelectG b f b -&gt; AnnSelectG b f a)
+-&gt; Functor (AnnSelectG b f)
+forall a b. a -&gt; AnnSelectG b f b -&gt; AnnSelectG b f a
 forall a b. (a -&gt; b) -&gt; AnnSelectG b f a -&gt; AnnSelectG b f b
 forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Functor f) =&gt;
@@ -55,16 +58,42 @@ forall (b :: BackendType) (f :: * -&gt; *) a b.
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: forall a b. a -&gt; AnnSelectG b f b -&gt; AnnSelectG b f a
-$c&lt;$ :: forall (b :: BackendType) (f :: * -&gt; *) a b.
-(Backend b, Functor f) =&gt;
-a -&gt; AnnSelectG b f b -&gt; AnnSelectG b f a
-fmap :: forall a b. (a -&gt; b) -&gt; AnnSelectG b f a -&gt; AnnSelectG b f b
 $cfmap :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Functor f) =&gt;
 (a -&gt; b) -&gt; AnnSelectG b f a -&gt; AnnSelectG b f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691216920"><span id="local-6989586621691216922"><span id="local-6989586621691216924"><span id="local-6989586621691216926"><span id="local-6989586621691216928"><span id="local-6989586621691216930"><span id="local-6989586621691216937"><span id="local-6989586621691216939"><span id="local-6989586621691216941"><span id="local-6989586621691216943"><span id="local-6989586621691216945"><span id="local-6989586621691216947"><span id="local-6989586621691216949"><span id="local-6989586621691216956"><span id="local-6989586621691216958"><span id="local-6989586621691216978"><span id="local-6989586621691216980"><span class="annot"><span class="annottext">forall a. AnnSelectG b f a -&gt; Bool
+fmap :: forall a b. (a -&gt; b) -&gt; AnnSelectG b f a -&gt; AnnSelectG b f b
+$c&lt;$ :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Functor f) =&gt;
+a -&gt; AnnSelectG b f b -&gt; AnnSelectG b f a
+&lt;$ :: forall a b. a -&gt; AnnSelectG b f b -&gt; AnnSelectG b f a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686912576"><span id="local-6989586621686912582"><span id="local-6989586621686912602"><span id="local-6989586621686912607"><span id="local-6989586621686912614"><span id="local-6989586621686912617"><span id="local-6989586621686912620"><span id="local-6989586621686912623"><span id="local-6989586621686912626"><span id="local-6989586621686912629"><span id="local-6989586621686912632"><span id="local-6989586621686912639"><span id="local-6989586621686912642"><span id="local-6989586621686912647"><span id="local-6989586621686912652"><span id="local-6989586621686912657"><span id="local-6989586621686912662"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; AnnSelectG b f m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnSelectG b f a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnSelectG b f a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectG b f a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectG b f a -&gt; a)
+-&gt; (forall a. AnnSelectG b f a -&gt; [a])
+-&gt; (forall a. AnnSelectG b f a -&gt; Bool)
+-&gt; (forall a. AnnSelectG b f a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; AnnSelectG b f a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; AnnSelectG b f a -&gt; a)
+-&gt; (forall a. Ord a =&gt; AnnSelectG b f a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnSelectG b f a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnSelectG b f a -&gt; a)
+-&gt; Foldable (AnnSelectG b f)
+forall a. Eq a =&gt; a -&gt; AnnSelectG b f a -&gt; Bool
+forall a. Num a =&gt; AnnSelectG b f a -&gt; a
+forall a. Ord a =&gt; AnnSelectG b f a -&gt; a
+forall m. Monoid m =&gt; AnnSelectG b f m -&gt; m
+forall a. AnnSelectG b f a -&gt; Bool
+forall a. AnnSelectG b f a -&gt; Int
+forall a. AnnSelectG b f a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectG b f a -&gt; a
 forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnSelectG b f a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
 forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
 forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f, Eq a) =&gt;
@@ -118,75 +147,92 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: forall a. Num a =&gt; AnnSelectG b f a -&gt; a
-$cproduct :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f, Num a) =&gt;
-AnnSelectG b f a -&gt; a
-sum :: forall a. Num a =&gt; AnnSelectG b f a -&gt; a
-$csum :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f, Num a) =&gt;
-AnnSelectG b f a -&gt; a
-minimum :: forall a. Ord a =&gt; AnnSelectG b f a -&gt; a
-$cminimum :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f, Ord a) =&gt;
-AnnSelectG b f a -&gt; a
-maximum :: forall a. Ord a =&gt; AnnSelectG b f a -&gt; a
-$cmaximum :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f, Ord a) =&gt;
-AnnSelectG b f a -&gt; a
-elem :: forall a. Eq a =&gt; a -&gt; AnnSelectG b f a -&gt; Bool
-$celem :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f, Eq a) =&gt;
-a -&gt; AnnSelectG b f a -&gt; Bool
-length :: forall a. AnnSelectG b f a -&gt; Int
-$clength :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f) =&gt;
-AnnSelectG b f a -&gt; Int
-null :: forall a. AnnSelectG b f a -&gt; Bool
-$cnull :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f) =&gt;
-AnnSelectG b f a -&gt; Bool
-toList :: forall a. AnnSelectG b f a -&gt; [a]
-$ctoList :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f) =&gt;
-AnnSelectG b f a -&gt; [a]
-foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectG b f a -&gt; a
-$cfoldl1 :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f) =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnSelectG b f a -&gt; a
-foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectG b f a -&gt; a
-$cfoldr1 :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f) =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnSelectG b f a -&gt; a
-foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
-$cfoldl' :: forall (b :: BackendType) (f :: * -&gt; *) b a.
-(Backend b, Foldable f) =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
-foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
-$cfoldl :: forall (b :: BackendType) (f :: * -&gt; *) b a.
-(Backend b, Foldable f) =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
-foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
-$cfoldr' :: forall (b :: BackendType) (f :: * -&gt; *) a b.
-(Backend b, Foldable f) =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
-foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
-$cfoldr :: forall (b :: BackendType) (f :: * -&gt; *) a b.
-(Backend b, Foldable f) =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
-foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnSelectG b f a -&gt; m
-$cfoldMap' :: forall (b :: BackendType) (f :: * -&gt; *) m a.
-(Backend b, Foldable f, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnSelectG b f a -&gt; m
-foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnSelectG b f a -&gt; m
-$cfoldMap :: forall (b :: BackendType) (f :: * -&gt; *) m a.
-(Backend b, Foldable f, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnSelectG b f a -&gt; m
-fold :: forall m. Monoid m =&gt; AnnSelectG b f m -&gt; m
 $cfold :: forall (b :: BackendType) (f :: * -&gt; *) m.
 (Backend b, Foldable f, Monoid m) =&gt;
 AnnSelectG b f m -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691216887"><span id="local-6989586621691216889"><span id="local-6989586621691216891"><span id="local-6989586621691216913"><span class="annot"><span class="annottext">forall {b :: BackendType} {f :: * -&gt; *}.
+fold :: forall m. Monoid m =&gt; AnnSelectG b f m -&gt; m
+$cfoldMap :: forall (b :: BackendType) (f :: * -&gt; *) m a.
+(Backend b, Foldable f, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnSelectG b f a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnSelectG b f a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) (f :: * -&gt; *) m a.
+(Backend b, Foldable f, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnSelectG b f a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnSelectG b f a -&gt; m
+$cfoldr :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Foldable f) =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
+$cfoldr' :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Foldable f) =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
+$cfoldl :: forall (b :: BackendType) (f :: * -&gt; *) b a.
+(Backend b, Foldable f) =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
+$cfoldl' :: forall (b :: BackendType) (f :: * -&gt; *) b a.
+(Backend b, Foldable f) =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectG b f a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f) =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnSelectG b f a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectG b f a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f) =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnSelectG b f a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectG b f a -&gt; a
+$ctoList :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f) =&gt;
+AnnSelectG b f a -&gt; [a]
+toList :: forall a. AnnSelectG b f a -&gt; [a]
+$cnull :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f) =&gt;
+AnnSelectG b f a -&gt; Bool
+null :: forall a. AnnSelectG b f a -&gt; Bool
+$clength :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f) =&gt;
+AnnSelectG b f a -&gt; Int
+length :: forall a. AnnSelectG b f a -&gt; Int
+$celem :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f, Eq a) =&gt;
+a -&gt; AnnSelectG b f a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; AnnSelectG b f a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f, Ord a) =&gt;
+AnnSelectG b f a -&gt; a
+maximum :: forall a. Ord a =&gt; AnnSelectG b f a -&gt; a
+$cminimum :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f, Ord a) =&gt;
+AnnSelectG b f a -&gt; a
+minimum :: forall a. Ord a =&gt; AnnSelectG b f a -&gt; a
+$csum :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f, Num a) =&gt;
+AnnSelectG b f a -&gt; a
+sum :: forall a. Num a =&gt; AnnSelectG b f a -&gt; a
+$cproduct :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f, Num a) =&gt;
+AnnSelectG b f a -&gt; a
+product :: forall a. Num a =&gt; AnnSelectG b f a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686912676"><span id="local-6989586621686912698"><span id="local-6989586621686912704"><span id="local-6989586621686912709"><span class="annot"><span class="annottext">Functor (AnnSelectG b f)
+Foldable (AnnSelectG b f)
+Functor (AnnSelectG b f)
+-&gt; Foldable (AnnSelectG b f)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; AnnSelectG b f a -&gt; f (AnnSelectG b f b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    AnnSelectG b f (f a) -&gt; f (AnnSelectG b f a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; AnnSelectG b f a -&gt; m (AnnSelectG b f b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    AnnSelectG b f (m a) -&gt; m (AnnSelectG b f a))
+-&gt; Traversable (AnnSelectG b f)
+forall {b :: BackendType} {f :: * -&gt; *}.
 (Backend b, Traversable f) =&gt;
 Functor (AnnSelectG b f)
 forall {b :: BackendType} {f :: * -&gt; *}.
@@ -216,85 +262,99 @@ Functor t
     (a -&gt; m b) -&gt; t a -&gt; m (t b))
 -&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
 -&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnSelectG b f (m a) -&gt; m (AnnSelectG b f a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnSelectG b f (f a) -&gt; f (AnnSelectG b f a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; AnnSelectG b f a -&gt; m (AnnSelectG b f b)
 forall (f :: * -&gt; *) a b.
-Applicative f =&gt;
-(a -&gt; f b) -&gt; AnnSelectG b f a -&gt; f (AnnSelectG b f b)
-sequence :: forall (m :: * -&gt; *) a.
-Monad m =&gt;
-AnnSelectG b f (m a) -&gt; m (AnnSelectG b f a)
-$csequence :: forall (b :: BackendType) (f :: * -&gt; *) (m :: * -&gt; *) a.
-(Backend b, Traversable f, Monad m) =&gt;
-AnnSelectG b f (m a) -&gt; m (AnnSelectG b f a)
-mapM :: forall (m :: * -&gt; *) a b.
-Monad m =&gt;
-(a -&gt; m b) -&gt; AnnSelectG b f a -&gt; m (AnnSelectG b f b)
-$cmapM :: forall (b :: BackendType) (f :: * -&gt; *) (m :: * -&gt; *) a b.
-(Backend b, Traversable f, Monad m) =&gt;
-(a -&gt; m b) -&gt; AnnSelectG b f a -&gt; m (AnnSelectG b f b)
-sequenceA :: forall (f :: * -&gt; *) a.
-Applicative f =&gt;
-AnnSelectG b f (f a) -&gt; f (AnnSelectG b f a)
-$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) (f :: * -&gt; *) a.
-(Backend b, Traversable f, Applicative f) =&gt;
-AnnSelectG b f (f a) -&gt; f (AnnSelectG b f a)
-traverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; AnnSelectG b f a -&gt; f (AnnSelectG b f b)
 $ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) (f :: * -&gt; *) a b.
 (Backend b, Traversable f, Applicative f) =&gt;
 (a -&gt; f b) -&gt; AnnSelectG b f a -&gt; f (AnnSelectG b f b)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; AnnSelectG b f a -&gt; f (AnnSelectG b f b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) (f :: * -&gt; *) a.
+(Backend b, Traversable f, Applicative f) =&gt;
+AnnSelectG b f (f a) -&gt; f (AnnSelectG b f a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnSelectG b f (f a) -&gt; f (AnnSelectG b f a)
+$cmapM :: forall (b :: BackendType) (f :: * -&gt; *) (m :: * -&gt; *) a b.
+(Backend b, Traversable f, Monad m) =&gt;
+(a -&gt; m b) -&gt; AnnSelectG b f a -&gt; m (AnnSelectG b f b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; AnnSelectG b f a -&gt; m (AnnSelectG b f b)
+$csequence :: forall (b :: BackendType) (f :: * -&gt; *) (m :: * -&gt; *) a.
+(Backend b, Traversable f, Monad m) =&gt;
+AnnSelectG b f (m a) -&gt; m (AnnSelectG b f a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnSelectG b f (m a) -&gt; m (AnnSelectG b f a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span id="local-6989586621691216872"><span id="local-6989586621691216883"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621691217218"><span id="local-6989586621691217219"><span id="local-6989586621691217220"><span class="annot"><a href="#local-6989586621691217218"><span class="hs-keyword hs-type hs-type hs-type">stock</span></a></span></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-38"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217220"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-39"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217219"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217218"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-40"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgsG"><span class="hs-identifier hs-type">SelectArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217220"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217218"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-41"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.From.html#SelectFromG"><span class="hs-identifier hs-type">SelectFromG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217220"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217218"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-42"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217220"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217218"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span id="local-6989586621686912723"><span id="local-6989586621686912734"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621686912428"><span id="local-6989586621686912429"><span id="local-6989586621686912430"><span class="annot"><a href="#local-6989586621686912428"><span class="hs-keyword hs-type hs-type hs-type">stock</span></a></span></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912428"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912429"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912430"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgsG"><span class="hs-identifier hs-type">SelectArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912428"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912430"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.From.html#SelectFromG"><span class="hs-identifier hs-type">SelectFromG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912428"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912430"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912428"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912430"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-44"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-type">AnnSelectG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217220"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217219"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217218"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-type">AnnSelectG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912428"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912429"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912430"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span id="local-6989586621691216853"><span id="local-6989586621691216855"><span id="local-6989586621691216868"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621691217212"><span id="local-6989586621691217213"><span id="local-6989586621691217214"><span class="annot"><a href="#local-6989586621691217212"><span class="hs-keyword hs-type hs-type hs-type">stock</span></a></span></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-47"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217214"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-48"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217213"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217212"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-49"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgsG"><span class="hs-identifier hs-type">SelectArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217214"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217212"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-50"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.From.html#SelectFromG"><span class="hs-identifier hs-type">SelectFromG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217214"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217212"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-51"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217214"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217212"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span id="local-6989586621686912745"><span id="local-6989586621686912758"><span id="local-6989586621686912762"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621686912437"><span id="local-6989586621686912438"><span id="local-6989586621686912439"><span class="annot"><a href="#local-6989586621686912437"><span class="hs-keyword hs-type hs-type hs-type">stock</span></a></span></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912437"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912438"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912439"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgsG"><span class="hs-identifier hs-type">SelectArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912437"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912439"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.From.html#SelectFromG"><span class="hs-identifier hs-type">SelectFromG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912437"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912439"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912437"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912439"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-52"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-53"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-type">AnnSelectG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217214"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217213"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217212"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-type">AnnSelectG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912437"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912438"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912439"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-54"></span><span>
-</span><span id="line-55"></span><span class="hs-comment">-- | IR type representing nodes for streaming subscriptions</span><span>
+</span><span id="line-55"></span><span class="annot"><span class="hs-comment">-- | IR type representing nodes for streaming subscriptions</span></span><span>
 </span><span id="line-56"></span><span class="hs-keyword">data</span><span>
 </span><span id="line-57"></span><span>  </span><span id="AnnSelectStreamG"><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectStreamG"><span class="hs-identifier hs-var">AnnSelectStreamG</span></a></span></span><span>
-</span><span id="line-58"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621691217211"><span class="annot"><a href="#local-6989586621691217211"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-59"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621691217210"><span class="annot"><a href="#local-6989586621691217210"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-60"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621691217209"><span class="annot"><a href="#local-6989586621691217209"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnSelectStreamG"><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectStreamG"><span class="hs-identifier hs-var">AnnSelectStreamG</span></a></span></span><span>
+</span><span id="line-58"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621686912440"><span class="annot"><a href="#local-6989586621686912440"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621686912441"><span class="annot"><a href="#local-6989586621686912441"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621686912442"><span class="annot"><a href="#local-6989586621686912442"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnSelectStreamG"><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectStreamG"><span class="hs-identifier hs-var">AnnSelectStreamG</span></a></span></span><span>
 </span><span id="line-61"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | type to indicate if streaming subscription has been enabled in the `BackendType`.</span><span>
 </span><span id="line-62"></span><span>    </span><span class="hs-comment">--   This type helps avoiding missing case match patterns for backends where it's disabled.</span><span>
 </span><span id="line-63"></span><span>    </span><span id="%24sel%3A_assnXStreamingSubscription%3AAnnSelectStreamG"><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectStreamG b f v -&gt; XStreamingSubscription b
-</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_assnXStreamingSubscription%3AAnnSelectStreamG"><span class="hs-identifier hs-var hs-var">_assnXStreamingSubscription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XStreamingSubscription"><span class="hs-identifier hs-type">XStreamingSubscription</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217211"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-64"></span><span>    </span><span class="hs-comment">-- | output selection fields</span><span>
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_assnXStreamingSubscription%3AAnnSelectStreamG"><span class="hs-identifier hs-var hs-var">_assnXStreamingSubscription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XStreamingSubscription"><span class="hs-identifier hs-type">XStreamingSubscription</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912440"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>    </span><span class="annot"><span class="hs-comment">-- | output selection fields</span></span><span>
 </span><span id="line-65"></span><span>    </span><span id="%24sel%3A_assnFields%3AAnnSelectStreamG"><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectStreamG b f v -&gt; Fields (f v)
-</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_assnFields%3AAnnSelectStreamG"><span class="hs-identifier hs-var hs-var">_assnFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217210"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217209"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-66"></span><span>    </span><span class="hs-comment">-- | table information to select from</span><span>
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_assnFields%3AAnnSelectStreamG"><span class="hs-identifier hs-var hs-var">_assnFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912441"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912442"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><span class="hs-comment">-- | table information to select from</span></span><span>
 </span><span id="line-67"></span><span>    </span><span id="%24sel%3A_assnFrom%3AAnnSelectStreamG"><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectStreamG b f v -&gt; SelectFromG b v
-</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_assnFrom%3AAnnSelectStreamG"><span class="hs-identifier hs-var hs-var">_assnFrom</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.From.html#SelectFromG"><span class="hs-identifier hs-type">SelectFromG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217211"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217209"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-68"></span><span>    </span><span class="hs-comment">-- | select permissions</span><span>
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_assnFrom%3AAnnSelectStreamG"><span class="hs-identifier hs-var hs-var">_assnFrom</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.From.html#SelectFromG"><span class="hs-identifier hs-type">SelectFromG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912440"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912442"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><span class="hs-comment">-- | select permissions</span></span><span>
 </span><span id="line-69"></span><span>    </span><span id="%24sel%3A_assnPerm%3AAnnSelectStreamG"><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectStreamG b f v -&gt; TablePermG b v
-</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_assnPerm%3AAnnSelectStreamG"><span class="hs-identifier hs-var hs-var">_assnPerm</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217211"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217209"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-70"></span><span>    </span><span class="hs-comment">-- | streaming arguments</span><span>
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_assnPerm%3AAnnSelectStreamG"><span class="hs-identifier hs-var hs-var">_assnPerm</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912440"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912442"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><span class="hs-comment">-- | streaming arguments</span></span><span>
 </span><span id="line-71"></span><span>    </span><span id="%24sel%3A_assnArgs%3AAnnSelectStreamG"><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectStreamG b f v -&gt; SelectStreamArgsG b v
-</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_assnArgs%3AAnnSelectStreamG"><span class="hs-identifier hs-var hs-var">_assnArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgsG"><span class="hs-identifier hs-type">SelectStreamArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217211"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217209"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_assnArgs%3AAnnSelectStreamG"><span class="hs-identifier hs-var hs-var">_assnArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgsG"><span class="hs-identifier hs-type">SelectStreamArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912440"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912442"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-72"></span><span>    </span><span id="%24sel%3A_assnStrfyNum%3AAnnSelectStreamG"><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectStreamG b f v -&gt; StringifyNumbers
 </span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_assnStrfyNum%3AAnnSelectStreamG"><span class="hs-identifier hs-var hs-var">_assnStrfyNum</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span>
 </span><span id="line-73"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-74"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691216832"><span id="local-6989586621691216840"><span class="annot"><span class="annottext">forall a b. a -&gt; AnnSelectStreamG b f b -&gt; AnnSelectStreamG b f a
+</span><span id="line-74"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686912776"><span id="local-6989586621686912784"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b) -&gt; AnnSelectStreamG b f a -&gt; AnnSelectStreamG b f b)
+-&gt; (forall a b.
+    a -&gt; AnnSelectStreamG b f b -&gt; AnnSelectStreamG b f a)
+-&gt; Functor (AnnSelectStreamG b f)
+forall a b. a -&gt; AnnSelectStreamG b f b -&gt; AnnSelectStreamG b f a
 forall a b.
 (a -&gt; b) -&gt; AnnSelectStreamG b f a -&gt; AnnSelectStreamG b f b
 forall (b :: BackendType) (f :: * -&gt; *) a b.
@@ -306,17 +366,47 @@ forall (b :: BackendType) (f :: * -&gt; *) a b.
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: forall a b. a -&gt; AnnSelectStreamG b f b -&gt; AnnSelectStreamG b f a
-$c&lt;$ :: forall (b :: BackendType) (f :: * -&gt; *) a b.
-(Backend b, Functor f) =&gt;
-a -&gt; AnnSelectStreamG b f b -&gt; AnnSelectStreamG b f a
-fmap :: forall a b.
-(a -&gt; b) -&gt; AnnSelectStreamG b f a -&gt; AnnSelectStreamG b f b
 $cfmap :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Functor f) =&gt;
 (a -&gt; b) -&gt; AnnSelectStreamG b f a -&gt; AnnSelectStreamG b f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691216767"><span id="local-6989586621691216769"><span id="local-6989586621691216771"><span id="local-6989586621691216773"><span id="local-6989586621691216775"><span id="local-6989586621691216777"><span id="local-6989586621691216784"><span id="local-6989586621691216786"><span id="local-6989586621691216788"><span id="local-6989586621691216790"><span id="local-6989586621691216792"><span id="local-6989586621691216794"><span id="local-6989586621691216796"><span id="local-6989586621691216803"><span id="local-6989586621691216805"><span id="local-6989586621691216822"><span id="local-6989586621691216824"><span class="annot"><span class="annottext">forall a. AnnSelectStreamG b f a -&gt; Bool
+fmap :: forall a b.
+(a -&gt; b) -&gt; AnnSelectStreamG b f a -&gt; AnnSelectStreamG b f b
+$c&lt;$ :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Functor f) =&gt;
+a -&gt; AnnSelectStreamG b f b -&gt; AnnSelectStreamG b f a
+&lt;$ :: forall a b. a -&gt; AnnSelectStreamG b f b -&gt; AnnSelectStreamG b f a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686912794"><span id="local-6989586621686912800"><span id="local-6989586621686912817"><span id="local-6989586621686912822"><span id="local-6989586621686912829"><span id="local-6989586621686912832"><span id="local-6989586621686912835"><span id="local-6989586621686912838"><span id="local-6989586621686912841"><span id="local-6989586621686912844"><span id="local-6989586621686912847"><span id="local-6989586621686912854"><span id="local-6989586621686912857"><span id="local-6989586621686912862"><span id="local-6989586621686912867"><span id="local-6989586621686912872"><span id="local-6989586621686912877"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; AnnSelectStreamG b f m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnSelectStreamG b f a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnSelectStreamG b f a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectStreamG b f a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectStreamG b f a -&gt; a)
+-&gt; (forall a. AnnSelectStreamG b f a -&gt; [a])
+-&gt; (forall a. AnnSelectStreamG b f a -&gt; Bool)
+-&gt; (forall a. AnnSelectStreamG b f a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; AnnSelectStreamG b f a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; AnnSelectStreamG b f a -&gt; a)
+-&gt; (forall a. Ord a =&gt; AnnSelectStreamG b f a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnSelectStreamG b f a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnSelectStreamG b f a -&gt; a)
+-&gt; Foldable (AnnSelectStreamG b f)
+forall a. Eq a =&gt; a -&gt; AnnSelectStreamG b f a -&gt; Bool
+forall a. Num a =&gt; AnnSelectStreamG b f a -&gt; a
+forall a. Ord a =&gt; AnnSelectStreamG b f a -&gt; a
+forall m. Monoid m =&gt; AnnSelectStreamG b f m -&gt; m
+forall a. AnnSelectStreamG b f a -&gt; Bool
+forall a. AnnSelectStreamG b f a -&gt; Int
+forall a. AnnSelectStreamG b f a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectStreamG b f a -&gt; a
 forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnSelectStreamG b f a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
 forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
 forall (b :: BackendType) (f :: * -&gt; *) a.
 (Backend b, Foldable f, Eq a) =&gt;
@@ -370,75 +460,92 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: forall a. Num a =&gt; AnnSelectStreamG b f a -&gt; a
-$cproduct :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f, Num a) =&gt;
-AnnSelectStreamG b f a -&gt; a
-sum :: forall a. Num a =&gt; AnnSelectStreamG b f a -&gt; a
-$csum :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f, Num a) =&gt;
-AnnSelectStreamG b f a -&gt; a
-minimum :: forall a. Ord a =&gt; AnnSelectStreamG b f a -&gt; a
-$cminimum :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f, Ord a) =&gt;
-AnnSelectStreamG b f a -&gt; a
-maximum :: forall a. Ord a =&gt; AnnSelectStreamG b f a -&gt; a
-$cmaximum :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f, Ord a) =&gt;
-AnnSelectStreamG b f a -&gt; a
-elem :: forall a. Eq a =&gt; a -&gt; AnnSelectStreamG b f a -&gt; Bool
-$celem :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f, Eq a) =&gt;
-a -&gt; AnnSelectStreamG b f a -&gt; Bool
-length :: forall a. AnnSelectStreamG b f a -&gt; Int
-$clength :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f) =&gt;
-AnnSelectStreamG b f a -&gt; Int
-null :: forall a. AnnSelectStreamG b f a -&gt; Bool
-$cnull :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f) =&gt;
-AnnSelectStreamG b f a -&gt; Bool
-toList :: forall a. AnnSelectStreamG b f a -&gt; [a]
-$ctoList :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f) =&gt;
-AnnSelectStreamG b f a -&gt; [a]
-foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectStreamG b f a -&gt; a
-$cfoldl1 :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f) =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnSelectStreamG b f a -&gt; a
-foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectStreamG b f a -&gt; a
-$cfoldr1 :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Foldable f) =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnSelectStreamG b f a -&gt; a
-foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
-$cfoldl' :: forall (b :: BackendType) (f :: * -&gt; *) b a.
-(Backend b, Foldable f) =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
-foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
-$cfoldl :: forall (b :: BackendType) (f :: * -&gt; *) b a.
-(Backend b, Foldable f) =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
-foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
-$cfoldr' :: forall (b :: BackendType) (f :: * -&gt; *) a b.
-(Backend b, Foldable f) =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
-foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
-$cfoldr :: forall (b :: BackendType) (f :: * -&gt; *) a b.
-(Backend b, Foldable f) =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
-foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnSelectStreamG b f a -&gt; m
-$cfoldMap' :: forall (b :: BackendType) (f :: * -&gt; *) m a.
-(Backend b, Foldable f, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnSelectStreamG b f a -&gt; m
-foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnSelectStreamG b f a -&gt; m
-$cfoldMap :: forall (b :: BackendType) (f :: * -&gt; *) m a.
-(Backend b, Foldable f, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnSelectStreamG b f a -&gt; m
-fold :: forall m. Monoid m =&gt; AnnSelectStreamG b f m -&gt; m
 $cfold :: forall (b :: BackendType) (f :: * -&gt; *) m.
 (Backend b, Foldable f, Monoid m) =&gt;
 AnnSelectStreamG b f m -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691216738"><span id="local-6989586621691216740"><span id="local-6989586621691216742"><span id="local-6989586621691216761"><span class="annot"><span class="annottext">forall {b :: BackendType} {f :: * -&gt; *}.
+fold :: forall m. Monoid m =&gt; AnnSelectStreamG b f m -&gt; m
+$cfoldMap :: forall (b :: BackendType) (f :: * -&gt; *) m a.
+(Backend b, Foldable f, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnSelectStreamG b f a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnSelectStreamG b f a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) (f :: * -&gt; *) m a.
+(Backend b, Foldable f, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnSelectStreamG b f a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnSelectStreamG b f a -&gt; m
+$cfoldr :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Foldable f) =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
+$cfoldr' :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Foldable f) =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
+$cfoldl :: forall (b :: BackendType) (f :: * -&gt; *) b a.
+(Backend b, Foldable f) =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
+$cfoldl' :: forall (b :: BackendType) (f :: * -&gt; *) b a.
+(Backend b, Foldable f) =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnSelectStreamG b f a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f) =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnSelectStreamG b f a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectStreamG b f a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f) =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnSelectStreamG b f a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnSelectStreamG b f a -&gt; a
+$ctoList :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f) =&gt;
+AnnSelectStreamG b f a -&gt; [a]
+toList :: forall a. AnnSelectStreamG b f a -&gt; [a]
+$cnull :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f) =&gt;
+AnnSelectStreamG b f a -&gt; Bool
+null :: forall a. AnnSelectStreamG b f a -&gt; Bool
+$clength :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f) =&gt;
+AnnSelectStreamG b f a -&gt; Int
+length :: forall a. AnnSelectStreamG b f a -&gt; Int
+$celem :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f, Eq a) =&gt;
+a -&gt; AnnSelectStreamG b f a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; AnnSelectStreamG b f a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f, Ord a) =&gt;
+AnnSelectStreamG b f a -&gt; a
+maximum :: forall a. Ord a =&gt; AnnSelectStreamG b f a -&gt; a
+$cminimum :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f, Ord a) =&gt;
+AnnSelectStreamG b f a -&gt; a
+minimum :: forall a. Ord a =&gt; AnnSelectStreamG b f a -&gt; a
+$csum :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f, Num a) =&gt;
+AnnSelectStreamG b f a -&gt; a
+sum :: forall a. Num a =&gt; AnnSelectStreamG b f a -&gt; a
+$cproduct :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Foldable f, Num a) =&gt;
+AnnSelectStreamG b f a -&gt; a
+product :: forall a. Num a =&gt; AnnSelectStreamG b f a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686912890"><span id="local-6989586621686912909"><span id="local-6989586621686912915"><span id="local-6989586621686912920"><span class="annot"><span class="annottext">Functor (AnnSelectStreamG b f)
+Foldable (AnnSelectStreamG b f)
+Functor (AnnSelectStreamG b f)
+-&gt; Foldable (AnnSelectStreamG b f)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; AnnSelectStreamG b f a -&gt; f (AnnSelectStreamG b f b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    AnnSelectStreamG b f (f a) -&gt; f (AnnSelectStreamG b f a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; AnnSelectStreamG b f a -&gt; m (AnnSelectStreamG b f b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    AnnSelectStreamG b f (m a) -&gt; m (AnnSelectStreamG b f a))
+-&gt; Traversable (AnnSelectStreamG b f)
+forall {b :: BackendType} {f :: * -&gt; *}.
 (Backend b, Traversable f) =&gt;
 Functor (AnnSelectStreamG b f)
 forall {b :: BackendType} {f :: * -&gt; *}.
@@ -468,187 +575,230 @@ Functor t
     (a -&gt; m b) -&gt; t a -&gt; m (t b))
 -&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
 -&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnSelectStreamG b f (m a) -&gt; m (AnnSelectStreamG b f a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnSelectStreamG b f (f a) -&gt; f (AnnSelectStreamG b f a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; AnnSelectStreamG b f a -&gt; m (AnnSelectStreamG b f b)
 forall (f :: * -&gt; *) a b.
-Applicative f =&gt;
-(a -&gt; f b) -&gt; AnnSelectStreamG b f a -&gt; f (AnnSelectStreamG b f b)
-sequence :: forall (m :: * -&gt; *) a.
-Monad m =&gt;
-AnnSelectStreamG b f (m a) -&gt; m (AnnSelectStreamG b f a)
-$csequence :: forall (b :: BackendType) (f :: * -&gt; *) (m :: * -&gt; *) a.
-(Backend b, Traversable f, Monad m) =&gt;
-AnnSelectStreamG b f (m a) -&gt; m (AnnSelectStreamG b f a)
-mapM :: forall (m :: * -&gt; *) a b.
-Monad m =&gt;
-(a -&gt; m b) -&gt; AnnSelectStreamG b f a -&gt; m (AnnSelectStreamG b f b)
-$cmapM :: forall (b :: BackendType) (f :: * -&gt; *) (m :: * -&gt; *) a b.
-(Backend b, Traversable f, Monad m) =&gt;
-(a -&gt; m b) -&gt; AnnSelectStreamG b f a -&gt; m (AnnSelectStreamG b f b)
-sequenceA :: forall (f :: * -&gt; *) a.
-Applicative f =&gt;
-AnnSelectStreamG b f (f a) -&gt; f (AnnSelectStreamG b f a)
-$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) (f :: * -&gt; *) a.
-(Backend b, Traversable f, Applicative f) =&gt;
-AnnSelectStreamG b f (f a) -&gt; f (AnnSelectStreamG b f a)
-traverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; AnnSelectStreamG b f a -&gt; f (AnnSelectStreamG b f b)
 $ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) (f :: * -&gt; *) a b.
 (Backend b, Traversable f, Applicative f) =&gt;
 (a -&gt; f b) -&gt; AnnSelectStreamG b f a -&gt; f (AnnSelectStreamG b f b)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; AnnSelectStreamG b f a -&gt; f (AnnSelectStreamG b f b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) (f :: * -&gt; *) a.
+(Backend b, Traversable f, Applicative f) =&gt;
+AnnSelectStreamG b f (f a) -&gt; f (AnnSelectStreamG b f a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnSelectStreamG b f (f a) -&gt; f (AnnSelectStreamG b f a)
+$cmapM :: forall (b :: BackendType) (f :: * -&gt; *) (m :: * -&gt; *) a b.
+(Backend b, Traversable f, Monad m) =&gt;
+(a -&gt; m b) -&gt; AnnSelectStreamG b f a -&gt; m (AnnSelectStreamG b f b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; AnnSelectStreamG b f a -&gt; m (AnnSelectStreamG b f b)
+$csequence :: forall (b :: BackendType) (f :: * -&gt; *) (m :: * -&gt; *) a.
+(Backend b, Traversable f, Monad m) =&gt;
+AnnSelectStreamG b f (m a) -&gt; m (AnnSelectStreamG b f a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnSelectStreamG b f (m a) -&gt; m (AnnSelectStreamG b f a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-75"></span><span>
-</span><span id="line-76"></span><span id="local-6989586621691216726"><span id="local-6989586621691216736"><span id="local-6989586621691217176"><span id="local-6989586621691217177"><span id="local-6989586621691217178"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-77"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217178"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-78"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.From.html#SelectFromG"><span class="hs-identifier hs-type">SelectFromG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217178"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217177"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-79"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217178"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217177"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-80"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgsG"><span class="hs-identifier hs-type">SelectStreamArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217178"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217177"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-81"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217176"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217177"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span id="local-6989586621686912499"><span id="local-6989586621686912500"><span id="local-6989586621686912501"><span id="local-6989586621686912930"><span id="local-6989586621686912941"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912499"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.From.html#SelectFromG"><span class="hs-identifier hs-type">SelectFromG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912499"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912500"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912499"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912500"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgsG"><span class="hs-identifier hs-type">SelectStreamArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912499"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912500"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912501"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912500"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-82"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-83"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectStreamG"><span class="hs-identifier hs-type">AnnSelectStreamG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217178"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217176"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217177"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectStreamG"><span class="hs-identifier hs-type">AnnSelectStreamG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912499"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912501"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912500"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
 </span><span id="line-84"></span><span>
-</span><span id="line-85"></span><span id="local-6989586621691216708"><span id="local-6989586621691216710"><span id="local-6989586621691216721"><span id="local-6989586621691217170"><span id="local-6989586621691217171"><span id="local-6989586621691217172"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-86"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217172"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-87"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.From.html#SelectFromG"><span class="hs-identifier hs-type">SelectFromG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217172"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217171"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-88"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217172"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217171"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-89"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgsG"><span class="hs-identifier hs-type">SelectStreamArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217172"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217171"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-90"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217170"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217171"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span id="local-6989586621686912508"><span id="local-6989586621686912509"><span id="local-6989586621686912510"><span id="local-6989586621686912954"><span id="local-6989586621686912966"><span id="local-6989586621686912970"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912508"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-87"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.From.html#SelectFromG"><span class="hs-identifier hs-type">SelectFromG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912508"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912509"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-88"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.TablePerm.html#TablePermG"><span class="hs-identifier hs-type">TablePermG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912508"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912509"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-89"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgsG"><span class="hs-identifier hs-type">SelectStreamArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912508"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912509"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912510"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912509"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-91"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-92"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectStreamG"><span class="hs-identifier hs-type">AnnSelectStreamG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217172"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217170"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217171"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-92"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectStreamG"><span class="hs-identifier hs-type">AnnSelectStreamG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912508"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912510"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912509"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span><span>
 </span><span id="line-93"></span><span>
 </span><span id="line-94"></span><span class="hs-comment">-- | We can't write a Bifoldable instance for AnnSelectG because the types don't line up.</span><span>
 </span><span id="line-95"></span><span class="hs-comment">-- Instead, we provide this function which can be used to help define Bifoldable instances of other types</span><span>
 </span><span id="line-96"></span><span class="hs-comment">-- containing AnnSelectG values.</span><span>
-</span><span id="line-97"></span><span id="local-6989586621691217164"><span id="local-6989586621691217165"><span id="local-6989586621691217166"><span id="local-6989586621691217168"><span id="local-6989586621691217169"><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#bifoldMapAnnSelectG"><span class="hs-identifier hs-type">bifoldMapAnnSelectG</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217169"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Bifoldable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217168"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217169"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Monoid</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217166"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217165"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691217166"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217164"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691217166"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-type">AnnSelectG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217169"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217168"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217169"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217165"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621691217164"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691217166"><span class="hs-identifier hs-type">m</span></a></span></span></span></span></span></span><span>
+</span><span id="line-97"></span><span id="local-6989586621686912511"><span id="local-6989586621686912512"><span id="local-6989586621686912514"><span id="local-6989586621686912515"><span id="local-6989586621686912516"><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#bifoldMapAnnSelectG"><span class="hs-identifier hs-type">bifoldMapAnnSelectG</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912511"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bifoldable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912512"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912511"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="#local-6989586621686912514"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912515"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621686912514"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912516"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621686912514"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-type">AnnSelectG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912511"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912512"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912511"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912515"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621686912516"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621686912514"><span class="hs-identifier hs-type">m</span></a></span></span></span></span></span></span><span>
 </span><span id="line-98"></span><span id="bifoldMapAnnSelectG"><span class="annot"><span class="annottext">bifoldMapAnnSelectG :: forall (b :: BackendType) (f :: BackendType -&gt; * -&gt; * -&gt; *) m r v.
 (Backend b, Bifoldable (f b), Monoid m) =&gt;
 (r -&gt; m) -&gt; (v -&gt; m) -&gt; AnnSelectG b (f b r) v -&gt; m
-</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#bifoldMapAnnSelectG"><span class="hs-identifier hs-var hs-var">bifoldMapAnnSelectG</span></a></span></span><span> </span><span id="local-6989586621691216683"><span class="annot"><span class="annottext">r -&gt; m
-</span><a href="#local-6989586621691216683"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621691216682"><span class="annot"><span class="annottext">v -&gt; m
-</span><a href="#local-6989586621691216682"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-type">AnnSelectG</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691216676"><span id="local-6989586621691216677"><span id="local-6989586621691216678"><span id="local-6989586621691216679"><span id="local-6989586621691216680"><span id="local-6989586621691216681"><span class="annot"><span class="annottext">Fields (f b r v)
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#bifoldMapAnnSelectG"><span class="hs-identifier hs-var hs-var">bifoldMapAnnSelectG</span></a></span></span><span> </span><span id="local-6989586621686912997"><span class="annot"><span class="annottext">r -&gt; m
+</span><a href="#local-6989586621686912997"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621686912998"><span class="annot"><span class="annottext">v -&gt; m
+</span><a href="#local-6989586621686912998"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-type">AnnSelectG</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621686912999"><span id="local-6989586621686913000"><span id="local-6989586621686913001"><span id="local-6989586621686913002"><span id="local-6989586621686913003"><span id="local-6989586621686913004"><span class="annot"><span class="annottext">Fields (f b r v)
 Maybe NamingCase
 StringifyNumbers
 TablePermG b v
 SelectArgsG b v
 SelectFromG b v
-_asnNamingConvention :: Maybe NamingCase
-_asnStrfyNum :: StringifyNumbers
-_asnArgs :: SelectArgsG b v
-_asnPerm :: TablePermG b v
-_asnFrom :: SelectFromG b v
-_asnFields :: Fields (f b r v)
-$sel:_asnNamingConvention:AnnSelectG :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnSelectG b f v -&gt; Maybe NamingCase
-$sel:_asnStrfyNum:AnnSelectG :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnSelectG b f v -&gt; StringifyNumbers
-$sel:_asnArgs:AnnSelectG :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnSelectG b f v -&gt; SelectArgsG b v
-$sel:_asnPerm:AnnSelectG :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnSelectG b f v -&gt; TablePermG b v
-$sel:_asnFrom:AnnSelectG :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnSelectG b f v -&gt; SelectFromG b v
 $sel:_asnFields:AnnSelectG :: forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectG b f v -&gt; Fields (f v)
-</span><a href="#local-6989586621691216676"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-99"></span><span>  </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
+$sel:_asnFrom:AnnSelectG :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnSelectG b f v -&gt; SelectFromG b v
+$sel:_asnPerm:AnnSelectG :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnSelectG b f v -&gt; TablePermG b v
+$sel:_asnArgs:AnnSelectG :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnSelectG b f v -&gt; SelectArgsG b v
+$sel:_asnStrfyNum:AnnSelectG :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnSelectG b f v -&gt; StringifyNumbers
+$sel:_asnNamingConvention:AnnSelectG :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnSelectG b f v -&gt; Maybe NamingCase
+_asnFields :: Fields (f b r v)
+_asnFrom :: SelectFromG b v
+_asnPerm :: TablePermG b v
+_asnArgs :: SelectArgsG b v
+_asnStrfyNum :: StringifyNumbers
+_asnNamingConvention :: Maybe NamingCase
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnFields%3AAnnSelectG"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-99"></span><span>  </span><span class="annot"><span class="annottext">((FieldName, f b r v) -&gt; m) -&gt; Fields (f b r v) -&gt; m
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; [a] -&gt; m
+forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
+</span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(f b r v -&gt; m) -&gt; (FieldName, f b r v) -&gt; m
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; (FieldName, a) -&gt; m
+forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (p :: * -&gt; * -&gt; *) m a b.
+</span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="annot"><span class="annottext">((f b r v -&gt; m) -&gt; (FieldName, f b r v) -&gt; m)
+-&gt; (f b r v -&gt; m) -&gt; (FieldName, f b r v) -&gt; m
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(r -&gt; m) -&gt; (v -&gt; m) -&gt; f b r v -&gt; m
+forall m a b. Monoid m =&gt; (a -&gt; m) -&gt; (b -&gt; m) -&gt; f b a b -&gt; m
+forall (p :: * -&gt; * -&gt; *) m a b.
 (Bifoldable p, Monoid m) =&gt;
 (a -&gt; m) -&gt; (b -&gt; m) -&gt; p a b -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">bifoldMap</span></a></span><span> </span><span class="annot"><span class="annottext">r -&gt; m
-</span><a href="#local-6989586621691216683"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
-</span><a href="#local-6989586621691216682"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Fields (f b r v)
-</span><a href="#local-6989586621691216681"><span class="hs-identifier hs-var">_asnFields</span></a></span><span>
-</span><span id="line-100"></span><span>    </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
+</span><span class="hs-identifier hs-var">bifoldMap</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; m
+</span><a href="#local-6989586621686912997"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
+</span><a href="#local-6989586621686912998"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Fields (f b r v)
+</span><a href="#local-6989586621686912999"><span class="hs-identifier hs-var">_asnFields</span></a></span><span>
+</span><span id="line-100"></span><span>    </span><span class="annot"><span class="annottext">m -&gt; m -&gt; m
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; m) -&gt; SelectFromG b v -&gt; m
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectFromG b a -&gt; m
+forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
-</span><a href="#local-6989586621691216682"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">SelectFromG b v
-</span><a href="#local-6989586621691216680"><span class="hs-identifier hs-var">_asnFrom</span></a></span><span>
-</span><span id="line-101"></span><span>    </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
+</span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
+</span><a href="#local-6989586621686912998"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">SelectFromG b v
+</span><a href="#local-6989586621686913000"><span class="hs-identifier hs-var">_asnFrom</span></a></span><span>
+</span><span id="line-101"></span><span>    </span><span class="annot"><span class="annottext">m -&gt; m -&gt; m
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; m) -&gt; TablePermG b v -&gt; m
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; TablePermG b a -&gt; m
+forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
-</span><a href="#local-6989586621691216682"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">TablePermG b v
-</span><a href="#local-6989586621691216679"><span class="hs-identifier hs-var">_asnPerm</span></a></span><span>
-</span><span id="line-102"></span><span>    </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
+</span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
+</span><a href="#local-6989586621686912998"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">TablePermG b v
+</span><a href="#local-6989586621686913001"><span class="hs-identifier hs-var">_asnPerm</span></a></span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><span class="annottext">m -&gt; m -&gt; m
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; m) -&gt; SelectArgsG b v -&gt; m
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectArgsG b a -&gt; m
+forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
-</span><a href="#local-6989586621691216682"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">SelectArgsG b v
-</span><a href="#local-6989586621691216678"><span class="hs-identifier hs-var">_asnArgs</span></a></span><span>
+</span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
+</span><a href="#local-6989586621686912998"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">SelectArgsG b v
+</span><a href="#local-6989586621686913002"><span class="hs-identifier hs-var">_asnArgs</span></a></span><span>
 </span><span id="line-103"></span><span>
-</span><span id="line-104"></span><span id="local-6989586621691217144"><span id="local-6989586621691217145"><span id="local-6989586621691217146"><span id="local-6989586621691217147"><span id="local-6989586621691217148"><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#bifoldMapAnnSelectStreamG"><span class="hs-identifier hs-type">bifoldMapAnnSelectStreamG</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217148"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Bifoldable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217147"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217148"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Monoid</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217146"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217145"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691217146"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217144"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691217146"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectStreamG"><span class="hs-identifier hs-type">AnnSelectStreamG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217148"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691217147"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217148"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691217145"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621691217144"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691217146"><span class="hs-identifier hs-type">m</span></a></span></span></span></span></span></span><span>
+</span><span id="line-104"></span><span id="local-6989586621686912532"><span id="local-6989586621686912533"><span id="local-6989586621686912534"><span id="local-6989586621686912535"><span id="local-6989586621686912536"><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#bifoldMapAnnSelectStreamG"><span class="hs-identifier hs-type">bifoldMapAnnSelectStreamG</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912532"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bifoldable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912533"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912532"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="#local-6989586621686912534"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912535"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621686912534"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912536"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621686912534"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectStreamG"><span class="hs-identifier hs-type">AnnSelectStreamG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912532"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621686912533"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912532"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686912535"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621686912536"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621686912534"><span class="hs-identifier hs-type">m</span></a></span></span></span></span></span></span><span>
 </span><span id="line-105"></span><span id="bifoldMapAnnSelectStreamG"><span class="annot"><span class="annottext">bifoldMapAnnSelectStreamG :: forall (b :: BackendType) (f :: BackendType -&gt; * -&gt; * -&gt; *) m r v.
 (Backend b, Bifoldable (f b), Monoid m) =&gt;
 (r -&gt; m) -&gt; (v -&gt; m) -&gt; AnnSelectStreamG b (f b r) v -&gt; m
-</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#bifoldMapAnnSelectStreamG"><span class="hs-identifier hs-var hs-var">bifoldMapAnnSelectStreamG</span></a></span></span><span> </span><span id="local-6989586621691216654"><span class="annot"><span class="annottext">r -&gt; m
-</span><a href="#local-6989586621691216654"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621691216653"><span class="annot"><span class="annottext">v -&gt; m
-</span><a href="#local-6989586621691216653"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectStreamG"><span class="hs-identifier hs-type">AnnSelectStreamG</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691216647"><span id="local-6989586621691216648"><span id="local-6989586621691216649"><span id="local-6989586621691216650"><span id="local-6989586621691216651"><span id="local-6989586621691216652"><span class="annot"><span class="annottext">Fields (f b r v)
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#bifoldMapAnnSelectStreamG"><span class="hs-identifier hs-var hs-var">bifoldMapAnnSelectStreamG</span></a></span></span><span> </span><span id="local-6989586621686913026"><span class="annot"><span class="annottext">r -&gt; m
+</span><a href="#local-6989586621686913026"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621686913027"><span class="annot"><span class="annottext">v -&gt; m
+</span><a href="#local-6989586621686913027"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectStreamG"><span class="hs-identifier hs-type">AnnSelectStreamG</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621686913028"><span id="local-6989586621686913029"><span id="local-6989586621686913030"><span id="local-6989586621686913031"><span id="local-6989586621686913032"><span id="local-6989586621686913033"><span class="annot"><span class="annottext">Fields (f b r v)
 StringifyNumbers
 XStreamingSubscription b
 TablePermG b v
 SelectStreamArgsG b v
 SelectFromG b v
-_assnStrfyNum :: StringifyNumbers
-_assnArgs :: SelectStreamArgsG b v
-_assnPerm :: TablePermG b v
-_assnFrom :: SelectFromG b v
-_assnFields :: Fields (f b r v)
-_assnXStreamingSubscription :: XStreamingSubscription b
-$sel:_assnStrfyNum:AnnSelectStreamG :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnSelectStreamG b f v -&gt; StringifyNumbers
-$sel:_assnArgs:AnnSelectStreamG :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnSelectStreamG b f v -&gt; SelectStreamArgsG b v
-$sel:_assnPerm:AnnSelectStreamG :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnSelectStreamG b f v -&gt; TablePermG b v
-$sel:_assnFrom:AnnSelectStreamG :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnSelectStreamG b f v -&gt; SelectFromG b v
-$sel:_assnFields:AnnSelectStreamG :: forall (b :: BackendType) (f :: * -&gt; *) v.
-AnnSelectStreamG b f v -&gt; Fields (f v)
 $sel:_assnXStreamingSubscription:AnnSelectStreamG :: forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectStreamG b f v -&gt; XStreamingSubscription b
-</span><a href="#local-6989586621691216647"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-106"></span><span>  </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
+$sel:_assnFields:AnnSelectStreamG :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnSelectStreamG b f v -&gt; Fields (f v)
+$sel:_assnFrom:AnnSelectStreamG :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnSelectStreamG b f v -&gt; SelectFromG b v
+$sel:_assnPerm:AnnSelectStreamG :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnSelectStreamG b f v -&gt; TablePermG b v
+$sel:_assnArgs:AnnSelectStreamG :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnSelectStreamG b f v -&gt; SelectStreamArgsG b v
+$sel:_assnStrfyNum:AnnSelectStreamG :: forall (b :: BackendType) (f :: * -&gt; *) v.
+AnnSelectStreamG b f v -&gt; StringifyNumbers
+_assnXStreamingSubscription :: XStreamingSubscription b
+_assnFields :: Fields (f b r v)
+_assnFrom :: SelectFromG b v
+_assnPerm :: TablePermG b v
+_assnArgs :: SelectStreamArgsG b v
+_assnStrfyNum :: StringifyNumbers
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_assnXStreamingSubscription%3AAnnSelectStreamG"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><span class="annottext">((FieldName, f b r v) -&gt; m) -&gt; Fields (f b r v) -&gt; m
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; [a] -&gt; m
+forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
+</span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(f b r v -&gt; m) -&gt; (FieldName, f b r v) -&gt; m
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; (FieldName, a) -&gt; m
+forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (p :: * -&gt; * -&gt; *) m a b.
+</span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="annot"><span class="annottext">((f b r v -&gt; m) -&gt; (FieldName, f b r v) -&gt; m)
+-&gt; (f b r v -&gt; m) -&gt; (FieldName, f b r v) -&gt; m
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(r -&gt; m) -&gt; (v -&gt; m) -&gt; f b r v -&gt; m
+forall m a b. Monoid m =&gt; (a -&gt; m) -&gt; (b -&gt; m) -&gt; f b a b -&gt; m
+forall (p :: * -&gt; * -&gt; *) m a b.
 (Bifoldable p, Monoid m) =&gt;
 (a -&gt; m) -&gt; (b -&gt; m) -&gt; p a b -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">bifoldMap</span></a></span><span> </span><span class="annot"><span class="annottext">r -&gt; m
-</span><a href="#local-6989586621691216654"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
-</span><a href="#local-6989586621691216653"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Fields (f b r v)
-</span><a href="#local-6989586621691216651"><span class="hs-identifier hs-var">_assnFields</span></a></span><span>
-</span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
+</span><span class="hs-identifier hs-var">bifoldMap</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; m
+</span><a href="#local-6989586621686913026"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
+</span><a href="#local-6989586621686913027"><span class="hs-identifier hs-var">g</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Fields (f b r v)
+</span><a href="#local-6989586621686913029"><span class="hs-identifier hs-var">_assnFields</span></a></span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">m -&gt; m -&gt; m
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; m) -&gt; SelectFromG b v -&gt; m
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectFromG b a -&gt; m
+forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
-</span><a href="#local-6989586621691216653"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">SelectFromG b v
-</span><a href="#local-6989586621691216650"><span class="hs-identifier hs-var">_assnFrom</span></a></span><span>
-</span><span id="line-108"></span><span>    </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
+</span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
+</span><a href="#local-6989586621686913027"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">SelectFromG b v
+</span><a href="#local-6989586621686913030"><span class="hs-identifier hs-var">_assnFrom</span></a></span><span>
+</span><span id="line-108"></span><span>    </span><span class="annot"><span class="annottext">m -&gt; m -&gt; m
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; m) -&gt; TablePermG b v -&gt; m
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; TablePermG b a -&gt; m
+forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
-</span><a href="#local-6989586621691216653"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">TablePermG b v
-</span><a href="#local-6989586621691216649"><span class="hs-identifier hs-var">_assnPerm</span></a></span><span>
-</span><span id="line-109"></span><span>    </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
+</span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
+</span><a href="#local-6989586621686913027"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">TablePermG b v
+</span><a href="#local-6989586621686913031"><span class="hs-identifier hs-var">_assnPerm</span></a></span><span>
+</span><span id="line-109"></span><span>    </span><span class="annot"><span class="annottext">m -&gt; m -&gt; m
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; m) -&gt; SelectStreamArgsG b v -&gt; m
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectStreamArgsG b a -&gt; m
+forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
-</span><a href="#local-6989586621691216653"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">SelectStreamArgsG b v
-</span><a href="#local-6989586621691216648"><span class="hs-identifier hs-var">_assnArgs</span></a></span><span>
+</span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="annot"><span class="annottext">v -&gt; m
+</span><a href="#local-6989586621686913027"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">SelectStreamArgsG b v
+</span><a href="#local-6989586621686913032"><span class="hs-identifier hs-var">_assnArgs</span></a></span><span>
 </span><span id="line-110"></span></pre></body></html>

@@ -544,6 +544,10 @@ table.info {
   background: url(synopsis.png) no-repeat -75px -8px;
 }
 
+#synopsis details:not([open]) > ul {
+  visibility: hidden;
+}
+
 #synopsis ul {
   height: 100%;
   overflow: auto;

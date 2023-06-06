@@ -15,8 +15,8 @@
 </span><span id="line-15"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-16"></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens.TH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">makeLenses</span></span><span class="hs-special">)</span><span>
-</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Kind</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier">Type</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html"><span class="hs-identifier">Hasura.RQL.IR.Returning</span></a></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
@@ -26,35 +26,40 @@
 </span><span id="line-26"></span><span>
 </span><span id="line-27"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-28"></span><span>
-</span><span id="line-29"></span><span class="hs-keyword">data</span><span> </span><span id="AnnotatedUpdateG"><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdateG"><span class="hs-identifier hs-var">AnnotatedUpdateG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691245836"><span class="annot"><a href="#local-6989586621691245836"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691245835"><span class="annot"><a href="#local-6989586621691245835"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621691245834"><span class="annot"><a href="#local-6989586621691245834"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnotatedUpdateG"><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdateG"><span class="hs-identifier hs-var">AnnotatedUpdateG</span></a></span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">data</span><span> </span><span id="AnnotatedUpdateG"><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdateG"><span class="hs-identifier hs-var">AnnotatedUpdateG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942325"><span class="annot"><a href="#local-6989586621686942325"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942326"><span class="annot"><a href="#local-6989586621686942326"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621686942327"><span class="annot"><a href="#local-6989586621686942327"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnotatedUpdateG"><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdateG"><span class="hs-identifier hs-var">AnnotatedUpdateG</span></a></span></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_auTable"><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 AnnotatedUpdateG b r v -&gt; TableName b
-</span><a href="Hasura.RQL.IR.Update.html#_auTable"><span class="hs-identifier hs-var hs-var">_auTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245836"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Update.html#_auTable"><span class="hs-identifier hs-var hs-var">_auTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942325"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-31"></span><span>    </span><span id="_auUpdatePermissions"><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 AnnotatedUpdateG b r v -&gt; AnnBoolExp b v
-</span><a href="Hasura.RQL.IR.Update.html#_auUpdatePermissions"><span class="hs-identifier hs-var hs-var">_auUpdatePermissions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245836"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245834"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Update.html#_auUpdatePermissions"><span class="hs-identifier hs-var hs-var">_auUpdatePermissions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942325"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942327"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-32"></span><span>    </span><span id="_auCheck"><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 AnnotatedUpdateG b r v -&gt; AnnBoolExp b v
-</span><a href="Hasura.RQL.IR.Update.html#_auCheck"><span class="hs-identifier hs-var hs-var">_auCheck</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245836"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245834"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Update.html#_auCheck"><span class="hs-identifier hs-var hs-var">_auCheck</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942325"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942327"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-33"></span><span>    </span><span id="_auUpdateVariant"><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 AnnotatedUpdateG b r v -&gt; UpdateVariant b v
-</span><a href="Hasura.RQL.IR.Update.html#_auUpdateVariant"><span class="hs-identifier hs-var hs-var">_auUpdateVariant</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#UpdateVariant"><span class="hs-identifier hs-type">UpdateVariant</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245836"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245834"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Update.html#_auUpdateVariant"><span class="hs-identifier hs-var hs-var">_auUpdateVariant</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#UpdateVariant"><span class="hs-identifier hs-type">UpdateVariant</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942325"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942327"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-34"></span><span>    </span><span class="hs-comment">-- we don't prepare the arguments for returning</span><span>
 </span><span id="line-35"></span><span>    </span><span class="hs-comment">-- however the session variable can still be</span><span>
 </span><span id="line-36"></span><span>    </span><span class="hs-comment">-- converted as desired</span><span>
 </span><span id="line-37"></span><span>
-</span><span id="line-38"></span><span>    </span><span class="hs-comment">-- | Selection set</span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Selection set</span></span><span>
 </span><span id="line-39"></span><span>    </span><span id="_auOutput"><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 AnnotatedUpdateG b r v -&gt; MutationOutputG b r v
-</span><a href="Hasura.RQL.IR.Update.html#_auOutput"><span class="hs-identifier hs-var hs-var">_auOutput</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MutationOutputG"><span class="hs-identifier hs-type">MutationOutputG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245836"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245835"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245834"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Update.html#_auOutput"><span class="hs-identifier hs-var hs-var">_auOutput</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MutationOutputG"><span class="hs-identifier hs-type">MutationOutputG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942325"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942326"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942327"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-40"></span><span>    </span><span id="_auAllCols"><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 AnnotatedUpdateG b r v -&gt; [ColumnInfo b]
-</span><a href="Hasura.RQL.IR.Update.html#_auAllCols"><span class="hs-identifier hs-var hs-var">_auAllCols</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245836"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Update.html#_auAllCols"><span class="hs-identifier hs-var hs-var">_auAllCols</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942325"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-41"></span><span>    </span><span id="_auNamingConvention"><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 AnnotatedUpdateG b r v -&gt; Maybe NamingCase
-</span><a href="Hasura.RQL.IR.Update.html#_auNamingConvention"><span class="hs-identifier hs-var hs-var">_auNamingConvention</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span>
+</span><a href="Hasura.RQL.IR.Update.html#_auNamingConvention"><span class="hs-identifier hs-var hs-var">_auNamingConvention</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691245605"><span id="local-6989586621691245617"><span class="annot"><span class="annottext">forall a b. a -&gt; AnnotatedUpdateG b r b -&gt; AnnotatedUpdateG b r a
+</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942503"><span id="local-6989586621686942515"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b) -&gt; AnnotatedUpdateG b r a -&gt; AnnotatedUpdateG b r b)
+-&gt; (forall a b.
+    a -&gt; AnnotatedUpdateG b r b -&gt; AnnotatedUpdateG b r a)
+-&gt; Functor (AnnotatedUpdateG b r)
+forall a b. a -&gt; AnnotatedUpdateG b r b -&gt; AnnotatedUpdateG b r a
 forall a b.
 (a -&gt; b) -&gt; AnnotatedUpdateG b r a -&gt; AnnotatedUpdateG b r b
 forall (b :: BackendType) r a b.
@@ -66,17 +71,47 @@ Backend b =&gt;
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: forall a b. a -&gt; AnnotatedUpdateG b r b -&gt; AnnotatedUpdateG b r a
-$c&lt;$ :: forall (b :: BackendType) r a b.
-Backend b =&gt;
-a -&gt; AnnotatedUpdateG b r b -&gt; AnnotatedUpdateG b r a
-fmap :: forall a b.
-(a -&gt; b) -&gt; AnnotatedUpdateG b r a -&gt; AnnotatedUpdateG b r b
 $cfmap :: forall (b :: BackendType) r a b.
 Backend b =&gt;
 (a -&gt; b) -&gt; AnnotatedUpdateG b r a -&gt; AnnotatedUpdateG b r b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691245530"><span id="local-6989586621691245532"><span id="local-6989586621691245534"><span id="local-6989586621691245536"><span id="local-6989586621691245538"><span id="local-6989586621691245540"><span id="local-6989586621691245548"><span id="local-6989586621691245550"><span id="local-6989586621691245552"><span id="local-6989586621691245554"><span id="local-6989586621691245556"><span id="local-6989586621691245558"><span id="local-6989586621691245560"><span id="local-6989586621691245568"><span id="local-6989586621691245570"><span id="local-6989586621691245591"><span id="local-6989586621691245593"><span class="annot"><span class="annottext">forall a. AnnotatedUpdateG b r a -&gt; Bool
+fmap :: forall a b.
+(a -&gt; b) -&gt; AnnotatedUpdateG b r a -&gt; AnnotatedUpdateG b r b
+$c&lt;$ :: forall (b :: BackendType) r a b.
+Backend b =&gt;
+a -&gt; AnnotatedUpdateG b r b -&gt; AnnotatedUpdateG b r a
+&lt;$ :: forall a b. a -&gt; AnnotatedUpdateG b r b -&gt; AnnotatedUpdateG b r a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942529"><span id="local-6989586621686942535"><span id="local-6989586621686942557"><span id="local-6989586621686942562"><span id="local-6989586621686942570"><span id="local-6989586621686942573"><span id="local-6989586621686942576"><span id="local-6989586621686942579"><span id="local-6989586621686942582"><span id="local-6989586621686942585"><span id="local-6989586621686942588"><span id="local-6989586621686942596"><span id="local-6989586621686942599"><span id="local-6989586621686942604"><span id="local-6989586621686942609"><span id="local-6989586621686942614"><span id="local-6989586621686942619"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; AnnotatedUpdateG b r m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnotatedUpdateG b r a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AnnotatedUpdateG b r a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedUpdateG b r a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedUpdateG b r a -&gt; a)
+-&gt; (forall a. AnnotatedUpdateG b r a -&gt; [a])
+-&gt; (forall a. AnnotatedUpdateG b r a -&gt; Bool)
+-&gt; (forall a. AnnotatedUpdateG b r a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; AnnotatedUpdateG b r a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; AnnotatedUpdateG b r a -&gt; a)
+-&gt; (forall a. Ord a =&gt; AnnotatedUpdateG b r a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnotatedUpdateG b r a -&gt; a)
+-&gt; (forall a. Num a =&gt; AnnotatedUpdateG b r a -&gt; a)
+-&gt; Foldable (AnnotatedUpdateG b r)
+forall a. Eq a =&gt; a -&gt; AnnotatedUpdateG b r a -&gt; Bool
+forall a. Num a =&gt; AnnotatedUpdateG b r a -&gt; a
+forall a. Ord a =&gt; AnnotatedUpdateG b r a -&gt; a
+forall m. Monoid m =&gt; AnnotatedUpdateG b r m -&gt; m
+forall a. AnnotatedUpdateG b r a -&gt; Bool
+forall a. AnnotatedUpdateG b r a -&gt; Int
+forall a. AnnotatedUpdateG b r a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedUpdateG b r a -&gt; a
 forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnotatedUpdateG b r a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
 forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
 forall (b :: BackendType) r a.
 (Backend b, Eq a) =&gt;
@@ -130,75 +165,92 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: forall a. Num a =&gt; AnnotatedUpdateG b r a -&gt; a
-$cproduct :: forall (b :: BackendType) r a.
-(Backend b, Num a) =&gt;
-AnnotatedUpdateG b r a -&gt; a
-sum :: forall a. Num a =&gt; AnnotatedUpdateG b r a -&gt; a
-$csum :: forall (b :: BackendType) r a.
-(Backend b, Num a) =&gt;
-AnnotatedUpdateG b r a -&gt; a
-minimum :: forall a. Ord a =&gt; AnnotatedUpdateG b r a -&gt; a
-$cminimum :: forall (b :: BackendType) r a.
-(Backend b, Ord a) =&gt;
-AnnotatedUpdateG b r a -&gt; a
-maximum :: forall a. Ord a =&gt; AnnotatedUpdateG b r a -&gt; a
-$cmaximum :: forall (b :: BackendType) r a.
-(Backend b, Ord a) =&gt;
-AnnotatedUpdateG b r a -&gt; a
-elem :: forall a. Eq a =&gt; a -&gt; AnnotatedUpdateG b r a -&gt; Bool
-$celem :: forall (b :: BackendType) r a.
-(Backend b, Eq a) =&gt;
-a -&gt; AnnotatedUpdateG b r a -&gt; Bool
-length :: forall a. AnnotatedUpdateG b r a -&gt; Int
-$clength :: forall (b :: BackendType) r a.
-Backend b =&gt;
-AnnotatedUpdateG b r a -&gt; Int
-null :: forall a. AnnotatedUpdateG b r a -&gt; Bool
-$cnull :: forall (b :: BackendType) r a.
-Backend b =&gt;
-AnnotatedUpdateG b r a -&gt; Bool
-toList :: forall a. AnnotatedUpdateG b r a -&gt; [a]
-$ctoList :: forall (b :: BackendType) r a.
-Backend b =&gt;
-AnnotatedUpdateG b r a -&gt; [a]
-foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedUpdateG b r a -&gt; a
-$cfoldl1 :: forall (b :: BackendType) r a.
-Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnotatedUpdateG b r a -&gt; a
-foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedUpdateG b r a -&gt; a
-$cfoldr1 :: forall (b :: BackendType) r a.
-Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; AnnotatedUpdateG b r a -&gt; a
-foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
-$cfoldl' :: forall (b :: BackendType) r b a.
-Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
-foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
-$cfoldl :: forall (b :: BackendType) r b a.
-Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
-foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
-$cfoldr' :: forall (b :: BackendType) r a b.
-Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
-foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
-$cfoldr :: forall (b :: BackendType) r a b.
-Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
-foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnotatedUpdateG b r a -&gt; m
-$cfoldMap' :: forall (b :: BackendType) r m a.
-(Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnotatedUpdateG b r a -&gt; m
-foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnotatedUpdateG b r a -&gt; m
-$cfoldMap :: forall (b :: BackendType) r m a.
-(Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; AnnotatedUpdateG b r a -&gt; m
-fold :: forall m. Monoid m =&gt; AnnotatedUpdateG b r m -&gt; m
 $cfold :: forall (b :: BackendType) r m.
 (Backend b, Monoid m) =&gt;
 AnnotatedUpdateG b r m -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691245498"><span id="local-6989586621691245500"><span id="local-6989586621691245502"><span id="local-6989586621691245523"><span class="annot"><span class="annottext">forall (b :: BackendType) r.
+fold :: forall m. Monoid m =&gt; AnnotatedUpdateG b r m -&gt; m
+$cfoldMap :: forall (b :: BackendType) r m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnotatedUpdateG b r a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnotatedUpdateG b r a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) r m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AnnotatedUpdateG b r a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnotatedUpdateG b r a -&gt; m
+$cfoldr :: forall (b :: BackendType) r a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
+$cfoldr' :: forall (b :: BackendType) r a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
+$cfoldl :: forall (b :: BackendType) r b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
+$cfoldl' :: forall (b :: BackendType) r b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnotatedUpdateG b r a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) r a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnotatedUpdateG b r a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedUpdateG b r a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) r a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AnnotatedUpdateG b r a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnotatedUpdateG b r a -&gt; a
+$ctoList :: forall (b :: BackendType) r a.
+Backend b =&gt;
+AnnotatedUpdateG b r a -&gt; [a]
+toList :: forall a. AnnotatedUpdateG b r a -&gt; [a]
+$cnull :: forall (b :: BackendType) r a.
+Backend b =&gt;
+AnnotatedUpdateG b r a -&gt; Bool
+null :: forall a. AnnotatedUpdateG b r a -&gt; Bool
+$clength :: forall (b :: BackendType) r a.
+Backend b =&gt;
+AnnotatedUpdateG b r a -&gt; Int
+length :: forall a. AnnotatedUpdateG b r a -&gt; Int
+$celem :: forall (b :: BackendType) r a.
+(Backend b, Eq a) =&gt;
+a -&gt; AnnotatedUpdateG b r a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; AnnotatedUpdateG b r a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) r a.
+(Backend b, Ord a) =&gt;
+AnnotatedUpdateG b r a -&gt; a
+maximum :: forall a. Ord a =&gt; AnnotatedUpdateG b r a -&gt; a
+$cminimum :: forall (b :: BackendType) r a.
+(Backend b, Ord a) =&gt;
+AnnotatedUpdateG b r a -&gt; a
+minimum :: forall a. Ord a =&gt; AnnotatedUpdateG b r a -&gt; a
+$csum :: forall (b :: BackendType) r a.
+(Backend b, Num a) =&gt;
+AnnotatedUpdateG b r a -&gt; a
+sum :: forall a. Num a =&gt; AnnotatedUpdateG b r a -&gt; a
+$cproduct :: forall (b :: BackendType) r a.
+(Backend b, Num a) =&gt;
+AnnotatedUpdateG b r a -&gt; a
+product :: forall a. Num a =&gt; AnnotatedUpdateG b r a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942632"><span id="local-6989586621686942654"><span id="local-6989586621686942660"><span id="local-6989586621686942665"><span class="annot"><span class="annottext">Functor (AnnotatedUpdateG b r)
+Foldable (AnnotatedUpdateG b r)
+Functor (AnnotatedUpdateG b r)
+-&gt; Foldable (AnnotatedUpdateG b r)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; AnnotatedUpdateG b r a -&gt; f (AnnotatedUpdateG b r b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    AnnotatedUpdateG b r (f a) -&gt; f (AnnotatedUpdateG b r a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; AnnotatedUpdateG b r a -&gt; m (AnnotatedUpdateG b r b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    AnnotatedUpdateG b r (m a) -&gt; m (AnnotatedUpdateG b r a))
+-&gt; Traversable (AnnotatedUpdateG b r)
+forall (b :: BackendType) r.
 Backend b =&gt;
 Functor (AnnotatedUpdateG b r)
 forall (b :: BackendType) r.
@@ -228,56 +280,65 @@ Functor t
     (a -&gt; m b) -&gt; t a -&gt; m (t b))
 -&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
 -&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnotatedUpdateG b r (m a) -&gt; m (AnnotatedUpdateG b r a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnotatedUpdateG b r (f a) -&gt; f (AnnotatedUpdateG b r a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; AnnotatedUpdateG b r a -&gt; m (AnnotatedUpdateG b r b)
 forall (f :: * -&gt; *) a b.
-Applicative f =&gt;
-(a -&gt; f b) -&gt; AnnotatedUpdateG b r a -&gt; f (AnnotatedUpdateG b r b)
-sequence :: forall (m :: * -&gt; *) a.
-Monad m =&gt;
-AnnotatedUpdateG b r (m a) -&gt; m (AnnotatedUpdateG b r a)
-$csequence :: forall (b :: BackendType) r (m :: * -&gt; *) a.
-(Backend b, Monad m) =&gt;
-AnnotatedUpdateG b r (m a) -&gt; m (AnnotatedUpdateG b r a)
-mapM :: forall (m :: * -&gt; *) a b.
-Monad m =&gt;
-(a -&gt; m b) -&gt; AnnotatedUpdateG b r a -&gt; m (AnnotatedUpdateG b r b)
-$cmapM :: forall (b :: BackendType) r (m :: * -&gt; *) a b.
-(Backend b, Monad m) =&gt;
-(a -&gt; m b) -&gt; AnnotatedUpdateG b r a -&gt; m (AnnotatedUpdateG b r b)
-sequenceA :: forall (f :: * -&gt; *) a.
-Applicative f =&gt;
-AnnotatedUpdateG b r (f a) -&gt; f (AnnotatedUpdateG b r a)
-$csequenceA :: forall (b :: BackendType) r (f :: * -&gt; *) a.
-(Backend b, Applicative f) =&gt;
-AnnotatedUpdateG b r (f a) -&gt; f (AnnotatedUpdateG b r a)
-traverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; AnnotatedUpdateG b r a -&gt; f (AnnotatedUpdateG b r b)
 $ctraverse :: forall (b :: BackendType) r (f :: * -&gt; *) a b.
 (Backend b, Applicative f) =&gt;
 (a -&gt; f b) -&gt; AnnotatedUpdateG b r a -&gt; f (AnnotatedUpdateG b r b)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; AnnotatedUpdateG b r a -&gt; f (AnnotatedUpdateG b r b)
+$csequenceA :: forall (b :: BackendType) r (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+AnnotatedUpdateG b r (f a) -&gt; f (AnnotatedUpdateG b r a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnotatedUpdateG b r (f a) -&gt; f (AnnotatedUpdateG b r a)
+$cmapM :: forall (b :: BackendType) r (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b) -&gt; AnnotatedUpdateG b r a -&gt; m (AnnotatedUpdateG b r b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; AnnotatedUpdateG b r a -&gt; m (AnnotatedUpdateG b r b)
+$csequence :: forall (b :: BackendType) r (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+AnnotatedUpdateG b r (m a) -&gt; m (AnnotatedUpdateG b r a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnotatedUpdateG b r (m a) -&gt; m (AnnotatedUpdateG b r a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span>
-</span><span id="line-45"></span><span id="local-6989586621691245478"><span id="local-6989586621691245480"><span id="local-6989586621691245495"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621691245744"><span id="local-6989586621691245745"><span id="local-6989586621691245746"><span class="annot"><a href="#local-6989586621691245744"><span class="hs-keyword hs-type hs-type hs-type">stock</span></a></span></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245746"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-47"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245745"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-48"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245744"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-49"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245746"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245745"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-50"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#UpdateVariant"><span class="hs-identifier hs-type">UpdateVariant</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245746"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245745"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-51"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MutationOutputG"><span class="hs-identifier hs-type">MutationOutputG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245746"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245744"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245745"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span id="local-6989586621686942677"><span id="local-6989586621686942693"><span id="local-6989586621686942697"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621686942440"><span id="local-6989586621686942441"><span id="local-6989586621686942442"><span class="annot"><a href="#local-6989586621686942440"><span class="hs-keyword hs-type hs-type hs-type">stock</span></a></span></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942440"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621686942441"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621686942442"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942440"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942441"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#UpdateVariant"><span class="hs-identifier hs-type">UpdateVariant</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942440"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942441"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MutationOutputG"><span class="hs-identifier hs-type">MutationOutputG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942440"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942442"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942441"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-52"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-53"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdateG"><span class="hs-identifier hs-type">AnnotatedUpdateG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245746"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245744"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245745"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdateG"><span class="hs-identifier hs-type">AnnotatedUpdateG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942440"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942442"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942441"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-54"></span><span>
-</span><span id="line-55"></span><span id="local-6989586621691245460"><span id="local-6989586621691245473"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621691245737"><span id="local-6989586621691245738"><span id="local-6989586621691245739"><span class="annot"><a href="#local-6989586621691245737"><span class="hs-keyword hs-type hs-type hs-type">stock</span></a></span></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-56"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245739"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-57"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245738"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-58"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245737"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-59"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245739"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245738"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-60"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#UpdateVariant"><span class="hs-identifier hs-type">UpdateVariant</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245739"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245738"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-61"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MutationOutputG"><span class="hs-identifier hs-type">MutationOutputG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245739"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245737"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245738"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span id="local-6989586621686942711"><span id="local-6989586621686942725"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621686942450"><span id="local-6989586621686942451"><span id="local-6989586621686942452"><span class="annot"><a href="#local-6989586621686942450"><span class="hs-keyword hs-type hs-type hs-type">stock</span></a></span></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942450"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621686942451"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621686942452"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942450"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942451"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#UpdateVariant"><span class="hs-identifier hs-type">UpdateVariant</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942450"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942451"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MutationOutputG"><span class="hs-identifier hs-type">MutationOutputG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942450"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942452"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942451"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-62"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-63"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdateG"><span class="hs-identifier hs-type">AnnotatedUpdateG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245739"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245737"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245738"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdateG"><span class="hs-identifier hs-type">AnnotatedUpdateG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942450"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942452"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942451"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span class="hs-keyword">type</span><span> </span><span id="AnnotatedUpdate"><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdate"><span class="hs-identifier hs-var">AnnotatedUpdate</span></a></span></span><span> </span><span id="local-6989586621691245456"><span class="annot"><a href="#local-6989586621691245456"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdateG"><span class="hs-identifier hs-type">AnnotatedUpdateG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245456"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Void</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SQLExpression"><span class="hs-identifier hs-type">SQLExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691245456"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span class="hs-keyword">type</span><span> </span><span id="AnnotatedUpdate"><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdate"><span class="hs-identifier hs-var">AnnotatedUpdate</span></a></span></span><span> </span><span id="local-6989586621686942732"><span class="annot"><a href="#local-6989586621686942732"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdateG"><span class="hs-identifier hs-type">AnnotatedUpdateG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942732"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SQLExpression"><span class="hs-identifier hs-type">SQLExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942732"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span class="hs-special">$</span><span id="auNamingConvention"><span id="auAllCols"><span id="auOutput"><span id="auUpdateVariant"><span id="auCheck"><span id="auUpdatePermissions"><span id="auTable"><span id="local-6989586621691245736"><span id="local-6989586621691245834"><span id="local-6989586621691245835"><span id="local-6989586621691245836"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AnnotatedUpdateG</span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-67"></span><span class="hs-special">$</span><span id="local-6989586621686942325"><span id="local-6989586621686942326"><span id="local-6989586621686942327"><span id="local-6989586621686942454"><span id="auTable"><span id="auUpdatePermissions"><span id="auCheck"><span id="auUpdateVariant"><span id="auOutput"><span id="auAllCols"><span id="auNamingConvention"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AnnotatedUpdateG</span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span><span>
 </span><span id="line-68"></span></pre></body></html>

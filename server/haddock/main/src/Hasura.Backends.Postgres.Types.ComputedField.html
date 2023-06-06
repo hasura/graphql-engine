@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
 </span><span id="line-2"></span><span>
-</span><span id="line-3"></span><span class="hs-comment">-- | Postgres types related to computed fields</span><span>
+</span><span id="line-3"></span><span class="annot"><span class="hs-comment">-- | Postgres types related to computed fields</span></span><span>
 </span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.Types.ComputedField</span><span>
 </span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier">ComputedFieldDefinition</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionTableArgument"><span class="hs-identifier">FunctionTableArgument</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
@@ -21,137 +21,224 @@
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html"><span class="hs-identifier">Hasura.Backends.Postgres.Types.Function</span></a></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html"><span class="hs-identifier">Hasura.Function.Cache</span></a></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span id="local-6989586621691117127"><span id="local-6989586621691117128"></span></span><span class="hs-keyword">data</span><span> </span><span id="ComputedFieldDefinition"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-var">ComputedFieldDefinition</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ComputedFieldDefinition"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-var">ComputedFieldDefinition</span></a></span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">data</span><span> </span><span id="ComputedFieldDefinition"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-var">ComputedFieldDefinition</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ComputedFieldDefinition"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-var">ComputedFieldDefinition</span></a></span></span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cfdFunction"><span class="annot"><span class="annottext">ComputedFieldDefinition -&gt; QualifiedFunction
 </span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#_cfdFunction"><span class="hs-identifier hs-var hs-var">_cfdFunction</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedFunction"><span class="hs-identifier hs-type">QualifiedFunction</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-28"></span><span>    </span><span id="_cfdTableArgument"><span class="annot"><span class="annottext">ComputedFieldDefinition -&gt; Maybe FunctionArgName
-</span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#_cfdTableArgument"><span class="hs-identifier hs-var hs-var">_cfdTableArgument</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#_cfdTableArgument"><span class="hs-identifier hs-var hs-var">_cfdTableArgument</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-29"></span><span>    </span><span id="_cfdSessionArgument"><span class="annot"><span class="annottext">ComputedFieldDefinition -&gt; Maybe FunctionArgName
-</span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#_cfdSessionArgument"><span class="hs-identifier hs-var hs-var">_cfdSessionArgument</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#_cfdSessionArgument"><span class="hs-identifier hs-var hs-var">_cfdSessionArgument</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691117108"><span id="local-6989586621691117110"><span id="local-6989586621691117121"><span class="annot"><span class="annottext">Int -&gt; ComputedFieldDefinition -&gt; ShowS
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686810532"><span id="local-6989586621686810543"><span id="local-6989586621686810547"><span class="annot"><span class="annottext">Int -&gt; ComputedFieldDefinition -&gt; ShowS
 [ComputedFieldDefinition] -&gt; ShowS
 ComputedFieldDefinition -&gt; String
+(Int -&gt; ComputedFieldDefinition -&gt; ShowS)
+-&gt; (ComputedFieldDefinition -&gt; String)
+-&gt; ([ComputedFieldDefinition] -&gt; ShowS)
+-&gt; Show ComputedFieldDefinition
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [ComputedFieldDefinition] -&gt; ShowS
-$cshowList :: [ComputedFieldDefinition] -&gt; ShowS
-show :: ComputedFieldDefinition -&gt; String
-$cshow :: ComputedFieldDefinition -&gt; String
-showsPrec :: Int -&gt; ComputedFieldDefinition -&gt; ShowS
 $cshowsPrec :: Int -&gt; ComputedFieldDefinition -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691117094"><span id="local-6989586621691117103"><span class="annot"><span class="annottext">ComputedFieldDefinition -&gt; ComputedFieldDefinition -&gt; Bool
+showsPrec :: Int -&gt; ComputedFieldDefinition -&gt; ShowS
+$cshow :: ComputedFieldDefinition -&gt; String
+show :: ComputedFieldDefinition -&gt; String
+$cshowList :: [ComputedFieldDefinition] -&gt; ShowS
+showList :: [ComputedFieldDefinition] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686810553"><span id="local-6989586621686810562"><span class="annot"><span class="annottext">ComputedFieldDefinition -&gt; ComputedFieldDefinition -&gt; Bool
+(ComputedFieldDefinition -&gt; ComputedFieldDefinition -&gt; Bool)
+-&gt; (ComputedFieldDefinition -&gt; ComputedFieldDefinition -&gt; Bool)
+-&gt; Eq ComputedFieldDefinition
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: ComputedFieldDefinition -&gt; ComputedFieldDefinition -&gt; Bool
-$c/= :: ComputedFieldDefinition -&gt; ComputedFieldDefinition -&gt; Bool
-== :: ComputedFieldDefinition -&gt; ComputedFieldDefinition -&gt; Bool
 $c== :: ComputedFieldDefinition -&gt; ComputedFieldDefinition -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep ComputedFieldDefinition x -&gt; ComputedFieldDefinition
+== :: ComputedFieldDefinition -&gt; ComputedFieldDefinition -&gt; Bool
+$c/= :: ComputedFieldDefinition -&gt; ComputedFieldDefinition -&gt; Bool
+/= :: ComputedFieldDefinition -&gt; ComputedFieldDefinition -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686810569"><span id="local-6989586621686810571"><span class="annot"><span class="annottext">(forall x.
+ ComputedFieldDefinition -&gt; Rep ComputedFieldDefinition x)
+-&gt; (forall x.
+    Rep ComputedFieldDefinition x -&gt; ComputedFieldDefinition)
+-&gt; Generic ComputedFieldDefinition
+forall x. Rep ComputedFieldDefinition x -&gt; ComputedFieldDefinition
 forall x. ComputedFieldDefinition -&gt; Rep ComputedFieldDefinition x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x. Rep ComputedFieldDefinition x -&gt; ComputedFieldDefinition
 $cfrom :: forall x. ComputedFieldDefinition -&gt; Rep ComputedFieldDefinition x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x. ComputedFieldDefinition -&gt; Rep ComputedFieldDefinition x
+$cto :: forall x. Rep ComputedFieldDefinition x -&gt; ComputedFieldDefinition
+to :: forall x. Rep ComputedFieldDefinition x -&gt; ComputedFieldDefinition
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691117086"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686810575"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span></span><span>
 </span><span id="line-34"></span><span>
-</span><span id="line-35"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691117079"><span id="local-6989586621691117081"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span></span></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686810604"><span id="local-6989586621686810611"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span></span></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691117075"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-38"></span><span>  </span><span id="local-6989586621691117055"><span class="annot"><span class="annottext">codec :: JSONCodec ComputedFieldDefinition
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-39"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686810635"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621686810657"><span class="annot"><span class="annottext">codec :: JSONCodec ComputedFieldDefinition
+</span><a href="#local-6989586621686810657"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec ComputedFieldDefinition ComputedFieldDefinition
+-&gt; JSONCodec ComputedFieldDefinition
+forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">AC.object</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;PostgresComputedFieldDefinition&quot;</span></span><span>
-</span><span id="line-40"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedFunction
+</span><span id="line-40"></span><span>      </span><span class="annot"><span class="annottext">(ObjectCodec ComputedFieldDefinition ComputedFieldDefinition
+ -&gt; JSONCodec ComputedFieldDefinition)
+-&gt; ObjectCodec ComputedFieldDefinition ComputedFieldDefinition
+-&gt; JSONCodec ComputedFieldDefinition
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">QualifiedFunction
 -&gt; Maybe FunctionArgName
 -&gt; Maybe FunctionArgName
 -&gt; ComputedFieldDefinition
 </span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-var">ComputedFieldDefinition</span></a></span><span>
-</span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
+</span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">(QualifiedFunction
+ -&gt; Maybe FunctionArgName
+ -&gt; Maybe FunctionArgName
+ -&gt; ComputedFieldDefinition)
+-&gt; Codec Object ComputedFieldDefinition QualifiedFunction
+-&gt; Codec
+     Object
+     ComputedFieldDefinition
+     (Maybe FunctionArgName
+      -&gt; Maybe FunctionArgName -&gt; ComputedFieldDefinition)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec QualifiedFunction QualifiedFunction
+forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;function&quot;</span></span><span>
-</span><span id="line-42"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-42"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec QualifiedFunction QualifiedFunction
+-&gt; (ComputedFieldDefinition -&gt; QualifiedFunction)
+-&gt; Codec Object ComputedFieldDefinition QualifiedFunction
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldDefinition -&gt; QualifiedFunction
 </span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#_cfdFunction"><span class="hs-identifier hs-var">_cfdFunction</span></a></span><span>
-</span><span id="line-43"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+</span><span id="line-43"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  ComputedFieldDefinition
+  (Maybe FunctionArgName
+   -&gt; Maybe FunctionArgName -&gt; ComputedFieldDefinition)
+-&gt; Codec Object ComputedFieldDefinition (Maybe FunctionArgName)
+-&gt; Codec
+     Object
+     ComputedFieldDefinition
+     (Maybe FunctionArgName -&gt; ComputedFieldDefinition)
+forall a b.
+Codec Object ComputedFieldDefinition (a -&gt; b)
+-&gt; Codec Object ComputedFieldDefinition a
+-&gt; Codec Object ComputedFieldDefinition b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec (Maybe FunctionArgName) (Maybe FunctionArgName)
+forall output.
 HasCodec output =&gt;
 Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><span class="hs-identifier hs-var">optionalField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;table_argument&quot;</span></span><span>
-</span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe FunctionArgName) (Maybe FunctionArgName)
+-&gt; (ComputedFieldDefinition -&gt; Maybe FunctionArgName)
+-&gt; Codec Object ComputedFieldDefinition (Maybe FunctionArgName)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldDefinition -&gt; Maybe FunctionArgName
 </span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#_cfdTableArgument"><span class="hs-identifier hs-var">_cfdTableArgument</span></a></span><span>
-</span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+</span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  ComputedFieldDefinition
+  (Maybe FunctionArgName -&gt; ComputedFieldDefinition)
+-&gt; Codec Object ComputedFieldDefinition (Maybe FunctionArgName)
+-&gt; ObjectCodec ComputedFieldDefinition ComputedFieldDefinition
+forall a b.
+Codec Object ComputedFieldDefinition (a -&gt; b)
+-&gt; Codec Object ComputedFieldDefinition a
+-&gt; Codec Object ComputedFieldDefinition b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec (Maybe FunctionArgName) (Maybe FunctionArgName)
+forall output.
 HasCodec output =&gt;
 Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><span class="hs-identifier hs-var">optionalField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;session_argument&quot;</span></span><span>
-</span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe FunctionArgName) (Maybe FunctionArgName)
+-&gt; (ComputedFieldDefinition -&gt; Maybe FunctionArgName)
+-&gt; Codec Object ComputedFieldDefinition (Maybe FunctionArgName)
+forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldDefinition -&gt; Maybe FunctionArgName
 </span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#_cfdSessionArgument"><span class="hs-identifier hs-var">_cfdSessionArgument</span></a></span><span>
 </span><span id="line-47"></span><span>
-</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691117044"><span id="local-6989586621691117046"><span id="local-6989586621691117048"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-49"></span><span>  </span><span id="local-6989586621691116924"><span class="annot"><span class="annottext">toJSON :: ComputedFieldDefinition -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686810664"><span id="local-6989586621686810668"><span id="local-6989586621686810671"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621686810792"><span class="annot"><span class="annottext">toJSON :: ComputedFieldDefinition -&gt; Value
+</span><a href="#local-6989586621686810792"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ComputedFieldDefinition -&gt; Value
+forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
-</span><a href="#local-6989586621691116920"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">}</span><span>
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
+</span><a href="#local-6989586621686810796"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">}</span><span>
 </span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691116917"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-52"></span><span>  </span><span id="local-6989586621691116834"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ComputedFieldDefinition
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-51"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686810799"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621686810884"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ComputedFieldDefinition
+</span><a href="#local-6989586621686810884"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser ComputedFieldDefinition
+forall a.
 (Generic a, GFromJSON Zero (Rep a)) =&gt;
 Options -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">genericParseJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
-</span><a href="#local-6989586621691116920"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">}</span><span>
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
+</span><a href="#local-6989586621686810796"><span class="hs-identifier hs-var">omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">}</span><span>
 </span><span id="line-53"></span><span>
 </span><span id="line-54"></span><span class="hs-comment">-- | The function table argument is either the very first argument or the named</span><span>
 </span><span id="line-55"></span><span class="hs-comment">-- argument with an index. The index is 0 if the named argument is the first.</span><span>
-</span><span id="line-56"></span><span id="local-6989586621691116830"><span id="local-6989586621691116831"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionTableArgument"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionTableArgument"><span class="hs-identifier hs-var">FunctionTableArgument</span></a></span></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">data</span><span> </span><span id="FunctionTableArgument"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionTableArgument"><span class="hs-identifier hs-var">FunctionTableArgument</span></a></span></span><span>
 </span><span id="line-57"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FTAFirst"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FTAFirst"><span class="hs-identifier hs-var">FTAFirst</span></a></span></span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FTANamed"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FTANamed"><span class="hs-identifier hs-var">FTANamed</span></a></span></span><span>
-</span><span id="line-59"></span><span>      </span><span class="hs-comment">-- | argument name</span><span>
+</span><span id="line-59"></span><span>      </span><span class="annot"><span class="hs-comment">-- | argument name</span></span><span>
 </span><span id="line-60"></span><span>      </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span>
-</span><span id="line-61"></span><span>      </span><span class="hs-comment">-- | argument index</span><span>
-</span><span id="line-62"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691116818"><span id="local-6989586621691116820"><span id="local-6989586621691116826"><span class="annot"><span class="annottext">Int -&gt; FunctionTableArgument -&gt; ShowS
+</span><span id="line-61"></span><span>      </span><span class="annot"><span class="hs-comment">-- | argument index</span></span><span>
+</span><span id="line-62"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686810890"><span id="local-6989586621686810896"><span id="local-6989586621686810900"><span class="annot"><span class="annottext">Int -&gt; FunctionTableArgument -&gt; ShowS
 [FunctionTableArgument] -&gt; ShowS
 FunctionTableArgument -&gt; String
+(Int -&gt; FunctionTableArgument -&gt; ShowS)
+-&gt; (FunctionTableArgument -&gt; String)
+-&gt; ([FunctionTableArgument] -&gt; ShowS)
+-&gt; Show FunctionTableArgument
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [FunctionTableArgument] -&gt; ShowS
-$cshowList :: [FunctionTableArgument] -&gt; ShowS
-show :: FunctionTableArgument -&gt; String
-$cshow :: FunctionTableArgument -&gt; String
-showsPrec :: Int -&gt; FunctionTableArgument -&gt; ShowS
 $cshowsPrec :: Int -&gt; FunctionTableArgument -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691116811"><span id="local-6989586621691116816"><span class="annot"><span class="annottext">FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
+showsPrec :: Int -&gt; FunctionTableArgument -&gt; ShowS
+$cshow :: FunctionTableArgument -&gt; String
+show :: FunctionTableArgument -&gt; String
+$cshowList :: [FunctionTableArgument] -&gt; ShowS
+showList :: [FunctionTableArgument] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686810903"><span id="local-6989586621686810908"><span class="annot"><span class="annottext">FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
+(FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool)
+-&gt; (FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool)
+-&gt; Eq FunctionTableArgument
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
-$c/= :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
-== :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
 $c== :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691116787"><span id="local-6989586621691116789"><span id="local-6989586621691116792"><span id="local-6989586621691116795"><span id="local-6989586621691116798"><span id="local-6989586621691116802"><span id="local-6989586621691116807"><span class="annot"><span class="annottext">Eq FunctionTableArgument
+== :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
+$c/= :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
+/= :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686810914"><span id="local-6989586621686810919"><span id="local-6989586621686810923"><span id="local-6989586621686810927"><span id="local-6989586621686810930"><span id="local-6989586621686810933"><span id="local-6989586621686810936"><span class="annot"><span class="annottext">Eq FunctionTableArgument
+Eq FunctionTableArgument
+-&gt; (FunctionTableArgument -&gt; FunctionTableArgument -&gt; Ordering)
+-&gt; (FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool)
+-&gt; (FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool)
+-&gt; (FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool)
+-&gt; (FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool)
+-&gt; (FunctionTableArgument
+    -&gt; FunctionTableArgument -&gt; FunctionTableArgument)
+-&gt; (FunctionTableArgument
+    -&gt; FunctionTableArgument -&gt; FunctionTableArgument)
+-&gt; Ord FunctionTableArgument
 FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
 FunctionTableArgument -&gt; FunctionTableArgument -&gt; Ordering
 FunctionTableArgument
@@ -166,76 +253,101 @@ Eq a
 -&gt; (a -&gt; a -&gt; a)
 -&gt; (a -&gt; a -&gt; a)
 -&gt; Ord a
-min :: FunctionTableArgument
--&gt; FunctionTableArgument -&gt; FunctionTableArgument
-$cmin :: FunctionTableArgument
+$ccompare :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Ordering
+compare :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Ordering
+$c&lt; :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
+&lt; :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
+$c&lt;= :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
+&lt;= :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
+$c&gt; :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
+&gt; :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
+$c&gt;= :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
+&gt;= :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
+$cmax :: FunctionTableArgument
 -&gt; FunctionTableArgument -&gt; FunctionTableArgument
 max :: FunctionTableArgument
 -&gt; FunctionTableArgument -&gt; FunctionTableArgument
-$cmax :: FunctionTableArgument
+$cmin :: FunctionTableArgument
 -&gt; FunctionTableArgument -&gt; FunctionTableArgument
-&gt;= :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
-$c&gt;= :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
-&gt; :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
-$c&gt; :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
-&lt;= :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
-$c&lt;= :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
-&lt; :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
-$c&lt; :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Bool
-compare :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Ordering
-$ccompare :: FunctionTableArgument -&gt; FunctionTableArgument -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep FunctionTableArgument x -&gt; FunctionTableArgument
+min :: FunctionTableArgument
+-&gt; FunctionTableArgument -&gt; FunctionTableArgument
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686810940"><span id="local-6989586621686810942"><span class="annot"><span class="annottext">(forall x. FunctionTableArgument -&gt; Rep FunctionTableArgument x)
+-&gt; (forall x. Rep FunctionTableArgument x -&gt; FunctionTableArgument)
+-&gt; Generic FunctionTableArgument
+forall x. Rep FunctionTableArgument x -&gt; FunctionTableArgument
 forall x. FunctionTableArgument -&gt; Rep FunctionTableArgument x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x. Rep FunctionTableArgument x -&gt; FunctionTableArgument
 $cfrom :: forall x. FunctionTableArgument -&gt; Rep FunctionTableArgument x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x. FunctionTableArgument -&gt; Rep FunctionTableArgument x
+$cto :: forall x. Rep FunctionTableArgument x -&gt; FunctionTableArgument
+to :: forall x. Rep FunctionTableArgument x -&gt; FunctionTableArgument
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691116782"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionTableArgument"><span class="hs-identifier hs-type">FunctionTableArgument</span></a></span></span><span>
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686810945"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionTableArgument"><span class="hs-identifier hs-type">FunctionTableArgument</span></a></span></span><span>
 </span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691116776"><span id="local-6989586621691116778"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionTableArgument"><span class="hs-identifier hs-type">FunctionTableArgument</span></a></span></span></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686810968"><span id="local-6989586621686810975"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionTableArgument"><span class="hs-identifier hs-type">FunctionTableArgument</span></a></span></span></span><span>
 </span><span id="line-68"></span><span>
-</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691116769"><span id="local-6989586621691116771"><span id="local-6989586621691116773"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionTableArgument"><span class="hs-identifier hs-type">FunctionTableArgument</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621691116760"><span class="annot"><span class="annottext">toJSON :: FunctionTableArgument -&gt; Value
-</span><a href="#local-6989586621691116760"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">FunctionTableArgument
+</span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686810994"><span id="local-6989586621686810998"><span id="local-6989586621686811001"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionTableArgument"><span class="hs-identifier hs-type">FunctionTableArgument</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621686811011"><span class="annot"><span class="annottext">toJSON :: FunctionTableArgument -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="annot"><span class="annottext">FunctionTableArgument
 </span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FTAFirst"><span class="hs-identifier hs-var">FTAFirst</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;first_argument&quot;</span></span><span>
-</span><span id="line-71"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FTANamed"><span class="hs-identifier hs-type">FTANamed</span></a></span><span> </span><span id="local-6989586621691116758"><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621691116758"><span class="hs-identifier hs-var">argName</span></a></span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span id="line-71"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FTANamed"><span class="hs-identifier hs-type">FTANamed</span></a></span><span> </span><span id="local-6989586621686811013"><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621686811013"><span class="hs-identifier hs-var">argName</span></a></span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
-</span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; FunctionArgName -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621691116758"><span class="hs-identifier hs-var">argName</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621686811013"><span class="hs-identifier hs-var">argName</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-72"></span><span>
 </span><span id="line-73"></span><span class="hs-comment">-- | The session argument, which passes Hasura session variables to a</span><span>
 </span><span id="line-74"></span><span class="hs-comment">-- SQL function as a JSON object.</span><span>
-</span><span id="line-75"></span><span id="local-6989586621691116754"><span id="local-6989586621691116755"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionSessionArgument"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionSessionArgument"><span class="hs-identifier hs-var">FunctionSessionArgument</span></a></span></span><span>
+</span><span id="line-75"></span><span class="hs-keyword">data</span><span> </span><span id="FunctionSessionArgument"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionSessionArgument"><span class="hs-identifier hs-var">FunctionSessionArgument</span></a></span></span><span>
 </span><span id="line-76"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FunctionSessionArgument"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionSessionArgument"><span class="hs-identifier hs-var">FunctionSessionArgument</span></a></span></span><span>
-</span><span id="line-77"></span><span>      </span><span class="hs-comment">-- | The argument name</span><span>
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="hs-comment">-- | The argument name</span></span><span>
 </span><span id="line-78"></span><span>      </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span>
-</span><span id="line-79"></span><span>      </span><span class="hs-comment">-- | The ordinal position in the function input parameters</span><span>
-</span><span id="line-80"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
-</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691116744"><span id="local-6989586621691116746"><span id="local-6989586621691116751"><span class="annot"><span class="annottext">Int -&gt; FunctionSessionArgument -&gt; ShowS
+</span><span id="line-79"></span><span>      </span><span class="annot"><span class="hs-comment">-- | The ordinal position in the function input parameters</span></span><span>
+</span><span id="line-80"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686811018"><span id="local-6989586621686811023"><span id="local-6989586621686811027"><span class="annot"><span class="annottext">Int -&gt; FunctionSessionArgument -&gt; ShowS
 [FunctionSessionArgument] -&gt; ShowS
 FunctionSessionArgument -&gt; String
+(Int -&gt; FunctionSessionArgument -&gt; ShowS)
+-&gt; (FunctionSessionArgument -&gt; String)
+-&gt; ([FunctionSessionArgument] -&gt; ShowS)
+-&gt; Show FunctionSessionArgument
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [FunctionSessionArgument] -&gt; ShowS
-$cshowList :: [FunctionSessionArgument] -&gt; ShowS
-show :: FunctionSessionArgument -&gt; String
-$cshow :: FunctionSessionArgument -&gt; String
-showsPrec :: Int -&gt; FunctionSessionArgument -&gt; ShowS
 $cshowsPrec :: Int -&gt; FunctionSessionArgument -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691116738"><span id="local-6989586621691116742"><span class="annot"><span class="annottext">FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
+showsPrec :: Int -&gt; FunctionSessionArgument -&gt; ShowS
+$cshow :: FunctionSessionArgument -&gt; String
+show :: FunctionSessionArgument -&gt; String
+$cshowList :: [FunctionSessionArgument] -&gt; ShowS
+showList :: [FunctionSessionArgument] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686811030"><span id="local-6989586621686811034"><span class="annot"><span class="annottext">FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
+(FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool)
+-&gt; (FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool)
+-&gt; Eq FunctionSessionArgument
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
-$c/= :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
-== :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
 $c== :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691116715"><span id="local-6989586621691116717"><span id="local-6989586621691116720"><span id="local-6989586621691116723"><span id="local-6989586621691116726"><span id="local-6989586621691116730"><span id="local-6989586621691116734"><span class="annot"><span class="annottext">Eq FunctionSessionArgument
+== :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
+$c/= :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
+/= :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686811040"><span id="local-6989586621686811044"><span id="local-6989586621686811048"><span id="local-6989586621686811052"><span id="local-6989586621686811055"><span id="local-6989586621686811058"><span id="local-6989586621686811061"><span class="annot"><span class="annottext">Eq FunctionSessionArgument
+Eq FunctionSessionArgument
+-&gt; (FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Ordering)
+-&gt; (FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool)
+-&gt; (FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool)
+-&gt; (FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool)
+-&gt; (FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool)
+-&gt; (FunctionSessionArgument
+    -&gt; FunctionSessionArgument -&gt; FunctionSessionArgument)
+-&gt; (FunctionSessionArgument
+    -&gt; FunctionSessionArgument -&gt; FunctionSessionArgument)
+-&gt; Ord FunctionSessionArgument
 FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
 FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Ordering
 FunctionSessionArgument
@@ -250,73 +362,108 @@ Eq a
 -&gt; (a -&gt; a -&gt; a)
 -&gt; (a -&gt; a -&gt; a)
 -&gt; Ord a
-min :: FunctionSessionArgument
--&gt; FunctionSessionArgument -&gt; FunctionSessionArgument
-$cmin :: FunctionSessionArgument
+$ccompare :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Ordering
+compare :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Ordering
+$c&lt; :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
+&lt; :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
+$c&lt;= :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
+&lt;= :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
+$c&gt; :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
+&gt; :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
+$c&gt;= :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
+&gt;= :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
+$cmax :: FunctionSessionArgument
 -&gt; FunctionSessionArgument -&gt; FunctionSessionArgument
 max :: FunctionSessionArgument
 -&gt; FunctionSessionArgument -&gt; FunctionSessionArgument
-$cmax :: FunctionSessionArgument
+$cmin :: FunctionSessionArgument
 -&gt; FunctionSessionArgument -&gt; FunctionSessionArgument
-&gt;= :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
-$c&gt;= :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
-&gt; :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
-$c&gt; :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
-&lt;= :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
-$c&lt;= :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
-&lt; :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
-$c&lt; :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Bool
-compare :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Ordering
-$ccompare :: FunctionSessionArgument -&gt; FunctionSessionArgument -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep FunctionSessionArgument x -&gt; FunctionSessionArgument
+min :: FunctionSessionArgument
+-&gt; FunctionSessionArgument -&gt; FunctionSessionArgument
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686811064"><span id="local-6989586621686811066"><span class="annot"><span class="annottext">(forall x.
+ FunctionSessionArgument -&gt; Rep FunctionSessionArgument x)
+-&gt; (forall x.
+    Rep FunctionSessionArgument x -&gt; FunctionSessionArgument)
+-&gt; Generic FunctionSessionArgument
+forall x. Rep FunctionSessionArgument x -&gt; FunctionSessionArgument
 forall x. FunctionSessionArgument -&gt; Rep FunctionSessionArgument x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x. Rep FunctionSessionArgument x -&gt; FunctionSessionArgument
 $cfrom :: forall x. FunctionSessionArgument -&gt; Rep FunctionSessionArgument x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x. FunctionSessionArgument -&gt; Rep FunctionSessionArgument x
+$cto :: forall x. Rep FunctionSessionArgument x -&gt; FunctionSessionArgument
+to :: forall x. Rep FunctionSessionArgument x -&gt; FunctionSessionArgument
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-82"></span><span>
-</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691116711"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionSessionArgument"><span class="hs-identifier hs-type">FunctionSessionArgument</span></a></span></span><span>
+</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686811069"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionSessionArgument"><span class="hs-identifier hs-type">FunctionSessionArgument</span></a></span></span><span>
 </span><span id="line-84"></span><span>
-</span><span id="line-85"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691116705"><span id="local-6989586621691116707"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionSessionArgument"><span class="hs-identifier hs-type">FunctionSessionArgument</span></a></span></span></span><span>
+</span><span id="line-85"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686811086"><span id="local-6989586621686811093"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionSessionArgument"><span class="hs-identifier hs-type">FunctionSessionArgument</span></a></span></span></span><span>
 </span><span id="line-86"></span><span>
-</span><span id="line-87"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691116698"><span id="local-6989586621691116700"><span id="local-6989586621691116702"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionSessionArgument"><span class="hs-identifier hs-type">FunctionSessionArgument</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-88"></span><span>  </span><span id="local-6989586621691116696"><span class="annot"><span class="annottext">toJSON :: FunctionSessionArgument -&gt; Value
-</span><a href="#local-6989586621691116696"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionSessionArgument"><span class="hs-identifier hs-type">FunctionSessionArgument</span></a></span><span> </span><span id="local-6989586621691116695"><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621691116695"><span class="hs-identifier hs-var">argName</span></a></span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span id="line-87"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686811105"><span id="local-6989586621686811109"><span id="local-6989586621686811112"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionSessionArgument"><span class="hs-identifier hs-type">FunctionSessionArgument</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-88"></span><span>  </span><span id="local-6989586621686811115"><span class="annot"><span class="annottext">toJSON :: FunctionSessionArgument -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionSessionArgument"><span class="hs-identifier hs-type">FunctionSessionArgument</span></a></span><span> </span><span id="local-6989586621686811116"><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621686811116"><span class="hs-identifier hs-var">argName</span></a></span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621691116695"><span class="hs-identifier hs-var">argName</span></a></span><span>
+</span><a href="#local-6989586621686811116"><span class="hs-identifier hs-var">argName</span></a></span><span>
 </span><span id="line-89"></span><span>
-</span><span id="line-90"></span><span id="local-6989586621691116693"><span id="local-6989586621691116694"></span></span><span class="hs-keyword">data</span><span> </span><span id="ComputedFieldImplicitArguments"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-var">ComputedFieldImplicitArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ComputedFieldImplicitArguments"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-var">ComputedFieldImplicitArguments</span></a></span></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">data</span><span> </span><span id="ComputedFieldImplicitArguments"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-var">ComputedFieldImplicitArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ComputedFieldImplicitArguments"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-var">ComputedFieldImplicitArguments</span></a></span></span><span>
 </span><span id="line-91"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cffaTableArgument"><span class="annot"><span class="annottext">ComputedFieldImplicitArguments -&gt; FunctionTableArgument
 </span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#_cffaTableArgument"><span class="hs-identifier hs-var hs-var">_cffaTableArgument</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionTableArgument"><span class="hs-identifier hs-type">FunctionTableArgument</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-92"></span><span>    </span><span id="_cffaSessionArgument"><span class="annot"><span class="annottext">ComputedFieldImplicitArguments -&gt; Maybe FunctionSessionArgument
-</span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#_cffaSessionArgument"><span class="hs-identifier hs-var hs-var">_cffaSessionArgument</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionSessionArgument"><span class="hs-identifier hs-type">FunctionSessionArgument</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#_cffaSessionArgument"><span class="hs-identifier hs-var hs-var">_cffaSessionArgument</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FunctionSessionArgument"><span class="hs-identifier hs-type">FunctionSessionArgument</span></a></span><span>
 </span><span id="line-93"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-94"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691116680"><span id="local-6989586621691116682"><span id="local-6989586621691116688"><span class="annot"><span class="annottext">Int -&gt; ComputedFieldImplicitArguments -&gt; ShowS
+</span><span id="line-94"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686811121"><span id="local-6989586621686811127"><span id="local-6989586621686811131"><span class="annot"><span class="annottext">Int -&gt; ComputedFieldImplicitArguments -&gt; ShowS
 [ComputedFieldImplicitArguments] -&gt; ShowS
 ComputedFieldImplicitArguments -&gt; String
+(Int -&gt; ComputedFieldImplicitArguments -&gt; ShowS)
+-&gt; (ComputedFieldImplicitArguments -&gt; String)
+-&gt; ([ComputedFieldImplicitArguments] -&gt; ShowS)
+-&gt; Show ComputedFieldImplicitArguments
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [ComputedFieldImplicitArguments] -&gt; ShowS
-$cshowList :: [ComputedFieldImplicitArguments] -&gt; ShowS
-show :: ComputedFieldImplicitArguments -&gt; String
-$cshow :: ComputedFieldImplicitArguments -&gt; String
-showsPrec :: Int -&gt; ComputedFieldImplicitArguments -&gt; ShowS
 $cshowsPrec :: Int -&gt; ComputedFieldImplicitArguments -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691116673"><span id="local-6989586621691116678"><span class="annot"><span class="annottext">ComputedFieldImplicitArguments
+showsPrec :: Int -&gt; ComputedFieldImplicitArguments -&gt; ShowS
+$cshow :: ComputedFieldImplicitArguments -&gt; String
+show :: ComputedFieldImplicitArguments -&gt; String
+$cshowList :: [ComputedFieldImplicitArguments] -&gt; ShowS
+showList :: [ComputedFieldImplicitArguments] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686811134"><span id="local-6989586621686811139"><span class="annot"><span class="annottext">ComputedFieldImplicitArguments
 -&gt; ComputedFieldImplicitArguments -&gt; Bool
+(ComputedFieldImplicitArguments
+ -&gt; ComputedFieldImplicitArguments -&gt; Bool)
+-&gt; (ComputedFieldImplicitArguments
+    -&gt; ComputedFieldImplicitArguments -&gt; Bool)
+-&gt; Eq ComputedFieldImplicitArguments
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: ComputedFieldImplicitArguments
--&gt; ComputedFieldImplicitArguments -&gt; Bool
-$c/= :: ComputedFieldImplicitArguments
+$c== :: ComputedFieldImplicitArguments
 -&gt; ComputedFieldImplicitArguments -&gt; Bool
 == :: ComputedFieldImplicitArguments
 -&gt; ComputedFieldImplicitArguments -&gt; Bool
-$c== :: ComputedFieldImplicitArguments
+$c/= :: ComputedFieldImplicitArguments
 -&gt; ComputedFieldImplicitArguments -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691116647"><span id="local-6989586621691116649"><span id="local-6989586621691116652"><span id="local-6989586621691116655"><span id="local-6989586621691116658"><span id="local-6989586621691116663"><span id="local-6989586621691116669"><span class="annot"><span class="annottext">Eq ComputedFieldImplicitArguments
+/= :: ComputedFieldImplicitArguments
+-&gt; ComputedFieldImplicitArguments -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686811145"><span id="local-6989586621686811151"><span id="local-6989586621686811156"><span id="local-6989586621686811160"><span id="local-6989586621686811163"><span id="local-6989586621686811166"><span id="local-6989586621686811169"><span class="annot"><span class="annottext">Eq ComputedFieldImplicitArguments
+Eq ComputedFieldImplicitArguments
+-&gt; (ComputedFieldImplicitArguments
+    -&gt; ComputedFieldImplicitArguments -&gt; Ordering)
+-&gt; (ComputedFieldImplicitArguments
+    -&gt; ComputedFieldImplicitArguments -&gt; Bool)
+-&gt; (ComputedFieldImplicitArguments
+    -&gt; ComputedFieldImplicitArguments -&gt; Bool)
+-&gt; (ComputedFieldImplicitArguments
+    -&gt; ComputedFieldImplicitArguments -&gt; Bool)
+-&gt; (ComputedFieldImplicitArguments
+    -&gt; ComputedFieldImplicitArguments -&gt; Bool)
+-&gt; (ComputedFieldImplicitArguments
+    -&gt; ComputedFieldImplicitArguments
+    -&gt; ComputedFieldImplicitArguments)
+-&gt; (ComputedFieldImplicitArguments
+    -&gt; ComputedFieldImplicitArguments
+    -&gt; ComputedFieldImplicitArguments)
+-&gt; Ord ComputedFieldImplicitArguments
 ComputedFieldImplicitArguments
 -&gt; ComputedFieldImplicitArguments -&gt; Bool
 ComputedFieldImplicitArguments
@@ -333,35 +480,42 @@ Eq a
 -&gt; (a -&gt; a -&gt; a)
 -&gt; (a -&gt; a -&gt; a)
 -&gt; Ord a
-min :: ComputedFieldImplicitArguments
--&gt; ComputedFieldImplicitArguments -&gt; ComputedFieldImplicitArguments
-$cmin :: ComputedFieldImplicitArguments
--&gt; ComputedFieldImplicitArguments -&gt; ComputedFieldImplicitArguments
-max :: ComputedFieldImplicitArguments
--&gt; ComputedFieldImplicitArguments -&gt; ComputedFieldImplicitArguments
-$cmax :: ComputedFieldImplicitArguments
--&gt; ComputedFieldImplicitArguments -&gt; ComputedFieldImplicitArguments
-&gt;= :: ComputedFieldImplicitArguments
--&gt; ComputedFieldImplicitArguments -&gt; Bool
-$c&gt;= :: ComputedFieldImplicitArguments
--&gt; ComputedFieldImplicitArguments -&gt; Bool
-&gt; :: ComputedFieldImplicitArguments
--&gt; ComputedFieldImplicitArguments -&gt; Bool
-$c&gt; :: ComputedFieldImplicitArguments
--&gt; ComputedFieldImplicitArguments -&gt; Bool
-&lt;= :: ComputedFieldImplicitArguments
--&gt; ComputedFieldImplicitArguments -&gt; Bool
-$c&lt;= :: ComputedFieldImplicitArguments
+$ccompare :: ComputedFieldImplicitArguments
+-&gt; ComputedFieldImplicitArguments -&gt; Ordering
+compare :: ComputedFieldImplicitArguments
+-&gt; ComputedFieldImplicitArguments -&gt; Ordering
+$c&lt; :: ComputedFieldImplicitArguments
 -&gt; ComputedFieldImplicitArguments -&gt; Bool
 &lt; :: ComputedFieldImplicitArguments
 -&gt; ComputedFieldImplicitArguments -&gt; Bool
-$c&lt; :: ComputedFieldImplicitArguments
+$c&lt;= :: ComputedFieldImplicitArguments
 -&gt; ComputedFieldImplicitArguments -&gt; Bool
-compare :: ComputedFieldImplicitArguments
--&gt; ComputedFieldImplicitArguments -&gt; Ordering
-$ccompare :: ComputedFieldImplicitArguments
--&gt; ComputedFieldImplicitArguments -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x.
+&lt;= :: ComputedFieldImplicitArguments
+-&gt; ComputedFieldImplicitArguments -&gt; Bool
+$c&gt; :: ComputedFieldImplicitArguments
+-&gt; ComputedFieldImplicitArguments -&gt; Bool
+&gt; :: ComputedFieldImplicitArguments
+-&gt; ComputedFieldImplicitArguments -&gt; Bool
+$c&gt;= :: ComputedFieldImplicitArguments
+-&gt; ComputedFieldImplicitArguments -&gt; Bool
+&gt;= :: ComputedFieldImplicitArguments
+-&gt; ComputedFieldImplicitArguments -&gt; Bool
+$cmax :: ComputedFieldImplicitArguments
+-&gt; ComputedFieldImplicitArguments -&gt; ComputedFieldImplicitArguments
+max :: ComputedFieldImplicitArguments
+-&gt; ComputedFieldImplicitArguments -&gt; ComputedFieldImplicitArguments
+$cmin :: ComputedFieldImplicitArguments
+-&gt; ComputedFieldImplicitArguments -&gt; ComputedFieldImplicitArguments
+min :: ComputedFieldImplicitArguments
+-&gt; ComputedFieldImplicitArguments -&gt; ComputedFieldImplicitArguments
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686811172"><span id="local-6989586621686811174"><span class="annot"><span class="annottext">(forall x.
+ ComputedFieldImplicitArguments
+ -&gt; Rep ComputedFieldImplicitArguments x)
+-&gt; (forall x.
+    Rep ComputedFieldImplicitArguments x
+    -&gt; ComputedFieldImplicitArguments)
+-&gt; Generic ComputedFieldImplicitArguments
+forall x.
 Rep ComputedFieldImplicitArguments x
 -&gt; ComputedFieldImplicitArguments
 forall x.
@@ -369,79 +523,111 @@ ComputedFieldImplicitArguments
 -&gt; Rep ComputedFieldImplicitArguments x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x.
-Rep ComputedFieldImplicitArguments x
--&gt; ComputedFieldImplicitArguments
 $cfrom :: forall x.
 ComputedFieldImplicitArguments
 -&gt; Rep ComputedFieldImplicitArguments x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x.
+ComputedFieldImplicitArguments
+-&gt; Rep ComputedFieldImplicitArguments x
+$cto :: forall x.
+Rep ComputedFieldImplicitArguments x
+-&gt; ComputedFieldImplicitArguments
+to :: forall x.
+Rep ComputedFieldImplicitArguments x
+-&gt; ComputedFieldImplicitArguments
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-95"></span><span>
-</span><span id="line-96"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691116643"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span></span><span>
+</span><span id="line-96"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686811177"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span></span><span>
 </span><span id="line-97"></span><span>
-</span><span id="line-98"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691116637"><span id="local-6989586621691116639"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span></span></span><span>
+</span><span id="line-98"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686811195"><span id="local-6989586621686811202"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span></span></span><span>
 </span><span id="line-99"></span><span>
-</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691116630"><span id="local-6989586621691116632"><span id="local-6989586621691116634"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-101"></span><span>  </span><span id="local-6989586621691116566"><span class="annot"><span class="annottext">toJSON :: ComputedFieldImplicitArguments -&gt; Value
-</span><a href="#local-6989586621691116566"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686811215"><span id="local-6989586621686811219"><span id="local-6989586621686811222"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621686811287"><span class="annot"><span class="annottext">toJSON :: ComputedFieldImplicitArguments -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ComputedFieldImplicitArguments -&gt; Value
+forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
 </span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span id="local-6989586621691117437"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#fromComputedFieldImplicitArguments"><span class="hs-identifier hs-type">fromComputedFieldImplicitArguments</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-104"></span><span>  </span><span class="annot"><a href="#local-6989586621691117437"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-103"></span><span id="local-6989586621686810460"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#fromComputedFieldImplicitArguments"><span class="hs-identifier hs-type">fromComputedFieldImplicitArguments</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-104"></span><span>  </span><span class="annot"><a href="#local-6989586621686810460"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-105"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-106"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#ArgumentExp"><span class="hs-identifier hs-type">ArgumentExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691117437"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#ArgumentExp"><span class="hs-identifier hs-type">ArgumentExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686810460"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span></span><span>
 </span><span id="line-107"></span><span id="fromComputedFieldImplicitArguments"><span class="annot"><span class="annottext">fromComputedFieldImplicitArguments :: forall v. v -&gt; ComputedFieldImplicitArguments -&gt; [ArgumentExp v]
 </span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#fromComputedFieldImplicitArguments"><span class="hs-identifier hs-var hs-var">fromComputedFieldImplicitArguments</span></a></span></span><span> </span><span class="annot"><span class="annottext">v
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionTableArgument
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe FunctionSessionArgument
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall a. ArgumentExp a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ArgumentExp v
+forall a. ArgumentExp a
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#AETableRow"><span class="hs-identifier hs-var">AETableRow</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-comment">-- No session argument</span><span>
-</span><span id="line-108"></span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#fromComputedFieldImplicitArguments"><span class="hs-identifier hs-var">fromComputedFieldImplicitArguments</span></a></span><span> </span><span id="local-6989586621691116561"><span class="annot"><span class="annottext">v
-</span><a href="#local-6989586621691116561"><span class="hs-identifier hs-var">sess</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionTableArgument
+</span><span id="line-108"></span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#fromComputedFieldImplicitArguments"><span class="hs-identifier hs-var">fromComputedFieldImplicitArguments</span></a></span><span> </span><span id="local-6989586621686811292"><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621686811292"><span class="hs-identifier hs-var">sess</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionTableArgument
 </span><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FTAFirst"><span class="hs-identifier hs-var">FTAFirst</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe FunctionSessionArgument
-</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall a. ArgumentExp a
-</span><a href="Hasura.Backends.Postgres.Types.Function.html#AETableRow"><span class="hs-identifier hs-var">AETableRow</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; ArgumentExp a
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ArgumentExp v
+forall a. ArgumentExp a
+</span><a href="Hasura.Backends.Postgres.Types.Function.html#AETableRow"><span class="hs-identifier hs-var">AETableRow</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">v -&gt; ArgumentExp v
+forall a. a -&gt; ArgumentExp a
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#AESession"><span class="hs-identifier hs-var">AESession</span></a></span><span> </span><span class="annot"><span class="annottext">v
-</span><a href="#local-6989586621691116561"><span class="hs-identifier hs-var">sess</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-109"></span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#fromComputedFieldImplicitArguments"><span class="hs-identifier hs-var">fromComputedFieldImplicitArguments</span></a></span><span> </span><span id="local-6989586621691116559"><span class="annot"><span class="annottext">v
-</span><a href="#local-6989586621691116559"><span class="hs-identifier hs-var">sess</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FTANamed"><span class="hs-identifier hs-type">FTANamed</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621686811292"><span class="hs-identifier hs-var">sess</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-109"></span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#fromComputedFieldImplicitArguments"><span class="hs-identifier hs-var">fromComputedFieldImplicitArguments</span></a></span><span> </span><span id="local-6989586621686811294"><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621686811294"><span class="hs-identifier hs-var">sess</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#FTANamed"><span class="hs-identifier hs-type">FTANamed</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe FunctionSessionArgument
-</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall a. ArgumentExp a
-</span><a href="Hasura.Backends.Postgres.Types.Function.html#AETableRow"><span class="hs-identifier hs-var">AETableRow</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; ArgumentExp a
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ArgumentExp v
+forall a. ArgumentExp a
+</span><a href="Hasura.Backends.Postgres.Types.Function.html#AETableRow"><span class="hs-identifier hs-var">AETableRow</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">v -&gt; ArgumentExp v
+forall a. a -&gt; ArgumentExp a
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#AESession"><span class="hs-identifier hs-var">AESession</span></a></span><span> </span><span class="annot"><span class="annottext">v
-</span><a href="#local-6989586621691116559"><span class="hs-identifier hs-var">sess</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-comment">-- Index is 0 implies table argument is first</span><span>
-</span><span id="line-110"></span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#fromComputedFieldImplicitArguments"><span class="hs-identifier hs-var">fromComputedFieldImplicitArguments</span></a></span><span> </span><span id="local-6989586621691116558"><span class="annot"><span class="annottext">v
-</span><a href="#local-6989586621691116558"><span class="hs-identifier hs-var">sess</span></a></span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldImplicitArguments
-</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">forall a. a -&gt; ArgumentExp a
+</span><a href="#local-6989586621686811294"><span class="hs-identifier hs-var">sess</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-comment">-- Index is 0 implies table argument is first</span><span>
+</span><span id="line-110"></span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#fromComputedFieldImplicitArguments"><span class="hs-identifier hs-var">fromComputedFieldImplicitArguments</span></a></span><span> </span><span id="local-6989586621686811295"><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621686811295"><span class="hs-identifier hs-var">sess</span></a></span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldImplicitArguments
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">v -&gt; ArgumentExp v
+forall a. a -&gt; ArgumentExp a
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#AESession"><span class="hs-identifier hs-var">AESession</span></a></span><span> </span><span class="annot"><span class="annottext">v
-</span><a href="#local-6989586621691116558"><span class="hs-identifier hs-var">sess</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ArgumentExp a
+</span><a href="#local-6989586621686811295"><span class="hs-identifier hs-var">sess</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ArgumentExp v
+forall a. ArgumentExp a
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#AETableRow"><span class="hs-identifier hs-var">AETableRow</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-111"></span><span>
-</span><span id="line-112"></span><span id="local-6989586621691116556"><span id="local-6989586621691116557"></span></span><span class="hs-keyword">data</span><span> </span><span id="ComputedFieldReturn"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldReturn"><span class="hs-identifier hs-var">ComputedFieldReturn</span></a></span></span><span>
+</span><span id="line-112"></span><span class="hs-keyword">data</span><span> </span><span id="ComputedFieldReturn"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldReturn"><span class="hs-identifier hs-var">ComputedFieldReturn</span></a></span></span><span>
 </span><span id="line-113"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CFRScalar"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#CFRScalar"><span class="hs-identifier hs-var">CFRScalar</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGScalarType"><span class="hs-identifier hs-type">PGScalarType</span></a></span><span>
 </span><span id="line-114"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CFRSetofTable"><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#CFRSetofTable"><span class="hs-identifier hs-var">CFRSetofTable</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedTable"><span class="hs-identifier hs-type">QualifiedTable</span></a></span><span>
-</span><span id="line-115"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691116542"><span id="local-6989586621691116544"><span id="local-6989586621691116552"><span class="annot"><span class="annottext">Int -&gt; ComputedFieldReturn -&gt; ShowS
+</span><span id="line-115"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686811299"><span id="local-6989586621686811307"><span id="local-6989586621686811311"><span class="annot"><span class="annottext">Int -&gt; ComputedFieldReturn -&gt; ShowS
 [ComputedFieldReturn] -&gt; ShowS
 ComputedFieldReturn -&gt; String
+(Int -&gt; ComputedFieldReturn -&gt; ShowS)
+-&gt; (ComputedFieldReturn -&gt; String)
+-&gt; ([ComputedFieldReturn] -&gt; ShowS)
+-&gt; Show ComputedFieldReturn
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [ComputedFieldReturn] -&gt; ShowS
-$cshowList :: [ComputedFieldReturn] -&gt; ShowS
-show :: ComputedFieldReturn -&gt; String
-$cshow :: ComputedFieldReturn -&gt; String
-showsPrec :: Int -&gt; ComputedFieldReturn -&gt; ShowS
 $cshowsPrec :: Int -&gt; ComputedFieldReturn -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691116533"><span id="local-6989586621691116539"><span class="annot"><span class="annottext">ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
+showsPrec :: Int -&gt; ComputedFieldReturn -&gt; ShowS
+$cshow :: ComputedFieldReturn -&gt; String
+show :: ComputedFieldReturn -&gt; String
+$cshowList :: [ComputedFieldReturn] -&gt; ShowS
+showList :: [ComputedFieldReturn] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686811315"><span id="local-6989586621686811321"><span class="annot"><span class="annottext">ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
+(ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool)
+-&gt; (ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool)
+-&gt; Eq ComputedFieldReturn
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
-$c/= :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
-== :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
 $c== :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691116505"><span id="local-6989586621691116507"><span id="local-6989586621691116510"><span id="local-6989586621691116513"><span id="local-6989586621691116516"><span id="local-6989586621691116521"><span id="local-6989586621691116528"><span class="annot"><span class="annottext">Eq ComputedFieldReturn
+== :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
+$c/= :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
+/= :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686811328"><span id="local-6989586621686811335"><span id="local-6989586621686811340"><span id="local-6989586621686811344"><span id="local-6989586621686811347"><span id="local-6989586621686811350"><span id="local-6989586621686811353"><span class="annot"><span class="annottext">Eq ComputedFieldReturn
+Eq ComputedFieldReturn
+-&gt; (ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Ordering)
+-&gt; (ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool)
+-&gt; (ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool)
+-&gt; (ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool)
+-&gt; (ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool)
+-&gt; (ComputedFieldReturn
+    -&gt; ComputedFieldReturn -&gt; ComputedFieldReturn)
+-&gt; (ComputedFieldReturn
+    -&gt; ComputedFieldReturn -&gt; ComputedFieldReturn)
+-&gt; Ord ComputedFieldReturn
 ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
 ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Ordering
 ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; ComputedFieldReturn
@@ -455,54 +641,64 @@ Eq a
 -&gt; (a -&gt; a -&gt; a)
 -&gt; (a -&gt; a -&gt; a)
 -&gt; Ord a
-min :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; ComputedFieldReturn
-$cmin :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; ComputedFieldReturn
-max :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; ComputedFieldReturn
-$cmax :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; ComputedFieldReturn
-&gt;= :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
-$c&gt;= :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
-&gt; :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
-$c&gt; :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
-&lt;= :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
-$c&lt;= :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
-&lt; :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
-$c&lt; :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
-compare :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Ordering
 $ccompare :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep ComputedFieldReturn x -&gt; ComputedFieldReturn
+compare :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Ordering
+$c&lt; :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
+&lt; :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
+$c&lt;= :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
+&lt;= :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
+$c&gt; :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
+&gt; :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
+$c&gt;= :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
+&gt;= :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; Bool
+$cmax :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; ComputedFieldReturn
+max :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; ComputedFieldReturn
+$cmin :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; ComputedFieldReturn
+min :: ComputedFieldReturn -&gt; ComputedFieldReturn -&gt; ComputedFieldReturn
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686811357"><span id="local-6989586621686811359"><span class="annot"><span class="annottext">(forall x. ComputedFieldReturn -&gt; Rep ComputedFieldReturn x)
+-&gt; (forall x. Rep ComputedFieldReturn x -&gt; ComputedFieldReturn)
+-&gt; Generic ComputedFieldReturn
+forall x. Rep ComputedFieldReturn x -&gt; ComputedFieldReturn
 forall x. ComputedFieldReturn -&gt; Rep ComputedFieldReturn x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x. Rep ComputedFieldReturn x -&gt; ComputedFieldReturn
 $cfrom :: forall x. ComputedFieldReturn -&gt; Rep ComputedFieldReturn x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x. ComputedFieldReturn -&gt; Rep ComputedFieldReturn x
+$cto :: forall x. Rep ComputedFieldReturn x -&gt; ComputedFieldReturn
+to :: forall x. Rep ComputedFieldReturn x -&gt; ComputedFieldReturn
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-116"></span><span>
-</span><span id="line-117"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691116500"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldReturn"><span class="hs-identifier hs-type">ComputedFieldReturn</span></a></span></span><span>
+</span><span id="line-117"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686811362"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldReturn"><span class="hs-identifier hs-type">ComputedFieldReturn</span></a></span></span><span>
 </span><span id="line-118"></span><span>
-</span><span id="line-119"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691116494"><span id="local-6989586621691116496"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldReturn"><span class="hs-identifier hs-type">ComputedFieldReturn</span></a></span></span></span><span>
+</span><span id="line-119"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686811383"><span id="local-6989586621686811390"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldReturn"><span class="hs-identifier hs-type">ComputedFieldReturn</span></a></span></span></span><span>
 </span><span id="line-120"></span><span>
-</span><span id="line-121"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691116487"><span id="local-6989586621691116489"><span id="local-6989586621691116491"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldReturn"><span class="hs-identifier hs-type">ComputedFieldReturn</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-122"></span><span>  </span><span id="local-6989586621691116415"><span class="annot"><span class="annottext">toJSON :: ComputedFieldReturn -&gt; Value
-</span><a href="#local-6989586621691116415"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-123"></span><span>    </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-121"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686811406"><span id="local-6989586621686811410"><span id="local-6989586621686811413"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.ComputedField.html#ComputedFieldReturn"><span class="hs-identifier hs-type">ComputedFieldReturn</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-122"></span><span>  </span><span id="local-6989586621686811486"><span class="annot"><span class="annottext">toJSON :: ComputedFieldReturn -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-123"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; ComputedFieldReturn -&gt; Value
+forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">genericToJSON</span></span><span>
-</span><span id="line-124"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><span id="line-124"></span><span>      </span><span class="annot"><span class="annottext">(Options -&gt; ComputedFieldReturn -&gt; Value)
+-&gt; Options -&gt; ComputedFieldReturn -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Options
 </span><span class="hs-identifier hs-var">defaultOptions</span></span><span>
 </span><span id="line-125"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">constructorTagModifier :: ShowS
-</span><a href="#local-6989586621691116413"><span class="hs-identifier hs-var">constructorTagModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
-</span><span class="hs-identifier hs-var">snakeCase</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Int -&gt; [a] -&gt; [a]
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">drop</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686811488"><span class="hs-identifier hs-var">constructorTagModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><span class="hs-identifier hs-var">snakeCase</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; ShowS
+forall a. Int -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">3</span></span><span class="hs-special">,</span><span>
 </span><span id="line-126"></span><span>          </span><span class="annot"><span class="annottext">sumEncoding :: SumEncoding
-</span><a href="#local-6989586621691116409"><span class="hs-identifier hs-var">sumEncoding</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; SumEncoding
+</span><a href="#local-6989586621686811492"><span class="hs-identifier hs-var">sumEncoding</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; SumEncoding
 </span><span class="hs-identifier hs-var">TaggedObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;info&quot;</span></span><span>
 </span><span id="line-127"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-128"></span><span>
-</span><span id="line-129"></span><span class="hs-special">$</span><span id="_CFRSetofTable"><span id="_CFRScalar"><span class="hs-special">(</span><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ComputedFieldReturn</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-129"></span><span class="hs-special">$</span><span id="_CFRScalar"><span id="_CFRSetofTable"><span class="hs-special">(</span><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ComputedFieldReturn</span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-130"></span></pre></body></html>

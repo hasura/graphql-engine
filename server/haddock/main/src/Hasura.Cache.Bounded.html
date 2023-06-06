@@ -15,45 +15,65 @@
 </span><span id="line-15"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-16"></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
-</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Data.Word</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">Word16</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">GHC.Natural</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-bignum-1.2/src"><span class="hs-identifier">Natural</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">lookup</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Word</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Word16</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Natural</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Natural</span></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">lookup</span></span><span class="hs-special">)</span><span>
 </span><span id="line-21"></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">newtype</span><span> </span><span id="CacheSize"><span class="annot"><a href="Hasura.Cache.Bounded.html#CacheSize"><span class="hs-identifier hs-var">CacheSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CacheSize"><span class="annot"><a href="Hasura.Cache.Bounded.html#CacheSize"><span class="hs-identifier hs-var">CacheSize</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unCacheSize"><span class="annot"><span class="annottext">CacheSize -&gt; Word16
-</span><a href="Hasura.Cache.Bounded.html#unCacheSize"><span class="hs-identifier hs-var hs-var">unCacheSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word16</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691037315"><span id="local-6989586621691037317"><span id="local-6989586621691037323"><span class="annot"><span class="annottext">Int -&gt; CacheSize -&gt; ShowS
+</span><a href="Hasura.Cache.Bounded.html#unCacheSize"><span class="hs-identifier hs-var hs-var">unCacheSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">}</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686728697"><span id="local-6989586621686728703"><span id="local-6989586621686728707"><span class="annot"><span class="annottext">Int -&gt; CacheSize -&gt; ShowS
 [CacheSize] -&gt; ShowS
 CacheSize -&gt; String
+(Int -&gt; CacheSize -&gt; ShowS)
+-&gt; (CacheSize -&gt; String)
+-&gt; ([CacheSize] -&gt; ShowS)
+-&gt; Show CacheSize
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [CacheSize] -&gt; ShowS
-$cshowList :: [CacheSize] -&gt; ShowS
-show :: CacheSize -&gt; String
-$cshow :: CacheSize -&gt; String
-showsPrec :: Int -&gt; CacheSize -&gt; ShowS
 $cshowsPrec :: Int -&gt; CacheSize -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691037297"><span id="local-6989586621691037307"><span id="local-6989586621691037310"><span id="local-6989586621691037312"><span class="annot"><span class="annottext">ReadPrec [CacheSize]
+showsPrec :: Int -&gt; CacheSize -&gt; ShowS
+$cshow :: CacheSize -&gt; String
+show :: CacheSize -&gt; String
+$cshowList :: [CacheSize] -&gt; ShowS
+showList :: [CacheSize] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686728711"><span id="local-6989586621686728715"><span id="local-6989586621686728718"><span id="local-6989586621686728728"><span class="annot"><span class="annottext">ReadPrec [CacheSize]
 ReadPrec CacheSize
 Int -&gt; ReadS CacheSize
 ReadS [CacheSize]
+(Int -&gt; ReadS CacheSize)
+-&gt; ReadS [CacheSize]
+-&gt; ReadPrec CacheSize
+-&gt; ReadPrec [CacheSize]
+-&gt; Read CacheSize
 forall a.
 (Int -&gt; ReadS a)
 -&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
-readListPrec :: ReadPrec [CacheSize]
-$creadListPrec :: ReadPrec [CacheSize]
-readPrec :: ReadPrec CacheSize
-$creadPrec :: ReadPrec CacheSize
-readList :: ReadS [CacheSize]
-$creadList :: ReadS [CacheSize]
-readsPrec :: Int -&gt; ReadS CacheSize
 $creadsPrec :: Int -&gt; ReadS CacheSize
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691037288"><span id="local-6989586621691037293"><span class="annot"><span class="annottext">CacheSize -&gt; CacheSize -&gt; Bool
+readsPrec :: Int -&gt; ReadS CacheSize
+$creadList :: ReadS [CacheSize]
+readList :: ReadS [CacheSize]
+$creadPrec :: ReadPrec CacheSize
+readPrec :: ReadPrec CacheSize
+$creadListPrec :: ReadPrec [CacheSize]
+readListPrec :: ReadPrec [CacheSize]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686728732"><span id="local-6989586621686728737"><span class="annot"><span class="annottext">CacheSize -&gt; CacheSize -&gt; Bool
+(CacheSize -&gt; CacheSize -&gt; Bool)
+-&gt; (CacheSize -&gt; CacheSize -&gt; Bool) -&gt; Eq CacheSize
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: CacheSize -&gt; CacheSize -&gt; Bool
-$c/= :: CacheSize -&gt; CacheSize -&gt; Bool
-== :: CacheSize -&gt; CacheSize -&gt; Bool
 $c== :: CacheSize -&gt; CacheSize -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691037255"><span id="local-6989586621691037259"><span id="local-6989586621691037263"><span id="local-6989586621691037267"><span id="local-6989586621691037271"><span id="local-6989586621691037275"><span id="local-6989586621691037280"><span class="annot"><span class="annottext">Eq CacheSize
+== :: CacheSize -&gt; CacheSize -&gt; Bool
+$c/= :: CacheSize -&gt; CacheSize -&gt; Bool
+/= :: CacheSize -&gt; CacheSize -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686728745"><span id="local-6989586621686728750"><span id="local-6989586621686728754"><span id="local-6989586621686728758"><span id="local-6989586621686728762"><span id="local-6989586621686728766"><span id="local-6989586621686728770"><span class="annot"><span class="annottext">Eq CacheSize
+Eq CacheSize
+-&gt; (CacheSize -&gt; CacheSize -&gt; Ordering)
+-&gt; (CacheSize -&gt; CacheSize -&gt; Bool)
+-&gt; (CacheSize -&gt; CacheSize -&gt; Bool)
+-&gt; (CacheSize -&gt; CacheSize -&gt; Bool)
+-&gt; (CacheSize -&gt; CacheSize -&gt; Bool)
+-&gt; (CacheSize -&gt; CacheSize -&gt; CacheSize)
+-&gt; (CacheSize -&gt; CacheSize -&gt; CacheSize)
+-&gt; Ord CacheSize
 CacheSize -&gt; CacheSize -&gt; Bool
 CacheSize -&gt; CacheSize -&gt; Ordering
 CacheSize -&gt; CacheSize -&gt; CacheSize
@@ -67,29 +87,38 @@ Eq a
 -&gt; (a -&gt; a -&gt; a)
 -&gt; (a -&gt; a -&gt; a)
 -&gt; Ord a
-min :: CacheSize -&gt; CacheSize -&gt; CacheSize
-$cmin :: CacheSize -&gt; CacheSize -&gt; CacheSize
-max :: CacheSize -&gt; CacheSize -&gt; CacheSize
-$cmax :: CacheSize -&gt; CacheSize -&gt; CacheSize
-&gt;= :: CacheSize -&gt; CacheSize -&gt; Bool
-$c&gt;= :: CacheSize -&gt; CacheSize -&gt; Bool
-&gt; :: CacheSize -&gt; CacheSize -&gt; Bool
-$c&gt; :: CacheSize -&gt; CacheSize -&gt; Bool
-&lt;= :: CacheSize -&gt; CacheSize -&gt; Bool
-$c&lt;= :: CacheSize -&gt; CacheSize -&gt; Bool
-&lt; :: CacheSize -&gt; CacheSize -&gt; Bool
-$c&lt; :: CacheSize -&gt; CacheSize -&gt; Bool
-compare :: CacheSize -&gt; CacheSize -&gt; Ordering
 $ccompare :: CacheSize -&gt; CacheSize -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691037244"><span id="local-6989586621691037249"><span class="annot"><span class="annottext">CacheSize
+compare :: CacheSize -&gt; CacheSize -&gt; Ordering
+$c&lt; :: CacheSize -&gt; CacheSize -&gt; Bool
+&lt; :: CacheSize -&gt; CacheSize -&gt; Bool
+$c&lt;= :: CacheSize -&gt; CacheSize -&gt; Bool
+&lt;= :: CacheSize -&gt; CacheSize -&gt; Bool
+$c&gt; :: CacheSize -&gt; CacheSize -&gt; Bool
+&gt; :: CacheSize -&gt; CacheSize -&gt; Bool
+$c&gt;= :: CacheSize -&gt; CacheSize -&gt; Bool
+&gt;= :: CacheSize -&gt; CacheSize -&gt; Bool
+$cmax :: CacheSize -&gt; CacheSize -&gt; CacheSize
+max :: CacheSize -&gt; CacheSize -&gt; CacheSize
+$cmin :: CacheSize -&gt; CacheSize -&gt; CacheSize
+min :: CacheSize -&gt; CacheSize -&gt; CacheSize
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686728776"><span id="local-6989586621686728781"><span class="annot"><span class="annottext">CacheSize
+CacheSize -&gt; CacheSize -&gt; Bounded CacheSize
 forall a. a -&gt; a -&gt; Bounded a
-maxBound :: CacheSize
-$cmaxBound :: CacheSize
-minBound :: CacheSize
 $cminBound :: CacheSize
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691037214"><span id="local-6989586621691037218"><span id="local-6989586621691037222"><span id="local-6989586621691037226"><span id="local-6989586621691037230"><span id="local-6989586621691037234"><span id="local-6989586621691037238"><span class="annot"><span class="annottext">Integer -&gt; CacheSize
+minBound :: CacheSize
+$cmaxBound :: CacheSize
+maxBound :: CacheSize
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686728787"><span id="local-6989586621686728791"><span id="local-6989586621686728795"><span id="local-6989586621686728799"><span id="local-6989586621686728803"><span id="local-6989586621686728807"><span id="local-6989586621686728811"><span class="annot"><span class="annottext">Integer -&gt; CacheSize
 CacheSize -&gt; CacheSize
 CacheSize -&gt; CacheSize -&gt; CacheSize
+(CacheSize -&gt; CacheSize -&gt; CacheSize)
+-&gt; (CacheSize -&gt; CacheSize -&gt; CacheSize)
+-&gt; (CacheSize -&gt; CacheSize -&gt; CacheSize)
+-&gt; (CacheSize -&gt; CacheSize)
+-&gt; (CacheSize -&gt; CacheSize)
+-&gt; (CacheSize -&gt; CacheSize)
+-&gt; (Integer -&gt; CacheSize)
+-&gt; Num CacheSize
 forall a.
 (a -&gt; a -&gt; a)
 -&gt; (a -&gt; a -&gt; a)
@@ -99,28 +128,40 @@ forall a.
 -&gt; (a -&gt; a)
 -&gt; (Integer -&gt; a)
 -&gt; Num a
-fromInteger :: Integer -&gt; CacheSize
-$cfromInteger :: Integer -&gt; CacheSize
-signum :: CacheSize -&gt; CacheSize
-$csignum :: CacheSize -&gt; CacheSize
-abs :: CacheSize -&gt; CacheSize
-$cabs :: CacheSize -&gt; CacheSize
-negate :: CacheSize -&gt; CacheSize
-$cnegate :: CacheSize -&gt; CacheSize
-* :: CacheSize -&gt; CacheSize -&gt; CacheSize
-$c* :: CacheSize -&gt; CacheSize -&gt; CacheSize
-- :: CacheSize -&gt; CacheSize -&gt; CacheSize
-$c- :: CacheSize -&gt; CacheSize -&gt; CacheSize
-+ :: CacheSize -&gt; CacheSize -&gt; CacheSize
 $c+ :: CacheSize -&gt; CacheSize -&gt; CacheSize
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691037204"><span class="annot"><span class="annottext">Num CacheSize
++ :: CacheSize -&gt; CacheSize -&gt; CacheSize
+$c- :: CacheSize -&gt; CacheSize -&gt; CacheSize
+- :: CacheSize -&gt; CacheSize -&gt; CacheSize
+$c* :: CacheSize -&gt; CacheSize -&gt; CacheSize
+* :: CacheSize -&gt; CacheSize -&gt; CacheSize
+$cnegate :: CacheSize -&gt; CacheSize
+negate :: CacheSize -&gt; CacheSize
+$cabs :: CacheSize -&gt; CacheSize
+abs :: CacheSize -&gt; CacheSize
+$csignum :: CacheSize -&gt; CacheSize
+signum :: CacheSize -&gt; CacheSize
+$cfromInteger :: Integer -&gt; CacheSize
+fromInteger :: Integer -&gt; CacheSize
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686728821"><span class="annot"><span class="annottext">Num CacheSize
 Ord CacheSize
+Num CacheSize
+-&gt; Ord CacheSize -&gt; (CacheSize -&gt; Rational) -&gt; Real CacheSize
 CacheSize -&gt; Rational
 forall a. Num a -&gt; Ord a -&gt; (a -&gt; Rational) -&gt; Real a
-toRational :: CacheSize -&gt; Rational
 $ctoRational :: CacheSize -&gt; Rational
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Real</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691037167"><span id="local-6989586621691037171"><span id="local-6989586621691037175"><span id="local-6989586621691037179"><span id="local-6989586621691037183"><span id="local-6989586621691037187"><span id="local-6989586621691037192"><span class="annot"><span class="annottext">Enum CacheSize
+toRational :: CacheSize -&gt; Rational
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Real</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686728833"><span id="local-6989586621686728838"><span id="local-6989586621686728842"><span id="local-6989586621686728846"><span id="local-6989586621686728850"><span id="local-6989586621686728854"><span id="local-6989586621686728858"><span class="annot"><span class="annottext">Enum CacheSize
 Real CacheSize
+Real CacheSize
+-&gt; Enum CacheSize
+-&gt; (CacheSize -&gt; CacheSize -&gt; CacheSize)
+-&gt; (CacheSize -&gt; CacheSize -&gt; CacheSize)
+-&gt; (CacheSize -&gt; CacheSize -&gt; CacheSize)
+-&gt; (CacheSize -&gt; CacheSize -&gt; CacheSize)
+-&gt; (CacheSize -&gt; CacheSize -&gt; (CacheSize, CacheSize))
+-&gt; (CacheSize -&gt; CacheSize -&gt; (CacheSize, CacheSize))
+-&gt; (CacheSize -&gt; Integer)
+-&gt; Integral CacheSize
 CacheSize -&gt; Integer
 CacheSize -&gt; CacheSize -&gt; (CacheSize, CacheSize)
 CacheSize -&gt; CacheSize -&gt; CacheSize
@@ -135,26 +176,35 @@ Real a
 -&gt; (a -&gt; a -&gt; (a, a))
 -&gt; (a -&gt; Integer)
 -&gt; Integral a
-toInteger :: CacheSize -&gt; Integer
-$ctoInteger :: CacheSize -&gt; Integer
-divMod :: CacheSize -&gt; CacheSize -&gt; (CacheSize, CacheSize)
-$cdivMod :: CacheSize -&gt; CacheSize -&gt; (CacheSize, CacheSize)
-quotRem :: CacheSize -&gt; CacheSize -&gt; (CacheSize, CacheSize)
-$cquotRem :: CacheSize -&gt; CacheSize -&gt; (CacheSize, CacheSize)
-mod :: CacheSize -&gt; CacheSize -&gt; CacheSize
-$cmod :: CacheSize -&gt; CacheSize -&gt; CacheSize
-div :: CacheSize -&gt; CacheSize -&gt; CacheSize
-$cdiv :: CacheSize -&gt; CacheSize -&gt; CacheSize
-rem :: CacheSize -&gt; CacheSize -&gt; CacheSize
-$crem :: CacheSize -&gt; CacheSize -&gt; CacheSize
-quot :: CacheSize -&gt; CacheSize -&gt; CacheSize
 $cquot :: CacheSize -&gt; CacheSize -&gt; CacheSize
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Integral</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691037132"><span id="local-6989586621691037136"><span id="local-6989586621691037140"><span id="local-6989586621691037144"><span id="local-6989586621691037148"><span id="local-6989586621691037152"><span id="local-6989586621691037156"><span id="local-6989586621691037161"><span class="annot"><span class="annottext">Int -&gt; CacheSize
+quot :: CacheSize -&gt; CacheSize -&gt; CacheSize
+$crem :: CacheSize -&gt; CacheSize -&gt; CacheSize
+rem :: CacheSize -&gt; CacheSize -&gt; CacheSize
+$cdiv :: CacheSize -&gt; CacheSize -&gt; CacheSize
+div :: CacheSize -&gt; CacheSize -&gt; CacheSize
+$cmod :: CacheSize -&gt; CacheSize -&gt; CacheSize
+mod :: CacheSize -&gt; CacheSize -&gt; CacheSize
+$cquotRem :: CacheSize -&gt; CacheSize -&gt; (CacheSize, CacheSize)
+quotRem :: CacheSize -&gt; CacheSize -&gt; (CacheSize, CacheSize)
+$cdivMod :: CacheSize -&gt; CacheSize -&gt; (CacheSize, CacheSize)
+divMod :: CacheSize -&gt; CacheSize -&gt; (CacheSize, CacheSize)
+$ctoInteger :: CacheSize -&gt; Integer
+toInteger :: CacheSize -&gt; Integer
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Integral</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686728864"><span id="local-6989586621686728869"><span id="local-6989586621686728873"><span id="local-6989586621686728877"><span id="local-6989586621686728881"><span id="local-6989586621686728885"><span id="local-6989586621686728889"><span id="local-6989586621686728893"><span class="annot"><span class="annottext">Int -&gt; CacheSize
 CacheSize -&gt; Int
 CacheSize -&gt; [CacheSize]
 CacheSize -&gt; CacheSize
 CacheSize -&gt; CacheSize -&gt; [CacheSize]
 CacheSize -&gt; CacheSize -&gt; CacheSize -&gt; [CacheSize]
+(CacheSize -&gt; CacheSize)
+-&gt; (CacheSize -&gt; CacheSize)
+-&gt; (Int -&gt; CacheSize)
+-&gt; (CacheSize -&gt; Int)
+-&gt; (CacheSize -&gt; [CacheSize])
+-&gt; (CacheSize -&gt; CacheSize -&gt; [CacheSize])
+-&gt; (CacheSize -&gt; CacheSize -&gt; [CacheSize])
+-&gt; (CacheSize -&gt; CacheSize -&gt; CacheSize -&gt; [CacheSize])
+-&gt; Enum CacheSize
 forall a.
 (a -&gt; a)
 -&gt; (a -&gt; a)
@@ -165,79 +215,97 @@ forall a.
 -&gt; (a -&gt; a -&gt; [a])
 -&gt; (a -&gt; a -&gt; a -&gt; [a])
 -&gt; Enum a
-enumFromThenTo :: CacheSize -&gt; CacheSize -&gt; CacheSize -&gt; [CacheSize]
-$cenumFromThenTo :: CacheSize -&gt; CacheSize -&gt; CacheSize -&gt; [CacheSize]
-enumFromTo :: CacheSize -&gt; CacheSize -&gt; [CacheSize]
-$cenumFromTo :: CacheSize -&gt; CacheSize -&gt; [CacheSize]
-enumFromThen :: CacheSize -&gt; CacheSize -&gt; [CacheSize]
-$cenumFromThen :: CacheSize -&gt; CacheSize -&gt; [CacheSize]
-enumFrom :: CacheSize -&gt; [CacheSize]
-$cenumFrom :: CacheSize -&gt; [CacheSize]
-fromEnum :: CacheSize -&gt; Int
-$cfromEnum :: CacheSize -&gt; Int
-toEnum :: Int -&gt; CacheSize
-$ctoEnum :: Int -&gt; CacheSize
-pred :: CacheSize -&gt; CacheSize
-$cpred :: CacheSize -&gt; CacheSize
-succ :: CacheSize -&gt; CacheSize
 $csucc :: CacheSize -&gt; CacheSize
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></a></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691037114"><span id="local-6989586621691037118"><span id="local-6989586621691037122"><span id="local-6989586621691037127"><span class="annot"><span class="annottext">[CacheSize] -&gt; Value
+succ :: CacheSize -&gt; CacheSize
+$cpred :: CacheSize -&gt; CacheSize
+pred :: CacheSize -&gt; CacheSize
+$ctoEnum :: Int -&gt; CacheSize
+toEnum :: Int -&gt; CacheSize
+$cfromEnum :: CacheSize -&gt; Int
+fromEnum :: CacheSize -&gt; Int
+$cenumFrom :: CacheSize -&gt; [CacheSize]
+enumFrom :: CacheSize -&gt; [CacheSize]
+$cenumFromThen :: CacheSize -&gt; CacheSize -&gt; [CacheSize]
+enumFromThen :: CacheSize -&gt; CacheSize -&gt; [CacheSize]
+$cenumFromTo :: CacheSize -&gt; CacheSize -&gt; [CacheSize]
+enumFromTo :: CacheSize -&gt; CacheSize -&gt; [CacheSize]
+$cenumFromThenTo :: CacheSize -&gt; CacheSize -&gt; CacheSize -&gt; [CacheSize]
+enumFromThenTo :: CacheSize -&gt; CacheSize -&gt; CacheSize -&gt; [CacheSize]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686728898"><span id="local-6989586621686728903"><span id="local-6989586621686728907"><span id="local-6989586621686728911"><span class="annot"><span class="annottext">[CacheSize] -&gt; Value
 [CacheSize] -&gt; Encoding
 CacheSize -&gt; Value
 CacheSize -&gt; Encoding
+(CacheSize -&gt; Value)
+-&gt; (CacheSize -&gt; Encoding)
+-&gt; ([CacheSize] -&gt; Value)
+-&gt; ([CacheSize] -&gt; Encoding)
+-&gt; ToJSON CacheSize
 forall a.
 (a -&gt; Value)
 -&gt; (a -&gt; Encoding)
 -&gt; ([a] -&gt; Value)
 -&gt; ([a] -&gt; Encoding)
 -&gt; ToJSON a
-toEncodingList :: [CacheSize] -&gt; Encoding
-$ctoEncodingList :: [CacheSize] -&gt; Encoding
-toJSONList :: [CacheSize] -&gt; Value
-$ctoJSONList :: [CacheSize] -&gt; Value
-toEncoding :: CacheSize -&gt; Encoding
-$ctoEncoding :: CacheSize -&gt; Encoding
-toJSON :: CacheSize -&gt; Value
 $ctoJSON :: CacheSize -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691037103"><span id="local-6989586621691037108"><span class="annot"><span class="annottext">Value -&gt; Parser [CacheSize]
+toJSON :: CacheSize -&gt; Value
+$ctoEncoding :: CacheSize -&gt; Encoding
+toEncoding :: CacheSize -&gt; Encoding
+$ctoJSONList :: [CacheSize] -&gt; Value
+toJSONList :: [CacheSize] -&gt; Value
+$ctoEncodingList :: [CacheSize] -&gt; Encoding
+toEncodingList :: [CacheSize] -&gt; Encoding
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686728917"><span id="local-6989586621686728922"><span class="annot"><span class="annottext">Value -&gt; Parser [CacheSize]
 Value -&gt; Parser CacheSize
+(Value -&gt; Parser CacheSize)
+-&gt; (Value -&gt; Parser [CacheSize]) -&gt; FromJSON CacheSize
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
-parseJSONList :: Value -&gt; Parser [CacheSize]
-$cparseJSONList :: Value -&gt; Parser [CacheSize]
-parseJSON :: Value -&gt; Parser CacheSize
 $cparseJSON :: Value -&gt; Parser CacheSize
+parseJSON :: Value -&gt; Parser CacheSize
+$cparseJSONList :: Value -&gt; Parser [CacheSize]
+parseJSONList :: Value -&gt; Parser [CacheSize]
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-24"></span><span>
-</span><span id="line-25"></span><span class="annot"><a href="Hasura.Cache.Bounded.html#parseCacheSize"><span class="hs-identifier hs-type">parseCacheSize</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="annot"><a href="Hasura.Cache.Bounded.html#CacheSize"><span class="hs-identifier hs-type">CacheSize</span></a></span><span>
+</span><span id="line-25"></span><span class="annot"><a href="Hasura.Cache.Bounded.html#parseCacheSize"><span class="hs-identifier hs-type">parseCacheSize</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="Hasura.Cache.Bounded.html#CacheSize"><span class="hs-identifier hs-type">CacheSize</span></a></span><span>
 </span><span id="line-26"></span><span id="parseCacheSize"><span class="annot"><span class="annottext">parseCacheSize :: String -&gt; Either String CacheSize
-</span><a href="Hasura.Cache.Bounded.html#parseCacheSize"><span class="hs-identifier hs-var hs-var">parseCacheSize</span></a></span></span><span> </span><span id="local-6989586621691037098"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621691037098"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Cache.Bounded.html#parseCacheSize"><span class="hs-identifier hs-var hs-var">parseCacheSize</span></a></span></span><span> </span><span id="local-6989586621686728927"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621686728927"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-comment">-- NOTE: naively using readMaybe Word16 will silently wrap</span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall a. Read a =&gt; String -&gt; Maybe a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">readMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621691037098"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-bignum-1.2/src"><span class="hs-identifier hs-type">Natural</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-29"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621691037096"><span class="annot"><span class="annottext">Natural
-</span><a href="#local-6989586621691037096"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Natural
-</span><a href="#local-6989586621691037096"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&lt;=</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
-</span><a href="#local-6989586621691037094"><span class="hs-identifier hs-var">max16</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&amp;&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
-</span><a href="#local-6989586621691037096"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
-</span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word16 -&gt; CacheSize
-</span><a href="Hasura.Cache.Bounded.html#CacheSize"><span class="hs-identifier hs-var">CacheSize</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
-</span><a href="#local-6989586621691037096"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe Natural
+forall a. Read a =&gt; String -&gt; Maybe a
+</span><span class="hs-identifier hs-var">readMaybe</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621686728927"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621686728929"><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621686728929"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621686728929"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621686728931"><span class="hs-identifier hs-var">max16</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621686728929"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CacheSize -&gt; Either String CacheSize
+forall a. a -&gt; Either String a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word16 -&gt; CacheSize
+</span><a href="Hasura.Cache.Bounded.html#CacheSize"><span class="hs-identifier hs-var">CacheSize</span></a></span><span> </span><span class="annot"><span class="annottext">(Word16 -&gt; CacheSize) -&gt; Word16 -&gt; CacheSize
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Word16
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621686728929"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span>    </span><span class="annot"><span class="annottext">Maybe Natural
-</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">throwError</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String CacheSize
+forall a. String -&gt; Either String a
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;cache size must be given as a number between 0 and 65535&quot;</span></span><span>
 </span><span id="line-31"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-32"></span><span>    </span><span id="local-6989586621691037094"><span class="annot"><span class="annottext">max16 :: Natural
-</span><a href="#local-6989586621691037094"><span class="hs-identifier hs-var hs-var">max16</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (Integral a, Num b) =&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">fromIntegral</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Bounded a =&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">maxBound</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Word16</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-bignum-1.2/src"><span class="hs-identifier hs-type">Natural</span></a></span><span>
+</span><span id="line-32"></span><span>    </span><span id="local-6989586621686728931"><span class="annot"><span class="annottext">max16 :: Natural
+</span><a href="#local-6989586621686728931"><span class="hs-identifier hs-var hs-var">max16</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word16 -&gt; Natural
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word16
+forall a. Bounded a =&gt; a
+</span><span class="hs-identifier hs-var">maxBound</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span>
 </span><span id="line-33"></span></pre></body></html>

@@ -5,7 +5,7 @@
 </span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-6"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-7"></span><span>
-</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span>
@@ -14,28 +14,33 @@
 </span><span id="line-14"></span><span class="hs-comment">-- really are generic. If not, please start by moving them to a Postgres-specific</span><span>
 </span><span id="line-15"></span><span class="hs-comment">-- module.</span><span>
 </span><span id="line-16"></span><span>
-</span><span id="line-17"></span><span class="hs-keyword">data</span><span> </span><span id="ConflictTarget"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#ConflictTarget"><span class="hs-identifier hs-var">ConflictTarget</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691178407"><span class="annot"><a href="#local-6989586621691178407"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-18"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CTColumn"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#CTColumn"><span class="hs-identifier hs-var">CTColumn</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178407"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-19"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CTConstraint"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#CTConstraint"><span class="hs-identifier hs-var">CTConstraint</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ConstraintName"><span class="hs-identifier hs-type">ConstraintName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178407"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">data</span><span> </span><span id="ConflictTarget"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#ConflictTarget"><span class="hs-identifier hs-var">ConflictTarget</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686872963"><span class="annot"><a href="#local-6989586621686872963"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CTColumn"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#CTColumn"><span class="hs-identifier hs-var">CTColumn</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686872963"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CTConstraint"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#CTConstraint"><span class="hs-identifier hs-var">CTConstraint</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ConstraintName"><span class="hs-identifier hs-type">ConstraintName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686872963"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span id="local-6989586621691178393"><span id="local-6989586621691178395"><span id="local-6989586621691178403"><span id="local-6989586621691178578"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178578"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#ConflictTarget"><span class="hs-identifier hs-type">ConflictTarget</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178578"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-21"></span><span id="local-6989586621686872864"><span id="local-6989586621686872968"><span id="local-6989586621686872978"><span id="local-6989586621686872982"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686872864"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#ConflictTarget"><span class="hs-identifier hs-type">ConflictTarget</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686872864"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-22"></span><span>
-</span><span id="line-23"></span><span id="local-6989586621691178385"><span id="local-6989586621691178390"><span id="local-6989586621691178575"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178575"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#ConflictTarget"><span class="hs-identifier hs-type">ConflictTarget</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178575"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-23"></span><span id="local-6989586621686872868"><span id="local-6989586621686872991"><span id="local-6989586621686872998"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686872868"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#ConflictTarget"><span class="hs-identifier hs-type">ConflictTarget</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686872868"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-24"></span><span>
-</span><span id="line-25"></span><span class="hs-keyword">data</span><span> </span><span id="OnConflictClauseData"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClauseData"><span class="hs-identifier hs-var">OnConflictClauseData</span></a></span></span><span> </span><span id="local-6989586621691178574"><span class="annot"><a href="#local-6989586621691178574"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621691178573"><span class="annot"><a href="#local-6989586621691178573"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OnConflictClauseData"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClauseData"><span class="hs-identifier hs-var">OnConflictClauseData</span></a></span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">data</span><span> </span><span id="OnConflictClauseData"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClauseData"><span class="hs-identifier hs-var">OnConflictClauseData</span></a></span></span><span> </span><span id="local-6989586621686872869"><span class="annot"><a href="#local-6989586621686872869"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621686872870"><span class="annot"><a href="#local-6989586621686872870"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OnConflictClauseData"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClauseData"><span class="hs-identifier hs-var">OnConflictClauseData</span></a></span></span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="cp1udConflictTarget"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
 OnConflictClauseData b v -&gt; ConflictTarget b
-</span><a href="Hasura.RQL.IR.Conflict.html#cp1udConflictTarget"><span class="hs-identifier hs-var hs-var">cp1udConflictTarget</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#ConflictTarget"><span class="hs-identifier hs-type">ConflictTarget</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178574"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Conflict.html#cp1udConflictTarget"><span class="hs-identifier hs-var hs-var">cp1udConflictTarget</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#ConflictTarget"><span class="hs-identifier hs-type">ConflictTarget</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686872869"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-27"></span><span>    </span><span id="cp1udAffectedColumns"><span class="annot"><span class="annottext">forall (b :: BackendType) v. OnConflictClauseData b v -&gt; [Column b]
-</span><a href="Hasura.RQL.IR.Conflict.html#cp1udAffectedColumns"><span class="hs-identifier hs-var hs-var">cp1udAffectedColumns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178574"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Conflict.html#cp1udAffectedColumns"><span class="hs-identifier hs-var hs-var">cp1udAffectedColumns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686872869"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-28"></span><span>    </span><span id="cp1udValues"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
 OnConflictClauseData b v -&gt; PreSetColsG b v
-</span><a href="Hasura.RQL.IR.Conflict.html#cp1udValues"><span class="hs-identifier hs-var hs-var">cp1udValues</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PreSetColsG"><span class="hs-identifier hs-type">PreSetColsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178574"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178573"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Conflict.html#cp1udValues"><span class="hs-identifier hs-var hs-var">cp1udValues</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PreSetColsG"><span class="hs-identifier hs-type">PreSetColsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686872869"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686872870"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-29"></span><span>    </span><span id="cp1udFilter"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
 OnConflictClauseData b v -&gt; AnnBoolExp b v
-</span><a href="Hasura.RQL.IR.Conflict.html#cp1udFilter"><span class="hs-identifier hs-var hs-var">cp1udFilter</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178574"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178573"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><a href="Hasura.RQL.IR.Conflict.html#cp1udFilter"><span class="hs-identifier hs-var hs-var">cp1udFilter</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686872869"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686872870"><span class="hs-identifier hs-type">v</span></a></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691178368"><span id="local-6989586621691178376"><span class="annot"><span class="annottext">forall a b.
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686873011"><span id="local-6989586621686873019"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b) -&gt; OnConflictClauseData b a -&gt; OnConflictClauseData b b)
+-&gt; (forall a b.
+    a -&gt; OnConflictClauseData b b -&gt; OnConflictClauseData b a)
+-&gt; Functor (OnConflictClauseData b)
+forall a b.
 a -&gt; OnConflictClauseData b b -&gt; OnConflictClauseData b a
 forall a b.
 (a -&gt; b) -&gt; OnConflictClauseData b a -&gt; OnConflictClauseData b b
@@ -48,18 +53,52 @@ Backend b =&gt;
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: forall a b.
-a -&gt; OnConflictClauseData b b -&gt; OnConflictClauseData b a
-$c&lt;$ :: forall (b :: BackendType) a b.
-Backend b =&gt;
-a -&gt; OnConflictClauseData b b -&gt; OnConflictClauseData b a
-fmap :: forall a b.
-(a -&gt; b) -&gt; OnConflictClauseData b a -&gt; OnConflictClauseData b b
 $cfmap :: forall (b :: BackendType) a b.
 Backend b =&gt;
 (a -&gt; b) -&gt; OnConflictClauseData b a -&gt; OnConflictClauseData b b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691178312"><span id="local-6989586621691178314"><span id="local-6989586621691178316"><span id="local-6989586621691178318"><span id="local-6989586621691178320"><span id="local-6989586621691178322"><span id="local-6989586621691178327"><span id="local-6989586621691178329"><span id="local-6989586621691178331"><span id="local-6989586621691178333"><span id="local-6989586621691178335"><span id="local-6989586621691178337"><span id="local-6989586621691178339"><span id="local-6989586621691178344"><span id="local-6989586621691178346"><span id="local-6989586621691178359"><span id="local-6989586621691178361"><span class="annot"><span class="annottext">forall a. OnConflictClauseData b a -&gt; Bool
+fmap :: forall a b.
+(a -&gt; b) -&gt; OnConflictClauseData b a -&gt; OnConflictClauseData b b
+$c&lt;$ :: forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; OnConflictClauseData b b -&gt; OnConflictClauseData b a
+&lt;$ :: forall a b.
+a -&gt; OnConflictClauseData b b -&gt; OnConflictClauseData b a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686873027"><span id="local-6989586621686873033"><span id="local-6989586621686873046"><span id="local-6989586621686873051"><span id="local-6989586621686873056"><span id="local-6989586621686873059"><span id="local-6989586621686873062"><span id="local-6989586621686873065"><span id="local-6989586621686873068"><span id="local-6989586621686873071"><span id="local-6989586621686873074"><span id="local-6989586621686873079"><span id="local-6989586621686873082"><span id="local-6989586621686873087"><span id="local-6989586621686873092"><span id="local-6989586621686873097"><span id="local-6989586621686873102"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; OnConflictClauseData b m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; OnConflictClauseData b a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; OnConflictClauseData b a -&gt; m)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClauseData b a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClauseData b a -&gt; a)
+-&gt; (forall a. OnConflictClauseData b a -&gt; [a])
+-&gt; (forall a. OnConflictClauseData b a -&gt; Bool)
+-&gt; (forall a. OnConflictClauseData b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; OnConflictClauseData b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; OnConflictClauseData b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; OnConflictClauseData b a -&gt; a)
+-&gt; (forall a. Num a =&gt; OnConflictClauseData b a -&gt; a)
+-&gt; (forall a. Num a =&gt; OnConflictClauseData b a -&gt; a)
+-&gt; Foldable (OnConflictClauseData b)
+forall a. Eq a =&gt; a -&gt; OnConflictClauseData b a -&gt; Bool
+forall a. Num a =&gt; OnConflictClauseData b a -&gt; a
+forall a. Ord a =&gt; OnConflictClauseData b a -&gt; a
+forall m. Monoid m =&gt; OnConflictClauseData b m -&gt; m
+forall a. OnConflictClauseData b a -&gt; Bool
+forall a. OnConflictClauseData b a -&gt; Int
+forall a. OnConflictClauseData b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClauseData b a -&gt; a
 forall m a. Monoid m =&gt; (a -&gt; m) -&gt; OnConflictClauseData b a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
 forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
 forall (b :: BackendType) a.
 (Backend b, Eq a) =&gt;
@@ -113,75 +152,94 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: forall a. Num a =&gt; OnConflictClauseData b a -&gt; a
-$cproduct :: forall (b :: BackendType) a.
-(Backend b, Num a) =&gt;
-OnConflictClauseData b a -&gt; a
-sum :: forall a. Num a =&gt; OnConflictClauseData b a -&gt; a
-$csum :: forall (b :: BackendType) a.
-(Backend b, Num a) =&gt;
-OnConflictClauseData b a -&gt; a
-minimum :: forall a. Ord a =&gt; OnConflictClauseData b a -&gt; a
-$cminimum :: forall (b :: BackendType) a.
-(Backend b, Ord a) =&gt;
-OnConflictClauseData b a -&gt; a
-maximum :: forall a. Ord a =&gt; OnConflictClauseData b a -&gt; a
-$cmaximum :: forall (b :: BackendType) a.
-(Backend b, Ord a) =&gt;
-OnConflictClauseData b a -&gt; a
-elem :: forall a. Eq a =&gt; a -&gt; OnConflictClauseData b a -&gt; Bool
-$celem :: forall (b :: BackendType) a.
-(Backend b, Eq a) =&gt;
-a -&gt; OnConflictClauseData b a -&gt; Bool
-length :: forall a. OnConflictClauseData b a -&gt; Int
-$clength :: forall (b :: BackendType) a.
-Backend b =&gt;
-OnConflictClauseData b a -&gt; Int
-null :: forall a. OnConflictClauseData b a -&gt; Bool
-$cnull :: forall (b :: BackendType) a.
-Backend b =&gt;
-OnConflictClauseData b a -&gt; Bool
-toList :: forall a. OnConflictClauseData b a -&gt; [a]
-$ctoList :: forall (b :: BackendType) a.
-Backend b =&gt;
-OnConflictClauseData b a -&gt; [a]
-foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClauseData b a -&gt; a
-$cfoldl1 :: forall (b :: BackendType) a.
-Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; OnConflictClauseData b a -&gt; a
-foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClauseData b a -&gt; a
-$cfoldr1 :: forall (b :: BackendType) a.
-Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; OnConflictClauseData b a -&gt; a
-foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
-$cfoldl' :: forall (b :: BackendType) b a.
-Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
-foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
-$cfoldl :: forall (b :: BackendType) b a.
-Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
-foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
-$cfoldr' :: forall (b :: BackendType) a b.
-Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
-foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
-$cfoldr :: forall (b :: BackendType) a b.
-Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
-foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; OnConflictClauseData b a -&gt; m
-$cfoldMap' :: forall (b :: BackendType) m a.
-(Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; OnConflictClauseData b a -&gt; m
-foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; OnConflictClauseData b a -&gt; m
-$cfoldMap :: forall (b :: BackendType) m a.
-(Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; OnConflictClauseData b a -&gt; m
-fold :: forall m. Monoid m =&gt; OnConflictClauseData b m -&gt; m
 $cfold :: forall (b :: BackendType) m.
 (Backend b, Monoid m) =&gt;
 OnConflictClauseData b m -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691178288"><span id="local-6989586621691178290"><span id="local-6989586621691178292"><span id="local-6989586621691178305"><span class="annot"><span class="annottext">forall (b :: BackendType).
+fold :: forall m. Monoid m =&gt; OnConflictClauseData b m -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; OnConflictClauseData b a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; OnConflictClauseData b a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; OnConflictClauseData b a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; OnConflictClauseData b a -&gt; m
+$cfoldr :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClauseData b a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; OnConflictClauseData b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClauseData b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; OnConflictClauseData b a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClauseData b a -&gt; a
+$ctoList :: forall (b :: BackendType) a.
+Backend b =&gt;
+OnConflictClauseData b a -&gt; [a]
+toList :: forall a. OnConflictClauseData b a -&gt; [a]
+$cnull :: forall (b :: BackendType) a.
+Backend b =&gt;
+OnConflictClauseData b a -&gt; Bool
+null :: forall a. OnConflictClauseData b a -&gt; Bool
+$clength :: forall (b :: BackendType) a.
+Backend b =&gt;
+OnConflictClauseData b a -&gt; Int
+length :: forall a. OnConflictClauseData b a -&gt; Int
+$celem :: forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; OnConflictClauseData b a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; OnConflictClauseData b a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+OnConflictClauseData b a -&gt; a
+maximum :: forall a. Ord a =&gt; OnConflictClauseData b a -&gt; a
+$cminimum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+OnConflictClauseData b a -&gt; a
+minimum :: forall a. Ord a =&gt; OnConflictClauseData b a -&gt; a
+$csum :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+OnConflictClauseData b a -&gt; a
+sum :: forall a. Num a =&gt; OnConflictClauseData b a -&gt; a
+$cproduct :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+OnConflictClauseData b a -&gt; a
+product :: forall a. Num a =&gt; OnConflictClauseData b a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686873113"><span id="local-6989586621686873126"><span id="local-6989586621686873132"><span id="local-6989586621686873137"><span class="annot"><span class="annottext">Functor (OnConflictClauseData b)
+Foldable (OnConflictClauseData b)
+Functor (OnConflictClauseData b)
+-&gt; Foldable (OnConflictClauseData b)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b)
+    -&gt; OnConflictClauseData b a -&gt; f (OnConflictClauseData b b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    OnConflictClauseData b (f a) -&gt; f (OnConflictClauseData b a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b)
+    -&gt; OnConflictClauseData b a -&gt; m (OnConflictClauseData b b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    OnConflictClauseData b (m a) -&gt; m (OnConflictClauseData b a))
+-&gt; Traversable (OnConflictClauseData b)
+forall (b :: BackendType).
 Backend b =&gt;
 Functor (OnConflictClauseData b)
 forall (b :: BackendType).
@@ -213,31 +271,17 @@ Functor t
     (a -&gt; m b) -&gt; t a -&gt; m (t b))
 -&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
 -&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+OnConflictClauseData b (m a) -&gt; m (OnConflictClauseData b a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+OnConflictClauseData b (f a) -&gt; f (OnConflictClauseData b a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; OnConflictClauseData b a -&gt; m (OnConflictClauseData b b)
 forall (f :: * -&gt; *) a b.
-Applicative f =&gt;
-(a -&gt; f b)
--&gt; OnConflictClauseData b a -&gt; f (OnConflictClauseData b b)
-sequence :: forall (m :: * -&gt; *) a.
-Monad m =&gt;
-OnConflictClauseData b (m a) -&gt; m (OnConflictClauseData b a)
-$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
-(Backend b, Monad m) =&gt;
-OnConflictClauseData b (m a) -&gt; m (OnConflictClauseData b a)
-mapM :: forall (m :: * -&gt; *) a b.
-Monad m =&gt;
-(a -&gt; m b)
--&gt; OnConflictClauseData b a -&gt; m (OnConflictClauseData b b)
-$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
-(Backend b, Monad m) =&gt;
-(a -&gt; m b)
--&gt; OnConflictClauseData b a -&gt; m (OnConflictClauseData b b)
-sequenceA :: forall (f :: * -&gt; *) a.
-Applicative f =&gt;
-OnConflictClauseData b (f a) -&gt; f (OnConflictClauseData b a)
-$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Applicative f) =&gt;
-OnConflictClauseData b (f a) -&gt; f (OnConflictClauseData b a)
-traverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b)
 -&gt; OnConflictClauseData b a -&gt; f (OnConflictClauseData b b)
@@ -245,12 +289,40 @@ $ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Applicative f) =&gt;
 (a -&gt; f b)
 -&gt; OnConflictClauseData b a -&gt; f (OnConflictClauseData b b)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; OnConflictClauseData b a -&gt; f (OnConflictClauseData b b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+OnConflictClauseData b (f a) -&gt; f (OnConflictClauseData b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+OnConflictClauseData b (f a) -&gt; f (OnConflictClauseData b a)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b)
+-&gt; OnConflictClauseData b a -&gt; m (OnConflictClauseData b b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; OnConflictClauseData b a -&gt; m (OnConflictClauseData b b)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+OnConflictClauseData b (m a) -&gt; m (OnConflictClauseData b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+OnConflictClauseData b (m a) -&gt; m (OnConflictClauseData b a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span class="hs-keyword">data</span><span> </span><span id="OnConflictClause"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClause"><span class="hs-identifier hs-var">OnConflictClause</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691178510"><span class="annot"><a href="#local-6989586621691178510"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621691178286"><span class="annot"><a href="#local-6989586621691178286"><span class="hs-identifier hs-type">v</span></a></span></span><span>
-</span><span id="line-34"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="OCCDoNothing"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OCCDoNothing"><span class="hs-identifier hs-var">OCCDoNothing</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#ConflictTarget"><span class="hs-identifier hs-type">ConflictTarget</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178510"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="OCCUpdate"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OCCUpdate"><span class="hs-identifier hs-var">OCCUpdate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClauseData"><span class="hs-identifier hs-type">OnConflictClauseData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178510"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691178286"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691178278"><span id="local-6989586621691178281"><span class="annot"><span class="annottext">forall a b. a -&gt; OnConflictClause b b -&gt; OnConflictClause b a
+</span><span id="line-33"></span><span class="hs-keyword">data</span><span> </span><span id="OnConflictClause"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClause"><span class="hs-identifier hs-var">OnConflictClause</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686873142"><span class="annot"><a href="#local-6989586621686873142"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621686873143"><span class="annot"><a href="#local-6989586621686873143"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="OCCDoNothing"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OCCDoNothing"><span class="hs-identifier hs-var">OCCDoNothing</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#ConflictTarget"><span class="hs-identifier hs-type">ConflictTarget</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873142"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="OCCUpdate"><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OCCUpdate"><span class="hs-identifier hs-var">OCCUpdate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Conflict.html#OnConflictClauseData"><span class="hs-identifier hs-type">OnConflictClauseData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873142"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873143"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686873148"><span id="local-6989586621686873151"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b) -&gt; OnConflictClause b a -&gt; OnConflictClause b b)
+-&gt; (forall a b. a -&gt; OnConflictClause b b -&gt; OnConflictClause b a)
+-&gt; Functor (OnConflictClause b)
+forall a b. a -&gt; OnConflictClause b b -&gt; OnConflictClause b a
 forall a b.
 (a -&gt; b) -&gt; OnConflictClause b a -&gt; OnConflictClause b b
 forall (b :: BackendType) a b.
@@ -262,17 +334,43 @@ Backend b =&gt;
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: forall a b. a -&gt; OnConflictClause b b -&gt; OnConflictClause b a
-$c&lt;$ :: forall (b :: BackendType) a b.
-Backend b =&gt;
-a -&gt; OnConflictClause b b -&gt; OnConflictClause b a
-fmap :: forall a b.
-(a -&gt; b) -&gt; OnConflictClause b a -&gt; OnConflictClause b b
 $cfmap :: forall (b :: BackendType) a b.
 Backend b =&gt;
 (a -&gt; b) -&gt; OnConflictClause b a -&gt; OnConflictClause b b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691178236"><span id="local-6989586621691178238"><span id="local-6989586621691178240"><span id="local-6989586621691178242"><span id="local-6989586621691178244"><span id="local-6989586621691178246"><span id="local-6989586621691178249"><span id="local-6989586621691178251"><span id="local-6989586621691178253"><span id="local-6989586621691178255"><span id="local-6989586621691178257"><span id="local-6989586621691178259"><span id="local-6989586621691178261"><span id="local-6989586621691178264"><span id="local-6989586621691178266"><span id="local-6989586621691178272"><span id="local-6989586621691178274"><span class="annot"><span class="annottext">forall a. OnConflictClause b a -&gt; Bool
+fmap :: forall a b.
+(a -&gt; b) -&gt; OnConflictClause b a -&gt; OnConflictClause b b
+$c&lt;$ :: forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; OnConflictClause b b -&gt; OnConflictClause b a
+&lt;$ :: forall a b. a -&gt; OnConflictClause b b -&gt; OnConflictClause b a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686873156"><span id="local-6989586621686873162"><span id="local-6989586621686873168"><span id="local-6989586621686873173"><span id="local-6989586621686873176"><span id="local-6989586621686873179"><span id="local-6989586621686873182"><span id="local-6989586621686873185"><span id="local-6989586621686873188"><span id="local-6989586621686873191"><span id="local-6989586621686873194"><span id="local-6989586621686873197"><span id="local-6989586621686873200"><span id="local-6989586621686873205"><span id="local-6989586621686873210"><span id="local-6989586621686873215"><span id="local-6989586621686873220"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; OnConflictClause b m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; OnConflictClause b a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; OnConflictClause b a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClause b a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClause b a -&gt; a)
+-&gt; (forall a. OnConflictClause b a -&gt; [a])
+-&gt; (forall a. OnConflictClause b a -&gt; Bool)
+-&gt; (forall a. OnConflictClause b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; OnConflictClause b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; OnConflictClause b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; OnConflictClause b a -&gt; a)
+-&gt; (forall a. Num a =&gt; OnConflictClause b a -&gt; a)
+-&gt; (forall a. Num a =&gt; OnConflictClause b a -&gt; a)
+-&gt; Foldable (OnConflictClause b)
+forall a. Eq a =&gt; a -&gt; OnConflictClause b a -&gt; Bool
+forall a. Num a =&gt; OnConflictClause b a -&gt; a
+forall a. Ord a =&gt; OnConflictClause b a -&gt; a
+forall m. Monoid m =&gt; OnConflictClause b m -&gt; m
+forall a. OnConflictClause b a -&gt; Bool
+forall a. OnConflictClause b a -&gt; Int
+forall a. OnConflictClause b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClause b a -&gt; a
 forall m a. Monoid m =&gt; (a -&gt; m) -&gt; OnConflictClause b a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
 forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
 forall (b :: BackendType) a.
 (Backend b, Eq a) =&gt;
@@ -326,75 +424,92 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: forall a. Num a =&gt; OnConflictClause b a -&gt; a
-$cproduct :: forall (b :: BackendType) a.
-(Backend b, Num a) =&gt;
-OnConflictClause b a -&gt; a
-sum :: forall a. Num a =&gt; OnConflictClause b a -&gt; a
-$csum :: forall (b :: BackendType) a.
-(Backend b, Num a) =&gt;
-OnConflictClause b a -&gt; a
-minimum :: forall a. Ord a =&gt; OnConflictClause b a -&gt; a
-$cminimum :: forall (b :: BackendType) a.
-(Backend b, Ord a) =&gt;
-OnConflictClause b a -&gt; a
-maximum :: forall a. Ord a =&gt; OnConflictClause b a -&gt; a
-$cmaximum :: forall (b :: BackendType) a.
-(Backend b, Ord a) =&gt;
-OnConflictClause b a -&gt; a
-elem :: forall a. Eq a =&gt; a -&gt; OnConflictClause b a -&gt; Bool
-$celem :: forall (b :: BackendType) a.
-(Backend b, Eq a) =&gt;
-a -&gt; OnConflictClause b a -&gt; Bool
-length :: forall a. OnConflictClause b a -&gt; Int
-$clength :: forall (b :: BackendType) a.
-Backend b =&gt;
-OnConflictClause b a -&gt; Int
-null :: forall a. OnConflictClause b a -&gt; Bool
-$cnull :: forall (b :: BackendType) a.
-Backend b =&gt;
-OnConflictClause b a -&gt; Bool
-toList :: forall a. OnConflictClause b a -&gt; [a]
-$ctoList :: forall (b :: BackendType) a.
-Backend b =&gt;
-OnConflictClause b a -&gt; [a]
-foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClause b a -&gt; a
-$cfoldl1 :: forall (b :: BackendType) a.
-Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; OnConflictClause b a -&gt; a
-foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClause b a -&gt; a
-$cfoldr1 :: forall (b :: BackendType) a.
-Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; OnConflictClause b a -&gt; a
-foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
-$cfoldl' :: forall (b :: BackendType) b a.
-Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
-foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
-$cfoldl :: forall (b :: BackendType) b a.
-Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
-foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
-$cfoldr' :: forall (b :: BackendType) a b.
-Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
-foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
-$cfoldr :: forall (b :: BackendType) a b.
-Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
-foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; OnConflictClause b a -&gt; m
-$cfoldMap' :: forall (b :: BackendType) m a.
-(Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; OnConflictClause b a -&gt; m
-foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; OnConflictClause b a -&gt; m
-$cfoldMap :: forall (b :: BackendType) m a.
-(Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; OnConflictClause b a -&gt; m
-fold :: forall m. Monoid m =&gt; OnConflictClause b m -&gt; m
 $cfold :: forall (b :: BackendType) m.
 (Backend b, Monoid m) =&gt;
 OnConflictClause b m -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691178218"><span id="local-6989586621691178220"><span id="local-6989586621691178222"><span id="local-6989586621691178230"><span class="annot"><span class="annottext">forall (b :: BackendType).
+fold :: forall m. Monoid m =&gt; OnConflictClause b m -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; OnConflictClause b a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; OnConflictClause b a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; OnConflictClause b a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; OnConflictClause b a -&gt; m
+$cfoldr :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; OnConflictClause b a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; OnConflictClause b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClause b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; OnConflictClause b a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; OnConflictClause b a -&gt; a
+$ctoList :: forall (b :: BackendType) a.
+Backend b =&gt;
+OnConflictClause b a -&gt; [a]
+toList :: forall a. OnConflictClause b a -&gt; [a]
+$cnull :: forall (b :: BackendType) a.
+Backend b =&gt;
+OnConflictClause b a -&gt; Bool
+null :: forall a. OnConflictClause b a -&gt; Bool
+$clength :: forall (b :: BackendType) a.
+Backend b =&gt;
+OnConflictClause b a -&gt; Int
+length :: forall a. OnConflictClause b a -&gt; Int
+$celem :: forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; OnConflictClause b a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; OnConflictClause b a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+OnConflictClause b a -&gt; a
+maximum :: forall a. Ord a =&gt; OnConflictClause b a -&gt; a
+$cminimum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+OnConflictClause b a -&gt; a
+minimum :: forall a. Ord a =&gt; OnConflictClause b a -&gt; a
+$csum :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+OnConflictClause b a -&gt; a
+sum :: forall a. Num a =&gt; OnConflictClause b a -&gt; a
+$cproduct :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+OnConflictClause b a -&gt; a
+product :: forall a. Num a =&gt; OnConflictClause b a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686873230"><span id="local-6989586621686873238"><span id="local-6989586621686873244"><span id="local-6989586621686873249"><span class="annot"><span class="annottext">Functor (OnConflictClause b)
+Foldable (OnConflictClause b)
+Functor (OnConflictClause b)
+-&gt; Foldable (OnConflictClause b)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; OnConflictClause b a -&gt; f (OnConflictClause b b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    OnConflictClause b (f a) -&gt; f (OnConflictClause b a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; OnConflictClause b a -&gt; m (OnConflictClause b b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    OnConflictClause b (m a) -&gt; m (OnConflictClause b a))
+-&gt; Traversable (OnConflictClause b)
+forall (b :: BackendType).
 Backend b =&gt;
 Functor (OnConflictClause b)
 forall (b :: BackendType).
@@ -424,32 +539,41 @@ Functor t
     (a -&gt; m b) -&gt; t a -&gt; m (t b))
 -&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
 -&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+OnConflictClause b (m a) -&gt; m (OnConflictClause b a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+OnConflictClause b (f a) -&gt; f (OnConflictClause b a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; OnConflictClause b a -&gt; m (OnConflictClause b b)
 forall (f :: * -&gt; *) a b.
-Applicative f =&gt;
-(a -&gt; f b) -&gt; OnConflictClause b a -&gt; f (OnConflictClause b b)
-sequence :: forall (m :: * -&gt; *) a.
-Monad m =&gt;
-OnConflictClause b (m a) -&gt; m (OnConflictClause b a)
-$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
-(Backend b, Monad m) =&gt;
-OnConflictClause b (m a) -&gt; m (OnConflictClause b a)
-mapM :: forall (m :: * -&gt; *) a b.
-Monad m =&gt;
-(a -&gt; m b) -&gt; OnConflictClause b a -&gt; m (OnConflictClause b b)
-$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
-(Backend b, Monad m) =&gt;
-(a -&gt; m b) -&gt; OnConflictClause b a -&gt; m (OnConflictClause b b)
-sequenceA :: forall (f :: * -&gt; *) a.
-Applicative f =&gt;
-OnConflictClause b (f a) -&gt; f (OnConflictClause b a)
-$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Applicative f) =&gt;
-OnConflictClause b (f a) -&gt; f (OnConflictClause b a)
-traverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; OnConflictClause b a -&gt; f (OnConflictClause b b)
 $ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Applicative f) =&gt;
 (a -&gt; f b) -&gt; OnConflictClause b a -&gt; f (OnConflictClause b b)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; OnConflictClause b a -&gt; f (OnConflictClause b b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+OnConflictClause b (f a) -&gt; f (OnConflictClause b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+OnConflictClause b (f a) -&gt; f (OnConflictClause b a)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b) -&gt; OnConflictClause b a -&gt; m (OnConflictClause b b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; OnConflictClause b a -&gt; m (OnConflictClause b b)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+OnConflictClause b (m a) -&gt; m (OnConflictClause b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+OnConflictClause b (m a) -&gt; m (OnConflictClause b a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span></pre></body></html>

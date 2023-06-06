@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | The RQL metadata query ('/v1/metadata')</span><span>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | The RQL metadata query ('/v1/metadata')</span></span><span>
 </span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Server.API.Metadata.Types</span><span>
 </span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV1"><span class="hs-identifier">RQLMetadataV1</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV2"><span class="hs-identifier">RQLMetadataV2</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
@@ -6,7 +6,7 @@
 </span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-7"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-8"></span><span>
-</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier">GHC.Generics</span></a></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Generics</span></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Function.API.html"><span class="hs-identifier">Hasura.Function.API</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Functions</span></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.API.html"><span class="hs-identifier">Hasura.LogicalModel.API</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">LogicalModel</span></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.NativeQuery.API.html"><span class="hs-identifier">Hasura.NativeQuery.API</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NativeQueries</span></span><span>
@@ -44,7 +44,7 @@
 </span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.API.html"><span class="hs-identifier">Hasura.StoredProcedure.API</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">StoredProcedures</span></span><span>
 </span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.Types.Extended</span></span><span>
 </span><span id="line-46"></span><span>
-</span><span id="line-47"></span><span id="local-6989586621691444906"><span id="local-6989586621691444907"></span></span><span class="hs-keyword">data</span><span> </span><span id="RQLMetadataV1"><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV1"><span class="hs-identifier hs-var">RQLMetadataV1</span></a></span></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">data</span><span> </span><span id="RQLMetadataV1"><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV1"><span class="hs-identifier hs-var">RQLMetadataV1</span></a></span></span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- Sources</span><span>
 </span><span id="line-49"></span><span>    </span><span id="RMAddSource"><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RMAddSource"><span class="hs-identifier hs-var">RMAddSource</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#AnyBackend"><span class="hs-identifier hs-type">AnyBackend</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#AddSource"><span class="hs-identifier hs-type">AddSource</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RMDropSource"><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RMDropSource"><span class="hs-identifier hs-var">RMDropSource</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Source.html#DropSource"><span class="hs-identifier hs-type">DropSource</span></a></span><span>
@@ -207,24 +207,34 @@
 </span><span id="line-207"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Bulk metadata queries, running a single schema cache resolve at the</span><span>
 </span><span id="line-208"></span><span>    </span><span class="hs-comment">-- end. Only works for a subset of commands.</span><span>
 </span><span id="line-209"></span><span>    </span><span id="RMBulkAtomic"><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RMBulkAtomic"><span class="hs-identifier hs-var">RMBulkAtomic</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataRequest"><span class="hs-identifier hs-type">RQLMetadataRequest</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-210"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall x. Rep RQLMetadataV1 x -&gt; RQLMetadataV1
+</span><span id="line-210"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687155970"><span id="local-6989586621687155972"><span class="annot"><span class="annottext">(forall x. RQLMetadataV1 -&gt; Rep RQLMetadataV1 x)
+-&gt; (forall x. Rep RQLMetadataV1 x -&gt; RQLMetadataV1)
+-&gt; Generic RQLMetadataV1
+forall x. Rep RQLMetadataV1 x -&gt; RQLMetadataV1
 forall x. RQLMetadataV1 -&gt; Rep RQLMetadataV1 x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x. Rep RQLMetadataV1 x -&gt; RQLMetadataV1
 $cfrom :: forall x. RQLMetadataV1 -&gt; Rep RQLMetadataV1 x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x. RQLMetadataV1 -&gt; Rep RQLMetadataV1 x
+$cto :: forall x. Rep RQLMetadataV1 x -&gt; RQLMetadataV1
+to :: forall x. Rep RQLMetadataV1 x -&gt; RQLMetadataV1
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-211"></span><span>
-</span><span id="line-212"></span><span id="local-6989586621691444664"><span id="local-6989586621691444665"></span></span><span class="hs-keyword">data</span><span> </span><span id="RQLMetadataV2"><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV2"><span class="hs-identifier hs-var">RQLMetadataV2</span></a></span></span><span>
+</span><span id="line-212"></span><span class="hs-keyword">data</span><span> </span><span id="RQLMetadataV2"><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV2"><span class="hs-identifier hs-var">RQLMetadataV2</span></a></span></span><span>
 </span><span id="line-213"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RMV2ReplaceMetadata"><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RMV2ReplaceMetadata"><span class="hs-identifier hs-var">RMV2ReplaceMetadata</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ReplaceMetadataV2"><span class="hs-identifier hs-type">ReplaceMetadataV2</span></a></span><span>
 </span><span id="line-214"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RMV2ExportMetadata"><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RMV2ExportMetadata"><span class="hs-identifier hs-var">RMV2ExportMetadata</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.DDL.Metadata.Types.html#ExportMetadata"><span class="hs-identifier hs-type">ExportMetadata</span></a></span><span>
-</span><span id="line-215"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall x. Rep RQLMetadataV2 x -&gt; RQLMetadataV2
+</span><span id="line-215"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687155979"><span id="local-6989586621687155981"><span class="annot"><span class="annottext">(forall x. RQLMetadataV2 -&gt; Rep RQLMetadataV2 x)
+-&gt; (forall x. Rep RQLMetadataV2 x -&gt; RQLMetadataV2)
+-&gt; Generic RQLMetadataV2
+forall x. Rep RQLMetadataV2 x -&gt; RQLMetadataV2
 forall x. RQLMetadataV2 -&gt; Rep RQLMetadataV2 x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x. Rep RQLMetadataV2 x -&gt; RQLMetadataV2
 $cfrom :: forall x. RQLMetadataV2 -&gt; Rep RQLMetadataV2 x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x. RQLMetadataV2 -&gt; Rep RQLMetadataV2 x
+$cto :: forall x. Rep RQLMetadataV2 x -&gt; RQLMetadataV2
+to :: forall x. Rep RQLMetadataV2 x -&gt; RQLMetadataV2
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-216"></span><span>
 </span><span id="line-217"></span><span class="hs-keyword">data</span><span> </span><span id="RQLMetadataRequest"><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataRequest"><span class="hs-identifier hs-var">RQLMetadataRequest</span></a></span></span><span>
 </span><span id="line-218"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RMV1"><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RMV1"><span class="hs-identifier hs-var">RMV1</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV1"><span class="hs-identifier hs-type">RQLMetadataV1</span></a></span><span>

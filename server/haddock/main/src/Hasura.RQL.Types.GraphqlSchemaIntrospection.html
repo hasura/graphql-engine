@@ -7,34 +7,50 @@
 </span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec.Extended</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">hashSetCodec</span></span><span class="hs-special">)</span><span>
 </span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">genericParseJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">genericToEncoding</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">genericToJSON</span></span><span class="hs-special">)</span><span>
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
-</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html"><span class="hs-identifier">Hasura.RQL.Types.Roles</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier">RoleName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-12"></span><span>
-</span><span id="line-13"></span><span id="local-6989586621691060112"><span id="local-6989586621691060113"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="SetGraphqlIntrospectionOptions"><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-var">SetGraphqlIntrospectionOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SetGraphqlIntrospectionOptions"><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-var">SetGraphqlIntrospectionOptions</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_idrDisabledForRoles"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions -&gt; HashSet RoleName
+</span><span id="line-13"></span><span class="hs-keyword">newtype</span><span> </span><span id="SetGraphqlIntrospectionOptions"><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-var">SetGraphqlIntrospectionOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SetGraphqlIntrospectionOptions"><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-var">SetGraphqlIntrospectionOptions</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_idrDisabledForRoles"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions -&gt; HashSet RoleName
 </span><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#_idrDisabledForRoles"><span class="hs-identifier hs-var hs-var">_idrDisabledForRoles</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span class="hs-special">)</span><span class="hs-special">}</span><span>
-</span><span id="line-14"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621691060099"><span id="local-6989586621691060101"><span id="local-6989586621691060108"><span class="annot"><span class="annottext">Int -&gt; SetGraphqlIntrospectionOptions -&gt; ShowS
+</span><span id="line-14"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686752255"><span id="local-6989586621686752262"><span id="local-6989586621686752266"><span class="annot"><span class="annottext">Int -&gt; SetGraphqlIntrospectionOptions -&gt; ShowS
 [SetGraphqlIntrospectionOptions] -&gt; ShowS
 SetGraphqlIntrospectionOptions -&gt; String
+(Int -&gt; SetGraphqlIntrospectionOptions -&gt; ShowS)
+-&gt; (SetGraphqlIntrospectionOptions -&gt; String)
+-&gt; ([SetGraphqlIntrospectionOptions] -&gt; ShowS)
+-&gt; Show SetGraphqlIntrospectionOptions
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [SetGraphqlIntrospectionOptions] -&gt; ShowS
-$cshowList :: [SetGraphqlIntrospectionOptions] -&gt; ShowS
-show :: SetGraphqlIntrospectionOptions -&gt; String
-$cshow :: SetGraphqlIntrospectionOptions -&gt; String
-showsPrec :: Int -&gt; SetGraphqlIntrospectionOptions -&gt; ShowS
 $cshowsPrec :: Int -&gt; SetGraphqlIntrospectionOptions -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691060089"><span id="local-6989586621691060095"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
+showsPrec :: Int -&gt; SetGraphqlIntrospectionOptions -&gt; ShowS
+$cshow :: SetGraphqlIntrospectionOptions -&gt; String
+show :: SetGraphqlIntrospectionOptions -&gt; String
+$cshowList :: [SetGraphqlIntrospectionOptions] -&gt; ShowS
+showList :: [SetGraphqlIntrospectionOptions] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686752271"><span id="local-6989586621686752277"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
 -&gt; SetGraphqlIntrospectionOptions -&gt; Bool
+(SetGraphqlIntrospectionOptions
+ -&gt; SetGraphqlIntrospectionOptions -&gt; Bool)
+-&gt; (SetGraphqlIntrospectionOptions
+    -&gt; SetGraphqlIntrospectionOptions -&gt; Bool)
+-&gt; Eq SetGraphqlIntrospectionOptions
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: SetGraphqlIntrospectionOptions
--&gt; SetGraphqlIntrospectionOptions -&gt; Bool
-$c/= :: SetGraphqlIntrospectionOptions
+$c== :: SetGraphqlIntrospectionOptions
 -&gt; SetGraphqlIntrospectionOptions -&gt; Bool
 == :: SetGraphqlIntrospectionOptions
 -&gt; SetGraphqlIntrospectionOptions -&gt; Bool
-$c== :: SetGraphqlIntrospectionOptions
+$c/= :: SetGraphqlIntrospectionOptions
 -&gt; SetGraphqlIntrospectionOptions -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x.
+/= :: SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686752285"><span id="local-6989586621686752287"><span class="annot"><span class="annottext">(forall x.
+ SetGraphqlIntrospectionOptions
+ -&gt; Rep SetGraphqlIntrospectionOptions x)
+-&gt; (forall x.
+    Rep SetGraphqlIntrospectionOptions x
+    -&gt; SetGraphqlIntrospectionOptions)
+-&gt; Generic SetGraphqlIntrospectionOptions
+forall x.
 Rep SetGraphqlIntrospectionOptions x
 -&gt; SetGraphqlIntrospectionOptions
 forall x.
@@ -42,16 +58,33 @@ SetGraphqlIntrospectionOptions
 -&gt; Rep SetGraphqlIntrospectionOptions x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
-$cto :: forall x.
-Rep SetGraphqlIntrospectionOptions x
--&gt; SetGraphqlIntrospectionOptions
 $cfrom :: forall x.
 SetGraphqlIntrospectionOptions
 -&gt; Rep SetGraphqlIntrospectionOptions x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691060063"><span id="local-6989586621691060071"><span id="local-6989586621691060078"><span class="annot"><span class="annottext">NonEmpty SetGraphqlIntrospectionOptions
+from :: forall x.
+SetGraphqlIntrospectionOptions
+-&gt; Rep SetGraphqlIntrospectionOptions x
+$cto :: forall x.
+Rep SetGraphqlIntrospectionOptions x
+-&gt; SetGraphqlIntrospectionOptions
+to :: forall x.
+Rep SetGraphqlIntrospectionOptions x
+-&gt; SetGraphqlIntrospectionOptions
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686752291"><span id="local-6989586621686752298"><span id="local-6989586621686752306"><span class="annot"><span class="annottext">NonEmpty SetGraphqlIntrospectionOptions
 -&gt; SetGraphqlIntrospectionOptions
 SetGraphqlIntrospectionOptions
 -&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+(SetGraphqlIntrospectionOptions
+ -&gt; SetGraphqlIntrospectionOptions
+ -&gt; SetGraphqlIntrospectionOptions)
+-&gt; (NonEmpty SetGraphqlIntrospectionOptions
+    -&gt; SetGraphqlIntrospectionOptions)
+-&gt; (forall b.
+    Integral b =&gt;
+    b
+    -&gt; SetGraphqlIntrospectionOptions
+    -&gt; SetGraphqlIntrospectionOptions)
+-&gt; Semigroup SetGraphqlIntrospectionOptions
 forall b.
 Integral b =&gt;
 b
@@ -61,74 +94,90 @@ forall a.
 -&gt; (NonEmpty a -&gt; a)
 -&gt; (forall b. Integral b =&gt; b -&gt; a -&gt; a)
 -&gt; Semigroup a
-stimes :: forall b.
-Integral b =&gt;
-b
+$c&lt;&gt; :: SetGraphqlIntrospectionOptions
 -&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+&lt;&gt; :: SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+$csconcat :: NonEmpty SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions
+sconcat :: NonEmpty SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions
 $cstimes :: forall b.
 Integral b =&gt;
 b
 -&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
-sconcat :: NonEmpty SetGraphqlIntrospectionOptions
--&gt; SetGraphqlIntrospectionOptions
-$csconcat :: NonEmpty SetGraphqlIntrospectionOptions
--&gt; SetGraphqlIntrospectionOptions
-&lt;&gt; :: SetGraphqlIntrospectionOptions
+stimes :: forall b.
+Integral b =&gt;
+b
 -&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
-$c&lt;&gt; :: SetGraphqlIntrospectionOptions
--&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691060038"><span id="local-6989586621691060044"><span id="local-6989586621691060051"><span class="annot"><span class="annottext">Semigroup SetGraphqlIntrospectionOptions
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686752319"><span id="local-6989586621686752326"><span id="local-6989586621686752332"><span class="annot"><span class="annottext">Semigroup SetGraphqlIntrospectionOptions
 SetGraphqlIntrospectionOptions
+Semigroup SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions
+-&gt; (SetGraphqlIntrospectionOptions
+    -&gt; SetGraphqlIntrospectionOptions
+    -&gt; SetGraphqlIntrospectionOptions)
+-&gt; ([SetGraphqlIntrospectionOptions]
+    -&gt; SetGraphqlIntrospectionOptions)
+-&gt; Monoid SetGraphqlIntrospectionOptions
 [SetGraphqlIntrospectionOptions] -&gt; SetGraphqlIntrospectionOptions
 SetGraphqlIntrospectionOptions
 -&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
 forall a.
 Semigroup a -&gt; a -&gt; (a -&gt; a -&gt; a) -&gt; ([a] -&gt; a) -&gt; Monoid a
-mconcat :: [SetGraphqlIntrospectionOptions] -&gt; SetGraphqlIntrospectionOptions
-$cmconcat :: [SetGraphqlIntrospectionOptions] -&gt; SetGraphqlIntrospectionOptions
-mappend :: SetGraphqlIntrospectionOptions
--&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+$cmempty :: SetGraphqlIntrospectionOptions
+mempty :: SetGraphqlIntrospectionOptions
 $cmappend :: SetGraphqlIntrospectionOptions
 -&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
-mempty :: SetGraphqlIntrospectionOptions
-$cmempty :: SetGraphqlIntrospectionOptions
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></a></span></span></span></span><span class="hs-special">)</span><span>
+mappend :: SetGraphqlIntrospectionOptions
+-&gt; SetGraphqlIntrospectionOptions -&gt; SetGraphqlIntrospectionOptions
+$cmconcat :: [SetGraphqlIntrospectionOptions] -&gt; SetGraphqlIntrospectionOptions
+mconcat :: [SetGraphqlIntrospectionOptions] -&gt; SetGraphqlIntrospectionOptions
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span><span>
-</span><span id="line-16"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691060030"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686752340"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span></span><span>
 </span><span id="line-17"></span><span>
-</span><span id="line-18"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691060023"><span id="local-6989586621691060025"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span></span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686752359"><span id="local-6989586621686752366"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span></span></span><span>
 </span><span id="line-19"></span><span>
-</span><span id="line-20"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691060019"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-21"></span><span>  </span><span id="local-6989586621691060014"><span class="annot"><span class="annottext">codec :: JSONCodec SetGraphqlIntrospectionOptions
-</span><a href="#local-6989586621691060014"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall oldOutput newOutput newInput oldInput context.
+</span><span id="line-20"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686752379"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-21"></span><span>  </span><span id="local-6989586621686752386"><span class="annot"><span class="annottext">codec :: JSONCodec SetGraphqlIntrospectionOptions
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HashSet RoleName -&gt; SetGraphqlIntrospectionOptions)
+-&gt; (SetGraphqlIntrospectionOptions -&gt; HashSet RoleName)
+-&gt; Codec Value (HashSet RoleName) (HashSet RoleName)
+-&gt; JSONCodec SetGraphqlIntrospectionOptions
+forall oldOutput newOutput newInput oldInput context.
 (oldOutput -&gt; newOutput)
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
 -&gt; Codec context newInput newOutput
 </span><span class="hs-identifier hs-var">dimapCodec</span></span><span> </span><span class="annot"><span class="annottext">HashSet RoleName -&gt; SetGraphqlIntrospectionOptions
 </span><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-var">SetGraphqlIntrospectionOptions</span></a></span><span> </span><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions -&gt; HashSet RoleName
-</span><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#_idrDisabledForRoles"><span class="hs-identifier hs-var">_idrDisabledForRoles</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. (Hashable a, HasCodec a) =&gt; JSONCodec (HashSet a)
+</span><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#_idrDisabledForRoles"><span class="hs-identifier hs-var">_idrDisabledForRoles</span></a></span><span> </span><span class="annot"><span class="annottext">Codec Value (HashSet RoleName) (HashSet RoleName)
+forall a. (Hashable a, HasCodec a) =&gt; JSONCodec (HashSet a)
 </span><span class="hs-identifier hs-var">hashSetCodec</span></span><span>
 </span><span id="line-22"></span><span>
-</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691060011"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-24"></span><span>  </span><span id="local-6989586621691059937"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SetGraphqlIntrospectionOptions
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686752389"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-24"></span><span>  </span><span id="local-6989586621686752465"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SetGraphqlIntrospectionOptions
+</span><a href="#local-6989586621686752465"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser SetGraphqlIntrospectionOptions
+forall a.
 (Generic a, GFromJSON Zero (Rep a)) =&gt;
 Options -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">genericParseJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
 </span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691059929"><span id="local-6989586621691059931"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-27"></span><span>  </span><span id="local-6989586621691059865"><span class="annot"><span class="annottext">toJSON :: SetGraphqlIntrospectionOptions -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686752471"><span id="local-6989586621686752475"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-27"></span><span>  </span><span id="local-6989586621686752540"><span class="annot"><span class="annottext">toJSON :: SetGraphqlIntrospectionOptions -&gt; Value
+</span><a href="#local-6989586621686752540"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; SetGraphqlIntrospectionOptions -&gt; Value
+forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
-</span><span id="line-28"></span><span>  </span><span id="local-6989586621691059812"><span class="annot"><span class="annottext">toEncoding :: SetGraphqlIntrospectionOptions -&gt; Encoding
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a.
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621686752593"><span class="annot"><span class="annottext">toEncoding :: SetGraphqlIntrospectionOptions -&gt; Encoding
+</span><a href="#local-6989586621686752593"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; SetGraphqlIntrospectionOptions -&gt; Encoding
+forall a.
 (Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Encoding
 </span><span class="hs-identifier hs-var">genericToEncoding</span></span><span> </span><span class="annot"><span class="annottext">Options
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
 </span><span id="line-29"></span></pre></body></html>

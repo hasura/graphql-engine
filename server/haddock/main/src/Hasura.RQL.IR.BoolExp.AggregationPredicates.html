@@ -12,7 +12,7 @@
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Extended</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToJSONKeyValue</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Key</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromText</span></span><span class="hs-special">)</span><span>
-</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier">AnnBoolExp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier">OpExpG</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier">Column</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">B</span></span><span>
@@ -40,22 +40,74 @@
 </span><span id="line-40"></span><span class="hs-comment">--</span><span>
 </span><span id="line-41"></span><span class="hs-comment">-- Note that we make no attempt at modelling window functions or so-called</span><span>
 </span><span id="line-42"></span><span class="hs-comment">-- 'analytical' functions such as 'percentile_cont'.</span><span>
-</span><span id="line-43"></span><span id="local-6989586621691179351"><span id="local-6989586621691179352"></span></span><span class="hs-keyword">data</span><span> </span><span id="AggregationPredicatesImplementation"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-var">AggregationPredicatesImplementation</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691179976"><span class="annot"><a href="#local-6989586621691179976"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621691179975"><span class="annot"><a href="#local-6989586621691179975"><span class="hs-identifier hs-type">field</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AggregationPredicatesImplementation"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-var">AggregationPredicatesImplementation</span></a></span></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">data</span><span> </span><span id="AggregationPredicatesImplementation"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-var">AggregationPredicatesImplementation</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686873601"><span class="annot"><a href="#local-6989586621686873601"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621686873602"><span class="annot"><a href="#local-6989586621686873602"><span class="hs-identifier hs-type">field</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AggregationPredicatesImplementation"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-var">AggregationPredicatesImplementation</span></a></span></span><span>
 </span><span id="line-44"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="aggRelation"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
 AggregationPredicatesImplementation b field -&gt; RelInfo b
-</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggRelation"><span class="hs-identifier hs-var hs-var">aggRelation</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179976"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggRelation"><span class="hs-identifier hs-var hs-var">aggRelation</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873601"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-45"></span><span>    </span><span id="aggRowPermission"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
 AggregationPredicatesImplementation b field -&gt; AnnBoolExp b field
-</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggRowPermission"><span class="hs-identifier hs-var hs-var">aggRowPermission</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179976"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179975"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggRowPermission"><span class="hs-identifier hs-var hs-var">aggRowPermission</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873601"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873602"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-46"></span><span>    </span><span id="aggPredicate"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
 AggregationPredicatesImplementation b field
 -&gt; AggregationPredicate b field
-</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggPredicate"><span class="hs-identifier hs-var hs-var">aggPredicate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179976"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179975"><span class="hs-identifier hs-type">field</span></a></span><span>
+</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggPredicate"><span class="hs-identifier hs-var hs-var">aggPredicate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873601"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873602"><span class="hs-identifier hs-type">field</span></a></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691179297"><span id="local-6989586621691179299"><span id="local-6989586621691179301"><span id="local-6989586621691179303"><span id="local-6989586621691179305"><span id="local-6989586621691179307"><span id="local-6989586621691179312"><span id="local-6989586621691179314"><span id="local-6989586621691179316"><span id="local-6989586621691179318"><span id="local-6989586621691179320"><span id="local-6989586621691179322"><span id="local-6989586621691179324"><span id="local-6989586621691179329"><span id="local-6989586621691179331"><span id="local-6989586621691179343"><span id="local-6989586621691179345"><span class="annot"><span class="annottext">forall a. AggregationPredicatesImplementation b a -&gt; Bool
+</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686874034"><span id="local-6989586621686874040"><span id="local-6989586621686874053"><span id="local-6989586621686874058"><span id="local-6989586621686874063"><span id="local-6989586621686874066"><span id="local-6989586621686874069"><span id="local-6989586621686874072"><span id="local-6989586621686874075"><span id="local-6989586621686874078"><span id="local-6989586621686874081"><span id="local-6989586621686874086"><span id="local-6989586621686874089"><span id="local-6989586621686874094"><span id="local-6989586621686874099"><span id="local-6989586621686874104"><span id="local-6989586621686874109"><span class="annot"><span class="annottext">(forall m.
+ Monoid m =&gt;
+ AggregationPredicatesImplementation b m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AggregationPredicatesImplementation b a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AggregationPredicatesImplementation b a -&gt; m)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b)
+-&gt; (forall a.
+    (a -&gt; a -&gt; a) -&gt; AggregationPredicatesImplementation b a -&gt; a)
+-&gt; (forall a.
+    (a -&gt; a -&gt; a) -&gt; AggregationPredicatesImplementation b a -&gt; a)
+-&gt; (forall a. AggregationPredicatesImplementation b a -&gt; [a])
+-&gt; (forall a. AggregationPredicatesImplementation b a -&gt; Bool)
+-&gt; (forall a. AggregationPredicatesImplementation b a -&gt; Int)
+-&gt; (forall a.
+    Eq a =&gt;
+    a -&gt; AggregationPredicatesImplementation b a -&gt; Bool)
+-&gt; (forall a.
+    Ord a =&gt;
+    AggregationPredicatesImplementation b a -&gt; a)
+-&gt; (forall a.
+    Ord a =&gt;
+    AggregationPredicatesImplementation b a -&gt; a)
+-&gt; (forall a.
+    Num a =&gt;
+    AggregationPredicatesImplementation b a -&gt; a)
+-&gt; (forall a.
+    Num a =&gt;
+    AggregationPredicatesImplementation b a -&gt; a)
+-&gt; Foldable (AggregationPredicatesImplementation b)
+forall a.
+Eq a =&gt;
+a -&gt; AggregationPredicatesImplementation b a -&gt; Bool
+forall a. Num a =&gt; AggregationPredicatesImplementation b a -&gt; a
+forall a. Ord a =&gt; AggregationPredicatesImplementation b a -&gt; a
+forall m. Monoid m =&gt; AggregationPredicatesImplementation b m -&gt; m
+forall a. AggregationPredicatesImplementation b a -&gt; Bool
+forall a. AggregationPredicatesImplementation b a -&gt; Int
+forall a. AggregationPredicatesImplementation b a -&gt; [a]
+forall a.
+(a -&gt; a -&gt; a) -&gt; AggregationPredicatesImplementation b a -&gt; a
 forall m a.
 Monoid m =&gt;
 (a -&gt; m) -&gt; AggregationPredicatesImplementation b a -&gt; m
+forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
 forall a b.
 (a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
 forall (b :: BackendType) a.
@@ -110,87 +162,110 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: forall a. Num a =&gt; AggregationPredicatesImplementation b a -&gt; a
-$cproduct :: forall (b :: BackendType) a.
-(Backend b, Num a) =&gt;
-AggregationPredicatesImplementation b a -&gt; a
-sum :: forall a. Num a =&gt; AggregationPredicatesImplementation b a -&gt; a
-$csum :: forall (b :: BackendType) a.
-(Backend b, Num a) =&gt;
-AggregationPredicatesImplementation b a -&gt; a
-minimum :: forall a. Ord a =&gt; AggregationPredicatesImplementation b a -&gt; a
-$cminimum :: forall (b :: BackendType) a.
-(Backend b, Ord a) =&gt;
-AggregationPredicatesImplementation b a -&gt; a
-maximum :: forall a. Ord a =&gt; AggregationPredicatesImplementation b a -&gt; a
-$cmaximum :: forall (b :: BackendType) a.
-(Backend b, Ord a) =&gt;
-AggregationPredicatesImplementation b a -&gt; a
-elem :: forall a.
-Eq a =&gt;
-a -&gt; AggregationPredicatesImplementation b a -&gt; Bool
-$celem :: forall (b :: BackendType) a.
-(Backend b, Eq a) =&gt;
-a -&gt; AggregationPredicatesImplementation b a -&gt; Bool
-length :: forall a. AggregationPredicatesImplementation b a -&gt; Int
-$clength :: forall (b :: BackendType) a.
-Backend b =&gt;
-AggregationPredicatesImplementation b a -&gt; Int
-null :: forall a. AggregationPredicatesImplementation b a -&gt; Bool
-$cnull :: forall (b :: BackendType) a.
-Backend b =&gt;
-AggregationPredicatesImplementation b a -&gt; Bool
-toList :: forall a. AggregationPredicatesImplementation b a -&gt; [a]
-$ctoList :: forall (b :: BackendType) a.
-Backend b =&gt;
-AggregationPredicatesImplementation b a -&gt; [a]
-foldl1 :: forall a.
-(a -&gt; a -&gt; a) -&gt; AggregationPredicatesImplementation b a -&gt; a
-$cfoldl1 :: forall (b :: BackendType) a.
-Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; AggregationPredicatesImplementation b a -&gt; a
-foldr1 :: forall a.
-(a -&gt; a -&gt; a) -&gt; AggregationPredicatesImplementation b a -&gt; a
-$cfoldr1 :: forall (b :: BackendType) a.
-Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; AggregationPredicatesImplementation b a -&gt; a
-foldl' :: forall b a.
-(b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
-$cfoldl' :: forall (b :: BackendType) b a.
-Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
-foldl :: forall b a.
-(b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
-$cfoldl :: forall (b :: BackendType) b a.
-Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
-foldr' :: forall a b.
-(a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
-$cfoldr' :: forall (b :: BackendType) a b.
-Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
-foldr :: forall a b.
-(a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
-$cfoldr :: forall (b :: BackendType) a b.
-Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
-foldMap' :: forall m a.
-Monoid m =&gt;
-(a -&gt; m) -&gt; AggregationPredicatesImplementation b a -&gt; m
-$cfoldMap' :: forall (b :: BackendType) m a.
+$cfold :: forall (b :: BackendType) m.
+(Backend b, Monoid m) =&gt;
+AggregationPredicatesImplementation b m -&gt; m
+fold :: forall m. Monoid m =&gt; AggregationPredicatesImplementation b m -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
 (Backend b, Monoid m) =&gt;
 (a -&gt; m) -&gt; AggregationPredicatesImplementation b a -&gt; m
 foldMap :: forall m a.
 Monoid m =&gt;
 (a -&gt; m) -&gt; AggregationPredicatesImplementation b a -&gt; m
-$cfoldMap :: forall (b :: BackendType) m a.
+$cfoldMap' :: forall (b :: BackendType) m a.
 (Backend b, Monoid m) =&gt;
 (a -&gt; m) -&gt; AggregationPredicatesImplementation b a -&gt; m
-fold :: forall m. Monoid m =&gt; AggregationPredicatesImplementation b m -&gt; m
-$cfold :: forall (b :: BackendType) m.
-(Backend b, Monoid m) =&gt;
-AggregationPredicatesImplementation b m -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691179273"><span id="local-6989586621691179275"><span id="local-6989586621691179277"><span id="local-6989586621691179289"><span class="annot"><span class="annottext">forall {b :: BackendType}.
+foldMap' :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; AggregationPredicatesImplementation b a -&gt; m
+$cfoldr :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
+foldr :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
+foldr' :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
+foldl :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
+foldl' :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicatesImplementation b a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AggregationPredicatesImplementation b a -&gt; a
+foldr1 :: forall a.
+(a -&gt; a -&gt; a) -&gt; AggregationPredicatesImplementation b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AggregationPredicatesImplementation b a -&gt; a
+foldl1 :: forall a.
+(a -&gt; a -&gt; a) -&gt; AggregationPredicatesImplementation b a -&gt; a
+$ctoList :: forall (b :: BackendType) a.
+Backend b =&gt;
+AggregationPredicatesImplementation b a -&gt; [a]
+toList :: forall a. AggregationPredicatesImplementation b a -&gt; [a]
+$cnull :: forall (b :: BackendType) a.
+Backend b =&gt;
+AggregationPredicatesImplementation b a -&gt; Bool
+null :: forall a. AggregationPredicatesImplementation b a -&gt; Bool
+$clength :: forall (b :: BackendType) a.
+Backend b =&gt;
+AggregationPredicatesImplementation b a -&gt; Int
+length :: forall a. AggregationPredicatesImplementation b a -&gt; Int
+$celem :: forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; AggregationPredicatesImplementation b a -&gt; Bool
+elem :: forall a.
+Eq a =&gt;
+a -&gt; AggregationPredicatesImplementation b a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+AggregationPredicatesImplementation b a -&gt; a
+maximum :: forall a. Ord a =&gt; AggregationPredicatesImplementation b a -&gt; a
+$cminimum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+AggregationPredicatesImplementation b a -&gt; a
+minimum :: forall a. Ord a =&gt; AggregationPredicatesImplementation b a -&gt; a
+$csum :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+AggregationPredicatesImplementation b a -&gt; a
+sum :: forall a. Num a =&gt; AggregationPredicatesImplementation b a -&gt; a
+$cproduct :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+AggregationPredicatesImplementation b a -&gt; a
+product :: forall a. Num a =&gt; AggregationPredicatesImplementation b a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686874121"><span id="local-6989586621686874134"><span id="local-6989586621686874140"><span id="local-6989586621686874145"><span class="annot"><span class="annottext">Functor (AggregationPredicatesImplementation b)
+Foldable (AggregationPredicatesImplementation b)
+Functor (AggregationPredicatesImplementation b)
+-&gt; Foldable (AggregationPredicatesImplementation b)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b)
+    -&gt; AggregationPredicatesImplementation b a
+    -&gt; f (AggregationPredicatesImplementation b b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    AggregationPredicatesImplementation b (f a)
+    -&gt; f (AggregationPredicatesImplementation b a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b)
+    -&gt; AggregationPredicatesImplementation b a
+    -&gt; m (AggregationPredicatesImplementation b b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    AggregationPredicatesImplementation b (m a)
+    -&gt; m (AggregationPredicatesImplementation b a))
+-&gt; Traversable (AggregationPredicatesImplementation b)
+forall {b :: BackendType}.
 Backend b =&gt;
 Functor (AggregationPredicatesImplementation b)
 forall (b :: BackendType).
@@ -226,38 +301,20 @@ Functor t
     (a -&gt; m b) -&gt; t a -&gt; m (t b))
 -&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
 -&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AggregationPredicatesImplementation b (m a)
+-&gt; m (AggregationPredicatesImplementation b a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AggregationPredicatesImplementation b (f a)
+-&gt; f (AggregationPredicatesImplementation b a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; AggregationPredicatesImplementation b a
+-&gt; m (AggregationPredicatesImplementation b b)
 forall (f :: * -&gt; *) a b.
-Applicative f =&gt;
-(a -&gt; f b)
--&gt; AggregationPredicatesImplementation b a
--&gt; f (AggregationPredicatesImplementation b b)
-sequence :: forall (m :: * -&gt; *) a.
-Monad m =&gt;
-AggregationPredicatesImplementation b (m a)
--&gt; m (AggregationPredicatesImplementation b a)
-$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
-(Backend b, Monad m) =&gt;
-AggregationPredicatesImplementation b (m a)
--&gt; m (AggregationPredicatesImplementation b a)
-mapM :: forall (m :: * -&gt; *) a b.
-Monad m =&gt;
-(a -&gt; m b)
--&gt; AggregationPredicatesImplementation b a
--&gt; m (AggregationPredicatesImplementation b b)
-$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
-(Backend b, Monad m) =&gt;
-(a -&gt; m b)
--&gt; AggregationPredicatesImplementation b a
--&gt; m (AggregationPredicatesImplementation b b)
-sequenceA :: forall (f :: * -&gt; *) a.
-Applicative f =&gt;
-AggregationPredicatesImplementation b (f a)
--&gt; f (AggregationPredicatesImplementation b a)
-$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Applicative f) =&gt;
-AggregationPredicatesImplementation b (f a)
--&gt; f (AggregationPredicatesImplementation b a)
-traverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b)
 -&gt; AggregationPredicatesImplementation b a
@@ -267,7 +324,47 @@ $ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 (a -&gt; f b)
 -&gt; AggregationPredicatesImplementation b a
 -&gt; f (AggregationPredicatesImplementation b b)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691179261"><span id="local-6989586621691179269"><span class="annot"><span class="annottext">forall a b.
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; AggregationPredicatesImplementation b a
+-&gt; f (AggregationPredicatesImplementation b b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+AggregationPredicatesImplementation b (f a)
+-&gt; f (AggregationPredicatesImplementation b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AggregationPredicatesImplementation b (f a)
+-&gt; f (AggregationPredicatesImplementation b a)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b)
+-&gt; AggregationPredicatesImplementation b a
+-&gt; m (AggregationPredicatesImplementation b b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; AggregationPredicatesImplementation b a
+-&gt; m (AggregationPredicatesImplementation b b)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+AggregationPredicatesImplementation b (m a)
+-&gt; m (AggregationPredicatesImplementation b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AggregationPredicatesImplementation b (m a)
+-&gt; m (AggregationPredicatesImplementation b a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686874152"><span id="local-6989586621686874160"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b)
+ -&gt; AggregationPredicatesImplementation b a
+ -&gt; AggregationPredicatesImplementation b b)
+-&gt; (forall a b.
+    a
+    -&gt; AggregationPredicatesImplementation b b
+    -&gt; AggregationPredicatesImplementation b a)
+-&gt; Functor (AggregationPredicatesImplementation b)
+forall a b.
 a
 -&gt; AggregationPredicatesImplementation b b
 -&gt; AggregationPredicatesImplementation b a
@@ -288,25 +385,38 @@ Backend b =&gt;
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: forall a b.
-a
--&gt; AggregationPredicatesImplementation b b
--&gt; AggregationPredicatesImplementation b a
-$c&lt;$ :: forall (b :: BackendType) a b.
-Backend b =&gt;
-a
--&gt; AggregationPredicatesImplementation b b
--&gt; AggregationPredicatesImplementation b a
-fmap :: forall a b.
-(a -&gt; b)
--&gt; AggregationPredicatesImplementation b a
--&gt; AggregationPredicatesImplementation b b
 $cfmap :: forall (b :: BackendType) a b.
 Backend b =&gt;
 (a -&gt; b)
 -&gt; AggregationPredicatesImplementation b a
 -&gt; AggregationPredicatesImplementation b b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a.
+fmap :: forall a b.
+(a -&gt; b)
+-&gt; AggregationPredicatesImplementation b a
+-&gt; AggregationPredicatesImplementation b b
+$c&lt;$ :: forall (b :: BackendType) a b.
+Backend b =&gt;
+a
+-&gt; AggregationPredicatesImplementation b b
+-&gt; AggregationPredicatesImplementation b a
+&lt;$ :: forall a b.
+a
+-&gt; AggregationPredicatesImplementation b b
+-&gt; AggregationPredicatesImplementation b a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686874166"><span id="local-6989586621686874168"><span class="annot"><span class="annottext">(forall x.
+ AggregationPredicatesImplementation b field
+ -&gt; Rep (AggregationPredicatesImplementation b field) x)
+-&gt; (forall x.
+    Rep (AggregationPredicatesImplementation b field) x
+    -&gt; AggregationPredicatesImplementation b field)
+-&gt; Generic (AggregationPredicatesImplementation b field)
+forall x.
+Rep (AggregationPredicatesImplementation b field) x
+-&gt; AggregationPredicatesImplementation b field
+forall x.
+AggregationPredicatesImplementation b field
+-&gt; Rep (AggregationPredicatesImplementation b field) x
+forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 forall (b :: BackendType) field x.
 Rep (AggregationPredicatesImplementation b field) x
@@ -314,108 +424,153 @@ Rep (AggregationPredicatesImplementation b field) x
 forall (b :: BackendType) field x.
 AggregationPredicatesImplementation b field
 -&gt; Rep (AggregationPredicatesImplementation b field) x
-$cto :: forall (b :: BackendType) field x.
-Rep (AggregationPredicatesImplementation b field) x
--&gt; AggregationPredicatesImplementation b field
 $cfrom :: forall (b :: BackendType) field x.
 AggregationPredicatesImplementation b field
 -&gt; Rep (AggregationPredicatesImplementation b field) x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x.
+AggregationPredicatesImplementation b field
+-&gt; Rep (AggregationPredicatesImplementation b field) x
+$cto :: forall (b :: BackendType) field x.
+Rep (AggregationPredicatesImplementation b field) x
+-&gt; AggregationPredicatesImplementation b field
+to :: forall x.
+Rep (AggregationPredicatesImplementation b field) x
+-&gt; AggregationPredicatesImplementation b field
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-49"></span><span>
-</span><span id="line-50"></span><span id="local-6989586621691179246"><span id="local-6989586621691179252"><span id="local-6989586621691179916"><span id="local-6989586621691179917"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-51"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179917"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-52"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179917"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179916"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-53"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179917"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179916"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span id="local-6989586621686873684"><span id="local-6989586621686873685"><span id="local-6989586621686874175"><span id="local-6989586621686874181"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873684"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873684"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873685"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873684"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873685"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-55"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179917"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179916"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873684"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873685"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-56"></span><span>
-</span><span id="line-57"></span><span id="local-6989586621691179233"><span id="local-6989586621691179235"><span id="local-6989586621691179243"><span id="local-6989586621691179911"><span id="local-6989586621691179912"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-58"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179912"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-59"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179912"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179911"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-60"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179912"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179911"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span id="local-6989586621686873691"><span id="local-6989586621686873692"><span id="local-6989586621686874189"><span id="local-6989586621686874197"><span id="local-6989586621686874201"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873691"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873691"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873692"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873691"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873692"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-61"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-62"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179912"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179911"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873691"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873692"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span class="hs-keyword">instance</span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621691179226"><span id="local-6989586621691179228"><span id="local-6989586621691179908"><span id="local-6989586621691179909"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179909"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-66"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179909"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179908"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-67"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179909"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179908"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621686873711"><span id="local-6989586621686873712"><span id="local-6989586621686874212"><span id="local-6989586621686874219"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873711"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873711"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873712"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873711"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873712"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-69"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179909"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179908"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873711"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873712"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-70"></span><span>
 </span><span id="line-71"></span><span class="hs-keyword">instance</span><span>
-</span><span id="line-72"></span><span>  </span><span id="local-6989586621691179223"><span id="local-6989586621691179905"><span id="local-6989586621691179906"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179906"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-73"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179906"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179905"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-74"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179906"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179905"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>  </span><span id="local-6989586621686873730"><span id="local-6989586621686873731"><span id="local-6989586621686874241"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873730"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-73"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873730"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873731"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873730"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873731"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-75"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-76"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179906"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179905"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873730"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873731"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-77"></span><span>
 </span><span id="line-78"></span><span class="hs-keyword">instance</span><span>
-</span><span id="line-79"></span><span>  </span><span id="local-6989586621691179214"><span id="local-6989586621691179216"><span id="local-6989586621691179218"><span id="local-6989586621691179220"><span id="local-6989586621691179901"><span id="local-6989586621691179902"><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179902"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179901"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-80"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179902"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179901"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-81"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179902"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179901"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-82"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179902"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-79"></span><span>  </span><span id="local-6989586621686873863"><span id="local-6989586621686873864"><span id="local-6989586621686874267"><span id="local-6989586621686874274"><span id="local-6989586621686874277"><span id="local-6989586621686874280"><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873863"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873864"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873863"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873864"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873863"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873864"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-82"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873863"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-83"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-84"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179902"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179901"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-84"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873863"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873864"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span><span>
 </span><span id="line-85"></span><span>
 </span><span id="line-86"></span><span class="hs-keyword">instance</span><span>
-</span><span id="line-87"></span><span>  </span><span id="local-6989586621691179895"><span id="local-6989586621691179896"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179896"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-88"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ToJSONKeyValue</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179896"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179895"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621686873869"><span id="local-6989586621686873870"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873869"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-88"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ToJSONKeyValue</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873869"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873870"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-89"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-90"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ToJSONKeyValue</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179896"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179895"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-90"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ToJSONKeyValue</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873869"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873870"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-91"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-92"></span><span>  </span><span id="local-6989586621691179190"><span class="annot"><span class="annottext">toJSONKeyValue :: AggregationPredicatesImplementation b field -&gt; Pair
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSONKeyValue</span></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691179186"><span id="local-6989586621691179187"><span id="local-6989586621691179188"><span class="annot"><span class="annottext">RelInfo b
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621686874414"><span class="annot"><span class="annottext">toJSONKeyValue :: AggregationPredicatesImplementation b field -&gt; Pair
+</span><a href="#local-6989586621686874414"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSONKeyValue</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicatesImplementation"><span class="hs-identifier hs-type">AggregationPredicatesImplementation</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621686874416"><span id="local-6989586621686874417"><span id="local-6989586621686874418"><span class="annot"><span class="annottext">RelInfo b
 AnnBoolExp b field
 AggregationPredicate b field
-aggPredicate :: AggregationPredicate b field
-aggRowPermission :: AnnBoolExp b field
-aggRelation :: RelInfo b
+aggRelation :: forall (b :: BackendType) field.
+AggregationPredicatesImplementation b field -&gt; RelInfo b
+aggRowPermission :: forall (b :: BackendType) field.
+AggregationPredicatesImplementation b field -&gt; AnnBoolExp b field
 aggPredicate :: forall (b :: BackendType) field.
 AggregationPredicatesImplementation b field
 -&gt; AggregationPredicate b field
-aggRowPermission :: forall (b :: BackendType) field.
-AggregationPredicatesImplementation b field -&gt; AnnBoolExp b field
-aggRelation :: forall (b :: BackendType) field.
-AggregationPredicatesImplementation b field -&gt; RelInfo b
-</span><a href="#local-6989586621691179186"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+aggRelation :: RelInfo b
+aggRowPermission :: AnnBoolExp b field
+aggPredicate :: AggregationPredicate b field
+</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggRelation"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-93"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Key
 </span><span class="hs-identifier hs-var">fromText</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;aggregation_predicates&quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-94"></span><span>      </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span id="line-94"></span><span>      </span><span class="annot"><span class="annottext">[(Text, Value)] -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span>
 </span><span id="line-95"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;predicate&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSONKeyValue a =&gt; a -&gt; Pair
+</span><span class="hs-string">&quot;predicate&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Pair -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">(Pair -&gt; Value) -&gt; Pair -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AggregationPredicate b field -&gt; Pair
+forall a. ToJSONKeyValue a =&gt; a -&gt; Pair
 </span><span class="hs-identifier hs-var">toJSONKeyValue</span></span><span> </span><span class="annot"><span class="annottext">AggregationPredicate b field
-</span><a href="#local-6989586621691179186"><span class="hs-identifier hs-var">aggPredicate</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621686874418"><span class="hs-identifier hs-var">aggPredicate</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-96"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;relation&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-string">&quot;relation&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RelInfo b -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">RelInfo b
-</span><a href="#local-6989586621691179188"><span class="hs-identifier hs-var">aggRelation</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686874416"><span class="hs-identifier hs-var">aggRelation</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-97"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-98"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-99"></span><span>
-</span><span id="line-100"></span><span id="local-6989586621691179183"><span id="local-6989586621691179184"></span></span><span class="hs-keyword">data</span><span> </span><span id="AggregationPredicate"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-var">AggregationPredicate</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691179943"><span class="annot"><a href="#local-6989586621691179943"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621691179884"><span class="annot"><a href="#local-6989586621691179884"><span class="hs-identifier hs-type">field</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AggregationPredicate"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-var">AggregationPredicate</span></a></span></span><span>
+</span><span id="line-100"></span><span class="hs-keyword">data</span><span> </span><span id="AggregationPredicate"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-var">AggregationPredicate</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686873879"><span class="annot"><a href="#local-6989586621686873879"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621686873880"><span class="annot"><a href="#local-6989586621686873880"><span class="hs-identifier hs-type">field</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AggregationPredicate"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-var">AggregationPredicate</span></a></span></span><span>
 </span><span id="line-101"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="aggPredFunctionName"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
 AggregationPredicate b field -&gt; Text
 </span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggPredFunctionName"><span class="hs-identifier hs-var hs-var">aggPredFunctionName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
 </span><span id="line-102"></span><span>    </span><span id="aggPredDistinct"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
 AggregationPredicate b field -&gt; Bool
-</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggPredDistinct"><span class="hs-identifier hs-var hs-var">aggPredDistinct</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggPredDistinct"><span class="hs-identifier hs-var hs-var">aggPredDistinct</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
 </span><span id="line-103"></span><span>    </span><span id="aggPredFilter"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
 AggregationPredicate b field -&gt; Maybe (AnnBoolExp b field)
-</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggPredFilter"><span class="hs-identifier hs-var hs-var">aggPredFilter</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179943"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179884"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggPredFilter"><span class="hs-identifier hs-var hs-var">aggPredFilter</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873879"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873880"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-104"></span><span>    </span><span id="aggPredArguments"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
 AggregationPredicate b field -&gt; AggregationPredicateArguments b
-</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggPredArguments"><span class="hs-identifier hs-var hs-var">aggPredArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179943"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggPredArguments"><span class="hs-identifier hs-var hs-var">aggPredArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873879"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-105"></span><span>    </span><span id="aggPredPredicate"><span class="annot"><span class="annottext">forall (b :: BackendType) field.
 AggregationPredicate b field -&gt; [OpExpG b field]
-</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggPredPredicate"><span class="hs-identifier hs-var hs-var">aggPredPredicate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179943"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179884"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">]</span><span>
+</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggPredPredicate"><span class="hs-identifier hs-var hs-var">aggPredPredicate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873879"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873880"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-106"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-107"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691179118"><span id="local-6989586621691179120"><span id="local-6989586621691179122"><span id="local-6989586621691179124"><span id="local-6989586621691179126"><span id="local-6989586621691179128"><span id="local-6989586621691179135"><span id="local-6989586621691179137"><span id="local-6989586621691179139"><span id="local-6989586621691179141"><span id="local-6989586621691179143"><span id="local-6989586621691179145"><span id="local-6989586621691179147"><span id="local-6989586621691179154"><span id="local-6989586621691179156"><span id="local-6989586621691179173"><span id="local-6989586621691179175"><span class="annot"><span class="annottext">forall a. AggregationPredicate b a -&gt; Bool
+</span><span id="line-107"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686874428"><span id="local-6989586621686874433"><span id="local-6989586621686874450"><span id="local-6989586621686874455"><span id="local-6989586621686874462"><span id="local-6989586621686874465"><span id="local-6989586621686874468"><span id="local-6989586621686874471"><span id="local-6989586621686874474"><span id="local-6989586621686874477"><span id="local-6989586621686874480"><span id="local-6989586621686874487"><span id="local-6989586621686874490"><span id="local-6989586621686874495"><span id="local-6989586621686874500"><span id="local-6989586621686874505"><span id="local-6989586621686874510"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; AggregationPredicate b m -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AggregationPredicate b a -&gt; m)
+-&gt; (forall m a.
+    Monoid m =&gt;
+    (a -&gt; m) -&gt; AggregationPredicate b a -&gt; m)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b)
+-&gt; (forall a b.
+    (a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b)
+-&gt; (forall b a.
+    (b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AggregationPredicate b a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AggregationPredicate b a -&gt; a)
+-&gt; (forall a. AggregationPredicate b a -&gt; [a])
+-&gt; (forall a. AggregationPredicate b a -&gt; Bool)
+-&gt; (forall a. AggregationPredicate b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; AggregationPredicate b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; AggregationPredicate b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; AggregationPredicate b a -&gt; a)
+-&gt; (forall a. Num a =&gt; AggregationPredicate b a -&gt; a)
+-&gt; (forall a. Num a =&gt; AggregationPredicate b a -&gt; a)
+-&gt; Foldable (AggregationPredicate b)
+forall a. Eq a =&gt; a -&gt; AggregationPredicate b a -&gt; Bool
+forall a. Num a =&gt; AggregationPredicate b a -&gt; a
+forall a. Ord a =&gt; AggregationPredicate b a -&gt; a
+forall m. Monoid m =&gt; AggregationPredicate b m -&gt; m
+forall a. AggregationPredicate b a -&gt; Bool
+forall a. AggregationPredicate b a -&gt; Int
+forall a. AggregationPredicate b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; AggregationPredicate b a -&gt; a
 forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AggregationPredicate b a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
 forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
 forall (b :: BackendType) a.
 (Backend b, Eq a) =&gt;
@@ -469,75 +624,94 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: forall a. Num a =&gt; AggregationPredicate b a -&gt; a
-$cproduct :: forall (b :: BackendType) a.
-(Backend b, Num a) =&gt;
-AggregationPredicate b a -&gt; a
-sum :: forall a. Num a =&gt; AggregationPredicate b a -&gt; a
-$csum :: forall (b :: BackendType) a.
-(Backend b, Num a) =&gt;
-AggregationPredicate b a -&gt; a
-minimum :: forall a. Ord a =&gt; AggregationPredicate b a -&gt; a
-$cminimum :: forall (b :: BackendType) a.
-(Backend b, Ord a) =&gt;
-AggregationPredicate b a -&gt; a
-maximum :: forall a. Ord a =&gt; AggregationPredicate b a -&gt; a
-$cmaximum :: forall (b :: BackendType) a.
-(Backend b, Ord a) =&gt;
-AggregationPredicate b a -&gt; a
-elem :: forall a. Eq a =&gt; a -&gt; AggregationPredicate b a -&gt; Bool
-$celem :: forall (b :: BackendType) a.
-(Backend b, Eq a) =&gt;
-a -&gt; AggregationPredicate b a -&gt; Bool
-length :: forall a. AggregationPredicate b a -&gt; Int
-$clength :: forall (b :: BackendType) a.
-Backend b =&gt;
-AggregationPredicate b a -&gt; Int
-null :: forall a. AggregationPredicate b a -&gt; Bool
-$cnull :: forall (b :: BackendType) a.
-Backend b =&gt;
-AggregationPredicate b a -&gt; Bool
-toList :: forall a. AggregationPredicate b a -&gt; [a]
-$ctoList :: forall (b :: BackendType) a.
-Backend b =&gt;
-AggregationPredicate b a -&gt; [a]
-foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AggregationPredicate b a -&gt; a
-$cfoldl1 :: forall (b :: BackendType) a.
-Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; AggregationPredicate b a -&gt; a
-foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AggregationPredicate b a -&gt; a
-$cfoldr1 :: forall (b :: BackendType) a.
-Backend b =&gt;
-(a -&gt; a -&gt; a) -&gt; AggregationPredicate b a -&gt; a
-foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
-$cfoldl' :: forall (b :: BackendType) b a.
-Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
-foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
-$cfoldl :: forall (b :: BackendType) b a.
-Backend b =&gt;
-(b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
-foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
-$cfoldr' :: forall (b :: BackendType) a b.
-Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
-foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
-$cfoldr :: forall (b :: BackendType) a b.
-Backend b =&gt;
-(a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
-foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AggregationPredicate b a -&gt; m
-$cfoldMap' :: forall (b :: BackendType) m a.
-(Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; AggregationPredicate b a -&gt; m
-foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AggregationPredicate b a -&gt; m
-$cfoldMap :: forall (b :: BackendType) m a.
-(Backend b, Monoid m) =&gt;
-(a -&gt; m) -&gt; AggregationPredicate b a -&gt; m
-fold :: forall m. Monoid m =&gt; AggregationPredicate b m -&gt; m
 $cfold :: forall (b :: BackendType) m.
 (Backend b, Monoid m) =&gt;
 AggregationPredicate b m -&gt; m
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691179091"><span id="local-6989586621691179093"><span id="local-6989586621691179095"><span id="local-6989586621691179112"><span class="annot"><span class="annottext">forall (b :: BackendType).
+fold :: forall m. Monoid m =&gt; AggregationPredicate b m -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AggregationPredicate b a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AggregationPredicate b a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; AggregationPredicate b a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AggregationPredicate b a -&gt; m
+$cfoldr :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AggregationPredicate b a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AggregationPredicate b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AggregationPredicate b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; AggregationPredicate b a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AggregationPredicate b a -&gt; a
+$ctoList :: forall (b :: BackendType) a.
+Backend b =&gt;
+AggregationPredicate b a -&gt; [a]
+toList :: forall a. AggregationPredicate b a -&gt; [a]
+$cnull :: forall (b :: BackendType) a.
+Backend b =&gt;
+AggregationPredicate b a -&gt; Bool
+null :: forall a. AggregationPredicate b a -&gt; Bool
+$clength :: forall (b :: BackendType) a.
+Backend b =&gt;
+AggregationPredicate b a -&gt; Int
+length :: forall a. AggregationPredicate b a -&gt; Int
+$celem :: forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; AggregationPredicate b a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; AggregationPredicate b a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+AggregationPredicate b a -&gt; a
+maximum :: forall a. Ord a =&gt; AggregationPredicate b a -&gt; a
+$cminimum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+AggregationPredicate b a -&gt; a
+minimum :: forall a. Ord a =&gt; AggregationPredicate b a -&gt; a
+$csum :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+AggregationPredicate b a -&gt; a
+sum :: forall a. Num a =&gt; AggregationPredicate b a -&gt; a
+$cproduct :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+AggregationPredicate b a -&gt; a
+product :: forall a. Num a =&gt; AggregationPredicate b a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686874520"><span id="local-6989586621686874537"><span id="local-6989586621686874542"><span id="local-6989586621686874547"><span class="annot"><span class="annottext">Functor (AggregationPredicate b)
+Foldable (AggregationPredicate b)
+Functor (AggregationPredicate b)
+-&gt; Foldable (AggregationPredicate b)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b)
+    -&gt; AggregationPredicate b a -&gt; f (AggregationPredicate b b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    AggregationPredicate b (f a) -&gt; f (AggregationPredicate b a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b)
+    -&gt; AggregationPredicate b a -&gt; m (AggregationPredicate b b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    AggregationPredicate b (m a) -&gt; m (AggregationPredicate b a))
+-&gt; Traversable (AggregationPredicate b)
+forall (b :: BackendType).
 Backend b =&gt;
 Functor (AggregationPredicate b)
 forall (b :: BackendType).
@@ -569,31 +743,17 @@ Functor t
     (a -&gt; m b) -&gt; t a -&gt; m (t b))
 -&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
 -&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AggregationPredicate b (m a) -&gt; m (AggregationPredicate b a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AggregationPredicate b (f a) -&gt; f (AggregationPredicate b a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; AggregationPredicate b a -&gt; m (AggregationPredicate b b)
 forall (f :: * -&gt; *) a b.
-Applicative f =&gt;
-(a -&gt; f b)
--&gt; AggregationPredicate b a -&gt; f (AggregationPredicate b b)
-sequence :: forall (m :: * -&gt; *) a.
-Monad m =&gt;
-AggregationPredicate b (m a) -&gt; m (AggregationPredicate b a)
-$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
-(Backend b, Monad m) =&gt;
-AggregationPredicate b (m a) -&gt; m (AggregationPredicate b a)
-mapM :: forall (m :: * -&gt; *) a b.
-Monad m =&gt;
-(a -&gt; m b)
--&gt; AggregationPredicate b a -&gt; m (AggregationPredicate b b)
-$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
-(Backend b, Monad m) =&gt;
-(a -&gt; m b)
--&gt; AggregationPredicate b a -&gt; m (AggregationPredicate b b)
-sequenceA :: forall (f :: * -&gt; *) a.
-Applicative f =&gt;
-AggregationPredicate b (f a) -&gt; f (AggregationPredicate b a)
-$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
-(Backend b, Applicative f) =&gt;
-AggregationPredicate b (f a) -&gt; f (AggregationPredicate b a)
-traverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b)
 -&gt; AggregationPredicate b a -&gt; f (AggregationPredicate b b)
@@ -601,7 +761,36 @@ $ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 (Backend b, Applicative f) =&gt;
 (a -&gt; f b)
 -&gt; AggregationPredicate b a -&gt; f (AggregationPredicate b b)
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691179078"><span id="local-6989586621691179088"><span class="annot"><span class="annottext">forall a b.
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; AggregationPredicate b a -&gt; f (AggregationPredicate b b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+AggregationPredicate b (f a) -&gt; f (AggregationPredicate b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AggregationPredicate b (f a) -&gt; f (AggregationPredicate b a)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b)
+-&gt; AggregationPredicate b a -&gt; m (AggregationPredicate b b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; AggregationPredicate b a -&gt; m (AggregationPredicate b b)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+AggregationPredicate b (m a) -&gt; m (AggregationPredicate b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AggregationPredicate b (m a) -&gt; m (AggregationPredicate b a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686874553"><span id="local-6989586621686874563"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b) -&gt; AggregationPredicate b a -&gt; AggregationPredicate b b)
+-&gt; (forall a b.
+    a -&gt; AggregationPredicate b b -&gt; AggregationPredicate b a)
+-&gt; Functor (AggregationPredicate b)
+forall a b.
 a -&gt; AggregationPredicate b b -&gt; AggregationPredicate b a
 forall a b.
 (a -&gt; b) -&gt; AggregationPredicate b a -&gt; AggregationPredicate b b
@@ -614,123 +803,162 @@ Backend b =&gt;
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: forall a b.
-a -&gt; AggregationPredicate b b -&gt; AggregationPredicate b a
-$c&lt;$ :: forall (b :: BackendType) a b.
-Backend b =&gt;
-a -&gt; AggregationPredicate b b -&gt; AggregationPredicate b a
-fmap :: forall a b.
-(a -&gt; b) -&gt; AggregationPredicate b a -&gt; AggregationPredicate b b
 $cfmap :: forall (b :: BackendType) a b.
 Backend b =&gt;
 (a -&gt; b) -&gt; AggregationPredicate b a -&gt; AggregationPredicate b b
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a.
+fmap :: forall a b.
+(a -&gt; b) -&gt; AggregationPredicate b a -&gt; AggregationPredicate b b
+$c&lt;$ :: forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; AggregationPredicate b b -&gt; AggregationPredicate b a
+&lt;$ :: forall a b.
+a -&gt; AggregationPredicate b b -&gt; AggregationPredicate b a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686874570"><span id="local-6989586621686874572"><span class="annot"><span class="annottext">(forall x.
+ AggregationPredicate b field
+ -&gt; Rep (AggregationPredicate b field) x)
+-&gt; (forall x.
+    Rep (AggregationPredicate b field) x
+    -&gt; AggregationPredicate b field)
+-&gt; Generic (AggregationPredicate b field)
+forall x.
+Rep (AggregationPredicate b field) x
+-&gt; AggregationPredicate b field
+forall x.
+AggregationPredicate b field
+-&gt; Rep (AggregationPredicate b field) x
+forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 forall (b :: BackendType) field x.
 Rep (AggregationPredicate b field) x
 -&gt; AggregationPredicate b field
 forall (b :: BackendType) field x.
+AggregationPredicate b field
+-&gt; Rep (AggregationPredicate b field) x
+$cfrom :: forall (b :: BackendType) field x.
+AggregationPredicate b field
+-&gt; Rep (AggregationPredicate b field) x
+from :: forall x.
 AggregationPredicate b field
 -&gt; Rep (AggregationPredicate b field) x
 $cto :: forall (b :: BackendType) field x.
 Rep (AggregationPredicate b field) x
 -&gt; AggregationPredicate b field
-$cfrom :: forall (b :: BackendType) field x.
-AggregationPredicate b field
--&gt; Rep (AggregationPredicate b field) x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+to :: forall x.
+Rep (AggregationPredicate b field) x
+-&gt; AggregationPredicate b field
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-108"></span><span>
-</span><span id="line-109"></span><span id="local-6989586621691179058"><span id="local-6989586621691179069"><span id="local-6989586621691179864"><span id="local-6989586621691179865"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-110"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179865"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-111"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179865"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179864"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-112"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179865"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179864"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-113"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179865"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span id="local-6989586621686873918"><span id="local-6989586621686873919"><span id="local-6989586621686874579"><span id="local-6989586621686874590"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873918"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-111"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873918"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873919"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-112"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873918"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873919"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873918"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-114"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-115"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179865"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179864"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-115"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873918"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873919"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-116"></span><span>
-</span><span id="line-117"></span><span id="local-6989586621691179042"><span id="local-6989586621691179044"><span id="local-6989586621691179056"><span id="local-6989586621691179860"><span id="local-6989586621691179861"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-118"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179861"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-119"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179861"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179860"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-120"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179861"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179860"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-121"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179861"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span id="local-6989586621686873924"><span id="local-6989586621686873925"><span id="local-6989586621686874598"><span id="local-6989586621686874610"><span id="local-6989586621686874614"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-118"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873924"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-119"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873924"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873925"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-120"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873924"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873925"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-121"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873924"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-122"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-123"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179861"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179860"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-123"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873924"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873925"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
 </span><span id="line-124"></span><span>
 </span><span id="line-125"></span><span class="hs-keyword">instance</span><span>
-</span><span id="line-126"></span><span>  </span><span id="local-6989586621691179034"><span id="local-6989586621691179036"><span id="local-6989586621691179856"><span id="local-6989586621691179857"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179857"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-127"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BooleanOperators"><span class="hs-identifier hs-type">B.BooleanOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179857"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179856"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-128"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179857"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179856"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-129"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621691179856"><span class="hs-identifier hs-type">field</span></a></span><span>
+</span><span id="line-126"></span><span>  </span><span id="local-6989586621686873936"><span id="local-6989586621686873937"><span id="local-6989586621686874626"><span id="local-6989586621686874633"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873936"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-127"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BooleanOperators"><span class="hs-identifier hs-type">B.BooleanOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873936"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873937"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-128"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873936"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873937"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-129"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621686873937"><span class="hs-identifier hs-type">field</span></a></span><span>
 </span><span id="line-130"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-131"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179857"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179856"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873936"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873937"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-132"></span><span>
 </span><span id="line-133"></span><span class="hs-keyword">instance</span><span>
-</span><span id="line-134"></span><span>  </span><span id="local-6989586621691179031"><span id="local-6989586621691179853"><span id="local-6989586621691179854"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179854"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-135"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179854"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-136"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179854"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179853"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-137"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179854"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179853"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-134"></span><span>  </span><span id="local-6989586621686873943"><span id="local-6989586621686873944"><span id="local-6989586621686874671"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873943"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873943"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-136"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873943"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873944"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-137"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873943"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873944"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-138"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-139"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179854"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179853"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873943"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873944"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-140"></span><span>
 </span><span id="line-141"></span><span class="hs-keyword">instance</span><span>
-</span><span id="line-142"></span><span>  </span><span id="local-6989586621691179849"><span id="local-6989586621691179850"><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179850"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-143"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179850"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179849"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-144"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ToJSONKeyValue</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179850"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179849"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span><span>  </span><span id="local-6989586621686873947"><span id="local-6989586621686873948"><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873947"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-143"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873947"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873948"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-144"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ToJSONKeyValue</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873947"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873948"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-145"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-146"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ToJSONKeyValue</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179850"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179849"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-146"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ToJSONKeyValue</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873947"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873948"><span class="hs-identifier hs-type">field</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-147"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-148"></span><span>  </span><span id="local-6989586621691179008"><span class="annot"><span class="annottext">toJSONKeyValue :: AggregationPredicate b field -&gt; Pair
-</span><a href="#local-6989586621691179008"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSONKeyValue</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691179003"><span id="local-6989586621691179004"><span id="local-6989586621691179005"><span id="local-6989586621691179006"><span id="local-6989586621691179007"><span class="annot"><span class="annottext">Bool
+</span><span id="line-148"></span><span>  </span><span id="local-6989586621686874722"><span class="annot"><span class="annottext">toJSONKeyValue :: AggregationPredicate b field -&gt; Pair
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSONKeyValue</span></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicate"><span class="hs-identifier hs-type">AggregationPredicate</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621686874723"><span id="local-6989586621686874724"><span id="local-6989586621686874725"><span id="local-6989586621686874726"><span id="local-6989586621686874727"><span class="annot"><span class="annottext">Bool
 [OpExpG b field]
 Maybe (AnnBoolExp b field)
 Text
 AggregationPredicateArguments b
-aggPredPredicate :: [OpExpG b field]
-aggPredArguments :: AggregationPredicateArguments b
-aggPredFilter :: Maybe (AnnBoolExp b field)
-aggPredDistinct :: Bool
-aggPredFunctionName :: Text
-aggPredPredicate :: forall (b :: BackendType) field.
-AggregationPredicate b field -&gt; [OpExpG b field]
-aggPredArguments :: forall (b :: BackendType) field.
-AggregationPredicate b field -&gt; AggregationPredicateArguments b
-aggPredFilter :: forall (b :: BackendType) field.
-AggregationPredicate b field -&gt; Maybe (AnnBoolExp b field)
-aggPredDistinct :: forall (b :: BackendType) field.
-AggregationPredicate b field -&gt; Bool
 aggPredFunctionName :: forall (b :: BackendType) field.
 AggregationPredicate b field -&gt; Text
-</span><a href="#local-6989586621691179003"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+aggPredDistinct :: forall (b :: BackendType) field.
+AggregationPredicate b field -&gt; Bool
+aggPredFilter :: forall (b :: BackendType) field.
+AggregationPredicate b field -&gt; Maybe (AnnBoolExp b field)
+aggPredArguments :: forall (b :: BackendType) field.
+AggregationPredicate b field -&gt; AggregationPredicateArguments b
+aggPredPredicate :: forall (b :: BackendType) field.
+AggregationPredicate b field -&gt; [OpExpG b field]
+aggPredFunctionName :: Text
+aggPredDistinct :: Bool
+aggPredFilter :: Maybe (AnnBoolExp b field)
+aggPredArguments :: AggregationPredicateArguments b
+aggPredPredicate :: [OpExpG b field]
+</span><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#aggPredFunctionName"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-149"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Key
 </span><span class="hs-identifier hs-var">fromText</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621691179007"><span class="hs-identifier hs-var">aggPredFunctionName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-150"></span><span>      </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="#local-6989586621686874723"><span class="hs-identifier hs-var">aggPredFunctionName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-150"></span><span>      </span><span class="annot"><span class="annottext">[(Text, Value)] -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span>
 </span><span id="line-151"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;aggPredDistinct&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-string">&quot;aggPredDistinct&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621691179006"><span class="hs-identifier hs-var">aggPredDistinct</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621686874724"><span class="hs-identifier hs-var">aggPredDistinct</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-152"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;aggPredFilter&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-string">&quot;aggPredFilter&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe (AnnBoolExp b field) -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Maybe (AnnBoolExp b field)
-</span><a href="#local-6989586621691179005"><span class="hs-identifier hs-var">aggPredFilter</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621686874725"><span class="hs-identifier hs-var">aggPredFilter</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-153"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;aggPredArguments&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-string">&quot;aggPredArguments&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AggregationPredicateArguments b -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">AggregationPredicateArguments b
-</span><a href="#local-6989586621691179004"><span class="hs-identifier hs-var">aggPredArguments</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621686874726"><span class="hs-identifier hs-var">aggPredArguments</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-154"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;aggPredPredicate&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
-</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSONKeyValue a =&gt; a -&gt; Pair
+</span><span class="hs-string">&quot;aggPredPredicate&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(OpExpG b field -&gt; Pair) -&gt; [OpExpG b field] -&gt; [Pair]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">OpExpG b field -&gt; Pair
+forall a. ToJSONKeyValue a =&gt; a -&gt; Pair
 </span><span class="hs-identifier hs-var">toJSONKeyValue</span></span><span> </span><span class="annot"><span class="annottext">[OpExpG b field]
-</span><a href="#local-6989586621691179003"><span class="hs-identifier hs-var">aggPredPredicate</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686874727"><span class="hs-identifier hs-var">aggPredPredicate</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-155"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-156"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-157"></span><span>
-</span><span id="line-158"></span><span id="local-6989586621691179001"><span id="local-6989586621691179002"></span></span><span class="hs-keyword">data</span><span> </span><span id="AggregationPredicateArguments"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-var">AggregationPredicateArguments</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691179844"><span class="annot"><a href="#local-6989586621691179844"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-158"></span><span class="hs-keyword">data</span><span> </span><span id="AggregationPredicateArguments"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-var">AggregationPredicateArguments</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686874728"><span class="annot"><a href="#local-6989586621686874728"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-159"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AggregationPredicateArgumentsStar"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArgumentsStar"><span class="hs-identifier hs-var">AggregationPredicateArgumentsStar</span></a></span></span><span>
-</span><span id="line-160"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AggregationPredicateArguments"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-var">AggregationPredicateArguments</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179844"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-161"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-160"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AggregationPredicateArguments"><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-var">AggregationPredicateArguments</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686874728"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-161"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621686874732"><span id="local-6989586621686874734"><span class="annot"><span class="annottext">(forall x.
+ AggregationPredicateArguments b
+ -&gt; Rep (AggregationPredicateArguments b) x)
+-&gt; (forall x.
+    Rep (AggregationPredicateArguments b) x
+    -&gt; AggregationPredicateArguments b)
+-&gt; Generic (AggregationPredicateArguments b)
+forall x.
+Rep (AggregationPredicateArguments b) x
+-&gt; AggregationPredicateArguments b
+forall x.
+AggregationPredicateArguments b
+-&gt; Rep (AggregationPredicateArguments b) x
+forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 forall (b :: BackendType) x.
 Rep (AggregationPredicateArguments b) x
@@ -738,21 +966,27 @@ Rep (AggregationPredicateArguments b) x
 forall (b :: BackendType) x.
 AggregationPredicateArguments b
 -&gt; Rep (AggregationPredicateArguments b) x
-$cto :: forall (b :: BackendType) x.
-Rep (AggregationPredicateArguments b) x
--&gt; AggregationPredicateArguments b
 $cfrom :: forall (b :: BackendType) x.
 AggregationPredicateArguments b
 -&gt; Rep (AggregationPredicateArguments b) x
-</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+from :: forall x.
+AggregationPredicateArguments b
+-&gt; Rep (AggregationPredicateArguments b) x
+$cto :: forall (b :: BackendType) x.
+Rep (AggregationPredicateArguments b) x
+-&gt; AggregationPredicateArguments b
+to :: forall x.
+Rep (AggregationPredicateArguments b) x
+-&gt; AggregationPredicateArguments b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-162"></span><span>
-</span><span id="line-163"></span><span id="local-6989586621691178991"><span id="local-6989586621691178995"><span id="local-6989586621691179855"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179855"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179855"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-163"></span><span id="local-6989586621686873938"><span id="local-6989586621686874738"><span id="local-6989586621686874743"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873938"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873938"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-164"></span><span>
-</span><span id="line-165"></span><span id="local-6989586621691178982"><span id="local-6989586621691178984"><span id="local-6989586621691178989"><span id="local-6989586621691179836"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179836"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179836"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-165"></span><span id="local-6989586621686873965"><span id="local-6989586621686874749"><span id="local-6989586621686874755"><span id="local-6989586621686874759"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">B.Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873965"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873965"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-166"></span><span>
-</span><span id="line-167"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691178976"><span id="local-6989586621691178978"><span id="local-6989586621691179835"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179835"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179835"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-167"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686873935"><span id="local-6989586621686874766"><span id="local-6989586621686874772"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873935"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873935"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-168"></span><span>
-</span><span id="line-169"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691178974"><span id="local-6989586621691179834"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179834"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/deepseq-1.4.6.1/src"><span class="hs-identifier hs-type">NFData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179834"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-169"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686873982"><span id="local-6989586621686874789"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873982"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686873982"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-170"></span><span>
-</span><span id="line-171"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691178966"><span id="local-6989586621691178968"><span id="local-6989586621691178970"><span id="local-6989586621691178972"><span id="local-6989586621691179833"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179833"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691179833"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-171"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686874026"><span id="local-6989586621686874809"><span id="local-6989586621686874816"><span id="local-6989586621686874819"><span id="local-6989586621686874822"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686874026"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.AggregationPredicates.html#AggregationPredicateArguments"><span class="hs-identifier hs-type">AggregationPredicateArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686874026"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
 </span><span id="line-172"></span></pre></body></html>
