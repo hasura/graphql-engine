@@ -350,7 +350,7 @@ const Relationships = ({
    * Metadata table object - this is the "table" that needs to be passed for all our new components
    * The existing `NormalizedTable` stuff has to be phased out slowly
    * */
-  const table = source.tables.find(t => {
+  const normalizedTableObject = source.tables.find(t => {
     return areTablesEqual(t.table, {
       table_schema: tableSchema.table_schema,
       table_name: tableSchema.table_name,
@@ -388,7 +388,7 @@ const Relationships = ({
     return (
       <DatabaseRelationshipsTab
         table={tableSchema}
-        metadataTable={table.table}
+        metadataTable={normalizedTableObject.table}
         driver={currentDriver}
         currentSource={currentSource}
         migrationMode={migrationMode}
@@ -531,7 +531,7 @@ const Relationships = ({
     <>
       <RightContainer>
         <Analytics name="Relationships" {...REDACT_EVERYTHING}>
-          <div className={`${styles.container} container-fluid`}>
+          <div className={`${styles.container} container-fluid bootstrap-jail`}>
             <TableHeader
               dispatch={dispatch}
               table={tableSchema}

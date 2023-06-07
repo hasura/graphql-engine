@@ -1,6 +1,46 @@
 const colors = require('tailwindcss/colors');
 const plugin = require('tailwindcss/plugin');
 
+function hexToHsl(hex) {
+  // Remove the '#' character from the beginning of the hex code
+  hex = hex.replace('#', '');
+
+  // Convert hex code to RGB
+  const red = parseInt(hex.substring(0, 2), 16) / 255;
+  const green = parseInt(hex.substring(2, 4), 16) / 255;
+  const blue = parseInt(hex.substring(4, 6), 16) / 255;
+
+  const max = Math.max(red, green, blue);
+  const min = Math.min(red, green, blue);
+  let hue,
+    saturation,
+    lightness = (max + min) / 2;
+
+  if (max === min) {
+    hue = saturation = 0; // achromatic
+  } else {
+    const delta = max - min;
+    saturation =
+      lightness > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+    switch (max) {
+      case red:
+        hue = (green - blue) / delta + (green < blue ? 6 : 0);
+        break;
+      case green:
+        hue = (blue - red) / delta + 2;
+        break;
+      case blue:
+        hue = (red - green) / delta + 4;
+        break;
+    }
+    hue *= 60;
+  }
+
+  return `${parseFloat(hue.toFixed(2))}, ${parseFloat(
+    (100 * saturation).toFixed(2)
+  )}%, ${parseFloat((100 * lightness).toFixed(2))}%`;
+}
+
 function dataStateVariant(state, { addVariant, e }) {
   addVariant(`data-state-${state}`, ({ modifySelectors, separator }) => {
     modifySelectors(({ className }) => {
@@ -198,10 +238,20 @@ module.exports = {
             opacity: '0',
           },
         },
+        fadeIn: {
+          from: { opacity: 0 },
+          to: { opacity: 1 },
+        },
+        alertContentShow: {
+          from: { opacity: 0, transform: 'translate(-50%, -48%) scale(0.96)' },
+          to: { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
+        },
       },
       animation: {
         collapsibleContentOpen: 'collapsibleContentOpen 300ms ease-out',
         collapsibleContentClose: 'collapsibleContentClose 300ms ease-out',
+        collapsibleContentOpenFast: 'collapsibleContentOpen 200ms ease-out',
+        collapsibleContentCloseFast: 'collapsibleContentClose 200ms ease-out',
         slideUpAndFade: 'slideUpAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         slideRightAndFade:
           'slideRightAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1)',
@@ -213,6 +263,8 @@ module.exports = {
         notificationClose: 'notificationClose 300ms ease-in-out',
         dropdownMenuContentOpen: 'dropdownMenuContentOpen 100ms ease-in',
         dropdownMenuContentClose: 'dropdownMenuContentClose 100ms ease-out',
+        overlayShow: 'overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1)',
+        contentShow: 'contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1)',
       },
     },
   },
@@ -227,6 +279,36 @@ module.exports = {
       dataStateVariant('on', helpers);
       dataStateVariant('checked', helpers);
       dataStateVariant('unchecked', helpers);
+    }),
+    plugin(function ({ addBase, theme }) {
+      const colors = {
+        '--tw-font-family-sans': theme('fontFamily.sans'),
+        '--tw-font-family-mono': theme('fontFamily.mono'),
+        '--tw-color-white-hex': '#ffffff',
+        '--tw-color-white-hsl': '0, 0%, 100%',
+        '--tw-color-black-hex': '#000000',
+        '--tw-color-black-hsl': '0, 0%, 0%',
+      };
+      Object.entries(theme('colors'))
+        .filter(([name]) => !['white', 'black'].includes(name))
+        .forEach(([name, color]) => {
+          Object.entries(color).forEach(([shade, value]) => {
+            if (typeof value === 'object') {
+              Object.entries(value).forEach(([shade, hex]) => {
+                if (hex?.startsWith('#')) {
+                  colors[`--tw-color-${name}-${shade}-hex`] = hex;
+                  colors[`--tw-color-${name}-${shade}-hsl`] = hexToHsl(hex);
+                }
+              });
+            } else if (typeof value === 'string' && value?.startsWith('#')) {
+              colors[`--tw-color-${name}-${shade}-hex`] = value;
+              colors[`--tw-color-${name}-${shade}-hsl`] = hexToHsl(value);
+            }
+          });
+        });
+      addBase({
+        '*, ::before, ::after': colors,
+      });
     }),
   ],
 };

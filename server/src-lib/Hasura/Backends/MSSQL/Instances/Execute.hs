@@ -17,9 +17,8 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Extended qualified as J
-import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended qualified as T
@@ -41,15 +40,15 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Namespace (RootFieldAlias (..), RootFieldMap)
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend as RQLTypes
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as RQLColumn
 import Hasura.RQL.Types.Common as RQLTypes
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
@@ -88,29 +87,34 @@ msDBQueryPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
-  Env.Environment ->
   SourceName ->
   SourceConfig 'MSSQL ->
   QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   [HTTP.Header] ->
   Maybe G.Name ->
   m (DBStepInfo 'MSSQL)
-msDBQueryPlan userInfo _env sourceName sourceConfig qrf _ _ = do
+msDBQueryPlan userInfo sourceName sourceConfig qrf _ _ = do
   let sessionVariables = _uiSession userInfo
-  statement <- planQuery sessionVariables qrf
+  QueryWithDDL {qwdBeforeSteps, qwdAfterSteps, qwdQuery = statement} <- planQuery sessionVariables qrf
   queryTags <- ask
+
   -- Append Query tags comment to the select statement
   let printer = fromSelect statement `withQueryTagsPrinter` queryTags
       queryString = ODBC.renderQuery (toQueryPretty printer)
 
-  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) (runSelectQuery printer) ()
+  pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) (runSelectQuery printer qwdBeforeSteps qwdAfterSteps) ()
   where
-    runSelectQuery queryPrinter = OnBaseMonad do
-      let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
-      mssqlRunReadOnly (_mscExecCtx sourceConfig) queryTx
+    runSelectQuery queryPrinter beforeSteps afterSteps = OnBaseMonad do
+      let queryTx = do
+            let executeStep = Tx.unitQueryE defaultMSSQLTxErrorHandler . toQueryFlat . TQ.fromTempTableDDL
+            traverse_ executeStep beforeSteps
+            result <- encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
+            traverse_ executeStep afterSteps
+            pure result
+      mssqlRunReadOnly (_mscExecCtx sourceConfig) (fmap withNoStatistics queryTx)
 
 runShowplan ::
-  MonadIO m =>
+  (MonadIO m) =>
   ODBC.Query ->
   Tx.TxET QErr m [Text]
 runShowplan query = Tx.withTxET defaultMSSQLTxErrorHandler do
@@ -122,7 +126,7 @@ runShowplan query = Tx.withTxET defaultMSSQLTxErrorHandler do
   pure texts
 
 msDBQueryExplain ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   RootFieldAlias ->
   UserInfo ->
   SourceName ->
@@ -133,24 +137,24 @@ msDBQueryExplain ::
   m (AB.AnyBackend DBStepInfo)
 msDBQueryExplain fieldName userInfo sourceName sourceConfig qrf _ _ = do
   let sessionVariables = _uiSession userInfo
-  statement <- planQuery sessionVariables qrf
+  statement <- qwdQuery <$> planQuery sessionVariables qrf
   let query = toQueryPretty (fromSelect statement)
       queryString = ODBC.renderQuery query
-      odbcQuery = OnBaseMonad $
-        mssqlRunReadOnly
+      odbcQuery = OnBaseMonad
+        $ mssqlRunReadOnly
           (_mscExecCtx sourceConfig)
           do
             showplan <- runShowplan query
             pure
-              ( encJFromJValue $
-                  ExplainPlan
-                    fieldName
-                    (Just queryString)
-                    (Just showplan)
-              )
-  pure $
-    AB.mkAnyBackend $
-      DBStepInfo @'MSSQL sourceName sourceConfig Nothing odbcQuery ()
+              $ withNoStatistics
+              $ encJFromJValue
+              $ ExplainPlan
+                fieldName
+                (Just queryString)
+                (Just showplan)
+  pure
+    $ AB.mkAnyBackend
+    $ DBStepInfo @'MSSQL sourceName sourceConfig Nothing odbcQuery ()
 
 msDBSubscriptionExplain ::
   (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
@@ -204,16 +208,16 @@ multiplexRootReselect variables rootReselect =
               }
         ],
       selectFrom =
-        Just $
-          FromOpenJson
+        Just
+          $ FromOpenJson
             Aliased
               { aliasedThing =
                   OpenJson
                     { openJsonExpression =
                         ValueExpression (ODBC.TextValue $ lbsToTxt $ J.encode variables),
                       openJsonWith =
-                        Just $
-                          NE.fromList
+                        Just
+                          $ NE.fromList
                             [ ScalarField GuidType DataLengthUnspecified resultIdAlias (Just $ IndexPath RootPath 0),
                               JsonField resultVarsAlias (Just $ IndexPath RootPath 1)
                             ]
@@ -223,6 +227,7 @@ multiplexRootReselect variables rootReselect =
       selectJoins =
         [ Join
             { joinSource = JoinReselect rootReselect,
+              joinWhere = mempty,
               joinJoinAlias =
                 JoinAlias
                   { joinAliasEntity = resultAlias,
@@ -245,7 +250,6 @@ msDBMutationPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
-  Env.Environment ->
   Options.StringifyNumbers ->
   SourceName ->
   SourceConfig 'MSSQL ->
@@ -253,14 +257,14 @@ msDBMutationPlan ::
   [HTTP.Header] ->
   Maybe G.Name ->
   m (DBStepInfo 'MSSQL)
-msDBMutationPlan userInfo _environment stringifyNum sourceName sourceConfig mrf _headers _gName = do
+msDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf _headers _gName = do
   go <$> case mrf of
     MDBInsert annInsert -> executeInsert userInfo stringifyNum sourceConfig annInsert
     MDBDelete annDelete -> executeDelete userInfo stringifyNum sourceConfig annDelete
     MDBUpdate annUpdate -> executeUpdate userInfo stringifyNum sourceConfig annUpdate
     MDBFunction {} -> throw400 NotSupported "function mutations are not supported in MSSQL"
   where
-    go v = DBStepInfo @'MSSQL sourceName sourceConfig Nothing v ()
+    go v = DBStepInfo @'MSSQL sourceName sourceConfig Nothing (fmap withNoStatistics v) ()
 
 -- * Subscription
 
@@ -280,12 +284,12 @@ msDBLiveQuerySubscriptionPlan ::
   Maybe G.Name ->
   m (SubscriptionQueryPlan 'MSSQL (MultiplexedQuery 'MSSQL))
 msDBLiveQuerySubscriptionPlan UserInfo {_uiSession, _uiRole} _sourceName sourceConfig namespace rootFields _ _ = do
-  (reselect, prepareState) <- planSubscription (OMap.mapKeys _rfaAlias rootFields) _uiSession
+  (reselect, prepareState) <- planSubscription (InsOrdHashMap.mapKeys _rfaAlias rootFields) _uiSession
   cohortVariables <- prepareStateCohortVariables sourceConfig _uiSession prepareState
   queryTags <- ask
   let parameterizedPlan = ParameterizedSubscriptionQueryPlan _uiRole $ (MultiplexedQuery' reselect queryTags)
-  pure $
-    SubscriptionQueryPlan parameterizedPlan sourceConfig dummyCohortId () cohortVariables namespace
+  pure
+    $ SubscriptionQueryPlan parameterizedPlan sourceConfig dummyCohortId () cohortVariables namespace
 
 prepareStateCohortVariables ::
   (MonadError QErr m, MonadIO m, MonadBaseControl IO m) =>
@@ -296,8 +300,8 @@ prepareStateCohortVariables ::
 prepareStateCohortVariables sourceConfig session prepState = do
   (namedVars, posVars) <- validateVariables sourceConfig session prepState
   let PrepareState {sessionVariables} = prepState
-  pure $
-    mkCohortVariables
+  pure
+    $ mkCohortVariables
       sessionVariables
       session
       namedVars
@@ -344,7 +348,7 @@ validateVariables sourceConfig sessionVariableValues prepState = do
         map
           ( \(n, v) -> Aliased (ValueExpression (RQLColumn.cvValue v)) (G.unName n)
           )
-          $ Map.toList
+          $ HashMap.toList
           $ namedArguments
 
       -- For positional args we need to be a bit careful not to capture names
@@ -362,8 +366,8 @@ validateVariables sourceConfig sessionVariableValues prepState = do
         if null projAll
           then Nothing
           else
-            Just $
-              renderQuery
+            Just
+              $ renderQuery
                 emptySelect
                   { selectProjections = projAll,
                     selectFrom = sessionOpenJson occSessionVars
@@ -395,8 +399,8 @@ validateVariables sourceConfig sessionVariableValues prepState = do
     sessionOpenJson occSessionVars =
       nonEmpty (getSessionVariables occSessionVars)
         <&> \fields ->
-          FromOpenJson $
-            Aliased
+          FromOpenJson
+            $ Aliased
               ( OpenJson
                   (ValueExpression $ ODBC.TextValue $ lbsToTxt $ J.encode occSessionVars)
                   (pure (sessField <$> fields))
@@ -458,4 +462,4 @@ msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
   where
     runSelectQuery queryPrinter = OnBaseMonad do
       let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
-      mssqlRunReadOnly (_mscExecCtx sourceConfig) queryTx
+      mssqlRunReadOnly (_mscExecCtx sourceConfig) (fmap withNoStatistics queryTx)

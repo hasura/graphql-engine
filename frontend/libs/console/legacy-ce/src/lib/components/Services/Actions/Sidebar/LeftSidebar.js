@@ -6,14 +6,15 @@ import { browserHistory, Link } from 'react-router';
 
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
-import { isProConsole } from '../../../../utils';
 import { Badge } from '../../../../new-components/Badge';
+import globals from '../../../../Globals';
 
 const LeftSidebar = ({
   appPrefix,
   common: { currentAction },
   actions,
   readOnlyMode,
+  allowOpenApiImport,
 }) => {
   const [searchText, setSearchText] = React.useState('');
 
@@ -108,7 +109,7 @@ const LeftSidebar = ({
       addTestString={'actions-sidebar-add-table'}
       childListTestString={'actions-table-links'}
       addBtn={
-        isProConsole(window.__env) ? (
+        allowOpenApiImport ? (
           <div
             className={`col-xs-4 text-center ${styles.padd_left_remove} ${styles.sidebarCreateTable}`}
           >
@@ -121,7 +122,9 @@ const LeftSidebar = ({
                     <div
                       className="py-1 "
                       onClick={() => {
-                        browserHistory.push(`${appPrefix}/manage/add`);
+                        browserHistory.push(
+                          `${globals.urlPrefix}${appPrefix}/manage/add`
+                        );
                       }}
                     >
                       <FaEdit className="relative -top-[1px]" /> New Action
@@ -131,7 +134,9 @@ const LeftSidebar = ({
                     <div
                       className="py-1 "
                       onClick={() => {
-                        browserHistory.push(`${appPrefix}/manage/add-oas`);
+                        browserHistory.push(
+                          `${globals.urlPrefix}${appPrefix}/manage/add-oas`
+                        );
                       }}
                     >
                       <FaFileImport className="relative -left-[2px] -top-[1px]" />{' '}

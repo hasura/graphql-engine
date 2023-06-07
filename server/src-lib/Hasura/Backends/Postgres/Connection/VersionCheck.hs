@@ -34,8 +34,8 @@ data CockroachDbVersion = CockroachDbVersion
 runCockroachVersionCheck :: Env.Environment -> PG.PostgresConnConfiguration -> IO (Either QErr ())
 runCockroachVersionCheck env connConf = do
   result <-
-    withPostgresDB env connConf $
-      PG.rawQE PG.dmlTxErrorHandler (PG.fromText "select version();") [] False
+    withPostgresDB env connConf
+      $ PG.rawQE PG.dmlTxErrorHandler (PG.fromText "select version();") [] False
   pure case result of
     -- running the query failed
     Left err ->
@@ -45,8 +45,8 @@ runCockroachVersionCheck env connConf = do
       case parseCrdbVersion versionString of
         -- parsing the query output failed
         Left err ->
-          Left $
-            crdbVersionCheckErr500
+          Left
+            $ crdbVersionCheckErr500
               [ "version-parse-error" .= show err,
                 "version-string" .= versionString
               ]
@@ -57,8 +57,8 @@ runCockroachVersionCheck env connConf = do
               Right ()
             else -- the crdb version is not supported
 
-              Left $
-                crdbVersionCheckErr500
+              Left
+                $ crdbVersionCheckErr500
                   [ "version-string" .= versionString
                   ]
 

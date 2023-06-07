@@ -1,5 +1,4 @@
 export {
-  extractAssets,
   validateAllowedAssets,
-  generateAssetLoaderFile,
+  generatePolyfillLoaderFile,
 } from './executors/build-server-assets/executor';

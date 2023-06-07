@@ -8,86 +8,171 @@ keywords:
   - permission
   - role
   - session variable
-sidebar_position: 3
-sidebar_label: Roles & session variables
+sidebar_position: 20
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Roles & Session Variables
 
 ## Roles
 
-Every table/view can have permission rules for users based on their role.
+Every table or view can have permission rules defined for users based on user **role**. You define your own
+roles in the Hasura GraphQL Engine and then create permissions for each of them.
 
-By default, there is an `admin` role that can perform any operation on any table.
+For example:
 
-You can define roles and then create permissions for each of these roles:
+| Role      | Description                                 | Allowed Activity                            |
+|-----------|---------------------------------------------|---------------------------------------------|
+| anonymous | A user who is not logged-in                 | Only read from some restricted tables/views |
+| user      | A user who is logged in                     | CRUD on data that belongs to them           |
+| manager   | A user that has access to other users' data | CRUD on all users' data                     |
 
-Examples:
+See [this section](/auth/authorization/permissions/index.mdx) on how to configure permissions.
 
-<table>
-  <tbody>
-    <tr>
-      <td>user</td>
-      <td>A logged-in user</td>
-      <td>CRUD on data that belongs to them</td>
-    </tr>
-    <tr>
-      <td>anonymous</td>
-      <td>A not logged-in user</td>
-      <td>Only read from some tables/views</td>
-    </tr>
-    <tr>
-      <td>manager</td>
-      <td>A user that has access to other user’s data</td>
-      <td>CRUD on all users data</td>
-    </tr>
-  </tbody>
-</table>
+### The admin role
 
-See [this page](/auth/authorization/permission-rules.mdx) on how to configure permission rules.
+By default, there is an `admin` role that can perform any operation on any table. It can be used like any other
+user role when making queries where you would like full unrestricted permissions. The alternative to this method is to
+use the [admin secret header](/auth/authentication/admin-secret-access.mdx).
 
-:::info Role-based schemas
+### Role-based schema publishing
 
 For every role that you create, Hasura automatically publishes a different GraphQL schema that represents the right
-queries, fields, and mutations that are available to that role.
+fields, queries and mutations that are available to that role so that users with that role will only see a schema
+which they are able to access.
+
+### Create a new role
+
+New roles are created "on-the-fly" when a permission is configured for it.
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+  In the **Console**, in **Data -> [table] -> Permissions**, enter a new role name and click on the <code>select</code>
+  cell for the role in order to begin configuring permissions for that role. When the permissions are saved, the new
+  role will be created.
+
+  <Thumbnail
+    src="/img/auth/authorization_create-new-role_2-16-1.png"
+    alt="Using boolean expressions to build rules"
+  />
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+Using the CLI, you can create a new role by defining permissions for it in <b>metadata >
+databases > [database_name] -> tables -> [table.yaml]</b> file. Eg:
+
+```yaml {4-10}
+- table:
+    schema: public
+    name: products
+  select_permissions:
+    - role: user
+      permission:
+        columns: []
+        filter:
+          price:
+          _lt: 1000
+```
+
+Apply the metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+By defining permissions for a role, the role is created.
+
+```http {11-15}
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_create_select_permission",
+  "args": {
+    "source": "<db_name>",
+    "table": "products",
+    "role": "user",
+    "permission": {
+      "columns": "*",
+      "filter": {
+        "price": {
+          "_lt": 1000
+        }
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+### Delete a role
+
+Deleting a role can be done from the
+[permissions summary section](/auth/authorization/permissions/permissions-summary.mdx).
+
+### Copy a role
+
+Copying a role and its permissions can be done from the
+[permissions summary section](/auth/authorization/permissions/permissions-summary.mdx).
+
+## Session variables
+
+Permissions usually incorporate _session variables_. Session variables are data returned from your
+authentication service for each request.
+
+In JWT mode, session variables are encoded into the payload of the JWT
+token. In webhook mode, session variables are returned as a JSON object in the body of the response from the webhook.
+
+:::info Session variable key format
+
+Session variables are case-insensitive and Hasura Engine only has access to session variables beginning with
+`X-Hasura-`.
 
 :::
 
-## Dynamic session variables {#dynamic-session-variables}
+[//]: # (For example: If a user makes a request, their provided `X-Hasura-User-Id` session variable can be mapped to the)
 
-Permission rules can also refer to _session variables_. Session variables are key-value pairs returned from the
-authentication service for each request.
+[//]: # (`id` column in the `users` table. This `user-id` can be used in a permission rule to show that inserts into a table)
 
-For example: If a user makes a request, the session token maps to a `user-id`. This `user-id` can be used in a
-permission to show that inserts into a table are only allowed if the `user_id` column has a value equal to that of
-`user-id`, the session variable.
+[//]: # (are only allowed if the `id` column has a value equal to the `X-Hasura-User-Id` session variable, restricting)
 
-When you are constructing permission rules, however, there might be several variables that represent the business logic
-of having access to data. For example, if you have a SaaS application, you might restrict access based on a `client_id`
-variable. If you want to provide different levels of access on different devices, you might restrict access based on a
-`device_type` variable.
+[//]: # (access to their data to them.)
 
-Hasura allows you to create permission rules that can use any dynamic variable that is a property of the request. All
-your dynamic variables must follow the naming convention `X-Hasura-*`.
+When you are constructing permission rules there might be several variables that represent the required business
+logic of having access to data. For example, if you have a SaaS application, you might restrict access based on a
+`client_id` variable. If you want to provide different levels of access on different devices, you might restrict
+access based on a `device_type` variable. It is entirely up to you to decide what restrictions and permissions you
+want to apply to your data.
+
+Hasura allows you to create powerful permissions that can use any variable that is a property of the request.
 
 Examples:
 
 <table>
 <thead>
 <tr>
-<th width="20%">Example</th>
-<th width="10%">Role</th>
-<th width="20%">Condition</th>
-<th width="50%">Permission expression</th>
+<th width="25%">Example</th>
+<th width="15%">Role</th>
+<th width="30%">Condition</th>
+<th width="35%">Permission expression</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><p>Allow access to user's own row</p></td>
 <td><p><code>user</code></p></td>
-<td><p><code>user_id</code> column is equal to <code>session-user-id</code> from a request</p></td>
+<td><p><code>user_id</code> column is equal to the user id session variable in a request</p></td>
 <td>
 
 ```json
@@ -103,7 +188,7 @@ Examples:
 <tr>
 <td><p>Allow project admins access to anything that belongs to the project</p></td>
 <td><p><code>project-admin</code></p></td>
-<td><p><code>project_id</code> column is equal to <code>project-id</code> of the "session user"</p></td>
+<td><p><code>project_id</code> column is equal to the project id session variable of the user</p></td>
 <td>
 
 ```json
@@ -119,39 +204,37 @@ Examples:
 </tbody>
 </table>
 
-:::info ABAC
+:::info Attribute-Based Access Control - ABAC
 
 Session variables are analogous to _attributes_ in a typical
 [attribute-based access control](https://en.wikipedia.org/wiki/Attribute-based_access_control) (ABAC) system.
 
 :::
 
-## Modeling Roles in Hasura
+## Model roles in Hasura
 
-General guidelines for modeling roles in Hasura.
+Roles in Hasura are defined in a flat, non-hierarchical model.
 
-Roles are typically modelled in two ways:
+Role systems can typically be modeled in two ways:
 
-1.  **Hierarchical roles**: Access scopes are nested depending on available roles.
-    [Roles in GitHub for organizations](https://help.github.com/en/articles/managing-peoples-access-to-your-organization-with-roles)
-    is a great example of such modeling where access scopes are inherited by deeper roles:
+1. **Flat roles**: Non-hierarchical roles with each role requiring an independent access scope to be defined. This
+is the model which is used in Hasura.
+2.  **Hierarchical roles**: Access scopes are nested depending on available roles.
+[Roles in GitHub for organizations](https://help.github.com/en/articles/managing-peoples-access-to-your-organization-with-roles)
+is an example of such modeling where access scopes are inherited by deeper roles. Eg:
 
-<Thumbnail src="/img/auth/github-org-hierarchical-roles.png" alt="Hierarchical roles" />
+<Thumbnail src='/img/auth/auth_github-org-hierarchical-roles_diagram.png' alt='Hierarchical roles' />
 
-2.  **Flat roles**: Non-hierarchical roles with each role requiring an independent access scope to be defined.
-
-**Roles in Hasura have to be defined in the latter way i.e. in a flat, non-hierarchical model**.
-
-To convert the above hierarchical roles model into the one expected by Hasura, you will need to model roles as partially
-captured by the table below (_showing access permissions for the_ `user` _&_ `org-member` _roles_, `repositories` _table
-and_ `select` _operation_):
+To convert the above GitHub hierarchical roles model into the one expected by Hasura, you will need to model roles
+as partially captured by the table below which shows permissions for the `user` & `org-member` roles, `repositories`
+table and `select` operation:
 
 <table>
 <thead>
 <tr>
 <th width="27%">Role</th>
-<th width="22%">Access Permissions</th>
-<th width="50%">Example permission rule</th>
+<th width="22%">Access Description</th>
+<th width="50%">Example <code>repositories</code> table <code>select</code> permission rule</th>
 </tr>
 </thead>
 <tbody>
@@ -172,7 +255,7 @@ and_ `select` _operation_):
 </tr>
 <tr>
 <td>org-member</td>
-<td><p>Allow access to personally created repositories and the organization's repositories</p></td>
+<td><p>Allow access to personally created repositories <b>or</b> the organization's repositories</p></td>
 <td>
 
 ```json
@@ -201,43 +284,70 @@ and_ `select` _operation_):
 </tbody>
 </table>
 
-### Making role-based user information available
+## Permission information availability
 
-Effective permission rules require that information about which roles have access to which objects is available when
-processing the permission rule. Different users with the same role or the same user with different roles may have access
-to different sets of rows of the same table.
+Hasura Engine's permission rules require that information about which roles have access to which objects is available
+when processing the permission rule.
 
-In some cases this is straightforward - for example, to restrict access for authors to only their articles, a trivial
-row-level permission like `"creator_id": {"_eq": "X-Hasura-User-Id"}` will suffice. In others, like our example in the
-previous section, this user information (_ownership or relationship_) must be available for defining a permission rule.
+Different users with the same role or the same user with different roles may have access to different sets of rows
+of the same table.
+
+In some cases this is straightforward - for example, to restrict access for users to only their shopping carts, a
+trivial row-level permission like `"user_id": {"_eq": "X-Hasura-User-Id"}` in the shopping carts table `select`
+permission will suffice.
+
+In others, like in the example below where we need to check whether the user is actually a member of the related
+organization. The user information (_ownership or relationship_) must be available to define a permission rule.
+
+```json
+{
+  "_or": [
+    {
+      "creator_id": {
+        "_eq": "X-Hasura-User-Id"
+      }
+    },
+    {
+      "organization": {
+        "members": {
+          "member_id": {
+            "_eq": "X-Hasura-User-Id"
+          }
+        }
+      }
+    }
+  ]
+}
+```
 
 These non-trivial use cases are to be handled differently based on whether this information is available in the same
 database or not.
 
-#### Relationship information is available in the same database
+### Relationship information is available in the same database
 
-Let's take a closer look at the permission rule for the `org-member` rule in the example from the previous section. The
-rule reads as "_allow access to this repository if it was created by this user or if this user is a member of the
-organization that this repository belongs to_".
+Let's take a closer look at the permission for the `org-member` rule in the example from the previous section. The
+rule reads as "_allow access to this data if it was created by this user or if this user is a member of the
+organization that it belongs to_".
 
 The crucial piece of user information that is presumed to be available in the same database and that makes this an
 effective rule, is the mapping of users (_members_) to organizations.
 
 Since this information is available in the same database, it can be easily leveraged via
-[Relationships in permissions](/auth/authorization/permission-rules.mdx#relationships-in-permissions) (_see this
+[Relationships in permissions](/auth/authorization/permissions/row-level-permissions.mdx#relationships-in-permissions) (_see this
 reference for another example of the same kind_).
 
-#### Relationship information is **not** available in the same database
+### Relationship information is **not** available in the same database
 
-When this user information is not available in the database that Hasura is configured to use, session variables are the
-only avenue to pass this information to a permission rule. In our example, the mapping of users (members) to
-organizations may not have been available in the same database.
+When this user information is not available in the database that Hasura is configured to use, session variables on
+the request are the only way to pass this information to a permission rule. In our example, let's assume the mapping
+of users (members) to organizations may not have been available in the same database.
 
-To convey this information, a session variable, say `X-Hasura-Allowed-Organizations` can be used by the configured
-authentication to relay this information. We can then check for the following condition to emulate the same rule: _is
-the organization that this repository belongs to part of the list of the organizations the user is a member of_.
+To convey this information, a session variable, say `X-Hasura-Allowed-Organizations` can be passed by your
+authentication service to relay this information. We can then check for the following condition to emulate the same
+rule: _is the organization that this repository belongs to within the list of the organizations the user is a
+member of_.
 
-The permission for `org-member` role changes to this:
+The permission for the `org-member` role changes to this:
 
 ```json
 {
@@ -261,26 +371,27 @@ The permission for `org-member` role changes to this:
 Support for using session variables for array operators like `_in`, `_nin`, `_has_any_keys`, `_has_all_keys` is
 available in versions `v1.0.0-beta.3` and above.
 
-When you use array operators such as `_in` in the permissions builder in the Hasura Console, it will automatically open
-an array for your values. If your session variable value is already an array, you can click the `[X-Hasura-Allowed-Ids]`
-suggestion to remove the brackets and set your session variable in its place.
+When you use array operators such as `_in` in the permissions builder in the Hasura Console, it will automatically show
+an array builder UI for your values. If your session variable value is already provided array, you can click the `
+[X-Hasura-Allowed-Ids]` suggestion to remove the brackets and set your session variable in its place.
 
 :::
 
-## Format of session variables
+[//]: # (TODO Postgres specific)
+## Type formats of session variables
 
-Session variables are currently expected to be Strings and should be encoded as Postgres's literals for the relevant
-type.
+Session variables are currently expected to only be strings and should be encoded based on Postgres's literals for the
+relevant type.
 
-For example, in the above example, let's say `creator_id` and `organization_id` columns are of type `integer`, then the
+For example, in the above, let's say `creator_id` and `organization_id` columns are of type `integer`, then the
 values of `X-Hasura-User-Id` and `X-Hasura-Allowed-Organizations` should be of type `integer` and `integer[]` (an
 integer array) respectively. To pass say a value `1` for `X-Hasura-User-Id`, it'll be "`1`" and if the allowed
 organizations are `1`, `2` and `3`, then `X-Hasura-Allowed-Organizations` will be "`{1,2,3}`". `{}` is the syntax for
 specifying [arrays in Postgres](https://www.postgresql.org/docs/current/arrays.html#ARRAYS-INPUT).
 
 The types and their formats are detailed [here](https://www.postgresql.org/docs/current/datatype.html). When in doubt
-about the Postgres format for a type, you can always test it in the SQL window. To check if `s` is a valid literal for
-type `t` then, you can check it as follows:
+about the format for a type, you can always test it in the SQL window. To check if `s` is a valid literal for type
+`t` then, you can check it as follows:
 
 ```sql
 select 's'::t;
@@ -292,17 +403,3 @@ a valid format of type `text[]`, you can run:
 ```sql
 select '{hello,world}'::text[];
 ```
-
-:::info JSON format
-
-In future, we'll add support for passing session variables as JSON values where possible (i.e, auth webhook and JWT but
-not in headers).
-
-:::
-
-:::info Additional Resources
-
-Enterprise Grade Authorization -
-[Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
-
-:::

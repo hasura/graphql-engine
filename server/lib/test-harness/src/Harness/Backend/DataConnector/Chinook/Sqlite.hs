@@ -13,7 +13,7 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Monad.Managed (Managed)
-import Harness.Backend.DataConnector.Chinook (ChinookTestEnv, NameFormatting (..))
+import Harness.Backend.DataConnector.Chinook (ChinookTestEnv, NameFormatting (..), ScalarTypes (..))
 import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
@@ -80,7 +80,8 @@ backendTypeConfig =
                   _nand: bool
                   _xor: bool
                 graphql_type: Boolean
-            queries: {}
+            queries:
+              foreach: {}
             relationships: {}
             comparisons:
               subquery:
@@ -100,13 +101,14 @@ backendTypeConfig =
       backendDisplayNameString = "Hasura SQLite",
       backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65007",
-      backendSchemaKeyword = "schema"
+      backendSchemaKeyword = "schema",
+      backendScalarType = const ""
     }
 
 --------------------------------------------------------------------------------
 
 mkChinookCloneTestEnvironment :: TestEnvironment -> Managed ChinookTestEnv
-mkChinookCloneTestEnvironment = Chinook.mkChinookCloneTestEnvironment nameFormatting
+mkChinookCloneTestEnvironment = Chinook.mkChinookCloneTestEnvironment nameFormatting scalarTypes
 
 nameFormatting :: NameFormatting
 nameFormatting = NameFormatting id id formatForeignKeyName
@@ -116,6 +118,14 @@ formatForeignKeyName :: Text -> Text
 formatForeignKeyName = \case
   "Artist" -> "Album.ArtistId->Artist.ArtistId"
   x -> x
+
+scalarTypes :: ScalarTypes
+scalarTypes =
+  ScalarTypes
+    { _stFloatType = "number",
+      _stIntegerType = "number",
+      _stStringType = "string"
+    }
 
 chinookFixture :: Fixture ChinookTestEnv
 chinookFixture =

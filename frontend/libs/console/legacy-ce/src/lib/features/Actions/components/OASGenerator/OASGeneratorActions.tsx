@@ -4,6 +4,8 @@ import clsx from 'clsx';
 import React from 'react';
 import { FaChevronDown, FaExternalLinkAlt } from 'react-icons/fa';
 import { Operation } from './types';
+import globals from '../../../../Globals';
+import { normalizeOperationId } from './utils';
 
 export interface OasGeneratorActionsProps {
   operation: Operation;
@@ -50,7 +52,9 @@ export const OasGeneratorActions: React.FC<
                 size="sm"
                 onClick={e => {
                   window.open(
-                    `/actions/manage/${operation.operationId}/modify`,
+                    `${globals.urlPrefix}/actions/manage/${normalizeOperationId(
+                      operation.operationId
+                    )}/modify`,
                     '_blank'
                   );
                 }}

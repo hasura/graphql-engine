@@ -35,11 +35,12 @@ module Database.PG.Query.Connection
     PrepArg,
     prepare,
     execMulti,
-    execCmd,
     execQuery,
     lenientDecodeUtf8,
     PGErrInternal (..),
     PGStmtErrDetail (..),
+    describePrepared,
+    PreparedDescription (..),
   )
 where
 
@@ -123,11 +124,11 @@ type PGError = Either PGErrInternal PGConnErr
 type PGExec a = ExceptT PGError IO a
 
 throwPGIntErr ::
-  MonadError PGError m => PGErrInternal -> m a
+  (MonadError PGError m) => PGErrInternal -> m a
 throwPGIntErr = throwError . Left
 
 throwPGConnErr ::
-  MonadError PGError m => PGConnErr -> m a
+  (MonadError PGError m) => PGConnErr -> m a
 throwPGConnErr = throwError . Right
 
 readConnErr :: PQ.Connection -> IO Text
@@ -415,7 +416,7 @@ cancelOnAsync conn action = do
         `catch` (\(PGCancelErr msg) -> throwPGIntErr $ PGIUnexpected $ "error cancelling query: " <> msg)
 
 mkPGRetryPolicy ::
-  MonadIO m =>
+  (MonadIO m) =>
   -- | number of retries
   Int ->
   PGRetryPolicyM m
@@ -529,7 +530,6 @@ instance ToJSON PGErrInternal where
   toJSON (PGIUnexpected msg) = toJSON msg
   toJSON (PGIStatement errDetail) = toJSON errDetail
 
-{-# INLINE execQuery #-}
 execQuery ::
   PGConn ->
   PGQuery a ->
@@ -555,7 +555,6 @@ execQuery pgConn pgQuery = do
       mRes <- run $ PQ.execPrepared conn rk vl PQ.Binary
       checkResult conn mRes
 
-{-# INLINE execMulti #-}
 execMulti ::
   PGConn ->
   Template ->
@@ -571,16 +570,38 @@ execMulti pgConn (Template t) convF = do
   where
     PGConn conn _ cancelable _ _ _ _ _ _ = pgConn
 
-{-# INLINE execCmd #-}
-execCmd ::
+-- | Extract the description of a prepared statement.
+describePrepared ::
   PGConn ->
-  Template ->
-  ExceptT PGErrInternal IO ()
-execCmd pgConn (Template t) =
-  retryOnConnErr pgConn $ do
+  ByteString ->
+  ExceptT PGErrInternal IO (PreparedDescription PQ.Oid)
+describePrepared pgConn name = do
+  resOk <- retryOnConnErr pgConn $ do
     mRes <-
-      bool lift (cancelOnAsync conn) cancelable $
-        PQ.execParams conn t [] PQ.Binary
-    assertResCmd conn mRes
-  where
-    PGConn conn _ cancelable _ _ _ _ _ _ = pgConn
+      bool lift (cancelOnAsync (pgPQConn pgConn)) (pgCancel pgConn) $
+        PQ.describePrepared (pgPQConn pgConn) name
+    checkResult (pgPQConn pgConn) mRes
+
+  let res = getPQRes resOk
+  lift $ do
+    numberOfParams <- PQ.nparams res
+    numberOfFields <- PQ.nfields res
+    PreparedDescription
+      <$> traverse (PQ.paramtype res) [0 .. (numberOfParams - 1)]
+      <*> traverse
+        ( \i ->
+            (,)
+              <$> PQ.fname res i
+              <*> PQ.ftype res i
+        )
+        [0 .. (numberOfFields - 1)]
+
+-- | The description of a prepared statement.
+--   See "PQdescribePrepared" in <https://www.postgresql.org/docs/current/libpq-exec.html> for more information.
+data PreparedDescription typ = PreparedDescription
+  { -- | input parameters
+    pd_paramtype :: [typ],
+    -- | output columns
+    pd_fname_ftype :: [(Maybe ByteString, typ)]
+  }
+  deriving stock (Eq, Show)

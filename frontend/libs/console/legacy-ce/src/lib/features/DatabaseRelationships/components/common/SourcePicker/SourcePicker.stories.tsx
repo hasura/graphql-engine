@@ -2,7 +2,7 @@ import React from 'react';
 import { z } from 'zod';
 import { action } from '@storybook/addon-actions';
 import { FaArrowAltCircleRight } from 'react-icons/fa';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { SimpleForm } from '../../../../../new-components/Form';
 import { SourcePicker } from './SourcePicker';
@@ -12,7 +12,7 @@ import { mapItemsToSourceOptions } from './SourcePicker.utils';
 export default {
   component: SourcePicker,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof SourcePicker>;
+} as Meta<typeof SourcePicker>;
 
 const items: SourceSelectorItem[] = [
   {
@@ -30,7 +30,7 @@ const items: SourceSelectorItem[] = [
 
 const validationSchema = z.any({});
 
-export const Basic: ComponentStory<typeof SourcePicker> = () => (
+export const Basic: StoryFn<typeof SourcePicker> = () => (
   <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
     <SourcePicker
       name="from"
@@ -42,7 +42,7 @@ export const Basic: ComponentStory<typeof SourcePicker> = () => (
 );
 
 const defaultValue = mapItemsToSourceOptions([items[0]])[0];
-export const Preselected: ComponentStory<typeof SourcePicker> = () => {
+export const Preselected: StoryFn<typeof SourcePicker> = () => {
   return (
     <SimpleForm
       schema={validationSchema}

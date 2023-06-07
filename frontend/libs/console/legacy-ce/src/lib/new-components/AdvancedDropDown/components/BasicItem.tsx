@@ -6,12 +6,21 @@ export const BasicItem: React.FC<{
   disabled?: boolean;
   onClick?: () => void;
   dangerous?: boolean;
-}> = ({ disabled, onClick, children, dangerous }) => (
-  <DropdownMenu.Item
-    disabled={disabled}
-    className="group/item outline-none cursor-pointer"
-    onClick={onClick}
-  >
-    <StyleWrappers.Item dangerous={dangerous}>{children}</StyleWrappers.Item>
-  </DropdownMenu.Item>
-);
+  link?: boolean;
+  query?: string;
+}> = ({ disabled, onClick, children, dangerous, link, query }) => {
+  if (typeof children === 'string' && !!query && !children.includes(query)) {
+    return null;
+  }
+  return (
+    <DropdownMenu.Item
+      disabled={disabled}
+      className="group/item outline-none cursor-pointer"
+      onClick={onClick}
+    >
+      <StyleWrappers.Item dangerous={dangerous} link={link}>
+        {children}
+      </StyleWrappers.Item>
+    </DropdownMenu.Item>
+  );
+};

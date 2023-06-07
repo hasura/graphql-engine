@@ -24,7 +24,7 @@ data ResourceLimits = ResourceLimits
   }
 
 -- | Monads which support resource (memory, CPU time, etc.) limiting
-class Monad m => HasResourceLimits m where
+class (Monad m) => HasResourceLimits m where
   askHTTPHandlerLimit :: m ResourceLimits
   askGraphqlOperationLimit :: HGE.RequestId -> UserInfo -> ApiLimit -> m ResourceLimits
 
@@ -42,8 +42,8 @@ class Monad m => HasResourceLimits m where
     m ResourceLimits
   askGraphqlOperationLimit reqId userInfo apiLimit = lift $ askGraphqlOperationLimit reqId userInfo apiLimit
 
-instance HasResourceLimits m => HasResourceLimits (ReaderT r m)
+instance (HasResourceLimits m) => HasResourceLimits (ReaderT r m)
 
-instance HasResourceLimits m => HasResourceLimits (ExceptT e m)
+instance (HasResourceLimits m) => HasResourceLimits (ExceptT e m)
 
-instance HasResourceLimits m => HasResourceLimits (Tracing.TraceT m)
+instance (HasResourceLimits m) => HasResourceLimits (Tracing.TraceT m)

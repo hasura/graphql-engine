@@ -1,7 +1,8 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 import React, { Component } from 'react';
 import GraphiQL from 'graphiql';
 import { connect } from 'react-redux';
-import { FaCheckCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
@@ -25,6 +26,7 @@ import {
 import { showErrorNotification } from '../../Common/Notification';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { getActionsCreateRoute } from '../../../Common/utils/routesUtils';
+import { getQueryResponseCachingRoute } from '../../../../utils/routeUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   setActionDefinition,
@@ -33,7 +35,9 @@ import {
 } from '../../Actions/Add/reducer';
 import { getGraphQLEndpoint } from '../utils';
 import snippets from './snippets';
-import { canAccessCacheButton } from '../../../../utils/permissions';
+import globals from '../../../../Globals';
+import { WithEELiteAccess } from '../../../../features/EETrial';
+import { isProConsole } from '../../../../utils/proConsole';
 
 import './GraphiQL.css';
 import _push from '../../Data/push';
@@ -41,6 +45,10 @@ import { isQueryValid } from '../Rest/utils';
 import { LS_KEYS, setLSItem } from '../../../../utils/localStorage';
 import { CodeExporterEventTracer } from './CodeExporterEventTracer';
 import { trackGraphiQlToolbarButtonClick } from '../customAnalyticsEvents';
+import {
+  ResponseTimeWarning,
+  RESPONSE_TIME_CACHE_WARNING,
+} from './ResponseTimeWarning';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -91,8 +99,14 @@ class GraphiQLWrapper extends Component {
     } = this.props;
     const { codeExporterOpen, requestTrackingId } = this.state;
     const graphqlNetworkData = this.props.data;
-    const { responseTime, responseSize, isResponseCached, responseTrackingId } =
-      this.props.response;
+    const {
+      responseTime,
+      responseSize,
+      isResponseCached,
+      responseTrackingId,
+      cacheWarning,
+      isRequestCachable,
+    } = this.props.response;
 
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {
@@ -188,11 +202,42 @@ class GraphiQLWrapper extends Component {
     const _toggleCacheDirective = () => {
       trackGraphiQlToolbarButtonClick('Cache');
 
-      const editor = graphiqlContext.getQueryEditor();
-      const operationString = editor.getValue();
-      const cacheToggledOperationString = toggleCacheDirective(operationString);
-      editor.setValue(cacheToggledOperationString);
+      try {
+        const editor = graphiqlContext.getQueryEditor();
+        const operationString = editor.getValue();
+        const cacheToggledOperationString =
+          toggleCacheDirective(operationString);
+        editor.setValue(cacheToggledOperationString);
+      } catch {
+        // throw a generic error
+        throw new Error(
+          'Caching directives can only be added to valid GraphQL queries.'
+        );
+      }
     };
+
+    const _addCacheDirective = () => {
+      try {
+        const editor = graphiqlContext.getQueryEditor();
+        const operationString = editor.getValue();
+        const cacheToggledOperationString = toggleCacheDirective(
+          operationString,
+          true
+        );
+        editor.setValue(cacheToggledOperationString);
+      } catch {
+        // throw a generic error
+        throw new Error(
+          'Caching directives can only be added to valid GraphQL queries.'
+        );
+      }
+    };
+
+    const shouldShowResponseTimeWarning =
+      isRequestCachable &&
+      responseTime > RESPONSE_TIME_CACHE_WARNING &&
+      !isResponseCached &&
+      !cacheWarning;
 
     const renderGraphiqlFooter = responseTime &&
       responseTrackingId === requestTrackingId && (
@@ -202,6 +247,9 @@ class GraphiQLWrapper extends Component {
               Response Time
             </span>
             <span className="text-sm text-black mr-md">{responseTime} ms</span>
+            {shouldShowResponseTimeWarning && (
+              <ResponseTimeWarning onAddCacheDirective={_addCacheDirective} />
+            )}
             {responseSize && (
               <>
                 <span className="text-xs text-[#777777] mr-sm uppercase font-semibold">
@@ -225,6 +273,20 @@ class GraphiQLWrapper extends Component {
                 <FaCheckCircle className="text-[#008000]" />
               </>
             )}
+            {!isResponseCached && cacheWarning && (
+              <>
+                <span className="text-xs text-[#777777] font-semibold uppercase">
+                  Not Cached
+                </span>
+                <ToolTip
+                  message={`Response not cached due to: "${cacheWarning}"`}
+                  placement="top"
+                  tooltipStyle="text-yellow-600"
+                >
+                  <FaExclamationTriangle className="text-yellow-600 mb-1" />
+                </ToolTip>
+              </>
+            )}
           </div>
         </GraphiQL.Footer>
       );
@@ -237,7 +299,7 @@ class GraphiQLWrapper extends Component {
       }
 
       // get toolbar buttons
-      const getGraphiqlButtons = () => {
+      const getGraphiqlButtons = eeLiteAccess => {
         const routeToREST = createRouteToREST(graphiqlProps);
 
         const buttons = [
@@ -262,8 +324,18 @@ class GraphiQLWrapper extends Component {
           {
             label: 'Cache',
             title: 'Cache the response of this query',
-            onClick: _toggleCacheDirective,
-            hide: !canAccessCacheButton(),
+            onClick: () => {
+              if (eeLiteAccess === 'active' || isProConsole(globals)) {
+                // toggle cache directive only if it is cloud/ee-classic/ee-lite-active
+                _toggleCacheDirective();
+              } else {
+                // send to the query-response-caching page if the EE lite trial isn't active
+                if (eeLiteAccess !== 'forbidden') {
+                  dispatch(_push(getQueryResponseCachingRoute()));
+                }
+              }
+            },
+            hide: !isProConsole(globals) && eeLiteAccess === 'forbidden',
           },
           {
             label: 'Code Exporter',
@@ -306,7 +378,11 @@ class GraphiQLWrapper extends Component {
           >
             <GraphiQL.Logo>GraphiQL</GraphiQL.Logo>
             <GraphiQL.Toolbar>
-              {getGraphiqlButtons()}
+              <WithEELiteAccess globals={globals}>
+                {({ access: eeLiteAccess }) => {
+                  return getGraphiqlButtons(eeLiteAccess);
+                }}
+              </WithEELiteAccess>
               <AnalyzeButton
                 operations={graphiqlContext && graphiqlContext.state.operations}
                 analyzeFetcher={analyzeFetcherInstance}

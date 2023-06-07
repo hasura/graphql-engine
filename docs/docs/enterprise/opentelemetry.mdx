@@ -16,11 +16,12 @@ sidebar_position: 4
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Export Traces to OpenTelemetry Compliant Receiver
 
 <div className="badge-container">
-  <div className="badge badge--primary heading-badge">Available on: Self-hosted Enterprise</div>
+  <ProductBadge self />
   <div className="badge badge-gray heading-badge">Beta</div>
 </div>
 
@@ -184,14 +185,59 @@ Example using Console:
   width="745px"
 />
 
-## Understanding traces
+Your observability tool may expect to receive certain resource attributes in order to provide full functionality; such
+resource attributes must be set with this parameter. Many, but not all, of these resource attributes will be
+[OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/concepts/semantic-conventions/).
 
-Use your observability tool's UI to visualize and perform further analytics on trace data to monitor, diagnose and
-troubleshoot your application. Traces and their spans are listed out and selecting a trace shows a flame graph
-containing a visual representation of where the operation spent its execution time.
+Hasura automatically sets some resource attributes. The values of such attributes can be overridden by specifying your
+own value for the attribute using this parameter.
 
-For example, the image below shows a flame graph in [Jaeger](https://www.jaegertracing.io/) where a query took 5.64
-milliseconds in total, of which 2.78 milliseconds was the actual Postgres database processing the query.
+#### Default resource attributes
+
+| Attribute                                                                                                    | Type   | Default  |
+| ------------------------------------------------------------------------------------------------------------ | ------ | -------- |
+| [service.name](https://opentelemetry.io/docs/reference/specification/resource/semantic_conventions/#service) | string | `hasura` |
+
+:::info Attribute type support
+
+Hasura currently only supports string-valued attributes.
+
+:::
+
+## Consuming and visualizing traces
+
+You can utilize your observability tool's UI to visualize and perform further analytics on trace data to monitor,
+diagnose and troubleshoot your application. Typically, traces and their spans are listed out and selecting a trace shows
+a flame graph containing a visual representation of where the operation spent its execution time. Below, we provide some
+examples of how to consume and visualize traces using popular observability tools.
+
+### Jaeger
+
+To use [Jaeger](https://www.jaegertracing.io/), simply add this to your `docker-compose.yaml`:
+
+```yaml
+jaeger:
+  image: jaegertracing/all-in-one:1.37
+  restart: always
+  ports:
+    - 5775:5775/udp
+    - 6831:6831/udp
+    - 6832:6832/udp
+    - 5778:5778
+    - 4002:16686
+    - 14250:14250
+    - 14268:14268
+    - 14269:14269
+    - 4317:4317 # OTLP gRPC
+    - 4318:4318 # OTLP HTTP
+    - 9411:9411
+  environment:
+    COLLECTOR_OTLP_ENABLED: 'true'
+    COLLECTOR_ZIPKIN_HOST_PORT: '9411'
+```
+
+The image below shows a flame graph in Jaeger where a query took 5.64 milliseconds in total, of which 2.78 milliseconds
+was the actual Postgres database processing the query.
 
 <Thumbnail
   src="/img/observability/jaeger-trace-flame-graph.png"
@@ -199,10 +245,10 @@ milliseconds in total, of which 2.78 milliseconds was the actual Postgres databa
   width="1146px"
 />
 
-## OpenTelemetry Collector
+### OpenTelemetry Collector
 
-OpenTelemetry provides a [Collector](https://opentelemetry.io/docs/collector/) that can export OpenTelemetry data to
-observability tools that do not support native OpenTelemetry ingestion.
+OpenTelemetry provides the [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) that can export
+OpenTelemetry data to observability tools that do not support native OpenTelemetry ingestion.
 
 To work with such observability tools, Hasura's OpenTelemetry integration can be configured to send OpenTelemetry data
 to the collector.

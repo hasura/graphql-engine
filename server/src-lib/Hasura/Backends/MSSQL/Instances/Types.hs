@@ -18,11 +18,11 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.Update.Batch (UpdateBatch)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (TriggerOnReplication (..))
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (..))
-import Hasura.RQL.Types.ResizePool (ServerReplicas)
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.ResizePool (ServerReplicas, SourceResizePoolSummary (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'MSSQL where
@@ -64,8 +64,8 @@ instance Backend 'MSSQL where
 
   type HealthCheckTest 'MSSQL = HealthCheckTestSql
   healthCheckImplementation =
-    Just $
-      HealthCheckImplementation
+    Just
+      $ HealthCheckImplementation
         { _hciDefaultTest = defaultHealthCheckTestSql,
           _hciTestCodec = codec
         }
@@ -90,7 +90,7 @@ instance Backend 'MSSQL where
   functionToTable = error "Unexpected MSSQL error: calling functionToTable. Please report this error at https://github.com/hasura/graphql-engine/issues/6590"
 
   tableToFunction :: TableName 'MSSQL -> FunctionName 'MSSQL
-  tableToFunction = MSSQL.FunctionName . MSSQL.tableName
+  tableToFunction tn = MSSQL.FunctionName (MSSQL.tableName tn) (MSSQL.tableSchema tn)
 
   tableGraphQLName :: TableName 'MSSQL -> Either QErr G.Name
   tableGraphQLName = MSSQL.getGQLTableName
@@ -99,7 +99,7 @@ instance Backend 'MSSQL where
   functionGraphQLName = error "Unexpected MSSQL error: calling functionGraphQLName. Please report this error at https://github.com/hasura/graphql-engine/issues/6590"
 
   snakeCaseTableName :: TableName 'MSSQL -> Text
-  snakeCaseTableName = MSSQL.snakeCaseTableName
+  snakeCaseTableName tn = MSSQL.snakeCaseName (MSSQL.tableName tn) (MSSQL.tableSchema tn)
 
   getTableIdentifier :: TableName 'MSSQL -> Either QErr GQLNameIdentifier
   getTableIdentifier = MSSQL.getTableIdentifier
@@ -116,12 +116,14 @@ instance Backend 'MSSQL where
   fromComputedFieldImplicitArguments :: v -> ComputedFieldImplicitArguments 'MSSQL -> [FunctionArgumentExp 'MSSQL v]
   fromComputedFieldImplicitArguments _ = absurd
 
-  resizeSourcePools :: SourceConfig 'MSSQL -> ServerReplicas -> IO ()
-  resizeSourcePools sourceConfig =
-    MSSQL.mssqlResizePools (MSSQL._mscExecCtx sourceConfig)
+  resizeSourcePools :: SourceConfig 'MSSQL -> ServerReplicas -> IO SourceResizePoolSummary
+  resizeSourcePools sourceConfig = MSSQL.mssqlResizePools (MSSQL._mscExecCtx sourceConfig)
 
   defaultTriggerOnReplication = Just ((), TOREnableTrigger)
 
 instance HasSourceConfiguration 'MSSQL where
   type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
+  sourceConfigNumReadReplicas = MSSQL._mscReadReplicas
+  sourceConfigConnectonTemplateEnabled = const False -- not supported
+  sourceConfigBackendSourceKind _sourceConfig = MSSQLKind

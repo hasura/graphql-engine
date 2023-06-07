@@ -5,14 +5,17 @@ module Hasura.Base.ToErrorValue
   )
 where
 
-import Data.Aeson qualified as Aeson
-import Data.Aeson.Key qualified as Aeson.Key
-import Data.Aeson.Text qualified as Aeson
+import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as J.Key
+import Data.Aeson.Text qualified as J
+import Data.Foldable (fold)
 import Data.HashSet (HashSet)
 import Data.HashSet qualified as HashSet
 import Data.List qualified as List
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NonEmpty
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Text.Lazy qualified as Text.Lazy
 import Data.Void (Void, absurd)
 import Hasura.Base.ErrorMessage
@@ -34,21 +37,25 @@ instance ToErrorValue () where
 
 -- | Wraps a list of values with brackets and separates the values with commas.
 --   For example:
--- > [Aeson.Number 1, Aeson.Bool True, Aeson.String "three"]
+-- > [J.Number 1, J.Bool True, J.String "three"]
 --   Will be printed as:
 -- > "[1, true, \"three\"]"
-instance ToErrorValue a => ToErrorValue [a] where
+instance (ToErrorValue a) => ToErrorValue [a] where
   toErrorValue values = "[" <> commaSeparatedValues <> "]"
     where
-      commaSeparatedValues = foldr1 (<>) $ List.intersperse (toErrorMessage ", ") (map toErrorValue values)
+      commaSeparatedValues = fold $ List.intersperse (toErrorMessage ", ") (map toErrorValue values)
 
 -- | Will be printed as a list
-instance ToErrorValue a => ToErrorValue (NonEmpty a) where
+instance (ToErrorValue a) => ToErrorValue (NonEmpty a) where
   toErrorValue = toErrorValue . NonEmpty.toList
 
 -- | Will be printed as a list
-instance ToErrorValue a => ToErrorValue (HashSet a) where
+instance (ToErrorValue a) => ToErrorValue (HashSet a) where
   toErrorValue = toErrorValue . HashSet.toList
+
+-- | Will be printed as a list
+instance (ToErrorValue a) => ToErrorValue (Set a) where
+  toErrorValue = toErrorValue . Set.toList
 
 -- | Will be printed with single quotes surrounding it
 instance ToErrorValue G.Name where
@@ -58,8 +65,8 @@ instance ToErrorValue G.Name where
 instance ToErrorValue G.GType where
   toErrorValue = squote . G.showGT
 
-instance ToErrorValue Aeson.Key where
-  toErrorValue = dquote . Aeson.Key.toText
+instance ToErrorValue J.Key where
+  toErrorValue = dquote . J.Key.toText
 
-instance ToErrorValue Aeson.Value where
-  toErrorValue = toErrorMessage . Text.Lazy.toStrict . Aeson.encodeToLazyText
+instance ToErrorValue J.Value where
+  toErrorValue = toErrorMessage . Text.Lazy.toStrict . J.encodeToLazyText

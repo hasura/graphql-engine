@@ -1,19 +1,20 @@
 {
+  "name": "console-legacy-ce",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/console/legacy-ce/src",
   "projectType": "library",
-  "tags": ["legacy"],
+  "tags": ["scope:console", "type:feature", "meta:legacy"],
   "targets": {
     "lint": {
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["libs/console/legacy-ce/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": ["libs/console/legacy-ce/**/*.{ts,tsx,js,jsx,json}"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/libs/console/legacy-ce"],
+      "outputs": ["{workspaceRoot}/coverage/libs/console/legacy-ce"],
       "options": {
         "jestConfig": "libs/console/legacy-ce/jest.config.ts",
         "passWithNoTests": true
@@ -22,11 +23,8 @@
     "storybook": {
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "uiFramework": "@storybook/react",
         "port": 4400,
-        "config": {
-          "configFolder": "libs/console/legacy-ce/.storybook"
-        }
+        "configDir": "libs/console/legacy-ce/.storybook"
       },
       "configurations": {
         "ci": {
@@ -36,13 +34,10 @@
     },
     "build-storybook": {
       "executor": "@nrwl/storybook:build",
-      "outputs": ["{options.outputPath}"],
+      "outputs": ["{options.outputDir}"],
       "options": {
-        "uiFramework": "@storybook/react",
-        "outputPath": "dist/storybook/console/legacy-ce",
-        "config": {
-          "configFolder": "libs/console/legacy-ce/.storybook"
-        }
+        "configDir": "libs/console/legacy-ce/.storybook",
+        "outputDir": "dist/storybook/console/legacy-ce"
       },
       "configurations": {
         "ci": {

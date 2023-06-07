@@ -8,7 +8,7 @@ export const getTrackableTables = async (props: GetTrackableTablesProps) => {
     const result = await runMetadataQuery<GDCTable[]>({
       httpClient,
       body: {
-        type: 'get_source_tables',
+        type: 'dataconnector_get_source_tables',
         args: {
           source: dataSourceName,
         },
@@ -17,7 +17,7 @@ export const getTrackableTables = async (props: GetTrackableTablesProps) => {
 
     const tables = result.map(table => {
       /**
-       * Ideally each table is suppososed to be GDCTable, but the server fix has not yet been merged to main.
+       * Ideally each table is supposed to be GDCTable, but the server fix has not yet been merged to main.
        * Right now it returns string as a table.
        */
       let name = '';

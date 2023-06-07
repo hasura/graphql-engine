@@ -1,16 +1,14 @@
-import React from 'react';
-import { DecoratorFn } from '@storybook/react';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import merge from 'lodash.merge';
-
-import { RootState } from '../../store';
+import merge from 'lodash/merge';
+import { Provider } from 'react-redux';
 import reducer from '../../reducer';
+import { RootState } from '../../store';
 import { DeepPartial } from '../../types';
+import { Decorator } from '@storybook/react';
 
 export const ReduxDecorator = (
   mockValues: DeepPartial<RootState>
-): DecoratorFn => {
+): Decorator => {
   // Dispatch manually inside reducer with undefined as state and a action that shouldn't be used
   // So we have the base state of the app
   const baseState = reducer(undefined, { type: '@@INIT_MOCK_STORYBOOK@@' });

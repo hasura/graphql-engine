@@ -7,7 +7,7 @@ export const generateConnectionInfo = (
   values: MssqlConnectionSchema['configuration']['connectionInfo']
 ) => {
   return {
-    database_url:
+    connection_string:
       values.connectionString.connectionType === 'databaseUrl'
         ? values.connectionString.url
         : { from_env: values.connectionString.envVar },

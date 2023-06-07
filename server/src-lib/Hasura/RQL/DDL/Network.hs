@@ -14,8 +14,8 @@ import Hasura.Metadata.Class ()
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
-import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.SchemaCache.Build
+import Network.Types.Extended
 
 runAddHostToTLSAllowlist ::
   (QErrM m, CacheRWM m, MetadataM m) =>
@@ -30,15 +30,21 @@ runAddHostToTLSAllowlist tlsAllowListEntry@TlsAllow {..} = do
   when (checkForHostWithSuffixInTLSAllowlist taHost taSuffix (tlsList networkMetadata)) $ do
     case taSuffix of
       Nothing ->
-        throw400 AlreadyExists $
-          "the host " <> dquote (pack taHost) <> " already exists in the allowlist"
+        throw400 AlreadyExists
+          $ "the host "
+          <> dquote (pack taHost)
+          <> " already exists in the allowlist"
       Just suffix ->
-        throw400 AlreadyExists $
-          "the host " <> dquote (pack taHost) <> " with suffix " <> dquote (pack suffix) <> " already exists in the allowlist"
+        throw400 AlreadyExists
+          $ "the host "
+          <> dquote (pack taHost)
+          <> " with suffix "
+          <> dquote (pack suffix)
+          <> " already exists in the allowlist"
 
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      addHostToTLSAllowList tlsAllowListEntry
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ addHostToTLSAllowList tlsAllowListEntry
 
   pure successMsg
   where
@@ -57,15 +63,21 @@ runDropHostFromTLSAllowlist (DropHostFromTLSAllowlist hostname maybeSuffix) = do
   unless (checkForHostWithSuffixInTLSAllowlist hostname maybeSuffix (networkTlsAllowlist networkMetadata)) $ do
     case maybeSuffix of
       Nothing ->
-        throw400 NotExists $
-          "the host " <> dquote (pack hostname) <> " isn't present in the allowlist"
+        throw400 NotExists
+          $ "the host "
+          <> dquote (pack hostname)
+          <> " isn't present in the allowlist"
       Just suffix ->
-        throw400 NotExists $
-          "the host " <> dquote (pack hostname) <> " with suffix " <> dquote (pack suffix) <> " isn't present in the allowlist"
+        throw400 NotExists
+          $ "the host "
+          <> dquote (pack hostname)
+          <> " with suffix "
+          <> dquote (pack suffix)
+          <> " isn't present in the allowlist"
 
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      dropHostFromAllowList hostname maybeSuffix
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ dropHostFromAllowList hostname maybeSuffix
 
   pure successMsg
 

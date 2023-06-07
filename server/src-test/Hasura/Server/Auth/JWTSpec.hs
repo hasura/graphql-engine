@@ -81,7 +81,7 @@ determineJwkExpiryLifetimeTests = describe "determineJwkExpiryLifetime" $ do
     result <- determineJwkExpiryLifetime' [expires, cacheControl]
     result `shouldBe` (Left ())
 
-determineJwkExpiryLifetime' :: MonadIO m => ResponseHeaders -> m (Either () (Maybe UTCTime))
+determineJwkExpiryLifetime' :: (MonadIO m) => ResponseHeaders -> m (Either () (Maybe UTCTime))
 determineJwkExpiryLifetime' headers =
   discardJwkFetchError <$> runExceptT (JWT.determineJwkExpiryLifetime (pure currentTimeForTest) voidLogger headers)
 

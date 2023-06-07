@@ -3,75 +3,37 @@
 
 -- | Constant configurations used throughout the test suite.
 module Constants
-  ( postgresqlMetadataConnectionString,
-    serveOptions,
+  ( serveOptions,
   )
 where
 
 -------------------------------------------------------------------------------
 
 import Data.HashSet qualified as Set
-import Data.Word (Word16)
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
   ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),
     OptionalInterval (..),
-    ResponseInternalErrorsConfig (..),
     ServeOptions (..),
   )
 import Hasura.Server.Init qualified as Init
 import Hasura.Server.Logging (MetadataQueryLoggingMode (MetadataQueryLoggingDisabled))
 import Hasura.Server.Types
-  ( EventingMode (EventingEnabled),
+  ( ApolloFederationStatus (ApolloFederationDisabled),
+    EventingMode (EventingEnabled),
     ExperimentalFeature (..),
     MaintenanceMode (MaintenanceModeDisabled),
     ReadOnlyMode (ReadOnlyModeDisabled),
   )
 import Network.WebSockets qualified as WS
 import Refined (refineTH)
-
--------------------------------------------------------------------------------
-
--- * Postgres metadata DB
-
--- To allow us to test different Postgres flavours,
--- we have separate connection details for the metadata DB
--- (which should always be Postgres) and other Postgres (which
--- might actually be Yugabyte, etc)
-postgresMetadataPassword :: String
-postgresMetadataPassword = "hasura"
-
-postgresMetadataUser :: String
-postgresMetadataUser = "hasura"
-
-postgresMetadataDb :: String
-postgresMetadataDb = "hasura_metadata"
-
-postgresMetadataHost :: String
-postgresMetadataHost = "127.0.0.1"
-
-postgresMetadataPort :: Word16
-postgresMetadataPort = 65002
-
-postgresqlMetadataConnectionString :: String
-postgresqlMetadataConnectionString =
-  "postgres://"
-    <> postgresMetadataUser
-    <> ":"
-    <> postgresMetadataPassword
-    <> "@"
-    <> postgresMetadataHost
-    <> ":"
-    <> show postgresMetadataPort
-    <> "/"
-    <> postgresMetadataDb
 
 -- * Server configuration
 
@@ -95,7 +57,7 @@ serveOptions =
       soUnAuthRole = Nothing,
       soCorsConfig = CCAllowAll,
       soConsoleStatus = Init.ConsoleEnabled,
-      soConsoleAssetsDir = Just "../../../frontend/dist/apps/server-assets-console-ce",
+      soConsoleAssetsDir = Just "../../frontend/dist/apps/server-assets-console-ce",
       soConsoleSentryDsn = Nothing,
       soEnableTelemetry = Init.TelemetryDisabled,
       soStringifyNum = Options.Don'tStringifyNumbers,
@@ -106,7 +68,6 @@ serveOptions =
       soEnableAllowList = Init.AllowListDisabled,
       soEnabledLogTypes = Set.fromList L.userAllowedLogTypes,
       soLogLevel = fromMaybe (L.LevelOther "test-suite") engineLogLevel,
-      soResponseInternalErrorsConfig = InternalErrorsAllRequests,
       soEventsHttpPoolSize = Init._default Init.graphqlEventsHttpPoolSizeOption,
       soEventsFetchInterval = Init._default Init.graphqlEventsFetchIntervalOption,
       soAsyncActionsFetchInterval = Skip,
@@ -120,6 +81,7 @@ serveOptions =
       soExperimentalFeatures = Set.fromList [EFStreamingSubscriptions, EFBigQueryStringNumericInput],
       soEventsFetchBatchSize = $$(refineTH 1),
       soDevMode = Init.DevModeEnabled,
+      soAdminInternalErrors = Init.AdminInternalErrorsEnabled,
       soGracefulShutdownTimeout = $$(refineTH 0), -- Don't wait to shutdown.
       soWebSocketConnectionInitTimeout = Init._default Init.webSocketConnectionInitTimeoutOption,
       soEventingMode = EventingEnabled,
@@ -127,7 +89,8 @@ serveOptions =
       soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled,
       soDefaultNamingConvention = Init._default Init.defaultNamingConventionOption,
       soExtensionsSchema = ExtensionsSchema "public",
-      soMetadataDefaults = emptyMetadataDefaults
+      soMetadataDefaults = emptyMetadataDefaults,
+      soApolloFederationStatus = ApolloFederationDisabled
     }
 
 -- | What log level should be used by the engine; this is not exported, and

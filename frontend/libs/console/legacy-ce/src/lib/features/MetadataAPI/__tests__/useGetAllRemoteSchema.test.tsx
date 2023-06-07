@@ -140,13 +140,13 @@ describe('The useGetAllRemoteRelationship hook', () => {
     expect(
       (result.current as UseQueryResult<Record<string, unknown>, Error>).data
     ).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "relationships": Array [
-            Object {
-              "definition": Object {
-                "to_source": Object {
-                  "field_mapping": Object {
+      [
+        {
+          "relationships": [
+            {
+              "definition": {
+                "to_source": {
+                  "field_mapping": {
                     "code": "id",
                   },
                   "relationship_type": "object",
@@ -156,15 +156,15 @@ describe('The useGetAllRemoteRelationship hook', () => {
               },
               "name": "an_example_rs_to_db_relationship",
             },
-            Object {
-              "definition": Object {
-                "to_remote_schema": Object {
-                  "lhs_fields": Array [
+            {
+              "definition": {
+                "to_remote_schema": {
+                  "lhs_fields": [
                     "code",
                   ],
-                  "remote_field": Object {
-                    "pokemons": Object {
-                      "arguments": Object {},
+                  "remote_field": {
+                    "pokemons": {
+                      "arguments": {},
                     },
                   },
                   "remote_schema": "destination_remote_schema",
@@ -172,15 +172,15 @@ describe('The useGetAllRemoteRelationship hook', () => {
               },
               "name": "test_rel",
             },
-            Object {
-              "definition": Object {
-                "to_remote_schema": Object {
-                  "lhs_fields": Array [
+            {
+              "definition": {
+                "to_remote_schema": {
+                  "lhs_fields": [
                     "code",
                   ],
-                  "remote_field": Object {
-                    "pokemons": Object {
-                      "arguments": Object {},
+                  "remote_field": {
+                    "pokemons": {
+                      "arguments": {},
                     },
                   },
                   "remote_schema": "destination_remote_schema",

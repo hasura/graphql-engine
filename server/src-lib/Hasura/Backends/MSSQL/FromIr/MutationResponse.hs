@@ -11,12 +11,12 @@ import Hasura.Backends.MSSQL.FromIr (FromIr)
 import Hasura.Backends.MSSQL.FromIr.Query (fromSelect)
 import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.Returning (MutationOutputG)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common qualified as IR
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.Schema.Options qualified as Options
 
 -- | Generate a SQL SELECT statement which outputs the mutation response
 --
@@ -106,8 +106,8 @@ selectMutationOutputAndCheckCondition alias mutationOutputSelect checkBoolExp =
         ExpressionProjection $ Aliased (SelectExpression mutationOutputSelect) "mutation_response"
       checkConstraintProjection =
         -- apply ISNULL() to avoid check constraint select statement yielding empty rows
-        ExpressionProjection $
-          Aliased (FunctionApplicationExpression $ FunExpISNULL (SelectExpression checkConstraintSelect) (ValueExpression (ODBC.IntValue 0))) "check_constraint_select"
+        ExpressionProjection
+          $ Aliased (FunctionApplicationExpression $ FunExpISNULL (SelectExpression checkConstraintSelect) (ValueExpression (ODBC.IntValue 0))) "check_constraint_select"
    in emptySelect {selectProjections = [mutationOutputProjection, checkConstraintProjection]}
   where
     checkConstraintSelect =
@@ -116,8 +116,8 @@ selectMutationOutputAndCheckCondition alias mutationOutputSelect checkBoolExp =
           sumAggregate =
             OpAggregate
               "SUM"
-              [ ColumnExpression $
-                  FieldName
+              [ ColumnExpression
+                  $ FieldName
                     { fieldNameEntity = subQueryAlias,
                       fieldName = checkEvaluationFieldName
                     }

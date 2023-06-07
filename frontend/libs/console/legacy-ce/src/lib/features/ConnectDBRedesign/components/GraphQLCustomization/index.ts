@@ -1,7 +1,5 @@
 export { GraphQLCustomization } from './GraphQLCustomization';
 export { adaptGraphQLCustomization } from './utils/adaptResponse';
 export { generateGraphQLCustomizationInfo } from './utils/generateRequest';
-export {
-  GraphQLCustomizationSchema,
-  graphQLCustomizationSchema,
-} from './schema';
+export { graphQLCustomizationSchema } from './schema';
+export type { GraphQLCustomizationSchema } from './schema';

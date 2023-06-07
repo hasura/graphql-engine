@@ -17,7 +17,7 @@ import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (duplicates)
 import Data.Text qualified as T
@@ -33,11 +33,12 @@ import Hasura.HTTP
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (makeHeadersFromConf)
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Server.Utils
 import Hasura.Services.Network
-import Hasura.Session
+import Hasura.Session (UserInfo, adminUserInfo, sessionVariablesToHeaders, _uiSession)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Parser qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -56,13 +57,12 @@ fetchRemoteSchema ::
   forall m.
   (MonadIO m, MonadError QErr m, Tracing.MonadTrace m, ProvidesNetwork m) =>
   Env.Environment ->
-  RemoteSchemaName ->
   ValidatedRemoteSchemaDef ->
   m (IntrospectionResult, BL.ByteString, RemoteSchemaInfo)
-fetchRemoteSchema env _rscName rsDef = do
+fetchRemoteSchema env rsDef = do
   (_, _, rawIntrospectionResult) <-
     execRemoteGQ env adminUserInfo [] rsDef introspectionQuery
-  (ir, rsi) <- stitchRemoteSchema rawIntrospectionResult _rscName rsDef
+  (ir, rsi) <- stitchRemoteSchema rawIntrospectionResult rsDef
   -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
   -- the introspection result of the remote server. We store this in the
   -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
@@ -74,10 +74,9 @@ fetchRemoteSchema env _rscName rsDef = do
 stitchRemoteSchema ::
   (MonadIO m, MonadError QErr m) =>
   BL.ByteString ->
-  RemoteSchemaName ->
   ValidatedRemoteSchemaDef ->
   m (IntrospectionResult, RemoteSchemaInfo)
-stitchRemoteSchema rawIntrospectionResult _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
+stitchRemoteSchema rawIntrospectionResult rsDef@ValidatedRemoteSchemaDef {..} = do
   -- Parse the JSON into flat GraphQL type AST.
   FromIntrospection _rscIntroOriginal <-
     J.eitherDecode rawIntrospectionResult `onLeft` (throwRemoteSchema . T.pack)
@@ -92,13 +91,13 @@ stitchRemoteSchema rawIntrospectionResult _rscName rsDef@ValidatedRemoteSchemaDe
   -- generation. The result is discarded, as the local schema will be built
   -- properly for each role at schema generation time, but this allows us to
   -- quickly reject an invalid schema.
-  void $
-    runMemoizeT $
-      runRemoteSchema minimumValidContext $
-        buildRemoteParser @_ @_ @Parse
-          _rscIntroOriginal
-          mempty -- remote relationships
-          remoteSchemaInfo
+  void
+    $ runMemoizeT
+    $ runRemoteSchema minimumValidContext
+    $ buildRemoteParser @_ @_ @Parse
+      _rscIntroOriginal
+      mempty -- remote relationships
+      remoteSchemaInfo
   return (_rscIntroOriginal, remoteSchemaInfo)
   where
     -- If there is no explicit mutation or subscription root type we need to check for
@@ -142,30 +141,30 @@ execRemoteGQ ::
 execRemoteGQ env userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
   let gqlReqUnparsed = renderGQLReqOutgoing gqlReq
 
-  when (G._todType _grQuery == G.OperationTypeSubscription) $
-    throwRemoteSchema "subscription to remote server is not supported"
+  when (G._todType _grQuery == G.OperationTypeSubscription)
+    $ throwRemoteSchema "subscription to remote server is not supported"
   confHdrs <- makeHeadersFromConf env hdrConf
   let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
       -- filter out duplicate headers
       -- priority: conf headers > resolved userinfo vars > client headers
       hdrMaps =
-        [ Map.fromList confHdrs,
-          Map.fromList userInfoToHdrs,
-          Map.fromList clientHdrs
+        [ HashMap.fromList confHdrs,
+          HashMap.fromList userInfoToHdrs,
+          HashMap.fromList clientHdrs
         ]
-      headers = Map.toList $ foldr Map.union Map.empty hdrMaps
+      headers = HashMap.toList $ foldr HashMap.union HashMap.empty hdrMaps
       finalHeaders = addDefaultHeaders headers
   initReq <- onLeft (HTTP.mkRequestEither $ tshow url) (throwRemoteSchemaHttp webhookEnvRecord)
   let req =
         initReq
           & set HTTP.method "POST"
           & set HTTP.headers finalHeaders
-          & set HTTP.body (Just $ J.encode gqlReqUnparsed)
+          & set HTTP.body (HTTP.RequestBodyLBS $ J.encode gqlReqUnparsed)
           & set HTTP.timeout (HTTP.responseTimeoutMicro (timeout * 1000000))
 
   manager <- askHTTPManager
-  Tracing.tracedHttpRequest req \req' -> do
-    (time, res) <- withElapsedTime $ liftIO $ try $ HTTP.performRequest req' manager
+  Tracing.traceHTTPRequest req \req' -> do
+    (time, res) <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req' manager
     resp <- onLeft res (throwRemoteSchemaHttp webhookEnvRecord)
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
@@ -178,7 +177,7 @@ execRemoteGQ env userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
 
 validateSchemaCustomizations ::
   forall m.
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   RemoteSchemaCustomizer ->
   RemoteSchemaIntrospection ->
   m ()
@@ -188,7 +187,7 @@ validateSchemaCustomizations remoteSchemaCustomizer remoteSchemaIntrospection = 
 
 validateSchemaCustomizationsConsistent ::
   forall m.
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   RemoteSchemaCustomizer ->
   RemoteSchemaIntrospection ->
   m ()
@@ -204,24 +203,24 @@ validateSchemaCustomizationsConsistent remoteSchemaCustomizer (RemoteSchemaIntro
           for_ _itdFieldsDefinition $ \G.FieldDefinition {..} -> do
             let interfaceCustomizedFieldName = runCustomizeRemoteFieldName customizeFieldName _itdName _fldName
                 typeCustomizedFieldName = runCustomizeRemoteFieldName customizeFieldName typeName _fldName
-            when (interfaceCustomizedFieldName /= typeCustomizedFieldName) $
-              throwRemoteSchema $
-                "Remote schema customization inconsistency: field name mapping for field "
-                  <> _fldName
-                    <<> " of interface "
-                  <> _itdName
-                    <<> " is inconsistent with mapping for type "
-                  <> typeName
-                    <<> ". Interface field name maps to "
-                  <> interfaceCustomizedFieldName
-                    <<> ". Type field name maps to "
-                  <> typeCustomizedFieldName
-                    <<> "."
+            when (interfaceCustomizedFieldName /= typeCustomizedFieldName)
+              $ throwRemoteSchema
+              $ "Remote schema customization inconsistency: field name mapping for field "
+              <> _fldName
+              <<> " of interface "
+              <> _itdName
+              <<> " is inconsistent with mapping for type "
+              <> typeName
+              <<> ". Interface field name maps to "
+              <> interfaceCustomizedFieldName
+              <<> ". Type field name maps to "
+              <> typeCustomizedFieldName
+              <<> "."
       _ -> pure ()
 
 validateSchemaCustomizationsDistinct ::
   forall m.
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   RemoteSchemaCustomizer ->
   RemoteSchemaIntrospection ->
   m ()
@@ -234,30 +233,30 @@ validateSchemaCustomizationsDistinct remoteSchemaCustomizer (RemoteSchemaIntrosp
 
     validateTypeMappingsAreDistinct :: m ()
     validateTypeMappingsAreDistinct = do
-      let dups = duplicates $ runMkTypename customizeTypeName <$> Map.keys typeDefinitions
-      unless (Set.null dups) $
-        throwRemoteSchema $
-          "Type name mappings are not distinct; the following types appear more than once: "
-            <> dquoteList dups
+      let dups = duplicates $ runMkTypename customizeTypeName <$> HashMap.keys typeDefinitions
+      unless (Set.null dups)
+        $ throwRemoteSchema
+        $ "Type name mappings are not distinct; the following types appear more than once: "
+        <> dquoteList dups
 
     validateFieldMappingsAreDistinct :: G.TypeDefinition a b -> m ()
     validateFieldMappingsAreDistinct = \case
       G.TypeDefinitionInterface G.InterfaceTypeDefinition {..} -> do
         let dups = duplicates $ customizeFieldName _itdName . G._fldName <$> _itdFieldsDefinition
-        unless (Set.null dups) $
-          throwRemoteSchema $
-            "Field name mappings for interface type "
-              <> _itdName
-                <<> " are not distinct; the following fields appear more than once: "
-              <> dquoteList dups
+        unless (Set.null dups)
+          $ throwRemoteSchema
+          $ "Field name mappings for interface type "
+          <> _itdName
+          <<> " are not distinct; the following fields appear more than once: "
+          <> dquoteList dups
       G.TypeDefinitionObject G.ObjectTypeDefinition {..} -> do
         let dups = duplicates $ customizeFieldName _otdName . G._fldName <$> _otdFieldsDefinition
-        unless (Set.null dups) $
-          throwRemoteSchema $
-            "Field name mappings for object type "
-              <> _otdName
-                <<> " are not distinct; the following fields appear more than once: "
-              <> dquoteList dups
+        unless (Set.null dups)
+          $ throwRemoteSchema
+          $ "Field name mappings for object type "
+          <> _otdName
+          <<> " are not distinct; the following fields appear more than once: "
+          <> dquoteList dups
       _ -> pure ()
 
 -------------------------------------------------------------------------------
@@ -404,7 +403,7 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
             types
         r =
           IntrospectionResult
-            (RemoteSchemaIntrospection $ Map.fromListOn getTypeName $ fromIntrospection <$> types')
+            (RemoteSchemaIntrospection $ HashMap.fromListOn getTypeName $ fromIntrospection <$> types')
             queryRoot
             mutationRoot
             subsRoot
@@ -427,14 +426,14 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
     nameFilter name = not $ "__" `T.isPrefixOf` G.unName name || name `Set.member` protectedTypeNames
 
     mkPrefixSuffixMap :: Maybe G.Name -> Maybe G.Name -> [G.Name] -> HashMap G.Name G.Name
-    mkPrefixSuffixMap mPrefix mSuffix names = Map.fromList $ case (mPrefix, mSuffix) of
+    mkPrefixSuffixMap mPrefix mSuffix names = HashMap.fromList $ case (mPrefix, mSuffix) of
       (Nothing, Nothing) -> []
       (Just prefix, Nothing) -> map (\name -> (name, prefix <> name)) names
       (Nothing, Just suffix) -> map (\name -> (name, name <> suffix)) names
       (Just prefix, Just suffix) -> map (\name -> (name, prefix <> name <> suffix)) names
 
     RemoteSchemaIntrospection typeDefinitions = irDoc
-    typesToRename = filter nameFilter $ Map.keys typeDefinitions
+    typesToRename = filter nameFilter $ HashMap.keys typeDefinitions
 
     -- NOTE: We are creating a root type name mapping, this will be used to
     -- prefix the root field names with the root field namespace. We are doing
@@ -443,8 +442,8 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
     -- the _rtcMapping. This means that a user can still change the root type
     -- name.
     rootTypeNameMap =
-      mkPrefixSuffixMap _rscRootFieldsNamespace Nothing $
-        catMaybes [Just irQueryRoot, irMutationRoot, irSubscriptionRoot]
+      mkPrefixSuffixMap _rscRootFieldsNamespace Nothing
+        $ catMaybes [Just irQueryRoot, irMutationRoot, irSubscriptionRoot]
 
     typeRenameMap =
       case _rscTypeNames of
@@ -466,10 +465,10 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
 
     fieldRenameMap =
       case _rscFieldNames of
-        Nothing -> Map.empty
+        Nothing -> HashMap.empty
         Just fieldNameCustomizations ->
-          let customizationMap = Map.fromList $ map (\rfc -> (_rfcParentType rfc, rfc)) fieldNameCustomizations
-           in Map.intersectionWith mkFieldRenameMap customizationMap typeFieldMap
+          let customizationMap = HashMap.fromList $ map (\rfc -> (_rfcParentType rfc, rfc)) fieldNameCustomizations
+           in HashMap.intersectionWith mkFieldRenameMap customizationMap typeFieldMap
 
     _rscNamespaceFieldName = _rscRootFieldsNamespace
     _rscCustomizeTypeName = typeRenameMap
@@ -481,18 +480,18 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
 pErr :: (MonadFail m) => Text -> m a
 pErr = fail . T.unpack
 
-throwRemoteSchema :: QErrM m => Text -> m a
+throwRemoteSchema :: (QErrM m) => Text -> m a
 throwRemoteSchema = throw400 RemoteSchemaError
 
 throwRemoteSchemaHttp ::
-  QErrM m =>
+  (QErrM m) =>
   EnvRecord URI ->
   HTTP.HttpException ->
   m a
 throwRemoteSchemaHttp urlEnvRecord exception =
-  throwError $
-    (baseError urlEnvRecord)
-      { qeInternal = Just $ ExtraInternal $ J.toJSON $ HttpException exception
+  throwError
+    $ (baseError urlEnvRecord)
+      { qeInternal = Just $ ExtraInternal $ getHttpExceptionJson (ShowErrorInfo True) $ HttpException exception
       }
   where
     baseError val = err400 RemoteSchemaError (httpExceptMsg val)

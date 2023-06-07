@@ -115,54 +115,53 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
                 readOnly={readOnly}
               />
             </div>
-            <>
-              {!isAllColumnChecked ? (
-                <div className="w-full p-0 mt-sm">
-                  <div>
-                    List of columns to select:
-                    <Button
-                      className="ml-2"
-                      size="sm"
-                      onClick={() => handleToggleAllColumns()}
-                      disabled={readOnly}
-                    >
-                      Toggle All
-                    </Button>
-                  </div>
-                  {opCols.map(col => {
-                    const toggle = () => {
-                      if (!readOnly) {
-                        const newCols = opCols.map(oc => {
-                          return {
-                            ...oc,
-                            enabled:
-                              col.name === oc.name ? !oc.enabled : oc.enabled,
-                          };
-                        });
-                        setOperationColumns(newCols);
-                      }
-                    };
-                    return (
-                      <label
-                        className="mr-md my-md p-0 pointer-cursor"
-                        key={col.name}
-                        onChange={toggle}
-                      >
-                        <input
-                          type="checkbox"
-                          className={`!mr-xs cursor-pointer ${focusYellowRing} disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-200 border-gray-200 rounded-sm bg-white`}
-                          checked={col.enabled}
-                          disabled={readOnly}
-                          readOnly
-                        />
-                        {col.name}
-                        <small className="p-xs"> ({col.type})</small>
-                      </label>
-                    );
-                  })}
+            {!isAllColumnChecked ? (
+              <div className="w-full p-0 mt-sm">
+                <div>
+                  List of columns to select:
+                  <Button
+                    className="ml-2"
+                    size="sm"
+                    onClick={() => handleToggleAllColumns()}
+                    disabled={readOnly}
+                  >
+                    Toggle All
+                  </Button>
                 </div>
-              ) : null}
-            </>
+                {opCols.map(col => {
+                  const toggle = () => {
+                    if (!readOnly) {
+                      const newCols = opCols.map(oc => {
+                        return {
+                          ...oc,
+                          enabled:
+                            col.name === oc.name ? !oc.enabled : oc.enabled,
+                        };
+                      });
+                      setOperationColumns(newCols);
+                    }
+                  };
+                  return (
+                    <label
+                      className="mr-md my-md p-0 pointer-cursor"
+                      key={col.name}
+                      onChange={toggle}
+                    >
+                      <input
+                        type="checkbox"
+                        name={`column-${col.name}`}
+                        className={`!mr-xs cursor-pointer ${focusYellowRing} disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-200 border-gray-200 rounded-sm bg-white`}
+                        checked={col.enabled}
+                        disabled={readOnly}
+                        readOnly
+                      />
+                      {col.name}
+                      <small className="p-xs"> ({col.type})</small>
+                    </label>
+                  );
+                })}
+              </div>
+            ) : null}
           </>
         ) : (
           <div className="w-full p-0">

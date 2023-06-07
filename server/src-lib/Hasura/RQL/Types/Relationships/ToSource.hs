@@ -14,11 +14,10 @@ import Autodocodec (HasCodec, requiredField')
 import Autodocodec qualified as AC
 import Control.Lens (makeLenses)
 import Data.Aeson
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Instances ()
 
 --------------------------------------------------------------------------------
 -- metadata
@@ -55,12 +54,16 @@ instance NFData ToSourceRelationshipDef
 
 instance HasCodec ToSourceRelationshipDef where
   codec =
-    AC.object "ToSourceRelationshipDef" $
-      ToSourceRelationshipDef
-        <$> requiredField' "relationship_type" AC..= _tsrdRelationshipType
-        <*> requiredField' "field_mapping" AC..= _tsrdFieldMapping
-        <*> requiredField' "source" AC..= _tsrdSource
-        <*> requiredField' "table" AC..= _tsrdTable
+    AC.object "ToSourceRelationshipDef"
+      $ ToSourceRelationshipDef
+      <$> requiredField' "relationship_type"
+      AC..= _tsrdRelationshipType
+        <*> requiredField' "field_mapping"
+      AC..= _tsrdFieldMapping
+        <*> requiredField' "source"
+      AC..= _tsrdSource
+        <*> requiredField' "table"
+      AC..= _tsrdTable
 
 instance ToJSON ToSourceRelationshipDef where
   toJSON = genericToJSON hasuraJSON
@@ -80,7 +83,7 @@ data RemoteSourceFieldInfo tgt = RemoteSourceFieldInfo
     -- | this is parsed from `Value`
     _rsfiTable :: TableName tgt,
     -- | LHS field name -> RHS Column, RHS Column type
-    _rsfiMapping :: HM.HashMap FieldName (ScalarType tgt, Column tgt)
+    _rsfiMapping :: HashMap.HashMap FieldName (ScalarType tgt, Column tgt)
   }
   deriving stock (Generic)
 

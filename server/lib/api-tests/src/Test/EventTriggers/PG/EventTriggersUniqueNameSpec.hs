@@ -10,9 +10,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
@@ -84,15 +84,11 @@ articlesTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  duplicateTriggerNameNotAllowed opts
-
-duplicateTriggerNameNotAllowed :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-duplicateTriggerNameNotAllowed opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "only unique trigger names are allowed" do
-    it "check: inserting a new row invokes a event trigger" $
-      \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+    it "check: inserting a new row invokes a event trigger"
+      $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
         let insertQuery =
@@ -119,7 +115,7 @@ duplicateTriggerNameNotAllowed opts =
 
         -- Insert a row into the table with event trigger
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 
@@ -131,8 +127,8 @@ duplicateTriggerNameNotAllowed opts =
 
         eventPayload `shouldBeYaml` expectedEventPayload
 
-    it "metadata_api: does not allow creating an event trigger with a name that already exists" $
-      \(testEnvironment, (webhookServer, _)) -> do
+    it "metadata_api: does not allow creating an event trigger with a name that already exists"
+      $ \(testEnvironment, (webhookServer, _)) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
         -- metadata <- GraphqlEngine.exportMetadata testEnvironment
@@ -160,12 +156,12 @@ duplicateTriggerNameNotAllowed opts =
 
         -- Creating a event trigger with duplicate name should fail
         shouldReturnYaml
-          opts
-          (GraphqlEngine.postWithHeadersStatus 400 testEnvironment "/v1/metadata/" mempty createEventTriggerWithDuplicateName)
+          testEnvironment
+          (GraphqlEngine.postMetadataWithStatus 400 testEnvironment createEventTriggerWithDuplicateName)
           createEventTriggerWithDuplicateNameExpectedResponse
 
-    it "replace_metadata: does not allow creating an event trigger with a name that already exists" $
-      \(testEnvironment, (webhookServer, _)) -> do
+    it "replace_metadata: does not allow creating an event trigger with a name that already exists"
+      $ \(testEnvironment, (webhookServer, _)) -> do
         let replaceMetadata = getReplaceMetadata testEnvironment webhookServer
 
             replaceMetadataWithDuplicateNameExpectedResponse =
@@ -177,8 +173,8 @@ duplicateTriggerNameNotAllowed opts =
 
         -- Creating a event trigger with duplicate name should fail
         shouldReturnYaml
-          opts
-          (GraphqlEngine.postWithHeadersStatus 400 testEnvironment "/v1/metadata/" mempty replaceMetadata)
+          testEnvironment
+          (GraphqlEngine.postMetadataWithStatus 400 testEnvironment replaceMetadata)
           replaceMetadataWithDuplicateNameExpectedResponse
 
 --------------------------------------------------------------------------------
@@ -190,8 +186,8 @@ postgresSetup testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger
@@ -255,8 +251,8 @@ getReplaceMetadata testEnvironment webhookServer =
 
 postgresTeardown :: TestEnvironment -> IO ()
 postgresTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: bulk
       args:
       - type: pg_delete_event_trigger

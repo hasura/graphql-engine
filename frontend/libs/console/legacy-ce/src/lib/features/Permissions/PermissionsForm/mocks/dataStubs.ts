@@ -101,7 +101,7 @@ export const metadata: Metadata = {
                 role: 'user',
                 permission: {
                   columns: ['ArtistId', 'Name'],
-                  filter: {},
+                  filter: { ArtistId: { _eq: 'X-Hasura-User-Id' } },
                   allow_aggregations: true,
                 },
               },
@@ -119,4 +119,96 @@ export const metadata: Metadata = {
       },
     ],
   },
+};
+
+export const capabilitiesResponse = {
+  capabilities: {
+    comparisons: { subquery: { supports_relations: true } },
+    data_schema: { supports_foreign_keys: true, supports_primary_keys: true },
+    explain: {},
+    mutations: {
+      delete: {},
+      insert: { supports_nested_inserts: true },
+      update: {},
+    },
+    queries: {},
+    raw: {},
+    relationships: {},
+    scalar_types: {
+      DateTime: {
+        comparison_operators: { _in_year: 'int' },
+        graphql_type: 'String',
+      },
+      bool: {
+        comparison_operators: {
+          _and: 'bool',
+          _nand: 'bool',
+          _or: 'bool',
+          _xor: 'bool',
+        },
+        graphql_type: 'Boolean',
+      },
+      decimal: {
+        aggregate_functions: { max: 'decimal', min: 'decimal', sum: 'decimal' },
+        comparison_operators: { _modulus_is_zero: 'decimal' },
+        graphql_type: 'Float',
+        update_column_operators: {
+          dec: { argument_type: 'decimal' },
+          inc: { argument_type: 'decimal' },
+        },
+      },
+      number: {
+        aggregate_functions: { max: 'number', min: 'number', sum: 'number' },
+        comparison_operators: { _modulus_is_zero: 'number' },
+        graphql_type: 'Float',
+        update_column_operators: {
+          dec: { argument_type: 'number' },
+          inc: { argument_type: 'number' },
+        },
+      },
+      string: {
+        aggregate_functions: { max: 'string', min: 'string' },
+        comparison_operators: { _glob: 'string', _like: 'string' },
+        graphql_type: 'String',
+      },
+    },
+  },
+  config_schema_response: {
+    config_schema: {
+      nullable: false,
+      properties: {
+        DEBUG: {
+          additionalProperties: true,
+          description: 'For debugging.',
+          nullable: true,
+          type: 'object',
+        },
+        db: { description: 'The SQLite database file to use.', type: 'string' },
+        explicit_main_schema: {
+          default: false,
+          description: "Prefix all tables with the 'main' schema",
+          nullable: true,
+          type: 'boolean',
+        },
+        include_sqlite_meta_tables: {
+          description:
+            'By default index tables, etc are not included, set this to true to include them.',
+          nullable: true,
+          type: 'boolean',
+        },
+        tables: {
+          description:
+            'List of tables to make available in the schema and for querying',
+          items: { $ref: '#/other_schemas/TableName' },
+          nullable: true,
+          type: 'array',
+        },
+      },
+      required: ['db'],
+      type: 'object',
+    },
+    other_schemas: { TableName: { nullable: false, type: 'string' } },
+  },
+  display_name: 'Hasura SQLite',
+  options: { uri: 'http://host.docker.internal:8100' },
 };

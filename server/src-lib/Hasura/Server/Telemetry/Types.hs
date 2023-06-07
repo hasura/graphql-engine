@@ -8,6 +8,8 @@ module Hasura.Server.Telemetry.Types
     RelationshipMetric (..),
     PermissionMetric (..),
     ActionMetric (..),
+    NativeQueriesMetrics (..),
+    StoredProceduresMetrics (..),
     LogicalModelsMetrics (..),
     Metrics (..),
     SourceMetadata (..),
@@ -35,11 +37,12 @@ module Hasura.Server.Telemetry.Types
 where
 
 import CI qualified
-import Data.Aeson qualified as A
-import Data.Aeson.TH qualified as A
+import Data.Aeson qualified as J
+import Data.Aeson.TH qualified as J
+import Data.Monoid (Sum (..))
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Metadata.Instances ()
-import Hasura.SQL.Backend (BackendType)
 import Hasura.Server.Telemetry.Counters
 import Hasura.Server.Types
 import Hasura.Server.Version
@@ -50,7 +53,7 @@ data RelationshipMetric = RelationshipMetric
   }
   deriving (Show, Eq)
 
-$(A.deriveToJSON hasuraJSON ''RelationshipMetric)
+$(J.deriveToJSON hasuraJSON ''RelationshipMetric)
 
 data PermissionMetric = PermissionMetric
   { _pmSelect :: Int,
@@ -61,7 +64,7 @@ data PermissionMetric = PermissionMetric
   }
   deriving (Show, Eq)
 
-$(A.deriveToJSON hasuraJSON ''PermissionMetric)
+$(J.deriveToJSON hasuraJSON ''PermissionMetric)
 
 data ActionMetric = ActionMetric
   { _amSynchronous :: Int,
@@ -72,24 +75,49 @@ data ActionMetric = ActionMetric
   }
   deriving (Show, Eq)
 
-$(A.deriveToJSON hasuraJSON ''ActionMetric)
+$(J.deriveToJSON hasuraJSON ''ActionMetric)
 
-data LogicalModelsMetrics = LogicalModelsMetrics
-  { _lmmWithParameters :: Int,
-    _lmmWithoutParameters :: Int
+data NativeQueriesMetrics = NativeQueriesMetrics
+  { _nqmWithParameters :: Int,
+    _nqmWithoutParameters :: Int
   }
   deriving (Show, Eq)
 
-instance Semigroup LogicalModelsMetrics where
+instance Semigroup NativeQueriesMetrics where
   a <> b =
-    LogicalModelsMetrics
-      (_lmmWithParameters a + _lmmWithParameters b)
-      (_lmmWithoutParameters a + _lmmWithoutParameters b)
+    NativeQueriesMetrics
+      (_nqmWithParameters a + _nqmWithParameters b)
+      (_nqmWithoutParameters a + _nqmWithoutParameters b)
 
-instance Monoid LogicalModelsMetrics where
-  mempty = LogicalModelsMetrics 0 0
+instance Monoid NativeQueriesMetrics where
+  mempty = NativeQueriesMetrics 0 0
 
-$(A.deriveToJSON hasuraJSON ''LogicalModelsMetrics)
+$(J.deriveToJSON hasuraJSON ''NativeQueriesMetrics)
+
+data StoredProceduresMetrics = StoredProceduresMetrics
+  { _spmWithParameters :: Int,
+    _spmWithoutParameters :: Int
+  }
+  deriving (Show, Eq)
+
+instance Semigroup StoredProceduresMetrics where
+  a <> b =
+    StoredProceduresMetrics
+      (_spmWithParameters a + _spmWithParameters b)
+      (_spmWithoutParameters a + _spmWithoutParameters b)
+
+instance Monoid StoredProceduresMetrics where
+  mempty = StoredProceduresMetrics 0 0
+
+$(J.deriveToJSON hasuraJSON ''StoredProceduresMetrics)
+
+newtype LogicalModelsMetrics = LogicalModelsMetrics
+  { _lmmCount :: Int
+  }
+  deriving (Show, Eq)
+  deriving (Semigroup, Monoid) via Sum Int
+
+$(J.deriveToJSON hasuraJSON ''LogicalModelsMetrics)
 
 data Metrics = Metrics
   { _mtTables :: Int,
@@ -102,20 +130,23 @@ data Metrics = Metrics
     _mtRemoteSchemas :: Maybe Int,
     _mtServiceTimings :: Maybe ServiceTimingMetrics,
     _mtActions :: Maybe ActionMetric,
+    _mtNativeQueries :: NativeQueriesMetrics,
+    _mtStoredProcedures :: StoredProceduresMetrics,
     _mtLogicalModels :: LogicalModelsMetrics
   }
   deriving (Show, Eq)
 
-$(A.deriveToJSON hasuraJSON ''Metrics)
+$(J.deriveToJSON hasuraJSON ''Metrics)
 
 data SourceMetadata = SourceMetadata
   { _smDbUid :: Maybe DbUid,
-    _smDbKind :: BackendType,
+    _smBackendType :: BackendType,
+    _smDbKind :: Text,
     _smDbVersion :: Maybe DbVersion
   }
   deriving (Show, Eq)
 
-$(A.deriveToJSON hasuraJSON ''SourceMetadata)
+$(J.deriveToJSON hasuraJSON ''SourceMetadata)
 
 data HasuraTelemetry = HasuraTelemetry
   { _htMetadataDbUid :: MetadataDbId,
@@ -128,11 +159,11 @@ data HasuraTelemetry = HasuraTelemetry
   }
   deriving (Show)
 
-$(A.deriveToJSON hasuraJSON ''HasuraTelemetry)
+$(J.deriveToJSON hasuraJSON ''HasuraTelemetry)
 
 -- | The telemetry table to which we'll add telemetry.
 newtype Topic = Topic {getTopic :: Text}
-  deriving (Show, Eq, A.ToJSON, A.FromJSON)
+  deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
 data TelemetryPayload = TelemetryPayload
   { _tpTopic :: Topic,
@@ -140,4 +171,4 @@ data TelemetryPayload = TelemetryPayload
   }
   deriving (Show)
 
-$(A.deriveToJSON hasuraJSON ''TelemetryPayload)
+$(J.deriveToJSON hasuraJSON ''TelemetryPayload)

@@ -27,6 +27,7 @@ const SelectOne = ({
     onChange={onChange}
     className={`${inputStyles} font-normal`}
     data-test={`remote-schema-customization-${label}-lhs-input`}
+    name={`${label}-lhs`}
   >
     <option value="" className="text-base">
       Select Type ...
@@ -99,6 +100,7 @@ const TypeMapping = ({ types, typeMappings, onChange, label }: Props) => {
                 data-test={`remote-schema-customization-${
                   label ?? 'no-value'
                 }-${i}-rhs-input`}
+                name={`${label}-rhs[${i}]`}
               />
             </div>
             <div>
@@ -136,6 +138,7 @@ const TypeMapping = ({ types, typeMappings, onChange, label }: Props) => {
             onChange={e =>
               setNewMap({ ...newMap, custom_name: e.target.value })
             }
+            name={`${label}-rhs`}
             // onBlur={() => {
             //   onAddItem(newMap);
             // }}

@@ -9,8 +9,8 @@ where
 import Control.Exception (Exception)
 import Control.Monad.Catch (MonadThrow, throwM)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Data.Aeson qualified as Aeson
-import Data.Aeson.Encode.Pretty qualified as Aeson
+import Data.Aeson qualified as J
+import Data.Aeson.Encode.Pretty qualified as J
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as LazyBS
 import Data.CaseInsensitive qualified as CI
@@ -23,7 +23,7 @@ import Data.Text.Lazy.Encoding qualified as LazyText
 import Data.Text.Lazy.IO qualified as LazyText
 import Network.HTTP.Client qualified as HttpClient
 import Network.HTTP.Types (Header, Status (..))
-import Servant.Client (BaseUrl, showBaseUrl)
+import Servant.Client (BaseUrl (baseUrlPath), showBaseUrl)
 import System.FilePath ((</>))
 import Prelude
 
@@ -43,7 +43,7 @@ writeRequest baseUrl request fileNamePrefix testFolder = do
     requestLine = method <> " " <> requestBaseUrl <> requestPath <> "\n"
 
     requestBaseUrl :: TextBuilder.Builder
-    requestBaseUrl = TextBuilder.fromString $ showBaseUrl baseUrl
+    requestBaseUrl = TextBuilder.fromString $ showBaseUrl (baseUrl {baseUrlPath = ""})
 
     requestPath :: TextBuilder.Builder
     requestPath = bsToBuilder $ HttpClient.path request
@@ -79,7 +79,7 @@ writeRequest baseUrl request fileNamePrefix testFolder = do
       HttpClient.RequestBodyIO bodyIO ->
         liftIO bodyIO >>= getBody
 
-writeResponse :: forall m. (MonadIO m) => (Aeson.Value -> Aeson.Value) -> HttpClient.Response LazyBS.ByteString -> String -> FilePath -> m ()
+writeResponse :: forall m. (MonadIO m) => (J.Value -> J.Value) -> HttpClient.Response LazyBS.ByteString -> String -> FilePath -> m ()
 writeResponse redactJsonResponse response fileNamePrefix testFolder =
   liftIO . LazyText.writeFile filepath . TextBuilder.toLazyText $
     statusLine
@@ -124,12 +124,12 @@ isJsonBody headers =
     contentTypeHeader = lookup (CI.mk "Content-Type") headers
     contentTypeValueParts = maybe [] (fmap Text.strip . Text.splitOn ";" . Text.decodeUtf8) contentTypeHeader
 
-transformAndFormatIfJson :: (Aeson.Value -> Aeson.Value) -> [Header] -> LazyBS.ByteString -> TextBuilder.Builder
+transformAndFormatIfJson :: (J.Value -> J.Value) -> [Header] -> LazyBS.ByteString -> TextBuilder.Builder
 transformAndFormatIfJson transform headers body =
   if isJsonBody headers
     then do
-      case Aeson.decode body of
-        Just (json :: Aeson.Value) -> Aeson.encodePrettyToTextBuilder' (Aeson.defConfig {Aeson.confIndent = Aeson.Spaces 2}) $ transform json
+      case J.decode body of
+        Just (json :: J.Value) -> J.encodePrettyToTextBuilder' (J.defConfig {J.confIndent = J.Spaces 2}) $ transform json
         Nothing -> lbsToBuilder body
     else lbsToBuilder body
 

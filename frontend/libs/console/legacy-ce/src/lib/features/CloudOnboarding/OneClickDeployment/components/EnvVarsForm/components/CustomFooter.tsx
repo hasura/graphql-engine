@@ -22,6 +22,7 @@ export function CustomFooter(props: Props) {
       passHtmlAttributesToChildren
     >
       <Dialog.Footer
+        id="one-click-deployment-env-var-form-submit"
         callToAction={buttonText[state]}
         callToActionIcon={
           state === 'error' ? <MdRefresh className="text-black" /> : undefined

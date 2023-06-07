@@ -6,7 +6,7 @@ import {
   useMetadataVersion,
 } from '../../MetadataAPI';
 import { useQuery, UseQueryResult } from 'react-query';
-import { useAppSelector } from '../../../store';
+import { useAppSelector } from '../../../storeHooks';
 import { getRunSqlQuery } from '../../../components/Common/utils/v1QueryUtils';
 import Endpoints from '../../../Endpoints';
 import { RunSQLResponse } from '../../../hooks/types';

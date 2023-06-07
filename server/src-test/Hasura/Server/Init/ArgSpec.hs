@@ -9,24 +9,24 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Lens (preview, _Just)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashSet qualified as Set
 import Data.Time (NominalDiffTime)
 import Data.URL.Template qualified as Template
 import Database.PG.Query qualified as PG
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
-import Hasura.GraphQL.Schema.NamingCase qualified as NC
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults (..), overrideMetadataDefaults, _metaBackendConfigs)
+import Hasura.RQL.Types.NamingCase qualified as NC
+import Hasura.RQL.Types.Roles qualified as Roles
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init qualified as UUT
 import Hasura.Server.Logging qualified as Logging
 import Hasura.Server.Types qualified as Types
-import Hasura.Session qualified as Session
 import Network.WebSockets qualified as WS
 import Options.Applicative qualified as Opt
 import Refined (NonNegative, Positive, refineTH)
@@ -719,7 +719,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoUnAuthRole result `Hspec.shouldSatisfy` \case
-        Opt.Success unAuthRole -> fmap Session.roleNameToTxt unAuthRole == Just "guest"
+        Opt.Success unAuthRole -> fmap Roles.roleNameToTxt unAuthRole == Just "guest"
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1397,7 +1397,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoAdminInternalErrors result `Hspec.shouldSatisfy` \case
-        Opt.Success adminInternalErrors -> adminInternalErrors == Just True
+        Opt.Success adminInternalErrors -> adminInternalErrors == Just UUT.AdminInternalErrorsEnabled
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -2070,8 +2070,8 @@ serveParserSpec =
 
           -- Then
           argResult = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
-          mdResult = Aeson.eitherDecode @Metadata mdInput
-          mdExpectedResult = Aeson.eitherDecode @Metadata mdExpected
+          mdResult = J.eitherDecode @Metadata mdInput
+          mdExpectedResult = J.eitherDecode @Metadata mdExpected
 
       fmap UUT.rsoMetadataDefaults argResult `Hspec.shouldSatisfy` \case
         Opt.Success Nothing -> False
@@ -2083,3 +2083,16 @@ serveParserSpec =
               let o = overrideMetadataDefaults md (MetadataDefaults mdd)
                in o == mde
             _ -> False
+
+    Hspec.it "It accepts '--enable-apollo-federation'" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--enable-apollo-federation"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      fmap UUT.rsoApolloFederationStatus result `Hspec.shouldSatisfy` \case
+        Opt.Success enableApolloFederation -> enableApolloFederation == (Just Types.ApolloFederationEnabled)
+        Opt.Failure _pf -> False
+        Opt.CompletionInvoked _cr -> False

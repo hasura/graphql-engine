@@ -4,8 +4,12 @@ import { MetadataSelectors, useMetadata } from '../../hasura-metadata-api';
 import { MetadataTableColumnConfig } from '../../hasura-metadata-types';
 import { UseQueryResult } from 'react-query';
 
+export type ListAllTableColumn = TableColumn & {
+  config: MetadataTableColumnConfig | undefined;
+};
+
 export type ListAllTableColumnsReturn = {
-  columns: (TableColumn & { config: MetadataTableColumnConfig | undefined })[];
+  columns: ListAllTableColumn[];
 } & Omit<UseQueryResult, 'data'>;
 
 export const useListAllTableColumns = (

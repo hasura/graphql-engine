@@ -1,4 +1,4 @@
-import React, { ReactNode, useRef, useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { saTrack } from '@site/src/utils/segmentAnalytics';
 import styles from './styles.module.scss';
 export const Feedback = ({ metadata }: { metadata: any }) => {
@@ -119,11 +119,28 @@ export const Feedback = ({ metadata }: { metadata: any }) => {
       <div className={styles.form}>
         <div className={styles.topSection}>
           <h3>What did you think of this doc?</h3>
-
           {isSubmitSuccess ? (
             <div className={styles.successMessage}>
               <p>Thanks for your feedback.</p>
-              <p>Feel free to review as many docs pages as you like!</p>
+              {rating >= 3 ? (
+                <p>Feel free to review as many docs pages as you like!</p>
+              ) : (
+                <p>
+                  If you need help with the issue that led to this low score, you can create a{' '}
+                  <a
+                    href="https://github.com/hasura/graphql-engine/issues/new/choose"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    GitHub issue
+                  </a>{' '}
+                  if you think this is a bug, or check out our{' '}
+                  <a href="https://hasura.io/discord" target="_blank" rel="noopener noreferrer">
+                    Discord server
+                  </a>
+                  , where Hasurians and community users are ready to engage.
+                </p>
+              )}
             </div>
           ) : (
             <div className={styles.numberRow}>

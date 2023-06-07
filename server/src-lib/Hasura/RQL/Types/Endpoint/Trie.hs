@@ -12,7 +12,7 @@ module Hasura.RQL.Types.Endpoint.Trie
 where
 
 import Data.Aeson (ToJSON, ToJSONKey)
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.Multi qualified as MM
 import Data.Set qualified as S
 import Data.Trie qualified as T
@@ -30,11 +30,11 @@ data PathComponent a
   | PathParam
   deriving stock (Show, Eq, Ord, Generic)
 
-instance ToJSON a => ToJSON (PathComponent a)
+instance (ToJSON a) => ToJSON (PathComponent a)
 
-instance ToJSON a => ToJSONKey (PathComponent a)
+instance (ToJSON a) => ToJSONKey (PathComponent a)
 
-instance Hashable a => Hashable (PathComponent a)
+instance (Hashable a) => Hashable (PathComponent a)
 
 -- | Result of matching a path @['PathComponent'] a@ and key @k@ in a 'MultiMapPathTrie'.
 --
@@ -88,7 +88,7 @@ instance Monoid (MatchResult a k v) where
 -- | Look up the value at a path.
 -- @PathParam@ matches any path component.
 -- Returns a list of pairs containing the value found and bindings for any @PathParam@s.
-lookupPath :: Hashable a => [a] -> T.Trie (PathComponent a) v -> [(v, [a])]
+lookupPath :: (Hashable a) => [a] -> T.Trie (PathComponent a) v -> [(v, [a])]
 lookupPath [] t = [(v, []) | v <- maybeToList (T.trieData t)]
 lookupPath (x : xs) t = do
   (pc, t') <- matchPathComponent x $ T.trieMap t
@@ -98,12 +98,12 @@ lookupPath (x : xs) t = do
     PathParam -> (x :) <$> m
   where
     matchPathComponent ::
-      Hashable a =>
+      (Hashable a) =>
       a ->
-      M.HashMap (PathComponent a) v ->
+      HashMap.HashMap (PathComponent a) v ->
       [(PathComponent (), v)]
     matchPathComponent a m =
-      catMaybes [(PathLiteral (),) <$> M.lookup (PathLiteral a) m, (PathParam,) <$> M.lookup PathParam m]
+      catMaybes [(PathLiteral (),) <$> HashMap.lookup (PathLiteral a) m, (PathParam,) <$> HashMap.lookup PathParam m]
 
 -- | Match a key @k@ and path @[a]@ against a @MultiMapPathTrie a k v@
 matchPath :: (Hashable k, Hashable a) => k -> [a] -> MultiMapPathTrie a k v -> MatchResult a k v
@@ -140,7 +140,7 @@ ambiguousPaths (T.Trie pathMap methodMap) =
     isAmbiguous e = S.size e >= 2
     ambiguous = mconcat $ filter isAmbiguous $ maybe [] MM.elems methodMap
     thisNodeAmbiguousPaths = guard (not $ null $ ambiguous) >> [([], ambiguous)]
-    childNodesAmbiguousPaths = uncurry childNodeAmbiguousPaths =<< M.toList pathMap
+    childNodesAmbiguousPaths = uncurry childNodeAmbiguousPaths =<< HashMap.toList pathMap
     childNodeAmbiguousPaths pc t = first (pc :) <$> ambiguousPaths (mergeWildcardTrie t)
-    wildcardTrie = M.lookup PathParam pathMap
+    wildcardTrie = HashMap.lookup PathParam pathMap
     mergeWildcardTrie = maybe id (<>) wildcardTrie

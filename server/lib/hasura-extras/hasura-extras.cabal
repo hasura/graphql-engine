@@ -1,0 +1,153 @@
+cabal-version: 3.6
+name: hasura-extras
+version: 1.0.0
+build-type: Simple
+copyright: Hasura Inc.
+
+library
+  hs-source-dirs: src
+  default-language: GHC2021
+
+  ghc-options:
+    -foptimal-applicative-do
+    -- This is just to keep compile-times in check and might be adjusted later (See mono #2610):
+    -fmax-simplifier-iterations=2
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- try and mitigate damage from missed inlining opportunities from this
+    -- code being it's own package
+    -fexpose-all-unfoldings
+    -fspecialise-aggressively
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+    -Wno-deriving-typeable
+    -Wno-prepositive-qualified-module
+    -Wno-implicit-lift
+    -Wno-identities
+    -Wno-operator-whitespace
+    -Wno-partial-fields
+    -Wno-redundant-bang-patterns
+    -Wno-unused-type-patterns
+
+  build-depends:
+    , QuickCheck
+    , aeson
+    , async
+    , attoparsec
+    , autodocodec
+    , base
+    , base64-bytestring
+    , byteorder
+    , bytestring
+    , case-insensitive
+    , connection
+    , containers
+    , data-default
+    , data-default-class
+    , deepseq
+    , exceptions
+    , ghc-heap-view
+    , graphql-parser
+    , hashable
+    , hasura-prelude
+    , http-client
+    , http-client-tls
+    , http-conduit
+    , http-types
+    , insert-ordered-containers
+    , kriti-lang
+    , lens
+    , mtl
+    , network
+    , network-bsd
+    , network-uri
+    , optparse-generic
+    , pg-client
+    , refined
+    , safe-exceptions
+    , pg-client
+    , refined
+    , scientific
+    , servant-client
+    , template-haskell
+    , text
+    , text-builder
+    , text-conversions
+    , time
+    , tls
+    , unordered-containers
+    , uri-encode
+    , wai
+    , websockets
+    , wide-word
+    , witherable
+    , x509
+    , x509-store
+    , x509-system
+    , x509-validation
+
+
+  default-extensions:
+    BlockArguments
+    DerivingStrategies
+    FunctionalDependencies
+    ImportQualifiedPost
+    LambdaCase
+    NoImplicitPrelude
+    QuasiQuotes
+    OverloadedStrings
+    RecordWildCards
+    TypeFamilies
+
+  exposed-modules:
+    Autodocodec.Extended
+
+    Data.Aeson.Extended
+    Data.Environment
+    Data.HashMap.Strict.Extended
+    Data.HashMap.Strict.InsOrd.Autodocodec
+    Data.HashMap.Strict.InsOrd.Extended
+    Data.HashMap.Strict.Multi
+    Data.HashMap.Strict.NonEmpty
+    Data.List.Extended
+    Data.Parser.CacheControl
+    Data.Parser.Expires
+    Data.Parser.JSONPath
+    Data.SerializableBlob
+    Data.Text.Casing
+    Data.Text.Extended
+    Data.Text.NonEmpty
+    Data.Trie
+    Data.URL.Template
+
+    GHC.AssertNF.CPP
+    GHC.Stats.Extended
+    GHC.Generics.Extended
+
+    Network.HTTP.Client.Blocklisting
+    Network.HTTP.Client.CreateManager
+    Network.HTTP.Client.DynamicTlsPermissions
+    Network.HTTP.Client.Restricted
+    Network.HTTP.Client.Transformable
+    Network.Types.Extended
+    Network.URI.Extended
+    Network.Wai.Extended
+    Network.Wai.Handler.WebSockets.Custom
+
+    -- Our vendored bits of the 'ip' package, to avoid dependencies and ease 9.2 migration
+    -- We might see if maintainer is willing to split their package up so we can remove these:
+    Net.IPv4
+    Net.IPv6
+
+    System.Monitor.Heartbeat

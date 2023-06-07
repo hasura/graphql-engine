@@ -64,28 +64,28 @@ specBodyLens = describe "Body Lens" $ do
 
   it "get body s ≡ a" $ do
     -- THEN
-    view Client.body req `shouldBe` Nothing
+    preview (Client.body . Client._RequestBodyLBS) req `shouldBe` Just mempty
 
   it "get body . set body b ≡ b" $ do
     -- WHEN
-    let req' = set Client.body (Just "{ \"hello\": \"world\"}") req
+    let req' = set Client.body (Client.RequestBodyLBS "{ \"hello\": \"world\"}") req
 
     -- THEN
-    view Client.body req' `shouldBe` (Just "{ \"hello\": \"world\"}")
+    preview (Client.body . Client._RequestBodyLBS) req' `shouldBe` (Just "{ \"hello\": \"world\"}")
 
   it "over id ≡ id" $ do
     -- WHEN
     let req' = over Client.body id req
 
     -- THEN
-    view Client.body req' `shouldBe` Nothing
+    preview (Client.body . Client._RequestBodyLBS) req' `shouldBe` Just mempty
 
   it "over body (const b) ≡ set body b" $ do
     -- WHEN
-    let req' = over Client.body (const (Just "{ \"hello\": \"world\"}")) req
+    let req' = over Client.body (const (Client.RequestBodyLBS "{ \"hello\": \"world\"}")) req
 
     -- THEN
-    view Client.body req' `shouldBe` (Just "{ \"hello\": \"world\"}")
+    preview (Client.body . Client._RequestBodyLBS) req' `shouldBe` (Just "{ \"hello\": \"world\"}")
 
 specHeadersLens :: Spec
 specHeadersLens = describe "Headers Lens" $ do

@@ -26,16 +26,7 @@ export const listCronTriggerAPIResponse: ListCronTriggerAPIResponse = {
         tolerance_seconds: 21600,
       },
       schedule: '* * * * *',
-      webhook: 'http://httporg.post',
-      request_transform: {
-        version: 2,
-        template_engine: 'Kriti',
-        method: 'POST',
-        url: '/users',
-        query_params: {
-          userId: '12',
-        },
-      },
+      webhook: 'http://httpbin.org/post',
     },
     {
       comment: 'this trigger is not included in metadata',

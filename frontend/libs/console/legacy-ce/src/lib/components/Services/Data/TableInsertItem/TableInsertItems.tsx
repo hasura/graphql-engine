@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppDispatch } from '../../../../store';
+import type { AppDispatch } from '../../../../store';
 import { Button } from '../../../../new-components/Button';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { ordinalColSort } from '../utils';
@@ -114,74 +114,70 @@ export const TableInsertItems = ({
   const columns = currentTable?.columns.sort(ordinalColSort) || [];
 
   return (
-    <>
-      <RightContainer>
+    <RightContainer>
+      <div className="bootstrap-jail">
+        <TableHeader
+          count={count}
+          dispatch={dispatch}
+          table={currentTable}
+          source={currentSource}
+          tabName="insert"
+          migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
+          isCountEstimated
+        />
+        <br />
         <div>
-          <TableHeader
-            count={count}
-            dispatch={dispatch}
-            table={currentTable}
-            source={currentSource}
-            tabName="insert"
-            migrationMode={migrationMode}
-            readOnlyMode={readOnlyMode}
-            isCountEstimated
-          />
-          <br />
-          <div>
-            <div className="justify-center w-9/12 pl-md">
-              <form id="insertForm">
-                <div className="flex flex-col pt-sm">
-                  {columns.map((column, index) => (
-                    <DataTableRowItem
-                      setNullCheckedValues={setNullCheckedValues}
-                      setDefaultValueColumns={setDefaultValueColumns}
-                      values={values}
-                      key={column?.column_name}
-                      column={column}
-                      onColumnUpdate={onColumnUpdate}
-                      enumOptions={enumOptions}
-                      index={index.toString()}
-                    />
-                  ))}
-                </div>
-                <div className="my-sm">
-                  <MigrationCheckbox
-                    onChange={toggleMigrationCheckBox}
-                    isChecked={isMigration}
-                    isCLIMode={isCLIMode}
+          <div className="justify-center w-9/12 pl-md">
+            <form id="insertForm">
+              <div className="flex flex-col pt-sm">
+                {columns.map((column, index) => (
+                  <DataTableRowItem
+                    setNullCheckedValues={setNullCheckedValues}
+                    setDefaultValueColumns={setDefaultValueColumns}
+                    values={values}
+                    key={column?.column_name}
+                    column={column}
+                    onColumnUpdate={onColumnUpdate}
+                    enumOptions={enumOptions}
+                    index={index.toString()}
                   />
+                ))}
+              </div>
+              <div className="my-sm">
+                <MigrationCheckbox
+                  onChange={toggleMigrationCheckBox}
+                  isChecked={isMigration}
+                  isCLIMode={isCLIMode}
+                />
+              </div>
+              <div className="flex items-center">
+                <div className="mr-md">
+                  <Button
+                    type="submit"
+                    mode="primary"
+                    onClick={onClickSave}
+                    data-test="insert-save-button"
+                  >
+                    {buttonText}
+                  </Button>
                 </div>
-                <div className="flex items-center">
-                  <div className="mr-md">
-                    <Button
-                      type="submit"
-                      mode="primary"
-                      onClick={onClickSave}
-                      data-test="insert-save-button"
-                    >
-                      {buttonText}
-                    </Button>
-                  </div>
-                  <div className="mr-md">
-                    <Button onClick={onClickClear} data-test="clear-button">
-                      Clear
-                    </Button>
-                  </div>
-                  {isEnum ? (
-                    <ReloadEnumValuesButton dispatch={dispatch} />
-                  ) : null}
+                <div className="mr-md">
+                  <Button onClick={onClickClear} data-test="clear-button">
+                    Clear
+                  </Button>
                 </div>
-              </form>
-            </div>
-            <div className="w-3/12">
-              <Alert lastError={lastError} lastSuccess={lastSuccess} />
-            </div>
+                {isEnum ? <ReloadEnumValuesButton dispatch={dispatch} /> : null}
+              </div>
+            </form>
           </div>
-          <br />
-          <br />
+          <div className="w-3/12">
+            <Alert lastError={lastError} lastSuccess={lastSuccess} />
+          </div>
         </div>
-      </RightContainer>
-    </>
+        <br />
+        <br />
+      </div>
+    </RightContainer>
   );
 };

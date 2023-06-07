@@ -2,9 +2,8 @@ import { Table } from '../../../../hasura-metadata-types';
 import {
   addConstraintName,
   filterTableRelationships,
-  removeExistingRelationships,
 } from './useSuggestedRelationships';
-import { LocalRelationship, SuggestedRelationship } from '../../../types';
+import { SuggestedRelationship } from '../../../types';
 
 describe('filterTableRelationships', () => {
   it('filters relationships', () => {
@@ -36,69 +35,6 @@ describe('filterTableRelationships', () => {
 
     expect(filterTableRelationships({ table, relationships })).toEqual([
       relationships[0],
-    ]);
-  });
-});
-
-describe('removeExistingRelationships', () => {
-  it('removes existing relationships', () => {
-    const relationships: SuggestedRelationship[] = [
-      {
-        type: 'object',
-        from: {
-          table: ['Album'],
-          columns: ['ArtistId'],
-        },
-        to: {
-          table: ['Artist'],
-          columns: ['ArtistId'],
-        },
-      },
-      {
-        type: 'object',
-        from: {
-          table: ['Genre'],
-          columns: ['GenreId'],
-        },
-        to: {
-          table: ['Artist'],
-          columns: ['GenreId'],
-        },
-      },
-    ];
-    const existingRelationships: LocalRelationship[] = [
-      {
-        type: 'localRelationship',
-        relationshipType: 'Object',
-        definition: {
-          toTable: ['Artist'],
-          mapping: {
-            GenreId: 'GenreId',
-          },
-        },
-        fromSource: 'dataSource',
-        fromTable: ['Genre'],
-        name: 'aName',
-      },
-    ];
-
-    expect(
-      removeExistingRelationships({
-        relationships,
-        existingRelationships,
-      })
-    ).toEqual([
-      {
-        type: 'object',
-        from: {
-          table: ['Album'],
-          columns: ['ArtistId'],
-        },
-        to: {
-          table: ['Artist'],
-          columns: ['ArtistId'],
-        },
-      },
     ]);
   });
 });

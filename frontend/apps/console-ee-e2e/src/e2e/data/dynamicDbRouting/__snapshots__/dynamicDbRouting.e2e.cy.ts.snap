@@ -1,0 +1,29 @@
+exports[`Dynamic Db Routing > When users update the Dynamic DB Routing connection template, the metadata should be updated #0`] =
+{
+  "configuration": {
+    "connection_info": {
+      "database_url": {
+        "from_env": "HASURA_GRAPHQL_DATABASE_URL"
+      },
+      "isolation_level": "read-committed",
+      "use_prepared_statements": false
+    },
+    "connection_set": [
+      {
+        "connection_info": {
+          "database_url": "postgres://postgres:postgres@localhost:5432/postgres",
+          "isolation_level": "read-committed",
+          "use_prepared_statements": false
+        },
+        "name": "test-connection"
+      }
+    ],
+    "connection_template": {
+      "template": "{{ if ($.request.session.x-hasura-tenant-id == \"my_tenant_1\")}}\n    {{$.connection_set.my_tenant_1_connection}}\n{{ elif ($.request.session.x-hasura-tenant-id == \"my_tenant_2\")}}\n    {{$.connection_set.my_tenant_2_connection}}\n{{ else }}\n    {{$.default}}\n{{ end }}",
+      "version": 1
+    }
+  },
+  "kind": "postgres",
+  "name": "dynamic-db-routing",
+  "tables": []
+};

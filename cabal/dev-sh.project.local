@@ -19,11 +19,25 @@ package *
     -j2
     +RTS -A64m -n2m -RTS
 
+  -- This guarantees that -Wredundant-contraints will properly fire, even with
+  -- optimizations disabled. See https://gitlab.haskell.org/ghc/ghc/-/issues/16932
+  ghc-options: -fsolve-constant-dicts
+
 -- NOTE: new-build may report a misleading 'Build profile: -O1'
 -- See:https://github.com/haskell/cabal/issues/6221
 flags: -optimize-hasura
 
 package graphql-engine
+  -- NOTE: 'cabal new-build --enable-coverage' seems to rebuild all deps with coverage
+  -- which is not what we originally wanted. But building the test modules
+  -- themselves with coverage is actually nice for validation.
+  coverage: true
+  -- to match CI:
+  ghc-options: -Werror
+  -- For compile-time performance (see cabal.project.ci.local):
+  ghc-options: -j
+
+package graphql-engine-pro
   -- NOTE: 'cabal new-build --enable-coverage' seems to rebuild all deps with coverage
   -- which is not what we originally wanted. But building the test modules
   -- themselves with coverage is actually nice for validation.
@@ -69,16 +83,16 @@ package dc-api
 package graphql-parser
   ghc-options: -j -Werror
 
-package hasura-error-message
+package error-message
   ghc-options: -j -Werror
 
-package hasura-incremental
+package incremental
   ghc-options: -j -Werror
 
 package hasura-prelude
   ghc-options: -j -Werror
 
-package hasura-schema-parsers
+package schema-parsers
   ghc-options: -j -Werror
 
 package pg-client

@@ -19,12 +19,15 @@ module Hasura.RQL.Types.Common
     failureMsg,
     InputWebhook (..),
     ResolvedWebhook (..),
+    ResolveWebhookError (..),
     resolveWebhook,
+    resolveWebhookEither,
     Timeout (..),
     defaultActionTimeoutSecs,
     UrlConf (..),
     resolveUrlConf,
     getEnv,
+    getEnvEither,
     SourceName (..),
     defaultSource,
     sourceNameToText,
@@ -63,6 +66,7 @@ import Autodocodec
     stringConstCodec,
   )
 import Autodocodec qualified as AC
+import Autodocodec.Extended (boolConstCodec, fromEnvCodec, typeableName)
 import Control.Lens (Lens)
 import Control.Lens qualified as Lens
 import Data.Aeson
@@ -79,12 +83,11 @@ import Data.URL.Template
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Base.Instances ()
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON
-import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Metadata.DTO.Utils (boolConstCodec, fromEnvCodec, typeableName)
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers ()
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax qualified as TH
 import Network.URI
@@ -143,8 +146,9 @@ instance FromJSON RelType where
   parseJSON _ = fail "expecting either 'object' or 'array' for rel_type"
 
 instance PG.FromCol RelType where
-  fromCol bs = flip PG.fromColHelper bs $
-    PD.enum $ \case
+  fromCol bs = flip PG.fromColHelper bs
+    $ PD.enum
+    $ \case
       "object" -> Just ObjRel
       "array" -> Just ArrRel
       _ -> Nothing
@@ -166,7 +170,7 @@ instance ToJSON JsonAggSelect where
     JASSingleObject -> "single_row"
 
 data InsertOrder = BeforeParent | AfterParent
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData InsertOrder
 
@@ -341,13 +345,20 @@ instance PG.FromCol InputWebhook where
     urlTemplate <- parseURLTemplate <$> PG.fromCol bs
     bimap (\e -> "Parsing URL template failed: " <> T.pack e) InputWebhook urlTemplate
 
-resolveWebhook :: QErrM m => Env.Environment -> InputWebhook -> m ResolvedWebhook
-resolveWebhook env (InputWebhook urlTemplate) = do
-  let eitherRenderedTemplate = renderURLTemplate env urlTemplate
-  either
-    (throw400 Unexpected . T.pack)
-    (pure . ResolvedWebhook)
+-- Consists of the environment variable name with missing/invalid value
+newtype ResolveWebhookError = ResolveWebhookError {unResolveWebhookError :: Text} deriving (Show, ToTxt)
+
+resolveWebhook :: (QErrM m) => Env.Environment -> InputWebhook -> m ResolvedWebhook
+resolveWebhook env inputWebhook = do
+  let eitherRenderedTemplate = resolveWebhookEither env inputWebhook
+  onLeft
     eitherRenderedTemplate
+    (throw400 Unexpected . ("Value for environment variables not found: " <>) . unResolveWebhookError)
+
+-- This is similar to `resolveWebhook` but it doesn't fail when an env var is invalid
+resolveWebhookEither :: Env.Environment -> InputWebhook -> Either ResolveWebhookError ResolvedWebhook
+resolveWebhookEither env (InputWebhook urlTemplate) =
+  bimap ResolveWebhookError ResolvedWebhook (renderURLTemplate env urlTemplate)
 
 newtype Timeout = Timeout {unTimeout :: Int}
   deriving (Show, Eq, ToJSON, Generic, NFData)
@@ -387,43 +398,43 @@ instance Hashable PGConnectionParams
 
 instance HasCodec PGConnectionParams where
   codec =
-    AC.object "PGConnectionParams" $
-      PGConnectionParams
-        <$> requiredField' "host"
-          AC..= _pgcpHost
+    AC.object "PGConnectionParams"
+      $ PGConnectionParams
+      <$> requiredField' "host"
+      AC..= _pgcpHost
         <*> requiredField' "username"
-          AC..= _pgcpUsername
+      AC..= _pgcpUsername
         <*> optionalFieldOrNull' "password"
-          AC..= _pgcpPassword
+      AC..= _pgcpPassword
         <*> requiredField' "port"
-          AC..= _pgcpPort
+      AC..= _pgcpPort
         <*> requiredField' "database"
-          AC..= _pgcpDatabase
+      AC..= _pgcpDatabase
 
 -- TODO: Use HasCodec to define Aeson instances?
 instance ToJSON PGConnectionParams where
   toJSON PGConnectionParams {..} =
-    J.object $
-      [ "host" .= _pgcpHost,
-        "username" .= _pgcpUsername,
-        "port" .= _pgcpPort,
-        "database" .= _pgcpDatabase
-      ]
-        ++ ["password" .= _pgcpPassword | isJust _pgcpPassword]
+    J.object
+      $ [ "host" .= _pgcpHost,
+          "username" .= _pgcpUsername,
+          "port" .= _pgcpPort,
+          "database" .= _pgcpDatabase
+        ]
+      ++ ["password" .= _pgcpPassword | isJust _pgcpPassword]
 
 instance FromJSON PGConnectionParams where
   parseJSON = withObject "PGConnectionParams" $ \o ->
     PGConnectionParams
       <$> o
-        .: "host"
+      .: "host"
       <*> o
-        .: "username"
+      .: "username"
       <*> o
-        .:? "password"
+      .:? "password"
       <*> o
-        .: "port"
+      .: "port"
       <*> o
-        .: "database"
+      .: "database"
 
 data UrlConf
   = -- | the database connection string
@@ -440,9 +451,9 @@ instance Hashable UrlConf
 
 instance HasCodec UrlConf where
   codec =
-    dimapCodec dec enc $
-      disjointEitherCodec valCodec $
-        disjointEitherCodec fromEnvCodec fromParamsCodec
+    dimapCodec dec enc
+      $ disjointEitherCodec valCodec
+      $ disjointEitherCodec fromEnvCodec fromParamsCodec
     where
       valCodec = codec
       fromParamsCodec = AC.object "UrlConfFromParams" $ requiredField' "connection_parameters"
@@ -510,15 +521,15 @@ getConnOptionsFromConnParams PGConnectionParams {..} =
 getPGConnectionStringFromParams :: PGConnectionParams -> String
 getPGConnectionStringFromParams PGConnectionParams {..} =
   let uriAuth =
-        rectifyAuth $
-          URIAuth
+        rectifyAuth
+          $ URIAuth
             { uriUserInfo = getURIAuthUserInfo _pgcpUsername _pgcpPassword,
               uriRegName = unpackEscape _pgcpHost,
               uriPort = show _pgcpPort
             }
       pgConnectionURI =
-        rectify $
-          URI
+        rectify
+          $ URI
             { uriScheme = "postgresql",
               uriAuthority = Just uriAuth,
               uriPath = "/" <> unpackEscape _pgcpDatabase,
@@ -537,19 +548,26 @@ getPGConnectionStringFromParams PGConnectionParams {..} =
       Nothing -> unpackEscape username
       Just password -> unpackEscape username <> ":" <> unpackEscape password
 
-resolveUrlConf :: MonadError QErr m => Env.Environment -> UrlConf -> m Text
+resolveUrlConf :: (MonadError QErr m) => Env.Environment -> UrlConf -> m Text
 resolveUrlConf env = \case
   UrlValue v -> unResolvedWebhook <$> resolveWebhook env v
   UrlFromEnv envVar -> getEnv env envVar
   UrlFromParams connParams ->
     pure . T.pack $ getPGConnectionStringFromParams connParams
 
-getEnv :: QErrM m => Env.Environment -> Text -> m Text
+getEnv :: (QErrM m) => Env.Environment -> Text -> m Text
 getEnv env k = do
-  let mEnv = Env.lookupEnv env (T.unpack k)
-  case mEnv of
-    Nothing -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
-    Just envVal -> return (T.pack envVal)
+  let eitherEnv = getEnvEither env k
+  onLeft
+    eitherEnv
+    (\_ -> throw400 NotFound $ "environment variable '" <> k <> "' not set")
+
+-- This is similar to `getEnv` but it doesn't fail when the env var is invalid
+getEnvEither :: Env.Environment -> Text -> Either Text Text
+getEnvEither env k =
+  case Env.lookupEnv env (T.unpack k) of
+    Nothing -> Left k
+    Just envVal -> Right (T.pack envVal)
 
 -- | Various user-controlled configuration for metrics used by Pro
 data MetricsConfig = MetricsConfig
@@ -559,6 +577,15 @@ data MetricsConfig = MetricsConfig
     _mcAnalyzeResponseBody :: Bool
   }
   deriving (Show, Eq, Generic)
+
+instance HasCodec MetricsConfig where
+  codec =
+    AC.object "MetricsConfig"
+      $ MetricsConfig
+      <$> requiredField' "analyze_query_variables"
+      AC..= _mcAnalyzeQueryVariables
+        <*> requiredField' "analyze_response_body"
+      AC..= _mcAnalyzeResponseBody
 
 instance FromJSON MetricsConfig where
   parseJSON = J.withObject "MetricsConfig" $ \o -> do
@@ -625,9 +652,9 @@ data EnvRecord a = EnvRecord
   }
   deriving (Show, Eq, Generic)
 
-instance NFData a => NFData (EnvRecord a)
+instance (NFData a) => NFData (EnvRecord a)
 
-instance Hashable a => Hashable (EnvRecord a)
+instance (Hashable a) => Hashable (EnvRecord a)
 
 instance (ToJSON a) => ToJSON (EnvRecord a) where
   toJSON (EnvRecord envVar _envValue) = object ["env_var" .= envVar]
@@ -643,8 +670,8 @@ instance ToJSON ApolloFederationVersion where
   toJSON V1 = J.String "v1"
 
 instance FromJSON ApolloFederationVersion where
-  parseJSON = withText "ApolloFederationVersion" $
-    \case
+  parseJSON = withText "ApolloFederationVersion"
+    $ \case
       "v1" -> pure V1
       _ -> fail "enable takes the version of apollo federation. Supported value is v1 only."
 
@@ -657,9 +684,10 @@ data ApolloFederationConfig = ApolloFederationConfig
 
 instance HasCodec ApolloFederationConfig where
   codec =
-    AC.object "ApolloFederationConfig" $
-      ApolloFederationConfig
-        <$> requiredField "enable" enableDoc AC..= enable
+    AC.object "ApolloFederationConfig"
+      $ ApolloFederationConfig
+      <$> requiredField "enable" enableDoc
+      AC..= enable
     where
       enableDoc = "enable takes the version of apollo federation. Supported value is v1 only."
 
@@ -709,7 +737,7 @@ data RemoteRelationshipG definition = RemoteRelationship
   }
   deriving (Show, Eq, Generic)
 
-instance ToJSON definition => ToJSON (RemoteRelationshipG definition) where
+instance (ToJSON definition) => ToJSON (RemoteRelationshipG definition) where
   toJSON RemoteRelationship {..} =
     J.object
       [ "name" .= _rrName,
@@ -728,7 +756,9 @@ remoteRelationshipCodec ::
   JSONCodec definition ->
   JSONCodec (RemoteRelationshipG definition)
 remoteRelationshipCodec definitionCodec =
-  AC.object ("RemoteRelationship_" <> typeableName @definition) $
-    RemoteRelationship
-      <$> requiredField' "name" AC..= _rrName
-      <*> requiredFieldWith' "definition" definitionCodec AC..= _rrDefinition
+  AC.object ("RemoteRelationship_" <> typeableName @definition)
+    $ RemoteRelationship
+    <$> requiredField' "name"
+    AC..= _rrName
+      <*> requiredFieldWith' "definition" definitionCodec
+    AC..= _rrDefinition

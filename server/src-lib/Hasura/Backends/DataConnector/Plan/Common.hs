@@ -1,3 +1,6 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingStrategies #-}
+
 -- | This module contains Data Connector request/response planning code and utility
 -- functions and types that are common across the different categories of requests
 -- (ie queries, mutations, etc). It contains code and concepts that are independent
@@ -9,6 +12,7 @@
 module Hasura.Backends.DataConnector.Plan.Common
   ( Plan (..),
     TableRelationships (..),
+    TableRelationshipsKey (..),
     FieldPrefix,
     noPrefix,
     prefixWith,
@@ -19,6 +23,7 @@ module Hasura.Backends.DataConnector.Plan.Common
     prepareLiteral,
     translateBoolExpToExpression,
     mkRelationshipName,
+    mapFieldNameHashMap,
     encodeAssocListAsObject,
   )
 where
@@ -31,6 +36,8 @@ import Data.Bifunctor (Bifunctor (bimap))
 import Data.ByteString qualified as BS
 import Data.Has (Has (modifier))
 import Data.HashMap.Strict qualified as HashMap
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (toTxt, (<<>), (<>>))
@@ -42,10 +49,10 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend (SessionVarType)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Relationships.Local (RelInfo (..))
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.Relationships.Local (RelInfo (..), RelTarget (..))
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Session
 import Witch qualified
@@ -62,10 +69,18 @@ data Plan request response = Plan
 
 --------------------------------------------------------------------------------
 
+-- | Key datatype for TableRelationships to avoid having an Either directly as the key,
+--   and make extending the types of relationships easier in future.
+data TableRelationshipsKey
+  = FunctionNameKey API.FunctionName
+  | TableNameKey API.TableName
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (Hashable)
+
 -- | A monoidal data structure used to record Table Relationships encountered during request
 -- translation. Used with 'recordTableRelationship'.
 newtype TableRelationships = TableRelationships
-  {unTableRelationships :: HashMap API.TableName (HashMap API.RelationshipName API.Relationship)}
+  {unTableRelationships :: HashMap TableRelationshipsKey (HashMap API.RelationshipName API.Relationship)}
   deriving stock (Eq, Show)
 
 instance Semigroup TableRelationships where
@@ -81,12 +96,12 @@ recordTableRelationship ::
     Monoid writerOutput,
     MonadError QErr m
   ) =>
-  API.TableName ->
+  TableRelationshipsKey ->
   API.RelationshipName ->
   API.Relationship ->
   CPS.WriterT writerOutput m ()
-recordTableRelationship sourceTableName relationshipName relationship =
-  let newRelationship = TableRelationships $ HashMap.singleton sourceTableName (HashMap.singleton relationshipName relationship)
+recordTableRelationship sourceName relationshipName relationship =
+  let newRelationship = TableRelationships $ HashMap.singleton sourceName (HashMap.singleton relationshipName relationship)
    in CPS.tell $ modifier (const newRelationship) mempty
 
 recordTableRelationshipFromRelInfo ::
@@ -94,7 +109,7 @@ recordTableRelationshipFromRelInfo ::
     Monoid writerOutput,
     MonadError QErr m
   ) =>
-  API.TableName ->
+  TableRelationshipsKey ->
   RelInfo 'DataConnector ->
   CPS.WriterT writerOutput m (API.RelationshipName, API.Relationship)
 recordTableRelationshipFromRelInfo sourceTableName RelInfo {..} = do
@@ -102,17 +117,20 @@ recordTableRelationshipFromRelInfo sourceTableName RelInfo {..} = do
   let relationshipType = case riType of
         ObjRel -> API.ObjectRelationship
         ArrRel -> API.ArrayRelationship
-  let relationship =
-        API.Relationship
-          { _rTargetTable = Witch.from riRTable,
-            _rRelationshipType = relationshipType,
-            _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList riMapping
-          }
-  recordTableRelationship
-    sourceTableName
-    relationshipName
-    relationship
-  pure (relationshipName, relationship)
+  case riTarget of
+    RelTargetNativeQuery _ -> error "recordTableRelationshipFromRelInfo RelTargetNativeQuery"
+    RelTargetTable targetTableName -> do
+      let relationship =
+            API.Relationship
+              { _rTargetTable = Witch.from targetTableName,
+                _rRelationshipType = relationshipType,
+                _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList riMapping
+              }
+      recordTableRelationship
+        sourceTableName
+        relationshipName
+        relationship
+      pure (relationshipName, relationship)
 
 --------------------------------------------------------------------------------
 
@@ -147,7 +165,7 @@ data Cardinality
 --------------------------------------------------------------------------------
 
 prepareLiteral ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SessionVariables ->
   UnpreparedValue 'DataConnector ->
   m Literal
@@ -163,7 +181,7 @@ prepareLiteral sessionVariables = \case
 
 parseSessionVariable ::
   forall m.
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SessionVariable ->
   SessionVarType 'DataConnector ->
   Text ->
@@ -208,11 +226,11 @@ translateBoolExpToExpression ::
     MonadError QErr m
   ) =>
   SessionVariables ->
-  API.TableName ->
+  TableRelationshipsKey ->
   AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
   CPS.WriterT writerOutput m (Maybe API.Expression)
-translateBoolExpToExpression sessionVariables sourceTableName boolExp = do
-  removeAlwaysTrueExpression <$> translateBoolExp sessionVariables sourceTableName boolExp
+translateBoolExpToExpression sessionVariables sourceName boolExp = do
+  removeAlwaysTrueExpression <$> translateBoolExp sessionVariables sourceName boolExp
 
 translateBoolExp ::
   ( Has TableRelationships writerOutput,
@@ -220,48 +238,49 @@ translateBoolExp ::
     MonadError QErr m
   ) =>
   SessionVariables ->
-  API.TableName ->
+  TableRelationshipsKey ->
   AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
   CPS.WriterT writerOutput m API.Expression
-translateBoolExp sessionVariables sourceTableName = \case
+translateBoolExp sessionVariables sourceName = \case
   BoolAnd xs ->
-    mkIfZeroOrMany API.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp' sourceTableName) xs
+    mkIfZeroOrMany API.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp' sourceName) xs
   BoolOr xs ->
-    mkIfZeroOrMany API.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp' sourceTableName) xs
+    mkIfZeroOrMany API.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp' sourceName) xs
   BoolNot x ->
-    API.Not <$> (translateBoolExp' sourceTableName) x
+    API.Not <$> (translateBoolExp' sourceName) x
   BoolField (AVColumn c xs) ->
     lift $ mkIfZeroOrMany API.And <$> traverse (translateOp sessionVariables (Witch.from $ ciColumn c) (Witch.from . columnTypeToScalarType $ ciType c)) xs
-  BoolField (AVRelationship relationshipInfo boolExp) -> do
-    (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
-    API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp' _rTargetTable boolExp
+  BoolField (AVRelationship relationshipInfo (RelationshipFilters {rfTargetTablePermissions, rfFilter})) -> do
+    (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceName relationshipInfo
+    -- TODO: How does this function keep track of the root table?
+    API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp' (TableNameKey _rTargetTable) (BoolAnd [rfTargetTablePermissions, rfFilter])
   BoolExists GExists {..} ->
     let tableName = Witch.from _geTable
-     in API.Exists (API.UnrelatedTable tableName) <$> translateBoolExp' tableName _geWhere
+     in API.Exists (API.UnrelatedTable tableName) <$> translateBoolExp' (TableNameKey tableName) _geWhere
   where
     translateBoolExp' = translateBoolExp sessionVariables
 
     -- Makes an 'API.Expression' like 'API.And' if there is zero or many input expressions otherwise
     -- just returns the singleton expression. This helps remove redundant 'API.And' etcs from the expression.
-    mkIfZeroOrMany :: ([API.Expression] -> API.Expression) -> [API.Expression] -> API.Expression
+    mkIfZeroOrMany :: (Set API.Expression -> API.Expression) -> [API.Expression] -> API.Expression
     mkIfZeroOrMany mk = \case
       [singleExp] -> singleExp
-      zeroOrManyExps -> mk zeroOrManyExps
+      zeroOrManyExps -> mk $ Set.fromList zeroOrManyExps
 
 removeAlwaysTrueExpression :: API.Expression -> Maybe API.Expression
 removeAlwaysTrueExpression = \case
-  API.And [] -> Nothing
-  API.Not (API.Or []) -> Nothing
+  API.And exprs | exprs == mempty -> Nothing
+  API.Not (API.Or exprs) | exprs == mempty -> Nothing
   other -> Just other
 
 removeAlwaysFalseExpression :: API.Expression -> Maybe API.Expression
 removeAlwaysFalseExpression = \case
-  API.Or [] -> Nothing
-  API.Not (API.And []) -> Nothing
+  API.Or exprs | exprs == mempty -> Nothing
+  API.Not (API.And exprs) | exprs == mempty -> Nothing
   other -> Just other
 
 translateOp ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   SessionVariables ->
   API.ColumnName ->
   API.ScalarType ->
@@ -335,7 +354,7 @@ translateOp sessionVariables columnName columnType opExp = do
       let columnPath = case rootOrCurrent of
             IsRoot -> API.QueryTable
             IsCurrent -> API.CurrentTable
-       in API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.AnotherColumn $ API.ComparisonColumn columnPath (Witch.from otherColumnName) columnType)
+       in API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.AnotherColumnComparison $ API.ComparisonColumn columnPath (Witch.from otherColumnName) columnType)
 
     inOperator :: Literal -> API.Expression
     inOperator literal =
@@ -346,12 +365,15 @@ translateOp sessionVariables columnName columnType opExp = do
 
     mkApplyBinaryComparisonOperatorToScalar :: API.BinaryComparisonOperator -> J.Value -> ScalarType -> API.Expression
     mkApplyBinaryComparisonOperatorToScalar operator value scalarType =
-      API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.ScalarValue value (Witch.from scalarType))
+      API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.ScalarValueComparison $ API.ScalarValue value (Witch.from scalarType))
 
 --------------------------------------------------------------------------------
 
 mkRelationshipName :: RelName -> API.RelationshipName
 mkRelationshipName relName = API.RelationshipName $ toTxt relName
+
+mapFieldNameHashMap :: HashMap FieldName v -> HashMap API.FieldName v
+mapFieldNameHashMap = HashMap.mapKeys (API.FieldName . getFieldNameTxt)
 
 --------------------------------------------------------------------------------
 

@@ -12,10 +12,9 @@ import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import Tabbed from '../TabbedDataSourceConnection';
 import { NotFoundError } from '../../../../Error/PageNotFound';
 import { getDataSources } from '../../../../../metadata/selector';
-import { HerokuBanner } from './Neon/components/HerokuBanner/Banner';
-import { Neon } from './Neon';
+import { NeonConnect } from './Neon';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const CreateDataSource: React.FC<Props> = ({ dispatch, allDataSources }) => {
   // this condition fails for everything other than a Hasura Cloud project
@@ -29,12 +28,11 @@ const CreateDataSource: React.FC<Props> = ({ dispatch, allDataSources }) => {
         <div className={styles.connect_db_content}>
           <div className={`${styles.container} mb-md`}>
             <div className="w-full mb-md">
-              <Neon
+              <NeonConnect
                 allDatabases={allDataSources.map(d => d.name)}
                 dispatch={dispatch}
               />
             </div>
-            <HerokuBanner />
           </div>
         </div>
       </Analytics>
@@ -54,3 +52,4 @@ const connector = connect(mapStateToProps, mapDispatchToPropsEmpty);
 type InjectedProps = ConnectedProps<typeof connector>;
 const ConnectedCreateDataSourcePage = connector(CreateDataSource);
 export default ConnectedCreateDataSourcePage;
+export { NeonConnect };

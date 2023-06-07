@@ -10,6 +10,13 @@ export const TableColumnDescription: React.VFC<{
 }> = ({ column, onEdit }) => {
   return (
     <div key={column.name} className="flex gap-4 items-center mb-2">
+      {/* To assist with tests */}
+      <input
+        type="hidden"
+        data-data-type={column.dataType?.toLowerCase()}
+        data-console-data-type={column.consoleDataType}
+        data-testid={`${column.name}-data`}
+      />
       <Button
         size="sm"
         onClick={() => {
@@ -37,7 +44,9 @@ export const TableColumnDescription: React.VFC<{
       </div>
       <div>
         <Badge color="gray">
-          {column.consoleDataType || column.dataType || 'unknown type'}
+          <span data-testid={`${column.name}-ui-data-type`}>
+            {column.dataType?.toLowerCase() || 'Unknown'}
+          </span>
         </Badge>
       </div>
 

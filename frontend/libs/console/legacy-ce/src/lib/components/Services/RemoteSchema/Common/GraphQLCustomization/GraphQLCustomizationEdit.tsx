@@ -161,6 +161,7 @@ const GraphQLCustomizationEdit = ({
                 type="text"
                 className={inputStyles}
                 placeholder="namespace_"
+                name="namespace"
                 value={rootFieldNamespace || ''}
                 data-test="remote-schema-customization-root-field-input"
                 onChange={e =>
@@ -182,6 +183,7 @@ const GraphQLCustomizationEdit = ({
                 type="text"
                 className={inputStyles}
                 placeholder="prefix_"
+                name="prefix"
                 value={typeNames?.prefix || ''}
                 data-test="remote-schema-customization-type-name-prefix-input"
                 onChange={e =>
@@ -204,6 +206,7 @@ const GraphQLCustomizationEdit = ({
                 type="text"
                 className={inputStyles}
                 placeholder="_suffix"
+                name="suffix"
                 value={typeNames?.suffix || ''}
                 data-test="remote-schema-customization-type-name-suffix-input"
                 onChange={e =>

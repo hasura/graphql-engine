@@ -1,8 +1,8 @@
 ---
 sidebar_label: Enable caching
 sidebar_position: 5
-description: Hasura EE caching
-title: 'EE: Enable GraphQL caching'
+description: Hasura Enterprise Edition caching
+title: 'Enterprise Edition: Enable GraphQL caching'
 keywords:
   - hasura
   - docs
@@ -13,17 +13,16 @@ keywords:
 ---
 
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Enable GraphQL Caching
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
-</div>
+<ProductBadge standard pro ee self />
 
 ## Introduction
 
-To start using query response caching with your Hasura EE GraphQL Engine you will need a Redis instance that is
-co-located with the Hasura GraphQL containers.
+To start using [Hasura Caching](/caching/overview.mdx) with your Hasura Enterprise Edition GraphQL Engine you will need
+a Redis instance that is co-located with the Hasura GraphQL containers.
 
 Once you provision a Redis instance, provide the URL to the Hasura GraphQL Engine docker configuration using the
 following environment variable:
@@ -60,3 +59,15 @@ HASURA_GRAPHQL_RATE_LIMIT_REDIS_USE_TLS="true"
 HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL="redis://username:password@redishostname:port"
 HASURA_GRAPHQL_RATE_LIMIT_REDIS_TLS_HOSTNAME="redishostname"
 ```
+
+## Tune caching parameters
+
+You can tune the various caching parameters according to your use-case. For example, you can configure the maximum
+TTL allowed, the max entry size in the cache etc.
+
+| Env var                               | Flag                           | Description                                                                                                                                                 |
+|---------------------------------------|--------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `HASURA_GRAPHQL_CACHE_MAX_ENTRY_TTL`  | `--query-cache-max-ttl`        | Maximum TTL allowed in seconds. Clients can request TTL via the `@cached` directive. But an upper limit can be set using this setting. Default: 600 seconds |
+| `HASURA_GRAPHQL_CACHE_MAX_ENTRY_SIZE` | `--query-cache-max-entry-size` | Maximum size of the response that is allowed to be cached (in MB). default: 1 MB                                                                            |
+| `HASURA_GRAPHQL_CACHE_BUCKET_RATE`    | `--query-cache-bucket-rate`    | Recharge rate for the Query Response Cache token bucket. Default: 100,000 bytes/second                                                                      |
+| `HASURA_GRAPHQL_CACHE_BUCKET_SIZE`    | `--query-cache-bucket-size`    | Maximum capacity in bytes for the Query Response Cache token bucket algorithm. See https://hasura.io/docs/latest/queries/response-caching for more info. Default: 10000000000 bytes (1gb) |

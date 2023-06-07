@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { Link } from 'react-router';
-import BootstrapModal from 'react-bootstrap/lib/Modal';
+import { Dialog } from '@hasura/console-legacy-ce';
 import { Button } from '@hasura/console-legacy-ce';
 import CustomCopy from './CustomCopy';
 
@@ -174,59 +174,57 @@ const Modal = props => {
   };
 
   return (
-    <BootstrapModal
-      id="operationInspect"
-      onHide={onHide}
-      show
-      size="modal-lg"
-      className={styles.modalWrapper}
+    <Dialog
+      hasBackdrop
+      size="xxl"
+      id="dateModal"
+      onClose={onHide}
+      title="Inspect"
+      portal
     >
-      <BootstrapModal.Header className={styles.modalHeader} closeButton>
-        <BootstrapModal.Title className={styles.title}>
-          Inspect
-        </BootstrapModal.Title>
-      </BootstrapModal.Header>
-      <BootstrapModal.Body className={styles.modalContainer}>
-        <div className={styles.noPadd + ' col-md-6 ' + styles.borderRight}>
-          <div className={styles.infoWrapper}>
-            <div className={styles.infoField}>
-              <div className={styles.information}>
-                ID: <span>{id || 'N/A'}</span>
-                <span className={styles.rightAlign}>{getRequestsLink()}</span>
-              </div>
-              <div className={styles.information}>
-                OPERATION NAME: <span>{operationName || 'N/A'}</span>
-              </div>
-              <div className={styles.information}>
-                EXECUTED BY ROLES: <span>{computeRoles()}</span>
-              </div>
-              <div className={styles.information}>
-                REQUESTS: <span>{requestCount} Requests</span>
-              </div>
-              <div className={styles.information}>
-                AVERAGE EXECUTION TIME:{' '}
-                <span>{computeAverageExecutionTime()} ms</span>
-              </div>
-              <div className={styles.information}>
-                AVERAGE RESPONSE SIZE:{' '}
-                <span>{computeAverageResponseSize()} kB</span>
-              </div>
-              <div className={styles.information}>
-                ERROR RATE: <span>{computeErrorRate()}</span>
-                <span className={styles.addPaddLeft}>{getErrorLink()}</span>
+      <div className={styles.modalWrapper}>
+        <div className={styles.modalContainer}>
+          <div className={styles.noPadd + ' col-md-6 ' + styles.borderRight}>
+            <div className={styles.infoWrapper}>
+              <div className={styles.infoField}>
+                <div className={styles.information}>
+                  ID: <span>{id || 'N/A'}</span>
+                  <span className={styles.rightAlign}>{getRequestsLink()}</span>
+                </div>
+                <div className={styles.information}>
+                  OPERATION NAME: <span>{operationName || 'N/A'}</span>
+                </div>
+                <div className={styles.information}>
+                  EXECUTED BY ROLES: <span>{computeRoles()}</span>
+                </div>
+                <div className={styles.information}>
+                  REQUESTS: <span>{requestCount} Requests</span>
+                </div>
+                <div className={styles.information}>
+                  AVERAGE EXECUTION TIME:{' '}
+                  <span>{computeAverageExecutionTime()} ms</span>
+                </div>
+                <div className={styles.information}>
+                  AVERAGE RESPONSE SIZE:{' '}
+                  <span>{computeAverageResponseSize()} kB</span>
+                </div>
+                <div className={styles.information}>
+                  ERROR RATE: <span>{computeErrorRate()}</span>
+                  <span className={styles.addPaddLeft}>{getErrorLink()}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        {renderQueryIfExists()}
-        {/*
+          {renderQueryIfExists()}
+          {/*
         <div className={styles.noPadd + ' col-md-6'}>
           {renderOperationQuery()}
           {renderGeneratedSql()}
         </div>
         */}
-      </BootstrapModal.Body>
-    </BootstrapModal>
+        </div>
+      </div>
+    </Dialog>
   );
 };
 

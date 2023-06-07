@@ -1,26 +1,30 @@
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import { useContext } from 'react';
 import { rowPermissionsContext } from './RowPermissionsProvider';
 import { tableContext } from './TableProvider';
 import { PermissionType } from './types';
+import { logicalModelContext } from './RootLogicalModelProvider';
+import { useForbiddenFeatures } from './ForbiddenFeaturesProvider';
 
 export const Operator = ({
   operator,
   path,
-  noValue,
+  v,
 }: {
   operator: string;
   path: string[];
-  noValue?: boolean;
+  v: any;
 }) => {
   const { operators, setKey } = useContext(rowPermissionsContext);
   const { columns, table, relationships } = useContext(tableContext);
+  const { rootLogicalModel } = useContext(logicalModelContext);
   const parent = path[path.length - 1];
-  const operatorLevelId = `${path?.join('.')}-select${noValue ? '-empty' : ''}`;
+  const operatorLevelId = `${path?.join('.')}-operator`;
+  const { hasFeature } = useForbiddenFeatures();
   return (
     <select
       data-testid={operatorLevelId || 'root-operator-picker'}
-      className="border border-gray-200 rounded-md p-2"
+      className="border border-gray-200 rounded-md p-2 pr-4"
       value={operator}
       disabled={parent === '_where' && isEmpty(table)}
       onChange={e => {
@@ -28,7 +32,6 @@ export const Operator = ({
         setKey({ path, key: e.target.value, type });
       }}
     >
-      PermissionType
       <option value="">-</option>
       {operators.boolean?.items.length ? (
         <optgroup label="Bool operators">
@@ -56,7 +59,20 @@ export const Operator = ({
           ))}
         </optgroup>
       ) : null}
-      {operators.exist?.items.length ? (
+      {rootLogicalModel?.fields.length ? (
+        <optgroup label="Columns">
+          {rootLogicalModel?.fields.map((field, index) => (
+            <option
+              data-type="column"
+              key={'column' + index}
+              value={field.name}
+            >
+              {field.name}
+            </option>
+          ))}
+        </optgroup>
+      ) : null}
+      {hasFeature('exists') && operators.exist?.items.length ? (
         <optgroup label="Exist operators">
           {operators.exist.items.map((item, index) => (
             <option data-type="exist" key={'exist' + index} value={item.value}>

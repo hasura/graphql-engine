@@ -5,7 +5,7 @@ import ClearAdminSecret from './ClearAdminSecret';
 const Logout = props => {
   return (
     <Analytics name="Logout" {...REDACT_EVERYTHING}>
-      <div className="clear-both pl-md pt-md mb-md">
+      <div className="clear-both pl-md pt-md mb-md bootstrap-jail">
         <h2 className="text-xl font-bold mb-sm">Logout (clear admin-secret)</h2>
 
         <div>

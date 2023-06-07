@@ -1,10 +1,6 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '../../../features/FeatureFlags'; // Run time flag
-import {
   FaDatabase,
   FaFolder,
   FaFolderOpen,
@@ -21,6 +17,7 @@ import {
 } from '../../Common/utils/routesUtils';
 import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 import { GDCTree } from './GDCTree/GDCTree';
+import { useTreeData } from './GDCTree';
 
 type SourceItemsTypes =
   | 'database'
@@ -109,69 +106,62 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
     'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pg0KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDE2LjAuMCwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPg0KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCINCgkgd2lkdGg9IjE0Mi41MTRweCIgaGVpZ2h0PSIxNDIuNTE0cHgiIHZpZXdCb3g9IjAgMCAxNDIuNTE0IDE0Mi41MTQiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDE0Mi41MTQgMTQyLjUxNDsiDQoJIHhtbDpzcGFjZT0icHJlc2VydmUiPg0KPGc+DQoJPGc+DQoJCTxwYXRoIGQ9Ik0zNC4zNjcsMTQyLjUxNGMxMS42NDUsMCwxNy44MjctMTAuNCwxOS42NDUtMTYuNTQ0YzAuMDI5LTAuMDk3LDAuMDU2LTAuMTk2LDAuMDgxLTAuMjk3DQoJCQljNC4yMzYtMTcuNTQ1LDEwLjk4NC00NS4zNTMsMTUuOTgzLTY1LjU4aDE3Ljg4NmMzLjM2MywwLDYuMDktMi43MjYsNi4wOS02LjA5YzAtMy4zNjQtMi43MjctNi4wOS02LjA5LTYuMDlINzMuMTAzDQoJCQljMS42LTYuMzczLDIuNzcxLTEwLjkxMiwzLjIzMi0xMi40NjFsMC41MTItMS43MzRjMS44ODgtNi40NDMsNi4zMDktMjEuNTM1LDEzLjE0Ni0yMS41MzVjNi4zNCwwLDcuMjg1LDkuNzY0LDcuMzI4LDEwLjIzNg0KCQkJYzAuMjcsMy4zNDMsMy4xODYsNS44NjgsNi41MzcsNS41NzljMy4zNTQtMC4yNTYsNS44NjQtMy4xODcsNS42MDUtNi41MzlDMTA4Ljg5NCwxNC4wMzYsMTA0LjA4NywwLDg5Ljk5MSwwDQoJCQlDNzQuMDMsMCw2OC4wMzgsMjAuNDU4LDY1LjE1OSwzMC4yOTJsLTAuNDksMS42NTljLTAuNTg1LDEuOTQ2LTIuMTIsNy45NDItNC4xMjIsMTUuOTYySDM5LjIzOWMtMy4zNjQsMC02LjA5LDIuNzI2LTYuMDksNi4wOQ0KCQkJYzAsMy4zNjQsMi43MjYsNi4wOSw2LjA5LDYuMDlINTcuNTNjLTYuMjUzLDI1LjM2Mi0xNC4zMzQsNTguODE1LTE1LjIyMyw2Mi40OThjLTAuMzMyLDAuOTY1LTIuODI5LDcuNzQyLTcuOTM3LDcuNzQyDQoJCQljLTcuOCwwLTExLjE3Ny0xMC45NDgtMTEuMjA0LTExLjAzYy0wLjkzNi0zLjIyOS00LjMwNS01LjA5OC03LjU0NC00LjE1NmMtMy4yMywwLjkzNy01LjA5Miw0LjMxNC00LjE1Niw3LjU0NQ0KCQkJQzEzLjU5NywxMzAuMDUzLDIwLjgxNiwxNDIuNTE0LDM0LjM2NywxNDIuNTE0eiIgZmlsbD0iIzc2N0U5MyIvPg0KCQk8cGF0aCBkPSJNMTI0LjY4NSwxMjYuODA5YzMuNTg5LDAsNi42MDUtMi41NDksNi42MDUtNi42MDdjMC0xLjg4NS0wLjc1NC0zLjU4Ni0yLjM1OS01LjQ3NGwtMTIuNjQ2LTE0LjUzNGwxMi4yNzEtMTQuMzQ2DQoJCQljMS4xMzItMS40MTYsMS45OC0yLjkyNiwxLjk4LTQuOTA4YzAtMy41OS0yLjkyNy02LjIzMS02LjcwMy02LjIzMWMtMi41NDcsMC00LjUyNywxLjYwNC02LjIyOSwzLjY4NGwtOS41MzEsMTIuNDU0TDk4LjczLDc4LjM5MQ0KCQkJYy0xLjg5LTIuMzU3LTMuODY5LTMuNjgyLTYuNy0zLjY4MmMtMy41OSwwLTYuNjA3LDIuNTUxLTYuNjA3LDYuNjA5YzAsMS44ODUsMC43NTYsMy41ODYsMi4zNTcsNS40NzFsMTEuNzk5LDEzLjU5Mg0KCQkJTDg2LjY0NywxMTUuNjdjLTEuMjI3LDEuNDE2LTEuOTgsMi45MjYtMS45OCw0LjkwOGMwLDMuNTg5LDIuOTI2LDYuMjI5LDYuNjk5LDYuMjI5YzIuNTQ5LDAsNC41My0xLjYwNCw2LjIyOS0zLjY4MmwxMC4xOS0xMy40DQoJCQlsMTAuMTkzLDEzLjRDMTE5Ljg3MiwxMjUuNDg4LDEyMS44NTQsMTI2LjgwOSwxMjQuNjg1LDEyNi44MDl6IiBmaWxsPSIjNzY3RTkzIi8+DQoJPC9nPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPGc+DQo8L2c+DQo8Zz4NCjwvZz4NCjxnPg0KPC9nPg0KPC9zdmc+DQo=';
 
   return (
-    <>
-      <div
-        className={styles.sidebarTablePadding}
-        onClick={() => {
-          setIsOpen(prev => !prev);
-        }}
-        onKeyDown={() => {
-          setIsOpen(prev => !prev);
-        }}
-        role="button"
+    <div
+      className={styles.sidebarTablePadding}
+      onClick={() => {
+        setIsOpen(prev => !prev);
+      }}
+      onKeyDown={() => {
+        setIsOpen(prev => !prev);
+      }}
+      role="button"
+    >
+      <span
+        className={
+          item.children && `${styles.title} ${isOpen ? '' : styles.titleClosed}`
+        }
       >
-        <span
-          className={
-            item.children &&
-            `${styles.title} ${isOpen ? '' : styles.titleClosed}`
-          }
-        >
-          {item.type === 'function' ? (
+        {item.type === 'function' ? (
+          <Link
+            to={getFunctionModifyRoute(currentSchema, currentSource, item.name)}
+            data-test={item.name}
+            style={isActive ? activeStyle : {}}
+          >
+            <img
+              style={iconStyle}
+              src={isActive ? activeIcon : nonActiveIcon}
+              alt="function icon"
+            />
+            {item.name}
+          </Link>
+        ) : (
+          <>
             <Link
-              to={getFunctionModifyRoute(
+              to={getTableBrowseRoute(
                 currentSchema,
                 currentSource,
-                item.name
+                item.name,
+                !isView
               )}
               data-test={item.name}
               style={isActive ? activeStyle : {}}
             >
-              <img
-                style={iconStyle}
-                src={isActive ? activeIcon : nonActiveIcon}
-                alt="function icon"
-              />
-              {item.name}
+              {item.type === 'enum' ? (
+                <FaListUl className="mr-1" />
+              ) : (
+                <FaTable className="mr-1" />
+              )}
+              {item.type === 'view' ? <i>{item.name}</i> : item.name}
             </Link>
-          ) : (
-            <>
-              <Link
-                to={getTableBrowseRoute(
-                  currentSchema,
-                  currentSource,
-                  item.name,
-                  !isView
-                )}
-                data-test={item.name}
-                style={isActive ? activeStyle : {}}
-              >
-                {item.type === 'enum' ? (
-                  <FaListUl className="mr-1" />
-                ) : (
-                  <FaTable className="mr-1" />
-                )}
-                {item.type === 'view' ? <i>{item.name}</i> : item.name}
-              </Link>
-              <GqlCompatibilityWarning
-                identifier={item.name}
-                className={styles.add_mar_left_mid}
-                ifWarningCanBeFixed
-              />
-            </>
-          )}
-        </span>
-      </div>
-    </>
+            <GqlCompatibilityWarning
+              identifier={item.name}
+              className={styles.add_mar_left_mid}
+              ifWarningCanBeFixed
+            />
+          </>
+        )}
+      </span>
+    </div>
   );
 };
 
@@ -408,7 +398,11 @@ const TreeView: React.FC<TreeViewProps> = ({
     onDatabaseChange(dataSource);
   };
 
-  if (items.length === 0) {
+  const { data: gdcDatabases } = useTreeData();
+
+  const allDatabases = [...items, ...(gdcDatabases ?? [])];
+
+  if (allDatabases.length === 0) {
     return preLoadState ? (
       <div className={styles.treeNav}>
         <span className={`${styles.title} ${styles.padd_bottom_small}`}>
@@ -453,7 +447,7 @@ const TreeView: React.FC<TreeViewProps> = ({
         />
       ))}
       <div id="tree-container" className="inline-block">
-        <GDCTree onSelect={gdcItemClick} />
+        <GDCTree onSelect={gdcItemClick} treeData={gdcDatabases ?? []} />
       </div>
     </div>
   );

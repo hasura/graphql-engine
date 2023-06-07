@@ -5,7 +5,7 @@ import {
   SubmitHandler,
   UseFormProps,
 } from 'react-hook-form';
-import { ZodType, ZodTypeDef, infer as ZodInfer } from 'zod';
+import { infer as ZodInfer, ZodType, ZodTypeDef } from 'zod';
 
 // hook props:
 export type UseConsoleFormProps<
@@ -44,6 +44,10 @@ export type FormProps<TForm extends ZodInfer<Schema>> = {
    * The form ID
    */
   id?: string;
+  /**
+   * Enables a debug pane that outputs form values and errors
+   */
+  debug?: boolean;
 };
 
 // form wrapper props (combo of form component and FormProvider)

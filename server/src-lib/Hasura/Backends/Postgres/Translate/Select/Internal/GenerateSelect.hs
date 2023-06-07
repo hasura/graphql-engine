@@ -10,7 +10,8 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect
   )
 where
 
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
@@ -31,6 +32,7 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
 import Hasura.Backends.Postgres.Translate.Types
 import Hasura.Prelude
 import Hasura.RQL.IR.Select (ConnectionSlice (SliceFirst, SliceLast))
+import Hasura.RQL.Types.Relationships.Local (Nullable (..))
 
 generateSQLSelect ::
   -- | Pre join condition for lateral joins
@@ -41,7 +43,7 @@ generateSQLSelect ::
 generateSQLSelect joinCondition selectSource selectNode =
   S.mkSelect
     { S.selExtr =
-        case [S.Extractor e $ Just a | (a, e) <- HM.toList extractors] of
+        case [S.Extractor e $ Just a | (a, e) <- InsOrdHashMap.toList extractors] of
           -- If the select list is empty we will generated code which looks like this:
           -- > SELECT FROM ...
           -- This works for postgres, but not for cockroach, which expects a non-empty
@@ -86,49 +88,56 @@ generateSQLSelect joinCondition selectSource selectNode =
       S.WhereFrag $ S.simplifyBoolExp $ S.BEBin S.AndOp joinCond whereCond
 
     -- function to create a joined from item from two from items
-    leftOuterJoin current new =
-      S.FIJoin $
-        S.JoinExpr current S.LeftOuter new $
-          S.JoinOn $
-            S.BELit True
+    leftOuterJoin current (new, joinType) =
+      S.FIJoin
+        $ S.JoinExpr current joinType new
+        $ S.JoinOn
+        $ S.BELit True
 
     -- this is the from eexp for the final select
     joinedFrom :: S.FromItem
     joinedFrom =
-      foldl' leftOuterJoin baseFromItem $
-        map objectRelationToFromItem (HM.toList objectRelations)
-          <> map arrayRelationToFromItem (HM.toList arrayRelations)
-          <> map arrayConnectionToFromItem (HM.toList arrayConnections)
-          <> map computedFieldToFromItem (HM.toList computedFields)
+      foldl' leftOuterJoin baseFromItem
+        $ map objectRelationToFromItem (HashMap.toList objectRelations)
+        <> map arrayRelationToFromItem (HashMap.toList arrayRelations)
+        <> map arrayConnectionToFromItem (HashMap.toList arrayConnections)
+        <> map computedFieldToFromItem (HashMap.toList computedFields)
 
     objectRelationToFromItem ::
-      (ObjectRelationSource, SelectNode) -> S.FromItem
+      (ObjectRelationSource, SelectNode) -> (S.FromItem, S.JoinType)
     objectRelationToFromItem (objectRelationSource, node) =
-      let ObjectRelationSource _ colMapping objectSelectSource = objectRelationSource
+      let ObjectRelationSource
+            { _orsRelationMapping = colMapping,
+              _orsSelectSource = objectSelectSource,
+              _orsNullable = nullable
+            } = objectRelationSource
           alias = S.toTableAlias $ _ossPrefix objectSelectSource
           source = objectSelectSourceToSelectSource objectSelectSource
           select = generateSQLSelect (mkJoinCond baseSelectIdentifier colMapping) source node
-       in S.mkLateralFromItem select alias
+          joinType = case nullable of
+            Nullable -> S.LeftOuter
+            NotNullable -> S.Inner
+       in (S.mkLateralFromItem select alias, joinType)
 
     arrayRelationToFromItem ::
-      (ArrayRelationSource, MultiRowSelectNode) -> S.FromItem
+      (ArrayRelationSource, MultiRowSelectNode) -> (S.FromItem, S.JoinType)
     arrayRelationToFromItem (arrayRelationSource, arraySelectNode) =
       let ArrayRelationSource _ colMapping source = arrayRelationSource
           alias = S.toTableAlias $ _ssPrefix source
           select =
-            generateSQLSelectFromArrayNode source arraySelectNode $
-              mkJoinCond baseSelectIdentifier colMapping
-       in S.mkLateralFromItem select alias
+            generateSQLSelectFromArrayNode source arraySelectNode
+              $ mkJoinCond baseSelectIdentifier colMapping
+       in (S.mkLateralFromItem select alias, S.LeftOuter)
 
     arrayConnectionToFromItem ::
-      (ArrayConnectionSource, MultiRowSelectNode) -> S.FromItem
+      (ArrayConnectionSource, MultiRowSelectNode) -> (S.FromItem, S.JoinType)
     arrayConnectionToFromItem (arrayConnectionSource, arraySelectNode) =
       let selectWith = connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode
           alias = S.toTableAlias $ _ssPrefix $ _acsSource arrayConnectionSource
-       in S.FISelectWith (S.Lateral True) selectWith alias
+       in (S.FISelectWith (S.Lateral True) selectWith alias, S.LeftOuter)
 
     computedFieldToFromItem ::
-      (ComputedFieldTableSetSource, MultiRowSelectNode) -> S.FromItem
+      (ComputedFieldTableSetSource, MultiRowSelectNode) -> (S.FromItem, S.JoinType)
     computedFieldToFromItem (computedFieldTableSource, node) =
       let ComputedFieldTableSetSource _ source = computedFieldTableSource
           internalSelect = generateSQLSelect (S.BELit True) source $ _mrsnSelectNode node
@@ -138,7 +147,7 @@ generateSQLSelect joinCondition selectSource selectNode =
               { S.selExtr = _mrsnTopExtractors node,
                 S.selFrom = Just $ S.FromExp [S.mkSelFromItem internalSelect alias]
               }
-       in S.mkLateralFromItem select alias
+       in (S.mkLateralFromItem select alias, S.LeftOuter)
 
 -- | Create a select query
 generateSQLSelectFromArrayNode ::
@@ -150,8 +159,8 @@ generateSQLSelectFromArrayNode selectSource (MultiRowSelectNode topExtractors se
   S.mkSelect
     { S.selExtr = topExtractors,
       S.selFrom =
-        Just $
-          S.FromExp
+        Just
+          $ S.FromExp
             [ S.mkSelFromItem
                 (generateSQLSelect joinCondition selectSource selectNode)
                 $ S.toTableAlias
@@ -161,8 +170,9 @@ generateSQLSelectFromArrayNode selectSource (MultiRowSelectNode topExtractors se
 
 mkJoinCond :: S.TableIdentifier -> HashMap PGCol PGCol -> S.BoolExp
 mkJoinCond baseTablepfx colMapn =
-  foldl' (S.BEBin S.AndOp) (S.BELit True) $
-    flip map (HM.toList colMapn) $ \(lCol, rCol) ->
+  foldl' (S.BEBin S.AndOp) (S.BELit True)
+    $ flip map (HashMap.toList colMapn)
+    $ \(lCol, rCol) ->
       S.BECompare S.SEQ (S.mkQIdenExp baseTablepfx lCol) (S.mkSIdenExp rCol)
 
 connectionToSelectWith ::
@@ -285,23 +295,23 @@ connectionToSelectWith rootSelectAlias arrayConnectionSource arraySelectNode =
 
     fromPageInfoSelection =
       let hasPrevPage =
-            S.SEBool $
-              S.mkExists (S.FIIdentifier baseSelectIdentifier) $
-                S.BECompare S.SLT (S.SEIdentifier rowNumberIdentifier) $
-                  S.SESelect $
-                    S.mkSelect
-                      { S.selFrom = Just $ S.FromExp [S.FIIdentifier cursorsSelectAliasIdentifier],
-                        S.selExtr = [S.Extractor (S.SEIdentifier startRowNumberIdentifier) Nothing]
-                      }
+            S.SEBool
+              $ S.mkExists (S.FIIdentifier baseSelectIdentifier)
+              $ S.BECompare S.SLT (S.SEIdentifier rowNumberIdentifier)
+              $ S.SESelect
+              $ S.mkSelect
+                { S.selFrom = Just $ S.FromExp [S.FIIdentifier cursorsSelectAliasIdentifier],
+                  S.selExtr = [S.Extractor (S.SEIdentifier startRowNumberIdentifier) Nothing]
+                }
           hasNextPage =
-            S.SEBool $
-              S.mkExists (S.FIIdentifier baseSelectIdentifier) $
-                S.BECompare S.SGT (S.SEIdentifier rowNumberIdentifier) $
-                  S.SESelect $
-                    S.mkSelect
-                      { S.selFrom = Just $ S.FromExp [S.FIIdentifier cursorsSelectAliasIdentifier],
-                        S.selExtr = [S.Extractor (S.SEIdentifier endRowNumberIdentifier) Nothing]
-                      }
+            S.SEBool
+              $ S.mkExists (S.FIIdentifier baseSelectIdentifier)
+              $ S.BECompare S.SGT (S.SEIdentifier rowNumberIdentifier)
+              $ S.SESelect
+              $ S.mkSelect
+                { S.selFrom = Just $ S.FromExp [S.FIIdentifier cursorsSelectAliasIdentifier],
+                  S.selExtr = [S.Extractor (S.SEIdentifier endRowNumberIdentifier) Nothing]
+                }
 
           select =
             S.mkSelect

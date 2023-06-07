@@ -28,7 +28,7 @@ where
 
 import Control.Lens
 import Data.Aeson.Types
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Sequence qualified as DS
 import Data.Text qualified as T
@@ -38,25 +38,25 @@ import Hasura.Backends.Postgres.Instances.Metadata ()
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.SQL.Value
-import Hasura.Backends.Postgres.Translate.BoolExp
 import Hasura.Backends.Postgres.Translate.Column
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.DDL.Permission (annBoolExp)
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
-import Hasura.Server.Types
-import Hasura.Session
+import Hasura.Session (SessionVariable, UserInfoM, askCurRole, askUserInfo, getSessionVariables, sessionVariableToText, _uiSession)
+import Hasura.Table.Cache
 
 newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq PG.PrepArg) m a}
   deriving
@@ -69,15 +69,14 @@ newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq PG.PrepArg) m a}
       TableCoreInfoRM b,
       TableInfoRM b,
       CacheRM,
-      UserInfoM,
-      HasServerConfigCtx
+      UserInfoM
     )
 
 runDMLP1T :: DMLP1T m a -> m (a, DS.Seq PG.PrepArg)
 runDMLP1T = flip runStateT DS.empty . unDMLP1T
 
 askPermInfo ::
-  UserInfoM m =>
+  (UserInfoM m) =>
   Lens' (RolePermInfo ('Postgres 'Vanilla)) (Maybe c) ->
   TableInfo ('Postgres 'Vanilla) ->
   m (Maybe c)
@@ -99,14 +98,19 @@ assertAskPermInfo ::
 assertAskPermInfo pt pa tableInfo = do
   roleName <- askCurRole
   mPermInfo <- askPermInfo pa tableInfo
-  onNothing mPermInfo $
-    throw400 PermissionDenied $
-      permTypeToCode pt <> " on " <> tableInfoName tableInfo <<> " for role " <> roleName <<> " is not allowed. "
+  onNothing mPermInfo
+    $ throw400 PermissionDenied
+    $ permTypeToCode pt
+    <> " on "
+    <> tableInfoName tableInfo
+    <<> " for role "
+    <> roleName
+    <<> " is not allowed. "
 
 isTabUpdatable :: RoleName -> TableInfo ('Postgres 'Vanilla) -> Bool
 isTabUpdatable role ti
   | role == adminRoleName = True
-  | otherwise = isJust $ M.lookup role rpim >>= _permUpd
+  | otherwise = isJust $ HashMap.lookup role rpim >>= _permUpd
   where
     rpim = _tiRolePermInfoMap ti
 
@@ -155,7 +159,7 @@ checkSelOnCol ::
   Column ('Postgres 'Vanilla) ->
   m ()
 checkSelOnCol selPermInfo =
-  checkPermOnCol PTSelect (HS.fromList $ M.keys $ spiCols selPermInfo)
+  checkPermOnCol PTSelect (HS.fromList $ HashMap.keys $ spiCols selPermInfo)
 
 checkPermOnCol ::
   (UserInfoM m, QErrM m) =>
@@ -165,9 +169,9 @@ checkPermOnCol ::
   m ()
 checkPermOnCol pt allowedCols col = do
   role <- askCurRole
-  unless (HS.member col allowedCols) $
-    throw400 PermissionDenied $
-      permErrMsg role
+  unless (HS.member col allowedCols)
+    $ throw400 PermissionDenied
+    $ permErrMsg role
   where
     permErrMsg role
       | role == adminRoleName = "no such column exists: " <>> col
@@ -181,9 +185,9 @@ checkSelectPermOnScalarComputedField ::
   m ()
 checkSelectPermOnScalarComputedField selPermInfo computedField = do
   role <- askCurRole
-  unless (M.member computedField $ spiComputedFields selPermInfo) $
-    throw400 PermissionDenied $
-      permErrMsg role
+  unless (HashMap.member computedField $ spiComputedFields selPermInfo)
+    $ throw400 PermissionDenied
+    $ permErrMsg role
   where
     permErrMsg role
       | role == adminRoleName = "no such computed field exists: " <>> computedField
@@ -202,8 +206,8 @@ valueParserWithCollectableType valBldr pgType val = case pgType of
     -- for arrays, we don't use the prepared builder
     vals <- runAesonParser parseJSON val
     scalarValues <- parseScalarValuesColumnType ofTy vals
-    return $
-      S.SETyAnn
+    return
+      $ S.SETyAnn
         (S.SEArray $ map (toTxtValue . ColumnValue ofTy) scalarValues)
         (S.mkTypeAnn $ CollectableTypeArray (unsafePGColumnToBackend ofTy))
 
@@ -224,17 +228,19 @@ fetchRelTabInfo ::
   m (TableInfo ('Postgres 'Vanilla))
 fetchRelTabInfo refTabName =
   -- Internal error
-  modifyErrAndSet500 ("foreign " <>) $
-    askTableInfoSource refTabName
+  modifyErrAndSet500 ("foreign " <>)
+    $ askTableInfoSource refTabName
 
 askTableInfoSource ::
   (QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
   TableName ('Postgres 'Vanilla) ->
   m (TableInfo ('Postgres 'Vanilla))
 askTableInfoSource tableName = do
-  onNothingM (lookupTableInfo tableName) $
-    throw400 NotExists $
-      "table " <> tableName <<> " does not exist"
+  onNothingM (lookupTableInfo tableName)
+    $ throw400 NotExists
+    $ "table "
+    <> tableName
+    <<> " does not exist"
 
 data SessionVariableBuilder m = SessionVariableBuilder
   { _svbCurrentSession :: SQLExpression ('Postgres 'Vanilla),
@@ -252,18 +258,18 @@ fetchRelDet relName refTabName = do
   refTabInfo <- fetchRelTabInfo refTabName
   -- Get the correct constraint that applies to the given relationship
   refSelPerm <-
-    modifyErr (relPermErr refTabName roleName) $
-      askSelPermInfo refTabInfo
+    modifyErr (relPermErr refTabName roleName)
+      $ askSelPermInfo refTabInfo
 
   return (_tciFieldInfoMap $ _tiCoreInfo refTabInfo, refSelPerm)
   where
     relPermErr rTable roleName _ =
       "role "
         <> roleName
-          <<> " does not have permission to read relationship "
+        <<> " does not have permission to read relationship "
         <> relName
-          <<> "; no permission on table "
-          <>> rTable
+        <<> "; no permission on table "
+        <>> rTable
 
 checkOnColExp ::
   (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
@@ -276,11 +282,14 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
     let cn = ciColumn colInfo
     checkSelOnCol spi cn
     return annFld
-  AVRelationship relInfo nesAnn -> do
-    relSPI <- snd <$> fetchRelDet (riName relInfo) (riRTable relInfo)
-    modAnn <- checkSelPerm relSPI sessVarBldr nesAnn
-    resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSPI
-    return $ AVRelationship relInfo $ andAnnBoolExps modAnn resolvedFltr
+  AVRelationship relInfo (RelationshipFilters targetPerm nesAnn) ->
+    case riTarget relInfo of
+      RelTargetNativeQuery _ -> error "checkOnColExp RelTargetNativeQuery"
+      RelTargetTable tableName -> do
+        relSPI <- snd <$> fetchRelDet (riName relInfo) tableName
+        modAnn <- checkSelPerm relSPI sessVarBldr nesAnn
+        resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSPI
+        return $ AVRelationship relInfo (RelationshipFilters targetPerm (andAnnBoolExps modAnn resolvedFltr))
   AVComputedField cfBoolExp -> do
     roleName <- askCurRole
     let fieldName = _acfbName cfBoolExp
@@ -292,9 +301,12 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
         tableInfo <- modifyErrAndSet500 ("function " <>) $ askTableInfoSource table
         let errMsg _ =
               "role "
-                <> roleName <<> " does not have permission to read "
+                <> roleName
+                <<> " does not have permission to read "
                 <> " computed field "
-                <> fieldName <<> "; no permission on table " <>> table
+                <> fieldName
+                <<> "; no permission on table "
+                <>> table
         tableSPI <- modifyErr errMsg $ askSelPermInfo tableInfo
         modBoolExp <- checkSelPerm tableSPI sessVarBldr nesBoolExp
         resolvedFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter tableSPI
@@ -365,12 +377,12 @@ convBoolExp ::
   SelPermInfo ('Postgres 'Vanilla) ->
   BoolExp ('Postgres 'Vanilla) ->
   SessionVariableBuilder m ->
-  TableName ('Postgres 'Vanilla) ->
+  FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
   ValueParser ('Postgres 'Vanilla) m (SQLExpression ('Postgres 'Vanilla)) ->
   m (AnnBoolExpSQL ('Postgres 'Vanilla))
-convBoolExp cim spi be sessVarBldr rootTable rhsParser = do
+convBoolExp cim spi be sessVarBldr rootFieldInfoMap rhsParser = do
   let boolExpRHSParser = BoolExpRHSParser rhsParser $ _svbCurrentSession sessVarBldr
-  abe <- annBoolExp boolExpRHSParser rootTable cim $ unBoolExp be
+  abe <- annBoolExp boolExpRHSParser rootFieldInfoMap cim $ unBoolExp be
   checkSelPerm spi sessVarBldr abe
 
 -- validate headers
@@ -378,14 +390,15 @@ validateHeaders :: (UserInfoM m, QErrM m) => HashSet Text -> m ()
 validateHeaders depHeaders = do
   headers <- getSessionVariables . _uiSession <$> askUserInfo
   forM_ depHeaders $ \hdr ->
-    unless (hdr `elem` map T.toLower headers) $
-      throw400 NotFound $
-        hdr <<> " header is expected but not found"
+    unless (hdr `elem` map T.toLower headers)
+      $ throw400 NotFound
+      $ hdr
+      <<> " header is expected but not found"
 
 -- validate limit and offset int values
-onlyPositiveInt :: MonadError QErr m => Int -> m ()
+onlyPositiveInt :: (MonadError QErr m) => Int -> m ()
 onlyPositiveInt i =
-  when (i < 0) $
-    throw400
+  when (i < 0)
+    $ throw400
       NotSupported
       "unexpected negative value"

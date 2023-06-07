@@ -1,6 +1,6 @@
 import { setupServer } from 'msw/node';
 import { renderHook } from '@testing-library/react-hooks';
-import { useDataSourceUniqueKeys, useTableUniqueKeys } from '..';
+import { useDataSourceUniqueKeys, useTableUniqueKeys } from '../useUniqueKeys';
 import { networkStubs } from './common/networkStubs';
 import { wrapper } from './common/decorator';
 import { APIError } from '../error';

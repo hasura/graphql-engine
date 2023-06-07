@@ -29,20 +29,27 @@ instance Hashable RemoteTypeCustomization
 
 instance HasCodec RemoteTypeCustomization where
   codec =
-    object "RemoteTypeCustomization" $
-      RemoteTypeCustomization
-        <$> optionalFieldWith' "prefix" graphQLFieldNameCodec .= _rtcPrefix
-        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec .= _rtcSuffix
-        <*> requiredFieldWith' "mapping" (hashMapCodec graphQLFieldNameCodec) .= _rtcMapping
+    object "RemoteTypeCustomization"
+      $ RemoteTypeCustomization
+      <$> optionalFieldWith' "prefix" graphQLFieldNameCodec
+      .= _rtcPrefix
+        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec
+      .= _rtcSuffix
+        <*> requiredFieldWith' "mapping" (hashMapCodec graphQLFieldNameCodec)
+      .= _rtcMapping
 
 $(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteTypeCustomization)
 
 instance J.FromJSON RemoteTypeCustomization where
   parseJSON = J.withObject "RemoteTypeCustomization" $ \o ->
     RemoteTypeCustomization
-      <$> o J..:? "prefix"
-      <*> o J..:? "suffix"
-      <*> o J..:? "mapping" J..!= mempty
+      <$> o
+      J..:? "prefix"
+      <*> o
+      J..:? "suffix"
+      <*> o
+      J..:? "mapping"
+      J..!= mempty
 
 data RemoteFieldCustomization = RemoteFieldCustomization
   { _rfcParentType :: G.Name,
@@ -58,22 +65,31 @@ instance Hashable RemoteFieldCustomization
 
 instance HasCodec RemoteFieldCustomization where
   codec =
-    object "RemoteFieldCustomization" $
-      RemoteFieldCustomization
-        <$> requiredFieldWith' "parent_type" graphQLFieldNameCodec .= _rfcParentType
-        <*> optionalFieldWith' "prefix" graphQLFieldNameCodec .= _rfcPrefix
-        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec .= _rfcSuffix
-        <*> requiredFieldWith' "mapping" (hashMapCodec graphQLFieldNameCodec) .= _rfcMapping
+    object "RemoteFieldCustomization"
+      $ RemoteFieldCustomization
+      <$> requiredFieldWith' "parent_type" graphQLFieldNameCodec
+      .= _rfcParentType
+        <*> optionalFieldWith' "prefix" graphQLFieldNameCodec
+      .= _rfcPrefix
+        <*> optionalFieldWith' "suffix" graphQLFieldNameCodec
+      .= _rfcSuffix
+        <*> requiredFieldWith' "mapping" (hashMapCodec graphQLFieldNameCodec)
+      .= _rfcMapping
 
 $(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteFieldCustomization)
 
 instance J.FromJSON RemoteFieldCustomization where
   parseJSON = J.withObject "RemoteFieldCustomization" $ \o ->
     RemoteFieldCustomization
-      <$> o J..: "parent_type"
-      <*> o J..:? "prefix"
-      <*> o J..:? "suffix"
-      <*> o J..:? "mapping" J..!= mempty
+      <$> o
+      J..: "parent_type"
+      <*> o
+      J..:? "prefix"
+      <*> o
+      J..:? "suffix"
+      <*> o
+      J..:? "mapping"
+      J..!= mempty
 
 data RemoteSchemaCustomization = RemoteSchemaCustomization
   { _rscRootFieldsNamespace :: Maybe G.Name,
@@ -88,10 +104,13 @@ instance Hashable RemoteSchemaCustomization
 
 instance HasCodec RemoteSchemaCustomization where
   codec =
-    object "RemoteSchemaCustomization" $
-      RemoteSchemaCustomization
-        <$> optionalFieldWith' "root_fields_namespace" graphQLFieldNameCodec .= _rscRootFieldsNamespace
-        <*> optionalField' "type_names" .= _rscTypeNames
-        <*> optionalField' "field_names" .= _rscFieldNames
+    object "RemoteSchemaCustomization"
+      $ RemoteSchemaCustomization
+      <$> optionalFieldWith' "root_fields_namespace" graphQLFieldNameCodec
+      .= _rscRootFieldsNamespace
+        <*> optionalField' "type_names"
+      .= _rscTypeNames
+        <*> optionalField' "field_names"
+      .= _rscFieldNames
 
 $(J.deriveJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaCustomization)

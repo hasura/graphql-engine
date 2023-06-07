@@ -38,24 +38,24 @@ where
 import Data.HashSet qualified as Set
 import Data.Word (Word16)
 import Database.PG.Query qualified as PG
-import Harness.TestEnvironment (UniqueTestId)
+import Harness.UniqueTestId (UniqueTestId)
 import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
   ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),
     OptionalInterval (..),
-    ResponseInternalErrorsConfig (..),
     ServeOptions (..),
   )
 import Hasura.Server.Init qualified as Init
 import Hasura.Server.Logging (MetadataQueryLoggingMode (MetadataQueryLoggingDisabled))
 import Hasura.Server.Types
-  ( EventingMode (EventingEnabled),
+  ( ApolloFederationStatus (ApolloFederationDisabled),
+    EventingMode (EventingEnabled),
     ExperimentalFeature (..),
     MaintenanceMode (MaintenanceModeDisabled),
     ReadOnlyMode (ReadOnlyModeDisabled),
@@ -169,7 +169,7 @@ defaultCitusConnectionString =
 -- * Cockroach
 
 cockroachUser :: Text
-cockroachUser = "root"
+cockroachUser = "hasura"
 
 cockroachDb :: Text
 cockroachDb = "hasura"
@@ -275,7 +275,7 @@ serveOptions =
       soUnAuthRole = Nothing,
       soCorsConfig = CCAllowAll,
       soConsoleStatus = Init.ConsoleEnabled,
-      soConsoleAssetsDir = Just "../../../frontend/dist/apps/server-assets-console-ce",
+      soConsoleAssetsDir = Just "frontend/dist/apps/server-assets-console-ce",
       soConsoleSentryDsn = Nothing,
       soEnableTelemetry = Init.TelemetryDisabled,
       soStringifyNum = Options.Don'tStringifyNumbers,
@@ -286,7 +286,6 @@ serveOptions =
       soEnableAllowList = Init.AllowListDisabled,
       soEnabledLogTypes = Set.fromList L.userAllowedLogTypes,
       soLogLevel = fromMaybe (L.LevelOther "test-suite") engineLogLevel,
-      soResponseInternalErrorsConfig = InternalErrorsAllRequests,
       soEventsHttpPoolSize = Init._default Init.graphqlEventsHttpPoolSizeOption,
       soEventsFetchInterval = Init._default Init.graphqlEventsFetchIntervalOption,
       soAsyncActionsFetchInterval = Skip,
@@ -300,6 +299,7 @@ serveOptions =
       soExperimentalFeatures = Set.fromList [EFStreamingSubscriptions, EFBigQueryStringNumericInput],
       soEventsFetchBatchSize = $$(refineTH 1),
       soDevMode = Init.DevModeEnabled,
+      soAdminInternalErrors = Init.AdminInternalErrorsEnabled,
       soGracefulShutdownTimeout = $$(refineTH 0), -- Don't wait to shutdown.
       soWebSocketConnectionInitTimeout = Init._default Init.webSocketConnectionInitTimeoutOption,
       soEventingMode = EventingEnabled,
@@ -307,7 +307,8 @@ serveOptions =
       soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled,
       soDefaultNamingConvention = Init._default Init.defaultNamingConventionOption,
       soExtensionsSchema = ExtensionsSchema "public",
-      soMetadataDefaults = emptyMetadataDefaults
+      soMetadataDefaults = emptyMetadataDefaults,
+      soApolloFederationStatus = ApolloFederationDisabled
     }
 
 -- | What log level should be used by the engine; this is not exported, and

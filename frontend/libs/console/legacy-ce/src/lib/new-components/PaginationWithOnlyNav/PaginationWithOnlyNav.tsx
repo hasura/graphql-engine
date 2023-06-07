@@ -14,7 +14,7 @@ export const PaginationWithOnlyNav = (props: PaginationWithOnlyNavProps) => {
   const { offset, limit, changePage, changePageSize, rows } = props;
   const newPage = offset / limit;
   return (
-    <div className="flex ml-sm mr-sm mb-sm mt-sm justify-around">
+    <div className="flex ml-sm mr-sm mb-sm mt-sm justify-around max-w-5xl">
       <div>
         <Button
           onClick={() => changePage(newPage - 1)}

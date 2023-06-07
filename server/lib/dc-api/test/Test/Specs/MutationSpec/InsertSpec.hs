@@ -4,7 +4,7 @@ import Control.Arrow ((>>>))
 import Control.Lens (ix, (&), (.~), (?~), (^?), _Just)
 import Control.Monad (when)
 import Data.Aeson qualified as J
-import Data.Foldable (for_)
+import Data.Foldable (find, for_)
 import Data.Functor ((<&>))
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
@@ -12,6 +12,8 @@ import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Maybe (fromMaybe, listToMaybe, maybeToList)
 import Data.Scientific (Scientific)
+import Data.Set qualified as Set
+import Data.Text (Text)
 import Hasura.Backends.DataConnector.API
 import Test.AgentAPI (mutationExpectError, mutationGuarded, queryGuarded)
 import Test.AgentDatasets (chinookTemplate, usesDataset)
@@ -30,7 +32,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
     let mutationRequest =
           Data.emptyMutationRequest
             & mrOperations .~ [InsertOperation insertOperation]
-            & mrInsertSchema .~ [artistsInsertSchema]
+            & mrInsertSchema .~ Set.fromList [artistsInsertSchema]
 
     response <- mutationGuarded mutationRequest
 
@@ -47,14 +49,14 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             ]
     let insertOperation = mkInsertOperation _tdArtistsTableName & imoRows .~ [row]
     let insertSchema =
-          TableInsertSchema _tdArtistsTableName $
-            Data.mkFieldsMap
-              [ ("artist_name", ColumnInsert (_tdColumnInsertSchema _tdArtistsTableName "Name"))
-              ]
+          mkTableInsertSchema _tdSchemaTables _tdArtistsTableName $
+            [ ("artist_id", ColumnInsert (_tdColumnInsertSchema _tdArtistsTableName "ArtistId")),
+              ("artist_name", ColumnInsert (_tdColumnInsertSchema _tdArtistsTableName "Name"))
+            ]
     let mutationRequest =
           Data.emptyMutationRequest
             & mrOperations .~ [InsertOperation insertOperation]
-            & mrInsertSchema .~ [insertSchema]
+            & mrInsertSchema .~ Set.fromList [insertSchema]
 
     response <- mutationGuarded mutationRequest
 
@@ -69,7 +71,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
     let mutationRequest =
           Data.emptyMutationRequest
             & mrOperations .~ [InsertOperation insertOperation]
-            & mrInsertSchema .~ [artistsInsertSchema]
+            & mrInsertSchema .~ Set.fromList [artistsInsertSchema]
 
     response <- mutationGuarded mutationRequest
 
@@ -87,7 +89,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
     let mutationRequest =
           Data.emptyMutationRequest
             & mrOperations .~ [InsertOperation insertOperation1, InsertOperation insertOperation2, InsertOperation insertOperation3]
-            & mrInsertSchema .~ [albumsInsertSchema, artistsInsertSchema]
+            & mrInsertSchema .~ Set.fromList [albumsInsertSchema, artistsInsertSchema]
 
     response <- mutationGuarded mutationRequest
 
@@ -108,7 +110,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
     let mutationRequest =
           Data.emptyMutationRequest
             & mrOperations .~ [InsertOperation insertOperation]
-            & mrInsertSchema .~ [employeesInsertSchema]
+            & mrInsertSchema .~ Set.fromList [employeesInsertSchema]
 
     response <- mutationGuarded mutationRequest
 
@@ -125,14 +127,14 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             mkInsertOperation _tdAlbumsTableName
               & imoRows .~ rows
               & imoPostInsertCheck
-                ?~ Or
-                  [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (ScalarValue (J.Number acdcArtistId) artistIdScalarType),
-                    ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (ScalarValue (J.Number apocalypticaArtistId) artistIdScalarType)
+                ?~ Data.mkOrExpr
+                  [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number acdcArtistId) artistIdScalarType),
+                    ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number apocalypticaArtistId) artistIdScalarType)
                   ]
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [InsertOperation insertOperation]
-              & mrInsertSchema .~ [albumsInsertSchema]
+              & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
 
       response <- mutationGuarded mutationRequest
 
@@ -153,11 +155,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
       let insertOperation =
             mkInsertOperation _tdAlbumsTableName
               & imoRows .~ rows
-              & imoPostInsertCheck ?~ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (ScalarValue (J.Number acdcArtistId) artistIdScalarType)
+              & imoPostInsertCheck ?~ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (Data.scalarValueComparison (J.Number acdcArtistId) artistIdScalarType)
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [InsertOperation insertOperation]
-              & mrInsertSchema .~ [albumsInsertSchema]
+              & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
 
       response <- mutationExpectError mutationRequest
       _crType response `shouldBe` MutationPermissionCheckFailure
@@ -175,12 +177,12 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                 & imoPostInsertCheck
                   ?~ Exists
                     (UnrelatedTable _tdEmployeesTableName)
-                    (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (ScalarValue (J.Number someEmployeeIdThatExists) employeeIdScalarType))
+                    (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (Data.scalarValueComparison (J.Number someEmployeeIdThatExists) employeeIdScalarType))
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
-                & mrInsertSchema .~ [albumsInsertSchema]
-                & mrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+                & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
+                & mrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
 
         response <- mutationGuarded mutationRequest
 
@@ -204,12 +206,12 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                 & imoPostInsertCheck
                   ?~ Exists
                     (UnrelatedTable _tdEmployeesTableName)
-                    (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (ScalarValue (J.Number someEmployeeIdThatDoesNotExist) employeeIdScalarType))
+                    (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType) (Data.scalarValueComparison (J.Number someEmployeeIdThatDoesNotExist) employeeIdScalarType))
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
-                & mrInsertSchema .~ [albumsInsertSchema]
-                & mrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+                & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
+                & mrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
 
         response <- mutationExpectError mutationRequest
         _crType response `shouldBe` MutationPermissionCheckFailure
@@ -226,16 +228,16 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                 & imoPostInsertCheck
                   ?~ Exists
                     (RelatedTable _tdArtistRelationshipName)
-                    ( Or
-                        [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (ScalarValue (J.String "AC/DC") artistNameScalarType),
-                          ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (ScalarValue (J.String "Apocalyptica") artistNameScalarType)
+                    ( Data.mkOrExpr
+                        [ ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (J.String "AC/DC") artistNameScalarType),
+                          ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (J.String "Apocalyptica") artistNameScalarType)
                         ]
                     )
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
-                & mrInsertSchema .~ [albumsInsertSchema]
-                & mrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+                & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
+                & mrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
 
         response <- mutationGuarded mutationRequest
 
@@ -258,12 +260,12 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
                 & imoPostInsertCheck
                   ?~ Exists
                     (RelatedTable _tdArtistRelationshipName)
-                    (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (ScalarValue (J.String "AC/DC") artistNameScalarType))
+                    (ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (J.String "AC/DC") artistNameScalarType))
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
-                & mrInsertSchema .~ [albumsInsertSchema]
-                & mrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+                & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
+                & mrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
 
         response <- mutationExpectError mutationRequest
         _crType response `shouldBe` MutationPermissionCheckFailure
@@ -286,7 +288,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [InsertOperation insertOperation]
-              & mrInsertSchema .~ [albumsInsertSchema]
+              & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
 
       response <- mutationGuarded mutationRequest
 
@@ -306,7 +308,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [InsertOperation insertOperation]
-              & mrInsertSchema .~ [employeesInsertSchema]
+              & mrInsertSchema .~ Set.fromList [employeesInsertSchema]
 
       response <- mutationGuarded mutationRequest
 
@@ -344,8 +346,8 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
-                & mrInsertSchema .~ [albumsInsertSchema]
-                & mrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
+                & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
+                & mrTableRelationships .~ Set.fromList [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
 
         response <- mutationGuarded mutationRequest
 
@@ -407,10 +409,9 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
-                & mrInsertSchema .~ [employeesInsertSchema]
+                & mrInsertSchema .~ Set.fromList [employeesInsertSchema]
                 & mrTableRelationships
-                  .~ [ Data.onlyKeepRelationships [_tdReportsToEmployeeRelationshipName, _tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships
-                     ]
+                  .~ Set.fromList [Data.onlyKeepRelationships [_tdReportsToEmployeeRelationshipName, _tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships]
 
         response <- mutationGuarded mutationRequest
 
@@ -473,10 +474,9 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
-                & mrInsertSchema .~ [employeesInsertSchema]
+                & mrInsertSchema .~ Set.fromList [employeesInsertSchema]
                 & mrTableRelationships
-                  .~ [ Data.onlyKeepRelationships [_tdReportsToEmployeeRelationshipName, _tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships
-                     ]
+                  .~ Set.fromList [Data.onlyKeepRelationships [_tdReportsToEmployeeRelationshipName, _tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships]
 
         response <- mutationGuarded mutationRequest
 
@@ -542,11 +542,12 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [InsertOperation insertOperation]
-                & mrInsertSchema .~ [albumsInsertSchema]
+                & mrInsertSchema .~ Set.fromList [albumsInsertSchema]
                 & mrTableRelationships
-                  .~ [ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships,
-                       Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
-                     ]
+                  .~ Set.fromList
+                    [ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships,
+                      Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
+                    ]
 
         response <- mutationGuarded mutationRequest
 
@@ -597,16 +598,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             mkInsertOperation _ectdNoPrimaryKeyTableName
               & imoRows .~ rows
               & imoReturningFields .~ returning
-      let insertSchema =
-            TableInsertSchema _ectdNoPrimaryKeyTableName $
-              HashMap.fromList
-                [ (FieldName "FirstName", ColumnInsert (_ectdColumnInsertSchema _ectdNoPrimaryKeyTableName "FirstName")),
-                  (FieldName "LastName", ColumnInsert (_ectdColumnInsertSchema _ectdNoPrimaryKeyTableName "LastName"))
-                ]
+      let insertSchema = _ectdMkDefaultTableInsertSchema _ectdNoPrimaryKeyTableName
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [InsertOperation insertOperation]
-              & mrInsertSchema .~ [insertSchema]
+              & mrInsertSchema .~ Set.fromList [insertSchema]
 
       response <- mutationGuarded mutationRequest
 
@@ -639,15 +635,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             mkInsertOperation _ectdDefaultedPrimaryKeyTableName
               & imoRows .~ rows
               & imoReturningFields .~ returning
-      let insertSchema =
-            TableInsertSchema _ectdDefaultedPrimaryKeyTableName $
-              HashMap.fromList
-                [ (FieldName "Message", ColumnInsert (_ectdColumnInsertSchema _ectdDefaultedPrimaryKeyTableName "Message"))
-                ]
+      let insertSchema = _ectdMkDefaultTableInsertSchema _ectdDefaultedPrimaryKeyTableName
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [InsertOperation insertOperation]
-              & mrInsertSchema .~ [insertSchema]
+              & mrInsertSchema .~ Set.fromList [insertSchema]
 
       response <- mutationGuarded mutationRequest
 
@@ -676,12 +668,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             mkInsertOperation _ectdAllColumnsDefaultableTableName
               & imoRows .~ rows
               & imoReturningFields .~ returning
-      let insertSchema =
-            TableInsertSchema _ectdAllColumnsDefaultableTableName $ HashMap.fromList []
+      let insertSchema = _ectdMkDefaultTableInsertSchema _ectdAllColumnsDefaultableTableName
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [InsertOperation insertOperation]
-              & mrInsertSchema .~ [insertSchema]
+              & mrInsertSchema .~ Set.fromList [insertSchema]
 
       response <- mutationGuarded mutationRequest
 
@@ -696,6 +687,20 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
       response `mutationResponseShouldBe` MutationResponse [expectedResult]
   where
     edgeCaseTest = Test.edgeCaseTest edgeCasesTestData
+
+    mkTableInsertSchema :: [TableInfo] -> TableName -> [(Text, InsertFieldSchema)] -> TableInsertSchema
+    mkTableInsertSchema schemaTables tableName insertFields =
+      TableInsertSchema
+        { _tisTable = tableName,
+          _tisPrimaryKey = _tiPrimaryKey $ findTableInfo schemaTables tableName,
+          _tisFields = Data.mkFieldsMap insertFields
+        }
+
+    findTableInfo :: [TableInfo] -> TableName -> TableInfo
+    findTableInfo tables tableName =
+      tables
+        & find (\TableInfo {..} -> _tiName == tableName)
+        & fromMaybe (error $ "Can't find table " <> show tableName <> " in schema")
 
     mkInsertOperation :: TableName -> InsertMutationOperation
     mkInsertOperation tableName = InsertMutationOperation tableName [] Nothing mempty
@@ -712,7 +717,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             Data.emptyQuery
               & qFields ?~ mkFieldsFromExpectedData _tdArtistsTableName (expectedInsertedArtists artistsStartingId)
               & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType) (J.Number . fromInteger <$> artistIds) artistIdScalarType
-       in QueryRequest _tdArtistsTableName [] query
+       in TableQueryRequest _tdArtistsTableName mempty query Nothing
 
     albumsQueryRequest :: [Integer] -> QueryRequest
     albumsQueryRequest albumIds =
@@ -720,7 +725,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             Data.emptyQuery
               & qFields ?~ mkFieldsFromExpectedData _tdAlbumsTableName (expectedInsertedAcdcAlbums albumsStartingId)
               & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "AlbumId" albumIdScalarType) (J.Number . fromInteger <$> albumIds) albumIdScalarType
-       in QueryRequest _tdAlbumsTableName [] query
+       in TableQueryRequest _tdAlbumsTableName mempty query Nothing
 
     employeesQueryRequest :: [Integer] -> QueryRequest
     employeesQueryRequest employeeIds =
@@ -728,35 +733,16 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Insert Mutati
             Data.emptyQuery
               & qFields ?~ mkFieldsFromExpectedData _tdEmployeesTableName (expectedInsertedEmployees employeesStartingId)
               & qWhere ?~ ApplyBinaryArrayComparisonOperator In (_tdCurrentComparisonColumn "EmployeeId" albumIdScalarType) (J.Number . fromInteger <$> employeeIds) employeeIdScalarType
-       in QueryRequest _tdEmployeesTableName [] query
+       in TableQueryRequest _tdEmployeesTableName mempty query Nothing
 
     artistsInsertSchema :: TableInsertSchema
-    artistsInsertSchema =
-      TableInsertSchema _tdArtistsTableName $
-        HashMap.fromList
-          [ (FieldName "Name", ColumnInsert (_tdColumnInsertSchema _tdArtistsTableName "Name"))
-          ]
+    artistsInsertSchema = _tdMkDefaultTableInsertSchema _tdArtistsTableName
 
     albumsInsertSchema :: TableInsertSchema
-    albumsInsertSchema =
-      TableInsertSchema _tdAlbumsTableName $
-        HashMap.fromList
-          [ (FieldName "ArtistId", ColumnInsert (_tdColumnInsertSchema _tdAlbumsTableName "ArtistId")),
-            (FieldName "Title", ColumnInsert (_tdColumnInsertSchema _tdAlbumsTableName "Title"))
-          ]
+    albumsInsertSchema = _tdMkDefaultTableInsertSchema _tdAlbumsTableName
 
     employeesInsertSchema :: TableInsertSchema
-    employeesInsertSchema =
-      TableInsertSchema _tdEmployeesTableName $
-        HashMap.fromList
-          [ (FieldName "FirstName", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "FirstName")),
-            (FieldName "LastName", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "LastName")),
-            (FieldName "Title", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "Title")),
-            (FieldName "Email", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "Email")),
-            (FieldName "City", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "City")),
-            (FieldName "Country", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "Country")),
-            (FieldName "ReportsTo", ColumnInsert (_tdColumnInsertSchema _tdEmployeesTableName "ReportsTo"))
-          ]
+    employeesInsertSchema = _tdMkDefaultTableInsertSchema _tdEmployeesTableName
 
     artistsStartingId :: Integer
     artistsStartingId = 276

@@ -9,7 +9,7 @@ module Hasura.Backends.MSSQL.FromIr.Expression
 where
 
 import Control.Monad.Validate
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.MSSQL.FromIr
   ( Error (UnsupportedOpExpG),
     FromIr,
@@ -21,9 +21,9 @@ import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
 import Hasura.RQL.Types.Relationships.Local qualified as IR
-import Hasura.SQL.Backend
 
 -- | Translate boolean expressions into TSQL 'Expression's.
 --
@@ -51,25 +51,25 @@ fromGBoolExp =
       selectFrom <- lift (aliasQualifiedTable _geTable)
       scopedTo selectFrom $ do
         whereExpression <- fromGBoolExp _geWhere
-        pure $
-          ExistsExpression $
-            emptySelect
-              { selectOrderBy = Nothing,
-                selectProjections =
-                  [ ExpressionProjection
-                      ( Aliased
-                          { aliasedThing = trueExpression,
-                            aliasedAlias = existsFieldName
-                          }
-                      )
-                  ],
-                selectFrom = Just selectFrom,
-                selectJoins = mempty,
-                selectWhere = Where [whereExpression],
-                selectTop = NoTop,
-                selectFor = NoFor,
-                selectOffset = Nothing
-              }
+        pure
+          $ ExistsExpression
+          $ emptySelect
+            { selectOrderBy = Nothing,
+              selectProjections =
+                [ ExpressionProjection
+                    ( Aliased
+                        { aliasedThing = trueExpression,
+                          aliasedAlias = existsFieldName
+                        }
+                    )
+                ],
+              selectFrom = Just selectFrom,
+              selectJoins = mempty,
+              selectWhere = Where [whereExpression],
+              selectTop = NoTop,
+              selectFor = NoFor,
+              selectOffset = Nothing
+            }
 
 -- | Translate boolean expressions into TSQL 'Expression's.
 --
@@ -84,30 +84,33 @@ fromAnnBoolExpFld =
     IR.AVColumn columnInfo opExpGs -> do
       expressions <- traverse (fromOpExpG columnInfo) opExpGs
       pure (AndExpression expressions)
-    IR.AVRelationship IR.RelInfo {riMapping = mapping, riRTable = table} annBoolExp -> do
-      selectFrom <- lift (aliasQualifiedTable table)
-      mappingExpression <- translateMapping selectFrom mapping
-      whereExpression <- scopedTo selectFrom (fromGBoolExp annBoolExp)
-      pure
-        ( ExistsExpression
-            emptySelect
-              { selectOrderBy = Nothing,
-                selectProjections =
-                  [ ExpressionProjection
-                      ( Aliased
-                          { aliasedThing = trueExpression,
-                            aliasedAlias = existsFieldName
-                          }
-                      )
-                  ],
-                selectFrom = Just selectFrom,
-                selectJoins = mempty,
-                selectWhere = Where (mappingExpression <> [whereExpression]),
-                selectTop = NoTop,
-                selectFor = NoFor,
-                selectOffset = Nothing
-              }
-        )
+    IR.AVRelationship IR.RelInfo {riMapping = mapping, riTarget = target} (IR.RelationshipFilters tablePerm annBoolExp) -> do
+      case target of
+        IR.RelTargetNativeQuery _ -> error "fromAnnBoolExpFld RelTargetNativeQuery"
+        IR.RelTargetTable table -> do
+          selectFrom <- lift (aliasQualifiedTable table)
+          mappingExpression <- translateMapping selectFrom mapping
+          whereExpression <- scopedTo selectFrom (fromGBoolExp (IR.BoolAnd [tablePerm, annBoolExp]))
+          pure
+            ( ExistsExpression
+                emptySelect
+                  { selectOrderBy = Nothing,
+                    selectProjections =
+                      [ ExpressionProjection
+                          ( Aliased
+                              { aliasedThing = trueExpression,
+                                aliasedAlias = existsFieldName
+                              }
+                          )
+                      ],
+                    selectFrom = Just selectFrom,
+                    selectJoins = mempty,
+                    selectWhere = Where (mappingExpression <> [whereExpression]),
+                    selectTop = NoTop,
+                    selectFor = NoFor,
+                    selectOffset = Nothing
+                  }
+            )
   where
     -- Translate a relationship field mapping into column equality comparisons.
     translateMapping ::
@@ -126,7 +129,7 @@ fromAnnBoolExpFld =
                   (ColumnExpression remoteFieldName)
               )
         )
-        . HM.toList
+        . HashMap.toList
 
 -- | Scope a translation action to the table bound in a FROM clause.
 scopedTo :: From -> ReaderT EntityAlias FromIr a -> ReaderT EntityAlias FromIr a

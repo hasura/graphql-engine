@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../../store';
+import { useAppDispatch, useAppSelector } from '../../../../storeHooks';
 import { findTable, generateTableDef } from '../../../../dataSources';
 import { setTable } from '../DataActions';
 import { fetchEnumOptions, editItem, E_ONGOING_REQ } from './EditActions';

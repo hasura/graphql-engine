@@ -16,9 +16,10 @@ import Test.Hspec
 spec :: Spec
 spec = do
   describe "SchemaResponse" $ do
-    testToFromJSONToSchema (SchemaResponse []) [aesonQQ|{"tables": []}|]
+    testToFromJSONToSchema (SchemaResponse [] [] Nothing) [aesonQQ|{"tables": []}|]
     jsonOpenApiProperties genSchemaResponse
 
-genSchemaResponse :: (MonadGen m, GenBase m ~ Identity) => m SchemaResponse
-genSchemaResponse =
-  SchemaResponse <$> Gen.list defaultRange genTableInfo
+genSchemaResponse :: Gen SchemaResponse
+genSchemaResponse = do
+  tables <- Gen.list defaultRange genTableInfo
+  pure $ SchemaResponse tables [] Nothing

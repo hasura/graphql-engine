@@ -9,9 +9,8 @@ where
 
 --------------------------------------------------------------------------------
 
---------------------------------------------------------------------------------
 import Data.Aeson (FromJSON, (.:), (.=))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON (EncJSON)
@@ -25,28 +24,27 @@ import Hasura.Server.Types qualified as Types
 newtype GetFeatureFlag = GetFeatureFlag {gfgIdentifier :: Text}
 
 instance FromJSON GetFeatureFlag where
-  parseJSON = Aeson.withObject "GetFeatureFlag" \o -> do
+  parseJSON = J.withObject "GetFeatureFlag" \o -> do
     gfgIdentifier <- o .: "identifier"
     pure $ GetFeatureFlag {..}
 
 runGetFeatureFlag ::
   ( MonadError Error.QErr m,
-    Types.HasServerConfigCtx m,
     MonadIO m
   ) =>
+  Types.CheckFeatureFlag ->
   GetFeatureFlag ->
   m EncJSON
-runGetFeatureFlag GetFeatureFlag {..} = do
-  checkFeatureFlag <- Types._sccCheckFeatureFlag <$> Types.askServerConfigCtx
+runGetFeatureFlag (Types.CheckFeatureFlag getFeatureFlag) GetFeatureFlag {..} = do
   let flagM = HashMap.lookup gfgIdentifier $ FeatureFlag.getFeatureFlags $ FeatureFlag.featureFlags
   case flagM of
     Nothing -> Error.throw400 Error.NotFound $ "Feature Flag '" <> gfgIdentifier <> "' not found"
     Just flag -> do
-      flagValue <- liftIO $ checkFeatureFlag flag
-      pure $
-        EncJSON.encJFromJValue $
-          Aeson.object
-            [ "identifier" .= gfgIdentifier,
-              "value" .= flagValue,
-              "description" .= FeatureFlag.ffDescription flag
-            ]
+      flagValue <- liftIO $ getFeatureFlag flag
+      pure
+        $ EncJSON.encJFromJValue
+        $ J.object
+          [ "identifier" .= gfgIdentifier,
+            "value" .= flagValue,
+            "description" .= FeatureFlag.ffDescription flag
+          ]

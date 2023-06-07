@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RQL.Types.Allowlist
   ( -- | The schema cache representation of the allowlist
     InlinedAllowlist (..),
@@ -19,29 +17,54 @@ module Hasura.RQL.Types.Allowlist
   )
 where
 
+import Autodocodec (HasCodec, bimapCodec, disjointEitherCodec, optionalFieldWithDefault', requiredField')
+import Autodocodec qualified as AC
+import Autodocodec.Extended (discriminatorBoolField)
 import Data.Aeson
-import Data.Aeson.TH (deriveJSON, deriveToJSON)
-import Data.HashMap.Strict.Extended qualified as M
-import Data.HashMap.Strict.InsOrd.Extended qualified as OM
+import Data.HashMap.Strict.Extended qualified as HashMap
+import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.HashSet qualified as S
 import Data.Text.Extended ((<<>))
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Prelude
 import Hasura.RQL.Types.QueryCollection
-import Hasura.Session (RoleName)
+import Hasura.RQL.Types.Roles (RoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 newtype DropCollectionFromAllowlist = DropCollectionFromAllowlist
   { _dcfaCollection :: CollectionName
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON ''DropCollectionFromAllowlist)
+instance FromJSON DropCollectionFromAllowlist where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON DropCollectionFromAllowlist where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data AllowlistScope
   = AllowlistScopeGlobal
   | AllowlistScopeRoles (NonEmpty RoleName)
   deriving (Show, Eq, Generic)
+
+instance HasCodec AllowlistScope where
+  codec = bimapCodec dec enc $ disjointEitherCodec global scopeRoles
+    where
+      global = AC.object "AllowlistScopeGlobal" $ discriminatorBoolField "global" True
+      scopeRoles =
+        AC.object "AllowlistScopeRoles"
+          $ void (discriminatorBoolField "global" False)
+          *> requiredField' "roles"
+
+      dec (Left _) = Right AllowlistScopeGlobal
+      dec (Right roles)
+        | hasDups roles = Left "duplicate roles are not allowed"
+        | otherwise = Right $ AllowlistScopeRoles roles
+      enc AllowlistScopeGlobal = Left ()
+      enc (AllowlistScopeRoles roles) = Right roles
+
+      hasDups xs = length xs /= length (S.fromList (toList xs))
 
 instance FromJSON AllowlistScope where
   parseJSON = withObject "AllowlistScope" $ \o -> do
@@ -69,7 +92,18 @@ data AllowlistEntry = AllowlistEntry
   }
   deriving (Show, Eq, Generic)
 
-$(deriveToJSON hasuraJSON ''AllowlistEntry)
+instance HasCodec AllowlistEntry where
+  codec =
+    AC.object "AllowlistEntry"
+      $ AllowlistEntry
+      <$> requiredField' "collection"
+      AC..= aeCollection
+        <*> optionalFieldWithDefault' "scope" AllowlistScopeGlobal
+      AC..= aeScope
+
+instance ToJSON AllowlistEntry where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 instance FromJSON AllowlistEntry where
   parseJSON = withObject "AllowlistEntry" \o -> do
@@ -91,20 +125,21 @@ type MetadataAllowlist = InsOrdHashMap CollectionName AllowlistEntry
 metadataAllowlistInsert ::
   AllowlistEntry -> MetadataAllowlist -> Either Text MetadataAllowlist
 metadataAllowlistInsert entry@(AllowlistEntry coll _) al =
-  OM.alterF insertIfAbsent coll al
+  InsOrdHashMap.alterF insertIfAbsent coll al
   where
     insertIfAbsent = \case
       Nothing -> Right (Just entry)
       Just _ ->
-        Left $
-          "collection "
-            <> coll <<> " already exists in the allowlist, scope ignored;"
-            <> " to change scope, use update_scope_of_collection_in_allowlist"
+        Left
+          $ "collection "
+          <> coll
+          <<> " already exists in the allowlist, scope ignored;"
+          <> " to change scope, use update_scope_of_collection_in_allowlist"
 
 metadataAllowlistUpdateScope ::
   AllowlistEntry -> MetadataAllowlist -> Either Text MetadataAllowlist
 metadataAllowlistUpdateScope entry@(AllowlistEntry coll _) al =
-  OM.alterF setIfPresent coll al
+  InsOrdHashMap.alterF setIfPresent coll al
   where
     setIfPresent = \case
       Just _ -> Right (Just entry)
@@ -114,7 +149,7 @@ metadataAllowlistUpdateScope entry@(AllowlistEntry coll _) al =
 -- This is used in 'runDropCollection' to function to ensure that we don't delete
 -- any collections which are referred to in the allowlist.
 metadataAllowlistAllCollections :: MetadataAllowlist -> [CollectionName]
-metadataAllowlistAllCollections = toList . OM.map aeCollection
+metadataAllowlistAllCollections = toList . InsOrdHashMap.map aeCollection
 
 -- | A query stripped of typenames. A query is allowed if it occurs
 -- in an allowed query collection after normalization.
@@ -171,25 +206,27 @@ data InlinedAllowlist = InlinedAllowlist
   { iaGlobal :: HashSet NormalizedQuery,
     iaPerRole :: HashMap RoleName (HashSet NormalizedQuery)
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveToJSON hasuraJSON ''InlinedAllowlist)
+instance ToJSON InlinedAllowlist where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 inlineAllowlist :: QueryCollections -> MetadataAllowlist -> InlinedAllowlist
 inlineAllowlist collections allowlist = InlinedAllowlist global perRole
   where
     globalCollections :: [CollectionName]
     globalCollections =
-      [coll | AllowlistEntry coll AllowlistScopeGlobal <- OM.elems allowlist]
+      [coll | AllowlistEntry coll AllowlistScopeGlobal <- InsOrdHashMap.elems allowlist]
     perRoleCollections :: HashMap RoleName [CollectionName]
     perRoleCollections =
-      inverseMap $
-        [ (coll, toList roles)
-          | AllowlistEntry coll (AllowlistScopeRoles roles) <- OM.elems allowlist
-        ]
+      inverseMap
+        $ [ (coll, toList roles)
+            | AllowlistEntry coll (AllowlistScopeRoles roles) <- InsOrdHashMap.elems allowlist
+          ]
 
-    inverseMap :: Hashable b => [(a, [b])] -> HashMap b [a]
-    inverseMap = M.fromListWith (<>) . concatMap (\(c, rs) -> [(r, [c]) | r <- rs])
+    inverseMap :: (Hashable b) => [(a, [b])] -> HashMap b [a]
+    inverseMap = HashMap.fromListWith (<>) . concatMap (\(c, rs) -> [(r, [c]) | r <- rs])
 
     global = inlineQueries globalCollections
     perRole = inlineQueries <$> perRoleCollections
@@ -204,7 +241,7 @@ inlineAllowlist collections allowlist = InlinedAllowlist global perRole
 
     lookupQueries :: CollectionName -> [G.ExecutableDocument G.Name]
     lookupQueries coll =
-      maybe [] collectionQueries $ OM.lookup coll collections
+      maybe [] collectionQueries $ InsOrdHashMap.lookup coll collections
 
 -- | The mode in which the allowlist functions. In global mode,
 -- collections with non-global scope are ignored.
@@ -218,4 +255,4 @@ allowlistAllowsQuery (InlinedAllowlist global perRole) mode role query =
     AllowlistModeFull -> inAllowlist global || inAllowlist roleAllowlist
   where
     inAllowlist = S.member (normalizeQuery query)
-    roleAllowlist = M.findWithDefault mempty role perRole
+    roleAllowlist = HashMap.findWithDefault mempty role perRole

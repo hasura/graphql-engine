@@ -1,4 +1,5 @@
 import React from 'react';
+import clsx from 'clsx';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 import {
@@ -70,7 +71,7 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
       </Helmet>
 
       <Analytics name="EventsTableHeader" {...REDACT_EVERYTHING}>
-        <div className={styles.subHeader}>
+        <div className={clsx(styles.subHeader, 'bootstrap-jail')}>
           <BreadCrumb breadCrumbs={getBreadCrumbs()} />
           <h2 className={styles.heading_text}>{triggerName}</h2>
           <div className={styles.nav}>

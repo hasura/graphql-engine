@@ -18,12 +18,12 @@ import Hasura.Backends.Postgres.Translate.Types (PermissionLimitSubQuery (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.SQL.Backend
 
 aggregateFieldsToExtractorExps ::
-  TableIdentifier -> AggregateFields ('Postgres pgKind) -> [(S.ColumnAlias, S.SQLExp)]
+  TableIdentifier -> AggregateFields ('Postgres pgKind) S.SQLExp -> [(S.ColumnAlias, S.SQLExp)]
 aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
   flip concatMap aggregateFields $ \(_, field) ->
     case field of
@@ -36,21 +36,54 @@ aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
   where
     colsToExps = fmap mkColExp
 
-    aggOpToExps = mapMaybe colToMaybeExp . _aoFields
-    colToMaybeExp = \case
-      (_, CFCol col _) -> Just $ mkColExp col
-      _ -> Nothing
+    -- Do we have any computed fields?
+    hasComputedFields =
+      any
+        ( \case
+            (_, AFOp (AggregateOp _ aoFields)) ->
+              any
+                ( \case
+                    (_, SFComputedField {}) -> True
+                    _ -> False
+                )
+                aoFields
+            _ -> False
+        )
+        aggregateFields
 
+    -- If we have /any/ computed fields, we need to select the entire row.
+    -- Otherwise, we can select specific fields.
+    aggOpToExps a =
+      if hasComputedFields
+        then [mkComputedFieldColExp]
+        else mapMaybe colToMaybeExp . _aoFields $ a
+
+    -- Assuming we don't have any computed fields, extract the columns we need.
+    colToMaybeExp = \case
+      (_, SFCol col _) -> Just $ mkColExp col
+      (_, SFComputedField {}) -> Nothing
+      (_, SFExp _) -> Nothing
+
+    -- Assuming we don't have any computed fields, generate an alias for each
+    -- column we extract.
     mkColExp c =
-      let qualCol = S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix) (toIdentifier c)
-          colAls = toIdentifier c
-       in (S.toColumnAlias colAls, qualCol)
+      let qualifiedColumn = S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix) (toIdentifier c)
+          columnAlias = toIdentifier c
+       in (S.toColumnAlias columnAlias, qualifiedColumn)
+
+    -- If we /do/ have computed fields, we select the entire row to pass to the
+    -- computed field function as an argument, and we can recover the fields we
+    -- need from that row.
+    mkComputedFieldColExp =
+      let columnAlias = identifierToTableIdentifier (Identifier "entire_table_row")
+          qualifiedColumn = S.SEStar (Just (S.QualifiedIdentifier (mkBaseTableIdentifier sourcePrefix) Nothing))
+       in (S.toColumnAlias (tableIdentifierToIdentifier columnAlias), qualifiedColumn)
 
 mkAggregateOrderByExtractorAndFields ::
   forall pgKind.
-  Backend ('Postgres pgKind) =>
+  (Backend ('Postgres pgKind)) =>
   AnnotatedAggregateOrderBy ('Postgres pgKind) ->
-  (S.Extractor, AggregateFields ('Postgres pgKind))
+  (S.Extractor, AggregateFields ('Postgres pgKind) S.SQLExp)
 mkAggregateOrderByExtractorAndFields annAggOrderBy =
   case annAggOrderBy of
     AAOCount ->
@@ -62,11 +95,11 @@ mkAggregateOrderByExtractorAndFields annAggOrderBy =
           pgType = ciType pgColumnInfo
        in ( S.Extractor (S.SEFnApp opText [S.SEIdentifier $ toIdentifier pgColumn] Nothing) alias,
             [ ( FieldName opText,
-                AFOp $
-                  AggregateOp
+                AFOp
+                  $ AggregateOp
                     opText
                     [ ( fromCol @('Postgres pgKind) pgColumn,
-                        CFCol pgColumn pgType
+                        SFCol pgColumn pgType
                       )
                     ]
               )
@@ -99,20 +132,20 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
           rowIdentifier = S.mkQIdenExp subSelIdentifier alias
           extr = S.Extractor (mkSimpleJsonAgg rowIdentifier newOrderBy) Nothing
           fromExp =
-            S.FromExp $
-              pure $
-                S.mkSelFromItem subSelect $
-                  S.toTableAlias subSelAls
-       in S.SESelect $
-            S.mkSelect
+            S.FromExp
+              $ pure
+              $ S.mkSelFromItem subSelect
+              $ S.toTableAlias subSelAls
+       in S.SESelect
+            $ S.mkSelect
               { S.selExtr = pure extr,
                 S.selFrom = Just fromExp
               }
 
     mkSubSelect limit =
       let jsonRowExtr =
-            flip S.Extractor (Just alias) $
-              S.mkQIdenExp unnestTableIdentifier alias
+            flip S.Extractor (Just alias)
+              $ S.mkQIdenExp unnestTableIdentifier alias
           obExtrs = flip map newOBAliases $ \a ->
             S.Extractor (S.mkQIdenExp unnestTableIdentifier a) $ Just $ S.toColumnAlias a
        in S.mkSelect
@@ -123,16 +156,18 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
             }
 
     unnestFromItem =
-      let arrayAggItems = flip map (rowIdenExp : obCols) $
-            \s -> S.SEFnApp "array_agg" [s] Nothing
-       in S.FIUnnest arrayAggItems (S.toTableAlias unnestTable) $
-            alias : map S.toColumnAlias newOBAliases
+      let arrayAggItems = flip map (rowIdenExp : obCols)
+            $ \s -> S.SEFnApp "array_agg" [s] Nothing
+       in S.FIUnnest arrayAggItems (S.toTableAlias unnestTable)
+            $ alias
+            : map S.toColumnAlias newOBAliases
 
     newOrderBy = S.OrderByExp <$> NE.nonEmpty newOBItems
 
     (newOBItems, obCols, newOBAliases) = maybe ([], [], []) transformOrderBy ordBy
-    transformOrderBy (S.OrderByExp l) = unzip3 $
-      flip map (zip (toList l) [1 ..]) $ \(obItem, i :: Int) ->
+    transformOrderBy (S.OrderByExp l) = unzip3
+      $ flip map (zip (toList l) [1 ..])
+      $ \(obItem, i :: Int) ->
         let iden = Identifier $ "ob_col_" <> tshow i
          in ( obItem {S.oExpression = S.SEIdentifier iden},
               S.oExpression obItem,

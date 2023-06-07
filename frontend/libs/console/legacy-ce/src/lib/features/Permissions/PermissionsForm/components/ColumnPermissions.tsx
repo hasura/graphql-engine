@@ -94,7 +94,7 @@ export const ColumnPermissionsSection: React.FC<
   const [showConfirmation, setShowConfirmationModal] = useState<string | null>(
     null
   );
-  const all = watch();
+  watch();
 
   const [selectedColumns, queryRootFields, subscriptionRootFields] = watch([
     'columns',
@@ -171,7 +171,6 @@ export const ColumnPermissionsSection: React.FC<
                 <strong>columns</strong>:
               </p>
             </div>
-
             <fieldset className="flex gap-4 flex-wrap">
               {columns?.map(fieldName => (
                 <label key={fieldName} className="flex gap-2 items-center">

@@ -13,6 +13,7 @@ import Data.Aeson.Key (fromText)
 import Data.Aeson.Types qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
+import Data.Map.Strict (Map)
 import Data.Scientific (fromFloatDigits)
 import Data.Text qualified as Text
 import Data.Text.Casing qualified as C
@@ -24,9 +25,9 @@ import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw40
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, HasSourceConfiguration (..), SupportedNamingCase (..), XDisable, XEnable)
+import Hasura.RQL.Types.BackendType (BackendSourceKind (DataConnectorKind), BackendType (DataConnector))
 import Hasura.RQL.Types.Column (ColumnType (..))
-import Hasura.RQL.Types.ResizePool (ServerReplicas)
-import Hasura.SQL.Backend (BackendType (DataConnector))
+import Hasura.RQL.Types.ResizePool
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | An alias for '()' indicating that a particular associated type has not yet
@@ -40,13 +41,14 @@ import Language.GraphQL.Draft.Syntax qualified as G
 type Unimplemented = ()
 
 instance Backend 'DataConnector where
-  type BackendConfig 'DataConnector = InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions
+  type BackendConfig 'DataConnector = Map DC.DataConnectorName DC.DataConnectorOptions
   type BackendInfo 'DataConnector = HashMap DC.DataConnectorName DC.DataConnectorInfo
 
   type TableName 'DataConnector = DC.TableName
   type FunctionName 'DataConnector = DC.FunctionName
-  type RawFunctionInfo 'DataConnector = XDisable
-  type FunctionArgument 'DataConnector = XDisable
+  type FunctionReturnType 'DataConnector = DC.FunctionReturnType
+  type RawFunctionInfo 'DataConnector = API.FunctionInfo
+  type FunctionArgument 'DataConnector = API.FunctionArg
   type ConstraintName 'DataConnector = DC.ConstraintName
   type BasicOrderType 'DataConnector = DC.OrderDirection
   type NullsOrderType 'DataConnector = Unimplemented
@@ -61,9 +63,9 @@ instance Backend 'DataConnector where
   type SQLExpression 'DataConnector = DC.Literal
   type ScalarSelectionArguments 'DataConnector = Void
   type BooleanOperators 'DataConnector = CustomBooleanOperator
-  type ExtraTableMetadata 'DataConnector = Unimplemented
+  type ExtraTableMetadata 'DataConnector = DC.ExtraTableMetadata
   type ComputedFieldDefinition 'DataConnector = Unimplemented
-  type FunctionArgumentExp 'DataConnector = Const Unimplemented
+  type FunctionArgumentExp 'DataConnector = DC.ArgumentExp
   type ComputedFieldImplicitArguments 'DataConnector = Unimplemented
   type ComputedFieldReturn 'DataConnector = Unimplemented
 
@@ -76,6 +78,7 @@ instance Backend 'DataConnector where
   type XEventTriggers 'DataConnector = XDisable
   type XNestedInserts 'DataConnector = XDisable
   type XStreamingSubscription 'DataConnector = XDisable
+  type XNestedObjects 'DataConnector = XEnable
 
   type HealthCheckTest 'DataConnector = Void
 
@@ -91,12 +94,12 @@ instance Backend 'DataConnector where
     where
       scalarTypesCapabilities = API.unScalarTypesCapabilities $ API._cScalarTypes _scCapabilities
       insertOps typeName API.ScalarTypeCapabilities {..} m =
-        HashMap.foldrWithKey insertOp m $
-          API.unAggregateFunctions _stcAggregateFunctions
+        HashMap.foldrWithKey insertOp m
+          $ API.unAggregateFunctions _stcAggregateFunctions
         where
           insertOp funtionName resultTypeName =
-            HashMap.insertWith HashMap.union funtionName $
-              HashMap.singleton
+            HashMap.insertWith HashMap.union funtionName
+              $ HashMap.singleton
                 (DC.mkScalarType _scCapabilities typeName)
                 (DC.mkScalarType _scCapabilities resultTypeName)
 
@@ -109,9 +112,7 @@ instance Backend 'DataConnector where
   scalarValueToJSON :: ScalarValue 'DataConnector -> J.Value
   scalarValueToJSON = id
 
-  functionToTable :: FunctionName 'DataConnector -> TableName 'DataConnector
-  functionToTable = error "functionToTable: not implemented for the Data Connector backend."
-
+  -- TODO: Fill in this definition for computed fields
   computedFieldFunction :: ComputedFieldDefinition 'DataConnector -> FunctionName 'DataConnector
   computedFieldFunction = error "computedFieldFunction: not implemented for the Data Connector backend"
 
@@ -125,6 +126,9 @@ instance Backend 'DataConnector where
   tableToFunction :: TableName 'DataConnector -> FunctionName 'DataConnector
   tableToFunction = coerce
 
+  functionToTable :: FunctionName 'DataConnector -> TableName 'DataConnector
+  functionToTable = coerce
+
   tableGraphQLName :: TableName 'DataConnector -> Either QErr G.Name
   tableGraphQLName name = do
     let snakedName = snakeCaseTableName @'DataConnector name
@@ -132,7 +136,10 @@ instance Backend 'DataConnector where
       `onNothing` throw400 ValidationFailed ("TableName " <> snakedName <> " is not a valid GraphQL identifier")
 
   functionGraphQLName :: FunctionName 'DataConnector -> Either QErr G.Name
-  functionGraphQLName = error "functionGraphQLName: not implemented for the Data Connector backend."
+  functionGraphQLName name = do
+    let snakedName = snakeCaseTableName @'DataConnector (coerce name)
+    G.mkName snakedName
+      `onNothing` throw400 ValidationFailed ("FunctionName " <> snakedName <> " is not a valid GraphQL name")
 
   snakeCaseTableName :: TableName 'DataConnector -> Text
   snakeCaseTableName = Text.intercalate "_" . NonEmpty.toList . DC.unTableName
@@ -149,16 +156,19 @@ instance Backend 'DataConnector where
   namingConventionSupport :: SupportedNamingCase
   namingConventionSupport = OnlyHasuraCase
 
-  resizeSourcePools :: SourceConfig 'DataConnector -> ServerReplicas -> IO ()
+  resizeSourcePools :: SourceConfig 'DataConnector -> ServerReplicas -> IO SourceResizePoolSummary
   resizeSourcePools _sourceConfig _serverReplicas =
     -- Data connectors do not have concept of connection pools
-    pure ()
+    pure noPoolsResizedSummary
 
   defaultTriggerOnReplication = Nothing
 
 instance HasSourceConfiguration 'DataConnector where
   type SourceConfig 'DataConnector = DC.SourceConfig
   type SourceConnConfiguration 'DataConnector = DC.ConnSourceConfig
+  sourceConfigNumReadReplicas = const 0 -- not supported
+  sourceConfigConnectonTemplateEnabled = const False -- not supported
+  sourceConfigBackendSourceKind DC.SourceConfig {..} = DataConnectorKind _scDataConnectorName
 
 data CustomBooleanOperator a = CustomBooleanOperator
   { _cboName :: Text,
@@ -166,11 +176,11 @@ data CustomBooleanOperator a = CustomBooleanOperator
   }
   deriving stock (Eq, Generic, Foldable, Functor, Traversable, Show)
 
-instance NFData a => NFData (CustomBooleanOperator a)
+instance (NFData a) => NFData (CustomBooleanOperator a)
 
-instance Hashable a => Hashable (CustomBooleanOperator a)
+instance (Hashable a) => Hashable (CustomBooleanOperator a)
 
-instance J.ToJSON a => ToJSONKeyValue (CustomBooleanOperator a) where
+instance (J.ToJSON a) => ToJSONKeyValue (CustomBooleanOperator a) where
   toJSONKeyValue CustomBooleanOperator {..} = (fromText _cboName, J.toJSON _cboRHS)
 
 parseValue :: DC.ScalarType -> J.Value -> J.Parser J.Value

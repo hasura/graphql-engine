@@ -8,7 +8,7 @@ import { CapabilitiesResponse, SchemaResponse, QueryRequest, QueryResponse, Data
 import { cloneDataset, defaultDbStoreName, deleteDataset, getDataset, getDbStoreName } from './datasets';
 
 const port = Number(process.env.PORT) || 8100;
-const server = Fastify({ logger: { prettyPrint: true } });
+const server = Fastify({ logger: { transport: { target: 'pino-pretty' } }});
 let staticData : Record<string, StaticData> = {};
 
 server.register(FastifyCors, {
@@ -28,7 +28,7 @@ server.get<{ Reply: CapabilitiesResponse }>("/capabilities", async (request, _re
 server.get<{ Reply: SchemaResponse }>("/schema", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "schema.request");
   const config = getConfig(request);
-  return getSchema(config);
+  return getSchema(staticData, config);
 });
 
 server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (request, _response) => {
@@ -84,8 +84,8 @@ process.on('SIGINT', () => {
 
 const start = async () => {
   try {
-    staticData = {[defaultDbStoreName]: await loadStaticData("Chinook.xml.gz")};
-    await server.listen(port, "0.0.0.0");
+    staticData = {[defaultDbStoreName]: await loadStaticData("Chinook")};
+    await server.listen({port: port, host: "0.0.0.0"});
   }
   catch (err) {
     server.log.fatal(err);

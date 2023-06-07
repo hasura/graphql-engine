@@ -6,19 +6,21 @@
 -- Test case for bug reported at https://github.com/hasura/graphql-engine/issues/7936
 module Test.Regression.ObjectRelationshipsLimit7936Spec (spec) where
 
-import Data.Aeson (Value)
+import Data.Aeson
 import Data.List.NonEmpty qualified as NE
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql, postMetadata_)
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
-import Harness.Yaml (shouldReturnOneOfYaml, shouldReturnYaml)
+import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (_options))
+import Harness.Yaml (Visual (..), parseToMatch, shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, it)
+import Test.Hspec (HasCallStack, SpecWith, it, shouldBe, shouldContain)
 
 spec :: SpecWith GlobalTestEnvironment
 spec =
@@ -76,14 +78,8 @@ schema =
 --
 -- Because of that, we use 'shouldReturnOneOfYaml' and list all of the possible
 -- (valid) expected results.
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBeOneOf :: IO Value -> [Value] -> IO ()
-      shouldBeOneOf = shouldReturnOneOfYaml opts
-
-      shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   it "Query by ID" \testEnvironment -> do
     let possibilities :: [Value]
         possibilities =
@@ -118,7 +114,7 @@ tests opts = do
                 }
               |]
 
-    actual `shouldBeOneOf` possibilities
+    shouldReturnOneOfYaml testEnvironment actual possibilities
 
   it "Query limit 2" \testEnvironment -> do
     let possibilities :: [Value]
@@ -160,7 +156,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBeOneOf` possibilities
+    shouldReturnOneOfYaml testEnvironment actual possibilities
 
   it "... where author name" \testEnvironment -> do
     let possibilities :: [Value]
@@ -196,7 +192,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBeOneOf` possibilities
+    shouldReturnOneOfYaml testEnvironment actual possibilities
 
   it "Order by author id" \testEnvironment -> do
     let possibilities :: [Value]
@@ -238,7 +234,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBeOneOf` possibilities
+    shouldReturnOneOfYaml testEnvironment actual possibilities
 
   it "Count articles" \testEnvironment -> do
     let expected :: Value
@@ -264,7 +260,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata
@@ -307,3 +303,25 @@ setupMetadata testEnvironment = do
             |]
 
   Fixture.SetupAction setup \_ -> teardown
+
+-- | The action @actualIO@ should produce the @expected@ YAML,
+-- represented (by the yaml package) as an aeson 'Value'.
+--
+-- We use 'Visual' internally to easily display the 'Value' as YAML
+-- when the test suite uses its 'Show' instance.
+shouldReturnOneOfYaml :: (HasCallStack) => TestEnvironment -> IO Value -> [Value] -> IO ()
+shouldReturnOneOfYaml testEnv actualIO candidates = do
+  let Fixture.Options {stringifyNumbers} = _options testEnv
+  actual <- actualIO
+
+  let expecteds :: Set Value
+      expecteds = Set.fromList candidates
+
+      actuals :: Set Value
+      actuals
+        | stringifyNumbers = Set.map (`parseToMatch` actual) expecteds
+        | otherwise = Set.singleton actual
+
+  case Set.lookupMin (Set.intersection expecteds actuals) of
+    Just match -> Visual match `shouldBe` Visual actual
+    Nothing -> map Visual (Set.toList expecteds) `shouldContain` [Visual actual]

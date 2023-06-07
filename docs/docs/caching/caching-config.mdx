@@ -1,0 +1,103 @@
+---
+title: Caching Config
+keywords:
+  - caching
+  - queries
+  - query
+  - config
+sidebar_position: 4
+---
+
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Caching Config
+
+<ProductBadge standard pro ee self />
+
+## Introduction
+
+Hasura Cloud and Enterprise Edition provide support for caching query responses. This will drastically improve
+performance for queries which are executed frequently. This includes any GraphQL query including Actions and Remote
+Schemas.
+
+Cached responses are stored for a period of time in a LRU (least-recently used) cache, and removed from the cache as per
+a user-specified TTL (time-to-live) which defaults to 60 seconds.
+
+For self-hosted Enterprise Edition, refer to the [enable caching](/enterprise/caching.mdx) documentation configure
+various parameters.
+
+## Getting started
+
+In order to cache a query response, or to return an existing response from the cache (if one exists), simply add the
+`@cached` directive to your query:
+
+```graphql
+query MyCachedQuery @cached {
+  users {
+    id
+    name
+  }
+}
+```
+
+If the response was cached successfully, the HTTP response will include a `Cache-Control` header, whose value
+(`max-age={SECONDS}`) indicates the maximum number of seconds for the returned response to remain in the cache.
+
+
+## Controlling cache lifetime
+
+The maximum lifetime of an entry in the cache can be controlled using the `ttl` argument to the `@cached` query
+directive. The value is an integer number of seconds:
+
+```graphql
+query MyCachedQuery @cached(ttl: 120) {
+  users {
+    id
+    name
+  }
+}
+```
+
+By default, a response will be cached with a maximum lifetime of 60 seconds. The maximum allowed value is 300 seconds (5
+minutes).
+
+## Forcing the cache to refresh
+
+The cache entry can be forced to refresh, regardless of the maximum lifetime using the `refresh` argument to `@cached`.
+The value is a boolean:
+
+```graphql
+query MyCachedQuery @cached(refresh: true) {
+  users {
+    id
+    name
+  }
+}
+```
+
+:::info Use a literal boolean value for refresh
+
+`refresh` must be provided with literal boolean value and not as a variable to
+have the desired effect. If the value of this refresh argument is provided via a
+GraphQL variable, then there would be a cache miss, as it is considered a
+different query and will generate a new cache key.
+
+:::
+
+## Response headers
+
+When you enable caching for a query, the following headers should be returned in the HTTP response:
+
+- `X-Hasura-Query-Cache-Key` - Key for cached query response, unique to this query
+- `X-Hasura-Query-Family-Cache-Key` - Key for the family of queries (ignores variable values)
+- `Cache-Control` - Value: `max-age={SECONDS}` - Seconds until cache expires for query
+
+These can be used by your application as you see fit, as well as by the cache-clearing endpoints.
+
+## Clearing items from the cache
+
+A set of endpoints exist to clear items from the cache for the current project:
+
+- `POST /pro/cache/clear` -- Clears all
+- `POST /pro/cache/clear?key={HASH}` -- Clears key hash
+- `POST /pro/cache/clear?family={FAMILY}` -- Clears items that match query family (ignoring variables)

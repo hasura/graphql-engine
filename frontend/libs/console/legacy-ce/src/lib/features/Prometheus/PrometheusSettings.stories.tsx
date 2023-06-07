@@ -1,9 +1,12 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { rest, DelayMode } from 'msw';
 import { QueryClient, QueryClientProvider } from 'react-query';
+import { ReactQueryDevtools } from 'react-query/devtools';
 
 import { PrometheusSettings } from '.';
+import { eeLicenseInfo } from '../EETrial/mocks/http';
+import { registerEETrialLicenseActiveMutation } from '../EETrial/mocks/registration.mock';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,7 +24,7 @@ window.__env = {
   dataApiUrl: baseUrl,
 };
 
-const mockHandler = (
+const mockConfigHandler = (
   prometheusEnabled: boolean,
   delay: number | DelayMode,
   status = 200
@@ -66,39 +69,67 @@ export default {
     (Story: React.FC) => (
       <QueryClientProvider client={queryClient}>
         <Story />
+        <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     ),
   ],
-} as ComponentMeta<typeof PrometheusSettings>;
+} as Meta<typeof PrometheusSettings>;
 
-export const Loading: ComponentStory<typeof PrometheusSettings> = () => (
-  <PrometheusSettings />
-);
-Loading.storyName = '💠 Demo Page Loading';
-Loading.parameters = {
-  msw: [mockHandler(true, 'infinite')],
+export const DisabledWithoutLicense: StoryObj<typeof PrometheusSettings> = {
+  render: () => <PrometheusSettings />,
+  name: '💠 Demo Page Disabled without license',
+
+  parameters: {
+    msw: [
+      mockConfigHandler(false, 1),
+      eeLicenseInfo.noneOnce,
+      registerEETrialLicenseActiveMutation,
+      eeLicenseInfo.active,
+    ],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const Enabled: ComponentStory<typeof PrometheusSettings> = () => (
-  <PrometheusSettings />
-);
-Enabled.storyName = '💠 Demo Page Enabled';
-Enabled.parameters = {
-  msw: [mockHandler(true, 1)],
+export const Loading: StoryObj<typeof PrometheusSettings> = {
+  render: () => <PrometheusSettings />,
+
+  name: '💠 Demo Page Loading',
+
+  parameters: {
+    msw: [mockConfigHandler(true, 'infinite'), eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const Disabled: ComponentStory<typeof PrometheusSettings> = () => (
-  <PrometheusSettings />
-);
-Disabled.storyName = '💠 Demo Page Disabled';
-Disabled.parameters = {
-  msw: [mockHandler(false, 1)],
+export const Enabled: StoryObj<typeof PrometheusSettings> = {
+  render: () => <PrometheusSettings />,
+
+  name: '💠 Demo Page Enabled',
+
+  parameters: {
+    msw: [mockConfigHandler(true, 1), eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };
 
-export const Error: ComponentStory<typeof PrometheusSettings> = () => (
-  <PrometheusSettings />
-);
-Error.storyName = '💠 Demo Page Error';
-Error.parameters = {
-  msw: [mockHandler(false, 1, 500)],
+export const Disabled: StoryObj<typeof PrometheusSettings> = {
+  render: () => <PrometheusSettings />,
+
+  name: '💠 Demo Page Disabled',
+
+  parameters: {
+    msw: [mockConfigHandler(false, 1), eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
+};
+
+export const Error: StoryObj<typeof PrometheusSettings> = {
+  render: () => <PrometheusSettings />,
+
+  name: '💠 Demo Page Error',
+
+  parameters: {
+    msw: [mockConfigHandler(false, 1, 500), eeLicenseInfo.active],
+    consoleType: 'pro-lite',
+  },
 };

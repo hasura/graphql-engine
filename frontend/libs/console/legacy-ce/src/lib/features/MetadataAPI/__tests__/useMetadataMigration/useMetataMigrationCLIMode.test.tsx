@@ -128,10 +128,10 @@ describe('in CLI mode', () => {
 
     await testLibWaitFor(() => {
       expect(screen.getByRole('heading')).toMatchInlineSnapshot(`
-      <h1>
-        2
-      </h1>
-    `);
+              <h1>
+                2
+              </h1>
+          `);
     });
   });
 
@@ -146,7 +146,7 @@ describe('in CLI mode', () => {
     await waitFor(() => result.current.isSuccess);
 
     expect(result.current?.data).toMatchInlineSnapshot(`
-      Object {
+      {
         "message": "mock success response from cli server",
       }
     `);

@@ -10,6 +10,7 @@ import { CLI_CONSOLE_MODE } from '../../../constants';
 import styles from '../../Common/TableCommon/Table.module.scss';
 import { isFeatureSupported } from '../../../dataSources';
 import { fetchPostgresVersion } from '../../Main/Actions';
+import { useEnvironmentState } from '../../../features/ConnectDBRedesign/hooks';
 
 const DataPageContainer = ({
   children,
@@ -17,6 +18,7 @@ const DataPageContainer = ({
   dispatch,
   currentDataSource,
 }) => {
+  const { consoleType } = useEnvironmentState();
   useEffect(() => {
     // TODO: handle for different drivers
     if (
@@ -47,7 +49,7 @@ const DataPageContainer = ({
 
   const sidebarContent = (
     <Analytics name="DataPageContainerSidebar" {...REDACT_EVERYTHING}>
-      <ul>
+      <ul className="bootstrap-jail">
         <li
           role="presentation"
           className={
@@ -58,25 +60,50 @@ const DataPageContainer = ({
               : ''
           }
         >
-          <Link className={styles.linkBorder} to={`/data/manage`}>
+          <Link
+            data-testid="Data Manager"
+            className={styles.linkBorder}
+            to={`/data/manage`}
+          >
             Data Manager
           </Link>
 
           <DataSubSidebar />
         </li>
         {currentDataSource && (
-          <li
-            role="presentation"
-            className={currentLocation.includes('/sql') ? styles.active : ''}
-          >
-            <Link
-              className={styles.linkBorder}
-              to={`/data/sql`}
-              data-test="sql-link"
+          <>
+            <li
+              role="presentation"
+              className={currentLocation.includes('/sql') ? styles.active : ''}
             >
-              SQL
-            </Link>
-          </li>
+              <Link
+                className={styles.linkBorder}
+                to={`/data/sql`}
+                data-test="sql-link"
+              >
+                SQL
+              </Link>
+            </li>
+            {consoleType !== 'oss' ? (
+              <li
+                role="presentation"
+                className={
+                  currentLocation.includes('/native-queries') ||
+                  currentLocation.includes('/logical-models')
+                    ? styles.active
+                    : ''
+                }
+              >
+                <Link
+                  className={styles.linkBorder}
+                  to={`/data/native-queries`}
+                  data-test="native-queries"
+                >
+                  Native Queries
+                </Link>
+              </li>
+            ) : null}
+          </>
         )}
         {migrationTab}
       </ul>

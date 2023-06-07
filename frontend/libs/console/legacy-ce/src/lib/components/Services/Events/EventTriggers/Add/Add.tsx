@@ -45,6 +45,8 @@ import { isEmpty } from '../../../../Common/utils/jsUtils';
 import requestAction from '../../../../../utils/requestAction';
 import Endpoints from '../../../../../Endpoints';
 import { Button } from '../../../../../new-components/Button';
+import { useEELiteAccess } from '../../../../../features/EETrial';
+import globals from '../../../../../Globals';
 import { MapStateToProps } from '../../../../../types';
 import { useEventTrigger } from '../state';
 import { Header } from '../../../../Common/Headers/Headers';
@@ -66,7 +68,7 @@ import {
 } from '../../types';
 import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const Add: React.FC<Props> = props => {
   const { state, setState } = useEventTrigger();
@@ -83,6 +85,13 @@ const Add: React.FC<Props> = props => {
   const { dispatch, readOnlyMode, dataSourcesList } = props;
 
   const [databaseInfo, setDatabaseInfo] = useState<DatabaseInfo>({});
+
+  const { access: eeLiteAccess } = useEELiteAccess(globals);
+
+  const autoCleanupSupport =
+    isProConsole(globals) || eeLiteAccess === 'active'
+      ? 'active'
+      : eeLiteAccess;
 
   useEffect(() => {
     const driver = getSourceDriver(dataSourcesList, source);
@@ -303,13 +312,15 @@ const Add: React.FC<Props> = props => {
     const newState = { ...state };
 
     /* don't cleanup_config if console type is oss */
-    if (!isProConsole(window.__env)) {
+    if (autoCleanupSupport === 'active') {
       delete newState?.cleanupConfig;
     }
 
-    /* if auto cleanup is paused while creating event trigger */
-    /* remove the cleanup_config from the state */
-    if (state.cleanupConfig?.paused) {
+    /* don't pass cleanup config if it's empty or just have only paused*/
+    if (
+      JSON.stringify(newState?.cleanupConfig) === '{}' ||
+      JSON.stringify(newState?.cleanupConfig) === '{"paused":true}'
+    ) {
       delete newState?.cleanupConfig;
     }
 
@@ -377,7 +388,7 @@ const Add: React.FC<Props> = props => {
 
   return (
     <Analytics name="AddEventTrigger" {...REDACT_EVERYTHING}>
-      <div className="w-full overflow-y-auto bg-gray-50">
+      <div className="w-full overflow-y-auto bg-gray-50 bootstrap-jail">
         <div className="max-w-6xl">
           <div className="pt-md pb-md clear-both pl-md">
             <Helmet
@@ -411,6 +422,7 @@ const Add: React.FC<Props> = props => {
                     handleHeadersChange={handleHeadersChange}
                     handleToggleAllColumn={setState.toggleAllColumnChecked}
                     handleAutoCleanupChange={handleAutoCleanupChange}
+                    autoCleanupSupport={autoCleanupSupport}
                   />
                   <ConfigureTransformation
                     transformationType="event"

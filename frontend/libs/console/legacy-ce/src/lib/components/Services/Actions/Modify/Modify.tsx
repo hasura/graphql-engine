@@ -487,7 +487,7 @@ const ModifyAction: React.FC<ModifyProps> = ({
   );
 };
 
-interface ModifyProps extends InjectedProps {}
+type ModifyProps = InjectedProps;
 
 const Modify: React.FC<ModifyProps> = ({
   params,

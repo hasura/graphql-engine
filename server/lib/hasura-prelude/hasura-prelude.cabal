@@ -1,4 +1,4 @@
-cabal-version: 3.0
+cabal-version: 3.6
 name: hasura-prelude
 version: 0.1.0.0
 

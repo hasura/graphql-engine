@@ -1,8 +1,9 @@
 {
+  "name": "nx-storybook-addon-console-env",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/nx/storybook-addon-console-env/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["scope:shared", "type:feature", "meta:package"],
   "targets": {
     "build": {
       "executor": "@nrwl/js:swc",
@@ -26,13 +27,15 @@
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [
-          "libs/nx/storybook-addon-console-env/**/*.{ts,tsx,js,jsx}"
+          "libs/nx/storybook-addon-console-env/**/*.{ts,tsx,js,jsx,json}"
         ]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/libs/nx/storybook-addon-console-env"],
+      "outputs": [
+        "{workspaceRoot}/coverage/libs/nx/storybook-addon-console-env"
+      ],
       "options": {
         "jestConfig": "libs/nx/storybook-addon-console-env/jest.config.ts",
         "passWithNoTests": true
@@ -42,11 +45,8 @@
       "dependsOn": ["build"],
       "executor": "@nrwl/storybook:storybook",
       "options": {
-        "uiFramework": "@storybook/react",
         "port": 4400,
-        "config": {
-          "configFolder": "libs/nx/storybook-addon-console-env/.storybook"
-        }
+        "configDir": "libs/nx/storybook-addon-console-env/.storybook"
       },
       "configurations": {
         "ci": {
@@ -55,7 +55,7 @@
       }
     },
     "publish": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
         "command": "node tools/scripts/publish.mjs nx-storybook-addon-console-env {args.ver} {args.tag}"
       },

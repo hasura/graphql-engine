@@ -5,23 +5,21 @@ import { RequestHeadersSelector } from '../../../../../new-components/RequestHea
 
 export const AdvancedSettings = () => {
   return (
-    <>
-      <Collapse title="Advance Settings">
-        <Collapse.Content>
-          <div className="relative max-w-xl">
-            <div className="mb-md">
-              <label className="block flex items-center text-gray-600 font-semibold mb-xs">
-                Headers
-                <IconTooltip message="Configure headers for the request to the webhook" />
-              </label>
-              <RequestHeadersSelector
-                name="headers"
-                addButtonText="Add request headers"
-              />
-            </div>
+    <Collapse title="Advance Settings">
+      <Collapse.Content>
+        <div className="relative max-w-xl">
+          <div className="mb-md">
+            <label className="block flex items-center text-gray-600 font-semibold mb-xs">
+              Headers
+              <IconTooltip message="Configure headers for the request to the webhook" />
+            </label>
+            <RequestHeadersSelector
+              name="headers"
+              addButtonText="Add request headers"
+            />
           </div>
-        </Collapse.Content>
-      </Collapse>
-    </>
+        </div>
+      </Collapse.Content>
+    </Collapse>
   );
 };

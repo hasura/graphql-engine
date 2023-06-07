@@ -3,7 +3,7 @@ import { generateGraphQLCustomizationInfo } from '../../GraphQLCustomization/uti
 import { BigQueryConnectionSchema } from '../schema';
 import { cleanEmpty } from '../../ConnectPostgresWidget/utils/helpers';
 
-export const generatePostgresRequestPayload = ({
+export const generateBigQueryRequestPayload = ({
   driver,
   values,
 }: {
@@ -24,9 +24,9 @@ export const generatePostgresRequestPayload = ({
             ? { from_env: values.configuration.projectId.envVar }
             : values.configuration.projectId.value,
         datasets:
-          values.configuration.projectId.type === 'envVar'
-            ? { from_env: values.configuration.projectId.envVar }
-            : values.configuration.projectId.value.split(','),
+          values.configuration.datasets.type === 'envVar'
+            ? { from_env: values.configuration.datasets.envVar }
+            : values.configuration.datasets.value.split(','),
       },
       customization: generateGraphQLCustomizationInfo(
         values.customization ?? {}

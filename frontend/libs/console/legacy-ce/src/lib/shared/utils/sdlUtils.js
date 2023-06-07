@@ -383,18 +383,20 @@ export const getSdlComplete = (allActions, allTypes) => {
   return sdl;
 };
 
-export const toggleCacheDirective = operationString => {
+export const toggleCacheDirective = (operationString, onlyAdd = false) => {
   let operationAst;
   try {
     operationAst = sdlParse(operationString);
   } catch (e) {
     console.error(e);
-    return;
+    throw e;
   }
 
   const shouldAddCacheDirective = !operationAst.definitions.some(def => {
     return def.directives.some(dir => dir.name.value === 'cached');
   });
+
+  if (onlyAdd && !shouldAddCacheDirective) return operationString;
 
   const newOperationAst = JSON.parse(JSON.stringify(operationAst));
 

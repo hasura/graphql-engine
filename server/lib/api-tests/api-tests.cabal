@@ -11,8 +11,8 @@ common common-all
     -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
     -Weverything
     -Wno-missing-exported-signatures
-    -Wno-missing-import-lists
     -Wno-missed-specialisations
+    -Wno-missing-import-lists
     -Wno-all-missed-specialisations
     -Wno-unsafe
     -Wno-safe
@@ -57,12 +57,15 @@ library
     , aeson-pretty
     , base
     , bytestring
+    , containers
+    , data-has
     , dc-api
     , directory
     , fast-logger
     , filepath
     , graphql-engine
     , graphql-parser
+    , hasura-extras
     , hasura-prelude
     , hspec
     , hspec-core
@@ -85,6 +88,7 @@ library
     , uuid
     , vector
     , time
+    , QuickCheck
 
   exposed-modules:
     Spec
@@ -92,12 +96,16 @@ library
     Test.API.ConcurrentBulkSpec
     Test.API.ExplainSpec
     Test.API.GraphQL.ContentLengthSpec
+    Test.API.Metadata.BulkKeepGoingSpec
     Test.API.Metadata.ComputedFieldsSpec
     Test.API.Metadata.InconsistentSpec
     Test.API.Metadata.LogicalModelsSpec
     Test.API.Metadata.SuggestRelationshipsSpec
+    Test.API.Metadata.TablesSpec
     Test.API.Metadata.TestConnectionTemplateSpec
+    Test.API.Metadata.TrackTablesSpec
     Test.API.Metadata.TransparentDefaultsSpec
+    Test.API.Metadata.UntrackTablesSpec
     Test.API.Metadata.WarningsSpec
     Test.API.Schema.RunSQLSpec
     Test.Auth.Authorization.DisableRootFields.Common
@@ -118,6 +126,8 @@ library
     Test.DataConnector.MockAgent.MetadataApiSpec
     Test.DataConnector.MockAgent.OrderBySpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
+    Test.DataConnector.MockAgent.RemoteRelationshipsSpec
+    Test.DataConnector.MockAgent.TestHelpers
     Test.DataConnector.MockAgent.TransformedConfigurationSpec
     Test.DataConnector.MockAgent.UpdateMutationsSpec
     Test.DataConnector.QuerySpec
@@ -172,10 +182,12 @@ library
     Test.Queries.Errors.NoQueriesAvailableSpec
     Test.Queries.FilterSearch.AggregationPredicatesSpec
     Test.Queries.FilterSearch.FilterSearchSpec
-    Test.Queries.LogicalModels.LogicalModelsQueriesSpec
+    Test.Queries.NativeQueriesSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
+    Test.Queries.Relationship.PermissionRootReferenceSpec
+    Test.Queries.Simple.JSONSpec
     Test.Queries.Simple.ObjectQueriesSpec
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec
@@ -199,9 +211,12 @@ library
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec
     Test.Regression.RemoteRelationshipStringifyNum8387Spec
+    Test.Regression.RootExistElementAliasing9457Spec
     Test.Regression.StreamConflictSpec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
     Test.Regression.SqlServerIdentifierQuotingSpec
+    Test.ScheduledEvents.ScheduledEventsInvalidEnvVarSpec
+    Test.Schema.ComputedFields.AggregationSpec
     Test.Schema.ComputedFields.ScalarSpec
     Test.Schema.ComputedFields.TableSpec
     Test.Schema.ConflictsSpec
@@ -240,7 +255,7 @@ executable api-tests
     , lens-aeson
     , api-tests
     , base
-    , hspec
+    , hspec-core
 
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
@@ -334,6 +349,7 @@ executable produce-feature-matrix
     , fast-logger
     , feature-matrix
     , filepath
+    , hasura-extras
     , hasura-prelude
     , hspec
     , optparse-generic

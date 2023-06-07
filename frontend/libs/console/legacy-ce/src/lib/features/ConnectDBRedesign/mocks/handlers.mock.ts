@@ -1,198 +1,64 @@
-import { Metadata } from '../../hasura-metadata-types';
 import { rest } from 'msw';
+import {
+  mockCapabilitiesResponse,
+  mockMetadata,
+  mockSourceKinds,
+} from './data.mock';
+type AgentTestType =
+  | 'super_connector_agents_added'
+  | 'super_connector_agents_not_added'
+  | 'super_connector_agents_added_but_unavailable';
 
-const mockMetadata: Metadata = {
-  resource_version: 1,
-  metadata: {
-    version: 3,
-    sources: [
-      {
-        name: 'sqlite_test',
-        kind: 'sqlite',
-        tables: [],
-        configuration: {
-          template: null,
-          timeout: null,
-          value: {
-            db: './chinook.db',
-            explicit_main_schema: false,
-            include_sqlite_meta_tables: false,
-            tables: ['Album', 'Artist', 'Genre', 'Track'],
-          },
-        },
-      },
-      {
-        name: 'chinook',
-        kind: 'postgres',
-        tables: [],
-        configuration: {
-          connection_info: {
-            database_url:
-              'postgres://postgres:test@host.docker.internal:6001/chinook',
-            isolation_level: 'repeatable-read',
-            pool_settings: {
-              connection_lifetime: 150,
-              idle_timeout: 150,
-              pool_timeout: 150,
-              retries: 150,
-              total_max_connections: 150,
-            },
-            use_prepared_statements: true,
-          },
-          extensions_schema: 'test_public',
-          read_replicas: [
-            {
-              database_url:
-                'postgres://postgres:test@host.docker.internal:6001/chinook',
-              isolation_level: 'read-committed',
-              use_prepared_statements: false,
-            },
-          ],
-        },
-        customization: {
-          root_fields: {
-            namespace: 'namespace_',
-            prefix: 'prefix_',
-            suffix: '_suffix',
-          },
-          type_names: {
-            prefix: 'prefix_',
-            suffix: '_suffix',
-          },
-        },
-      },
-      {
-        name: 'mssql1',
-        kind: 'mssql',
-        tables: [],
-        configuration: {
-          connection_info: {
-            connection_string: {
-              from_env: 'HASURA_ENV_VAR',
-            },
-            pool_settings: {
-              max_connections: 50,
-              idle_timeout: 180,
-            },
-          },
-        },
-        customization: {
-          root_fields: {
-            namespace: 'some_field_name',
-            prefix: 'some_field_name_prefix',
-            suffix: 'some_field_name_suffix',
-          },
-          type_names: {
-            prefix: 'some_type_name_prefix',
-            suffix: 'some_type_name_suffix',
-          },
-        },
-      },
-    ],
-  },
-};
-
-export const mockCapabilitiesResponse = {
-  capabilities: {
-    comparisons: { subquery: { supports_relations: true } },
-    data_schema: { supports_foreign_keys: true, supports_primary_keys: true },
-    explain: {},
-    queries: {},
-    raw: {},
-    relationships: {},
-    scalar_types: {
-      DateTime: {
-        comparison_operators: { _in_year: 'int' },
-        graphql_type: 'String',
-      },
-      bool: {
-        comparison_operators: {
-          _and: 'bool',
-          _nand: 'bool',
-          _or: 'bool',
-          _xor: 'bool',
-        },
-        graphql_type: 'Boolean',
-      },
-      decimal: {
-        aggregate_functions: { max: 'decimal', min: 'decimal', sum: 'decimal' },
-        comparison_operators: { _modulus_is_zero: 'decimal' },
-        graphql_type: 'Float',
-        update_column_operators: {
-          dec: { argument_type: 'decimal' },
-          inc: { argument_type: 'decimal' },
-        },
-      },
-      number: {
-        aggregate_functions: { max: 'number', min: 'number', sum: 'number' },
-        comparison_operators: { _modulus_is_zero: 'number' },
-        graphql_type: 'Float',
-        update_column_operators: {
-          dec: { argument_type: 'number' },
-          inc: { argument_type: 'number' },
-        },
-      },
-      string: {
-        aggregate_functions: { max: 'string', min: 'string' },
-        comparison_operators: { _glob: 'string', _like: 'string' },
-        graphql_type: 'String',
-      },
-    },
-  },
-  config_schema_response: {
-    config_schema: {
-      nullable: false,
-      properties: {
-        DEBUG: {
-          additionalProperties: true,
-          description: 'For debugging.',
-          nullable: true,
-          type: 'object',
-        },
-        db: { description: 'The SQLite database file to use.', type: 'string' },
-        explicit_main_schema: {
-          default: false,
-          description: "Prefix all tables with the 'main' schema",
-          nullable: true,
-          type: 'boolean',
-        },
-        include_sqlite_meta_tables: {
-          description:
-            'By default index tables, etc are not included, set this to true to include them.',
-          nullable: true,
-          type: 'boolean',
-        },
-        tables: {
-          description:
-            'List of tables to make available in the schema and for querying',
-          items: { $ref: '#/other_schemas/TableName' },
-          nullable: true,
-          type: 'array',
-        },
-      },
-      required: ['db'],
-      type: 'object',
-    },
-    other_schemas: { TableName: { nullable: false, type: 'string' } },
-  },
-  display_name: 'Hasura SQLite',
-  options: { uri: 'http://host.docker.internal:8100' },
-};
-
-export const handlers = () => [
+export const handlers = (props?: { agentTestType: AgentTestType }) => [
   rest.post('http://localhost:8080/v1/metadata', (req, res, ctx) => {
     const requestBody = req.body as Record<string, any>;
-
+    if (requestBody.type === 'list_source_kinds') {
+      switch (props?.agentTestType) {
+        case 'super_connector_agents_added':
+          return res(ctx.json(mockSourceKinds.agentsAdded));
+        case 'super_connector_agents_not_added':
+          return res(ctx.json(mockSourceKinds.agentsNotAdded));
+        case 'super_connector_agents_added_but_unavailable':
+          return res(
+            ctx.json(mockSourceKinds.agentsAddedSuperConnectorNotAvailable)
+          );
+        default:
+          return res(ctx.json(mockSourceKinds.agentsNotAdded));
+      }
+    }
     if (requestBody.type === 'export_metadata')
       return res(ctx.json(mockMetadata));
 
     if (requestBody.type === 'get_source_kind_capabilities')
       return res(ctx.json(mockCapabilitiesResponse));
 
+    if (requestBody.type === 'get_inconsistent_metadata')
+      return res(
+        ctx.json({
+          inconsistent_objects: [
+            {
+              definition: 'bikes',
+              message: {
+                exception: {
+                  message:
+                    '[Microsoft][ODBC Driver 17 for SQL Server]Login timeout expired',
+                  type: 'unsuccessful_return_code',
+                },
+              },
+              name: 'source bikes',
+              reason: 'Inconsistent object: mssql connection error',
+              type: 'source',
+            },
+          ],
+          is_consistent: false,
+        })
+      );
+
     return res(ctx.json({}));
   }),
   rest.get(`http://localhost:8080/v1alpha1/config`, (req, res, ctx) => {
     return res(
+      ctx.delay(3000),
       ctx.json({
         version: 'dev-fb2bab3-test-app',
         is_function_permissions_inferred: true,
@@ -210,5 +76,46 @@ export const handlers = () => [
         default_naming_convention: null,
       })
     );
+  }),
+  rest.post('http://localhost:8080/v2/query', (req, res, ctx) => {
+    const requestBody = req.body as Record<string, any>;
+
+    if (
+      requestBody.type === 'run_sql' &&
+      JSON.stringify(requestBody.args) ===
+        JSON.stringify({ sql: 'SELECT VERSION()', source: 'chinook' })
+    )
+      return res(
+        ctx.json({
+          result_type: 'TuplesOk',
+          result: [
+            ['version'],
+            [
+              'PostgreSQL 12.12 (Debian 12.12-1.pgdg110+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 10.2.1-6) 10.2.1 20210110, 64-bit',
+            ],
+          ],
+        })
+      );
+
+    if (
+      requestBody.type === 'mssql_run_sql' &&
+      JSON.stringify(requestBody.args) ===
+        JSON.stringify({
+          sql: 'SELECT @@VERSION as version;',
+          source: 'mssql1',
+        })
+    )
+      return res(
+        ctx.json({
+          result_type: 'TuplesOk',
+          result: [
+            ['version'],
+            [
+              'Microsoft SQL Server 2008 (SP1) - 10.0.2531.0 (X64)   Mar 29 2009 10:11:52   Copyright (c) 1988-2008 Microsoft Corporation  Express Edition (64-bit) on Windows NT 6.1 <X64> (Build 7600: )',
+            ],
+          ],
+        })
+      );
+    return res(ctx.json({}));
   }),
 ];

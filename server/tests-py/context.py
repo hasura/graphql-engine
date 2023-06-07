@@ -838,28 +838,13 @@ class HGECtx:
         self.metadata_schema_url = metadata_schema_url
         self.hge_key = hge_key
         self.webhook = webhook
-        hge_jwt_key_file = config.getoption('--hge-jwt-key-file')
-        if hge_jwt_key_file is None:
-            self.hge_jwt_key = None
-        else:
-            with open(hge_jwt_key_file) as f:
-                self.hge_jwt_key = f.read()
-        self.hge_jwt_conf = config.getoption('--hge-jwt-conf')
-        if self.hge_jwt_conf is not None:
-            self.hge_jwt_conf_dict = json.loads(self.hge_jwt_conf)
-            self.hge_jwt_algo = self.hge_jwt_conf_dict["type"]
-            if self.hge_jwt_algo == "Ed25519":
-                self.hge_jwt_algo = "EdDSA"
         self.may_skip_test_teardown = False
 
         # This will be GC'd, but we also explicitly dispose() in teardown()
         self.engine = sqlalchemy.create_engine(self.metadata_schema_url)
         self.meta = sqlalchemy.schema.MetaData()
 
-        self.ws_read_cookie = config.getoption('--test-ws-init-cookie')
-
         self.hge_scale_url = config.getoption('--test-hge-scale-url')
-        self.avoid_err_msg_checks = config.getoption('--avoid-error-message-checks')
         self.pro_tests = config.getoption('--pro-tests')
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
@@ -879,7 +864,7 @@ class HGECtx:
             result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
             self.version = result.stdout.decode('utf-8').strip()
         # TODO: remove once parallelization work is completed
-        if clear_dbs and self.is_default_backend and (not enabled_apis or 'metadata' in enabled_apis) and not config.getoption('--skip-schema-setup'):
+        if clear_dbs and self.is_default_backend and (not enabled_apis or 'metadata' in enabled_apis):
           try:
               self.v2q_f("queries/" + self.backend_suffix("clear_db")+ ".yaml")
           except requests.exceptions.RequestException as e:

@@ -1,6 +1,6 @@
-# DATE VERSION: 2023-01-31
+# DATE VERSION: 2023-04-03
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
-FROM ubuntu:focal-20230126
+FROM ubuntu:focal-20230412
 
 ### NOTE! Shared libraries here need to be kept in sync with `server-builder.dockerfile`!
 
@@ -17,7 +17,7 @@ RUN set -ex; \
     apt-get update; \
     apt-get install -y apt-transport-https curl gnupg2; \
     apt-get update; \
-    apt-get install -y ca-certificates libkrb5-3 libpq5 libssl1.1 libnuma1 unixodbc-dev libmariadb-dev-compat mariadb-client
+    apt-get install -y ca-certificates libkrb5-3 libpq5 libssl1.1 libnuma1 unixodbc-dev
 
 RUN set -ex; \
     curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -; \

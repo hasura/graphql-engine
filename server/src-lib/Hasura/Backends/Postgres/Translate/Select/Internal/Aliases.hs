@@ -14,7 +14,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 where
 
 import Control.Monad.Writer.Strict
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -22,11 +22,11 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Types
 import Hasura.Prelude
 import Hasura.RQL.IR.Select
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.SQL.Backend
 
 -- | Generate alias for order by extractors
 mkAnnOrderByAlias ::
@@ -46,8 +46,8 @@ mkAnnOrderByAlias tablePrefix parAls similarFields = \case
   AOCArrayAggregation relInfo _ aggOrderBy ->
     let rn = riName relInfo
         arrPfx =
-          mkArrayRelationSourcePrefix tablePrefix parAls similarFields $
-            mkOrderByFieldName rn
+          mkArrayRelationSourcePrefix tablePrefix parAls similarFields
+            $ mkOrderByFieldName rn
         obAls = S.tableIdentifierToColumnAlias arrPfx <> "." <> mkAggregateOrderByAlias aggOrderBy
      in S.toColumnAlias obAls
   AOCComputedField cfOrderBy ->
@@ -83,19 +83,19 @@ mkAggregateOrderByAlias =
     AAOCount -> "count"
     AAOOp opText _resultType col -> opText <> "." <> getPGColTxt (ciColumn col)
 
-mkOrderByFieldName :: ToTxt a => a -> FieldName
+mkOrderByFieldName :: (ToTxt a) => a -> FieldName
 mkOrderByFieldName name =
   FieldName $ toTxt name <> "." <> "order_by"
 
 mkArrayRelationSourcePrefix ::
   TableIdentifier ->
   FieldName ->
-  HM.HashMap FieldName [FieldName] ->
+  HashMap.HashMap FieldName [FieldName] ->
   FieldName ->
   TableIdentifier
 mkArrayRelationSourcePrefix parentSourcePrefix parentFieldName similarFieldsMap fieldName =
-  mkArrayRelationTableIdentifier parentSourcePrefix parentFieldName $
-    HM.lookupDefault [fieldName] fieldName similarFieldsMap
+  mkArrayRelationTableIdentifier parentSourcePrefix parentFieldName
+    $ HashMap.lookupDefault [fieldName] fieldName similarFieldsMap
 
 mkArrayRelationTableIdentifier :: TableIdentifier -> FieldName -> [FieldName] -> TableIdentifier
 mkArrayRelationTableIdentifier pfx parAls flds =
@@ -105,13 +105,13 @@ mkArrayRelationTableIdentifier pfx parAls flds =
 
 mkArrayRelationAlias ::
   FieldName ->
-  HM.HashMap FieldName [FieldName] ->
+  HashMap.HashMap FieldName [FieldName] ->
   FieldName ->
   S.TableAlias
 mkArrayRelationAlias parentFieldName similarFieldsMap fieldName =
-  S.mkTableAlias $
-    mkUniqArrayRelationAlias parentFieldName $
-      HM.lookupDefault [fieldName] fieldName similarFieldsMap
+  S.mkTableAlias
+    $ mkUniqArrayRelationAlias parentFieldName
+    $ HashMap.lookupDefault [fieldName] fieldName similarFieldsMap
 
 -- array relationships are not grouped, so have to be prefixed by
 -- parent's alias

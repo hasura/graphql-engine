@@ -1,0 +1,32 @@
+---
+description: Remove Hasura data from a database
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - purge
+  - remove
+sidebar_position: 130
+sidebar_label: Remove Hasura Data
+---
+
+# Remove Hasura Data from a Database
+
+Hasura saves two schemas in the database that you have designated to store metadata: `hdb_catalog` and `hdb_views`.
+These schemas store metadata and track the state of your database.
+
+If you want to remove Hasura from this database, you can use the following commands to drop these schemas using
+either a database-management tool or the SQL editor - accessible in the sidebar of any table in the Hasura Console:
+
+```sql
+drop schema hdb_views cascade;
+drop schema hdb_catalog cascade;
+```
+
+:::info Designated metadata database
+
+Note that the database used to store metadata is designated with the
+[`HASURA_GRAPHQL_METADATA_DATABASE_URL` environment variable or `--metadata-database-url` startup flag](/deployment/graphql-engine-flags/reference.mdx#metadata-database-url).
+If this is not set, the metadata database will be the same as the database used for data.
+
+:::

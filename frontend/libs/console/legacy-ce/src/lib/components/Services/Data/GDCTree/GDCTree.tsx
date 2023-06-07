@@ -2,8 +2,8 @@ import { DownOutlined } from '@ant-design/icons';
 import { Tree } from 'antd';
 import { Key } from 'antd/lib/table/interface';
 import React from 'react';
-import { useTreeData } from './hooks/useTreeData';
 import '../../../../features/RemoteRelationships/RemoteSchemaRelationships/components/RemoteSchemaTree/index.css';
+import { GDCTreeData } from './types';
 
 const checkForGDCRoute = () => window.location.pathname.includes('data/v2');
 
@@ -26,20 +26,17 @@ const getCurrentActiveKeys = () => {
 
 type Props = {
   onSelect: (value: Key[]) => void;
+  treeData: GDCTreeData;
 };
 
-/* 
-  This component is still very much in development and will be changed once we have an API that tells us about the hierarchy of a GDC source
-  Until then, this component is more or less a POC/experminatal in nature and tests for its accompaniying story have not been included for this reason.
-  If you wish to test out this component, go to the settings > feature flag and enable "Experimental features for GDC"
-*/
-
-export const GDCTree = (props: Props) => {
+export const GDCTree = ({ onSelect, treeData }: Props) => {
   const isGDCRouteActive = checkForGDCRoute();
 
   const activeKey = isGDCRouteActive ? getCurrentActiveKeys() : [];
-  const { data: gdcDatabases } = useTreeData();
-  if (!gdcDatabases || gdcDatabases.length === 0) return null;
+
+  // unclear if we still need this check since this component won't be rendered
+  // in the parent if "treeData" is empty
+  if (!treeData || treeData.length === 0) return null;
 
   return (
     <Tree
@@ -48,8 +45,8 @@ export const GDCTree = (props: Props) => {
       showIcon
       defaultExpandedKeys={activeKey} // there are only two variations here - DB level or table level. middle level selections cannot be accessed
       defaultSelectedKeys={activeKey}
-      onSelect={props.onSelect}
-      treeData={gdcDatabases}
+      onSelect={onSelect}
+      treeData={treeData}
     />
   );
 };

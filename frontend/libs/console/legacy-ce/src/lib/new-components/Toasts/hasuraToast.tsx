@@ -1,7 +1,7 @@
-import React, { MouseEventHandler, PropsWithChildren, ReactNode } from 'react';
-import { Toast, toast, ToastOptions } from 'react-hot-toast/headless';
-import { deepmerge } from 'deepmerge-ts';
 import clsx from 'clsx';
+import { deepmerge } from 'deepmerge-ts';
+import { MouseEventHandler, PropsWithChildren, ReactNode } from 'react';
+import { Toast, ToastOptions, toast } from 'react-hot-toast/headless';
 import { FaTimesCircle } from 'react-icons/fa';
 import { HtmlAnalyticsAttributes } from '../../features/Analytics';
 
@@ -52,14 +52,14 @@ const TOASTS_TYPES_OPTIONS: Record<ToastType, ToastOptions> = {
   info: {
     duration: 5000,
     style: {
-      backgroundColor: 'rgb(232, 240, 244)',
-      borderColor: 'rgb(54, 156, 199)',
+      backgroundColor: '#EAF1F4',
+      borderColor: '#297393',
       boxShadow: 'rgb(54 156 199 / 90%) 0px 0px 1px',
-      color: 'rgb(65, 85, 93)',
+      color: '#297393',
     },
     iconTheme: {
-      primary: 'rgb(164, 190, 203)',
-      secondary: 'rgb(232, 240, 244)',
+      primary: '#C3D8E1',
+      secondary: '#C3D8E1',
     },
   },
   warning: {
@@ -89,6 +89,10 @@ export type ToastProps = PropsWithChildren<{
   onRemove?: () => void;
   toastOptions?: ToastOptions;
 }>;
+
+export const dismissAllToasts = () => {
+  toast.dismiss();
+};
 
 export const hasuraToast = ({
   type = 'info',
@@ -129,7 +133,7 @@ export const hasuraToast = ({
               {title}
             </div>
           ) : null}
-          <div className="w-full">{message}</div>
+          <div className="w-full whitespace-pre-line">{message}</div>
           <div className="w-full">{children}</div>
           {button ? (
             <div>

@@ -11,9 +11,9 @@ import Harness.GraphqlEngine (postV2Query_)
 import Harness.GraphqlEngine qualified as GraphQLEngine
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldReturnYaml)
@@ -165,8 +165,8 @@ postgresTeardown :: TestEnvironment -> IO ()
 postgresTeardown testEnvironment = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
-  GraphqlEngine.postV2Query_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postV2Query_ testEnvironment
+    $ [interpolateYaml|
 type: run_sql
 args:
   source: postgres
@@ -182,14 +182,14 @@ args:
 
 -- * Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests = do
   it "Creating an event trigger should create the SQL triggers" $ \(testEnvironment, (webhookServer, _)) -> do
     let schemaName :: Schema.SchemaName
         schemaName = Schema.getSchemaName testEnvironment
         webhookEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/hello"
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphQLEngine.postMetadata
           testEnvironment
           [interpolateYaml|
@@ -282,7 +282,7 @@ args:
   sql: TRUNCATE #{schemaName}.ddl_history RESTART IDENTITY;
 |]
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphQLEngine.postMetadata
           testEnvironment
           [yaml|
@@ -295,7 +295,7 @@ args:
          message: success
       |]
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphQLEngine.postV2Query
           200
           testEnvironment
@@ -325,7 +325,7 @@ args:
   sql: TRUNCATE #{schemaName}.ddl_history RESTART IDENTITY;
 |]
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphQLEngine.postMetadata
           testEnvironment
           [yaml|
@@ -340,7 +340,7 @@ args:
          message: success
       |]
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphQLEngine.postV2Query
           200
           testEnvironment
@@ -374,7 +374,7 @@ args:
     ALTER TABLE #{schemaName}.users ADD COLUMN last_name TEXT;
 |]
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphQLEngine.postV2Query
           200
           testEnvironment

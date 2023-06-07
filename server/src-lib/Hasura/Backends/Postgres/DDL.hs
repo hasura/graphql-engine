@@ -23,8 +23,8 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Utils
 import Hasura.Session
@@ -47,8 +47,9 @@ parseCollectableType pgType = \case
     CollectableTypeArray ofType -> do
       vals <- runAesonParser parseJSON val
       scalarValues <- parseScalarValuesColumnType ofType vals
-      return . PSESQLExp $
-        SETyAnn
+      return
+        . PSESQLExp
+        $ SETyAnn
           (SEArray $ map (toTxtValue . ColumnValue ofType) scalarValues)
           (mkTypeAnn $ CollectableTypeArray (unsafePGColumnToBackend ofType))
 

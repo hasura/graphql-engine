@@ -45,69 +45,31 @@ module Hasura.RQL.Types.CustomTypes
   )
 where
 
-import Autodocodec (HasCodec (codec), bimapCodec, dimapCodec, optionalField', optionalFieldWith', optionalFieldWithDefault', optionalFieldWithOmittedDefault', requiredField', requiredFieldWith')
+import Autodocodec (HasCodec (codec), dimapCodec, optionalField', optionalFieldWith', optionalFieldWithDefault', optionalFieldWithOmittedDefault', requiredField', requiredFieldWith')
 import Autodocodec qualified as AC
-import Autodocodec.Extended (graphQLEnumValueCodec, graphQLFieldDescriptionCodec, graphQLFieldNameCodec)
+import Autodocodec.Extended (graphQLEnumValueCodec, graphQLFieldDescriptionCodec, graphQLFieldNameCodec, typeableName)
 import Control.Lens.TH (makeLenses)
 import Data.Aeson ((.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
-import Data.Text qualified as T
 import Data.Text.Extended (ToTxt (..))
 import Data.Typeable (Typeable)
 import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend
-import Hasura.SQL.Backend
-import Language.GraphQL.Draft.Parser qualified as GParse
-import Language.GraphQL.Draft.Printer qualified as GPrint
+import Hasura.Table.Cache (GraphQLType (..), isListType, isNullableType)
 import Language.GraphQL.Draft.Syntax qualified as G
-import Text.Builder qualified as T
 
 --------------------------------------------------------------------------------
 -- Metadata
-
--- | A wrapper around 'G.GType' which allows us to define custom JSON
--- instances.
---
--- TODO: this name is ambiguous, and conflicts with
--- Hasura.RQL.DDL.RemoteSchema.Permission.GraphQLType; it should perhaps be
--- renamed, made internal to this module, or removed altogether?
-newtype GraphQLType = GraphQLType {unGraphQLType :: G.GType}
-  deriving (Show, Eq, Generic, NFData)
-
-instance HasCodec GraphQLType where
-  codec = bimapCodec dec enc codec
-    where
-      dec t = case GParse.parseGraphQLType t of
-        Left _ -> Left $ "not a valid GraphQL type: " <> T.unpack t
-        Right a -> Right $ GraphQLType a
-      enc = T.run . GPrint.graphQLType . unGraphQLType
-
-instance J.ToJSON GraphQLType where
-  toJSON = J.toJSON . T.run . GPrint.graphQLType . unGraphQLType
-
-instance J.FromJSON GraphQLType where
-  parseJSON =
-    J.withText "GraphQLType" $ \t ->
-      case GParse.parseGraphQLType t of
-        Left _ -> fail $ "not a valid GraphQL type: " <> T.unpack t
-        Right a -> return $ GraphQLType a
-
-isListType :: GraphQLType -> Bool
-isListType = coerce G.isListType
-
-isNullableType :: GraphQLType -> Bool
-isNullableType = coerce G.isNullable
 
 isInBuiltScalar :: Text -> Bool
 isInBuiltScalar s
@@ -131,12 +93,16 @@ instance NFData CustomTypes
 
 instance HasCodec CustomTypes where
   codec =
-    AC.object "CustomTypes" $
-      CustomTypes
-        <$> optionalFieldWithOmittedDefault' "input_objects" [] AC..= _ctInputObjects
-        <*> optionalFieldWithOmittedDefault' "objects" [] AC..= _ctObjects
-        <*> optionalFieldWithOmittedDefault' "scalars" [] AC..= _ctScalars
-        <*> optionalFieldWithOmittedDefault' "enums" [] AC..= _ctEnums
+    AC.object "CustomTypes"
+      $ CustomTypes
+      <$> optionalFieldWithOmittedDefault' "input_objects" []
+      AC..= _ctInputObjects
+        <*> optionalFieldWithOmittedDefault' "objects" []
+      AC..= _ctObjects
+        <*> optionalFieldWithOmittedDefault' "scalars" []
+      AC..= _ctScalars
+        <*> optionalFieldWithOmittedDefault' "enums" []
+      AC..= _ctEnums
 
 emptyCustomTypes :: CustomTypes
 emptyCustomTypes = CustomTypes [] [] [] []
@@ -149,17 +115,20 @@ data InputObjectTypeDefinition = InputObjectTypeDefinition
     _iotdDescription :: Maybe G.Description,
     _iotdFields :: NonEmpty InputObjectFieldDefinition
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData InputObjectTypeDefinition
 
 instance HasCodec InputObjectTypeDefinition where
   codec =
-    AC.object "InputObjectTypeDefinition" $
-      InputObjectTypeDefinition
-        <$> requiredField' "name" AC..= _iotdName
-        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec AC..= _iotdDescription
-        <*> requiredField' "fields" AC..= _iotdFields
+    AC.object "InputObjectTypeDefinition"
+      $ InputObjectTypeDefinition
+      <$> requiredField' "name"
+      AC..= _iotdName
+        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec
+      AC..= _iotdDescription
+        <*> requiredField' "fields"
+      AC..= _iotdFields
 
 newtype InputObjectTypeName = InputObjectTypeName {unInputObjectTypeName :: G.Name}
   deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData)
@@ -173,17 +142,20 @@ data InputObjectFieldDefinition = InputObjectFieldDefinition
     _iofdType :: GraphQLType
     -- TODO: support default values
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData InputObjectFieldDefinition
 
 instance HasCodec InputObjectFieldDefinition where
   codec =
-    AC.object "InputObjectFieldDefinition" $
-      InputObjectFieldDefinition
-        <$> requiredField' "name" AC..= _iofdName
-        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec AC..= _iofdDescription
-        <*> requiredField' "type" AC..= _iofdType
+    AC.object "InputObjectFieldDefinition"
+      $ InputObjectFieldDefinition
+      <$> requiredField' "name"
+      AC..= _iofdName
+        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec
+      AC..= _iofdDescription
+        <*> requiredField' "type"
+      AC..= _iofdType
 
 newtype InputObjectFieldName = InputObjectFieldName {unInputObjectFieldName :: G.Name}
   deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData)
@@ -206,12 +178,16 @@ instance NFData ObjectTypeDefinition
 
 instance HasCodec ObjectTypeDefinition where
   codec =
-    AC.object "ObjectTypeDefinition" $
-      ObjectTypeDefinition
-        <$> requiredField' "name" AC..= _otdName
-        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec AC..= _otdDescription
-        <*> requiredField' "fields" AC..= _otdFields
-        <*> optionalFieldWithOmittedDefault' "relationships" [] AC..= _otdRelationships
+    AC.object "ObjectTypeDefinition"
+      $ ObjectTypeDefinition
+      <$> requiredField' "name"
+      AC..= _otdName
+        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec
+      AC..= _otdDescription
+        <*> requiredField' "fields"
+      AC..= _otdFields
+        <*> optionalFieldWithOmittedDefault' "relationships" []
+      AC..= _otdRelationships
 
 newtype ObjectTypeName = ObjectTypeName {unObjectTypeName :: G.Name}
   deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData)
@@ -235,12 +211,16 @@ instance (NFData field) => NFData (ObjectFieldDefinition field)
 
 instance (HasCodec field, Typeable field) => HasCodec (ObjectFieldDefinition field) where
   codec =
-    AC.object ("ObjectFieldDefinition_" <> typeableName @field) $
-      ObjectFieldDefinition
-        <$> requiredField' "name" AC..= _ofdName
-        <*> optionalField' "arguments" AC..= _ofdArguments
-        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec AC..= _ofdDescription
-        <*> requiredField' "type" AC..= _ofdType
+    AC.object ("ObjectFieldDefinition_" <> typeableName @field)
+      $ ObjectFieldDefinition
+      <$> requiredField' "name"
+      AC..= _ofdName
+        <*> optionalField' "arguments"
+      AC..= _ofdArguments
+        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec
+      AC..= _ofdDescription
+        <*> requiredField' "type"
+      AC..= _ofdType
 
 newtype ObjectFieldName = ObjectFieldName {unObjectFieldName :: G.Name}
   deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData)
@@ -255,19 +235,21 @@ data ScalarTypeDefinition = ScalarTypeDefinition
   { _stdName :: G.Name,
     _stdDescription :: Maybe G.Description
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData ScalarTypeDefinition
 
 instance HasCodec ScalarTypeDefinition where
   codec =
-    AC.object "ScalarTypeDefinition" $
-      ScalarTypeDefinition
-        <$> requiredField' "name" AC..= _stdName
-        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec AC..= _stdDescription
+    AC.object "ScalarTypeDefinition"
+      $ ScalarTypeDefinition
+      <$> requiredField' "name"
+      AC..= _stdName
+        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec
+      AC..= _stdDescription
 
 defaultGraphQLScalars :: HashMap G.Name ScalarTypeDefinition
-defaultGraphQLScalars = Map.fromList . map (\name -> (name, ScalarTypeDefinition name Nothing)) $ Set.toList GName.builtInScalars
+defaultGraphQLScalars = HashMap.fromList . map (\name -> (name, ScalarTypeDefinition name Nothing)) $ Set.toList GName.builtInScalars
 
 --------------------------------------------------------------------------------
 -- Custom enums
@@ -277,17 +259,20 @@ data EnumTypeDefinition = EnumTypeDefinition
     _etdDescription :: Maybe G.Description,
     _etdValues :: NonEmpty EnumValueDefinition
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData EnumTypeDefinition
 
 instance HasCodec EnumTypeDefinition where
   codec =
-    AC.object "EnumTypeDefinition" $
-      EnumTypeDefinition
-        <$> requiredField' "name" AC..= _etdName
-        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec AC..= _etdDescription
-        <*> requiredField' "values" AC..= _etdValues
+    AC.object "EnumTypeDefinition"
+      $ EnumTypeDefinition
+      <$> requiredField' "name"
+      AC..= _etdName
+        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec
+      AC..= _etdDescription
+        <*> requiredField' "values"
+      AC..= _etdValues
 
 newtype EnumTypeName = EnumTypeName {unEnumTypeName :: G.Name}
   deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData)
@@ -300,17 +285,20 @@ data EnumValueDefinition = EnumValueDefinition
     _evdDescription :: Maybe G.Description,
     _evdIsDeprecated :: Maybe Bool
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData EnumValueDefinition
 
 instance HasCodec EnumValueDefinition where
   codec =
-    AC.object "EnumValueDefinition" $
-      EnumValueDefinition
-        <$> requiredFieldWith' "value" graphQLEnumValueCodec AC..= _evdValue
-        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec AC..= _evdDescription
-        <*> optionalField' "is_deprecated" AC..= _evdIsDeprecated
+    AC.object "EnumValueDefinition"
+      $ EnumValueDefinition
+      <$> requiredFieldWith' "value" graphQLEnumValueCodec
+      AC..= _evdValue
+        <*> optionalFieldWith' "description" graphQLFieldDescriptionCodec
+      AC..= _evdDescription
+        <*> optionalField' "is_deprecated"
+      AC..= _evdIsDeprecated
 
 --------------------------------------------------------------------------------
 -- Relationships
@@ -334,22 +322,33 @@ instance NFData TypeRelationshipDefinition
 
 instance HasCodec TypeRelationshipDefinition where
   codec =
-    AC.object "TypeRelationshipDefinition" $
-      TypeRelationshipDefinition
-        <$> requiredField' "name" AC..= _trdName
-        <*> requiredField' "type" AC..= _trdType
-        <*> optionalFieldWithDefault' "source" defaultSource AC..= _trdSource
-        <*> requiredField' "remote_table" AC..= _trdRemoteTable
-        <*> requiredField' "field_mapping" AC..= _trdFieldMapping
+    AC.object "TypeRelationshipDefinition"
+      $ TypeRelationshipDefinition
+      <$> requiredField' "name"
+      AC..= _trdName
+        <*> requiredField' "type"
+      AC..= _trdType
+        <*> optionalFieldWithDefault' "source" defaultSource
+      AC..= _trdSource
+        <*> requiredField' "remote_table"
+      AC..= _trdRemoteTable
+        <*> requiredField' "field_mapping"
+      AC..= _trdFieldMapping
 
 instance J.FromJSON TypeRelationshipDefinition where
   parseJSON = J.withObject "TypeRelationshipDefinition" $ \o ->
     TypeRelationshipDefinition
-      <$> o .: "name"
-      <*> o .: "type"
-      <*> o .:? "source" .!= defaultSource
-      <*> o .: "remote_table"
-      <*> o .: "field_mapping"
+      <$> o
+      .: "name"
+      <*> o
+      .: "type"
+      <*> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "remote_table"
+      <*> o
+      .: "field_mapping"
 
 -- | TODO: deduplicate this in favour of RelName
 newtype RelationshipName = RelationshipName {unRelationshipName :: G.Name}
@@ -380,16 +379,18 @@ data AnnotatedInputType
   = NOCTScalar AnnotatedScalarType
   | NOCTEnum EnumTypeDefinition
   | NOCTInputObject InputObjectTypeDefinition
-  deriving (Eq, Generic)
+  deriving (Eq, Ord, Generic)
 
 data AnnotatedScalarType
   = ASTCustom ScalarTypeDefinition
   | ASTReusedScalar G.Name (AnyBackend ScalarWrapper)
-  deriving (Eq, Generic)
+  deriving (Eq, Ord, Generic)
 
 newtype ScalarWrapper b = ScalarWrapper {unwrapScalar :: (ScalarType b)}
 
 deriving instance (Backend b) => Eq (ScalarWrapper b)
+
+deriving instance (Backend b) => Ord (ScalarWrapper b)
 
 data AnnotatedOutputType
   = AOTObject AnnotatedObjectType
@@ -417,7 +418,7 @@ data AnnotatedTypeRelationship = AnnotatedTypeRelationship
     _atrSource :: SourceName,
     _atrSourceConfig :: SourceConfig ('Postgres 'Vanilla),
     -- TODO: see comment in 'TypeRelationship'
-    _atrTableInfo :: TableInfo ('Postgres 'Vanilla),
+    _atrTableName :: TableName ('Postgres 'Vanilla),
     _atrFieldMapping :: HashMap ObjectFieldName (ColumnInfo ('Postgres 'Vanilla))
   }
   deriving (Generic)

@@ -6,7 +6,7 @@ module Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSpec (spec) where
 
 import Data.Aeson.QQ (aesonQQ)
 import Data.Has (Has (..))
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.NonEmpty (nonEmptyTextQQ)
 import Hasura.Backends.Postgres.Instances.Schema ()
 import Hasura.Backends.Postgres.SQL.Types
@@ -21,36 +21,29 @@ import Hasura.GraphQL.Schema.BoolExp.AggregationPredicates
     defaultAggregationPredicatesParser,
   )
 import Hasura.GraphQL.Schema.Introspection (queryInputFieldsParserIntrospection)
-import Hasura.GraphQL.Schema.NamingCase (NamingCase (..))
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (GBoolExp (..), OpExpG (AEQ))
 import Hasura.RQL.IR.BoolExp.AggregationPredicates
-import Hasura.RQL.IR.Value (UnpreparedValue (UVParameter))
+import Hasura.RQL.IR.Value (Provenance (FreshVar), UnpreparedValue (UVParameter))
+import Hasura.RQL.Types.BackendType (BackendSourceKind (PostgresVanillaKind), BackendType (Postgres), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnType (ColumnScalar), ColumnValue (..))
 import Hasura.RQL.Types.Common (InsertOrder (..), RelName (..), RelType (..), SourceName (..))
-import Hasura.RQL.Types.Relationships.Local (RelInfo (..))
-import Hasura.RQL.Types.Source (SourceInfo (..))
+import Hasura.RQL.Types.NamingCase (NamingCase (..))
+import Hasura.RQL.Types.Relationships.Local (RelInfo (..), RelTarget (..))
+import Hasura.RQL.Types.Schema.Options qualified as Options
+import Hasura.RQL.Types.Source (DBObjectsIntrospection (..), SourceInfo (..))
 import Hasura.RQL.Types.SourceCustomization (ResolvedSourceCustomization (..))
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
   ( TableCoreInfoG (_tciName),
     TableInfo (_tiCoreInfo),
   )
-import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
-import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Aeson.Expectation (shouldBeSubsetOf)
 import Test.Hspec
 import Test.Hspec.Extended
 import Test.Parser.Field qualified as GQL
 import Test.Parser.Internal
-  ( ColumnInfoBuilder
-      ( ColumnInfoBuilder,
-        cibIsPrimaryKey,
-        cibName,
-        cibNullable,
-        cibType
-      ),
+  ( ColumnInfoBuilder (..),
     TableInfoBuilder (columns, relations),
     buildTableInfo,
     mkTable,
@@ -75,7 +68,7 @@ We cannot do that however, since backends have the closed datakind `BackendType`
 newtype Unshowable a = Unshowable {unUnshowable :: a}
   deriving (Eq, Ord)
 
-instance Typeable a => Show (Unshowable a) where
+instance (Typeable a) => Show (Unshowable a) where
   show _ = "Unshowable<" ++ show (typeRep @a) ++ ">"
 
 spec :: Spec
@@ -84,16 +77,16 @@ spec = do
     describe "When no aggregation functions are given" do
       it "Yields no parsers" do
         let maybeParser =
-              runSchemaTest sourceInfo $
-                defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
+              runSchemaTest sourceInfo
+                $ defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
                   []
                   albumTableInfo
         (Unshowable maybeParser) `shouldSatisfy` (isNothing . unUnshowable)
 
     describe "When some aggregation functions are given" do
       let maybeParser =
-            runSchemaTest sourceInfo $
-              defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
+            runSchemaTest sourceInfo
+              $ defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
                 [ FunctionSignature
                     { fnName = "count",
                       fnGQLName = [G.name|count|],
@@ -212,7 +205,7 @@ spec = do
                             [ AEQ
                                 True
                                 ( UVParameter
-                                    Nothing
+                                    FreshVar
                                     ColumnValue
                                       { cvType = ColumnScalar PGInteger,
                                         cvValue = PGValInteger 42
@@ -255,12 +248,14 @@ spec = do
             { columns =
                 [ ColumnInfoBuilder
                     { cibName = "id",
+                      cibPosition = 0,
                       cibType = ColumnScalar PGInteger,
                       cibNullable = False,
                       cibIsPrimaryKey = True
                     },
                   ColumnInfoBuilder
                     { cibName = "title",
+                      cibPosition = 1,
                       cibType = ColumnScalar PGText,
                       cibNullable = False,
                       cibIsPrimaryKey = False
@@ -277,24 +272,28 @@ spec = do
             { columns =
                 [ ColumnInfoBuilder
                     { cibName = "id",
+                      cibPosition = 0,
                       cibType = ColumnScalar PGInteger,
                       cibNullable = False,
                       cibIsPrimaryKey = True
                     },
                   ColumnInfoBuilder
                     { cibName = "title",
+                      cibPosition = 1,
                       cibType = ColumnScalar PGText,
                       cibNullable = False,
                       cibIsPrimaryKey = False
                     },
                   ColumnInfoBuilder
                     { cibName = "duration_seconds",
+                      cibPosition = 2,
                       cibType = ColumnScalar PGInteger,
                       cibNullable = False,
                       cibIsPrimaryKey = False
                     },
                   ColumnInfoBuilder
                     { cibName = "album_id",
+                      cibPosition = 3,
                       cibType = ColumnScalar PGInteger,
                       cibNullable = False,
                       cibIsPrimaryKey = False
@@ -308,8 +307,8 @@ spec = do
       RelInfo
         { riName = RelName [nonEmptyTextQQ|tracks|],
           riType = ArrRel,
-          riMapping = HM.fromList [("id", "album_id")],
-          riRTable = (mkTable "track"),
+          riMapping = HashMap.fromList [("id", "album_id")],
+          riTarget = RelTargetTable (mkTable "track"),
           riIsManual = False,
           riInsertOrder = AfterParent
         }
@@ -318,13 +317,17 @@ spec = do
     sourceInfo =
       SourceInfo
         { _siName = SNDefault,
+          _siSourceKind = PostgresVanillaKind,
           _siTables = makeTableCache [albumTableInfo, trackTableInfo],
           _siFunctions = mempty,
+          _siNativeQueries = mempty,
+          _siStoredProcedures = mempty,
           _siLogicalModels = mempty,
           _siConfiguration = notImplementedYet "SourceConfig",
           _siQueryTagsConfig = Nothing,
-          _siCustomization = ResolvedSourceCustomization mempty mempty HasuraCase Nothing
+          _siCustomization = ResolvedSourceCustomization mempty mempty HasuraCase Nothing,
+          _siDbObjectsIntrospection = DBObjectsIntrospection mempty mempty mempty mempty
         }
 
     makeTableCache :: [TableInfo ('Postgres 'Vanilla)] -> HashMap QualifiedTable (TableInfo ('Postgres 'Vanilla))
-    makeTableCache tables = HM.fromList [(_tciName $ _tiCoreInfo ti, ti) | ti <- tables]
+    makeTableCache tables = HashMap.fromList [(_tciName $ _tiCoreInfo ti, ti) | ti <- tables]

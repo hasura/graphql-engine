@@ -8,7 +8,7 @@ where
 import Control.Concurrent.Async as Async
 import Control.Concurrent.Chan qualified as Chan
 import Control.Exception.Safe (bracket)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Parser.JSONPath (parseJSONPath)
 import Data.Text qualified as T
 import Harness.Http qualified as Http
@@ -23,7 +23,7 @@ import Network.Wai.Extended qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
 import Web.Spock.Core qualified as Spock
 
-newtype EventsQueue = EventsQueue (Chan.Chan Aeson.Value)
+newtype EventsQueue = EventsQueue (Chan.Chan J.Value)
 
 -- | This function starts a new thread with a minimal server on the
 -- first available port. It returns the corresponding 'Server'.
@@ -50,30 +50,31 @@ run = mkTestResource do
       extractEventDataInsertIntoEventQueue = do
         req <- Spock.request
         body <- liftIO $ Wai.strictRequestBody req
-        let jsonBody = Aeson.decode body
+        let jsonBody = J.decode body
         let eventDataPayload =
               -- Only extract the data payload from the request body
               let mkJSONPathE = either (error . T.unpack) id . parseJSONPath
                   eventJSONPath = mkJSONPathE "$.event.data"
                in iResultToMaybe =<< executeJSONPath eventJSONPath <$> jsonBody
-        liftIO $
-          Chan.writeChan eventsQueueChan $
-            fromMaybe (error "error in parsing the event data from the body") eventDataPayload
-  thread <- Async.async $
-    Spock.runSpockNoBanner port $
-      Spock.spockT id $ do
-        Spock.get "/" $
-          Spock.json $
-            Aeson.String "OK"
-        Spock.post "/hello" $
-          Spock.json $
-            Aeson.String "world"
-        Spock.post "/echo" $ do
-          extractEventDataInsertIntoEventQueue
-          Spock.json $ Aeson.object ["success" Aeson..= True]
-        Spock.post "/nextRetry" $ do
-          extractEventDataInsertIntoEventQueue
-          Spock.setStatus HTTP.status503
+        liftIO
+          $ Chan.writeChan eventsQueueChan
+          $ fromMaybe (error "error in parsing the event data from the body") eventDataPayload
+  thread <- Async.async
+    $ Spock.runSpockNoBanner port
+    $ Spock.spockT id
+    $ do
+      Spock.get "/"
+        $ Spock.json
+        $ J.String "OK"
+      Spock.post "/hello"
+        $ Spock.json
+        $ J.String "world"
+      Spock.post "/echo" $ do
+        extractEventDataInsertIntoEventQueue
+        Spock.json $ J.object ["success" J..= True]
+      Spock.post "/nextRetry" $ do
+        extractEventDataInsertIntoEventQueue
+        Spock.setStatus HTTP.status503
 
   let server = Server {port = fromIntegral port, urlPrefix, thread}
   pure

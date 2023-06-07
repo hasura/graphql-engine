@@ -31,7 +31,7 @@ find "$ROOT/install-manifests" \
 sed -i -E 's#(.*)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(.*)*$#\1'"${TAG}"'\9#' \
     "${ROOT}/cli/README.md" \
     "${ROOT}/cli/get.sh" \
-    "${ROOT}/docs/graphql/core/hasura-cli/install-hasura-cli.rst"
+    "${ROOT}/docs/docs/hasura-cli/install-hasura-cli.mdx"
 
 # update version in CI image scanning tags
 sed -i -E 's#v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)#'"${TAG}"'#' \
@@ -41,7 +41,7 @@ sed -i -E 's#v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)#'"${TAG}"'#' \
 
 git add "$ROOT/install-manifests" \
         "${ROOT}/cli" \
-        "${ROOT}/docs/graphql/core/hasura-cli/install-hasura-cli.rst" \
+        "${ROOT}/docs/docs/hasura-cli/install-hasura-cli.mdx" \
         "${ROOT}/.buildkite/pipeline-gen/pipeline/scan_graphql_engine_images.go" \
         "${ROOT}/.buildkite/pipeline-gen/pipeline/scan_graphql_engine_pro_images.go"
 

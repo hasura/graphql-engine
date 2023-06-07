@@ -27,11 +27,11 @@ import { TIME_RANGE_SYMBOL } from '../constants';
 import { aliasedNames, headerTitleLabel, defaultColumns } from './constants';
 import { FaCaretDown, FaCaretUp, FaSort } from 'react-icons/fa';
 
-const LIMIT = 10;
-
 import styles from '../Metrics.module.scss';
 import failure from '../images/failure.svg';
 import success from '../images/success.svg';
+
+const LIMIT = 10;
 
 const BrowserRows = props => {
   const defaultState = {

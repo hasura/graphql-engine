@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | Postgres Types CitusExtraTableMetadata
 --
 -- Additional metadata information for Citus tables.
@@ -11,19 +9,40 @@ module Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
   )
 where
 
+import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as JC
-import Data.Aeson.TH qualified as J
 import Data.Typeable (Typeable)
 import Hasura.Prelude
+import Hasura.RQL.Types.Source.Table (SourceTableType)
 
 data ExtraTableMetadata
-  = Local
-  | Reference
-  | Distributed {distributionColumn :: Text}
+  = Local {tableType :: SourceTableType}
+  | Reference {tableType :: SourceTableType}
+  | Distributed {distributionColumn :: Text, tableType :: SourceTableType}
   deriving stock (Show, Eq, Generic, Typeable)
 
 instance Hashable ExtraTableMetadata
 
 instance NFData ExtraTableMetadata
 
-$(J.deriveJSON J.defaultOptions {J.constructorTagModifier = JC.snakeCase, J.fieldLabelModifier = JC.snakeCase} ''ExtraTableMetadata)
+instance J.FromJSON ExtraTableMetadata where
+  parseJSON =
+    J.genericParseJSON
+      J.defaultOptions
+        { J.constructorTagModifier = JC.snakeCase,
+          J.fieldLabelModifier = JC.snakeCase
+        }
+
+instance J.ToJSON ExtraTableMetadata where
+  toJSON =
+    J.genericToJSON
+      J.defaultOptions
+        { J.constructorTagModifier = JC.snakeCase,
+          J.fieldLabelModifier = JC.snakeCase
+        }
+  toEncoding =
+    J.genericToEncoding
+      J.defaultOptions
+        { J.constructorTagModifier = JC.snakeCase,
+          J.fieldLabelModifier = JC.snakeCase
+        }

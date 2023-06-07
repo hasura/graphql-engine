@@ -178,7 +178,14 @@ const changeRequestParams = newParams => {
 };
 
 const createWsClient = (url, headers) => {
-  const websocketProtocol = getWebsocketProtocol(window.location.protocol);
+  let websocketProtocol = getWebsocketProtocol(window.location.protocol);
+  try {
+    const urlVar = new URL(url);
+    websocketProtocol = getWebsocketProtocol(urlVar.protocol);
+  } catch {
+    // ignore error
+  }
+
   const headersFinal = getHeadersAsJSON(headers);
   const graphqlUrl = `${websocketProtocol}//${url.split('//')[1]}`;
 
@@ -479,7 +486,14 @@ const getRemoteQueries = (queryUrl, cb, dispatch) => {
 };
 
 const processResponseDetails =
-  (responseTime, responseSize, isResponseCached, responseTrackingId) =>
+  (
+    responseTime,
+    responseSize,
+    isResponseCached,
+    responseTrackingId,
+    cacheWarning,
+    isRequestCachable
+  ) =>
   dispatch => {
     dispatch({
       type: TRACK_RESPONSE_DETAILS,
@@ -488,6 +502,8 @@ const processResponseDetails =
         responseSize,
         isResponseCached,
         responseTrackingId,
+        cacheWarning,
+        isRequestCachable,
       },
     });
   };
@@ -718,6 +734,8 @@ const apiExplorerReducer = (state = defaultState, action) => {
             responseSize: action.data.responseSize,
             isResponseCached: action.data.isResponseCached,
             responseTrackingId: action.data.responseTrackingId,
+            cacheWarning: action.data.cacheWarning,
+            isRequestCachable: action.data.isRequestCachable,
           },
         },
       };

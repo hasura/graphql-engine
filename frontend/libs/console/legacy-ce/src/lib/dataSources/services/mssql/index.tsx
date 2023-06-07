@@ -1,4 +1,3 @@
-import { TriggerOperation } from '../../../components/Common/FilterQuery/state';
 import globals from '../../../Globals';
 import { isEnvironmentSupportMultiTenantConnectionPooling } from '../../../utils/proConsole';
 import React from 'react';
@@ -1018,72 +1017,6 @@ WHERE
   },
   getAlterFunctionCommentSql: () => {
     return '';
-  },
-  // temporary workaround SQL query (till we get an API) as ODBC server library does not support some data types
-  // https://github.com/hasura/graphql-engine-mono/issues/4641
-
-  // temporary workaround SQL query (till we get an API) as ODBC server library does not support some data types
-  // https://github.com/hasura/graphql-engine-mono/issues/4641
-  getDataTriggerLogsQuery: (
-    triggerOp: TriggerOperation,
-    triggerName: string,
-    limit?: number,
-    offset?: number
-  ): string => {
-    const triggerTypes = {
-      pending: 'pending',
-      processed: 'processed',
-      invocation: 'invocation',
-    };
-    const eventRelTable = `"hdb_catalog"."event_log"`;
-    const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
-    let sql = '';
-
-    switch (triggerOp) {
-      case triggerTypes.pending:
-        sql = `SELECT CONVERT(varchar(MAX), id) AS "id", schema_name, table_name, trigger_name, 
-        CONVERT(varchar(MAX), payload) AS "payload", delivered, error, tries, CONVERT(varchar(MAX), CAST(created_at as datetime2) ) AS "created_at",
-        CONVERT(varchar(MAX), locked) AS "locked", CONVERT(varchar(MAX), next_retry_at) AS "next_retry_at", archived 
-        FROM ${eventRelTable} AS data_table
-        WHERE data_table.trigger_name = '${triggerName}'  
-        AND delivered=0 AND error=0 AND archived=0 ORDER BY created_at DESC `;
-        break;
-
-      case triggerTypes.processed:
-        sql = `SELECT CONVERT(varchar(MAX), id) AS "id", schema_name, table_name, trigger_name, 
-        CONVERT(varchar(MAX), payload) AS "payload", delivered, error, tries, CONVERT(varchar(MAX), CAST(created_at as datetime2) ) AS "created_at",
-        CONVERT(varchar(MAX), locked) AS "locked", CONVERT(varchar(MAX), next_retry_at) AS "next_retry_at", archived 
-        FROM ${eventRelTable} AS data_table 
-        WHERE data_table.trigger_name = '${triggerName}' 
-        AND (delivered=1 OR error=1) AND archived=0 ORDER BY created_at DESC `;
-        break;
-
-      case triggerTypes.invocation:
-        sql = `SELECT CONVERT(varchar(MAX), data_table.id) AS "id", CONVERT(varchar(MAX), data_table.event_id) AS "event_id",  
-        data_table.status,  CONVERT(varchar(MAX), data_table.request) AS "request", CONVERT(varchar(MAX), data_table.response) AS "response", 
-        CONVERT(varchar(MAX), CAST(data_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.id) AS "id", 
-        data_table.trigger_name, CONVERT(varchar(MAX), CAST(data_table.created_at as datetime2)) AS "created_at"
-        FROM ${eventInvTable} AS data_table
-        WHERE data_table.trigger_name = '${triggerName}' 
-        ORDER BY data_table.created_at DESC `;
-        break;
-      default:
-        break;
-    }
-
-    if (offset) {
-      sql += ` OFFSET ${offset} ROWS`;
-    } else {
-      sql += ` OFFSET 0 ROWS`;
-    }
-
-    if (limit) {
-      sql += ` FETCH NEXT ${limit} ROWS ONLY;`;
-    } else {
-      sql += ` FETCH NEXT 10 ROWS ONLY;`;
-    }
-
-    return sql;
   },
   // temporary workaround SQL query (till we get an API) as ODBC server library does not support some data types
   // https://github.com/hasura/graphql-engine-mono/issues/4641

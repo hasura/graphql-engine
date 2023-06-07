@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { RenameRelationship } from './RenameRelationship';
 import { LocalRelationship } from '../../types';
@@ -8,7 +8,7 @@ import { LocalRelationship } from '../../types';
 export default {
   component: RenameRelationship,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof RenameRelationship>;
+} as Meta<typeof RenameRelationship>;
 
 const demoRelationship: LocalRelationship = {
   name: 'order_items',
@@ -30,7 +30,7 @@ const demoRelationship: LocalRelationship = {
   },
 };
 
-export const Basic: ComponentStory<typeof RenameRelationship> = () => (
+export const Basic: StoryFn<typeof RenameRelationship> = () => (
   <RenameRelationship
     relationship={demoRelationship}
     onCancel={() => {

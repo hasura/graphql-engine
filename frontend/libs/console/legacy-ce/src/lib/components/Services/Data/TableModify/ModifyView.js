@@ -277,19 +277,15 @@ const ModifyView = props => {
           {getViewColumnsSection()}
 
           {isFeatureSupported('tables.modify.computedFields') && (
-            <>
-              <div className="w-full sm:w-6/12 mb-md">
-                <ComputedFields tableSchema={tableSchema} />
-              </div>
-            </>
+            <div className="w-full sm:w-6/12 mb-md">
+              <ComputedFields tableSchema={tableSchema} />
+            </div>
           )}
 
           {isFeatureSupported('tables.modify.customGqlRoot') && (
-            <>
-              <div className="w-full sm:w-6/12 mb-md">
-                <RootFields tableSchema={tableSchema} />
-              </div>
-            </>
+            <div className="w-full sm:w-6/12 mb-md">
+              <RootFields tableSchema={tableSchema} />
+            </div>
           )}
 
           {untrackBtn}

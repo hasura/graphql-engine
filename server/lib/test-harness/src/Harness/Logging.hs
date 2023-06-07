@@ -15,10 +15,10 @@ import Test.Hspec.Core.Runner
 import Test.Hspec.Core.Spec
 
 -- | Make the logger in the 'GlobalTestEnvironment' add context about the specs that use it.
-contextualizeLogger :: Has Logger a => SpecWith a -> SpecWith a
+contextualizeLogger :: (Has Logger a) => SpecWith a -> SpecWith a
 contextualizeLogger = mapSpecForest (map contextualizeTree)
 
-contextualizeTree :: forall a. Has Logger a => SpecTree a -> SpecTree a
+contextualizeTree :: forall a. (Has Logger a) => SpecTree a -> SpecTree a
 contextualizeTree spectree = go [] spectree
   where
     go :: [Text] -> SpecTree a -> SpecTree a
@@ -29,8 +29,8 @@ contextualizeTree spectree = go [] spectree
         action
         (map (go ps) children)
     go ps (Leaf item) =
-      Leaf $
-        item
+      Leaf
+        $ item
           { itemExample =
               \params actionRunner progressCallback ->
                 itemExample

@@ -6,9 +6,13 @@ import Data.Aeson qualified as J
 import Data.Foldable (for_)
 import Data.Functor ((<&>))
 import Data.HashMap.Strict (HashMap)
+import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, maybeToList)
+import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
+import Hasura.Backends.DataConnector.API.V0.Relationships as API
 import Test.AgentAPI (mutationGuarded, queryGuarded)
 import Test.AgentDatasets (chinookTemplate, usesDataset)
 import Test.Data (EdgeCasesTestData (..), TestData (..))
@@ -34,7 +38,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
     Data.responseRows receivedInvoiceLines `rowsShouldBe` []
 
   usesDataset chinookTemplate $ it "can delete a specific row" $ do
-    let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (ScalarValue (J.Number 420) invoiceLineIdScalarType)
+    let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (Data.scalarValueComparison (J.Number 420) invoiceLineIdScalarType)
     let deleteOperation =
           mkDeleteOperation _tdInvoiceLinesTableName
             & dmoWhere ?~ whereExp
@@ -54,9 +58,9 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
 
   usesDataset chinookTemplate $ it "can delete a range of rows" $ do
     let whereExp =
-          And
-            [ ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (ScalarValue (J.Number 10) invoiceLineIdScalarType),
-              ApplyBinaryComparisonOperator LessThanOrEqual (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (ScalarValue (J.Number 20) invoiceLineIdScalarType)
+          Data.mkAndExpr
+            [ ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (Data.scalarValueComparison (J.Number 10) invoiceLineIdScalarType),
+              ApplyBinaryComparisonOperator LessThanOrEqual (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (Data.scalarValueComparison (J.Number 20) invoiceLineIdScalarType)
             ]
     let deleteOperation =
           mkDeleteOperation _tdInvoiceLinesTableName
@@ -80,8 +84,8 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
     Data.responseRows receivedInvoiceLines `rowsShouldBe` expectedRemainingRows
 
   usesDataset chinookTemplate $ it "can perform multiple delete operations" $ do
-    let whereExp1 = ApplyBinaryComparisonOperator LessThan (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (ScalarValue (J.Number 3) invoiceIdScalarType)
-    let whereExp2 = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (ScalarValue (J.Number 410) invoiceIdScalarType)
+    let whereExp1 = ApplyBinaryComparisonOperator LessThan (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (Data.scalarValueComparison (J.Number 3) invoiceIdScalarType)
+    let whereExp2 = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (Data.scalarValueComparison (J.Number 410) invoiceIdScalarType)
     let deleteOperation1 =
           mkDeleteOperation _tdInvoiceLinesTableName
             & dmoWhere ?~ whereExp1
@@ -111,11 +115,11 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
     usesDataset chinookTemplate $ it "can delete rows filtered by a related table" $ do
       let whereExp =
             Exists (RelatedTable _tdTrackRelationshipName) $
-              ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Composer" composerScalarType) (ScalarValue (J.String "Eric Clapton") composerScalarType)
+              ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "Composer" composerScalarType) (Data.scalarValueComparison (J.String "Eric Clapton") composerScalarType)
       let deleteOperation =
             mkDeleteOperation _tdInvoiceLinesTableName
               & dmoWhere ?~ whereExp
-      let tableRelationships = [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
+      let tableRelationships = Set.fromList [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
       let mutationRequest =
             Data.emptyMutationRequest
               & mrOperations .~ [DeleteOperation deleteOperation]
@@ -135,12 +139,12 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                     pure $ track ^? Data.field "Composer" . Data._ColumnFieldString /= Just "Eric Clapton"
                 )
 
-      receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest & qrTableRelationships .~ tableRelationships)
+      receivedInvoiceLines <- Data.sortResponseRowsBy "InvoiceLineId" <$> queryGuarded (invoiceLinesQueryRequest & qrRelationships .~ Set.map API.RTable tableRelationships)
       Data.responseRows receivedInvoiceLines `rowsShouldBe` expectedRemainingRows
 
   for_ (_cMutations >>= _mcReturningCapabilities) $ \_returningCapabilities -> describe "returning" $ do
     usesDataset chinookTemplate $ it "returns deleted rows" $ do
-      let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (ScalarValue (J.Number 10) invoiceIdScalarType)
+      let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (Data.scalarValueComparison (J.Number 10) invoiceIdScalarType)
       let deleteOperation =
             mkDeleteOperation _tdInvoiceLinesTableName
               & dmoWhere ?~ whereExp
@@ -158,7 +162,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
 
     for_ _cRelationships $ \_relationshipCapabilities -> do
       usesDataset chinookTemplate $ it "can return deleted rows joined to additional rows from an object relationship" $ do
-        let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (ScalarValue (J.Number 37) invoiceIdScalarType)
+        let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceId" invoiceIdScalarType) (Data.scalarValueComparison (J.Number 37) invoiceIdScalarType)
         let deleteOperation =
               mkDeleteOperation _tdInvoiceLinesTableName
                 & dmoWhere ?~ whereExp
@@ -178,7 +182,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                           )
                         )
                       ]
-        let tableRelationships = [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
+        let tableRelationships = Set.fromList [Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
@@ -200,7 +204,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
         response `mutationResponseShouldBe` MutationResponse [expectedResult]
 
       usesDataset chinookTemplate $ it "can return deleted rows joined to additional rows from an array relationship" $ do
-        let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (ScalarValue (J.Number 2) invoiceLineIdScalarType)
+        let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (Data.scalarValueComparison (J.Number 2) invoiceLineIdScalarType)
         let deleteOperation =
               mkDeleteOperation _tdInvoiceLinesTableName
                 & dmoWhere ?~ whereExp
@@ -224,6 +228,14 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                                                           [ ("PlaylistId", _tdColumnField _tdPlaylistTracksTableName "PlaylistId"),
                                                             ("TrackId", _tdColumnField _tdPlaylistTracksTableName "TrackId")
                                                           ]
+                                                      & qOrderBy
+                                                        ?~ OrderBy
+                                                          mempty
+                                                          ( NonEmpty.fromList
+                                                              [ _tdOrderByColumn [] "PlaylistId" Ascending,
+                                                                _tdOrderByColumn [] "TrackId" Ascending
+                                                              ]
+                                                          )
                                                 )
                                             )
                                           )
@@ -233,9 +245,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                         )
                       ]
         let tableRelationships =
-              [ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
-                Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
-              ]
+              Set.fromList
+                [ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
+                  Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
+                ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
@@ -245,7 +258,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
 
         let joinInPlaylistTracks (track :: HashMap FieldName FieldValue) =
               let trackId = track ^? Data.field "TrackId" . Data._ColumnFieldNumber
-                  playlistTracks = _tdPlaylistTracksRows & filter (\playlistTrack -> playlistTrack ^? Data.field "TrackId" . Data._ColumnFieldNumber == trackId)
+                  playlistTracks =
+                    _tdPlaylistTracksRows
+                      & filter (\playlistTrack -> playlistTrack ^? Data.field "TrackId" . Data._ColumnFieldNumber == trackId)
+                      & sortOn (\playlistTrack -> (playlistTrack ^? Data.field "PlaylistId", playlistTrack ^? Data.field "TrackId"))
                in Data.insertField "PlaylistTracks" (Data.mkSubqueryRowsFieldValue playlistTracks) track
 
         let joinInTrack (invoiceLine :: HashMap FieldName FieldValue) =
@@ -262,7 +278,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
         response `mutationResponseShouldBe` MutationResponse [expectedResult]
 
       usesDataset chinookTemplate $ it "can return aggregates of array relationships joined to deleted rows" $ do
-        let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (ScalarValue (J.Number 2) invoiceLineIdScalarType)
+        let whereExp = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "InvoiceLineId" invoiceLineIdScalarType) (Data.scalarValueComparison (J.Number 2) invoiceLineIdScalarType)
         let deleteOperation =
               mkDeleteOperation _tdInvoiceLinesTableName
                 & dmoWhere ?~ whereExp
@@ -290,9 +306,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                         )
                       ]
         let tableRelationships =
-              [ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
-                Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
-              ]
+              Set.fromList
+                [ Data.onlyKeepRelationships [_tdTrackRelationshipName] _tdInvoiceLinesTableRelationships,
+                  Data.onlyKeepRelationships [_tdPlaylistTracksRelationshipName] _tdTracksTableRelationships
+                ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
@@ -353,9 +370,10 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
                         )
                       ]
         let tableRelationships =
-              [ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
-                Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
-              ]
+              Set.fromList
+                [ Data.onlyKeepRelationships [_tdInvoiceRelationshipName] _tdInvoiceLinesTableRelationships,
+                  Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName] _tdInvoicesTableRelationships
+                ]
         let mutationRequest =
               Data.emptyMutationRequest
                 & mrOperations .~ [DeleteOperation deleteOperation]
@@ -390,9 +408,9 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
         let firstNameScalarType = _ectdFindColumnScalarType _ectdNoPrimaryKeyTableName "FirstName"
         let lastNameScalarType = _ectdFindColumnScalarType _ectdNoPrimaryKeyTableName "LastName"
         let whereExp =
-              And
-                [ ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "FirstName" firstNameScalarType) (ScalarValue (J.String "Beverly") firstNameScalarType),
-                  ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "LastName" lastNameScalarType) (ScalarValue (J.String "Crusher") lastNameScalarType)
+              Data.mkAndExpr
+                [ ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "FirstName" firstNameScalarType) (Data.scalarValueComparison (J.String "Beverly") firstNameScalarType),
+                  ApplyBinaryComparisonOperator Equal (_ectdCurrentComparisonColumn "LastName" lastNameScalarType) (Data.scalarValueComparison (J.String "Crusher") lastNameScalarType)
                 ]
         let returning =
               Data.mkFieldsMap
@@ -435,7 +453,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
     invoiceLinesQueryRequest :: QueryRequest
     invoiceLinesQueryRequest =
       let query = Data.emptyQuery & qFields ?~ invoiceLinesFields & qOrderBy ?~ OrderBy mempty (_tdOrderByColumn [] "InvoiceId" Ascending :| [])
-       in QueryRequest _tdInvoiceLinesTableName [] query
+       in TableQueryRequest _tdInvoiceLinesTableName mempty query Nothing
 
     invoiceIdScalarType = _tdFindColumnScalarType _tdInvoiceLinesTableName "InvoiceId"
     invoiceLineIdScalarType = _tdFindColumnScalarType _tdInvoiceLinesTableName "InvoiceLineId"

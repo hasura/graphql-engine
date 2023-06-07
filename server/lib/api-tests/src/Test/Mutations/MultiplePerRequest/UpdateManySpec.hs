@@ -13,9 +13,9 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -23,9 +23,6 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
-  -- TODO: this test causes an internal server error for MySQL, even if we add
-  -- "SERIAL" as the 'Schema.defaultSerialType' for MySQL.
-
   Fixture.run
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
@@ -69,11 +66,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Update many objects" do
     it "When many equals zero" \testEnvironment -> do
       let expected :: Value
@@ -102,7 +96,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "When many equals one" \testEnvironment -> do
       let expected :: Value
@@ -135,7 +129,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "When many is more than one" \testEnvironment -> do
       let expected :: Value
@@ -175,7 +169,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Update record multiple times with overlapping conditions" \testEnvironment -> do
       let expected :: Value
@@ -215,7 +209,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Reverts on error" \testEnvironment -> do
       let expected :: Value
@@ -252,4 +246,4 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected

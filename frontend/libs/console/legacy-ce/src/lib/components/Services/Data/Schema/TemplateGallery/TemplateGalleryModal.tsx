@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { FaGithub, FaSpinner, FaUpload } from 'react-icons/fa';
-import { useAppDispatch, useAppSelector } from '../../../../../store';
+import { useAppDispatch, useAppSelector } from '../../../../../storeHooks';
 import {
   applyTemplate,
   fetchSchemaConfigurationByName,
@@ -11,6 +11,7 @@ import styles from './TemplateGallery.module.scss';
 import { ModalType } from './types';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import { showErrorNotification } from '../../../Common/Notification';
+import clsx from 'clsx';
 
 export const TemplateGalleryModalBody: React.VFC<{
   content: ModalType;
@@ -63,7 +64,7 @@ export const TemplateGalleryModalBody: React.VFC<{
         </p>
       ) : null}
       {details.blogPostLink ? (
-        <p>
+        <p className="border-b border-gray-300 pb-3">
           Read the blog post{' '}
           <a
             href={details.blogPostLink}
@@ -76,23 +77,23 @@ export const TemplateGalleryModalBody: React.VFC<{
         </p>
       ) : null}
       {details.imageUrl ? (
-        <>
-          <hr className={styles.modal_description} />
-          <p>
-            <img
-              className={styles.image_in_detail}
-              src={details.imageUrl}
-              alt=""
-            />
-          </p>
-        </>
+        <p className="py-3">
+          <img
+            className={styles.image_in_detail}
+            src={details.imageUrl}
+            alt=""
+          />
+        </p>
       ) : null}
-      <hr className={styles.modal_description} />
-      <p className={`${styles.mb_xs} ${styles.strong} ${styles.muted}`}>SQL:</p>
+      <p
+        className={`${styles.mb_xs} ${styles.strong} ${styles.muted} border-t border-gray-300 pt-4`}
+      >
+        SQL:
+      </p>
       <AceEditor
         readOnly
         value={details.sql}
-        className={styles.ace_custom_style}
+        className={clsx(styles.ace_custom_style, 'bg-white')}
         mode="sql"
         width="100%"
         showGutter={false}
@@ -149,7 +150,6 @@ export const TemplateGalleryModal: React.VFC<{
       onClose={closeModal}
       onCancel={closeModal}
       onSubmit={shouldDisplaySubmit ? onSubmit : undefined}
-      customClass={styles.modal_override}
       submitText={
         shouldDisplaySubmit ? (
           <>

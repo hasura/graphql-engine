@@ -1,6 +1,6 @@
 import Endpoints from '../../../../Endpoints';
 import { Api } from '../../../../hooks/apiUtils';
-import { useAppSelector } from '../../../../store';
+import { useAppSelector } from '../../../../storeHooks';
 import { useMutation, useQueryClient } from 'react-query';
 
 export const useAddRemoteSchemaRelationship = () => {

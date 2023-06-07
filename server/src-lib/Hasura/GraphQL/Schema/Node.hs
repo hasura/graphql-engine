@@ -21,7 +21,7 @@ where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Types qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
@@ -31,8 +31,8 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.Table.Cache
 
 {- Note [Relay Node Id]
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -247,8 +247,8 @@ newtype TableMap b = TableMap (HashMap (TableName b) (NodeInfo b))
 
 -- | Given a source name and table name, peform the double lookup within a
 -- 'NodeMap'.
-findNode :: forall b. Backend b => SourceName -> TableName b -> NodeMap -> Maybe (NodeInfo b)
+findNode :: forall b. (Backend b) => SourceName -> TableName b -> NodeMap -> Maybe (NodeInfo b)
 findNode sourceName tableName nodeMap = do
-  anyTableMap <- Map.lookup sourceName nodeMap
+  anyTableMap <- HashMap.lookup sourceName nodeMap
   TableMap tableMap <- AB.unpackAnyBackend @b anyTableMap
-  Map.lookup tableName tableMap
+  HashMap.lookup tableName tableMap

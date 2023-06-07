@@ -2,6 +2,7 @@ import { BuildServerAssetsExecutorSchema } from './schema';
 import { ExecutorContext } from '@nrwl/devkit';
 import runCommands from 'nx/src/executors/run-commands/run-commands.impl';
 import { flushChanges, FsTree, printChanges } from 'nx/src/generators/tree';
+import * as fs from 'node:fs';
 
 import {
   extractAssets,
@@ -73,81 +74,94 @@ console.log('Please note that the error of loading vendor.js and main.css is nor
 `;
 };
 
+function listFilesExtensions(directory: string, ignoredFiles: string[]) {
+  // Read the contents of the folder
+  const files = fs.readdirSync(directory);
+
+  // Filter out ignored files
+  const filteredFiles = files.filter(file => !ignoredFiles.includes(file));
+
+  // Extract the file extensions from the list of files
+  const extensions = filteredFiles.map(file => {
+    const parts = file.split('.');
+    return parts.length > 1 ? parts[parts.length - 1] : '';
+  });
+
+  // Remove duplicates and empty strings
+  return [...new Set(extensions.filter(extension => extension !== ''))];
+}
+
 export default async function runMyExecutor(
   options: BuildServerAssetsExecutorSchema,
   context: ExecutorContext
 ) {
   const projectName = context.projectName;
-
-  if (!projectName || typeof projectName !== 'string') {
-    console.log(`Unexpected project name ${projectName}`);
-    return { success: false };
+  if (!projectName) {
+    throw new Error('No project name was given.');
   }
-
   const distTarget =
-    context.workspace.projects[
-      projectName
-    ]?.targets?.build?.options?.outputPath.toString() ??
-    `dist/apps/${projectName}`;
-
-  if (typeof distTarget !== 'string') {
-    console.log(`Unexpected dist target ${distTarget}`);
-    return { success: false };
-  }
-
+    context.workspace?.projects?.[projectName]?.targets?.build?.options
+      ?.outputPath ?? `dist/apps/${projectName}`;
   const serverAssetBase = `dist/apps/server-assets-${projectName}`;
+
   await runCommands(
     {
       commands: [
         `rm -rf ${serverAssetBase}`,
         `cp -r ${distTarget} ${serverAssetBase}`,
         `mkdir -p ${serverAssetBase}/versioned`,
-        `mv ${serverAssetBase}/*.css ${serverAssetBase}/versioned`,
-        `mv ${serverAssetBase}/*.js ${serverAssetBase}/versioned`,
-        `gzip -r -f ${serverAssetBase}/versioned`,
-        `mv ${serverAssetBase}/*.map  ${serverAssetBase}/*.txt ${serverAssetBase}/versioned`,
       ],
       parallel: false,
       __unparsed__: [],
     },
     context
   );
+
+  const listOfExtToCopy = listFilesExtensions(serverAssetBase, ['index.html']);
+
   const tree = new FsTree(context.root, true);
 
-  const indexHtmlFile = tree.read(distTarget + '/index.html');
+  const rawHtmlString = tree.read(distTarget + '/index.html');
 
-  if (!indexHtmlFile) {
-    console.log(`${distTarget}/index.html file not found`);
-    return { success: false };
+  if (!rawHtmlString) {
+    throw new Error('No html found.');
   }
 
-  const htmlString = indexHtmlFile.toString();
+  const htmlString = rawHtmlString.toString();
 
-  const extractedAssets = gzAssetNames(extractAssets(htmlString));
+  const extractedAssets = extractAssets(htmlString);
+  validateAllowedAssets(extractedAssets);
 
   console.log('This will be the loaded assets from this build :');
-  console.log(extractedAssets.js.map(it => it.url));
-  console.log(extractedAssets.css.map(it => it.url));
+  console.log('Javascript assets :');
+  extractedAssets.js.forEach(it => console.log('- ' + it.url));
+  console.log('CSS assets :');
+  extractedAssets.css.forEach(it => console.log('- ' + it.url));
 
-  validateAllowedAssets(extractedAssets);
-  const loaderFile = generateAssetLoaderFile(extractedAssets);
+  const finalAssets = gzAssetNames(extractedAssets);
+
+  const loaderFile = generateAssetLoaderFile(finalAssets);
   tree.write(`${serverAssetBase}/versioned/assetLoader.js`, loaderFile);
   tree.write(
     `${serverAssetBase}/versioned/main.js`,
     generatePolyfillLoaderFile(loaderFile)
   );
-  tree.write(
-    `${serverAssetBase}/loaderPolyfill.js`,
-    generatePolyfillLoaderFile(loaderFile)
-  );
 
   printChanges(tree.listChanges());
   flushChanges(context.root, tree.listChanges());
+
   await runCommands(
     {
       commands: [
-        `gzip -f ${serverAssetBase}/versioned/assetLoader.js`,
-        `gzip -f ${serverAssetBase}/versioned/main.js`,
+        ...listOfExtToCopy.map(
+          ext => `mv ${serverAssetBase}/*.${ext} ${serverAssetBase}/versioned`
+        ),
+        ...[
+          ...extractedAssets.css.map(css => css.url),
+          ...extractedAssets.js.map(js => js.url),
+          'assetLoader.js',
+          'main.js',
+        ].map(name => `gzip -f ${serverAssetBase}/versioned/${name}`),
       ],
       parallel: false,
       __unparsed__: [],

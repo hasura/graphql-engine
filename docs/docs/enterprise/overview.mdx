@@ -1,0 +1,174 @@
+---
+description: Documentation for Hasura Enterprise Edition
+title: 'Enterprise Edition: Hasura Enterprise'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+hide_table_of_contents: true
+sidebar_position: 1
+sidebar_label: Overview
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import VersionedLink from '@site/src/components/VersionedLink';
+import ProductBadge from '@site/src/components/ProductBadge';
+import Enterprise from '@site/static/icons/features/enterprise.svg';
+
+# <Enterprise /> Hasura Enterprise
+
+<ProductBadge self />
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+    The open-source version of Hasura is great, but to take your deployment to the next level, upgrade to Hasura Enterprise Edition. With additional built-in features, you can run Hasura in production on your own infrastructure with ease.
+    </p>
+    <p>
+    Hasura Enterprise Edition comes with key capabilities for observability, security, and performance, making it the perfect choice for any organization running business-critical APIs. With the support of the Hasura team, you can deploy the Enterprise Edition on your own infrastructure or on a cloud provider of your choice.
+    </p>
+    <p>
+    Upgrade now and take advantage of our <b>30-day free <VersionedLink to="/enterprise/try-hasura-enterprise-edition/">
+          Enterprise Edition Trial
+        </VersionedLink></b> to evaluate the features right away. Don't miss out on the opportunity to streamline your deployment with Hasura Enterprise Edition. If you have any questions, please don't hesitate to <a href="mailto:sales@hasura.io">contact us</a>.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/enterprise/try-hasura-enterprise-edition/">
+          Free 30 days Trial for Hasura Enterprise Edition.
+        </VersionedLink>
+      </li>
+      <li>
+        <VersionedLink to="/enterprise/getting-started/quickstart-docker">
+          Quickstart with Docker.
+        </VersionedLink>
+      </li>
+    </ul>
+
+  </div>
+ <iframe
+        src="https://www.youtube.com/embed/QE3mTzE9a3o"
+        frameBorder="0"
+        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+</div>
+
+## Hasura Enterprise Edition Features
+
+<p>Hasura Enterprise Edition capabilities include all the features of the Hasura Open Source Community Edition plus:</p>
+<div className="overview-gallery">
+  <h2 style={{ gridColumn: `1 / -1`, marginTop: `1.2rem`, marginBottom: `.3rem`, justifySelf: `start`, fontSize: `1.8rem` }}>Databases</h2>
+  <VersionedLink to="/databases/snowflake/index/">
+    <div className="card">
+      <h3>Snowflake</h3>
+      <p>Learn how to connect Hasura to Snowflake using Hasura Enterprise Edition.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/athena/index/">
+    <div className="card">
+      <h3>Amazon Athena</h3>
+      <p>Learn how to connect Hasura to Amazon Athena using Hasura Enterprise Edition.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/mysql/index/">
+    <div className="card">
+      <h3>MySQL</h3>
+      <p>Learn how to connect Hasura to MySQL using Hasura Enterprise Edition.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/oracle/index/">
+    <div className="card">
+      <h3>Oracle</h3>
+      <p>Learn how to connect Hasura to Oracle using Hasura Enterprise Edition.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/mariadb/index/">
+    <div className="card">
+      <h3>MariaDB</h3>
+      <p>Learn how to connect Hasura to MariaDB using Hasura Enterprise Edition.</p>
+    </div>
+  </VersionedLink>
+  <h2 style={{ gridColumn: `1 / -1`, marginTop: `1.2rem`, marginBottom: `.3rem`, justifySelf: `start`, fontSize: `1.8rem` }}>Performance</h2>
+  <VersionedLink to="/enterprise/caching/">
+    <div className="card">
+      <h3>Caching</h3>
+      <p>Learn how to configure caching in Hasura Enterprise Edition to improve the performance of your GraphQL API.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/database-config/read-replicas/">
+    <div className="card">
+      <h3>Read Replicas</h3>
+      <p>
+        Learn how to configure read replicas in Hasura Enterprise Edition to load balance your database queries and subscriptions.
+      </p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/auth/authentication/webhook/#webhook-auth-caching">
+    <div className="card">
+      <h3>Webhook Auth Caching</h3>
+      <p>Authentication webhook session variables can be cached to improve the performance of a request with Hasura Enterprise Edition.</p>
+    </div>
+  </VersionedLink>
+  <h2 style={{ gridColumn: `1 / -1`, marginTop: `1.2rem`, marginBottom: `.3rem`, justifySelf: `start`, fontSize: `1.8rem` }}>Security</h2>
+  <VersionedLink to="/security/api-limits/">
+    <div className="card">
+      <h3>API Limiting</h3>
+      <p>Keep your API secure with API limiting to prevent users from abusing your GraphQL API.</p>
+    </div>
+
+  </VersionedLink>
+  <VersionedLink to="/security/allow-list/#role-based-allow-list">
+    <div className="card">
+      <h3>Role Based Allow List</h3>
+      <p>Use a role based allow list to restrict access to your GraphQL API and its operations.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/security/disable-graphql-introspection/">
+    <div className="card">
+      <h3>Disable GraphQL Introspection</h3>
+      <p>Prevent unauthorized access to your GraphQL API by disabling GraphQL introspection in Hasura Enterprise.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/security/multiple-admin-secrets/">
+    <div className="card">
+      <h3>Multiple Admin Secrets</h3>
+      <p>Configure multiple admin secrets in Hasura Enterprise Edition.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/security/multiple-jwt-secrets/">
+    <div className="card">
+      <h3>Multiple JWT Secrets</h3>
+      <p>Configure multiple JWT secrets in Hasura Enterprise Edition to support multiple authentication providers.</p>
+    </div>
+  </VersionedLink>
+  <h2 style={{ gridColumn: `1 / -1`, marginTop: `1.2rem`, marginBottom: `.3rem`, justifySelf: `start`, fontSize: `1.8rem` }}>Event Triggers</h2>
+  <VersionedLink to="/event-triggers/clean-up/auto-cleanup/">
+    <div className="card">
+      <h3>Auto Cleanup of Event Triggers</h3>
+      <p>Learn how to configure auto cleanup of Event Triggers in Hasura Enterprise Edition to keep your logs clean.</p>
+    </div>
+  </VersionedLink>
+  <h2 style={{ gridColumn: `1 / -1`, marginTop: `1.2rem`, marginBottom: `.3rem`, justifySelf: `start`, fontSize: `1.8rem` }}>Observability</h2>
+  <VersionedLink to="/deployment/logging/">
+    <div className="card">
+      <h3>Logs</h3>
+      <p>
+        Learn how to configure logging in Hasura Enterprise Edition to monitor your GraphQL API and troubleshoot issues.
+      </p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/enterprise/metrics/">
+    <div className="card">
+      <h3>Metrics via Prometheus</h3>
+      <p>Learn how to configure Prometheus in Hasura Enterprise Edition to monitor your GraphQL API.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/enterprise/opentelemetry/">
+    <div className="card">
+      <h3>Traces via OpenTelemetry</h3>
+      <p>Learn how to configure OpenTelemetry in Hasura Enterprise Edition.</p>
+    </div>
+  </VersionedLink>
+</div>

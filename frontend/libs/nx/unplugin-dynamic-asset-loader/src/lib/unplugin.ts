@@ -64,6 +64,7 @@ const unplugin = createUnplugin(label => ({
 
           // console.log(indexHtmlSource);
 
+          console.log('CREATING ASSET LOADER : ', finalString);
           compilation.emitAsset('assetLoader.js', new RawSource(finalString));
           // console.log(Object.keys(assets));
           // console.log('HOOK END');

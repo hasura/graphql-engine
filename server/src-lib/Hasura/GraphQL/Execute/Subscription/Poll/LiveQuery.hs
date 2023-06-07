@@ -11,7 +11,7 @@ import Control.Concurrent.Async qualified as A
 import Control.Concurrent.STM qualified as STM
 import Control.Lens
 import Data.ByteString qualified as BS
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.Split (chunksOf)
 import Data.Monoid (Sum (..))
 import Data.Text.Extended
@@ -28,12 +28,16 @@ import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendTag, reify)
+import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
-import Hasura.SQL.Backend (BackendType (..), PostgresKind (Vanilla))
-import Hasura.SQL.Tag (backendTag, reify)
-import Hasura.Session
+import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..), liveQuerySubscriptionLabel, recordSubcriptionMetric)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..))
 import Refined (unrefine)
+import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
+import System.Metrics.Prometheus.HistogramVector qualified as HistogramVector
 
 pushResultToCohort ::
   GQResult BS.ByteString ->
@@ -55,8 +59,8 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cohortSnapshot
         return (newSinks <> curSinks, mempty)
       else return (newSinks, curSinks)
   pushResultToSubscribers subscribersToPush
-  pure $
-    over
+  pure
+    $ over
       (each . each)
       ( \Subscriber {..} ->
           SubscriberExecutionDetails _sId _sMetadata
@@ -73,8 +77,9 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cohortSnapshot
 -- active 'Poller'. This needs to be async exception safe.
 pollLiveQuery ::
   forall b.
-  BackendTransport b =>
+  (BackendTransport b) =>
   PollerId ->
+  STM.TVar PollerResponseState ->
   SubscriptionsOptions ->
   (SourceName, SourceConfig b) ->
   RoleName ->
@@ -82,9 +87,13 @@ pollLiveQuery ::
   MultiplexedQuery b ->
   CohortMap 'LiveQuery ->
   SubscriptionPostPollHook ->
+  PrometheusMetrics ->
+  IO GranularPrometheusMetricsState ->
+  TMap.TMap (Maybe OperationName) Int ->
   ResolvedConnectionTemplate b ->
   IO ()
-pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook resolvedConnectionTemplate = do
+pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook prometheusMetrics granularPrometheusMetricsState operationNamesMap' resolvedConnectionTemplate = do
+  operationNamesMap <- STM.atomically $ TMap.getMap operationNamesMap'
   (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
     (snapshotTime, cohortBatches) <- withElapsedTime $ do
@@ -101,6 +110,27 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
     batchesDetails <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
       (queryExecutionTime, mxRes) <- runDBSubscription @b sourceConfig query (over (each . _2) C._csVariables cohorts) resolvedConnectionTemplate
 
+      let dbExecTimeMetric = submDBExecTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
+      recordSubcriptionMetric
+        granularPrometheusMetricsState
+        True
+        operationNamesMap
+        parameterizedQueryHash
+        liveQuerySubscriptionLabel
+        (flip (HistogramVector.observe dbExecTimeMetric) (realToFrac queryExecutionTime))
+
+      previousPollerResponseState <- STM.readTVarIO pollerResponseState
+
+      case mxRes of
+        Left _ -> do
+          when (previousPollerResponseState == PRSSuccess) $ do
+            Prometheus.Gauge.inc $ submActiveLiveQueryPollersInError $ pmSubscriptionMetrics prometheusMetrics
+            STM.atomically $ STM.writeTVar pollerResponseState PRSError
+        Right _ -> do
+          when (previousPollerResponseState == PRSError) $ do
+            Prometheus.Gauge.dec $ submActiveLiveQueryPollersInError $ pmSubscriptionMetrics prometheusMetrics
+            STM.atomically $ STM.writeTVar pollerResponseState PRSSuccess
+
       let lqMeta = SubscriptionMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes
           -- batch response size is the sum of the response sizes of the cohorts
@@ -108,8 +138,9 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
             case mxRes of
               Left _ -> Nothing
               Right resp -> Just $ getSum $ foldMap (Sum . BS.length . snd) resp
-      (pushTime, cohortsExecutionDetails) <- withElapsedTime $
-        A.forConcurrently operations $ \(res, cohortId, respData, snapshot) -> do
+      (pushTime, cohortsExecutionDetails) <- withElapsedTime
+        $ A.forConcurrently operations
+        $ \(res, cohortId, respData, snapshot) -> do
           (pushedSubscribers, ignoredSubscribers) <-
             pushResultToCohort res (fst <$> respData) lqMeta snapshot
           pure
@@ -128,15 +159,14 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
       let pgExecutionTime = case reify (backendTag @b) of
             Postgres Vanilla -> Just queryExecutionTime
             _ -> Nothing
-      pure $
-        BatchExecutionDetails
+      pure
+        $ BatchExecutionDetails
           pgExecutionTime
           queryExecutionTime
           pushTime
           batchId
           cohortsExecutionDetails
           batchResponseSize
-
     pure (snapshotTime, batchesDetails)
 
   let pollDetails =
@@ -153,6 +183,14 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
             _pdParameterizedQueryHash = parameterizedQueryHash
           }
   postPollHook pollDetails
+  let totalTimeMetric = submTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
+  recordSubcriptionMetric
+    granularPrometheusMetricsState
+    True
+    operationNamesMap
+    parameterizedQueryHash
+    liveQuerySubscriptionLabel
+    (flip (HistogramVector.observe totalTimeMetric) (realToFrac totalTime))
   where
     SubscriptionsOptions batchSize _ = lqOpts
 
@@ -172,7 +210,7 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
         let resp = throwError $ GQExecError [encodeGQLErr False e]
          in [(resp, cohortId, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
-        let cohortSnapshotMap = Map.fromList cohorts
+        let cohortSnapshotMap = HashMap.fromList cohorts
         flip mapMaybe responses $ \(cohortId, respBS) ->
           let respHash = mkRespHash respBS
               respSize = BS.length respBS
@@ -181,4 +219,4 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
               -- (this shouldn't happen but if it happens it means a logic error and
               -- we should log it)
               (pure respBS,cohortId,Just (respHash, respSize),)
-                <$> Map.lookup cohortId cohortSnapshotMap
+                <$> HashMap.lookup cohortId cohortSnapshotMap

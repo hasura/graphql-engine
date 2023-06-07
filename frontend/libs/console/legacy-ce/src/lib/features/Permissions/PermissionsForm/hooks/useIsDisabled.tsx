@@ -6,8 +6,12 @@ export const useIsDisabled = (queryType: QueryType) => {
   const checkType = watch('checkType');
   const filterType = watch('filterType');
 
-  if (queryType === 'insert' || queryType === 'update') {
+  if (queryType === 'insert') {
     return checkType === 'none';
+  }
+
+  if (queryType === 'update') {
+    return filterType === 'none';
   }
 
   return filterType === 'none';

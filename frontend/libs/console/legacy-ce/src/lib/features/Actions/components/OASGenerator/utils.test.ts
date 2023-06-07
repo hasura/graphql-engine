@@ -1,7 +1,7 @@
-import { Oas3 } from 'openapi-to-graphql';
-import { ParameterObject } from 'openapi-to-graphql/dist/types/oas3';
+import { Oas3 } from '@dancamma/openapi-to-graphql';
+import { ParameterObject } from '@dancamma/openapi-to-graphql/dist/types/oas3';
 import petStore from './petstore.json';
-import { getOperations, generateAction, generateQueryParams } from './utils';
+import { generateAction, generateQueryParams, parseOas } from './utils';
 
 const tags: ParameterObject = {
   name: 'tags',
@@ -32,7 +32,8 @@ const status: ParameterObject = {
 
 describe('getOperations', () => {
   it('should return an array of operations', async () => {
-    const operations = await getOperations(petStore as unknown as Oas3);
+    const parsedOas = await parseOas(petStore as unknown as Oas3);
+    const operations = Object.values(parsedOas.data.operations);
     expect(operations).toHaveLength(4);
     expect(operations[0].path).toBe('/pets');
     expect(operations[0].method).toBe('get');
@@ -45,7 +46,7 @@ describe('getOperations', () => {
   });
 
   it('throws an error if the OAS is invalid', async () => {
-    await expect(getOperations({} as unknown as Oas3)).rejects.toThrow();
+    await expect(parseOas({} as unknown as Oas3)).rejects.toThrow();
   });
 });
 
@@ -70,7 +71,7 @@ describe('generateAction', () => {
       method: 'GET',
       baseUrl: 'http://petstore.swagger.io/api',
       path: '/pets',
-      requestTransforms: '',
+      requestTransforms: undefined,
       responseTransforms: '',
       sampleInput: JSON.stringify(
         {
@@ -87,7 +88,7 @@ describe('generateAction', () => {
       ),
       headers: [],
       queryParams:
-        '{{ concat ([concat({{ range _, x := $body.input.tags }} "tags={{x}}&" {{ end }}), "limit={{$body.input.limit}}&"]) }}',
+        '{{ concat ([concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}), "limit={{$body.input?.limit}}&"]) }}',
     });
   });
 
@@ -102,19 +103,19 @@ describe('generateQueryParams', () => {
   it('should generate query params with one non-array param', async () => {
     const queryParams = await generateQueryParams([status]);
     expect(queryParams).toStrictEqual([
-      { name: 'status', value: '{{$body.input.status}}' },
+      { name: 'status', value: '{{$body.input?.status}}' },
     ]);
   });
   it('should generate query params with one non-array param and one array param', async () => {
     const queryParams = await generateQueryParams([status, tags]);
     expect(queryParams).toBe(
-      '{{ concat (["status={{$body.input.status}}&", concat({{ range _, x := $body.input.tags }} "tags={{x}}&" {{ end }})]) }}'
+      '{{ concat (["status={{$body.input?.status}}&", concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }})]) }}'
     );
   });
   it('should generate query params with one non-array param and one array param (reversed)', async () => {
     const queryParams = await generateQueryParams([tags, status]);
     expect(queryParams).toBe(
-      '{{ concat ([concat({{ range _, x := $body.input.tags }} "tags={{x}}&" {{ end }}), "status={{$body.input.status}}&"]) }}'
+      '{{ concat ([concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}), "status={{$body.input?.status}}&"]) }}'
     );
   });
 });

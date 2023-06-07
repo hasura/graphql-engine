@@ -14,9 +14,9 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -29,15 +29,7 @@ spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ -- Create table fails currently becasuse we postfix table names for some reason
-          -- which makes the valid table name go over the limit
-          --
-          -- (Fixture.fixture $ Fixture.Backend Fixture.MySQL)
-          --   { Fixture.setupTeardown = \(testEnv, _) ->
-          --       [ Mysql.setupTablesAction schema testEnv
-          --       ]
-          --   },
-          (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv
                 ]
@@ -65,8 +57,8 @@ spec = do
                 [ BigQuery.setupTablesAction schema testEnv
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
             }
@@ -185,13 +177,13 @@ multitable =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   it "select long table" $ \testEnvironment -> do
     let schemaName = Schema.getSchemaName testEnvironment
 
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
@@ -213,7 +205,7 @@ data:
     let schemaName = Schema.getSchemaName testEnvironment
 
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           [interpolateYaml|
@@ -241,7 +233,7 @@ data:
     let schemaName = Schema.getSchemaName testEnvironment
 
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           [interpolateYaml|
@@ -269,13 +261,13 @@ data:
         i_need_a_column_with_a_long_name_but_is_different: 2
 |]
 
-testInsert :: String -> Fixture.Options -> SpecWith TestEnvironment
-testInsert typ opts = do
+testInsert :: String -> SpecWith TestEnvironment
+testInsert typ = do
   it "insert to regular table" $ \testEnvironment -> do
     let schemaName = Schema.getSchemaName testEnvironment
 
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphqlYaml
           testEnvironment
           [interpolateYaml|
@@ -313,7 +305,7 @@ testInsert typ opts = do
     let schemaName = Schema.getSchemaName testEnvironment
 
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphqlYaml
           testEnvironment
           [interpolateYaml|
@@ -358,7 +350,7 @@ testInsert typ opts = do
     let schemaName = Schema.getSchemaName testEnvironment
 
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphqlYaml
           testEnvironment
           [interpolateYaml|

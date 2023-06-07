@@ -1,0 +1,49 @@
+// custom for overview pages
+
+.overview-header {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-gap: 20px;
+  margin-top: 1rem;
+  margin-bottom: 20px;
+  padding-bottom: 3rem;
+  border-bottom: solid 1px var(--ifm-color-emphasis-200);
+
+  iframe {
+    aspect-ratio: 16 / 9;
+    height: 100%;
+    width: 100%;
+    border-radius: 8px;
+  }
+}
+
+.overview-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  justify-items: center;
+  grid-gap: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 3rem;
+  border-bottom: solid 1px var(--ifm-color-emphasis-200);
+
+  .card {
+    min-height: 100%;
+    display: inline-block;
+    text-decoration: none !important;
+    h3 {
+      font-size: 1.5rem;
+    }
+
+    p {
+      font-size: 1rem;
+      color: var(--ifm-color-emphasis-900);
+    }
+  }
+}
+
+.overview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}

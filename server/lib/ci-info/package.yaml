@@ -1,0 +1,36 @@
+name:                ci-info
+version:             0.1.0.0
+github:              "hasura/graphql-engine"
+license:             MIT
+author:              "Ajeet D'Souza"
+maintainer:          "build@hasura.io"
+copyright:           "2019 Hasura Inc."
+
+extra-source-files:
+- README.md
+
+description:         Please see the README on GitHub at <https://github.com/hasura/ci-info-hs#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- aeson
+- aeson-casing
+- hashable
+- template-haskell
+- th-lift-instances
+- text
+- unordered-containers
+
+ghc-options:
+- -Wall
+- -Wincomplete-uni-patterns
+- -Wincomplete-record-updates
+- -Wcompat
+- -Widentities
+- -Wredundant-constraints
+- -Wmissing-export-lists
+- -Wpartial-fields
+
+library:
+  exposed-modules: CI
+  source-dirs: src

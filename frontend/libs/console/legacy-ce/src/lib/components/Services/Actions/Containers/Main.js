@@ -13,10 +13,10 @@ class Container extends React.Component {
   render() {
     const { children } = this.props;
 
-    const currentLocation = location.pathname;
+    const currentLocation = window.location.pathname;
 
     const sidebarContent = (
-      <ul>
+      <ul className="bootstrap-jail">
         <li
           role="presentation"
           className={
@@ -26,7 +26,11 @@ class Container extends React.Component {
           <Link className={styles.linkBorder} to={appPrefix + '/manage'}>
             Manage
           </Link>
-          <LeftSidebar appPrefix={appPrefix} {...this.props} />
+          <LeftSidebar
+            appPrefix={appPrefix}
+            {...this.props}
+            allowOpenApiImport
+          />
         </li>
         <li
           role="presentation"

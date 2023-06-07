@@ -1,19 +1,41 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Use onNothing" #-}
 
+--------------------------------------------------------------------------------
+
 module Hasura.Backends.DataConnector.API.V0.Capabilities
   ( Capabilities (..),
+    cDataSchema,
+    cQueries,
+    cLicensing,
+    cMutations,
+    cSubscriptions,
+    cScalarTypes,
+    cRelationships,
+    cComparisons,
+    cMetrics,
+    cExplain,
+    cRaw,
+    cDatasets,
+    cUserDefinedFunctions,
     defaultCapabilities,
     DataSchemaCapabilities (..),
+    dscSupportsPrimaryKeys,
+    dscSupportsForeignKeys,
+    dscColumnNullability,
     defaultDataSchemaCapabilities,
     ColumnNullability (..),
     QueryCapabilities (..),
+    qcForeach,
+    ForeachCapabilities (..),
     MutationCapabilities (..),
     InsertCapabilities (..),
     UpdateCapabilities (..),
+    UserDefinedFunctionCapabilities (..),
     DeleteCapabilities (..),
     AtomicitySupportLevel (..),
     ReturningCapabilities (..),
@@ -34,13 +56,21 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     RawCapabilities (..),
     DatasetCapabilities (..),
     CapabilitiesResponse (..),
+    crCapabilities,
+    crConfigSchemaResponse,
+    crDisplayName,
+    crReleaseName,
+    Licensing (..),
   )
 where
+
+--------------------------------------------------------------------------------
 
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.Applicative ((<|>))
 import Control.DeepSeq (NFData)
+import Control.Lens.TH (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Data (Data, Proxy (..))
 import Data.HashMap.Strict (HashMap)
@@ -56,6 +86,8 @@ import Language.GraphQL.Draft.Syntax qualified as GQL.Syntax
 import Servant.API.UVerb qualified as Servant
 import Prelude
 
+--------------------------------------------------------------------------------
+
 -- | The 'Capabilities' describes the _capabilities_ of the
 -- service. Specifically, the service is capable of serving queries
 -- which involve relationships.
@@ -70,14 +102,16 @@ data Capabilities = Capabilities
     _cMetrics :: Maybe MetricsCapabilities,
     _cExplain :: Maybe ExplainCapabilities,
     _cRaw :: Maybe RawCapabilities,
-    _cDatasets :: Maybe DatasetCapabilities
+    _cDatasets :: Maybe DatasetCapabilities,
+    _cUserDefinedFunctions :: Maybe UserDefinedFunctionCapabilities,
+    _cLicensing :: Maybe Licensing
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Capabilities
 
 defaultCapabilities :: Capabilities
-defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing Nothing
+defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 instance HasCodec Capabilities where
   codec =
@@ -94,6 +128,10 @@ instance HasCodec Capabilities where
         <*> optionalField "explain" "The agent's explain capabilities" .= _cExplain
         <*> optionalField "raw" "The agent's raw query capabilities" .= _cRaw
         <*> optionalField "datasets" "The agent's dataset capabilities" .= _cDatasets
+        <*> optionalField "user_defined_functions" "The agent's UDF capabilities" .= _cUserDefinedFunctions
+        <*> optionalField "licensing" "The agent's licensing requirements" .= _cLicensing
+
+--------------------------------------------------------------------------------
 
 data DataSchemaCapabilities = DataSchemaCapabilities
   { _dscSupportsPrimaryKeys :: Bool,
@@ -131,14 +169,27 @@ instance HasCodec ColumnNullability where
           (NullableAndNonNullableColumns, "nullable_and_non_nullable")
         ]
 
-data QueryCapabilities = QueryCapabilities {}
+data QueryCapabilities = QueryCapabilities
+  { _qcForeach :: Maybe ForeachCapabilities
+  }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec QueryCapabilities
 
 instance HasCodec QueryCapabilities where
   codec =
-    object "QueryCapabilities" $ pure QueryCapabilities
+    object "QueryCapabilities" $
+      QueryCapabilities
+        <$> optionalField "foreach" "Whether or not the agent supports foreach queries, which are used to enable remote joins to the agent" .= _qcForeach
+
+data ForeachCapabilities = ForeachCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ForeachCapabilities
+
+instance HasCodec ForeachCapabilities where
+  codec =
+    object "ForeachCapabilities" $ pure ForeachCapabilities
 
 data MutationCapabilities = MutationCapabilities
   { _mcInsertCapabilities :: Maybe InsertCapabilities,
@@ -463,6 +514,15 @@ instance HasCodec DatasetCapabilities where
   codec =
     object "DatasetCapabilities" $ pure DatasetCapabilities
 
+data UserDefinedFunctionCapabilities = UserDefinedFunctionCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec UserDefinedFunctionCapabilities
+
+instance HasCodec UserDefinedFunctionCapabilities where
+  codec =
+    object "UserDefinedFunctionCapabilities" $ pure UserDefinedFunctionCapabilities
+
 data CapabilitiesResponse = CapabilitiesResponse
   { _crCapabilities :: Capabilities,
     _crConfigSchemaResponse :: ConfigSchemaResponse,
@@ -503,3 +563,17 @@ instance ToSchema CapabilitiesResponse where
             }
 
     pure $ NamedSchema (Just "CapabilitiesResponse") schema
+
+data Licensing = Licensing {}
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Licensing
+
+instance HasCodec Licensing where
+  codec =
+    object "Licensing" $ pure Licensing
+
+$(makeLenses ''CapabilitiesResponse)
+$(makeLenses ''Capabilities)
+$(makeLenses ''QueryCapabilities)
+$(makeLenses ''DataSchemaCapabilities)

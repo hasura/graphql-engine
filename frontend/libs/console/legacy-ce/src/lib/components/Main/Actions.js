@@ -12,6 +12,7 @@ import { getConsoleNotificationQuery } from '../Common/utils/v1QueryUtils';
 import dataHeaders from '../Services/Data/Common/Headers';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { getUserType, getConsoleScope } from './utils';
+import { getLSItem, setLSItem, LS_KEYS } from '../../utils/localStorage';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -119,7 +120,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
   return dispatch(requestAction(url, options))
     .then(data => {
       const lastSeenNotifications = JSON.parse(
-        window.localStorage.getItem('notifications:lastSeen')
+        getLSItem(LS_KEYS.notificationsLastSeen)
       );
       if (data.data.console_notifications) {
         const fetchedData = data.data.console_notifications;
@@ -134,10 +135,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
             })
           );
           if (!lastSeenNotifications) {
-            window.localStorage.setItem(
-              'notifications:lastSeen',
-              JSON.stringify(0)
-            );
+            setLSItem(LS_KEYS.notificationsLastSeen, JSON.stringify(0));
           }
           return;
         }
@@ -157,8 +155,8 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
           lastSeenNotifications &&
           lastSeenNotifications > filteredData.length
         ) {
-          window.localStorage.setItem(
-            'notifications:lastSeen',
+          setLSItem(
+            LS_KEYS.notificationsLastSeen,
             JSON.stringify(filteredData.length)
           );
         }
@@ -179,7 +177,7 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
               toShowBadge = false;
             } else if (previousRead === 'all') {
               const previousList = JSON.parse(
-                localStorage.getItem('notifications:data')
+                getLSItem(LS_KEYS.notificationsData)
               );
               if (!previousList) {
                 // we don't have a record of the IDs that were marked as read previously
@@ -231,8 +229,8 @@ const fetchConsoleNotifications = () => (dispatch, getState) => {
           !lastSeenNotifications ||
           lastSeenNotifications !== filteredData.length
         ) {
-          window.localStorage.setItem(
-            'notifications:lastSeen',
+          setLSItem(
+            LS_KEYS.notificationsLastSeen,
             JSON.stringify(filteredData.length)
           );
         }

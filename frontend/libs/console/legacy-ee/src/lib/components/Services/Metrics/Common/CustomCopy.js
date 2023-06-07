@@ -32,7 +32,7 @@ const CustomCopy = ({ label, copy, onEdit }) => {
     <React.Fragment>
       <div className={styles.infoWrapper}>
         <div className={styles.information}>
-          {label}:
+          <span>{label}:</span>
           <span>
             {onEdit && (
               <EditIcon
@@ -47,7 +47,7 @@ const CustomCopy = ({ label, copy, onEdit }) => {
         </div>
       </div>
       <div className={styles.boxwrapper + ' ' + styles.errorBox}>
-        <div className={styles.box}>
+        <div className={`p-xs overflow-auto ${styles.box}`}>
           <code className={styles.queryCode}>
             <pre style={{ whitespace: 'pre-wrap' }}>{copy}</pre>
           </code>

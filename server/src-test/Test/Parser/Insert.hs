@@ -11,7 +11,6 @@ import Hasura.RQL.IR.Insert (InsertQueryP1 (..))
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..))
-import Hasura.RQL.Types.Instances ()
 import Test.Backend.Postgres.Misc
 
 type Output = MutationOutputG PG Void (UnpreparedValue PG)

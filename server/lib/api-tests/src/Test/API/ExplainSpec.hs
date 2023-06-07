@@ -11,8 +11,8 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine
 import Harness.Quoter.Graphql
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..))
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -60,8 +60,8 @@ schema =
       }
   ]
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests _opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Explaining queries" do
     it "Works as expected" \testEnvironment -> do
       -- All that matters to this test is that the call completes without error.

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { EnvVarsForm, EnvVarsFormProps } from './EnvVarsForm';
 import { RequiredEnvVar } from '../../types';
@@ -8,7 +8,7 @@ export default {
   title: 'features/CloudOnboarding/One Click Deployment/Env Vars Form',
   component: EnvVarsForm,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof EnvVarsForm>;
+} as Meta<typeof EnvVarsForm>;
 
 const sampleEnvVars: RequiredEnvVar[] = [
   {
@@ -105,7 +105,7 @@ const sampleEnvVarsMinimal: RequiredEnvVar[] = [
   },
 ];
 
-export const Default: Story<EnvVarsFormProps> = () => (
+export const Default: StoryFn<EnvVarsFormProps> = () => (
   <EnvVarsForm
     envVars={sampleEnvVars}
     formState="default"
@@ -115,7 +115,7 @@ export const Default: Story<EnvVarsFormProps> = () => (
   />
 );
 
-export const Loading: Story<EnvVarsFormProps> = () => (
+export const Loading: StoryFn<EnvVarsFormProps> = () => (
   <EnvVarsForm
     envVars={sampleEnvVarsMinimal}
     formState="loading"
@@ -125,7 +125,7 @@ export const Loading: Story<EnvVarsFormProps> = () => (
   />
 );
 
-export const Error: Story<EnvVarsFormProps> = () => (
+export const Error: StoryFn<EnvVarsFormProps> = () => (
   <EnvVarsForm
     envVars={sampleEnvVarsMinimal}
     formState="error"

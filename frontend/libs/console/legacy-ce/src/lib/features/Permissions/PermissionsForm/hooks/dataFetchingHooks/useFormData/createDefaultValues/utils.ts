@@ -1,22 +1,15 @@
-import isEqual from 'lodash.isequal';
-import { GraphQLSchema } from 'graphql';
+import isEqual from 'lodash/isEqual';
 import { TableColumn } from '../../../../../../DataSource';
 
 import type {
   DeletePermissionDefinition,
   InsertPermissionDefinition,
-  MetadataTable,
   Permission,
   SelectPermissionDefinition,
-  Source,
   UpdatePermissionDefinition,
 } from '../../../../../../hasura-metadata-types';
 
-import {
-  isPermission,
-  keyToPermission,
-  permissionToKey,
-} from '../../../../../utils';
+import { permissionToKey } from '../../../../../utils';
 import { createDefaultValues } from '../../../../components/RowPermissionsBuilder';
 
 import type { QueryType } from '../../../../../types';
@@ -90,60 +83,6 @@ const getColumns = (
   }, {});
 };
 
-export const getAllRowChecks = (
-  currentQuery: QueryType,
-  allChecks: Array<{ queryType: QueryType; value: any }> = []
-) => {
-  return allChecks
-    .filter(({ queryType }) => queryType !== currentQuery)
-    .map(({ queryType, value }) => {
-      if (['insert', 'update'].includes(queryType)) {
-        return { queryType, value: JSON.stringify(value.check || {}) };
-      }
-
-      return {
-        queryType,
-        value: JSON.stringify(value.filter || {}),
-      };
-    });
-};
-
-export interface UseDefaultValuesArgs {
-  dataSourceName: string;
-  table: unknown;
-  roleName: string;
-  queryType: QueryType;
-}
-
-export const getRowPermissionsForAllOtherQueriesMatchingSelectedRole = (
-  selectedQuery: QueryType,
-  selectedRole: string,
-  table?: TableEntry
-) => {
-  const res = Object.entries(table || {}).reduce<
-    Array<{ queryType: QueryType; value: any }>
-  >((acc, [key, value]) => {
-    const props = { key, value };
-
-    // check object key of metadata is a permission
-    if (isPermission(props)) {
-      // add each role from each permission to the set
-      props.value.forEach(permission => {
-        if (permission.role === selectedRole) {
-          acc.push({
-            queryType: keyToPermission[props.key],
-            value: permission.permission,
-          });
-        }
-      });
-    }
-
-    return acc;
-  }, []);
-
-  return getAllRowChecks(selectedQuery, res);
-};
-
 export const createPermission = {
   insert: (
     permission: InsertPermissionDefinition,
@@ -212,8 +151,8 @@ export const createPermission = {
     permission: UpdatePermissionDefinition,
     tableColumns: TableColumn[]
   ) => {
-    const check = JSON.stringify(permission?.check) || '';
-    const filter = JSON.stringify(permission?.filter) || '';
+    const check = permission?.check || {};
+    const filter = permission?.filter || {};
     const checkType = getCheckType(permission?.check);
     const filterType = getCheckType(permission?.filter);
     const presets = getPresets({
@@ -237,7 +176,7 @@ export const createPermission = {
     };
   },
   delete: (permission: DeletePermissionDefinition) => {
-    const filter = JSON.stringify(permission?.filter) || '';
+    const filter = permission?.filter || {};
     const filterType = getCheckType(permission?.filter);
     const presets = getPresets({
       currentQueryPermissions: permission,

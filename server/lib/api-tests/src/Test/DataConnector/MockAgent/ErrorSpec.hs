@@ -6,8 +6,8 @@ module Test.DataConnector.MockAgent.ErrorSpec (spec) where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson qualified as Aeson
-import Data.HashMap.Strict qualified as HashMap
+import Control.Lens ((?~))
+import Data.Aeson qualified as J
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest)
 import Harness.Backend.DataConnector.Mock qualified as Mock
@@ -19,6 +19,7 @@ import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldBeYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
+import Test.DataConnector.MockAgent.TestHelpers
 import Test.Hspec (SpecWith, describe, shouldBe)
 
 --------------------------------------------------------------------------------
@@ -36,7 +37,7 @@ spec =
     )
     tests
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -49,19 +50,22 @@ sourceMetadata =
               custom_root_fields:
                 select: albums
                 select_by_pk: albums_by_pk
+                insert: insert_albums
               column_config:
                 AlbumId:
                   custom_name: id
                 Title:
                   custom_name: title
+                ArtistId:
+                  custom_name: artist_id
         configuration: {}
       |]
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests _opts = describe "Error Protocol Tests" $ do
-  mockAgentGraphqlTest "handles returned errors correctly" $ \performGraphqlRequest -> do
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = describe "Error Protocol Tests" $ do
+  mockAgentGraphqlTest "handles returned UncaughtError errors correctly" $ \_testEnv performGraphqlRequest -> do
     let headers = []
     let graphqlRequest =
           [graphql|
@@ -72,42 +76,90 @@ tests _opts = describe "Error Protocol Tests" $ do
               }
             }
           |]
-    let errorResponse = API.ErrorResponse API.UncaughtError "Hello World!" [yaml| { foo: "bar" } |]
-    let mockConfig = Mock.chinookMock {Mock._queryResponse = \_ -> Left errorResponse}
+    let errorResponse = API.ErrorResponse API.UncaughtError "An unhandled error occurred" [yaml| { foo: "bar" } |]
+    let mockConfig = Mock.defaultMockRequestConfig {Mock._queryResponse = \_ -> Left errorResponse}
 
     MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
 
     _mrrResponse
       `shouldBeYaml` [yaml|
         errors:
-          -
-            extensions:
+          - extensions:
               code: "data-connector-error"
               path: "$"
               internal:
                 foo: "bar"
-            message: "UncaughtError: Hello World!"
+            message: "An unhandled error occurred"
       |]
 
     _mrrRecordedRequest
       `shouldBe` Just
-        ( Query $
-            API.QueryRequest
-              { _qrTable = API.TableName ("Album" :| []),
-                _qrTableRelationships = [],
-                _qrQuery =
-                  API.Query
-                    { _qFields =
-                        Just $
-                          HashMap.fromList
-                            [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                              (API.FieldName "title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
-                            ],
-                      _qAggregates = Nothing,
-                      _qLimit = Just 1,
-                      _qOffset = Nothing,
-                      _qWhere = Nothing,
-                      _qOrderBy = Nothing
-                    }
-              }
+        ( Query
+            $ mkTableRequest
+              (mkTableName "Album")
+              ( emptyQuery
+                  & API.qFields
+                  ?~ mkFieldsMap
+                    [ ("id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
+                      ("title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
+                    ]
+                    & API.qLimit
+                  ?~ 1
+              )
         )
+
+  mockAgentGraphqlTest "handles returned MutationConstraintViolation errors correctly" $ \_testEnv performGraphqlRequest -> do
+    let headers = []
+    let graphqlRequest =
+          [graphql|
+            mutation insertAlbum {
+              insert_albums(objects: [
+                {id: 9001, title: "Super Mega Rock", artist_id: 1}
+              ]) {
+                affected_rows
+              }
+            }
+          |]
+    let errorResponse = API.ErrorResponse API.MutationConstraintViolation "A constraint was violated" [yaml| { foo: "bar" } |]
+    let mockConfig = Mock.defaultMockRequestConfig {Mock._mutationResponse = \_ -> Left errorResponse}
+
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
+
+    _mrrResponse
+      `shouldBeYaml` [yaml|
+        errors:
+          - extensions:
+              code: "constraint-violation"
+              path: "$"
+              internal:
+                foo: "bar"
+            message: "A constraint was violated"
+      |]
+
+  mockAgentGraphqlTest "handles returned MutationPermissionCheckFailure errors correctly" $ \_testEnv performGraphqlRequest -> do
+    let headers = []
+    let graphqlRequest =
+          [graphql|
+            mutation insertAlbum {
+              insert_albums(objects: [
+                {id: 9001, title: "Super Mega Rock", artist_id: 1}
+              ]) {
+                affected_rows
+              }
+            }
+          |]
+    let errorResponse = API.ErrorResponse API.MutationPermissionCheckFailure "A permission check failed" [yaml| { foo: "bar" } |]
+    let mockConfig = Mock.defaultMockRequestConfig {Mock._mutationResponse = \_ -> Left errorResponse}
+
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
+
+    _mrrResponse
+      `shouldBeYaml` [yaml|
+        errors:
+          - extensions:
+              code: "permission-error"
+              path: "$"
+              internal:
+                foo: "bar"
+            message: "A permission check failed"
+      |]

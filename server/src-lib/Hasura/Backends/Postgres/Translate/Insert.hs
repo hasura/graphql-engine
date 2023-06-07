@@ -16,10 +16,10 @@ import Hasura.Backends.Postgres.Translate.Returning
 import Hasura.Prelude
 import Hasura.RQL.IR.Insert
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 
 mkInsertCTE ::
-  Backend ('Postgres pgKind) =>
+  (Backend ('Postgres pgKind)) =>
   InsertQueryP1 ('Postgres pgKind) ->
   S.TopLevelCTE
 mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
@@ -40,7 +40,7 @@ mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
     toSQLBool = toSQLBoolExp $ S.QualTable tn
 
 toSQLConflict ::
-  Backend ('Postgres pgKind) =>
+  (Backend ('Postgres pgKind)) =>
   QualifiedTable ->
   OnConflictClause ('Postgres pgKind) S.SQLExp ->
   S.SQLConflict
@@ -91,8 +91,8 @@ insertOrUpdateCheckExpr ::
   Maybe S.BoolExp ->
   S.Extractor
 insertOrUpdateCheckExpr qt (Just _conflict) insCheck (Just updCheck) =
-  asCheckErrorExtractor $
-    S.SECond
+  asCheckErrorExtractor
+    $ S.SECond
       ( S.BECompare
           S.SEQ
           (S.SEQIdentifier (S.QIdentifier (S.mkQual qt) (Identifier "xmax")))

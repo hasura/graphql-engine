@@ -1,5 +1,10 @@
+import { dataSource } from '../../../dataSources';
+import { TableColumn } from '../../DataSource';
 import clsx from 'clsx';
 import { useEffect, useRef } from 'react';
+import { InputCustomEvent } from './TextInput';
+import { ColumnRowInput } from './ColumnRowInput';
+import { SupportedDrivers } from '../../hasura-metadata-types';
 
 type RowValue = {
   columnName: string;
@@ -13,8 +18,11 @@ export type ColumnRowProps = {
   isDefaultDisabled: boolean;
   label: string;
   name: string;
+  dataType: TableColumn['dataType'];
   onChange: ({ columnName, selectionType, value }: RowValue) => void;
   resetToken: string;
+  placeholder: string;
+  driver: SupportedDrivers;
 };
 
 export const ColumnRow = ({
@@ -25,6 +33,9 @@ export const ColumnRow = ({
   name,
   onChange,
   resetToken,
+  placeholder,
+  dataType,
+  driver,
 }: ColumnRowProps) => {
   const valueId = `${name}-value`;
   const nullId = `${name}-null`;
@@ -37,6 +48,10 @@ export const ColumnRow = ({
     if (valueRadioRef.current) {
       valueRadioRef.current.checked = true;
     }
+  };
+
+  const onCheckValueRadio = () => {
+    checkValueRadio();
   };
 
   useEffect(() => {
@@ -54,13 +69,8 @@ export const ColumnRow = ({
     }
   }, [resetToken]);
 
-  const baseInputTw =
-    'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder-gray-500';
-  const disabledInputTw = '!bg-slate-100 !border-slate-200 cursor-not-allowed';
-  const inputTw = clsx(baseInputTw, isDisabled && disabledInputTw);
-
   const baseLabelTw = 'text-muted';
-  const labelTw = clsx(baseLabelTw, 'w-48');
+  const labelTw = clsx(baseLabelTw, 'min-w-[120px] w-48 font-semibold');
   const disabledLabelTw = 'text-slate-300 !cursor-not-allowed';
   const radioLabelTw = clsx(baseLabelTw, 'cursor-pointer');
 
@@ -69,7 +79,9 @@ export const ColumnRow = ({
 
   const disabledRadioTw = '!cursor-not-allowed border-slate-300';
 
-  const onValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onValueChange = (
+    e: React.ChangeEvent<HTMLInputElement> | InputCustomEvent
+  ) => {
     onChange({
       columnName: name,
       selectionType: 'value',
@@ -77,20 +89,24 @@ export const ColumnRow = ({
     });
   };
 
-  const onRadioChange = (e: any) => {
+  const onRadioChange = (e: InputCustomEvent) => {
     const selectionType = e.target.value;
 
     if (
+      valueInputRef &&
       valueInputRef?.current &&
       (selectionType === 'null' || selectionType === 'default')
     ) {
       valueInputRef.current.value = '';
     }
 
+    const value =
+      dataType === dataSource.columnDataTypes.BOOLEAN ? false : undefined;
+
     onChange({
       columnName: name,
-      selectionType: selectionType,
-      value: undefined,
+      selectionType: selectionType as RowValue['selectionType'],
+      value,
     });
   };
 
@@ -113,16 +129,20 @@ export const ColumnRow = ({
         disabled={isDisabled}
         tabIndex={1}
       />
-      <input
+
+      <ColumnRowInput
+        dataType={dataType}
         name={name}
         onChange={onValueChange}
         onInput={checkValueRadio}
-        ref={valueInputRef}
-        type="text"
-        className={inputTw}
+        inputRef={valueInputRef}
         disabled={isDisabled}
-        tabIndex={2}
+        placeholder={placeholder}
+        onValueChange={onValueChange}
+        onCheckValueRadio={onCheckValueRadio}
+        driver={driver}
       />
+
       <input
         className={clsx(radioTw, _isNullDisabled && disabledRadioTw)}
         id={nullId}
@@ -155,6 +175,9 @@ export const ColumnRow = ({
       >
         Default
       </label>
+      <span className="min-w-[180px] text-slate-400 font-mono text-sm font-light">
+        ({dataType})
+      </span>
     </div>
   );
 };

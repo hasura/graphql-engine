@@ -21,7 +21,7 @@ import Data.ByteString.Builder qualified as BS
 import Data.ByteString.Builder.Scientific qualified as BSBS
 import Data.Char (isControl)
 import Data.HashMap.Strict (HashMap)
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.List (intersperse, sort)
 import Data.Scientific (Scientific)
 import Data.String (IsString)
@@ -124,7 +124,7 @@ instance Printer T.Text where
   doubleP = T.pack . show
 
 class Print a where
-  printP :: Printer b => a -> b
+  printP :: (Printer b) => a -> b
 
 instance Print Void where
   printP = absurd
@@ -168,7 +168,7 @@ typedOperationDefinition :: (Print (frag var), Print var, Printer a) => TypedOpe
 typedOperationDefinition op =
   operationType (_todType op) <> charP ' ' <> nodeP op
 
-operationType :: Printer a => OperationType -> a
+operationType :: (Printer a) => OperationType -> a
 operationType = \case
   OperationTypeQuery -> "query"
   OperationTypeMutation -> "mutation"
@@ -204,7 +204,7 @@ field (Field alias name args dirs selSets) =
     <> charP ' '
     <> selectionSetP selSets
 
-optAlias :: Printer a => Maybe Name -> a
+optAlias :: (Printer a) => Maybe Name -> a
 optAlias = maybe mempty (\a -> nameP a <> textP ": ")
 
 inlineFragment :: (Print (frag var), Print var, Printer a) => InlineFragment frag var -> a
@@ -214,14 +214,14 @@ inlineFragment (InlineFragment tc ds sels) =
     <> optempty directives ds
     <> selectionSetP sels
 
-instance Print var => Print (FragmentSpread var) where
+instance (Print var) => Print (FragmentSpread var) where
   printP (FragmentSpread name ds) =
     "..." <> nameP name <> optempty directives ds
 
 instance Print (NoFragments var) where
   printP = \case {}
 
-fragmentDefinition :: Printer a => FragmentDefinition -> a
+fragmentDefinition :: (Printer a) => FragmentDefinition -> a
 fragmentDefinition (FragmentDefinition name tc dirs sels) =
   "fragment "
     <> nameP name
@@ -240,7 +240,7 @@ directive (Directive name args) =
 arguments :: (Print var, Printer a) => HashMap Name (Value var) -> a
 arguments xs = charP '(' <> objectFields xs <> charP ')'
 
-variableDefinitions :: Printer a => [VariableDefinition] -> a
+variableDefinitions :: (Printer a) => [VariableDefinition] -> a
 variableDefinitions vars =
   mconcat
     [ charP '(',
@@ -250,26 +250,26 @@ variableDefinitions vars =
   where
     vars' = intersperse (charP ',') $ map variableDefinition vars
 
-variableDefinition :: Printer a => VariableDefinition -> a
+variableDefinition :: (Printer a) => VariableDefinition -> a
 variableDefinition (VariableDefinition var ty defVal) =
   variableP var <> ": " <> graphQLType ty <> maybe mempty defaultValue defVal
 
-defaultValue :: Printer a => Value Void -> a
+defaultValue :: (Printer a) => Value Void -> a
 defaultValue v = " = " <> value v
 
-description :: Printer a => Maybe Description -> a
+description :: (Printer a) => Maybe Description -> a
 description Nothing = mempty
 description (Just desc) = dispatchStringPrinter (unDescription desc) <> " \n"
 
 -- | Type Reference
-graphQLType :: Printer a => GType -> a
+graphQLType :: (Printer a) => GType -> a
 graphQLType (TypeNamed n x) = nameP x <> nonNull n
 graphQLType (TypeList n x) = listType x <> nonNull n
 
-listType :: Printer a => GType -> a
+listType :: (Printer a) => GType -> a
 listType ty = charP '[' <> graphQLType ty <> charP ']'
 
-nonNull :: Printer a => Nullability -> a
+nonNull :: (Printer a) => Nullability -> a
 nonNull n = bool (charP '!') mempty $ unNullability n
 
 -- | Primitives
@@ -290,7 +290,7 @@ value = \case
 
 -- | Print a given text as a normal string or as a block string, depending on
 -- its content.
-dispatchStringPrinter :: Printer a => Text -> a
+dispatchStringPrinter :: (Printer a) => Text -> a
 dispatchStringPrinter t =
   if printAsBlockString then blockStringValue t else stringValue t
   where
@@ -322,10 +322,10 @@ dispatchStringPrinter t =
     isSourceCharacter = not . isControl
 
 -- | We use Aeson to decode string values, and therefore use Aeson to encode them back.
-stringValue :: Printer a => Text -> a
+stringValue :: (Printer a) => Text -> a
 stringValue s = textP $ LT.toStrict $ LTE.decodeUtf8 $ J.encode s
 
-blockStringValue :: Printer a => Text -> a
+blockStringValue :: (Printer a) => Text -> a
 blockStringValue t = textP "\"\"\"\n" <> textP t <> textP "\n\"\"\""
 
 listValue :: (Print var, Printer a) => [Value var] -> a
@@ -337,11 +337,11 @@ objectValue :: (Print var, Printer a) => HashMap Name (Value var) -> a
 objectValue o = charP '{' <> objectFields o <> charP '}'
 
 objectFields :: (Print var, Printer a) => HashMap Name (Value var) -> a
-objectFields o = mconcat $ intersperse (charP ',') $ map objectField $ M.toList o
+objectFields o = mconcat $ intersperse (charP ',') $ map objectField $ HashMap.toList o
   where
     objectField (name, val) = nameP name <> ": " <> value val
 
-fromBool :: Printer a => Bool -> a
+fromBool :: (Printer a) => Bool -> a
 fromBool True = "true"
 fromBool False = "false"
 
@@ -352,7 +352,7 @@ optempty f xs
 
 schemaDefinition ::
   forall a.
-  Printer a =>
+  (Printer a) =>
   SchemaDefinition ->
   a
 schemaDefinition (SchemaDefinition dirs rootOpDefs) =
@@ -362,15 +362,15 @@ schemaDefinition (SchemaDefinition dirs rootOpDefs) =
     <> mconcat (intersperse (charP ' ') (map rootOperationTypeDefinition rootOpDefs))
     <> " }"
 
-rootOperationTypeDefinition :: Printer a => RootOperationTypeDefinition -> a
+rootOperationTypeDefinition :: (Printer a) => RootOperationTypeDefinition -> a
 rootOperationTypeDefinition (RootOperationTypeDefinition opType rootName) =
   operationType opType <> ": " <> nameP rootName
 
-typeSystemDefinition :: Printer a => TypeSystemDefinition -> a
+typeSystemDefinition :: (Printer a) => TypeSystemDefinition -> a
 typeSystemDefinition (TypeSystemDefinitionSchema schemaDefn) = schemaDefinition schemaDefn
 typeSystemDefinition (TypeSystemDefinitionType typeDefn) = typeDefinitionP typeDefn
 
-schemaDocument :: Printer a => SchemaDocument -> a
+schemaDocument :: (Printer a) => SchemaDocument -> a
 schemaDocument (SchemaDocument typeDefns) =
   mconcat $ intersperse (textP "\n\n") $ map typeSystemDefinition $ sort $ filter isNotBuiltInScalar typeDefns
   where
@@ -383,7 +383,7 @@ schemaDocument (SchemaDocument typeDefns) =
         ) = name `notElem` builtInScalars
     isNotBuiltInScalar _ = True
 
-typeDefinitionP :: Printer a => TypeDefinition () InputValueDefinition -> a
+typeDefinitionP :: (Printer a) => TypeDefinition () InputValueDefinition -> a
 typeDefinitionP (TypeDefinitionScalar scalarDefn) = scalarTypeDefinition scalarDefn
 typeDefinitionP (TypeDefinitionObject objDefn) = objectTypeDefinition objDefn
 typeDefinitionP (TypeDefinitionInterface interfaceDefn) = interfaceTypeDefinition interfaceDefn
@@ -391,7 +391,7 @@ typeDefinitionP (TypeDefinitionUnion unionDefn) = unionTypeDefinition unionDefn
 typeDefinitionP (TypeDefinitionEnum enumDefn) = enumTypeDefinition enumDefn
 typeDefinitionP (TypeDefinitionInputObject inpObjDefn) = inputObjectTypeDefinition inpObjDefn
 
-scalarTypeDefinition :: Printer a => ScalarTypeDefinition -> a
+scalarTypeDefinition :: (Printer a) => ScalarTypeDefinition -> a
 scalarTypeDefinition (ScalarTypeDefinition desc name dirs) =
   description desc
     <> "scalar "
@@ -400,7 +400,7 @@ scalarTypeDefinition (ScalarTypeDefinition desc name dirs) =
       then mempty
       else charP ' ' <> optempty directives dirs
 
-inputValueDefinition :: Printer a => InputValueDefinition -> a
+inputValueDefinition :: (Printer a) => InputValueDefinition -> a
 inputValueDefinition (InputValueDefinition desc name gType defVal dirs) =
   description desc
     <> nameP name
@@ -411,7 +411,7 @@ inputValueDefinition (InputValueDefinition desc name gType defVal dirs) =
       then mempty
       else charP ' ' <> optempty directives dirs
 
-fieldDefinition :: Printer a => FieldDefinition InputValueDefinition -> a
+fieldDefinition :: (Printer a) => FieldDefinition InputValueDefinition -> a
 fieldDefinition (FieldDefinition desc name args gType dirs) =
   description desc
     <> nameP name
@@ -425,7 +425,7 @@ fieldDefinition (FieldDefinition desc name args gType dirs) =
     <> graphQLType gType
     <> optempty directives dirs
 
-objectTypeDefinition :: Printer a => ObjectTypeDefinition InputValueDefinition -> a
+objectTypeDefinition :: (Printer a) => ObjectTypeDefinition InputValueDefinition -> a
 objectTypeDefinition (ObjectTypeDefinition desc name ifaces dirs fieldDefinitions) =
   description desc
     <> "type "
@@ -444,7 +444,7 @@ objectTypeDefinition (ObjectTypeDefinition desc name ifaces dirs fieldDefinition
     <> "\n"
     <> "}"
 
-interfaceTypeDefinition :: Printer a => InterfaceTypeDefinition () InputValueDefinition -> a
+interfaceTypeDefinition :: (Printer a) => InterfaceTypeDefinition () InputValueDefinition -> a
 interfaceTypeDefinition (InterfaceTypeDefinition desc name dirs fieldDefinitions _possibleTypes) =
   -- `possibleTypes` are not included with an interface definition in a GraphQL IDL
   description desc
@@ -462,7 +462,7 @@ interfaceTypeDefinition (InterfaceTypeDefinition desc name dirs fieldDefinitions
     <> "\n"
     <> "}"
 
-unionTypeDefinition :: Printer a => UnionTypeDefinition -> a
+unionTypeDefinition :: (Printer a) => UnionTypeDefinition -> a
 unionTypeDefinition (UnionTypeDefinition desc name dirs members) =
   description desc
     <> "union "
@@ -472,14 +472,14 @@ unionTypeDefinition (UnionTypeDefinition desc name dirs members) =
     <> textP " = "
     <> mconcat (intersperse (textP " | ") $ map nameP $ sort members)
 
-enumValueDefinition :: Printer a => EnumValueDefinition -> a
+enumValueDefinition :: (Printer a) => EnumValueDefinition -> a
 enumValueDefinition (EnumValueDefinition desc name dirs) =
   description desc
     <> nameP (unEnumValue name)
     <> charP ' '
     <> optempty directives dirs
 
-enumTypeDefinition :: Printer a => EnumTypeDefinition -> a
+enumTypeDefinition :: (Printer a) => EnumTypeDefinition -> a
 enumTypeDefinition (EnumTypeDefinition desc name dirs enumValDefns) =
   description desc
     <> "enum "
@@ -495,7 +495,7 @@ enumTypeDefinition (EnumTypeDefinition desc name dirs enumValDefns) =
     <> "\n"
     <> "}"
 
-inputObjectTypeDefinition :: Printer a => InputObjectTypeDefinition InputValueDefinition -> a
+inputObjectTypeDefinition :: (Printer a) => InputObjectTypeDefinition InputValueDefinition -> a
 inputObjectTypeDefinition (InputObjectTypeDefinition desc name dirs valDefns) =
   description desc
     <> "input "

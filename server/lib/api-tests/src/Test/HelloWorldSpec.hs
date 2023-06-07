@@ -8,9 +8,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Quoter.Yaml (yaml)
-import Harness.Services.GraphqlEngine (HgeServerInstance, emptyHgeConfig, withHge)
+import Harness.Schema qualified as Schema
+import Harness.Services.GraphqlEngine (emptyHgeConfig, withHge)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), testLogTrace)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -20,7 +20,7 @@ spec :: SpecWith GlobalTestEnvironment
 spec = do
   withHge emptyHgeConfig do
     describe "An externally hosted HGE instance" do
-      it "runs" \(_server :: HgeServerInstance, _te) -> do
+      it "certainly runs" \_te -> do
         return @IO ()
 
   Fixture.run
@@ -57,11 +57,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   describe "Example test" do
     it "Works as expected" \testEnvironment -> do
       let expected :: Value
@@ -71,4 +68,4 @@ tests opts = do
           actual = pure Null
 
       testLogTrace testEnvironment ("A log message" :: Text)
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected

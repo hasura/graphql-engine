@@ -1,0 +1,284 @@
+---
+slug: index
+description: Customize the Hasura GraphQL schema with Logical Models
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - schema
+  - logical models
+  - native queries
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Postgres: Logical Models
+
+<ProductBadge standard pro ee self />
+
+## Introduction
+
+:::tip Supported from
+
+Native queries are supported from `v2.26.0`.
+
+:::
+
+Logical Models are a GraphQL representation of database data. They provide an abstraction over the underlying database.
+
+Logical Models are a new approach from Hasura and are currently used by the
+[Native Queries](/schema/postgres/logical-models/native-queries.mdx) feature to automatically create a GraphQL API for a
+native database query.
+
+You can find examples of how to use logical models in the
+[Native Queries](/schema/postgres/logical-models/native-queries.mdx) documentation. For a more detailed explanation of
+Logical Models themselves, read on.
+
+## Tracking a Logical Model
+
+:::info Only creatable via the API
+
+Currently, Logical Models can only be created via the API. Console and CLI support will be added in a future release.
+
+:::
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+You create a logical model through the metadata API:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_track_logical_model",
+  "args": {
+    "source": "default",
+    "name": "<name>",
+    "fields": [
+      {
+        "name": "<field name>",
+        "type": "<PostgreSQL field type>",
+        "nullable": false | true,
+        "description": "<optional field description>"
+      },
+      ...
+    ]
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+The type of each field can be any valid [PostgreSQL data type](/schema/postgres/postgresql-types.mdx), and each field
+can be marked as nullable or not.
+
+For example, we could track a representation of an article as follows:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_track_logical_model",
+  "args": {
+    "source": "default",
+    "name": "article",
+    "fields": [
+      {
+        "name": "id",
+        "type": "integer"
+      },
+      {
+        "name": "title",
+        "type": "text"
+      },
+      {
+        "name": "contents",
+        "type": "text"
+      },
+      {
+        "name": "published_date",
+        "type": "published_date",
+        "nullable": true
+      },
+      {
+        "name": "is_published",
+        "type": "boolean"
+      }
+    ]
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Untracking a Logical Model
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+You can remove a Logical Model the same way:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_untrack_logical_model",
+  "args": {
+    "source": "default",
+    "name": "<name>"
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info Removing a Logical Model
+
+Note that you can only remove an **unused** Logical Model; if the model is attached to a Native Query, this operation
+will fail. You must remove the Native Query first.
+
+:::
+
+To untrack the above "article" Logical Model, we would run the following:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_untrack_logical_model",
+  "args": {
+    "source": "default",
+    "name": "article"
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Permissions
+
+By default, a model has no permissions, and only the admin account will be able to use it. You can enable the model by
+adding permissions for a given role.
+
+As Logical Models are currently only used for read-only purposes, you can only add select permissions.
+
+The permissions consist of a list of columns that the role can access, and a filter that specifies which rows the role
+can receive.
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
+
+The filter is the same boolean expression syntax as [query filters](/queries/postgres/query-filters.mdx). To allow all
+rows to be passed through to the response, you can specify an empty filter, `{}`.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_create_logical_model_select_permission",
+  "args": {
+    "source": "default",
+    "name": "<logical model name>",
+    "role": "<role name>",
+    "permission": {
+      "columns": "*" | [
+        "column 1",
+        "column 2",
+        ...
+      ],
+      "filter": <boolean expression>
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+For example, to allow access to the "article" Logical Model for the "reader" role, but only for published articles, we
+could use the following permission to limit the accessible rows to those where `is_published` is `true`, and then hide
+that column from the list (by specifying all other columns).
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_create_logical_model_select_permission",
+  "args": {
+    "source": "default",
+    "name": "article",
+    "role": "reader",
+    "permission": {
+      "columns": [
+        "id",
+        "title",
+        "contents",
+        "date"
+      ],
+      "filter": {
+        "is_published": {"_eq": true}
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+You can also drop permissions:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_drop_logical_model_select_permission",
+  "args": {
+    "source": "default",
+    "name": "<logical model name>",
+    "role": "<role name>"
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Relationships
+
+Currently, Logical Models do not support relationships. They will be supported in a future release.

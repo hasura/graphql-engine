@@ -5,7 +5,7 @@
 module Hasura.Base.ErrorMessageSpec (spec) where
 
 import Data.Aeson
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KeyMap
 import Data.HashSet (HashSet)
 import Data.HashSet qualified as HashSet
@@ -73,39 +73,39 @@ spec =
 
     describe "JSON value serialization" do
       it "serializes a JSON null" do
-        let value = Aeson.Null
+        let value = J.Null
             message = "the value " <> toErrorValue value <> " is invalid"
          in message `shouldBe` "the value null is invalid"
 
       it "serializes a JSON array" do
-        let value = Aeson.Bool False
+        let value = J.Bool False
             message = "the value " <> toErrorValue value <> " is invalid"
          in message `shouldBe` "the value false is invalid"
 
       it "serializes a JSON number" do
-        let value = Aeson.Number 99
+        let value = J.Number 99
             message = "the value " <> toErrorValue value <> " is invalid"
          in message `shouldBe` "the value 99 is invalid"
 
       it "serializes a JSON string" do
-        let value = Aeson.String "this is a string"
+        let value = J.String "this is a string"
             message = "the value " <> toErrorValue value <> " is invalid"
          in message `shouldBe` "the value \"this is a string\" is invalid"
 
       it "serializes a JSON array" do
-        let value = Aeson.Array $ Vector.fromList [Aeson.Number 1, Aeson.Bool True, Aeson.String "three"]
+        let value = J.Array $ Vector.fromList [J.Number 1, J.Bool True, J.String "three"]
             message = "the value " <> toErrorValue value <> " is invalid"
          in message `shouldBe` "the value [1,true,\"three\"] is invalid"
 
       it "serializes a JSON object" do
-        let value = Aeson.Object $ KeyMap.fromList [("hello", Aeson.String "world"), ("name", Aeson.String "Alice"), ("age", Aeson.Number 42)]
+        let value = J.Object $ KeyMap.fromList [("hello", J.String "world"), ("name", J.String "Alice"), ("age", J.Number 42)]
             message = "the value " <> toErrorValue value <> " is invalid"
          in message `shouldBe` "the value {\"age\":42,\"hello\":\"world\",\"name\":\"Alice\"} is invalid"
 
 newtype Thing a = Thing a
   deriving newtype (Eq, Hashable)
 
-instance Show a => ToErrorValue (Thing a) where
+instance (Show a) => ToErrorValue (Thing a) where
   toErrorValue (Thing x) = toErrorMessage $ "Thing " <> Text.pack (show x)
 
 newtype SingleQuoted = SingleQuoted Char

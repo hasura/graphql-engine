@@ -3,7 +3,7 @@
 module Hasura.IncrementalSpec (spec) where
 
 import Control.Arrow.Extended
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as S
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
@@ -63,7 +63,7 @@ spec = do
     it "preserves incrementalization when entries don’t change" $ do
       let rule ::
             (MonadWriter (S.HashSet (String, Integer)) m, MonadIO m) =>
-            Inc.Rule m (M.HashMap String Integer) (M.HashMap String Integer)
+            Inc.Rule m (HashMap.HashMap String Integer) (HashMap.HashMap String Integer)
           rule = proc m ->
             (|
               Inc.keyed
@@ -71,11 +71,12 @@ spec = do
                     Inc.cache $ arrM (tell . S.singleton) -< (k, v)
                     returnA -< v * 2
                 )
-            |) m
+            |)
+              m
 
-      (result1, log1) <- runWriterT . Inc.build rule $ M.fromList [("a", 1), ("b", 2)]
-      Inc.result result1 `shouldBe` M.fromList [("a", 2), ("b", 4)]
+      (result1, log1) <- runWriterT . Inc.build rule $ HashMap.fromList [("a", 1), ("b", 2)]
+      Inc.result result1 `shouldBe` HashMap.fromList [("a", 2), ("b", 4)]
       log1 `shouldBe` S.fromList [("a", 1), ("b", 2)]
-      (result2, log2) <- runWriterT . Inc.rebuild result1 $ M.fromList [("a", 1), ("b", 3), ("c", 4)]
-      Inc.result result2 `shouldBe` M.fromList [("a", 2), ("b", 6), ("c", 8)]
+      (result2, log2) <- runWriterT . Inc.rebuild result1 $ HashMap.fromList [("a", 1), ("b", 3), ("c", 4)]
+      Inc.result result2 `shouldBe` HashMap.fromList [("a", 2), ("b", 6), ("c", 8)]
       log2 `shouldBe` S.fromList [("b", 3), ("c", 4)]

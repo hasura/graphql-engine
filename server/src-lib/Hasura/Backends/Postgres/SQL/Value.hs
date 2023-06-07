@@ -151,8 +151,8 @@ withScalarTypeAnn :: PGScalarType -> S.SQLExp -> S.SQLExp
 withScalarTypeAnn colTy v = S.SETyAnn v . S.mkTypeAnn $ CollectableTypeScalar colTy
 
 withTypeAnn :: CollectableType PGScalarType -> S.SQLExp -> S.SQLExp
-withTypeAnn ty expr = flip S.SETyAnn (S.mkTypeAnn ty) $
-  case ty of
+withTypeAnn ty expr = flip S.SETyAnn (S.mkTypeAnn ty)
+  $ case ty of
     CollectableTypeScalar baseTy -> withConstructorFn baseTy expr
     CollectableTypeArray _ -> expr
 
@@ -255,17 +255,17 @@ txtEncodedVal = \case
   PGNull _ ->
     TENull
   PGValJSON (PG.JSON j) ->
-    TELit $
-      TL.toStrict $
-        AE.encodeToLazyText j
+    TELit
+      $ TL.toStrict
+      $ AE.encodeToLazyText j
   PGValJSONB (PG.JSONB j) ->
-    TELit $
-      TL.toStrict $
-        AE.encodeToLazyText j
+    TELit
+      $ TL.toStrict
+      $ AE.encodeToLazyText j
   PGValGeo o ->
-    TELit $
-      TL.toStrict $
-        AE.encodeToLazyText o
+    TELit
+      $ TL.toStrict
+      $ AE.encodeToLazyText o
   PGValRaster r -> TELit $ TC.toText $ getRasterWKB r
   PGValUUID u -> TELit $ UUID.toText u
   PGValLtree (Ltree t) -> TELit t
@@ -304,7 +304,7 @@ binEncoder = \case
   PGValUnknown t -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
   PGValArray s -> (PTI.auto, Just (TE.encodeUtf8 $ buildArrayLiteral s, PQ.Text))
 
-formatTimestamp :: FormatTime t => t -> Text
+formatTimestamp :: (FormatTime t) => t -> Text
 formatTimestamp = T.pack . formatTime defaultTimeLocale "%0Y-%m-%dT%T%QZ"
 
 txtEncoder :: PGScalarValue -> S.SQLExp

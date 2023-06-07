@@ -1,0 +1,7 @@
+{
+  "label": "RESTified Endpoints",
+  "position": 125,
+  "customProps": {
+    "sidebar_pathname": "restified"
+  }
+}

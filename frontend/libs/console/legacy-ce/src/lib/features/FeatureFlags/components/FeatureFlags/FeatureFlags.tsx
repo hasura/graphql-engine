@@ -73,7 +73,7 @@ export const FeatureFlags = (props: FeatureFlagsProps) => {
   const { additionalFlags } = props;
   return (
     <Analytics name="FeatureFlags" {...REDACT_EVERYTHING}>
-      <div className="p-4">
+      <div className="p-4 bootstrap-jail">
         <h2 className="text-xl font-semibold mb-3.5">Feature Flags</h2>
         <p>
           Feature flags enable experimental features in Console. <br />

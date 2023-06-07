@@ -1,8 +1,9 @@
-import { exportMetadata } from '../DataSource';
+import { exportMetadata } from './exportMetadata';
 import { Metadata } from '../hasura-metadata-types';
 import { useHttpClient } from '../Network';
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
+import { APIError } from '../../hooks/error';
 
 export const DEFAULT_STALE_TIME = 5 * 60000; // 5 minutes as default stale time
 
@@ -24,22 +25,31 @@ export const useInvalidateMetadata = () => {
   return invalidate;
 };
 
-export const useMetadata = <T = Metadata>(
-  selector?: (m: Metadata) => T,
-  staleTime: number = DEFAULT_STALE_TIME
+type Options = {
+  staleTime?: number;
+  enabled?: boolean;
+};
+
+export const useMetadata = <FinalResult = Metadata>(
+  selector?: (m: Metadata) => FinalResult,
+  options: Options = {
+    staleTime: DEFAULT_STALE_TIME,
+    enabled: true,
+  }
 ) => {
   const httpClient = useHttpClient();
   const invalidateMetadata = useInvalidateMetadata();
 
-  const queryReturn = useQuery({
+  const queryReturn = useQuery<Metadata, APIError, FinalResult>({
     queryKey: [METADATA_QUERY_KEY],
     queryFn: async () => {
       const result = await exportMetadata({ httpClient });
       return result;
     },
-    staleTime: staleTime || DEFAULT_STALE_TIME,
+    staleTime: options.staleTime,
     refetchOnWindowFocus: false,
     select: selector,
+    enabled: options.enabled,
   });
 
   return {

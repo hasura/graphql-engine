@@ -9,11 +9,6 @@ GENERATED_CABAL_FILES = $(foreach package_file,$(PACKAGE_YAML_FILES),$(wildcard 
 build-all: $(GENERATED_CABAL_FILES)
 	cabal build all --enable-tests --enable-benchmarks
 
-.PHONY: build-console-assets
-## build-console-assets
-build-console-assets:
-	cd frontend && npm install && npm run server-build:ce
-
 .PHONY: build
 ## build: build non-pro graphql executable
 build: $(GENERATED_CABAL_FILES)
@@ -58,3 +53,8 @@ build-multitenant-integration-tests: $(GENERATED_CABAL_FILES)
 ## build-pro-api-tests: build pro api-tests
 build-pro-api-tests:
 	cabal build api-tests-pro
+
+.PHONY: build-postgres-agent
+## build-postgres-agent: build postgres data connector agent
+build-postgres-agent:
+	cabal build postgres-agent

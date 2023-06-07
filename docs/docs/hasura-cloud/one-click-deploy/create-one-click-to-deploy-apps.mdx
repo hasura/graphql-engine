@@ -14,12 +14,13 @@ sidebar_label: Create a One Click Deploy App
 sidebar_position: 10
 ---
 
-import Thumbnail from "@site/src/components/Thumbnail";
-import CloudDeployURLGenerationForm from "@site/src/components/CloudDeployURLGenerationForm";
+import Thumbnail from '@site/src/components/Thumbnail';
+import CloudDeployURLGenerationForm from '@site/src/components/CloudDeployURLGenerationForm';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Create a One Click Deploy to Hasura Cloud App
 
-<div className="badge badge--primary heading-badge">Available on: Cloud</div>
+<ProductBadge free standard pro ee />
 
 ## Introduction
 
@@ -48,7 +49,7 @@ The file structure of the project directory containing the Metadata, Migration, 
 Once the project directory is created with the application assets, push them to a public GitHub repository to be used as
 the source of your One Click Deploy app.
 
-:::info LOOKING FOR AN EXAMPLE?
+:::info Looking for an example?
 
 Check out what a Hasura project directory looks like with this
 [e-commerce app](https://github.com/hasura/data-hub/tree/main/data-models/postgres/ecommerce/hasura).
@@ -83,22 +84,22 @@ The `hasura-cloud-deploy-config.yaml` accepts the following fields:
 **Example**: `hasura-cloud-deploy-config.yaml` file
 
 ```yaml
-name: "hasura-ecommerce-sample-app"
+name: 'hasura-ecommerce-sample-app'
 
 static-env:
   HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
 
 user-env:
   PG_DATABASE_URL:
-    description: "Postgres database URL"
+    description: 'Postgres database URL'
     mandatory: true
   NEXTJS_SERVER_URL:
-    default: "http://localhost:3000"
-    description: "Next.js Server URL for authentication and custom business logic"
+    default: 'http://localhost:3000'
+    description: 'Next.js Server URL for authentication and custom business logic'
     mandatory: true
   HASURA_GRAPHQL_JWT_SECRET:
     default: '{"key": "this-is-the-hasura-nextjs-secret-key-replace-it-with-something-secure","type": "HS256"}'
-    description: "JWT Secret key"
+    description: 'JWT Secret key'
     mandatory: true
 ```
 
@@ -117,7 +118,7 @@ Adding a `hasura-cloud-deploy-config.yaml` is optional if the app doesn't need a
 Hasura Cloud automatically detects environment variables used for database connection strings from the app metadata and
 prompts users to set them even if a `hasura-cloud-deploy-config.yaml` file is not added.
 
-:::
+Hasura Cloud also automatically sets the `HASURA_GRAPHQL_ADMIN_SECRET` environment variable to secure the project. :::
 
 ## Step 3: Add a sample-requests.graphql file (optional)
 
@@ -136,7 +137,7 @@ The file structure of the project directory with the `sample-requests.graphql` s
 └─ 📄 sample-requests.graphql
 ```
 
-**Example**: ``sample-requests.graphql`` file
+**Example**: `sample-requests.graphql` file
 
 ```graphql
 query users {
@@ -160,12 +161,7 @@ query usersWithOrders {
 
 This will render the Console as follows on deployment completion:
 
-<Thumbnail
-  src="/img/deployment/one-click-to-deploy/project_console.png"
-  alt="Project console"
-  width="1200px"
-/>
-
+<Thumbnail src="/img/deployment/one-click-to-deploy/project_console.png" alt="Project console" width="1200px" />
 
 ## Step 4: Generate the Deployment URL and button
 
@@ -173,7 +169,9 @@ The following is the structure of the One Click Deploy URL which can also be lin
 button:
 
 ```html
-https://cloud.hasura.io/deploy?github_repo=<LINK-TO-GIT-REPO>&hasura_dir=<PATH-TO-HASURA-DIRECTORY-IN-REPO>&branch=<BRANCH-NAME>
+https://cloud.hasura.io/deploy?github_repo=<LINK-TO-GIT-REPO
+  >&hasura_dir=<PATH-TO-HASURA-DIRECTORY-IN-REPO>&branch=<BRANCH-NAME></BRANCH-NAME></PATH-TO-HASURA-DIRECTORY-IN-REPO
+></LINK-TO-GIT-REPO>
 ```
 
 ### One Click Deploy URL
@@ -196,19 +194,26 @@ for your app using the URL generated above.
 
 ### Snippets to Embed Button
 
-You can use the following snippets to add this button to a markdown file, such as your GitHub repository `README.md` or your dashboards for users to deploy:
+You can use the following snippets to add this button to a markdown file, such as your GitHub repository `README.md` or
+your dashboards for users to deploy:
 
 #### Markdown
+
 ```md
 [![Deploy to Hasura Cloud](https://hasura.io/deploy-button.svg)](https://cloud.hasura.io/deploy?github_repo=<LINK-TO-GIT-REPO>&hasura_dir=<PATH-TO-HASURA-DIRECTORY-IN-REPO>&branch=<BRANCH-NAME>)
 ```
 
 #### HTML
+
 ```html
-<a href="https://cloud.hasura.io/deploy?github_repo=<LINK-TO-GIT-REPO>&hasura_dir=<PATH-TO-HASURA-DIRECTORY-IN-REPO>&branch=<BRANCH-NAME>"><img src="https://hasura.io/deploy-button.svg" alt="Deploy to Hasura Cloud"/></a>
+<a
+  href="https://cloud.hasura.io/deploy?github_repo=<LINK-TO-GIT-REPO>&hasura_dir=<PATH-TO-HASURA-DIRECTORY-IN-REPO>&branch=<BRANCH-NAME>"
+  ><img src="https://hasura.io/deploy-button.svg" alt="Deploy to Hasura Cloud"
+/></a>
 ```
 
 #### URL
+
 ```bash
 https://cloud.hasura.io/deploy?github_repo=<LINK-TO-GIT-REPO>&hasura_dir=<PATH-TO-HASURA-DIRECTORY-IN-REPO>&branch=<BRANCH-NAME>
 ```
@@ -227,7 +232,7 @@ manually deploying your Hasura app via the [Hasura CLI](/hasura-cli/pro-cli/inst
 
 - Navigate to [Hasura Cloud](https://cloud.hasura.io/) and create a new Hasura Cloud project.
 
-- Connect the required database(s) needed for your app as shown [here](/databases/connect-db/index.mdx).
+- Connect the required database(s) needed for your app as shown [here](/databases/overview.mdx).
 
 - Set any environment variables required for your app as shown [here](/hasura-cloud/projects/env-vars.mdx).
 

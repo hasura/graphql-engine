@@ -8,7 +8,27 @@ keywords:
 slug: index
 ---
 
-# Postgres
+import VersionedLink from '@site/src/components/VersionedLink';
+import Aiven from '@site/static/img/cloud-dbs/logos/aiven.png';
+import Alloy from '@site/static/img/cloud-dbs/logos/alloydb.png';
+import Aurora from '@site/static/img/cloud-dbs/logos/aws-aurora.png';
+import Azure from '@site/static/img/cloud-dbs/logos/azure.png';
+import Cosmos from '@site/static/img/cloud-dbs/logos/cosmos.png';
+import RDS from '@site/static/img/cloud-dbs/logos/aws.png';
+import RollTide from '@site/static/img/cloud-dbs/logos/crunchy.png';
+import DO from '@site/static/img/cloud-dbs/logos/DO.png';
+import Elephant from '@site/static/img/cloud-dbs/logos/elephant.png';
+import Enterprise from '@site/static/img/cloud-dbs/logos/enterprisedb.png';
+import GCP from '@site/static/img/cloud-dbs/logos/gcp.png';
+import Postgres from '@site/static/img/databases/logos/postgresql.png';
+import Neon from '@site/static/img/cloud-dbs/logos/neon.png';
+import Railway from '@site/static/img/cloud-dbs/logos/railway.png';
+import Render from '@site/static/img/cloud-dbs/logos/render.png';
+import Supabase from '@site/static/img/cloud-dbs/logos/supabase.png';
+import Timescale from '@site/static/img/cloud-dbs/logos/timescaledb.png';
+import Yugabyte from '@site/static/img/cloud-dbs/logos/yugabyte.png';
+
+# Postgres & Compatible Databases
 
 ## Introduction
 
@@ -22,25 +42,168 @@ Hasura GraphQL Engine supports all supported versions of Postgres per the
 
 :::
 
-## Postgres compatibility & flavors {#postgres-compatible-flavors}
+## Postgres compatible {#postgres-compatible-flavors}
 
 Hasura supports most databases with full Postgres compatibility such as:
 
-- [Yugabyte](https://www.yugabyte.com/)
-- [Timescale](https://www.timescale.com/)
-- [Citus](https://www.citusdata.com/)
-- [CockroachDB](https://www.cockroachlabs.com/product/)
-- [Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.AuroraPostgreSQL.html)
-- [RDS](https://aws.amazon.com/rds/postgresql/)
-- [Crunchy](https://www.crunchydata.com/)
-- [AlloyDB](https://cloud.google.com/alloydb)
-- [Neon](https://neon.tech/)
-- [CosmosDB](https://azure.microsoft.com/en-gb/products/cosmos-db/)
+<div className="vendor-table">
+  <VersionedLink to="/databases/quickstart">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Postgres} title="Postgres" alt="Connect Postgres DB to Hasura" />
+      </div>
+      <h5>Postgres</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/aiven">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Aiven} title="Aiven Postgres" alt="Connect Postgres DB to Hasura" />
+      </div>
+      <h5>Aiven</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/alloy">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Alloy} title="Google AlloyDB Postgres" alt="Connect Google AlloyDB to Hasura" />
+      </div>
+      <h5>AlloyDB</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/aws-aurora">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Aurora} title="AWS Aurora Postgres" alt="Connect AWS Aurora Postgres to Hasura" />
+      </div>
+      <h5>AWS RDS Aurora Postgres</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/aws-postgres">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={RDS} title="AWS RDS Postgres" alt="Connect AWS RDS Postgres to Hasura" />
+      </div>
+      <h5>AWS RDS Postgres</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/azure-cosmos">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Cosmos} title="Azure Cosmos DB" alt="Connect Azure Cosmos to Hasura" />
+      </div>
+      <h5>Azure Cosmos</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/azure">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Azure} title="Azure Postgres" alt="Connect Azure Postgres to Hasura" />
+      </div>
+      <h5>Azure Postgres</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/crunchy">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={RollTide} title="Crunchy Postgres" alt="Connect Crunchy Postgres to Hasura" />
+      </div>
+      <h5>Crunchy Postgres</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/digital-ocean">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={DO} title="Digital Ocean Postgres" alt="Connect DO Postgres to Hasura" />
+      </div>
+      <h5>Digital Ocean Postgres</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/elephant">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Elephant} title="ElephantSQL Postgres" alt="Connect ElephantSQL Postgres to Hasura" />
+      </div>
+      <h5>ElephantSQL</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/enterprisedb">
+    <div className="card-wrapper">
+      <div className="card">
+        <img
+          src={Enterprise}
+          title="EnterpriseDB BigAnimal Postgres"
+          alt="Connect EnterpriseDB BigAnimal Postgres to Hasura"
+        />
+      </div>
+      <h5>EnterpriseDB</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/gcp">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={GCP} title="GCP Postgres" alt="Connect GCP Postgres to Hasura" />
+      </div>
+      <h5>GCP Postgres</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/neon">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Neon} title="Neon Postgres" alt="Connect Neon Postgres to Hasura" />
+      </div>
+      <h5>Neon Postgres</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/railway">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Railway} title="Railway Postgres" alt="Connect Railway Postgres to Hasura" />
+      </div>
+      <h5>Railway Postgres</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/render">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Render} title="Render Postgres" alt="Connect Render Postgres to Hasura" />
+      </div>
+      <h5>Render Postgres</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/supabase">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Supabase} title="Supabase Postgres" alt="Connect Supabase Postgres to Hasura" />
+      </div>
+      <h5>Supabase Postgres</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/timescale-cloud">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Timescale} title="TimescaleDB Postgres" alt="Connect TimescaleDB Postgres to Hasura" />
+      </div>
+      <h5>TimescaleDB</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/databases/postgres/yugabyte">
+    <div className="card-wrapper">
+      <div className="card">
+        <img src={Yugabyte} title="YugabyteDB Postgres" alt="Connect YugabyteDB Postgres to Hasura" />
+      </div>
+      <h5>YugabyteDB</h5>
+    </div>
+  </VersionedLink>
+</div>
 
-Hasura also [supports many other cloud database services](/databases/connect-db/cloud-databases/index.mdx).
+:::tip Other Postgres flavors
 
-Curious about any other Postgres flavours? Any other questions? Ask us on
+Curious about any other Postgres flavors? Any other questions? Ask us on
 [GitHub discussions](https://github.com/hasura/graphql-engine/discussions)
+
+:::
+
 
 ## Know more
 

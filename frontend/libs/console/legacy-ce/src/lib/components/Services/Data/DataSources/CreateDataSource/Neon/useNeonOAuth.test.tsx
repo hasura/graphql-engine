@@ -1,14 +1,11 @@
 import * as React from 'react';
-import {
-  act,
-  render,
-  screen,
-  cleanup,
-  waitFor,
-  fireEvent,
-} from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react-hooks';
 import type { GraphQLError } from 'graphql';
 import { ExchangeTokenResponse, useNeonOAuth } from './useNeonOAuth';
+import { rest } from 'msw';
+import { setupServer } from 'msw/node';
+import 'whatwg-fetch';
 
 import { NEON_CALLBACK_SEARCH } from './utils';
 
@@ -84,22 +81,19 @@ Object.defineProperty(window, 'open', { value: mockPopupImpl.openPopup });
 // --------------------------------------------------
 // NETWORK MOCK
 // --------------------------------------------------
+const server = setupServer();
+server.events.on('response:mocked', () => {
+  //
+  jest.advanceTimersByTime(10);
+  jest.runAllTicks();
+});
+
 const mockHTTPResponse = (status = 200, returnBody: any) => {
-  global.fetch = jest.fn().mockImplementationOnce(() => {
-    return new Promise(resolve => {
-      resolve({
-        ok: true,
-        status,
-        json: () => {
-          return returnBody || {};
-        },
-        headers: {
-          get: (key: string) =>
-            key === 'Content-Type' ? 'application/json' : '',
-        },
-      });
-    });
-  });
+  server.use(
+    rest.all('*', (req, res, context) => {
+      return res(context.json(returnBody), context.status(status));
+    })
+  );
 };
 
 // --------------------------------------------------
@@ -111,6 +105,7 @@ function closeFakePopup() {
   act(() => {
     mockPopupImpl.closePopup();
     jest.advanceTimersByTime(4000);
+    jest.runAllTicks();
   });
 }
 
@@ -119,39 +114,41 @@ function closeFakePopup() {
 // --------------------------------------------------
 describe('Neon', () => {
   // reset test state after each test
+  beforeAll(() => {
+    server.listen();
+  });
+  afterAll(() => {
+    server.close();
+    jest.useRealTimers();
+  });
   beforeEach(() => {
     cleanup();
     mockLocalStorage.clear();
     mockPopupImpl.closePopup();
+
+    jest.useFakeTimers();
     jest.clearAllTimers();
     jest.clearAllMocks();
-    jest.useFakeTimers('legacy');
+    server.resetHandlers();
   });
 
   it('Happy path', async () => {
     // Arrange
-    await render(<TestComponent />);
+    const { waitForValueToChange, result } = renderHook(() => useNeonOAuth());
 
-    expect(screen.getByTestId('status')).toHaveTextContent('idle');
+    expect(result.current.neonOauthStatus.status).toEqual('idle');
 
     // Act
-    fireEvent.click(screen.getByTestId('start'));
-
-    // Wait for the loading state to be triggered
-    await waitFor(() => {
-      expect(screen.getByTestId('status')).toHaveTextContent('authenticating');
+    act(() => {
+      result.current.startNeonOAuth();
     });
+    // Wait for the loading state to be triggered
+    expect(result.current.neonOauthStatus.status).toEqual('authenticating');
 
     // --------------------------------------------------
     // CONTROLLING TEST MOCKS
     // set search params in local storage and close popup
     // mock success exchange of token
-    const oauth2State = screen.getByTestId('oauth2-state').textContent;
-    mockLocalStorage.setItem(
-      NEON_CALLBACK_SEARCH,
-      `code=test_code&state=${oauth2State}`
-    );
-
     const response: ExchangeTokenResponse = {
       data: {
         neonExchangeOAuthToken: {
@@ -162,22 +159,35 @@ describe('Neon', () => {
     };
     mockHTTPResponse(200, response);
 
+    const oauth2State = result.current.oauth2State;
+    mockLocalStorage.setItem(
+      NEON_CALLBACK_SEARCH,
+      `code=test_code&state=${oauth2State}`
+    );
+
     closeFakePopup();
+    jest.runAllTicks();
     // --------------------------------------------------
 
-    await screen.findByText('authenticating');
+    // --------------------------------------------------
+
+    // ALl good until here
     // Assert
-    await screen.findByText('authenticated');
-    expect(screen.getByTestId('email')).toHaveTextContent(
+    await waitForValueToChange(() => result.current.neonOauthStatus);
+
+    expect(result.current.neonOauthStatus.status).toEqual('authenticated');
+
+    // @ts-expect-error we know better than typescript here
+    expect(result.current.neonOauthStatus?.email).toEqual(
       response.data.neonExchangeOAuthToken.email
     );
   });
 
   it('Renders idle state correctly', () => {
     // Arrange
-    render(<TestComponent />);
+    const { result } = renderHook(() => useNeonOAuth());
     // Assert
-    expect(screen.getByTestId('status')).toHaveTextContent('idle');
+    expect(result.current.neonOauthStatus.status).toEqual('idle');
   });
 
   it('throws unexpected error when the popup is closed before the parameters are stored in localstorage', () => {
@@ -246,15 +256,17 @@ describe('Neon', () => {
 
   it('Renders oauth error when there is an error exchanging the token', async () => {
     // Arrange
-    render(<TestComponent />);
+    const { waitForValueToChange, result } = renderHook(() => useNeonOAuth());
 
     // Act
-    fireEvent.click(screen.getByTestId('start'));
+    act(() => {
+      result.current.startNeonOAuth();
+    });
 
     // --------------------------------------------------
     // CONTROLLING TEST MOCKS
     // set the right in local storage along with a code
-    const oauth2State = screen.getByTestId('oauth2-state').textContent;
+    const oauth2State = result.current.oauth2State;
     mockLocalStorage.setItem(
       NEON_CALLBACK_SEARCH,
       `code=test_code&state=${oauth2State}`
@@ -272,13 +284,16 @@ describe('Neon', () => {
     closeFakePopup();
     // --------------------------------------------------
 
-    await waitFor(() => {
-      expect(screen.getByTestId('status')).toHaveTextContent('authenticating');
-    });
-
     // Assert
-    await waitFor(() => {
-      expect(screen.getByTestId('error')).toHaveTextContent('oauth api error');
-    });
+
+    await waitForValueToChange(() => result.current.neonOauthStatus);
+    console.log(result.current.neonOauthStatus);
+
+    expect(result.current.neonOauthStatus.status).toEqual('error');
+
+    // @ts-expect-error we know better than typescript here
+    expect(result.current.neonOauthStatus?.error?.message).toEqual(
+      'oauth api error'
+    );
   });
 });

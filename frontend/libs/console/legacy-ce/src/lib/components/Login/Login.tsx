@@ -16,6 +16,7 @@ import { verifyLogin } from './Actions';
 import { CLI_CONSOLE_MODE } from '../../constants';
 import { getAdminSecret } from '../Services/ApiExplorer/ApiRequest/utils';
 import { ConnectInjectedProps } from '../../types';
+import { isProConsole } from '../../utils/proConsole';
 
 import hasuraLogo from './black-logo.svg';
 import hasuraEELogo from './black-logo-ee.svg';
@@ -149,12 +150,11 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch, children }) => {
     );
   };
 
-  const showLogo =
-    globals.consoleType === 'pro' || globals.consoleType === 'pro-lite' ? (
-      <img className="flex w-36 mx-auto" src={hasuraEELogo} alt="Hasura EE" />
-    ) : (
-      <img src={hasuraLogo} alt="Hasura" />
-    );
+  const showLogo = isProConsole(globals) ? (
+    <img className="flex w-36 mx-auto" src={hasuraEELogo} alt="Hasura EE" />
+  ) : (
+    <img src={hasuraLogo} alt="Hasura" />
+  );
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">

@@ -58,8 +58,9 @@ spec = describe "Endpoint" $ do
     describe "ambiguousPaths" $ do
       let amb = map fst . ambiguousPaths
 
-      it "empty trie" $
-        amb emptyTrie `shouldBe` []
+      it "empty trie"
+        $ amb emptyTrie
+        `shouldBe` []
 
       prop "param/literal at start" $ \(t :: TestTrie) -> do
         let t' = inserts [PathParam] ["GET", "POST"] 42 $ inserts [PathLiteral 0] ["POST", "PUT"] 43 t

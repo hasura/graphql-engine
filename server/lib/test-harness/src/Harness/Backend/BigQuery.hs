@@ -1,3 +1,4 @@
+{- HLINT ignore "avoid InsecurelyShowDetails" -}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
@@ -15,7 +16,7 @@ module Harness.Backend.BigQuery
     dropTable,
     untrackTable,
     setupTablesAction,
-    setupPermissionsAction,
+    createUntrackedTablesAction,
   )
 where
 
@@ -34,18 +35,17 @@ import Harness.Env
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendTypeConfig)
-import Harness.Test.BackendType qualified as BackendType
-import Harness.Test.Fixture (SetupAction (..))
-import Harness.Test.Permissions qualified as Permissions
-import Harness.Test.Schema
+import Harness.Schema
   ( BackendScalarType (..),
     BackendScalarValue (..),
     ScalarValue (..),
     SchemaName (..),
     Table (..),
   )
-import Harness.Test.Schema qualified as Schema
+import Harness.Schema qualified as Schema
+import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType qualified as BackendType
+import Harness.Test.Fixture (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Backends.BigQuery.Connection (initConnection)
 import Hasura.Backends.BigQuery.Execute qualified as Execute
@@ -64,12 +64,13 @@ backendTypeMetadata =
       backendDisplayNameString = "bigquery",
       backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
-      backendSchemaKeyword = "dataset"
+      backendSchemaKeyword = "dataset",
+      backendScalarType = scalarType
     }
 
 --------------------------------------------------------------------------------
 
-getServiceAccount :: HasCallStack => IO ServiceAccount
+getServiceAccount :: (HasCallStack) => IO ServiceAccount
 getServiceAccount = getEnvJson Constants.bigqueryServiceKeyVar
 
 getProjectId :: (HasCallStack) => IO BigQueryProjectId
@@ -77,10 +78,10 @@ getProjectId = BigQueryProjectId <$> getEnvString Constants.bigqueryProjectIdVar
 
 -- | Run a plain Standard SQL string against the server, ignore the
 -- result. Just checks for errors.
-run_ :: HasCallStack => String -> IO ()
+run_ :: (HasCallStack) => String -> IO ()
 run_ query = do
-  void $
-    runWithRetry
+  void
+    $ runWithRetry
       ( \conn -> do
           res <-
             Execute.executeBigQuery
@@ -89,7 +90,7 @@ run_ query = do
           onLeft res \x -> liftIO (bigQueryError x query)
       )
 
-bigQueryError :: HasCallStack => Execute.ExecuteProblem -> String -> IO a
+bigQueryError :: (HasCallStack) => Execute.ExecuteProblem -> String -> IO a
 bigQueryError e query =
   error
     ( unlines
@@ -111,22 +112,22 @@ removeDataset schemaName =
   void $ runWithRetry (\conn -> Execute.deleteDataset conn $ unSchemaName schemaName)
 
 -- | Serialize Table into a SQL statement, as needed, and execute it on the BigQuery backend
-createTable :: HasCallStack => SchemaName -> Schema.Table -> IO ()
+createTable :: (HasCallStack) => SchemaName -> Schema.Table -> IO ()
 createTable schemaName table@Schema.Table {tableName, tableColumns} = do
-  run_ $
-    T.unpack $
-      T.unwords
-        ( [ "CREATE TABLE",
-            unSchemaName schemaName <> "." <> tableName,
-            "(",
-            commaSeparated (mkColumn <$> tableColumns),
-            -- Primary keys are not supported by BigQuery
-            -- Foreign keys are not support by BigQuery
-            ")"
-          ]
-            <> tableInsertions table
-            <> [";"]
-        )
+  run_
+    $ T.unpack
+    $ T.unwords
+      ( [ "CREATE TABLE",
+          unSchemaName schemaName <> "." <> tableName,
+          "(",
+          commaSeparated (mkColumn <$> tableColumns),
+          -- Primary keys are not supported by BigQuery
+          -- Foreign keys are not support by BigQuery
+          ")"
+        ]
+          <> tableInsertions table
+          <> [";"]
+      )
 
 -- | Generates a temporary table from structs, which is used to populate the table above.
 -- Along the lines of:
@@ -145,12 +146,12 @@ tableInsertions (Schema.Table {tableColumns, tableData}) =
     cellInsertion column VNull = ["CAST", "(", serialize VNull, "AS", scalarType (Schema.columnType column), ")", "AS", Schema.columnName column]
     cellInsertion column value = [serialize value, "AS", Schema.columnName column]
 
-scalarType :: HasCallStack => Schema.ScalarType -> Text
+scalarType :: (HasCallStack) => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "INT64"
   Schema.TStr -> "STRING"
   Schema.TUTCTime -> "DATETIME"
-  Schema.TBool -> "BOOLEAN"
+  Schema.TBool -> "BOOL"
   Schema.TGeography -> "GEOGRAPHY"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstBigQuery
 
@@ -175,15 +176,15 @@ serialize = \case
   VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvBigQuery
 
 -- | Serialize Table into an SQL DROP statement and execute it
-dropTable :: HasCallStack => SchemaName -> Schema.Table -> IO ()
+dropTable :: (HasCallStack) => SchemaName -> Schema.Table -> IO ()
 dropTable schemaName Schema.Table {tableName} = do
-  run_ $
-    T.unpack $
-      T.unwords
-        [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
-          unSchemaName schemaName <> "." <> tableName,
-          ";"
-        ]
+  run_
+    $ T.unpack
+    $ T.unwords
+      [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
+        unSchemaName schemaName <> "." <> tableName,
+        ";"
+      ]
 
 -- | Post an http request to start tracking
 -- Overriding here because bigquery's API is uncommon
@@ -219,7 +220,7 @@ untrackTable testEnvironment schemaName Schema.Table {tableName} = do
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
-setup :: HasCallStack => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+setup :: (HasCallStack) => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 setup tables' (testEnvironment, _) = do
   let source = BackendType.backendSourceName backendTypeMetadata
       backendType = BackendType.backendTypeString backendTypeMetadata
@@ -233,7 +234,8 @@ setup tables' (testEnvironment, _) = do
                 }
           )
           tables'
-  serviceAccount <- getServiceAccount
+  -- add metadata using env var name so not to log the key
+  let serviceAccountEnvVar = Constants.bigqueryServiceKeyVar
   projectId <- getProjectId
   -- create the dataset
   createDataset schemaName
@@ -249,9 +251,11 @@ setup tables' (testEnvironment, _) = do
           kind: *backendType
           tables: []
           configuration:
-            service_account: *serviceAccount
+            service_account:
+              from_env: *serviceAccountEnvVar
             project_id: *projectId
             datasets: [*schemaName]
+            retry_limit: 5
     |]
   -- Setup and track tables
   for_ tables $ \table -> do
@@ -271,25 +275,24 @@ teardown _ (testEnvironment, _) = do
     (GraphqlEngine.setSources testEnvironment mempty Nothing)
     (removeDataset schemaName)
 
-setupTablesAction :: HasCallStack => [Schema.Table] -> TestEnvironment -> SetupAction
+setupTablesAction :: (HasCallStack) => [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =
   SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
 
-setupPermissionsAction :: HasCallStack => [Permissions.Permission] -> TestEnvironment -> SetupAction
-setupPermissionsAction permissions env =
+createUntrackedTables :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+createUntrackedTables tables (testEnvironment, _) = do
+  let schemaName = Schema.getSchemaName testEnvironment
+  -- Setup tables
+  for_ tables $ \table -> do
+    retryIfJobRateLimitExceeded $ createTable schemaName table
+
+createUntrackedTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
+createUntrackedTablesAction ts env =
   SetupAction
-    (setupPermissions permissions env)
-    (const $ teardownPermissions permissions env)
-
--- | Setup the given permissions to the graphql engine in a TestEnvironment.
-setupPermissions :: HasCallStack => [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup permissions env
-
--- | Remove the given permissions from the graphql engine in a TestEnvironment.
-teardownPermissions :: HasCallStack => [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env
+    (createUntrackedTables ts (env, ()))
+    (const $ pure ())
 
 -- | We get @jobRateLimitExceeded@ errors from BigQuery if we run too many DML operations in short intervals.
 --   This functions tries to fix that by retrying after a few seconds if there's an error.

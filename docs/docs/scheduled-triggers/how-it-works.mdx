@@ -1,0 +1,38 @@
+---
+description: How to use Hasura's scheduled triggers to run cron jobs on your database
+title: 'How it Works: Scheduled Triggers'
+keywords:
+  - hasura
+  - docs
+  - scheduled triggers
+  - quickstart
+  - guide
+  - tutorial
+sidebar_label: How it works
+sidebar_position: 3
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# How It Works: Scheduled Triggers
+
+Hasura Scheduled Triggers is a powerful feature that allows you to schedule tasks or events in your application based on
+specific time intervals. It is a trigger-based system that executes tasks at predefined intervals, specified in a
+cron-like syntax.
+
+## How Hasura Scheduled Triggers Work
+
+Hasura Scheduled Triggers work by executing a webhook at a specified time interval. A webhook is an HTTP callback that
+is triggered by an event. When the webhook is triggered, it sends a request to the specified endpoint, which then
+executes the task or event defined.
+
+## Use Cases of Hasura Scheduled Triggers
+
+Hasura Scheduled Triggers can be used for a variety of use cases, including:
+
+- Sending reminders to users about upcoming events or appointments
+- Generating reports or analytics on a scheduled basis
+- Updating or cleaning up data on a regular basis, such as archiving old data or deleting expired records
+- Running maintenance tasks, such as backups or security checks
+- Scheduling automated emails or notifications to users

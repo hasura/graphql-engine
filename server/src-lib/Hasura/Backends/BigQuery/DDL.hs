@@ -14,20 +14,20 @@ import Hasura.Backends.BigQuery.DDL.ComputedField as M
 import Hasura.Backends.BigQuery.DDL.Source as M
 import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
-import Hasura.GraphQL.Schema.NamingCase
+import Hasura.Function.Cache
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Utils
 import Hasura.Session
+import Hasura.Table.Cache
 
 fetchAndValidateEnumValues ::
   (Monad m) =>
@@ -37,15 +37,15 @@ fetchAndValidateEnumValues ::
   [RawColumnInfo 'BigQuery] ->
   m (Either QErr EnumValues)
 fetchAndValidateEnumValues _ _ _ _ =
-  runExceptT $
-    throw400 NotSupported "Enum tables are not supported for BigQuery sources"
+  runExceptT
+    $ throw400 NotSupported "Enum tables are not supported for BigQuery sources"
 
 buildFunctionInfo ::
   (MonadError QErr m) =>
   SourceName ->
   FunctionName 'BigQuery ->
   SystemDefined ->
-  FunctionConfig ->
+  FunctionConfig 'BigQuery ->
   FunctionPermissionsMap ->
   RawFunctionInfo 'BigQuery ->
   Maybe Text ->

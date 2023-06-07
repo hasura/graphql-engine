@@ -1,12 +1,30 @@
-import produce from 'immer';
+import produce, { original } from 'immer';
 
 import { allowedMetadataTypes } from '../../../MetadataAPI';
 
-import { AccessType } from '../../types';
+import { AccessType, QueryType } from '../../types';
 import { PermissionsSchema } from '../../schema';
 import { areTablesEqual } from '../../../hasura-metadata-api';
 import { Table } from '../../../hasura-metadata-types';
 import { getTableDisplayName } from '../../../DatabaseRelationships';
+
+const formatFilterValues = (formFilter: Record<string, any>[] = []) => {
+  return Object.entries(formFilter).reduce<Record<string, any>>(
+    (acc, [operator, value]) => {
+      if (operator === '_and' || operator === '_or') {
+        const filteredEmptyObjects = (value as any[]).filter(
+          p => Object.keys(p).length !== 0
+        );
+        acc[operator] = filteredEmptyObjects;
+        return acc;
+      }
+
+      acc[operator] = value;
+      return acc;
+    },
+    {}
+  );
+};
 
 type SelectPermissionMetadata = {
   columns: string[];
@@ -24,29 +42,13 @@ const createSelectObject = (input: PermissionsSchema) => {
       .filter(({ 1: value }) => value)
       .map(([key]) => key);
 
-    // in row permissions builder an extra input is rendered automatically
-    // this will always be empty and needs to be removed
-
-    const filter = Object.entries(input.filter).reduce<Record<string, any>>(
-      (acc, [operator, value]) => {
-        if (operator === '_and' || operator === '_or') {
-          const filteredEmptyObjects = (value as any[]).filter(
-            p => Object.keys(p).length !== 0
-          );
-          acc[operator] = filteredEmptyObjects;
-          return acc;
-        }
-
-        acc[operator] = value;
-        return acc;
-      },
-      {}
-    );
+    // Input may be undefined
+    const filter = formatFilterValues(input.filter);
 
     const permissionObject: SelectPermissionMetadata = {
       columns,
       filter,
-      set: [],
+      set: {},
       allow_aggregations: input.aggregationEnabled,
     };
 
@@ -102,6 +104,72 @@ const createInsertObject = (input: PermissionsSchema) => {
   throw new Error('Case not handled');
 };
 
+export type DeletePermissionMetadata = {
+  columns?: string[];
+  set?: Record<string, any>;
+  backend_only: boolean;
+  filter: Record<string, any>;
+};
+
+const createDeleteObject = (input: PermissionsSchema) => {
+  if (input.queryType === 'delete') {
+    // Input may be undefined
+    const filter = formatFilterValues(input.filter);
+
+    const permissionObject: DeletePermissionMetadata = {
+      backend_only: input.backendOnly || false,
+      filter,
+    };
+
+    return permissionObject;
+  }
+
+  throw new Error('Case not handled');
+};
+
+type UpdatePermissionMetadata = {
+  columns: string[];
+  filter: Record<string, any>; // filter is PRE
+  check?: Record<string, any>; // check is POST
+  backend_only?: boolean;
+  set: Record<string, any>;
+};
+
+const createUpdateObject = (input: PermissionsSchema) => {
+  if (input.queryType === 'update') {
+    const columns = Object.entries(input.columns)
+      .filter(({ 1: value }) => value)
+      .map(([key]) => key);
+
+    const filter = formatFilterValues(input.filter);
+
+    const check = formatFilterValues(input.check);
+    const set =
+      input?.presets?.reduce((acc, preset) => {
+        if (preset.columnName === 'default') return acc;
+        const isNumber = !isNaN(Number(preset.columnValue));
+        return {
+          ...acc,
+          [preset.columnName]: isNumber
+            ? Number(preset.columnValue)
+            : preset.columnValue,
+        };
+      }, {}) ?? {};
+
+    const permissionObject: UpdatePermissionMetadata = {
+      columns,
+      filter,
+      check,
+      set,
+      backend_only: input.backendOnly,
+    };
+
+    return permissionObject;
+  }
+
+  throw new Error('Case not handled');
+};
+
 /**
  * creates the permissions object for the server
  */
@@ -112,9 +180,9 @@ const createPermission = (formData: PermissionsSchema) => {
     case 'insert':
       return createInsertObject(formData);
     case 'update':
-      throw new Error('Case not handled');
+      return createUpdateObject(formData);
     case 'delete':
-      throw new Error('Case not handled');
+      return createDeleteObject(formData);
     default:
       throw new Error('Case not handled');
   }
@@ -137,6 +205,60 @@ export interface ExistingPermission {
   role: string;
   queryType: string;
 }
+
+/**
+ * When cloning permissions we have to transform the payload between filter and checks.
+ * The input per type is:
+ * select uses filter
+ * delete uses filter
+ * insert uses check
+ * update uses filter(for pre-check) and check (for post-check)
+ *
+ * When cloning between the permissions type we need to swap these out based on with way we are cloning
+ */
+const getPermissionsWithMappedRowPermissions = (
+  permissionsObject: any,
+  mainQueryType: QueryType,
+  clonedQueryType: string
+): {
+  filter?: Record<string, any>;
+  check?: Record<string, any>;
+  columns?: string[];
+} => {
+  const clone: {
+    filter?: Record<string, any>;
+    check?: Record<string, any>;
+    columns?: string[];
+  } = {
+    filter: permissionsObject.filter,
+    check: permissionsObject.check,
+  };
+
+  if (
+    (mainQueryType === 'select' && clonedQueryType === 'insert') ||
+    (mainQueryType === 'select' && clonedQueryType === 'update') ||
+    (mainQueryType === 'delete' && clonedQueryType === 'insert') ||
+    (mainQueryType === 'delete' && clonedQueryType === 'update')
+  ) {
+    clone.check = permissionsObject.filter;
+  }
+
+  if (
+    (mainQueryType === 'update' && clonedQueryType === 'select') ||
+    (mainQueryType === 'update' && clonedQueryType === 'delete') ||
+    (mainQueryType === 'insert' && clonedQueryType === 'select') ||
+    (mainQueryType === 'insert' && clonedQueryType === 'delete') ||
+    (mainQueryType === 'insert' && clonedQueryType === 'update')
+  ) {
+    clone.filter = permissionsObject.check;
+  }
+
+  if (mainQueryType === 'delete')
+    clone.columns = permissionsObject.columns || [];
+
+  return { filter: clone.filter, check: clone.check, columns: clone.columns };
+};
+
 /**
  * creates the insert arguments to update permissions
  * adds cloned permissions
@@ -153,7 +275,6 @@ export const createInsertArgs = ({
   tables,
 }: CreateInsertArgs) => {
   const permission = createPermission(formData);
-
   // create args object with args from form
   const initialArgs = [
     {
@@ -206,9 +327,23 @@ export const createInsertArgs = ({
               d.set = {};
             }
 
-            return d;
+            const newValues = {
+              ...getPermissionsWithMappedRowPermissions(
+                original(d),
+                queryType,
+                clonedPermission.queryType
+              ),
+            };
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            d.filter = newValues.filter;
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            d.check = newValues.check;
+            d.columns = newValues.columns;
           }
         );
+
         // add each closed permission to args
         draft.push({
           type: `${driver}_create_${clonedPermission.queryType}_permission` as allowedMetadataTypes,

@@ -27,15 +27,17 @@ const InvocationLogs: React.FC<Props> = props => {
     setFilterState,
     runQuery
   ) => (
-    <InvocationLogsTable
-      rows={rows}
-      filterState={filterState}
-      setFilterState={setFilterState}
-      runQuery={runQuery}
-      columns={['id', 'status', 'event_id', 'created_at']}
-      identifier={triggerName}
-      dispatch={dispatch}
-    />
+    <div className="bootstrap-jail">
+      <InvocationLogsTable
+        rows={rows}
+        filterState={filterState}
+        setFilterState={setFilterState}
+        runQuery={runQuery}
+        columns={['id', 'status', 'event_id', 'created_at']}
+        identifier={triggerName}
+        dispatch={dispatch}
+      />
+    </div>
   );
 
   return (

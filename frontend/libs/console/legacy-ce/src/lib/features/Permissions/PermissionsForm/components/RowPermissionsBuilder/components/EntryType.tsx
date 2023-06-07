@@ -1,15 +1,11 @@
-import { Fragment, useContext, ReactNode } from 'react';
-import { get, isEmpty, isPlainObject } from 'lodash';
-import { Button } from '../../../../../../new-components/Button';
-import { isComparator } from './utils/helpers';
-import { tableContext, TableProvider } from './TableProvider';
-import { typesContext } from './TypesProvider';
-import { Token } from './Token';
-import { PermissionsInput } from './PermissionsInput';
-import { EmptyEntry } from './EmptyEntry';
-import { Entry } from './Entry';
+import { ObjectOrArrayEntry } from './EntryTypes/ObjectOrArrayEntry';
+import { ExistsEntry } from './EntryTypes/ExistsEntry';
+import { ArrayEntry } from './EntryTypes/ArrayEntry';
+import { isColumnComparator } from './utils';
+import { ColumnComparatorEntry } from './EntryTypes/ColumnComparatorEntry';
+import { useOperators } from './utils/comparatorsFromSchema';
 import { ValueInput } from './ValueInput';
-import { rowPermissionsContext } from './RowPermissionsProvider';
+import { useForbiddenFeatures } from './ForbiddenFeaturesProvider';
 
 export const EntryType = ({
   k,
@@ -20,89 +16,32 @@ export const EntryType = ({
   v: any;
   path: string[];
 }) => {
-  const { types } = useContext(typesContext);
-  const { relationships } = useContext(tableContext);
-
-  const { setValue } = useContext(rowPermissionsContext);
-  let Wrapper: any = Fragment;
-  const type = get(types, path)?.type;
-
-  if (type === 'relationship') {
-    const relationship = relationships.find(
-      r => r.name === path[path.length - 1]
-    );
-    if (relationship) {
-      const relationshipTable = relationship.table;
-      Wrapper = ({ children }: { children?: ReactNode | undefined }) => (
-        <TableProvider table={relationshipTable}>{children}</TableProvider>
-      );
+  const operators = useOperators({ path });
+  const operator = operators.find(o => o.name === k);
+  const { hasFeature } = useForbiddenFeatures();
+  if (isColumnComparator(k)) {
+    return <ColumnComparatorEntry k={k} path={path} v={v} />;
+  }
+  if (k === '_nin' || k === '_in') {
+    // TODO: Turn into generic array entry instead of handling only _in and _nin
+    // Not sure if this should be handled here or in another component, like the Value component
+    // The reason is that arrays are handled also in the PermissionsInput component, so right now we have duplicated logic
+    return <ArrayEntry k={k} v={v} path={path} />;
+  }
+  if (k === '_exists') {
+    if (!hasFeature('exists')) {
+      return null;
     }
+    return <ExistsEntry k={k} v={v} path={path} />;
+  }
+  if (
+    operator?.name === '_contains' ||
+    operator?.name === '_contained_in' ||
+    operator?.type === 'geometric' ||
+    operator?.type === 'geometric_geographic'
+  ) {
+    return <ValueInput value={v} path={path} />;
   }
 
-  switch (k) {
-    case '_nin':
-    case '_in':
-      return (
-        <Wrapper>
-          <div
-            className={
-              !isComparator(k) ? `border-dashed border-l border-gray-200` : ''
-            }
-          >
-            {Array.isArray(v) ? (
-              <div className="p-2 ml-6">
-                {v.map((val, i) => {
-                  console.log('path', path, i);
-                  return (
-                    <ValueInput
-                      key={String(i)}
-                      value={val}
-                      path={[...path, String(i)]}
-                    />
-                  );
-                })}
-
-                <Button
-                  onClick={() => setValue([...path, String(v.length)], '')}
-                  mode="default"
-                >
-                  Add input
-                </Button>
-              </div>
-            ) : null}
-          </div>
-        </Wrapper>
-      );
-
-    case '_exists':
-      return (
-        <TableProvider>
-          <Entry k="_where" v={v._where} path={[...path, '_where']} />
-          <Entry k="_table" v={v._table} path={[...path, '_table']} />
-        </TableProvider>
-      );
-
-    default:
-      return (
-        <Wrapper>
-          <div
-            className={
-              !isComparator(k) ? `border-dashed border-l border-gray-200` : ''
-            }
-          >
-            <PermissionsInput permissions={v} path={path} />
-            {Array.isArray(v) && k !== '_table' ? (
-              <div className="p-2 ml-6">
-                <Token token={'{'} />
-                <EmptyEntry path={[...path, `${v.length}`]} />
-                <Token token={'}'} />
-              </div>
-            ) : null}
-            {isEmpty(v) && isPlainObject(v) && k !== '_table' ? (
-              <EmptyEntry path={path} />
-            ) : null}
-          </div>
-        </Wrapper>
-      );
-  }
+  return <ObjectOrArrayEntry k={k} v={v} path={path} />;
 };

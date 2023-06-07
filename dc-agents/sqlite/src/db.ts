@@ -1,5 +1,4 @@
 import { Config } from "./config";
-import { Sequelize } from 'sequelize';
 import { DB_ALLOW_LIST, DB_CREATE, DB_PRIVATECACHE, DB_READONLY } from "./environment";
 import SQLite from 'sqlite3';
 
@@ -14,23 +13,6 @@ const cacheMode  = DB_PRIVATECACHE ? SQLite.OPEN_PRIVATECACHE : SQLite.OPEN_SHAR
 export const defaultMode = readMode | createMode | cacheMode;
 export const createDbMode = SQLite.OPEN_CREATE | readMode | cacheMode;
 
-export function connect(config: Config, sqlLogger: SqlLogger): Sequelize {
-  if(DB_ALLOW_LIST != null) {
-    if(DB_ALLOW_LIST.includes(config.db)) {
-      throw new Error(`Database ${config.db} is not present in DB_ALLOW_LIST 😭`);
-    }
-  }
-
-  const db = new Sequelize({
-    dialect: 'sqlite',
-    storage: config.db,
-    dialectOptions: { mode: defaultMode },
-    logging: sqlLogger
-  });
-
-  return db;
-};
-
 export type Connection = {
   query: (query: string, params?: Record<string, unknown>) => Promise<Array<any>>,
   exec: (sql: string) => Promise<void>;
@@ -44,7 +26,15 @@ export async function withConnection<Result>(config: Config, mode: number, sqlLo
     }
   }
 
-  const db_ = new SQLite.Database(config.db, mode);
+  const db_ = await new Promise<SQLite.Database>((resolve, reject) => {
+    const db = new SQLite.Database(config.db, mode, err => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(db);
+      }
+    });
+  });
 
   // NOTE: Avoiding util.promisify as this seems to be causing connection failures.
   const query = (query: string, params?: Record<string, unknown>): Promise<Array<any>> => {

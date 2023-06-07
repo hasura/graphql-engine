@@ -4,8 +4,8 @@ import { BigQueryConnectionSchema } from '../schema';
 
 export const Datasets = ({ name }: { name: string }) => {
   const options = [
-    { value: 'valeu', label: 'Datasets' },
-    { value: 'envVar', label: 'Enviromnent variable' },
+    { value: 'value', label: 'Datasets' },
+    { value: 'envVar', label: 'Environment variable' },
   ];
 
   const { watch } =
@@ -23,7 +23,7 @@ export const Datasets = ({ name }: { name: string }) => {
           label="Datasets"
           options={options}
           orientation="horizontal"
-          tooltip="Enviroment variable recomennded"
+          tooltip="Environment variable recommended"
         />
       </div>
 

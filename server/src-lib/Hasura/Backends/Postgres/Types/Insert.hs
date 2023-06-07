@@ -11,7 +11,7 @@ where
 import Hasura.Prelude
 import Hasura.RQL.IR.Conflict (OnConflictClause)
 import Hasura.RQL.Types.Backend (Backend)
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 
 -- | The PostgreSQL-specific data of an Insert expression.
 --

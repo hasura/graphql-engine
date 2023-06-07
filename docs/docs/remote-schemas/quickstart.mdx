@@ -1,0 +1,190 @@
+---
+description: Quickstart with Hasura Remote Schemas
+title: Quickstart
+keywords:
+  - hasura
+  - docs
+  - remote schemas
+  - quickstart
+sidebar_position: 2
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+import SampleAppBlock from '@site/src/components/SampleAppBlock';
+
+# Quickstart
+
+## Overview
+
+This quickstart will help you connect your first Remote Schema.
+
+<SampleAppBlock />
+
+## Step 1: Click Add
+
+From the Console, navigate to the `Remote Schemas` page. At the top of the page, click `Add`:
+
+<Thumbnail
+  src="/img/remote-schemas/remote-schema_getting-started-guide_2.18.0_click-add.png"
+  alt="API Explorer Landing Page"
+  width="1146px"
+/>
+
+## Step 2: Enter the basics
+
+Name this remote schema `countries_api` and enter the following value in the `GraphQL Service URL` field:
+
+```
+https://countries.trevorblades.com/graphql
+```
+
+<Thumbnail
+  src="/img/remote-schemas/remote-schema_getting-started-guide_2.18.0_enter-basics.png"
+  alt="API Explorer Landing Page"
+  width="1146px"
+/>
+
+Scroll to the bottom of the page and click `Add Remote Schema`.
+
+After clicking this button, you'll see the details of your newly connected API:
+
+<Thumbnail
+  src="/img/remote-schemas/remote-schema_getting-started-guide_2.18.0_newly-connected-result.png"
+  alt="API Explorer Landing Page"
+  width="1146px"
+/>
+
+:::tip That's it?!
+
+Yep, that's it! You've just joined a remote GraphQL service with your Hasura GraphQL API 🔥
+
+You could head to the API tab and query data from this new API, but keep reading if you're using the docs sample app to
+see the power of a unified schema by creating a relationship with our existing data model.
+
+:::
+
+## Step 3: Add a relationship
+
+Click the `Data` tab at the top of the page, select the `Products` table from the left-hand side navigation, and click
+`Relationships`. Scroll to the bottom of this page to find the `Remote Schema Relationships` and then click
+`Add a remote schema relationship`:
+
+<Thumbnail
+  src="/img/remote-schemas/remote-schema_getting-started-guide_2.18.0_click-add-remote-schema-relationship.png"
+  alt="API Explorer Landing Page"
+  width="1146px"
+/>
+
+## Step 4: Configure the relationship
+
+Call the relationship `countryInfo` and select `countries_api` from the `Remote Schema` dropdown.
+
+Then, under `Configuration`, check `countries`. Nested within `countries`, check the `filter` option and select `code`,
+then `eq`. We'll use the `country_of_origin` column as the foreign key for this relationship. When you've completed
+these steps, scroll down and click `Save`.
+
+<Thumbnail
+  src="/img/remote-schemas/remote-schema_getting-started-guide_2.18.0_configure-relationship.png"
+  alt="API Explorer Landing Page"
+  width="1146px"
+/>
+
+## Step 5: Test it out
+
+Head to the `API` tab and try this query; you should see a response similar to this:
+
+<GraphiQLIDE
+  query={`query {
+  products {
+		id
+		name
+    countryInfo {
+      emoji
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "products": [
+      {
+        "id": "7992fdfa-65b5-11ed-8612-6a8b11ef7372",
+        "name": "The Original Tee",
+        "country_of_origin": "US",
+        "countryInfo": [
+          {
+            "emoji": "🇺🇸"
+          }
+        ]
+      },
+      {
+        "id": "8aa93f86-65b6-11ed-901c-f320d4e17bb2",
+        "name": "Dark Furry Logo Tee",
+        "country_of_origin": "US",
+        "countryInfo": [
+          {
+            "emoji": "🇺🇸"
+          }
+        ]
+      },
+      {
+        "id": "a44eda7c-65b6-11ed-997b-53b5bdb7117e",
+        "name": "Hasuras in The Cloud Tee",
+        "country_of_origin": "US",
+        "countryInfo": [
+          {
+            "emoji": "🇺🇸"
+          }
+        ]
+      },
+      {
+        "id": "cd6be51c-65b6-11ed-a2f4-4b71f0d3d70f",
+        "name": "Get Ship Done Mug",
+        "country_of_origin": "GB",
+        "countryInfo": [
+          {
+            "emoji": "🇬🇧"
+          }
+        ]
+      },
+      {
+        "id": "e0a70b16-65b6-11ed-8788-8fa2504d64a3",
+        "name": "Sticker Sheet",
+        "country_of_origin": "IN",
+        "countryInfo": [
+          {
+            "emoji": "🇮🇳"
+          }
+        ]
+      },
+      {
+        "id": "fef9c02c-65b6-11ed-be19-2b4fad811971",
+        "name": "Monogram Baseball Cap",
+        "country_of_origin": "AU",
+        "countryInfo": [
+          {
+            "emoji": "🇦🇺"
+          }
+        ]
+      }
+    ]
+  }
+}`}
+/>
+
+Since our `products` table has a `country_of_origin` field, each product has a country code as its value. We can use
+this to filter by this value and return the data we want - in this case, a flag emoji - for our front end.
+
+## Recap
+
+What did we just do? Well, you just connected a remote GraphQL API to your Hasura GraphQL API and created a
+[relationship between your existing data model and the new API](/data-federation/data-federation-types.mdx#database-to-remote-schema-relationships).
+This means you can query data from both APIs in a single query, and also use the data from the remote API to filter or
+augment your existing data model 🎉
+
+In our example, we used the data from the remote API to filter our existing data model by a country code, and then
+return the data we want for that country. Common use cases include filtering for an id or a name.
+
+All Hasura needs is a GraphQL endpoint to connect to, and it will automatically generate a GraphQL schema for you. This
+means you can connect to any GraphQL API - or even multiple APIs - and access all your data in a single query from your
+Hasura GraphQL API.

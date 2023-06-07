@@ -1,40 +1,33 @@
 -- | Utility functions related to yaml
 module Harness.Yaml
-  ( combinationsObject,
-    fromObject,
-    mapObject,
+  ( mapObject,
     sortArray,
-    combinationsObjectUsingValue,
     shouldReturnYaml,
     shouldReturnYamlF,
-    shouldReturnOneOfYaml,
+    shouldReturnYamlFInternal,
+    ShouldReturnYamlF (..),
     shouldBeYaml,
+    shouldAtLeastBe,
+    Visual (..),
+    parseToMatch,
   )
 where
 
-import Data.Aeson
-  ( Object,
-    Value (..),
-  )
-import Data.Aeson qualified as Aeson
+import Data.Aeson (Value (..))
+import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
-import Data.List (permutations)
-import Data.Set (Set)
-import Data.Set qualified as Set
+import Data.Has
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8With)
 import Data.Text.Encoding.Error qualified as TE
+import Data.These
 import Data.Vector qualified as V
 import Data.Vector qualified as Vector
 import Data.Yaml qualified
-import Harness.Test.Fixture qualified as Fixture (Options (..))
+import Harness.Test.CustomOptions (Options (..))
 import Hasura.Prelude
 import Instances.TH.Lift ()
-import Test.Hspec (HasCallStack, shouldBe, shouldContain)
-
-fromObject :: Value -> Object
-fromObject (Object x) = x
-fromObject v = error $ "fromObject: Expected object, received" <> show v
+import Test.Hspec (HasCallStack, expectationFailure, shouldBe)
 
 mapObject :: (Value -> Value) -> Value -> Value
 mapObject f (Object x) = Object $ fmap f x
@@ -44,26 +37,11 @@ sortArray :: Value -> Value
 sortArray (Array a) = Array (V.fromList (sort (V.toList a)))
 sortArray _ = error "sortArray can only be called on Array Values"
 
--- | Compute all variations of an object and construct a list of
--- 'Value' based on the higher order function that is passed to it.  A
--- single variation of 'Object' is constructed as an 'Array' before
--- it's transformed by the passed function.
---
--- Typical usecase of this function is to use it with
--- 'shouldReturnOneOfYaml' function.
-combinationsObject :: (Value -> Value) -> [Object] -> [Value]
-combinationsObject fn variants =
-  let toArray :: [Value]
-      toArray = map ((Array . V.fromList) . (map Object)) (permutations variants)
-   in map fn toArray
-
--- | Same as 'combinationsObject' but the second parameter is a list
--- of 'Value`. We assume that 'Value' internally has only 'Object', if
--- not it will throw exception.
-combinationsObjectUsingValue :: (Value -> Value) -> [Value] -> [Value]
-combinationsObjectUsingValue fn variants = combinationsObject fn (map fromObject variants)
-
 -------------------------------------------------------------------
+
+newtype ShouldReturnYamlF = ShouldReturnYamlF
+  { getShouldReturnYamlF :: (Value -> IO Value) -> IO Value -> Value -> IO ()
+  }
 
 -- * Expectations
 
@@ -72,8 +50,15 @@ combinationsObjectUsingValue fn variants = combinationsObject fn (map fromObject
 --
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
-shouldReturnYaml :: HasCallStack => Fixture.Options -> IO Value -> Value -> IO ()
-shouldReturnYaml = shouldReturnYamlF pure
+shouldReturnYaml ::
+  ( HasCallStack,
+    Has ShouldReturnYamlF testEnvironment
+  ) =>
+  testEnvironment ->
+  IO Value ->
+  Value ->
+  IO ()
+shouldReturnYaml testEnvironment = shouldReturnYamlF testEnvironment pure
 
 -- | Because JSON supports numbers only up to 32 bits, some backends (such as
 -- BigQuery) send numbers as strings instead. So, for example, the floating
@@ -103,7 +88,7 @@ parseToMatch (Number _) (String text) =
     Just actual -> Number actual
     Nothing -> String text
 parseToMatch (Object expected) (Object actual) = do
-  let walk :: KM.KeyMap Value -> Aeson.Key -> Value -> Value
+  let walk :: KM.KeyMap Value -> J.Key -> Value -> Value
       walk reference key current =
         case KM.lookup key reference of
           Just this -> parseToMatch this current
@@ -121,37 +106,19 @@ parseToMatch _ actual = actual
 --
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
-shouldReturnYamlF :: HasCallStack => (Value -> IO Value) -> Fixture.Options -> IO Value -> Value -> IO ()
-shouldReturnYamlF transform options actualIO expected = do
+shouldReturnYamlF :: (HasCallStack, Has ShouldReturnYamlF testEnvironment) => testEnvironment -> (Value -> IO Value) -> IO Value -> Value -> IO ()
+shouldReturnYamlF = getShouldReturnYamlF . getter
+
+shouldReturnYamlFInternal :: (HasCallStack) => Options -> (Value -> IO Value) -> IO Value -> Value -> IO ()
+shouldReturnYamlFInternal options transform actualIO expected = do
   actual <-
     actualIO >>= transform >>= \actual ->
       pure
-        if Fixture.stringifyNumbers options
+        if stringifyNumbers options
           then parseToMatch expected actual
           else actual
 
-  actual `shouldBe` expected
-
--- | The action @actualIO@ should produce the @expected@ YAML,
--- represented (by the yaml package) as an aeson 'Value'.
---
--- We use 'Visual' internally to easily display the 'Value' as YAML
--- when the test suite uses its 'Show' instance.
-shouldReturnOneOfYaml :: HasCallStack => Fixture.Options -> IO Value -> [Value] -> IO ()
-shouldReturnOneOfYaml Fixture.Options {stringifyNumbers} actualIO candidates = do
-  actual <- actualIO
-
-  let expecteds :: Set Value
-      expecteds = Set.fromList candidates
-
-      actuals :: Set Value
-      actuals
-        | stringifyNumbers = Set.map (`parseToMatch` actual) expecteds
-        | otherwise = Set.singleton actual
-
-  case Set.lookupMin (Set.intersection expecteds actuals) of
-    Just match -> Visual match `shouldBe` Visual actual
-    Nothing -> map Visual (Set.toList expecteds) `shouldContain` [Visual actual]
+  actual `shouldBeYaml` expected
 
 -- | We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
@@ -162,9 +129,46 @@ shouldReturnOneOfYaml Fixture.Options {stringifyNumbers} actualIO candidates = d
 -- Since @Data.Yaml@ uses the same underlying 'Value' type as
 -- @Data.Aeson@, we could pull that in as a dependency and alias
 -- some of these functions accordingly.
-shouldBeYaml :: HasCallStack => Value -> Value -> IO ()
+shouldBeYaml :: (HasCallStack) => Value -> Value -> IO ()
 shouldBeYaml actual expected = do
   shouldBe (Visual actual) (Visual expected)
+
+-- | Assert that the expected json value should be a subset of the actual value, in the sense of 'jsonSubsetOf'.
+shouldAtLeastBe :: (HasCallStack) => Value -> Value -> IO ()
+shouldAtLeastBe actual expected | expected `jsonSubsetOf` actual = return ()
+shouldAtLeastBe actual expected =
+  expectationFailure $ "The expected value:\n\n" <> show (Visual expected) <> "\nis not a subset of the actual value:\n\n" <> show (Visual actual)
+
+-- | Compute whether one json value 'sub' is a subset of another value 'sup', in the sense that:
+--
+-- * For arrays, there is a contiguous segment in 'sup' in which all elements are subset-related with 'sub' in order
+-- * For objects, the keys of 'sub' are a subset of those of 'sup', and all their associated values are also subset-related
+-- * Leaf values are identical
+jsonSubsetOf :: J.Value -> J.Value -> Bool
+jsonSubsetOf (J.Array sub) (J.Array sup) = sub `subarrayOf` sup
+jsonSubsetOf (J.Object sub) (J.Object sup) = sub `subobjectOf` sup
+jsonSubsetOf (J.String sub) (J.String sup) = sub == sup
+jsonSubsetOf (J.Number sub) (J.Number sup) = sub == sup
+jsonSubsetOf (J.Bool sub) (J.Bool sup) = sub == sup
+jsonSubsetOf J.Null J.Null = True
+jsonSubsetOf _sub _sup = False
+
+subobjectOf :: KM.KeyMap J.Value -> KM.KeyMap J.Value -> Bool
+subobjectOf sub sup =
+  KM.foldr (&&) True
+    $ KM.alignWith
+      ( \case
+          This _ -> False -- key is only in the sub
+          That _ -> True -- key is only in sup
+          These l r -> l `jsonSubsetOf` r
+      )
+      sub
+      sup
+
+subarrayOf :: V.Vector J.Value -> V.Vector J.Value -> Bool
+subarrayOf sub sup | V.length sub > V.length sup = False
+subarrayOf sub sup | V.and $ V.zipWith jsonSubsetOf sub sup = True
+subarrayOf sub sup = subarrayOf sub (V.tail sup)
 
 -- | For the test suite: diff structural, but display in a readable
 -- way.

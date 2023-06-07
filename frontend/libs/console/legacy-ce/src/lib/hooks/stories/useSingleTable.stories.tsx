@@ -1,6 +1,6 @@
 import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
 import { ReduxDecorator } from '../../storybook/decorators/redux-decorator';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import React from 'react';
 import { SingleTable } from './useSingleTable.component';
 
@@ -10,29 +10,31 @@ export default {
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof SingleTable>;
+} as Meta<typeof SingleTable>;
 
-export const Playground: ComponentStory<typeof SingleTable> = args => {
-  return <SingleTable {...args} />;
-};
-
-Playground.args = {
-  currentDatasource: 'default',
-  driver: 'postgres',
-  table: {
-    name: 'person',
-    schema: 'public',
+export const Playground: StoryObj<typeof SingleTable> = {
+  render: args => {
+    return <SingleTable {...args} />;
   },
-};
 
-Playground.parameters = {
-  // Disable storybook for playground stories
-  chromatic: { disableSnapshot: true },
-};
+  args: {
+    currentDatasource: 'default',
+    driver: 'postgres',
+    table: {
+      name: 'person',
+      schema: 'public',
+    },
+  },
 
-Playground.argTypes = {
-  driver: {
-    options: ['postgres', 'bigquery', 'mssql', 'citus'],
-    control: 'select',
+  parameters: {
+    // Disable storybook for playground stories
+    chromatic: { disableSnapshot: true },
+  },
+
+  argTypes: {
+    driver: {
+      options: ['postgres', 'bigquery', 'mssql', 'citus'],
+      control: 'select',
+    },
   },
 };

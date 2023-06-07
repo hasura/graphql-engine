@@ -7,22 +7,22 @@
 module Test.Schema.DataValidations.Permissions.SelectSpec (spec) where
 
 import Data.Aeson (Value)
-import Data.Aeson.Key qualified as Key (toString)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphqlWithHeaders, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, describe, it)
+import Test.Hspec (SpecWith, describe, it, pendingWith)
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
@@ -31,35 +31,46 @@ spec = do
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
-                  setupMetadata Postgres.backendTypeMetadata testEnvironment
+                  setupMetadata SupportsArrayTypes Postgres.backendTypeMetadata testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Citus.setupTablesAction schema testEnvironment,
-                  setupMetadata Citus.backendTypeMetadata testEnvironment
+                  setupMetadata SupportsArrayTypes Citus.backendTypeMetadata testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
-                  setupMetadata Cockroach.backendTypeMetadata testEnvironment
+                  setupMetadata SupportsArrayTypes Cockroach.backendTypeMetadata testEnvironment
                 ]
             },
-          (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Sqlite.setupTablesAction schema testEnvironment,
+                  setupMetadata SupportsArrayTypes Sqlite.backendTypeMetadata testEnvironment
+                ]
+            }
+        ]
+    )
+    (tests SupportsArrayTypes)
+  Fixture.run
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ BigQuery.setupTablesAction schema testEnvironment,
-                  setupMetadata BigQuery.backendTypeMetadata testEnvironment
+                  setupMetadata DoesNotSupportArrayTypes BigQuery.backendTypeMetadata testEnvironment
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
             }
         ]
     )
-    tests
+    (tests DoesNotSupportArrayTypes)
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -74,7 +85,8 @@ schema =
         tablePrimaryKey = ["id"],
         tableData =
           [ [Schema.VInt 1, Schema.VStr "Author 1"],
-            [Schema.VInt 2, Schema.VStr "Author 2"]
+            [Schema.VInt 2, Schema.VStr "Author 2"],
+            [Schema.VInt 3, Schema.VStr "Author 3"]
           ]
       },
     (table "article")
@@ -82,7 +94,7 @@ schema =
           [ Schema.column "id" Schema.TInt,
             Schema.column "title" Schema.TStr,
             Schema.columnNull "content" Schema.TStr,
-            Schema.column "is_published" Schema.TBool,
+            Schema.column "state" Schema.TStr, -- 'Draft', 'InReview', 'Published'
             Schema.column "author_id" Schema.TInt
           ],
         tablePrimaryKey = ["id"],
@@ -91,14 +103,20 @@ schema =
           [ [ Schema.VInt 1,
               Schema.VStr "Article 1",
               Schema.VStr "Sample article content 1",
-              Schema.VBool False,
+              Schema.VStr "InReview",
               Schema.VInt 1
             ],
             [ Schema.VInt 2,
               Schema.VStr "Article 2",
               Schema.VStr "Sample article content 2",
-              Schema.VBool True,
+              Schema.VStr "Published",
               Schema.VInt 2
+            ],
+            [ Schema.VInt 3,
+              Schema.VStr "Article 3",
+              Schema.VStr "Sample article content 3",
+              Schema.VStr "Draft",
+              Schema.VInt 3
             ]
           ]
       }
@@ -107,40 +125,41 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
+data ArrayTypeSupport
+  = SupportsArrayTypes
+  | DoesNotSupportArrayTypes
+  deriving stock (Eq, Show)
 
-  describe "Permissions on queries" do
-    it "Authors can't select another author's articles" \testEnvironment -> do
-      let schemaName :: Schema.SchemaName
-          schemaName = Schema.getSchemaName testEnvironment
+tests :: ArrayTypeSupport -> SpecWith TestEnvironment
+tests arrayTypeSupport = describe "Permissions on queries" do
+  it "Authors can't select another author's articles" \testEnvironment -> do
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
 
-          expected :: Value
-          expected =
-            [interpolateYaml|
-              data:
-                #{schemaName}_article: []
+        expected :: Value
+        expected =
+          [interpolateYaml|
+            data:
+              #{schemaName}_article: []
+          |]
+
+        actual :: IO Value
+        actual =
+          postGraphqlWithHeaders
+            testEnvironment
+            [ ("X-Hasura-Role", "author"),
+              ("X-Hasura-User-Id", "0")
+            ]
+            [graphql|
+              query {
+                #{schemaName}_article {
+                  id
+                  author_id
+                }
+              }
             |]
 
-          actual :: IO Value
-          actual =
-            postGraphqlWithHeaders
-              testEnvironment
-              [ ("X-Hasura-Role", "author"),
-                ("X-Hasura-User-Id", "0")
-              ]
-              [graphql|
-                query {
-                  #{schemaName}_article {
-                    id
-                    author_id
-                  }
-                }
-              |]
-
-      actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected
 
   it "Authors can select their own articles" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -171,7 +190,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected
 
   it "User role can select published articles only" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -204,24 +223,73 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected
+
+  it "Editor role can select in review and published articles only" \testEnvironment -> do
+    when (arrayTypeSupport == DoesNotSupportArrayTypes)
+      $ pendingWith "Backend does not support array types"
+
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
+
+        expected :: Value
+        expected =
+          [interpolateYaml|
+            data:
+              #{schemaName}_article:
+              - author_id: 1
+                content: Sample article content 1
+                title: Article 1
+              - author_id: 2
+                content: Sample article content 2
+                title: Article 2
+          |]
+
+        actual :: IO Value
+        actual =
+          postGraphqlWithHeaders
+            testEnvironment
+            [ ("X-Hasura-Role", "editor")
+            ]
+            [graphql|
+              query {
+                #{schemaName}_article {
+                  title
+                  content
+                  author_id
+                }
+              }
+            |]
+
+    shouldReturnYaml testEnvironment actual expected
 
 --------------------------------------------------------------------------------
 -- Metadata
 
-setupMetadata :: Fixture.BackendTypeConfig -> TestEnvironment -> Fixture.SetupAction
-setupMetadata backendTypeMetadata testEnvironment = do
+setupMetadata :: ArrayTypeSupport -> Fixture.BackendTypeConfig -> TestEnvironment -> Fixture.SetupAction
+setupMetadata arrayTypeSupport backendTypeMetadata testEnvironment = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
-
-      schemaKeyword :: String
-      schemaKeyword = Key.toString $ Fixture.backendSchemaKeyword backendTypeMetadata
 
       backendPrefix :: String
       backendPrefix = Fixture.backendTypeString backendTypeMetadata
 
       source :: String
       source = Fixture.backendSourceName backendTypeMetadata
+
+      articleTable :: Value
+      articleTable = Schema.mkTableField backendTypeMetadata schemaName "article"
+
+      articleEditorFilter :: Value
+      articleEditorFilter =
+        case arrayTypeSupport of
+          SupportsArrayTypes ->
+            [interpolateYaml|
+              state:
+                _in: [InReview, Published]
+            |]
+          DoesNotSupportArrayTypes ->
+            [interpolateYaml| {} |]
 
       setup :: IO ()
       setup =
@@ -233,9 +301,7 @@ setupMetadata backendTypeMetadata testEnvironment = do
             - type: #{backendPrefix}_create_select_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: article
+                table: #{articleTable}
                 role: author
                 permission:
                   filter:
@@ -245,14 +311,20 @@ setupMetadata backendTypeMetadata testEnvironment = do
             - type: #{backendPrefix}_create_select_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: article
+                table: #{articleTable}
                 role: user
                 permission:
                   filter:
-                    is_published:
-                      _eq: true
+                    state:
+                      _eq: Published
+                  columns: "*"
+            - type: #{backendPrefix}_create_select_permission
+              args:
+                source: #{source}
+                table: #{articleTable}
+                role: editor
+                permission:
+                  filter: #{articleEditorFilter}
                   columns: "*"
           |]
 
@@ -266,17 +338,18 @@ setupMetadata backendTypeMetadata testEnvironment = do
             - type: #{backendPrefix}_drop_select_permission
               args:
                 source: #{source}
-                table:
-                  name: article
-                  #{schemaKeyword}: #{schemaName}
+                table: #{articleTable}
                 role: author
             - type: #{backendPrefix}_drop_select_permission
               args:
                 source: #{source}
-                table:
-                  name: article
-                  #{schemaKeyword}: #{schemaName}
+                table: #{articleTable}
                 role: user
+            - type: #{backendPrefix}_drop_select_permission
+              args:
+                source: #{source}
+                table: #{articleTable}
+                role: editor
           |]
 
   Fixture.SetupAction setup \_ -> teardown

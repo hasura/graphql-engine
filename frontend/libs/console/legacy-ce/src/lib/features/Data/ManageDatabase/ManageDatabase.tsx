@@ -1,61 +1,73 @@
-import React from 'react';
-import { Tooltip } from '../../../new-components/Tooltip';
+import get from 'lodash/get';
 import { Analytics, REDACT_EVERYTHING } from '../../Analytics';
-import { FaAngleRight, FaDatabase } from 'react-icons/fa';
-import { RiInformationFill } from 'react-icons/ri';
-import { TrackTables } from '../TrackTables/TrackTables';
+import { ManageTrackedTables } from '../ManageTable/components/ManageTrackedTables';
+import { ManageTrackedFunctions } from '../TrackResources/TrackFunctions/components/ManageTrackedFunctions';
+import { ManageTrackedRelationshipsContainer } from '../TrackResources/components/ManageTrackedRelationshipsContainer';
+import { useDriverCapabilities } from '../hooks/useDriverCapabilities';
+import { BreadCrumbs, SourceName, CollapsibleResource } from './parts';
 
-interface ManageDatabaseProps {
+export interface ManageDatabaseProps {
   dataSourceName: string;
 }
 
-export const ManageDatabase = (props: ManageDatabaseProps) => {
+//This component has the code for template gallery but is currently commented out until further notice.
+export const ManageDatabase = ({ dataSourceName }: ManageDatabaseProps) => {
+  const {
+    data: {
+      areForeignKeysSupported = false,
+      areUserDefinedFunctionsSupported = false,
+    } = {},
+  } = useDriverCapabilities({
+    dataSourceName,
+    select: data => {
+      return {
+        areForeignKeysSupported: !!get(
+          data,
+          'data_schema.supports_foreign_keys'
+        ),
+        areUserDefinedFunctionsSupported: !!get(data, 'user_defined_functions'),
+      };
+    },
+  });
+
   return (
     <Analytics name="ManageDatabaseV2" {...REDACT_EVERYTHING}>
       <div className="w-full overflow-y-auto bg-gray-50">
         <div className="px-md pt-md mb-xs">
-          <div className="flex items-center space-x-xs mb-1">
-            <div className="cursor-pointer flex items-center text-muted hover:text-gray-900">
-              <FaDatabase className="mr-1.5" />
-              <span className="text-sm">{props.dataSourceName}</span>
-            </div>
-            <FaAngleRight className="text-muted" />
-            <div className="cursor-pointer flex items-center">
-              <span className="text-sm font-semibold text-yellow-500">
-                Manage
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <div className="group relative">
-              <h1 className="inline-flex items-center text-xl font-semibold mb-1">
-                {props.dataSourceName}
-              </h1>
-            </div>
-          </div>
+          <BreadCrumbs dataSourceName={dataSourceName} />
+          <SourceName dataSourceName={dataSourceName} />
         </div>
-        <div>
-          <div className="px-md group relative">
-            <div className="flex mb-1 items-center">
-              <h4 className="inline-flex items-center font-semibold">
-                Track Tables
-              </h4>
-              <Tooltip
-                tooltipContentChildren="Expose the tables available in your database via the GraphQL API"
-                side="right"
-              >
-                <RiInformationFill />
-              </Tooltip>
-            </div>
+        <div className="px-md group relative gap-2 flex-col flex">
+          <CollapsibleResource
+            title="Tables/Views"
+            tooltip="Expose the tables available in your database via the GraphQL API"
+            defaultOpen
+          >
+            <ManageTrackedTables
+              dataSourceName={dataSourceName}
+              key={dataSourceName}
+            />
+          </CollapsibleResource>
 
-            <p className="text-muted">
-              Manage your database Tracking objects adds them to your GraphQL
-              API. All objects will be admin-only until permissions have been
-              set.
-            </p>
-          </div>
-          <TrackTables dataSourceName={props.dataSourceName} />
+          {areForeignKeysSupported && (
+            <CollapsibleResource
+              title="Foreign Key Relationships"
+              tooltip="Track foreign key relationships in your database in your GraphQL API"
+            >
+              <ManageTrackedRelationshipsContainer
+                dataSourceName={dataSourceName}
+              />
+            </CollapsibleResource>
+          )}
+
+          {areUserDefinedFunctionsSupported && (
+            <CollapsibleResource
+              title="Untracked Custom Functions"
+              tooltip="Expose the functions available in your database via the GraphQL API"
+            >
+              <ManageTrackedFunctions dataSourceName={dataSourceName} />
+            </CollapsibleResource>
+          )}
         </div>
       </div>
     </Analytics>

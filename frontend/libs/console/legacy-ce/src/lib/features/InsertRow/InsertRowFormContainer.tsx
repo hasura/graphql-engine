@@ -1,9 +1,12 @@
 import { hasuraToast } from '../../new-components/Toasts';
-import { useState } from 'react';
 import { useInsertRow, FormData } from '../Data/hooks/useInsertRow';
 import { useListAllTableColumns } from '../Data/hooks/useListAllTableColumns';
+import { getPlaceholder } from './utils/getPlaceholder';
 import { Table } from '../hasura-metadata-types/source/table';
-import { InsertRowForm } from './InsertRowForm';
+import { InsertRowForm, InsertRowFormProps } from './InsertRowForm';
+import { useTableInfo } from '../Data/hooks/useTableInfo';
+import { useMetadata } from '../hasura-metadata-api';
+import { SupportedDrivers } from '../hasura-metadata-types';
 
 type InsertRowFormContainerProps = {
   dataSourceName: string;
@@ -14,7 +17,19 @@ export const InsertRowFormContainer = ({
   dataSourceName,
   table,
 }: InsertRowFormContainerProps) => {
-  const { columns, isLoading } = useListAllTableColumns(dataSourceName, table);
+  const { columns: tableColumns, isLoading: isLoadingColumns } =
+    useListAllTableColumns(dataSourceName, table);
+
+  const { data: tableInfo, isLoading: isLoadingTableInfo } = useTableInfo({
+    dataSourceName,
+    table,
+  });
+
+  const { data: driver, isLoading: isLoadingMetadata } = useMetadata(
+    m => m.metadata.sources.find(source => source.name === dataSourceName)?.kind
+  );
+
+  const isLoading = isLoadingColumns || isLoadingTableInfo || isLoadingMetadata;
 
   const onInsertSuccess = () =>
     hasuraToast({
@@ -31,20 +46,37 @@ export const InsertRowFormContainer = ({
     });
   };
 
-  const { insertRow } = useInsertRow({
+  const { insertRow, isLoading: isInserting } = useInsertRow({
     dataSourceName,
     table,
     onSuccess: onInsertSuccess,
     onError: onInsertError,
   });
 
-  const [isInserting, setInserting] = useState(false);
-
   const onInsertRow = async (formData: FormData) => {
-    setInserting(true);
     await insertRow(formData);
-    setInserting(false);
   };
+
+  const columnsDefinitions = tableInfo?.columns;
+
+  const columns: InsertRowFormProps['columns'] = tableColumns.map(column => {
+    const columnInfo = columnsDefinitions?.find(
+      columnDefinition => columnDefinition.name === column.name
+    );
+
+    const dataType = columnInfo?.type || column.dataType;
+
+    return {
+      ...column,
+      insertable:
+        typeof columnInfo?.insertable !== 'undefined'
+          ? columnInfo?.insertable
+          : true,
+      description: columnInfo?.description || '',
+      dataType,
+      placeholder: getPlaceholder(dataType),
+    };
+  });
 
   return (
     <InsertRowForm
@@ -52,6 +84,7 @@ export const InsertRowFormContainer = ({
       isInserting={isInserting}
       isLoading={isLoading}
       onInsertRow={onInsertRow}
+      driver={driver as SupportedDrivers}
     />
   );
 };

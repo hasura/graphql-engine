@@ -3,7 +3,7 @@
 module Hasura.Backends.BigQuery.Instances.API () where
 
 import Hasura.Prelude
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.Server.API.Backend
 
 instance BackendAPI 'BigQuery where
@@ -14,5 +14,7 @@ instance BackendAPI 'BigQuery where
         tablePermissionsCommands @'BigQuery,
         relationshipCommands @'BigQuery,
         remoteRelationshipCommands @'BigQuery,
-        computedFieldCommands @'BigQuery
+        computedFieldCommands @'BigQuery,
+        nativeQueriesCommands @'BigQuery,
+        logicalModelsCommands @'BigQuery
       ]

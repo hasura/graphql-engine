@@ -14,12 +14,11 @@ sidebar_position: 20
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # GitHub Deployment
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Free, Cloud Standard, Cloud Professional, Cloud Enterprise
-</div>
+<ProductBadge free standard pro ee />
 
 ## Introduction
 
@@ -66,6 +65,33 @@ The permissions requested by Hasura Cloud can be viewed in the GitHub app settin
 
 Once linked, the GitHub account with the granted scope becomes available to all the admins on the project as the session
 is used to manage the GitHub integration from the UI.
+
+### Setup GitHub repo with Hasura project Metadata
+
+You'll need to set up a GitHub repository with the current Metadata of your Hasura project. This will become the
+starting point of the version control of the Metadata. **If the repository is empty, the GitHub integration will result
+in loss of your existing Metadata on Hasura Cloud.**
+
+Within your local Hasura project's directory, if not already done, initialize a git repository. Then, run the following
+command via the [Hasura CLI](/hasura-cli/overview.mdx):
+
+```bash
+hasura metadata export --admin-secret <your-project-admin-secret> --endpoint <your-hasura-cloud-project-url>
+```
+
+This will export your project's Metadata to the `metadata` directory in your project directory in YAML format. Add and
+commit these changes to git. Then, push the changes to your GitHub repository.
+
+:::warning Working with Metadata
+
+Once the GitHub integration is set-up, refrain from making changes in your Cloud project using Console. All the changes
+to your project now should be executed by the version control process. If you have made a change directly in the Cloud
+Console for any reason, please follow the `metadata export` command above and update your version control with the
+latest Metadata. Otherwise, you may lose the manual changes in your project the next time GitHub integration runs.
+
+You can learn more in our [Metadata Best Practices guide](/deployment/best-practices/metadata.mdx).
+
+:::
 
 ### Integrate GitHub repo with a Hasura Cloud project
 
@@ -137,6 +163,8 @@ You need to ensure the your Cloud project has been appropriately set up to execu
   added to your Cloud project as well.
 - Ensure that you have connected the required database(s) with the right name and connection params as you have in the
   Metadata to the Cloud project.
+- Follow the steps in our [Metadata Best Practices](/deployment/best-practices/metadata.mdx) guide to ensure that your
+  Metadata is in the right format and structure.
 
 ## Troubleshooting failures {#github-integration-troubleshooting}
 

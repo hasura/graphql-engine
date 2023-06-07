@@ -4,9 +4,10 @@ module Hasura.GraphQL.Execute.Mutation
 where
 
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Tagged qualified as Tagged
+import Data.Text.Extended ((<>>))
 import Hasura.Base.Error
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Execute.Action
@@ -25,12 +26,12 @@ import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.QueryTags.Types
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
-import Hasura.RQL.Types.QueryTags
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (RequestId (..))
@@ -58,7 +59,7 @@ convertMutationAction env logger prometheusMetrics userInfo reqHeaders gqlQueryT
   httpManager <- askHTTPManager
   case action of
     AMSync s ->
-      pure $ AEPSync $ resolveActionExecution httpManager env logger prometheusMetrics userInfo s actionExecContext gqlQueryText
+      pure $ AEPSync $ resolveActionExecution httpManager env logger prometheusMetrics s actionExecContext gqlQueryText
     AMAsync s ->
       AEPAsyncMutation <$> resolveActionMutationAsync s reqHeaders userSession
   where
@@ -107,21 +108,20 @@ convertMutationSelectionSet
   reqId
   maybeOperationName = do
     mutationParser <-
-      onNothing (gqlMutationParser gqlContext) $
-        throw400 ValidationFailed "no mutations exist"
+      onNothing (gqlMutationParser gqlContext)
+        $ throw400 ValidationFailed "no mutations exist"
 
-    (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty (GH._grVariables gqlUnparsed)) directives fields
+    (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe HashMap.empty (GH._grVariables gqlUnparsed)) directives fields
     -- Parse the GraphQL query into the RQL AST
-    unpreparedQueries ::
-      RootFieldMap (MutationRootField UnpreparedValue) <-
-      liftEither $ mutationParser resolvedSelSet
+    (unpreparedQueries :: RootFieldMap (MutationRootField UnpreparedValue)) <-
+      Tracing.newSpan "Parse mutation IR" $ liftEither $ mutationParser resolvedSelSet
 
     -- Process directives on the mutation
     _dirMap <- toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
 
     let parameterizedQueryHash = calculateParameterizedQueryHash resolvedSelSet
 
-        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = do
+        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = Tracing.newSpan ("Resolve execution step for " <>> rootFieldName) do
           case rootFieldUnpreparedValue of
             RFDB sourceName exists ->
               AB.dispatchAnyBackend @BackendExecute
@@ -135,13 +135,13 @@ convertMutationSelectionSet
                       mutationQueryTagsAttributes = encodeQueryTags $ QTMutation $ MutationMetadata mReqId maybeOperationName rootFieldName parameterizedQueryHash
                       queryTagsComment = Tagged.untag $ createQueryTags @m mutationQueryTagsAttributes queryTagsConfig
                       (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db
-                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b userInfo env stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName
+                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b userInfo stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName
                   pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
             RFRemote remoteField -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
               let (noRelsRemoteField, remoteJoins) = RJ.getRemoteJoinsGraphQLField resolvedRemoteField
-              pure $
-                buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation noRelsRemoteField remoteJoins (GH._grOperationName gqlUnparsed)
+              pure
+                $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation noRelsRemoteField remoteJoins (GH._grOperationName gqlUnparsed)
             RFAction action -> do
               let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionMutation action
               (actionName, _fch) <- pure $ case noRelsDBAST of
@@ -156,5 +156,5 @@ convertMutationSelectionSet
               pure $ ExecStepMulti allSteps
 
     -- Transform the RQL AST into a prepared SQL query
-    txs <- flip OMap.traverseWithKey unpreparedQueries $ resolveExecutionSteps
+    txs <- flip InsOrdHashMap.traverseWithKey unpreparedQueries $ resolveExecutionSteps
     return (txs, parameterizedQueryHash)

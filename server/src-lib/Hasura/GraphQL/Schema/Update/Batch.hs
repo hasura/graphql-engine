@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.GraphQL.Schema.Update.Batch
   ( updateTable,
     updateTableMany,
@@ -14,8 +12,6 @@ import Hasura.GraphQL.Schema.Backend (BackendTableSelectSchema (..), BackendUpda
 import Hasura.GraphQL.Schema.BoolExp (AggregationPredicatesSchema, tableBoolExp)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation (mutationSelectionSet, primaryKeysArguments)
-import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table (tableColumns)
 import Hasura.GraphQL.Schema.Typename
@@ -31,15 +27,17 @@ import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..))
 import Hasura.RQL.Types.Common (Comment (..))
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.NamingCase
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
-import Language.GraphQL.Draft.Syntax (Description (..), Name (..), litName)
+import Hasura.Table.Cache
+import Language.GraphQL.Draft.Syntax (Description (..), Name (..))
 
 buildAnnotatedUpdateGField ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n) =>
   Scenario ->
   TableInfo b ->
   -- | field display name
@@ -68,10 +66,10 @@ buildAnnotatedUpdateGField scenario tableInfo fieldName description parseOutput 
 
   outputParser <- parseOutput
   updateVariantParser <- mkUpdateVariantParser updatePerms
-  pure $
-    P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
-      mkAnnotatedUpdateG tableName columns updatePerms (Just tCase)
-        <$> P.subselection fieldName description updateVariantParser outputParser
+  pure
+    $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
+    $ mkAnnotatedUpdateG tableName columns updatePerms (Just tCase)
+    <$> P.subselection fieldName description updateVariantParser outputParser
 
 -- | Construct a root field, normally called update_tablename, that can be used
 -- to update rows in a DB table specified by filters. Only returns a parser if
@@ -178,6 +176,7 @@ updateTableByPk mkSingleBatchUpdateVariant scenario tableInfo tableGqlName = run
       tCase = _rscNamingConvention customization
       updateTableFieldName = mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfUpdateByPk mkUpdateByPkField tableGqlName
       pkObjectName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTablePkColumnsInputTypeName tableGqlName
+      pkFieldName = applyFieldNameCaseIdentifier tCase pkColumnsFieldName
   let parseOutput = fmap MOutSinglerowObject <$> MaybeT (tableSelectionSet tableInfo)
 
   buildAnnotatedUpdateGField scenario tableInfo updateTableFieldName updateByPkFieldDescription parseOutput $ \updatePerms -> do
@@ -192,11 +191,10 @@ updateTableByPk mkSingleBatchUpdateVariant scenario tableInfo tableGqlName = run
     updateByPkFieldDescription = buildFieldDescription defaultUpdateByPkDesc $ _crfComment _tcrfUpdateByPk
     defaultUpdateByPkDesc = "update single row of the table: " <>> tableName
     pkObjectDesc = Description $ "primary key columns input for table: " <> toTxt tableName
-    pkFieldName = $$(litName "pk_columns")
     TableCustomRootFields {..} = _tcCustomRootFields . _tciCustomConfig $ _tiCoreInfo tableInfo
 
 mkAnnotatedUpdateG ::
-  Backend b =>
+  (Backend b) =>
   TableName b ->
   [ColumnInfo b] ->
   UpdPermInfo b ->

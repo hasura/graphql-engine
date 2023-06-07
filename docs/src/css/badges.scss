@@ -9,15 +9,20 @@
   border: var(--ifm-badge-border-width) solid gray;
   border-radius: var(--ifm-badge-border-radius);
   color: var(--ifm-badge-color);
-  display: inline-block;
+  display: grid;
+  align-items: center;
   font-size: 75%;
   font-weight: var(--ifm-font-weight-bold);
   line-height: 1;
   padding: var(--ifm-badge-padding-vertical) var(--ifm-badge-padding-horizontal);
 }
 
-.heading-badge, .badge-container {
+.heading-badge,
+.badge-container {
   font-size: 0.9rem;
+  a {
+    color: var(--ifm-secondary);
+  }
   + p {
     margin-top: 1rem;
   }
@@ -30,7 +35,29 @@
       .menu__link {
         position: relative;
         &:after {
-          content: "Alpha";
+          content: 'Alpha';
+          font-size: 0.7rem;
+          font-weight: normal;
+          margin-left: 5px;
+          color: white;
+          padding: 2px 5px;
+          border-radius: 5px;
+          min-height: unset;
+          width: unset;
+          height: unset;
+          background: none;
+          background-color: var(--ifm-color-gray-600);
+          transform: none;
+        }
+      }
+    }
+  }
+  .theme-doc-sidebar-item-category.beta-cat {
+    .menu__list-item-collapsible {
+      .menu__link {
+        position: relative;
+        &:after {
+          content: "Beta";
           font-size: 0.7rem;
           font-weight: normal;
           margin-left: 5px;
@@ -54,7 +81,7 @@
   .alpha-tag {
     .menu__link {
       &:after {
-        content: "Alpha";
+        content: 'Alpha';
         font-size: 0.7rem;
         font-weight: normal;
         margin-left: 5px;
@@ -69,7 +96,7 @@
   .beta-tag {
     .menu__link {
       &:after {
-        content: "Beta";
+        content: 'Beta';
         font-size: 0.7rem;
         font-weight: normal;
         margin-left: 5px;
@@ -81,7 +108,3 @@
     }
   }
 }
-
-
-
-

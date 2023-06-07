@@ -1,6 +1,6 @@
 import React, { ReactText } from 'react';
 import clsx from 'clsx';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import { FieldError, useFormContext, Controller } from 'react-hook-form';
 import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
 import { Checkbox } from './Checkbox';

@@ -25,8 +25,8 @@ spec =
           columns = [P.idColumn, P.nameColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           updateVariant =
-            Expect.SingleBatchUpdate $
-              Expect.UpdateBatchBuilder
+            Expect.SingleBatchUpdate
+              $ Expect.UpdateBatchBuilder
                 { ubbOperations = [(P.nameColumn, UpdateSet P.textNew)],
                   ubbWhere = [(P.idColumn, [AEQ True P.integerOne])]
                 },
@@ -47,8 +47,8 @@ spec =
           columns = [P.idColumn, P.nameColumn, P.descColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           updateVariant =
-            Expect.SingleBatchUpdate $
-              Expect.UpdateBatchBuilder
+            Expect.SingleBatchUpdate
+              $ Expect.UpdateBatchBuilder
                 { ubbOperations =
                     [ (P.nameColumn, UpdateSet P.textNew),
                       (P.descColumn, UpdateSet P.textOther)
@@ -58,7 +58,7 @@ spec =
           expectedSQL =
             [QQ.sql|
               UPDATE "public"."test"
-                SET "name" = ('new name')::text, "description" = ('other')::text
+                SET "description" = ('other')::text, "name" = ('new name')::text
                 WHERE
                   (("public"."test"."id") = (('1')::integer))
                 RETURNING * , ('true')::boolean AS "check__constraint"
@@ -72,8 +72,8 @@ spec =
           columns = [P.idColumn, P.nameColumn, P.descColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
           updateVariant =
-            Expect.SingleBatchUpdate $
-              Expect.UpdateBatchBuilder
+            Expect.SingleBatchUpdate
+              $ Expect.UpdateBatchBuilder
                 { ubbOperations = [(P.nameColumn, UpdateSet P.textNew)],
                   ubbWhere =
                     [ (P.idColumn, [AEQ True P.integerOne]),

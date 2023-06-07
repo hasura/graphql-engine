@@ -11,7 +11,7 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Hasura.RQL.IR.Update.Batch (UpdateBatch)
 import Hasura.RQL.Types.Backend (Backend)
-import Hasura.SQL.Backend (BackendType (..))
+import Hasura.RQL.Types.BackendType (BackendType (..))
 
 --------------------------------------------------------------------------------
 
@@ -30,11 +30,11 @@ data DataConnectorUpdateVariant v
   = SingleBatch (UpdateBatch 'DataConnector UpdateOperator v)
   | MultipleBatches [UpdateBatch 'DataConnector UpdateOperator v]
 
-deriving stock instance Backend 'DataConnector => Functor DataConnectorUpdateVariant
+deriving stock instance (Backend 'DataConnector) => Functor DataConnectorUpdateVariant
 
-deriving stock instance Backend 'DataConnector => Foldable DataConnectorUpdateVariant
+deriving stock instance (Backend 'DataConnector) => Foldable DataConnectorUpdateVariant
 
-deriving stock instance Backend 'DataConnector => Traversable DataConnectorUpdateVariant
+deriving stock instance (Backend 'DataConnector) => Traversable DataConnectorUpdateVariant
 
 --------------------------------------------------------------------------------
 

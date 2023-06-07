@@ -2,7 +2,7 @@ import { OpenApiSchema } from '@hasura/dc-api-types';
 import React, { useState } from 'react';
 import clsx from 'clsx';
 import { FieldWrapper } from '../../../new-components/Form';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import { FieldError, useFormContext } from 'react-hook-form';
 import {
   getInputAttributes,

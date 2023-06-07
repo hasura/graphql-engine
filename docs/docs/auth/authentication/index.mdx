@@ -15,61 +15,72 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 ## Overview
 
-Authentication is handled outside of Hasura. Hasura delegates authentication and resolution of request headers into
-session variables to your authentication service _(existing or new)_.
+**Authentication verifies the identity of a user.**
 
-Your authentication service is required to pass a user's **role** information in the form of session variables like
-`X-Hasura-Role`, etc. More often than not, you'll also need to pass user information for your access control use cases,
-like `X-Hasura-User-Id`, to build permission rules.
+Hasura GraphQL Engine utilizes **session variables**, with specific user, role, organization and any other information
+you may need to determine the data access rights of the user.
 
-You can also configure Hasura to allow access to unauthenticated users by configuring a specific role which will be set
-for all unauthenticated requests.
+With these session variables you are able to construct permission rules which are added per **table**, **role**, and
+**database operation** in order to provide extremely granular access control.
 
-For information about making requests using the Admin Secret header please
-[see here](/auth/authentication/index.mdx#admin-secret-header).
+**Actual authentication is handled outside Hasura**. Ie: the responsibility for generating session variables is
+delegated to your (new or existing) authentication service in order to provide you with the greatest flexibility and
+range of options for your authentication needs.
 
-## Authentication options
+Hasura authentication can be configured via JSON web tokens (JWT) or a webhook service and can be integrated with any
+other provider you choose (e.g. [Auth0](https://auth0.com/), [Firebase Auth](https://firebase.google.com/products/auth),
+[AWS Cognito](https://aws.amazon.com/cognito/), a custom solution, etc) in order to verify the user and set
+session variables that then control access to data.
 
-Hasura supports two modes of authentication configuration:
+Full [admin level](auth/authentication/admin-secret-access.mdx) and
+[unauthenticated access](auth/authentication/unauthenticated-access.mdx) can also be configured.
 
-### 1. Webhook
+In [JWT mode](/auth/authentication/jwt.mdx), session variables are provided to Hasura Engine in the payload of the
+JWT token. In [webhook mode](/auth/authentication/webhook.mdx), the session variables are provided in JSON format
+back to Hasura Engine in the body of a successful request to the webhook endpoint.
 
-Your auth server exposes a webhook that is used to authenticate all incoming requests to the Hasura GraphQL Engine
-server and to get Metadata about the request to evaluate access control rules.
+Your authentication service is required to pass, at least, a **user's role information** in the form of the session
+variable `X-Hasura-Role`. More often than not, you'll also need to pass other information for your particular access
+control use cases, like `X-Hasura-User-Id` or `X-Hasura-Org-Id`, in order to build your permission rules.
 
-Here's how a GraphQL request is processed in webhook mode:
+The specific content of the GraphQL request is then processed with the session variables against the permissions
+defined by you in the Hasura Engine to build a single optimized query to the database with restricted access for that
+user role.
 
-<Thumbnail src="/img/auth/auth-webhook-overview.png" alt="Authentication using webhooks" width="1000px" />
+## The two Hasura authentication options
 
-### 2. JWT (JSON Web Token)
+Hasura supports two options for authentication configuration:
 
-Your auth server issues JWTs to your client app, which, when sent as part of the request, are verified and decoded by
-the GraphQL Engine to get Metadata about the request to evaluate access control rules.
+### 1. JWT
+
+Your auth service issues JWTs (JSON Web Tokens) to your client app, which, when sent as part of the request are then
+verified and decoded by the Hasura Engine to get session variables to use when evaluating permissions.
 
 Here's how a GraphQL query is processed in JWT mode:
 
-<Thumbnail src="/img/auth/auth-jwt-overview.png" alt="Authentication using JWT" width="1000px" />
+<Thumbnail src='/img/auth/auth-jwt-overview-diagram.png' alt='Authentication using JWT' width='1000px' />
 
-**See more details at:**
+### 2. Webhook
 
-- [Using webhooks](/auth/authentication/webhook.mdx)
-- [Using JWT](/auth/authentication/jwt.mdx)
+Your auth service exposes a webhook endpoint that is used to authenticate all incoming requests and to respond with
+session variables to use when evaluating permissions on Hasura Engine.
+
+Here's how a GraphQL request is processed in webhook mode:
+
+<Thumbnail src='/img/auth/auth-webhook-overview.png' alt='Authentication using webhooks' width='1000px' />
+
+## Other access levels
+- [Admin secret access](/auth/authentication/admin-secret-access.mdx)
 - [Unauthenticated / Public access](/auth/authentication/unauthenticated-access.mdx)
 
-:::info Additional Resources
+## Next Steps
+- [Quickstart 3rd party integration tutorials](/auth/authentication/quickstart.mdx)
+- [See here for info on using JWT mode](/auth/authentication/jwt.mdx).
+- [See here for info on using webhook mode](/auth/authentication/webhook.mdx).
 
-- Enterprise Grade Authorization -
-  [Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=)
+:::info JWT and webhook Tutorials
+
 - Webhooks Basics - [Learn Tutorial](https://hasura.io/learn/graphql/hasura-authentication/webhook-mode/)
 - JWT Basics - [Learn Tutorial](https://hasura.io/learn/graphql/hasura-authentication/jwt-basics/)
 
 :::
-
-## Using the Admin Secret header {#admin-secret-header}
-
-Hasura will allow all queries, mutations and subscriptions when you include your `X-Hasura-Admin-Secret` header on your
-request. If you also include the `X-Hasura-User-Id` and `X-Hasura-Role` headers along with the `X-Hasura-Admin-Secret`
-header you can "pretend" to be that user and role.
-
-Without the `X-Hasura-Admin-Secret` header you will need to authenticate your requests as a user and role with one of
-the options below.

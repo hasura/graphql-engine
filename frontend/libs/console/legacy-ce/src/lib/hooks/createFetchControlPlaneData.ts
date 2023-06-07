@@ -52,7 +52,7 @@ export function createFetchControlPlaneData<RESPONSE_DATA>(opts: {
         { 'content-type': 'application/json' }
       );
 
-      if ('errors' in response) {
+      if (response && typeof response === 'object' && 'errors' in response) {
         const errorMessage = response.errors?.[0]?.message ?? '';
 
         return errorMessage;

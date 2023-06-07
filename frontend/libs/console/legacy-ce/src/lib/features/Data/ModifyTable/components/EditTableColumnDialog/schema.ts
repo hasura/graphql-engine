@@ -1,4 +1,4 @@
-import pickBy from 'lodash.pickby';
+import pickBy from 'lodash/pickBy';
 import { z } from 'zod';
 
 export const schema = z

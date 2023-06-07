@@ -8,9 +8,9 @@ import Data.Maybe qualified as Maybe
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postMetadata, postMetadata_)
 import Harness.Quoter.Yaml
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment
 import Harness.Yaml qualified as Yaml
 import Hasura.Prelude
@@ -34,13 +34,13 @@ spec =
 table :: Schema.Table
 table = (Schema.table "table1") {Schema.tableColumns = [Schema.column "id" Schema.TInt]}
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldReturnYaml :: IO Value -> Value -> IO ()
-      shouldReturnYaml = Yaml.shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   describe "reloading the metadata" do
     it "flags missing tables as inconsistent" \testEnvironment -> do
+      let shouldReturnYaml :: IO Value -> Value -> IO ()
+          shouldReturnYaml = Yaml.shouldReturnYaml testEnvironment
+
       Postgres.createTable testEnvironment table
 
       postMetadata testEnvironment (replaceMetadataWithTable testEnvironment)
@@ -55,6 +55,9 @@ tests opts = do
         `shouldReturnYaml` expectedInconsistentYaml (Just "success") testEnvironment
 
     it "recognizes when tables have become consistent" \testEnvironment -> do
+      let shouldReturnYaml :: IO Value -> Value -> IO ()
+          shouldReturnYaml = Yaml.shouldReturnYaml testEnvironment
+
       postMetadata testEnvironment (replaceMetadataWithTable testEnvironment)
         `shouldReturnYaml` expectedInconsistentYaml Nothing testEnvironment
 
@@ -71,10 +74,16 @@ tests opts = do
 
   describe "replacing the metadata" do
     it "flags missing tables as inconsistent" \testEnvironment -> do
+      let shouldReturnYaml :: IO Value -> Value -> IO ()
+          shouldReturnYaml = Yaml.shouldReturnYaml testEnvironment
+
       postMetadata testEnvironment (replaceMetadataWithTable testEnvironment)
         `shouldReturnYaml` expectedInconsistentYaml Nothing testEnvironment
 
     it "recognizes when tables have become consistent" \testEnvironment -> do
+      let shouldReturnYaml :: IO Value -> Value -> IO ()
+          shouldReturnYaml = Yaml.shouldReturnYaml testEnvironment
+
       postMetadata testEnvironment (replaceMetadataWithTable testEnvironment)
         `shouldReturnYaml` expectedInconsistentYaml Nothing testEnvironment
 
@@ -89,6 +98,9 @@ tests opts = do
 
   describe "replacing metadata with already present inconsistency" do
     it "drop table for an already inconsistent table with event trigger" \testEnvironment -> do
+      let shouldReturnYaml :: IO Value -> Value -> IO ()
+          shouldReturnYaml = Yaml.shouldReturnYaml testEnvironment
+
       Postgres.createTable testEnvironment table
       _ <- postMetadata testEnvironment (setupMetadataWithTableAndEventTrigger testEnvironment)
       Postgres.dropTable testEnvironment table
@@ -99,18 +111,14 @@ tests opts = do
         |]
 
     it "drop source for an already inconsistent source" \testEnvironment -> do
+      let shouldReturnYaml :: IO Value -> Value -> IO ()
+          shouldReturnYaml = Yaml.shouldReturnYaml testEnvironment
+
       _ <- postMetadata testEnvironment (setupMetadataWithInconsistentSource testEnvironment)
       postMetadata testEnvironment repaceMetadataRemoveInconsistentSource
         `shouldReturnYaml` [yaml|
           is_consistent: true
           inconsistent_objects: []
-          warnings:
-            - message: >-
-                Could not cleanup the source '"postgres"' while dropping it from the graphql-engine as it is
-                inconsistent. Please consider cleaning the resources created by the graphql engine, refer
-                https://hasura.io/docs/latest/graphql/core/event-triggers/remove-event-triggers/#clean-footprints-manually
-              type: source
-              name: source postgres
         |]
 
 reloadMetadata :: Value

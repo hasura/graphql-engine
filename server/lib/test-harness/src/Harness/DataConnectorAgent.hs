@@ -1,6 +1,8 @@
 module Harness.DataConnectorAgent
   ( createClone,
+    createClone',
     deleteClone,
+    deleteClone',
     createManagedClone,
   )
 where
@@ -22,13 +24,19 @@ runDataConnectorAgentRequests agentUri runWithClient = do
   results `onLeft` throwIO
 
 createClone :: String -> TestEnvironment -> API.DatasetTemplateName -> IO API.DatasetCreateCloneResponse
-createClone agentUri TestEnvironment {..} templateName = runDataConnectorAgentRequests agentUri $ \dcClient -> do
-  let cloneName = API.DatasetCloneName (tshow uniqueTestId)
+createClone agentUri TestEnvironment {..} templateName =
+  createClone' agentUri (API.DatasetCloneName $ tshow uniqueTestId) templateName
+
+createClone' :: String -> API.DatasetCloneName -> API.DatasetTemplateName -> IO API.DatasetCreateCloneResponse
+createClone' agentUri cloneName templateName = runDataConnectorAgentRequests agentUri $ \dcClient -> do
   (dcClient // API._datasets // API._createClone) cloneName (API.DatasetCreateCloneRequest templateName)
 
 deleteClone :: String -> TestEnvironment -> IO API.DatasetDeleteCloneResponse
-deleteClone agentUri TestEnvironment {..} = runDataConnectorAgentRequests agentUri $ \dcClient -> do
-  let cloneName = API.DatasetCloneName (tshow uniqueTestId)
+deleteClone agentUri TestEnvironment {..} =
+  deleteClone' agentUri (API.DatasetCloneName $ tshow uniqueTestId)
+
+deleteClone' :: String -> API.DatasetCloneName -> IO API.DatasetDeleteCloneResponse
+deleteClone' agentUri cloneName = runDataConnectorAgentRequests agentUri $ \dcClient -> do
   (dcClient // API._datasets // API._deleteClone) cloneName
 
 withClone :: String -> TestEnvironment -> API.DatasetTemplateName -> (API.DatasetCreateCloneResponse -> IO a) -> IO a
@@ -39,5 +47,5 @@ withClone agentUri TestEnvironment {..} templateName useClone = runDataConnector
     (liftIO $ useClone response)
     ((dcClient // API._datasets // API._deleteClone) cloneName)
 
-createManagedClone :: MonadManaged m => String -> TestEnvironment -> API.DatasetTemplateName -> m API.DatasetCreateCloneResponse
+createManagedClone :: (MonadManaged m) => String -> TestEnvironment -> API.DatasetTemplateName -> m API.DatasetCreateCloneResponse
 createManagedClone agentUri testEnvironment templateName = managed (withClone agentUri testEnvironment templateName)

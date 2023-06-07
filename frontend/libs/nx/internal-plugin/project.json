@@ -1,4 +1,5 @@
 {
+  "name": "nx-internal-plugin",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/nx/internal-plugin/src",
   "projectType": "library",
@@ -41,20 +42,18 @@
       "options": {
         "lintFilePatterns": [
           "libs/nx/internal-plugin/**/*.ts",
-          "libs/nx/internal-plugin/generators.json",
-          "libs/nx/internal-plugin/executors.json",
-          "libs/nx/internal-plugin/package.json"
+          "libs/nx/internal-plugin/**/*.json"
         ]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/libs/nx/internal-plugin"],
+      "outputs": ["{workspaceRoot}/coverage/libs/nx/internal-plugin"],
       "options": {
         "jestConfig": "libs/nx/internal-plugin/jest.config.ts",
         "passWithNoTests": true
       }
     }
   },
-  "tags": []
+  "tags": ["scope:nx-plugins", "type:feature"]
 }

@@ -98,7 +98,7 @@ export const getNotificationDetails = (
   detailsJson: Json,
   children: React.ReactNode
 ) => {
-  return (
+  return children || detailsJson ? (
     <div className="notification-details">
       <AceEditor
         readOnly
@@ -115,7 +115,7 @@ export const getNotificationDetails = (
       />
       {children}
     </div>
-  );
+  ) : null;
 };
 
 // NOTE: this type has been created by reverse-engineering the original getErrorMessage function
@@ -347,12 +347,16 @@ const showErrorNotification = (
     };
 
     const action = getNotificationAction();
+    const errorDetails = [
+      getNotificationDetails(errorJson as Json, getRefreshBtn()),
+    ];
     dispatch(
       showNotification(
         {
           title,
           message: errorMessage,
           action,
+          children: errorDetails,
         },
         'error'
       )
@@ -411,7 +415,10 @@ const showWarningNotification = (
 ): Thunk => {
   const children: JSX.Element[] = [];
   if (dataObj) {
-    children.push(getNotificationDetails(dataObj, null));
+    const notificationDetails = getNotificationDetails(dataObj, null);
+    if (notificationDetails) {
+      children.push(notificationDetails);
+    }
   }
   if (child) {
     children.push(child);

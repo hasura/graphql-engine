@@ -1,5 +1,8 @@
 import { Table } from '../../hasura-metadata-types';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
+import {
+  defaultDatabaseProps,
+  defaultIntrospectionProps,
+} from '../common/defaultDatabaseProps';
 import { Database, Feature } from '../index';
 import {
   getTablesListAsTree,
@@ -8,6 +11,8 @@ import {
   getDatabaseConfiguration,
   getSupportedOperators,
   getFKRelationships,
+  getDriverCapabilities,
+  getTrackableObjects,
 } from './introspection';
 import { getTableRows } from './query';
 
@@ -17,18 +22,24 @@ import { getTableRows } from './query';
  * you'd have just the table name -> ["Album"] but in a db with schemas -> ["Public", "Album"].
  */
 export type GDCTable = string[];
+export type GDCFunction = string[];
 
 export const gdc: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    ...defaultIntrospectionProps,
     getDriverInfo: async () => Feature.NotImplemented,
     getDatabaseConfiguration,
+    getDriverCapabilities,
     getTrackableTables,
+    getTrackableObjects,
     getDatabaseHierarchy: async () => Feature.NotImplemented,
     getTableColumns,
     getFKRelationships,
     getTablesListAsTree,
     getSupportedOperators,
+    getDatabaseSchemas: async () => Feature.NotImplemented,
+    getIsTableView: async () => Feature.NotImplemented,
   },
   query: {
     getTableRows,
@@ -38,7 +49,7 @@ export const gdc: Database = {
       return (table as GDCTable).join('_');
     },
     getSupportedQueryTypes: async () => {
-      return ['select'];
+      return ['select', 'delete', 'update', 'insert'];
     },
   },
 };

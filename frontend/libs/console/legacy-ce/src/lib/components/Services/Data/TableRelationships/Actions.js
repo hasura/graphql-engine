@@ -1,5 +1,5 @@
 import inflection from 'inflection';
-import camelCase from 'lodash.camelcase';
+import camelCase from 'lodash/camelCase';
 
 import { makeMigrationCall, updateSchemaInfo } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';

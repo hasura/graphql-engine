@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { isProConsole } from '../../../../../utils';
 import { PostgresConnectionInfoSchema } from '../schema';
 
 export const getDatabaseConnectionDisplayName = (
@@ -51,4 +51,12 @@ export const cleanEmpty = (obj: Record<string, any>): any => {
         {}
       );
   }
+};
+
+export const areSSLSettingsEnabled = () => {
+  return isProConsole(window.__env);
+};
+
+export const areReadReplicasEnabled = () => {
+  return isProConsole(window.__env) || true;
 };

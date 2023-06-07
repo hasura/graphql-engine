@@ -1,3 +1,5 @@
+{-# LANGUAGE ConstraintKinds #-}
+
 module Test.Specs.SchemaSpec (spec) where
 
 --------------------------------------------------------------------------------
@@ -8,6 +10,7 @@ import Control.Lens.Lens ((&))
 import Control.Monad (forM_)
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Reader (MonadReader)
 import Data.Aeson (Value (..), toJSON)
 import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Aeson.Lens (_Object)
@@ -15,16 +18,18 @@ import Data.Foldable (find)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List (sort, sortOn)
 import Data.List.NonEmpty qualified as NonEmpty
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, isNothing)
 import Data.Text qualified as Text
+import GHC.Stack (HasCallStack)
 import Hasura.Backends.DataConnector.API qualified as API
 import Test.AgentAPI (getSchemaGuarded)
-import Test.AgentClient (AgentClientT, HasAgentClient)
+import Test.AgentClient (HasAgentClient, runAgentClientT)
 import Test.AgentDatasets (HasDatasetContext)
 import Test.AgentTestContext (HasAgentTestContext)
 import Test.Data (TestData (..))
 import Test.Expectations (jsonShouldBe)
-import Test.Sandwich (ExampleT, describe)
+import Test.Sandwich (ExampleT, HasLabel, Label (..), LabelValue, SpecFree, describe, getContext, introduce, (:>))
+import Test.Sandwich qualified as Sandwich
 import Test.Sandwich.Misc (HasBaseContext)
 import Test.TestHelpers (AgentDatasetTestSpec, it)
 import Prelude
@@ -32,21 +37,19 @@ import Prelude
 --------------------------------------------------------------------------------
 
 spec :: TestData -> API.Capabilities -> AgentDatasetTestSpec
-spec TestData {..} API.Capabilities {..} = describe "schema API" $ do
+spec TestData {..} API.Capabilities {..} = describe "schema API" $ preloadAgentSchema $ do
   let supportsInserts = isJust $ _cMutations >>= API._mcInsertCapabilities
   let supportsUpdates = isJust $ _cMutations >>= API._mcUpdateCapabilities
   let supportsDeletes = isJust $ _cMutations >>= API._mcDeleteCapabilities
 
   it "returns the Chinook tables" $ do
     let extractTableNames = sort . fmap API._tiName
-    tableNames <- (extractTableNames . API._srTables) <$> getSchemaGuarded
+    tableNames <- (extractTableNames . API._srTables) <$> getPreloadedAgentSchema
 
     let expectedTableNames = extractTableNames _tdSchemaTables
     tableNames `jsonShouldBe` expectedTableNames
 
-  testPerTable "returns the correct columns in the Chinook tables" $ \expectedTable@API.TableInfo {..} -> do
-    actualTable <- find (\t -> API._tiName t == _tiName) . API._srTables <$> getSchemaGuarded
-
+  testPerTable "returns the correct columns in the Chinook tables" $ \expectedTable actualTable -> do
     -- We remove some properties here so that we don't compare them since they vary between agent implementations
     let extractJsonForComparison table =
           let columns = fmap toJSON . sortOn API._ciName $ API._tiColumns table
@@ -71,13 +74,17 @@ spec TestData {..} API.Capabilities {..} = describe "schema API" $ do
             & applyWhen
               (not supportsUpdates)
               (traverse %~ (_Object . at "updatable" ?~ Bool False))
+            -- If agent doesn't support update mutations then all columns won't be generated
+            -- This is a bit of a dubious assumption since it's possible a database supports
+            -- generated values but the agent just doesn't support mutations on that DB
+            & applyWhen
+              (isNothing _cMutations)
+              (traverse %~ (_Object . at "value_generated" .~ Nothing))
             & Just
 
     actualJsonColumns `jsonShouldBe` expectedJsonColumns
 
-  testPerTable "returns the correct mutability in the Chinook tables" $ \expectedTable@API.TableInfo {..} -> do
-    actualTable <- find (\t -> API._tiName t == _tiName) . API._srTables <$> getSchemaGuarded
-
+  testPerTable "returns the correct mutability in the Chinook tables" $ \expectedTable actualTable -> do
     let extractJsonForComparison (table :: API.TableInfo) =
           toJSON table
             & _Object %~ (KeyMap.filterWithKey (\prop _value -> prop `elem` ["insertable", "updatable", "deletable"]))
@@ -103,53 +110,59 @@ spec TestData {..} API.Capabilities {..} = describe "schema API" $ do
     actualComparisonJson `jsonShouldBe` expectedComparisonJson
 
   if API._dscSupportsPrimaryKeys _cDataSchema
-    then testPerTable "returns the correct primary keys for the Chinook tables" $ \API.TableInfo {..} -> do
-      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> getSchemaGuarded
-      let actualPrimaryKey = API._tiPrimaryKey <$> tables
+    then testPerTable "returns the correct primary keys for the Chinook tables" $ \API.TableInfo {..} actualTable -> do
+      let actualPrimaryKey = API._tiPrimaryKey <$> actualTable
       actualPrimaryKey `jsonShouldBe` Just _tiPrimaryKey
-    else testPerTable "returns no primary keys for the Chinook tables" $ \API.TableInfo {..} -> do
-      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> getSchemaGuarded
-      let actualPrimaryKey = API._tiPrimaryKey <$> tables
-      actualPrimaryKey `jsonShouldBe` Just []
+    else testPerTable "returns no primary keys for the Chinook tables" $ \_expectedTable actualTable -> do
+      let actualPrimaryKey = API._tiPrimaryKey <$> actualTable
+      actualPrimaryKey `jsonShouldBe` Nothing
 
   if API._dscSupportsForeignKeys _cDataSchema
-    then testPerTable "returns the correct foreign keys for the Chinook tables" $ \expectedTable@API.TableInfo {..} -> do
-      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> getSchemaGuarded
-
+    then testPerTable "returns the correct foreign keys for the Chinook tables" $ \expectedTable actualTable -> do
       -- We compare only the constraints and ignore the constraint names since some agents will have
       -- different constraint names
       let extractConstraintsForComparison table =
             sort . HashMap.elems . API._unForeignKeys $ API._tiForeignKeys table
-      let actualConstraints = extractConstraintsForComparison <$> tables
+      let actualConstraints = extractConstraintsForComparison <$> actualTable
       let expectedConstraints = Just $ extractConstraintsForComparison expectedTable
 
       actualConstraints `jsonShouldBe` expectedConstraints
-    else testPerTable "returns no foreign keys for the Chinook tables" $ \API.TableInfo {..} -> do
-      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> getSchemaGuarded
-
-      let actualJsonConstraints = API._tiForeignKeys <$> tables
+    else testPerTable "returns no foreign keys for the Chinook tables" $ \_expectedTable actualTable -> do
+      let actualJsonConstraints = API._tiForeignKeys <$> actualTable
       actualJsonConstraints `jsonShouldBe` Just (API.ForeignKeys mempty)
   where
     testPerTable ::
       String ->
-      ( forall context m.
+      ( forall innerContext m.
         ( MonadThrow m,
-          MonadIO m,
-          HasBaseContext context,
-          HasAgentClient context,
-          HasAgentTestContext context,
-          HasDatasetContext context
+          MonadIO m
         ) =>
-        API.TableInfo ->
-        AgentClientT (ExampleT context m) ()
+        API.TableInfo -> -- Expected table
+        Maybe API.TableInfo -> -- Actual table
+        ExampleT innerContext m ()
       ) ->
-      AgentDatasetTestSpec
+      forall context. (HasPreloadedAgentSchema context) => SpecFree context IO ()
     testPerTable description test =
       describe description $ do
         forM_ _tdSchemaTables $ \expectedTable@API.TableInfo {..} -> do
-          it (Text.unpack . NonEmpty.last $ API.unTableName _tiName) $
-            test expectedTable
+          Sandwich.it (Text.unpack . NonEmpty.last $ API.unTableName _tiName) $ do
+            schemaResponse <- getPreloadedAgentSchema
+            let actualTable = find (\t -> API._tiName t == _tiName) $ API._srTables schemaResponse
+            test expectedTable actualTable
 
 applyWhen :: Bool -> (a -> a) -> a -> a
 applyWhen True f x = f x
 applyWhen False _ x = x
+
+preloadAgentSchema :: forall context m. (MonadIO m, MonadThrow m, HasAgentClient context, HasBaseContext context, HasAgentTestContext context, HasDatasetContext context) => SpecFree (LabelValue "agent-schema" API.SchemaResponse :> context) m () -> SpecFree context m ()
+preloadAgentSchema = introduce "Preload agent schema" agentSchemaLabel getAgentSchema (const $ pure ())
+  where
+    getAgentSchema = runAgentClientT Nothing $ getSchemaGuarded
+
+agentSchemaLabel :: Label "agent-schema" API.SchemaResponse
+agentSchemaLabel = Label
+
+type HasPreloadedAgentSchema context = HasLabel context "agent-schema" API.SchemaResponse
+
+getPreloadedAgentSchema :: (HasCallStack, HasPreloadedAgentSchema context, MonadReader context m) => m API.SchemaResponse
+getPreloadedAgentSchema = getContext agentSchemaLabel

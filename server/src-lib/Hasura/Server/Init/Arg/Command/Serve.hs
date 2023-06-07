@@ -19,6 +19,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     accessKeyOption,
     authHookOption,
     authHookModeOption,
+    authHookSendRequestBodyOption,
     jwtSecretOption,
     unAuthRoleOption,
     corsDomainOption,
@@ -58,6 +59,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     metadataDBExtensionsSchemaOption,
     parseMetadataDefaults,
     metadataDefaultsOption,
+    apolloFederationStatusOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -73,11 +75,13 @@ import Database.PG.Query qualified as Query
 import Hasura.Backends.Postgres.Connection.MonadTx qualified as MonadTx
 import Hasura.Cache.Bounded qualified as Bounded
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
-import Hasura.GraphQL.Schema.NamingCase qualified as NC
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (MetadataDefaults, emptyMetadataDefaults)
+import Hasura.RQL.Types.NamingCase qualified as NC
+import Hasura.RQL.Types.Roles (RoleName)
+import Hasura.RQL.Types.Roles qualified as Roles
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Arg.PrettyPrinter qualified as PP
@@ -85,7 +89,6 @@ import Hasura.Server.Init.Config qualified as Config
 import Hasura.Server.Init.Env qualified as Env
 import Hasura.Server.Logging qualified as Server.Logging
 import Hasura.Server.Types qualified as Types
-import Hasura.Session qualified as Session
 import Network.Wai.Handler.Warp qualified as Warp
 import Network.WebSockets qualified as WebSockets
 import Options.Applicative qualified as Opt
@@ -95,7 +98,7 @@ import Witch qualified
 --------------------------------------------------------------------------------
 -- Serve Command
 
-serveCommandParser :: Logging.EnabledLogTypes impl => Opt.Parser (Config.ServeOptionsRaw impl)
+serveCommandParser :: (Logging.EnabledLogTypes impl) => Opt.Parser (Config.ServeOptionsRaw impl)
 serveCommandParser =
   Config.ServeOptionsRaw
     <$> parseServerPort
@@ -142,14 +145,15 @@ serveCommandParser =
     <*> parseDefaultNamingConvention
     <*> parseExtensionsSchema
     <*> parseMetadataDefaults
+    <*> parseApolloFederationStatus
 
 --------------------------------------------------------------------------------
 -- Serve Options
 
 parseServerPort :: Opt.Parser (Maybe Config.Port)
 parseServerPort =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "server-port"
           <> Opt.metavar "<PORT>"
@@ -166,8 +170,8 @@ servePortOption =
 
 parseServerHost :: Opt.Parser (Maybe Warp.HostPreference)
 parseServerHost =
-  Opt.optional $
-    Opt.strOption
+  Opt.optional
+    $ Opt.strOption
       ( Opt.long "server-host"
           <> Opt.metavar "<HOST>"
           <> Opt.help (Config._helpMessage serveHostOption)
@@ -187,8 +191,8 @@ parseConnParams =
   where
     pgStripes :: Opt.Parser (Maybe (Refined NonNegative Int))
     pgStripes =
-      Opt.optional $
-        Opt.option
+      Opt.optional
+        $ Opt.option
           (Opt.eitherReader Env.fromEnv)
           ( Opt.long "stripes"
               <> Opt.short 's'
@@ -198,8 +202,8 @@ parseConnParams =
 
     pgConns :: Opt.Parser (Maybe (Refined NonNegative Int))
     pgConns =
-      Opt.optional $
-        Opt.option
+      Opt.optional
+        $ Opt.option
           (Opt.eitherReader Env.fromEnv)
           ( Opt.long "connections"
               <> Opt.short 'c'
@@ -209,8 +213,8 @@ parseConnParams =
 
     pgIdleTimeout :: Opt.Parser (Maybe (Refined NonNegative Int))
     pgIdleTimeout =
-      Opt.optional $
-        Opt.option
+      Opt.optional
+        $ Opt.option
           (Opt.eitherReader Env.fromEnv)
           ( Opt.long "timeout"
               <> Opt.metavar "<SECONDS>"
@@ -219,8 +223,8 @@ parseConnParams =
 
     pgConnLifetime :: Opt.Parser (Maybe (Refined NonNegative Time.NominalDiffTime))
     pgConnLifetime =
-      Opt.optional $
-        Opt.option
+      Opt.optional
+        $ Opt.option
           (Opt.eitherReader Env.fromEnv)
           ( Opt.long "conn-lifetime"
               <> Opt.metavar "<SECONDS>"
@@ -229,8 +233,8 @@ parseConnParams =
 
     pgUsePreparedStatements :: Opt.Parser (Maybe Bool)
     pgUsePreparedStatements =
-      Opt.optional $
-        Opt.option
+      Opt.optional
+        $ Opt.option
           (Opt.eitherReader Env.fromEnv)
           ( Opt.long "use-prepared-statements"
               <> Opt.metavar "<true|false>"
@@ -239,8 +243,8 @@ parseConnParams =
 
     pgPoolTimeout :: Opt.Parser (Maybe (Refined NonNegative Time.NominalDiffTime))
     pgPoolTimeout =
-      Opt.optional $
-        Opt.option
+      Opt.optional
+        $ Opt.option
           (Opt.eitherReader Env.fromEnv)
           ( Opt.long "pool-timeout"
               <> Opt.metavar "<SECONDS>"
@@ -305,8 +309,8 @@ pgPoolTimeoutOption =
 
 parseTxIsolation :: Opt.Parser (Maybe Query.TxIsolation)
 parseTxIsolation =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "tx-iso"
           <> Opt.short 'i'
@@ -324,13 +328,13 @@ txIsolationOption =
 
 parseAdminSecret :: Opt.Parser (Maybe Auth.AdminSecretHash)
 parseAdminSecret =
-  Opt.optional $
-    Auth.hashAdminSecret
-      <$> Opt.strOption
-        ( Opt.long "admin-secret"
-            <> Opt.metavar "ADMIN SECRET KEY"
-            <> Opt.help (Config._helpMessage adminSecretOption)
-        )
+  Opt.optional
+    $ Auth.hashAdminSecret
+    <$> Opt.strOption
+      ( Opt.long "admin-secret"
+          <> Opt.metavar "ADMIN SECRET KEY"
+          <> Opt.help (Config._helpMessage adminSecretOption)
+      )
 
 adminSecretOption :: Config.Option ()
 adminSecretOption =
@@ -342,13 +346,13 @@ adminSecretOption =
 
 parseAccessKey :: Opt.Parser (Maybe Auth.AdminSecretHash)
 parseAccessKey =
-  Opt.optional $
-    Auth.hashAdminSecret
-      <$> Opt.strOption
-        ( Opt.long "access-key"
-            <> Opt.metavar "ADMIN SECRET KEY (DEPRECATED: USE --admin-secret)"
-            <> Opt.help (Config._helpMessage accessKeyOption)
-        )
+  Opt.optional
+    $ Auth.hashAdminSecret
+    <$> Opt.strOption
+      ( Opt.long "access-key"
+          <> Opt.metavar "ADMIN SECRET KEY (DEPRECATED: USE --admin-secret)"
+          <> Opt.help (Config._helpMessage accessKeyOption)
+      )
 
 accessKeyOption :: Config.Option ()
 accessKeyOption =
@@ -360,22 +364,30 @@ accessKeyOption =
 
 parseAuthHook :: Opt.Parser Config.AuthHookRaw
 parseAuthHook =
-  Config.AuthHookRaw <$> url <*> urlType
+  Config.AuthHookRaw <$> url <*> urlType <*> sendRequestBody
   where
     url =
-      Opt.optional $
-        Opt.strOption
+      Opt.optional
+        $ Opt.strOption
           ( Opt.long "auth-hook"
               <> Opt.metavar "<WEB HOOK URL>"
               <> Opt.help (Config._helpMessage authHookOption)
           )
     urlType =
-      Opt.optional $
-        Opt.option
+      Opt.optional
+        $ Opt.option
           (Opt.eitherReader Env.fromEnv)
           ( Opt.long "auth-hook-mode"
               <> Opt.metavar "<GET|POST>"
               <> Opt.help (Config._helpMessage authHookModeOption)
+          )
+    sendRequestBody :: Opt.Parser (Maybe Bool) =
+      Opt.optional
+        $ Opt.option
+          (Opt.eitherReader Env.fromEnv)
+          ( Opt.long "auth-hook-send-request-body"
+              <> Opt.metavar "<true|false>"
+              <> Opt.help (Config._helpMessage authHookSendRequestBodyOption)
           )
 
 authHookOption :: Config.Option ()
@@ -394,10 +406,18 @@ authHookModeOption =
       Config._helpMessage = "HTTP method to use for authorization webhook (default: GET)"
     }
 
+authHookSendRequestBodyOption :: Config.Option Bool
+authHookSendRequestBodyOption =
+  Config.Option
+    { Config._default = True,
+      Config._envVar = "HASURA_GRAPHQL_AUTH_HOOK_SEND_REQUEST_BODY",
+      Config._helpMessage = "Send request body in POST method (default: true)"
+    }
+
 parseJwtSecret :: Opt.Parser (Maybe Auth.JWTConfig)
 parseJwtSecret =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "jwt-secret"
           <> Opt.metavar "<JSON CONFIG>"
@@ -415,17 +435,17 @@ jwtSecretOption =
           <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`"
     }
 
-parseUnAuthRole :: Opt.Parser (Maybe Session.RoleName)
+parseUnAuthRole :: Opt.Parser (Maybe RoleName)
 parseUnAuthRole =
-  fmap mkRoleName $
-    Opt.optional $
-      Opt.strOption
-        ( Opt.long "unauthorized-role"
-            <> Opt.metavar "<ROLE>"
-            <> Opt.help (Config._helpMessage unAuthRoleOption)
-        )
+  fmap mkRoleName
+    $ Opt.optional
+    $ Opt.strOption
+      ( Opt.long "unauthorized-role"
+          <> Opt.metavar "<ROLE>"
+          <> Opt.help (Config._helpMessage unAuthRoleOption)
+      )
   where
-    mkRoleName mText = mText >>= Session.mkRoleName
+    mkRoleName mText = mText >>= Roles.mkRoleName
 
 unAuthRoleOption :: Config.Option ()
 unAuthRoleOption =
@@ -441,8 +461,8 @@ parseCorsConfig :: Opt.Parser (Maybe Cors.CorsConfig)
 parseCorsConfig = mapCC <$> disableCors <*> corsDomain
   where
     corsDomain =
-      Opt.optional $
-        Opt.option
+      Opt.optional
+        $ Opt.option
           (Opt.eitherReader Env.fromEnv)
           ( Opt.long "cors-domain"
               <> Opt.metavar "<DOMAINS>"
@@ -494,8 +514,8 @@ enableConsoleOption =
 
 parseConsoleAssetsDir :: Opt.Parser (Maybe Text)
 parseConsoleAssetsDir =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "console-assets-dir"
           <> Opt.help (Config._helpMessage consoleAssetsDirOption)
@@ -514,8 +534,8 @@ consoleAssetsDirOption =
 
 parseConsoleSentryDsn :: Opt.Parser (Maybe Text)
 parseConsoleSentryDsn =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "console-sentry-dsn"
           <> Opt.help (Config._helpMessage consoleSentryDsnOption)
@@ -533,8 +553,8 @@ consoleSentryDsnOption =
 -- NOTE: Should this be an 'Opt.flag'?
 parseEnableTelemetry :: Opt.Parser (Maybe Config.TelemetryStatus)
 parseEnableTelemetry =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "enable-telemetry"
           <> Opt.help (Config._helpMessage enableTelemetryOption)
@@ -570,8 +590,8 @@ wsReadCookieOption =
 
 parseStringifyNum :: Opt.Parser Options.StringifyNumbers
 parseStringifyNum =
-  fmap (bool Options.Don'tStringifyNumbers Options.StringifyNumbers) $
-    Opt.switch
+  fmap (bool Options.Don'tStringifyNumbers Options.StringifyNumbers)
+    $ Opt.switch
       ( Opt.long "stringify-numeric-types"
           <> Opt.help (Config._helpMessage stringifyNumOption)
       )
@@ -586,8 +606,8 @@ stringifyNumOption =
 
 parseDangerousBooleanCollapse :: Opt.Parser (Maybe Options.DangerouslyCollapseBooleans)
 parseDangerousBooleanCollapse =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "v1-boolean-null-collapse"
           <> Opt.help (Config._helpMessage dangerousBooleanCollapseOption)
@@ -606,8 +626,8 @@ dangerousBooleanCollapseOption =
 
 parseEnabledAPIs :: Opt.Parser (Maybe (HashSet Config.API))
 parseEnabledAPIs =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "enabled-apis"
           <> Opt.help (Config._helpMessage enabledAPIsOption)
@@ -623,8 +643,8 @@ enabledAPIsOption =
 
 parseMxRefetchDelay :: Opt.Parser (Maybe Subscription.Options.RefetchInterval)
 parseMxRefetchDelay =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "live-queries-multiplexed-refetch-interval"
           <> Opt.metavar "<INTERVAL(ms)>"
@@ -643,8 +663,8 @@ mxRefetchDelayOption =
 
 parseMxBatchSize :: Opt.Parser (Maybe Subscription.Options.BatchSize)
 parseMxBatchSize =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "live-queries-multiplexed-batch-size"
           <> Opt.metavar "BATCH_SIZE"
@@ -663,8 +683,8 @@ mxBatchSizeOption =
 
 parseStreamingMxRefetchDelay :: Opt.Parser (Maybe Subscription.Options.RefetchInterval)
 parseStreamingMxRefetchDelay =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "streaming-queries-multiplexed-refetch-interval"
           <> Opt.metavar "<INTERVAL(ms)>"
@@ -683,8 +703,8 @@ streamingMxRefetchDelayOption =
 
 parseStreamingMxBatchSize :: Opt.Parser (Maybe Subscription.Options.BatchSize)
 parseStreamingMxBatchSize =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "streaming-queries-multiplexed-batch-size"
           <> Opt.metavar "BATCH_SIZE"
@@ -717,16 +737,16 @@ enableAllowlistOption =
       Config._helpMessage = "Only accept allowed GraphQL queries"
     }
 
-parseEnabledLogs :: forall impl. Logging.EnabledLogTypes impl => Opt.Parser (Maybe (HashSet (Logging.EngineLogType impl)))
+parseEnabledLogs :: forall impl. (Logging.EnabledLogTypes impl) => Opt.Parser (Maybe (HashSet (Logging.EngineLogType impl)))
 parseEnabledLogs =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "enabled-log-types"
           <> Opt.help (Config._helpMessage (enabledLogsOption @impl))
       )
 
-enabledLogsOption :: Logging.EnabledLogTypes impl => Config.Option (HashSet (Logging.EngineLogType impl))
+enabledLogsOption :: (Logging.EnabledLogTypes impl) => Config.Option (HashSet (Logging.EngineLogType impl))
 enabledLogsOption =
   Config.Option
     { Config._default = Logging.defaultEnabledLogTypes,
@@ -746,8 +766,8 @@ enabledLogsOption =
 
 parseLogLevel :: Opt.Parser (Maybe Logging.LogLevel)
 parseLogLevel =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "log-level"
           <> Opt.help (Config._helpMessage logLevelOption)
@@ -763,8 +783,8 @@ logLevelOption =
 
 parsePlanCacheSize :: Opt.Parser (Maybe Bounded.CacheSize)
 parsePlanCacheSize =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "query-plan-cache-size"
           <> Opt.help
@@ -790,28 +810,28 @@ graphqlDevModeOption =
       Config._helpMessage = "Set dev mode for GraphQL requests; include 'internal' key in the errors extensions (if required) of the response"
     }
 
-parseGraphqlAdminInternalErrors :: Opt.Parser (Maybe Bool)
+parseGraphqlAdminInternalErrors :: Opt.Parser (Maybe Config.AdminInternalErrorsStatus)
 parseGraphqlAdminInternalErrors =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "admin-internal-errors"
           <> Opt.help (Config._helpMessage graphqlAdminInternalErrorsOption)
       )
 
-graphqlAdminInternalErrorsOption :: Config.Option Bool
+graphqlAdminInternalErrorsOption :: Config.Option Config.AdminInternalErrorsStatus
 graphqlAdminInternalErrorsOption =
   Config.Option
     { -- Default to `true` to enable backwards compatibility
-      Config._default = True,
+      Config._default = Config.AdminInternalErrorsEnabled,
       Config._envVar = "HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS",
       Config._helpMessage = "Enables including 'internal' information in an error response for requests made by an 'admin' (default: true)"
     }
 
 parseGraphqlEventsHttpPoolSize :: Opt.Parser (Maybe (Refined Positive Int))
 parseGraphqlEventsHttpPoolSize =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "events-http-pool-size"
           <> Opt.metavar (Config._envVar graphqlEventsHttpPoolSizeOption)
@@ -828,8 +848,8 @@ graphqlEventsHttpPoolSizeOption =
 
 parseGraphqlEventsFetchInterval :: Opt.Parser (Maybe (Refined NonNegative Milliseconds))
 parseGraphqlEventsFetchInterval =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "events-fetch-interval"
           <> Opt.metavar (Config._envVar graphqlEventsFetchIntervalOption)
@@ -846,8 +866,8 @@ graphqlEventsFetchIntervalOption =
 
 parseGraphqlAsyncActionsFetchInterval :: Opt.Parser (Maybe Config.OptionalInterval)
 parseGraphqlAsyncActionsFetchInterval =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "async-actions-fetch-interval"
           <> Opt.metavar (Config._envVar asyncActionsFetchIntervalOption)
@@ -867,8 +887,8 @@ asyncActionsFetchIntervalOption =
 
 parseEnableRemoteSchemaPerms :: Opt.Parser Options.RemoteSchemaPermissions
 parseEnableRemoteSchemaPerms =
-  fmap (bool Options.DisableRemoteSchemaPermissions Options.EnableRemoteSchemaPermissions) $
-    Opt.switch
+  fmap (bool Options.DisableRemoteSchemaPermissions Options.EnableRemoteSchemaPermissions)
+    $ Opt.switch
       ( Opt.long "enable-remote-schema-permissions"
           <> Opt.help (Config._helpMessage enableRemoteSchemaPermsOption)
       )
@@ -899,8 +919,8 @@ webSocketCompressionOption =
 
 parseWebSocketKeepAlive :: Opt.Parser (Maybe Config.KeepAliveDelay)
 parseWebSocketKeepAlive =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "websocket-keepalive"
           <> Opt.help (Config._helpMessage webSocketKeepAliveOption)
@@ -917,8 +937,8 @@ webSocketKeepAliveOption =
 
 parseInferFunctionPerms :: Opt.Parser (Maybe Options.InferFunctionPermissions)
 parseInferFunctionPerms =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "infer-function-permissions"
           <> Opt.help (Config._helpMessage inferFunctionPermsOption)
@@ -934,8 +954,8 @@ inferFunctionPermsOption =
 
 parseEnableMaintenanceMode :: Opt.Parser (Types.MaintenanceMode ())
 parseEnableMaintenanceMode =
-  fmap (bool Types.MaintenanceModeDisabled (Types.MaintenanceModeEnabled ())) $
-    Opt.switch
+  fmap (bool Types.MaintenanceModeDisabled (Types.MaintenanceModeEnabled ()))
+    $ Opt.switch
       ( Opt.long "enable-maintenance-mode"
           <> Opt.help (Config._helpMessage enableMaintenanceModeOption)
       )
@@ -950,8 +970,8 @@ enableMaintenanceModeOption =
 
 parseSchemaPollInterval :: Opt.Parser (Maybe Config.OptionalInterval)
 parseSchemaPollInterval =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "schema-sync-poll-interval"
           <> Opt.metavar (Config._envVar schemaPollIntervalOption)
@@ -969,8 +989,8 @@ schemaPollIntervalOption =
 
 parseExperimentalFeatures :: Opt.Parser (Maybe (HashSet Types.ExperimentalFeature))
 parseExperimentalFeatures =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "experimental-features"
           <> Opt.help (Config._helpMessage experimentalFeaturesOption)
@@ -987,14 +1007,14 @@ experimentalFeaturesOption =
           <> "transformations for permission filters. "
           <> "inherited_roles: ignored; inherited roles cannot be switched off"
           <> "naming_convention: apply naming convention (graphql-default/hasura-default) based on source customization"
-          <> "apollo_federation: use hasura as a subgraph in an Apollo gateway"
+          <> "apollo_federation: use hasura as a subgraph in an Apollo gateway (deprecated)"
           <> "streaming_subscriptions: A streaming subscription streams the response according to the cursor provided by the user"
     }
 
 parseEventsFetchBatchSize :: Opt.Parser (Maybe (Refined NonNegative Int))
 parseEventsFetchBatchSize =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "events-fetch-batch-size"
           <> Opt.metavar (Config._envVar eventsFetchBatchSizeOption)
@@ -1013,8 +1033,8 @@ eventsFetchBatchSizeOption =
 
 parseGracefulShutdownTimeout :: Opt.Parser (Maybe (Refined NonNegative Seconds))
 parseGracefulShutdownTimeout =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "graceful-shutdown-timeout"
           <> Opt.metavar "<INTERVAL (seconds)>"
@@ -1033,8 +1053,8 @@ gracefulShutdownOption =
 
 parseWebSocketConnectionInitTimeout :: Opt.Parser (Maybe Config.WSConnectionInitTimeout)
 parseWebSocketConnectionInitTimeout =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "websocket-connection-init-timeout"
           <> Opt.help (Config._helpMessage webSocketConnectionInitTimeoutOption)
@@ -1051,8 +1071,8 @@ webSocketConnectionInitTimeoutOption =
 
 parseEnableMetadataQueryLogging :: Opt.Parser Server.Logging.MetadataQueryLoggingMode
 parseEnableMetadataQueryLogging =
-  fmap (bool Server.Logging.MetadataQueryLoggingDisabled Server.Logging.MetadataQueryLoggingEnabled) $
-    Opt.switch
+  fmap (bool Server.Logging.MetadataQueryLoggingDisabled Server.Logging.MetadataQueryLoggingEnabled)
+    $ Opt.switch
       ( Opt.long "enable-metadata-query-logging"
           <> Opt.help (Config._helpMessage enableMetadataQueryLoggingOption)
       )
@@ -1069,8 +1089,8 @@ enableMetadataQueryLoggingOption =
 -- an isolated PR we should move that defaulting in the parsing stage.
 parseDefaultNamingConvention :: Opt.Parser (Maybe NC.NamingCase)
 parseDefaultNamingConvention =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "default-naming-convention"
           <> Opt.help (Config._helpMessage defaultNamingConventionOption)
@@ -1089,8 +1109,8 @@ defaultNamingConventionOption =
 
 parseExtensionsSchema :: Opt.Parser (Maybe MonadTx.ExtensionsSchema)
 parseExtensionsSchema =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "metadata-database-extensions-schema"
           <> Opt.help (Config._helpMessage metadataDBExtensionsSchemaOption)
@@ -1106,8 +1126,8 @@ metadataDefaultsOption =
 
 parseMetadataDefaults :: Opt.Parser (Maybe MetadataDefaults)
 parseMetadataDefaults =
-  Opt.optional $
-    Opt.option
+  Opt.optional
+    $ Opt.option
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "metadata-defaults"
           <> Opt.help (Config._helpMessage metadataDefaultsOption)
@@ -1121,6 +1141,22 @@ metadataDBExtensionsSchemaOption =
       Config._helpMessage =
         "Name of the schema where Hasura can install database extensions. Default: public"
     }
+
+apolloFederationStatusOption :: Config.Option (Maybe Types.ApolloFederationStatus)
+apolloFederationStatusOption =
+  Config.Option
+    { Config._default = Nothing,
+      Config._envVar = "HASURA_GRAPHQL_ENABLE_APOLLO_FEDERATION",
+      Config._helpMessage = "Enable Apollo Federation (default: false). This will allow hasura to be used as a subgraph in an Apollo gateway"
+    }
+
+parseApolloFederationStatus :: Opt.Parser (Maybe Types.ApolloFederationStatus)
+parseApolloFederationStatus =
+  (bool Nothing (Just Types.ApolloFederationEnabled))
+    <$> Opt.switch
+      ( Opt.long "enable-apollo-federation"
+          <> Opt.help (Config._helpMessage apolloFederationStatusOption)
+      )
 
 --------------------------------------------------------------------------------
 -- Pretty Printer
@@ -1183,6 +1219,7 @@ serveCmdFooter =
         Config.optionPP accessKeyOption,
         Config.optionPP authHookOption,
         Config.optionPP authHookModeOption,
+        Config.optionPP authHookSendRequestBodyOption,
         Config.optionPP jwtSecretOption,
         Config.optionPP unAuthRoleOption,
         Config.optionPP corsDomainOption,
@@ -1218,6 +1255,7 @@ serveCmdFooter =
         Config.optionPP webSocketConnectionInitTimeoutOption,
         Config.optionPP enableMetadataQueryLoggingOption,
         Config.optionPP defaultNamingConventionOption,
-        Config.optionPP metadataDBExtensionsSchemaOption
+        Config.optionPP metadataDBExtensionsSchemaOption,
+        Config.optionPP apolloFederationStatusOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

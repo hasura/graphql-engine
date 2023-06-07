@@ -19,7 +19,7 @@ import Prelude
 mkOid :: Word32 -> PQ.Oid
 mkOid = PQ.Oid . fromIntegral
 
-unOid :: Integral n => PQ.Oid -> n
+unOid :: (Integral n) => PQ.Oid -> n
 unOid (PQ.Oid oid') = fromIntegral oid'
 
 -- * Constants
@@ -167,6 +167,38 @@ xml = mkOid 142
 
 -- Array Types
 
-text_arr = mkOid 1009
+bool_array = mkOid 1000
+
+char_array = mkOid 1002
+
+int2_array = mkOid 1005
+
+int4_array = mkOid 1007
+
+text_array = mkOid 1009
+
+varchar_array = mkOid 1015
+
+int8_array = mkOid 1016
+
+float4_array = mkOid 1021
+
+float8_array = mkOid 1022
+
+numeric_array = mkOid 1031
+
+timestamp_array = mkOid 1115
+
+date_array = mkOid 1182
+
+time_array = mkOid 1183
+
+timestamptz_array = mkOid 1185
+
+timetz_array = mkOid 1270
+
+json_array = mkOid 199
 
 jsonb_array = mkOid 3807
+
+uuid_array = mkOid 2951

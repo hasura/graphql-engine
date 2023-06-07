@@ -15,6 +15,7 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
     OperationName (..),
     VariableValues,
     encodeGQErr,
+    encodeGQExecError,
     encodeGQResp,
     decodeGQResp,
     encodeHTTPResp,
@@ -28,11 +29,12 @@ where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
+import Data.Aeson.Encoding qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Either (isLeft)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended (dquote)
 import Hasura.Base.Error
 import Hasura.Base.Instances ()
@@ -60,7 +62,7 @@ newtype OperationName = OperationName {_unOperationName :: G.Name}
 instance J.FromJSON OperationName where
   parseJSON v = OperationName <$> J.parseJSON v
 
-type VariableValues = Map.HashMap G.Name J.Value
+type VariableValues = HashMap.HashMap G.Name J.Value
 
 -- | https://graphql.org/learn/serving-over-http/#post-request
 --
@@ -86,11 +88,11 @@ data GQLBatchedReqs a
   | GQLBatchedReqs [a]
   deriving (Show, Eq, Generic, Functor)
 
-instance J.ToJSON a => J.ToJSON (GQLBatchedReqs a) where
+instance (J.ToJSON a) => J.ToJSON (GQLBatchedReqs a) where
   toJSON (GQLSingleRequest q) = J.toJSON q
   toJSON (GQLBatchedReqs qs) = J.toJSON qs
 
-instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
+instance (J.FromJSON a) => J.FromJSON (GQLBatchedReqs a) where
   parseJSON arr@J.Array {} = GQLBatchedReqs <$> J.parseJSON arr
   parseJSON other = GQLSingleRequest <$> J.parseJSON other
 
@@ -153,7 +155,7 @@ renderGQLReqOutgoing = fmap (GQLQueryText . G.renderExecutableDoc . toExecDoc . 
 --     https://graphql.org/learn/serving-over-http/
 {-# INLINEABLE getSingleOperation #-}
 getSingleOperation ::
-  MonadError QErr m =>
+  (MonadError QErr m) =>
   GQLReqParsed ->
   m SingleOperation
 getSingleOperation (GQLReq opNameM q _varValsM) = do
@@ -163,21 +165,22 @@ getSingleOperation (GQLReq opNameM q _varValsM) = do
       (Just opName, [], _) -> do
         let n = _unOperationName opName
             opDefM = find (\opDef -> G._todName opDef == Just n) opDefs
-        onNothing opDefM $
-          throw400 ValidationFailed $
-            "no such operation found in the document: " <> dquote n
+        onNothing opDefM
+          $ throw400 ValidationFailed
+          $ "no such operation found in the document: "
+          <> dquote n
       (Just _, _, _) ->
-        throw400 ValidationFailed $
-          "operationName cannot be used when "
-            <> "an anonymous operation exists in the document"
+        throw400 ValidationFailed
+          $ "operationName cannot be used when "
+          <> "an anonymous operation exists in the document"
       (Nothing, [selSet], []) ->
         return $ G.TypedOperationDefinition G.OperationTypeQuery Nothing [] [] selSet
       (Nothing, [], [opDef]) ->
         return opDef
       (Nothing, _, _) ->
-        throw400 ValidationFailed $
-          "exactly one operation has to be present "
-            <> "in the document when operationName is not specified"
+        throw400 ValidationFailed
+          $ "exactly one operation has to be present "
+          <> "in the document when operationName is not specified"
 
   inlinedSelSet <- EI.inlineSelectionSet fragments _todSelectionSet
   pure $ G.TypedOperationDefinition {_todSelectionSet = inlinedSelSet, ..}
@@ -189,25 +192,28 @@ toParsed req = case G.parseExecutableDoc gqlText of
   where
     gqlText = _unGQLQueryText $ _grQuery req
 
-encodeGQErr :: Bool -> QErr -> J.Value
+encodeGQErr :: Bool -> QErr -> J.Encoding
 encodeGQErr includeInternal qErr =
-  J.object ["errors" J..= [encodeGQLErr includeInternal qErr]]
+  J.pairs (J.pair "errors" $ J.list id [encodeGQLErr includeInternal qErr])
 
 type GQResult a = Either GQExecError a
 
-newtype GQExecError = GQExecError [J.Value]
-  deriving (Show, Eq, J.ToJSON)
+newtype GQExecError = GQExecError [J.Encoding]
+  deriving (Show, Eq)
 
 type GQResponse = GQResult BL.ByteString
 
 isExecError :: GQResult a -> Bool
 isExecError = isLeft
 
+encodeGQExecError :: GQExecError -> J.Encoding
+encodeGQExecError (GQExecError errs) = J.list id errs
+
 encodeGQResp :: GQResponse -> EncJSON
 encodeGQResp gqResp =
   encJFromAssocList $ case gqResp of
     Right r -> [("data", encJFromLbsWithoutSoh r)]
-    Left e -> [("data", encJFromBuilder "null"), ("errors", encJFromJValue e)]
+    Left e -> [("data", encJFromBuilder "null"), ("errors", encJFromJEncoding $ encodeGQExecError e)]
 
 -- We don't want to force the `Maybe GQResponse` unless absolutely necessary
 -- Decode EncJSON from Cache for HTTP endpoints
@@ -226,4 +232,4 @@ decodeGQResp encJson =
 encodeHTTPResp :: GQResponse -> EncJSON
 encodeHTTPResp = \case
   Right r -> encJFromLBS r
-  Left e -> encJFromJValue e
+  Left e -> encJFromJEncoding $ encodeGQExecError e

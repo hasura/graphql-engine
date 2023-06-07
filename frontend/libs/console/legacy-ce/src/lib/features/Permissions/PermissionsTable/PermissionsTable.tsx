@@ -6,9 +6,29 @@ import { useRolePermissions } from './hooks/usePermissions';
 import { PermissionsLegend } from './components/PermissionsLegend';
 import { EditableCell, InputCell } from './components/Cells';
 import { TableMachine } from './hooks';
+import { useDriverCapabilities } from '../../Data/hooks/useDriverCapabilities';
+import { Capabilities } from '@hasura/dc-api-types';
+import { getDriversSupportedQueryTypes } from './utils/getDriversSupportedQueryTypes';
+import { useIsTableView } from '../../Data/hooks/useIsTableView';
 
 const queryType = ['insert', 'select', 'update', 'delete'] as const;
 type QueryType = (typeof queryType)[number];
+
+const getIsColumnEditable = (
+  roleName: string,
+  isView: boolean | undefined,
+  driverSupportedQueries: string[],
+  permissionType: string
+) => {
+  if (roleName === 'admin') return false;
+
+  if (isView) {
+    return permissionType === 'select';
+  }
+  if (driverSupportedQueries.includes(permissionType)) return true;
+
+  return false;
+};
 
 interface ViewPermissionsNoteProps {
   viewsSupported: boolean;
@@ -62,7 +82,14 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
     table,
   });
 
+  const driverCapabilities = useDriverCapabilities({ dataSourceName });
+  const driverSupportedQueries = getDriversSupportedQueryTypes(
+    driverCapabilities?.data as Capabilities
+  );
+
   const [state, send] = machine;
+
+  const { data: isView } = useIsTableView({ dataSourceName, table });
 
   if (isLoading)
     return (
@@ -118,10 +145,14 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                   />
 
                   {permissionTypes.map(({ permissionType, access }) => {
-                    // only select is possible on GDC as mutations are not available yet
-                    const isEditable =
-                      (roleName !== 'admin' && permissionType === 'select') ||
-                      (roleName !== 'admin' && permissionType === 'insert');
+                    // TODO: add checks to see what permissions are supported by each db
+
+                    const isEditable = getIsColumnEditable(
+                      roleName,
+                      isView,
+                      driverSupportedQueries,
+                      permissionType
+                    );
 
                     if (isNewRole) {
                       return (
@@ -130,6 +161,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                           isEditable={isEditable}
                           access={access}
                           aria-label={`${state.context.newRoleName}-${permissionType}`}
+                          testId={`permission-table-button-${roleName}-${permissionType}`}
                           isCurrentEdit={
                             permissionType ===
                               state.context.selectedForm.queryType &&
@@ -164,6 +196,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                         isEditable={isEditable}
                         access={access}
                         aria-label={`${roleName}-${permissionType}`}
+                        testId={`permission-table-button-${roleName}-${permissionType}`}
                         isCurrentEdit={
                           permissionType ===
                             state.context.selectedForm.queryType &&

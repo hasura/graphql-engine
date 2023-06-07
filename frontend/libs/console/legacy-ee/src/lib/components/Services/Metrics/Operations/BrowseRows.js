@@ -27,6 +27,8 @@ import {
 import { FaCaretDown, FaCaretUp, FaSort } from 'react-icons/fa';
 
 import styles from '../Metrics.module.scss';
+import failure from '../images/failure.svg';
+import success from '../images/success.svg';
 
 const LIMIT = 10;
 
@@ -37,8 +39,6 @@ const defaultState = {
     time: 'desc',
   },
 };
-import failure from '../images/failure.svg';
-import success from '../images/success.svg';
 
 const BrowserRows = props => {
   const [browseState, setState] = useState(defaultState);
@@ -59,9 +59,6 @@ const BrowserRows = props => {
 
   const whereClause = {
     _and: [...filtersObj],
-    // there is delay response_size synchronization on websocket operations
-    // we temporary hide them until these values are updated
-    response_size: { _gt: 0 },
   };
 
   if (projectId) {

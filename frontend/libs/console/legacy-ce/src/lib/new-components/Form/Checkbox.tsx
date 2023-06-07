@@ -4,7 +4,6 @@ import { FaCheck, FaMinus } from 'react-icons/fa';
 
 import * as RadixCheckbox from '@radix-ui/react-checkbox';
 import clsx from 'clsx';
-import { RefCallBack } from 'react-hook-form';
 
 type CheckboxProps = PropsWithChildren<{
   /**

@@ -22,6 +22,7 @@ import Data.Data (Data)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
+import Data.Set (Set)
 import Data.Text (Text)
 import Data.Tuple.Extra
 import GHC.Generics (Generic)
@@ -119,9 +120,9 @@ instance HasCodec UnaryComparisonOperator where
 -- | A serializable representation of query filter expressions.
 data Expression
   = -- | A logical AND fold
-    And [Expression]
+    And (Set Expression)
   | -- | A logical OR fold
-    Or [Expression]
+    Or (Set Expression)
   | -- | A logical NOT function
     Not Expression
   | -- | There must exist a row in the table specified by 'ExistsInTable' that
@@ -293,8 +294,8 @@ instance HasCodec ColumnPath where
 -- | A serializable representation of comparison values used in comparisons inside 'Expression's.
 data ComparisonValue
   = -- | Allows a comparison to a column on the current table or another table
-    AnotherColumn ComparisonColumn
-  | ScalarValue Value API.V0.ScalarType
+    AnotherColumnComparison ComparisonColumn
+  | ScalarValueComparison API.V0.ScalarValue
   deriving stock (Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ComparisonValue
@@ -305,15 +306,11 @@ instance HasCodec ComparisonValue where
       discriminatedUnionCodec "type" enc dec
     where
       columnCodec = requiredField' "column"
-      scalarValueCodec =
-        (,)
-          <$> requiredField' "value" .= fst
-          <*> requiredField' "value_type" .= snd
       enc = \case
-        AnotherColumn c -> ("column", mapToEncoder c columnCodec)
-        ScalarValue value scalarType -> ("scalar", mapToEncoder (value, scalarType) scalarValueCodec)
+        AnotherColumnComparison c -> ("column", mapToEncoder c columnCodec)
+        ScalarValueComparison scalarValue -> ("scalar", mapToEncoder scalarValue objectCodec)
       dec =
         HashMap.fromList
-          [ ("column", ("AnotherColumnComparison", mapToDecoder AnotherColumn columnCodec)),
-            ("scalar", ("ScalarValueComparison", mapToDecoder (uncurry ScalarValue) scalarValueCodec))
+          [ ("column", ("AnotherColumnComparison", mapToDecoder AnotherColumnComparison columnCodec)),
+            ("scalar", ("ScalarValueComparison", mapToDecoder ScalarValueComparison objectCodec))
           ]

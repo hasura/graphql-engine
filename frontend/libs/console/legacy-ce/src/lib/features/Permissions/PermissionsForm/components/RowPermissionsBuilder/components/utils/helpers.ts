@@ -1,7 +1,10 @@
-import { get, isEmpty, set, unset, isObjectLike } from 'lodash';
+import get from 'lodash/get';
+import isEmpty from 'lodash/isEmpty';
+import set from 'lodash/set';
+import unset from 'lodash/unset';
+import isObjectLike from 'lodash/isObjectLike';
 import { RowPermissionsState, PermissionType } from '../types';
-import { allOperators } from '../../../../../../../components/Common/FilterQuery/utils';
-import { GraphQLType, isScalarType } from 'graphql';
+import { allOperators } from './comparatorsFromSchema';
 
 const getKeyPath = ({
   keyPath,
@@ -18,25 +21,36 @@ const getKeyPath = ({
   const value = get(permissionsState, ['permissions', ...keyPath]);
   let path = keyPath;
 
-  if (!isEmpty(value) || type === 'relationship') {
-    unset(permissionsState, ['permissions', ...keyPath]);
-    path = keyPath.slice(0, -1);
-  }
+  const isNestedComparator =
+    isComparator(newKey) &&
+    newKey !== '_exists' && // ignore _exists which is a special comparator
+    path.length >= 1;
 
-  if (isComparator(newKey) && path.length >= 1) {
-    unset(permissionsState, ['permissions', ...keyPath]);
-    path = keyPath.slice(0, -1);
+  if (!isEmpty(value) || type === 'relationship' || isNestedComparator) {
+    path = replacePath(keyPath, permissionsState);
   }
 
   const previousKey = keyPath[keyPath.length - 1];
   if ((previousKey === '_not' && newKey === '_and') || newKey === '_or') {
-    unset(permissionsState, ['permissions', ...keyPath]);
-    path = keyPath.slice(0, -1);
+    path = replacePath(keyPath, permissionsState);
   }
 
   if (newKey === '') return ['permissions', ...path];
-  return ['permissions', ...path, newKey];
+
+  return appendToPath(path, newKey);
 };
+
+function replacePath(
+  keyPath: string[],
+  permissionsState: Pick<RowPermissionsState, 'permissions' | 'operators'>
+) {
+  unset(permissionsState, ['permissions', ...keyPath]);
+  return keyPath.slice(0, -1);
+}
+
+function appendToPath(path: string[], newKey: string) {
+  return ['permissions', ...path, newKey];
+}
 
 const getInitialValue = (key: string, type?: PermissionType) => {
   switch (key) {
@@ -45,7 +59,19 @@ const getInitialValue = (key: string, type?: PermissionType) => {
     case '_or':
       return [{}];
     case '_not':
+    case '_contains':
+    case '_contained_in':
+    case '_st_d_within':
+    case '_st_within':
+    case '_st_3d_d_within':
+    case '_st_contains':
+    case '_st_crosses':
+    case '_st_intersects':
+    case '_st_touches':
+    case '_st_overlaps':
       return {};
+    case '_is_null':
+      return false;
     case '_exists':
       return {
         _where: {},
@@ -53,6 +79,8 @@ const getInitialValue = (key: string, type?: PermissionType) => {
       };
     case '_nin':
     case '_in':
+    case '_has_keys_all':
+    case '_has_keys_any':
       return [''];
   }
 
@@ -95,26 +123,20 @@ export const updateKey = ({
 };
 
 export const isComparator = (k: string) => {
-  return allOperators.find(o => o.alias === k);
+  return allOperators.find(o => o.name === k);
 };
 
 export const isPrimitive = (value: any) => {
   return !isObjectLike(value);
 };
 
-export function graphQLTypeToJsType(
-  value: string,
-  type: GraphQLType | undefined
-): boolean | string | number {
-  if (!isScalarType(type)) {
-    return value;
-  }
-  if (type.name === 'Int' || type.name === 'ID' || type.name === 'Float') {
-    return Number(value);
-  } else if (type.name === 'Boolean') {
-    return Boolean(value);
-  }
-
-  // Default to string on custom scalars since we have no way of knowing if they map to a number or boolean
-  return value;
+export function isColumnComparator(comparator: string) {
+  return (
+    comparator === '_ceq' ||
+    comparator === '_cne' ||
+    comparator === '_cgt' ||
+    comparator === '_cge' ||
+    comparator === '_clt' ||
+    comparator === '_cle'
+  );
 }

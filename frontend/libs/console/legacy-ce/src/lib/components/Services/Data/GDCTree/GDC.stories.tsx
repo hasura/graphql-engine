@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { GDCTree } from './GDCTree';
 
@@ -8,8 +8,8 @@ export default {
   component: GDCTree,
   decorators: [ReactQueryDecorator()],
   argTypes: { onSelect: { action: 'clicked' } },
-} as ComponentMeta<typeof GDCTree>;
+} as Meta<typeof GDCTree>;
 
-export const Primary: ComponentStory<typeof GDCTree> = args => (
-  <GDCTree onSelect={args.onSelect} />
-);
+export const Primary: StoryObj<typeof GDCTree> = {
+  render: args => <GDCTree onSelect={args.onSelect} />,
+};

@@ -10,9 +10,9 @@ import Data.Text qualified as T
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
+import Harness.Schema (SchemaName (..), Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (SchemaName (..), Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
@@ -68,52 +68,52 @@ setupFunctions :: TestEnvironment -> [Fixture.SetupAction]
 setupFunctions testEnv =
   let schemaName = Schema.getSchemaName testEnv
       articleTableSQL = unSchemaName schemaName <> ".article"
-   in [ SetupAction.noTeardown $
-          BigQuery.run_ $
-            T.unpack $
-              T.unwords $
-                [ "CREATE TABLE FUNCTION ",
-                  fetch_articles_returns_table schemaName,
-                  "(a_id INT64, search STRING)",
-                  "RETURNS TABLE<id INT64, title STRING, content STRING>",
-                  "AS (",
-                  "SELECT t.id, t.title, t.content FROM",
-                  articleTableSQL,
-                  "AS t WHERE t.author_id = a_id and (t.title LIKE `search` OR t.content LIKE `search`)",
-                  ");"
-                ],
-        SetupAction.noTeardown $
-          BigQuery.run_ $
-            T.unpack $
-              T.unwords $
-                [ "CREATE TABLE FUNCTION ",
-                  fetch_articles schemaName,
-                  "(a_id INT64, search STRING)",
-                  "AS (",
-                  "SELECT t.* FROM",
-                  articleTableSQL,
-                  "AS t WHERE t.author_id = a_id and (t.title LIKE `search` OR t.content LIKE `search`)",
-                  ");"
-                ],
-        SetupAction.noTeardown $
-          BigQuery.run_ $
-            T.unpack $
-              T.unwords $
-                [ "CREATE TABLE FUNCTION ",
-                  function_no_args schemaName <> "()",
-                  "AS (",
-                  "SELECT t.* FROM",
-                  articleTableSQL,
-                  "AS t);"
-                ],
-        SetupAction.noTeardown $
-          BigQuery.run_ $
-            T.unpack $
-              T.unwords $
-                [ "CREATE FUNCTION ",
-                  add_int schemaName <> "(a INT64, b INT64)",
-                  "RETURNS INT64 AS (a + b);"
-                ]
+   in [ SetupAction.noTeardown
+          $ BigQuery.run_
+          $ T.unpack
+          $ T.unwords
+          $ [ "CREATE TABLE FUNCTION ",
+              fetch_articles_returns_table schemaName,
+              "(a_id INT64, search STRING)",
+              "RETURNS TABLE<id INT64, title STRING, content STRING>",
+              "AS (",
+              "SELECT t.id, t.title, t.content FROM",
+              articleTableSQL,
+              "AS t WHERE t.author_id = a_id and (t.title LIKE `search` OR t.content LIKE `search`)",
+              ");"
+            ],
+        SetupAction.noTeardown
+          $ BigQuery.run_
+          $ T.unpack
+          $ T.unwords
+          $ [ "CREATE TABLE FUNCTION ",
+              fetch_articles schemaName,
+              "(a_id INT64, search STRING)",
+              "AS (",
+              "SELECT t.* FROM",
+              articleTableSQL,
+              "AS t WHERE t.author_id = a_id and (t.title LIKE `search` OR t.content LIKE `search`)",
+              ");"
+            ],
+        SetupAction.noTeardown
+          $ BigQuery.run_
+          $ T.unpack
+          $ T.unwords
+          $ [ "CREATE TABLE FUNCTION ",
+              function_no_args schemaName <> "()",
+              "AS (",
+              "SELECT t.* FROM",
+              articleTableSQL,
+              "AS t);"
+            ],
+        SetupAction.noTeardown
+          $ BigQuery.run_
+          $ T.unpack
+          $ T.unwords
+          $ [ "CREATE FUNCTION ",
+              add_int schemaName <> "(a INT64, b INT64)",
+              "RETURNS INT64 AS (a + b);"
+            ]
       ]
 
 fetch_articles_returns_table :: SchemaName -> T.Text
@@ -134,13 +134,13 @@ add_int schemaName =
 
 -- * Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   it "Add computed field with non exist function - exception" $ \testEnv -> do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv
@@ -191,7 +191,7 @@ code: invalid-configuration
     -- The function 'fetch_articles' is not defined with 'RETURNS TABLE<>' clause,
     -- we need to provide `return_table` in the payload
     shouldReturnYaml
-      opts
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv
@@ -249,7 +249,7 @@ code: invalid-configuration
     -- The function 'fetch_articles' is not defined with 'RETURNS TABLE<>' clause,
     -- we need to provide `return_table` in the payload
     shouldReturnYaml
-      opts
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv
@@ -311,7 +311,7 @@ code: invalid-configuration
     -- we don't need to provide 'return_table' in the payload as the returning fields are inferred
     -- from the function definition
     shouldReturnYaml
-      opts
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv
@@ -371,7 +371,7 @@ code: invalid-configuration
 
     -- The function 'function_no_args' has no input arguments
     shouldReturnYaml
-      opts
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv
@@ -430,7 +430,7 @@ code: invalid-configuration
     -- The function 'add_int' returns a scalar value of type 'INT64', as of now we do not support
     -- scalar computed fields.
     shouldReturnYaml
-      opts
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv
@@ -481,7 +481,7 @@ code: invalid-configuration
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      testEnv
       ( GraphqlEngine.postMetadataWithStatus
           400
           testEnv

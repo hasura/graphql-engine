@@ -1,8 +1,0 @@
-subscription {
-    user_online (
-      order_by: {username:asc}
-    ) {
-      id
-      username
-    }
-  }

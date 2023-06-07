@@ -1,6 +1,6 @@
 import { setupServer } from 'msw/node';
 import { renderHook } from '@testing-library/react-hooks';
-import { useDataSourceTables, useSingleTable } from '..';
+import { useDataSourceTables, useSingleTable } from '../useTables';
 import { networkStubs } from './common/networkStubs';
 import { wrapper } from './common/decorator';
 import { APIError } from '../error';

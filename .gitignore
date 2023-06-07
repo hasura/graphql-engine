@@ -24,6 +24,7 @@ cabal.project.local~
 temp-console-hasura/
 .DS_Store
 .idea
+tags
 
 # tool-agnostic personal ignore files
 .direnv
@@ -61,3 +62,10 @@ tests-hspec.log
 
 # Test run results from Sandwich-powered tests
 test_runs/
+
+# dependencies
+node_modules
+
+# ticky profiles, e.g. from dev.sh --prof-ticky
+*.ticky
+*.ticky.modules

@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 import { getRoute } from '../../../../../utils/getDataRoute';
 import { useIsUnmounted } from '../../Common/tsUtils';
 import _push from '../../push';
+import { defaultTab } from '../utils';
 
 export const useGDCTreeItemClick = (dispatch: Dispatch) => {
   const httpClient = useHttpClient();
@@ -29,8 +30,19 @@ export const useGDCTreeItemClick = (dispatch: Dispatch) => {
        * Handling click for GDC DBs
        */
       const isTableClicked = Object.keys(rest?.table || {}).length !== 0;
+      const isFunctionClicked = Object.keys(rest?.function || {}).length !== 0;
       if (isTableClicked) {
-        dispatch(_push(getRoute().table(database, rest.table)));
+        dispatch(
+          _push(
+            getRoute().table(
+              database,
+              rest.table,
+              defaultTab(metadataSource.kind)
+            )
+          )
+        );
+      } else if (isFunctionClicked) {
+        dispatch(_push(getRoute().function(database, rest.function)));
       } else {
         dispatch(_push(getRoute().database(database)));
       }

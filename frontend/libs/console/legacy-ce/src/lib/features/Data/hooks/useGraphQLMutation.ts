@@ -21,17 +21,13 @@ export function useGraphQLMutation({
     { query: string; resultPath: string }
   >(
     async ({ query }) => {
-      try {
-        const res = await runGraphQL({
-          httpClient,
-          operationName,
-          query,
-          headers,
-        });
-        return res.data;
-      } catch (err) {
-        throw err;
-      }
+      const res = await runGraphQL({
+        httpClient,
+        operationName,
+        query,
+        headers,
+      });
+      return res.data;
     },
     {
       onSuccess,

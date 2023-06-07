@@ -6,7 +6,7 @@ import * as customTasks from './src/support/tasks';
 
 type ConfigOptions = Parameters<typeof defineConfig>[0];
 
-const nxConfig = nxE2EPreset(__dirname);
+const nxConfig = nxE2EPreset(__filename);
 
 interface MyConfigOptions extends ConfigOptions {
   useRelativeSnapshots?: boolean;

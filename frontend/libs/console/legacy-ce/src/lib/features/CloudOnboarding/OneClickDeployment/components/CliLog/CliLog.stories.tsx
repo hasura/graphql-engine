@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { CliLog } from './CliLog';
 import { OneClickDeploymentState } from '../../types';
@@ -8,7 +8,7 @@ export default {
   title: 'features/CloudOnboarding/One Click Deployment/CLILog',
   component: CliLog,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof CliLog>;
+} as Meta<typeof CliLog>;
 
 const fallbackApps = [
   {
@@ -34,7 +34,7 @@ const StoryWrapper: React.FC = ({ children }) => {
   );
 };
 
-export const Initializing: Story = () => (
+export const Initializing: StoryFn = () => (
   <StoryWrapper>
     <CliLog
       step={OneClickDeploymentState.Initialized}
@@ -47,7 +47,7 @@ export const Initializing: Story = () => (
   </StoryWrapper>
 );
 
-export const Initialized: Story = () => (
+export const Initialized: StoryFn = () => (
   <StoryWrapper>
     <CliLog
       step={OneClickDeploymentState.Initialized}
@@ -60,7 +60,7 @@ export const Initialized: Story = () => (
   </StoryWrapper>
 );
 
-export const ErrorLogWithExpectedError: Story = () => (
+export const ErrorLogWithExpectedError: StoryFn = () => (
   <StoryWrapper>
     <CliLog
       step={OneClickDeploymentState.Initialized}
@@ -74,7 +74,7 @@ export const ErrorLogWithExpectedError: Story = () => (
   </StoryWrapper>
 );
 
-export const ErrorLogWithUnknownError: Story = () => (
+export const ErrorLogWithUnknownError: StoryFn = () => (
   <StoryWrapper>
     <CliLog
       step={OneClickDeploymentState.Initialized}

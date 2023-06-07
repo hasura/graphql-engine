@@ -13,7 +13,6 @@
                  pcre \
                  unixodbc \
                  libpq \
-                 mysql-client@5.7 \                 
                  libffi \
                  microsoft/mssql-release/mssql-tools18 \
                  direnv \
@@ -27,7 +26,6 @@
     echo 'export PATH="/opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin:$PATH"' >> ~/.zshrc
     echo 'export PATH="/opt/homebrew/opt/openssl@1.1/bin:$PATH"' >> ~/.zshrc
     echo 'export PATH="/opt/homebrew/opt/node@16/bin:$PATH"' >> ~/.zshrc
-    echo 'export PATH="/opt/homebrew/opt/mysql-client@5.7/bin:$PATH"' >> ~/.zshrc
     echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
     ```
 
@@ -62,14 +60,6 @@ If you are re-running this command to update your Mac, you may need to run
 5.  Append lines below to `cabal/dev-sh.project.local` to allow Cabal (the Haskell build tool) to find the C dependencies you installed earlier (remembering to replace `/opt/homebrew` with your brew prefix if different):
 
     ```sh
-    package mysql
-      extra-include-dirs:
-        /opt/homebrew/opt/openssl/include
-        /opt/homebrew/opt/mysql-client@5.7/include
-      extra-lib-dirs:
-        /opt/homebrew/opt/openssl/lib
-        /opt/homebrew/opt/mysql-client@5.7/lib
-
     package odbc
       extra-include-dirs: /opt/homebrew/opt/unixodbc/include
       extra-lib-dirs: /opt/homebrew/opt/unixodbc/lib

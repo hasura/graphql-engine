@@ -87,15 +87,15 @@ describe('generatePolyfillLoaderFile', () => {
       // THIS FILE IS GENERATED; DO NOT MODIFY BY HAND.
 
       const loadCss = (url) => {
-        const linkElem = document.createElement(\\"link\\");
-        linkElem.rel = \\"stylesheet\\";
-        linkElem.charset = \\"UTF-8\\";
+        const linkElem = document.createElement("link");
+        linkElem.rel = "stylesheet";
+        linkElem.charset = "UTF-8";
         linkElem.href = url;
         document.body.append(linkElem);
       };
       const loadJs = (url, type) => {
-        const scriptElem = document.createElement(\\"script\\");
-        scriptElem.charset = \\"UTF-8\\";
+        const scriptElem = document.createElement("script");
+        scriptElem.charset = "UTF-8";
         scriptElem.src = url;
         if (type) {
           scriptElem.type = type
@@ -105,9 +105,9 @@ describe('generatePolyfillLoaderFile', () => {
 
       window.__loadConsoleAssetsFromBasePath = (root) => {
       const basePath = root.endsWith('/') ? root : root + '/';
-      loadCss(basePath + \\"my.css.gz\\");
-      loadJs(basePath + \\"todo.js.gz\\", \\"module\\");
-      loadJs(basePath + \\"my.js.gz\\");
+      loadCss(basePath + "my.css.gz");
+      loadJs(basePath + "todo.js.gz", "module");
+      loadJs(basePath + "my.js.gz");
       }
 
       // This is from the old console template for the CLI

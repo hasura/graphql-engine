@@ -1,7 +1,10 @@
-import debounce from 'lodash.debounce';
+import debounce from 'lodash/debounce';
 import React from 'react';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { useServerConfig } from '../../../../hooks';
+import globals from '../../../../Globals';
+import { isProConsole } from '../../../../utils/proConsole';
+import { useEELiteAccess } from '../../../../features/EETrial';
 import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 import { AllowListSidebarHeader } from './AllowListSidebarHeader';
 import { QueryCollectionList } from './QueryCollectionList';
@@ -24,6 +27,10 @@ export const AllowListSidebar: React.FC<AllowListSidebarProps> = props => {
   const [search, setSearch] = React.useState('');
   const debouncedSearch = React.useMemo(() => debounce(setSearch, 300), []);
 
+  const { access: eeLiteAccess } = useEELiteAccess(globals);
+  const allowQueryCollectionsCreation =
+    isProConsole(globals) || eeLiteAccess === 'active';
+
   const { data: configData, isLoading: isConfigLoading } = useServerConfig();
 
   const renderInstructions =
@@ -32,7 +39,9 @@ export const AllowListSidebar: React.FC<AllowListSidebarProps> = props => {
   return (
     <div>
       <AllowListSidebarHeader
-        onQueryCollectionCreate={onQueryCollectionCreate}
+        onQueryCollectionCreate={
+          allowQueryCollectionsCreation ? onQueryCollectionCreate : undefined
+        }
       />
       <AllowListSidebarSearchForm
         setSearch={(searchString: string) => debouncedSearch(searchString)}

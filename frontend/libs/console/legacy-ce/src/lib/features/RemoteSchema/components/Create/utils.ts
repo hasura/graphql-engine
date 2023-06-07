@@ -1,4 +1,4 @@
-import pickBy from 'lodash.pickby';
+import pickBy from 'lodash/pickBy';
 import { Dictionary } from 'ts-essentials';
 import { Schema } from './schema';
 
@@ -22,7 +22,6 @@ interface Definition {
     | { name: string; value_from_env: string }
     | { name: string; value: string }
   )[];
-  comment?: string;
 }
 
 export const transformFormData = (values: Schema) => {
@@ -94,7 +93,6 @@ export const transformFormData = (values: Schema) => {
   const definition: Definition = {
     [url.type === 'from_env' ? 'url_from_env' : 'url']: url.value,
     forward_client_headers,
-    comment,
     headers: headers.map(header => {
       if (header.type === 'from_env')
         return { name: header.name, value_from_env: header.value };
@@ -104,5 +102,5 @@ export const transformFormData = (values: Schema) => {
     customization,
   };
 
-  return { name, definition };
+  return { name, comment, definition };
 };

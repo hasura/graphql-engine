@@ -107,10 +107,10 @@ describe('using the mutation in server mode', () => {
 
     await testLibWaitFor(() => {
       expect(screen.getByRole('heading')).toMatchInlineSnapshot(`
-      <h1>
-        2
-      </h1>
-    `);
+              <h1>
+                2
+              </h1>
+          `);
     });
   });
 
@@ -125,7 +125,7 @@ describe('using the mutation in server mode', () => {
 
     await waitFor(() => result.current.isSuccess);
     expect(result.current?.data).toMatchInlineSnapshot(`
-      Object {
+      {
         "message": "mock success response from server",
       }
     `);

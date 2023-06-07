@@ -8,7 +8,7 @@ import { GraphQLError } from 'graphql/error';
 
 export const createControlPlaneClient = (
   endpoint: string = endpoints.luxDataGraphql,
-  headers = {
+  headers: Record<string, string> = {
     'content-type': 'application/json',
     'hasura-client-name': 'hasura-console',
   }
@@ -37,7 +37,7 @@ export const createControlPlaneClient = (
 
   const subscribe = <
     ResponseType = Record<string, any>,
-    VariablesType = Record<string, any>
+    VariablesType extends Object = Record<string, any>
   >(
     queryDoc: DocumentNode,
     variables: VariablesType,

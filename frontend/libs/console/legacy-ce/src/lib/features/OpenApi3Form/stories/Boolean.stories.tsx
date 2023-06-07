@@ -1,7 +1,7 @@
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, StoryFn, Meta } from '@storybook/react';
 import React from 'react';
-import { screen } from '@testing-library/dom';
+import { screen } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { RenderOpenApi3Form } from './common/RenderOpenApi3Form';
@@ -21,9 +21,9 @@ export default {
     ReactQueryDecorator(),
     Story => <div className="p-4 w-full">{Story()}</div>,
   ],
-} as ComponentMeta<typeof RenderOpenApi3Form>;
+} as Meta<typeof RenderOpenApi3Form>;
 
-export const booleanInput: ComponentStory<typeof RenderOpenApi3Form> = () => {
+export const booleanInput: StoryFn<typeof RenderOpenApi3Form> = () => {
   return (
     <RenderOpenApi3Form
       name="BooleanInput"
@@ -40,7 +40,7 @@ export const booleanInput: ComponentStory<typeof RenderOpenApi3Form> = () => {
   );
 };
 
-export const booleanInputWithExistingValues: ComponentStory<
+export const booleanInputWithExistingValues: StoryFn<
   typeof RenderOpenApi3Form
 > = () => {
   return (
@@ -60,38 +60,40 @@ export const booleanInputWithExistingValues: ComponentStory<
   );
 };
 
-export const Test: ComponentStory<typeof RenderOpenApi3Form> = () => (
-  <RenderOpenApi3Form
-    name="BooleanInput"
-    getSchema={() => [
-      {
-        title: 'Boolean Input (nullable set to false)',
-        type: 'boolean',
-        nullable: false,
-      },
-      {},
-    ]}
-    defaultValues={{}}
-    rawOutput
-  />
-);
+export const Test: StoryObj<typeof RenderOpenApi3Form> = {
+  render: () => (
+    <RenderOpenApi3Form
+      name="BooleanInput"
+      getSchema={() => [
+        {
+          title: 'Boolean Input (nullable set to false)',
+          type: 'boolean',
+          nullable: false,
+        },
+        {},
+      ]}
+      defaultValues={{}}
+      rawOutput
+    />
+  ),
 
-Test.storyName = '🧪 Testing - toggle interaction';
+  name: '🧪 Testing - toggle interaction',
 
-Test.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
 
-  await waitFor(async () => {
-    await userEvent.click(canvas.getByTestId('BooleanInput'));
-  });
+    await waitFor(async () => {
+      await userEvent.click(canvas.getByTestId('BooleanInput'));
+    });
 
-  await waitFor(async () => {
-    await userEvent.click(canvas.getByTestId('submit-form-btn'));
-  });
+    await waitFor(async () => {
+      await userEvent.click(canvas.getByTestId('submit-form-btn'));
+    });
 
-  await waitFor(async () => {
-    await expect(screen.getByTestId('output').textContent).toBe(
-      '{"BooleanInput":true}'
-    );
-  });
+    await waitFor(async () => {
+      await expect(screen.getByTestId('output').textContent).toBe(
+        '{"BooleanInput":true}'
+      );
+    });
+  },
 };

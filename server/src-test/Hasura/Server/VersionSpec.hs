@@ -35,7 +35,8 @@ versions =
 
 spec :: Spec
 spec = describe "console assets version" do
-  parallel $
-    for_ versions \(input, output) ->
-      it ("versionToAssetsVersion returns expected output for " <> T.unpack input) $
-        versionToAssetsVersion (fromText input) `shouldBe` output
+  parallel
+    $ for_ versions \(input, output) ->
+      it ("versionToAssetsVersion returns expected output for " <> T.unpack input)
+        $ versionToAssetsVersion (fromText input)
+        `shouldBe` output

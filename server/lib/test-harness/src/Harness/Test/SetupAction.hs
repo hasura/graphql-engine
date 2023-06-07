@@ -4,11 +4,13 @@ module Harness.Test.SetupAction
     clearMetadata,
     permitTeardownFail,
     noTeardown,
+    setupPermissionsAction,
   )
 where
 
 import Control.Exception.Safe (catchAny)
 import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.Permissions (Permission, createPermissionMetadata, dropPermissionMetadata)
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Prelude
 
@@ -44,4 +46,16 @@ permitTeardownFail SetupAction {teardownAction = ta, setupAction = sa} =
   SetupAction
     { setupAction = sa,
       teardownAction = (\a -> ta a `catchAny` \_ -> return ())
+    }
+
+-- | A setup/teardown action for permissions.
+setupPermissionsAction :: [Permission] -> TestEnvironment -> SetupAction
+setupPermissionsAction permissions testEnvironment =
+  SetupAction
+    { setupAction = for_ permissions \permission ->
+        GraphqlEngine.postMetadata_ testEnvironment do
+          createPermissionMetadata testEnvironment permission,
+      teardownAction = const $ for_ permissions \permission ->
+        GraphqlEngine.postMetadata_ testEnvironment do
+          dropPermissionMetadata testEnvironment permission
     }

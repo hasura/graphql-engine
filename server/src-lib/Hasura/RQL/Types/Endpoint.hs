@@ -30,6 +30,7 @@ where
 
 import Autodocodec (HasCodec (codec), dimapCodec, optionalField', requiredField')
 import Autodocodec qualified as AC
+import Autodocodec.Extended (boundedEnumCodec, typeableName)
 import Control.Lens
 import Data.Aeson
 import Data.Aeson.Casing
@@ -40,7 +41,6 @@ import Data.Text.Extended
 import Data.Text.NonEmpty
 import Data.Trie qualified as T
 import Data.Typeable (Typeable)
-import Hasura.Metadata.DTO.Utils (boundedEnumCodec, typeableName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Endpoint.Trie as Trie
 import Hasura.RQL.Types.QueryCollection (CollectionName, QueryName)
@@ -98,7 +98,7 @@ newtype EndpointUrl = EndpointUrl {unEndpointUrl :: NonEmptyText}
 instance HasCodec EndpointUrl where
   codec = dimapCodec EndpointUrl unEndpointUrl codec
 
-mkEndpointUrl :: ToTxt a => a -> Maybe EndpointUrl
+mkEndpointUrl :: (ToTxt a) => a -> Maybe EndpointUrl
 mkEndpointUrl s = EndpointUrl <$> mkNonEmptyText (toTxt s)
 
 instance FromHttpApiData EndpointUrl where
@@ -116,10 +116,12 @@ data QueryReference = QueryReference
 
 instance HasCodec QueryReference where
   codec =
-    AC.object "QueryReference" $
-      QueryReference
-        <$> requiredField' "collection_name" AC..= _qrCollectionName
-        <*> requiredField' "query_name" AC..= _qrQueryName
+    AC.object "QueryReference"
+      $ QueryReference
+      <$> requiredField' "collection_name"
+      AC..= _qrCollectionName
+        <*> requiredField' "query_name"
+      AC..= _qrQueryName
 
 $(deriveJSON (aesonDrop 3 snakeCase) ''QueryReference)
 $(makeLenses ''QueryReference)
@@ -131,16 +133,17 @@ data EndpointDef query = EndpointDef
 
 instance (HasCodec query, Typeable query) => HasCodec (EndpointDef query) where
   codec =
-    AC.object ("EndpointDef_" <> typeableName @query) $
-      EndpointDef
-        <$> requiredField' "query" AC..= _edQuery
+    AC.object ("EndpointDef_" <> typeableName @query)
+      $ EndpointDef
+      <$> requiredField' "query"
+      AC..= _edQuery
 
 $(deriveJSON (aesonDrop 3 snakeCase) ''EndpointDef)
 $(makeLenses ''EndpointDef)
 
 type EndpointTrie query = MultiMapPathTrie Text EndpointMethod (EndpointMetadata query)
 
-buildEndpointsTrie :: Ord query => [EndpointMetadata query] -> EndpointTrie query
+buildEndpointsTrie :: (Ord query) => [EndpointMetadata query] -> EndpointTrie query
 buildEndpointsTrie = foldl' insert mempty
   where
     insert t q =
@@ -169,13 +172,18 @@ data EndpointMetadata query = EndpointMetadata
 
 instance (HasCodec query, Typeable query) => HasCodec (EndpointMetadata query) where
   codec =
-    AC.object ("EndpointMetadata_" <> typeableName @query) $
-      EndpointMetadata
-        <$> requiredField' "name" AC..= _ceName
-        <*> requiredField' "url" AC..= _ceUrl
-        <*> requiredField' "methods" AC..= _ceMethods
-        <*> requiredField' "definition" AC..= _ceDefinition
-        <*> optionalField' "comment" AC..= _ceComment
+    AC.object ("EndpointMetadata_" <> typeableName @query)
+      $ EndpointMetadata
+      <$> requiredField' "name"
+      AC..= _ceName
+        <*> requiredField' "url"
+      AC..= _ceUrl
+        <*> requiredField' "methods"
+      AC..= _ceMethods
+        <*> requiredField' "definition"
+      AC..= _ceDefinition
+        <*> optionalField' "comment"
+      AC..= _ceComment
 
 $(deriveJSON (aesonDrop 3 snakeCase) ''EndpointMetadata)
 $(makeLenses ''EndpointMetadata)

@@ -52,7 +52,7 @@ const getOptionsForUpdate = (
   currentQueryType: BaseQueryType
 ) => {
   if (currentQueryType !== 'update') {
-    return ['check', 'filter'];
+    return ['filter', 'check'];
   }
   if (currentFilterType === 'check') return ['filter'];
   return [];

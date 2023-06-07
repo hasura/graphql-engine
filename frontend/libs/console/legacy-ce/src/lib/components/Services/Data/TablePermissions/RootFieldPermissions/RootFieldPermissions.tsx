@@ -6,24 +6,17 @@ import clsx from 'clsx';
 
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 import { SelectPermissionsRow } from './SelectPermissionsRow';
-import {
-  QueryRootPermissionType,
-  SubscriptionRootPermissionType,
-  RootFieldPermissionsType,
-} from './types';
+import { RootFieldPermissionsType } from './types';
 import { RootFieldsPermissionsTitle } from './RootFieldsPermissionsTitle';
 import { useRootFieldPermissions } from './useRootFieldPermissions';
+import {
+  subscriptionRootPermissionFields,
+  queryRootPermissionFields,
+} from './constants';
 
 export type RootKeyValues = 'query_root_values' | 'subscription_root_values';
 
-export const queryRootPermissionFields: QueryRootPermissionType[] = [
-  'select',
-  'select_by_pk',
-  'select_aggregate',
-];
-
-export const subscriptionRootPermissionFields: SubscriptionRootPermissionType[] =
-  ['select', 'select_by_pk', 'select_aggregate', 'select_stream'];
+export { subscriptionRootPermissionFields, queryRootPermissionFields };
 
 export const QUERY_ROOT_VALUES = 'query_root_values';
 export const SUBSCRIPTION_ROOT_VALUES = 'subscription_root_values';

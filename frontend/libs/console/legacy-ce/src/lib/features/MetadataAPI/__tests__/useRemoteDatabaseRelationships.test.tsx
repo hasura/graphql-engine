@@ -135,11 +135,11 @@ describe('The useRemoteDatabaseRelationships hook', () => {
 
     expect((result.all[1] as UseQueryResult<RemoteRelationship[], Error>).data)
       .toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "definition": Object {
-            "to_source": Object {
-              "field_mapping": Object {
+      [
+        {
+          "definition": {
+            "to_source": {
+              "field_mapping": {
                 "id": "AlbumId",
               },
               "relationship_type": "object",

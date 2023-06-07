@@ -1,6 +1,6 @@
 module Data.TrieSpec (spec) where
 
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Trie qualified as T
 import Hasura.Prelude
 import Hasura.QuickCheck.Instances ()
@@ -17,7 +17,7 @@ spec = describe "Trie" $ do
       T.insert p v T.empty `shouldBe` expected
 
     prop "insert a singleton path into an empty trie" $ \pc v -> do
-      let expected = T.Trie (M.singleton pc (T.Trie mempty (Just v))) Nothing :: TestTrie
+      let expected = T.Trie (HashMap.singleton pc (T.Trie mempty (Just v))) Nothing :: TestTrie
       T.insert [pc] v T.empty `shouldBe` expected
 
     prop "insertion is idempotent" $ \p v (t :: TestTrie) -> do

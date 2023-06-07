@@ -12,6 +12,7 @@ import { useExportRows } from './useExportRows';
 import { UseRowsPropType } from '../useRows';
 
 jest.mock('../../../../components/Common/utils/export.utils', () => ({
+  ...jest.requireActual('../../../../components/Common/utils/export.utils'),
   downloadObjectAsCsvFile: jest.fn(),
   downloadObjectAsJsonFile: jest.fn(),
 }));

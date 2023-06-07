@@ -5,75 +5,54 @@
 module Harness.TestEnvironment
   ( TestEnvironment (..),
     GlobalTestEnvironment (..),
+    GlobalFlags (..),
+    Protocol (..),
     Server (..),
     TestingMode (..),
+    TestingRole (..),
     UniqueTestId (..),
+    debugger,
     getServer,
     getTestingMode,
     getBackendTypeConfig,
     focusFixtureLeft,
     focusFixtureRight,
+    scalarTypeToText,
     serverUrl,
     stopServer,
     testLogTrace,
     testLogMessage,
     testLogShow,
     testLogHarness,
+    getSchemaName,
+    getSchemaNameInternal,
+    defaultGlobalFlags,
+    traceIf,
   )
 where
 
-import Control.Concurrent.Async (Async)
 import Control.Concurrent.Async qualified as Async
-import Data.Char qualified
+import Data.Aeson (ToJSON, Value)
+import Data.Aeson.Encode.Pretty (encodePretty)
 import Data.Has
-import Data.UUID (UUID)
-import Data.Word
-import Database.PostgreSQL.Simple.Options (Options)
+import Data.Text qualified as T
+import Data.Text.Lazy qualified as TL
+import Debug.Trace
+import Harness.Constants qualified as Constants
+import Harness.GlobalTestEnvironment
 import Harness.Logging.Messages
+import Harness.Permissions.Types (Permission)
+import Harness.Schema.Name
 import Harness.Services.Composed qualified as Services
 import Harness.Test.BackendType
+import Harness.Test.CustomOptions qualified as Custom
 import Harness.Test.FixtureName
+import Harness.Test.ScalarType
+import Harness.UniqueTestId
+import Harness.Yaml
 import Hasura.Prelude
+import System.Process (readProcess)
 import Text.Pretty.Simple
-
-newtype UniqueTestId = UniqueTestId {getUniqueTestId :: UUID}
-
--- | Sanitise UUID for use in BigQuery dataset name
--- must be alphanumeric (plus underscores)
-instance Show UniqueTestId where
-  show (UniqueTestId uuid) =
-    fmap
-      ( \a ->
-          if Data.Char.isAlphaNum a
-            then a
-            else '_'
-      )
-      . show
-      $ uuid
-
--- | static information across an entire test suite run
-data GlobalTestEnvironment = GlobalTestEnvironment
-  { -- | shared function to log information from tests
-    logger :: Logger,
-    -- | the mode in which we're running the tests. See 'TestingMode' for
-    -- details'.
-    testingMode :: TestingMode,
-    -- | connection details for the instance of HGE we're connecting to
-    server :: Server,
-    servicesConfig :: Services.TestServicesConfig
-  }
-
-instance Has Logger GlobalTestEnvironment where
-  getter = logger
-  modifier f x = x {logger = f (logger x)}
-
-instance Has GlobalTestEnvironment TestEnvironment where
-  getter = globalEnvironment
-  modifier f x = x {globalEnvironment = f (globalEnvironment x)}
-
-instance Show GlobalTestEnvironment where
-  show GlobalTestEnvironment {server} =
-    "<GlobalTestEnvironment: " ++ urlPrefix server ++ ":" ++ show (port server) ++ " >"
 
 -- | A testEnvironment that's passed to all tests.
 data TestEnvironment = TestEnvironment
@@ -84,10 +63,25 @@ data TestEnvironment = TestEnvironment
     uniqueTestId :: UniqueTestId,
     -- | the backend types of the tests
     fixtureName :: FixtureName,
-    -- | The role we attach to requests made within the tests. This allows us
-    -- to test permissions.
-    testingRole :: Maybe Text
+    -- | The permissions we'd like to use for testing.
+    permissions :: TestingRole,
+    -- | Custom fixture-specific options.
+    _options :: Custom.Options,
+    -- Compatibility with the new, componentised fixtures:
+    _postgraphqlInternal :: TestEnvironment -> Value -> IO Value,
+    _shouldReturnYamlFInternal :: TestEnvironment -> (Value -> IO Value) -> IO Value -> Value -> IO (),
+    _getSchemaNameInternal :: TestEnvironment -> SchemaName
   }
+
+scalarTypeToText :: TestEnvironment -> ScalarType -> Text
+scalarTypeToText TestEnvironment {fixtureName} = case fixtureName of
+  Backend BackendTypeConfig {backendScalarType} -> backendScalarType
+  _ -> error "scalarTypeToText only currently defined for the `Backend` `FixtureName`"
+
+-- | The role we're going to use for testing. Either we're an admin, in which
+-- case all permissions are implied, /or/ we're a regular user, in which case
+-- the given permissions will be applied.
+data TestingRole = Admin | NonAdmin [Permission]
 
 instance Has Logger TestEnvironment where
   getter = logger . globalEnvironment
@@ -102,17 +96,9 @@ instance Has Logger TestEnvironment where
             }
       }
 
-instance Has Services.TestServicesConfig GlobalTestEnvironment where
-  getter = servicesConfig
-  modifier f x = x {servicesConfig = f (servicesConfig x)}
-
-instance Has Services.HgeBinPath GlobalTestEnvironment where
-  getter = getter . getter @Services.TestServicesConfig
-  modifier f = modifier (modifier @_ @Services.TestServicesConfig f)
-
-instance Has Services.PostgresServerUrl GlobalTestEnvironment where
-  getter = getter . getter @Services.TestServicesConfig
-  modifier f = modifier (modifier @_ @Services.TestServicesConfig f)
+instance Has GlobalTestEnvironment TestEnvironment where
+  getter = globalEnvironment
+  modifier f x = x {globalEnvironment = f (globalEnvironment x)}
 
 instance Has Services.TestServicesConfig TestEnvironment where
   getter = getter . getter @GlobalTestEnvironment
@@ -126,9 +112,27 @@ instance Has Services.PostgresServerUrl TestEnvironment where
   getter = getter . getter @GlobalTestEnvironment
   modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
 
+instance Has Services.PassthroughEnvVars TestEnvironment where
+  getter = getter . getter @GlobalTestEnvironment
+  modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
+
+instance Has Services.HgeServerInstance TestEnvironment where
+  getter = getter . getter @GlobalTestEnvironment
+  modifier f = modifier (modifier @_ @GlobalTestEnvironment f)
+
 instance Show TestEnvironment where
   show TestEnvironment {globalEnvironment} =
     "<TestEnvironment: " ++ urlPrefix (server globalEnvironment) ++ ":" ++ show (port (server globalEnvironment)) ++ " >"
+
+debugger :: TestEnvironment -> IO ()
+debugger TestEnvironment {globalEnvironment} = do
+  putStrLn "Test run paused. See the state of the world here:"
+  print globalEnvironment
+
+  _ <- readProcess "open" [serverUrl (server globalEnvironment)] ""
+  putStrLn "Press enter to continue testing..."
+
+  void getLine
 
 -- | the `BackendTypeConfig` is used to decide which schema name to use
 -- and for data connector capabilities
@@ -159,45 +163,9 @@ focusFixtureRight testEnv =
         _ -> error "Could not focus on right-hand FixtureName"
     }
 
--- | Credentials for our testing modes. See 'SpecHook.setupTestingMode' for the
--- practical consequences of this type.
-data TestingMode
-  = -- | run all tests, unfiltered
-    TestEverything
-  | -- | run only tests containing this BackendType (or a RemoteSchema, so
-    -- those aren't missed)
-    TestBackend BackendType
-  | -- | run "all the other tests"
-    TestNoBackends
-  | -- | test a Postgres-compatible using a custom connection string
-    TestNewPostgresVariant Options
-  deriving (Eq, Ord, Show)
-
--- | Information about a server that we're working with.
-data Server = Server
-  { -- | The port to connect on.
-    port :: Word16,
-    -- | The full URI prefix e.g. http://localhost
-    urlPrefix :: String,
-    -- | The thread that the server is running on, so we can stop it later.
-    thread :: Async ()
-  }
-
-instance Show Server where
-  show = serverUrl
-
 -- | Retrieve the 'Server' associated with some 'TestEnvironment'.
 getServer :: TestEnvironment -> Server
 getServer TestEnvironment {globalEnvironment} = server globalEnvironment
-
--- | Extracts the full URL prefix and port number from a given 'Server'.
---
--- @
---   > serverUrl (Server 8080 "http://localhost" someThreadId)
---   "http://localhost:8080"
--- @
-serverUrl :: Server -> String
-serverUrl Server {urlPrefix, port} = urlPrefix ++ ":" ++ show port
 
 -- | Retrieve the 'TestingMode' associated with some 'TestEnvironment'
 getTestingMode :: TestEnvironment -> TestingMode
@@ -207,14 +175,10 @@ getTestingMode = testingMode . globalEnvironment
 stopServer :: Server -> IO ()
 stopServer Server {thread} = Async.cancel thread
 
--- | Log a structured message in tests
-testLogMessage :: LoggableMessage a => TestEnvironment -> a -> IO ()
-testLogMessage = runLogger . logger . globalEnvironment
-
 -- | Log an unstructured trace string. Should only be used directly in specs,
 -- not in the Harness modules.
 {-# ANN testLogTrace ("HLINT: ignore" :: String) #-}
-testLogTrace :: TraceString a => TestEnvironment -> a -> IO ()
+testLogTrace :: (TraceString a) => TestEnvironment -> a -> IO ()
 testLogTrace testEnv =
   testLogMessage testEnv . logTrace
 
@@ -228,5 +192,74 @@ testLogShow testEnv =
 -- in the Harness modules, not in Specs.
 --
 -- This should ideally be replaced with more specific logging functions.
-testLogHarness :: TraceString a => TestEnvironment -> a -> IO ()
+testLogHarness :: (TraceString a) => TestEnvironment -> a -> IO ()
 testLogHarness testEnv = testLogMessage testEnv . logHarness
+
+-- Compatibility with the new, componentised fixtures:
+
+-- | This enables late binding of 'postGraphql' on the test environment.
+-- This makes 'TestEnvironment'-based specs more readily compatible with componontised fixtures.
+--
+-- This instance is somewhat subtle, in that the 'PostGraphql' function we return
+-- has to constructed using the *current* test environment. Otherwise we'll break
+-- the late binding and 'postGraphqlInternal' won't pick up updates to
+-- permissions or protocols.
+instance Has Services.PostGraphql TestEnvironment where
+  getter testEnv = Services.PostGraphql $ _postgraphqlInternal testEnv testEnv
+  modifier f testEnv =
+    testEnv
+      { _postgraphqlInternal =
+          const (Services.getPostGraphql $ f (getter testEnv))
+      }
+
+-- | This enables late binding of 'shouldReturnYaml' on the test environment.
+-- This makes 'TestEnvironment'-based specs more readily compatible with componontised fixtures.
+-- Same nuances hold for this as for 'PostGraphql'.
+instance Has ShouldReturnYamlF TestEnvironment where
+  getter testEnvironment = ShouldReturnYamlF (_shouldReturnYamlFInternal testEnvironment testEnvironment)
+  modifier f testEnvironment = testEnvironment {_shouldReturnYamlFInternal = const (getShouldReturnYamlF $ f (getter testEnvironment))}
+
+instance Has SchemaName TestEnvironment where
+  getter testEnv = _getSchemaNameInternal testEnv testEnv
+  modifier f testEnv = testEnv {_getSchemaNameInternal = const (f (getter testEnv))}
+
+-- | Given a `TestEnvironment`, returns a `SchemaName` to use in the test, used
+-- to separate out different test suites
+--
+-- This is used both in setup and teardown, and in individual tests
+--
+-- The `TestEnvironment` contains a `uniqueTestId` and `backendType`, from
+-- which we decide what the `SchemaName` should be.
+--
+-- The backendType is only required so we make changes for BigQuery for now,
+-- once we do this for all backends we'll just need the unique id.
+--
+-- For all other backends, we fall back to the Constants that were used before
+getSchemaName :: TestEnvironment -> SchemaName
+getSchemaName = getter
+
+-- | exposed for use when creating a TestEnvironment
+getSchemaNameInternal :: TestEnvironment -> SchemaName
+getSchemaNameInternal testEnv = getSchemaNameByTestIdAndBackendType (fmap backendType $ getBackendTypeConfig testEnv) (uniqueTestId testEnv)
+  where
+    getSchemaNameByTestIdAndBackendType :: Maybe BackendType -> UniqueTestId -> SchemaName
+    getSchemaNameByTestIdAndBackendType Nothing _ = SchemaName "hasura" -- the `Nothing` case is for tests with multiple schemas
+    getSchemaNameByTestIdAndBackendType (Just BigQuery) uniqueTestId =
+      SchemaName
+        $ T.pack
+        $ "hasura_test_"
+        <> show uniqueTestId
+    getSchemaNameByTestIdAndBackendType (Just Postgres) _ = SchemaName Constants.postgresDb
+    getSchemaNameByTestIdAndBackendType (Just SQLServer) _ = SchemaName $ T.pack Constants.sqlserverDb
+    getSchemaNameByTestIdAndBackendType (Just Citus) _ = SchemaName Constants.citusDb
+    getSchemaNameByTestIdAndBackendType (Just Cockroach) _ = SchemaName Constants.cockroachDb
+    getSchemaNameByTestIdAndBackendType (Just (DataConnector "sqlite")) _ = SchemaName "main"
+    getSchemaNameByTestIdAndBackendType (Just (DataConnector _)) _ = SchemaName $ T.pack Constants.dataConnectorDb
+
+-- | trace if flag is set in the test environment.
+traceIf :: (ToJSON a) => (Show a) => TestEnvironment -> a -> a
+traceIf testEnv value
+  | gfTraceCommands (globalFlags (globalEnvironment testEnv)) =
+      let pretty = TL.unpack (pShow (encodePretty value))
+       in trace (show (uniqueTestId testEnv) <> ":\n" <> pretty) value
+  | otherwise = value

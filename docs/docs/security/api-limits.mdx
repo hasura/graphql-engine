@@ -10,17 +10,16 @@ keywords:
 sidebar_position: 2
 sidebar_label: API limits
 sidebar_class_name: cloud-and-enterprise-icon
-title: 'Cloud & EE: API Limits'
+title: 'Cloud & Enterprise Edition: API Limits'
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # API Limits
 
-<div className="badge badge--primary heading-badge">
-  Available on: Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted Enterprise
-</div>
+<ProductBadge standard pro ee self />
 
 ## Introduction
 
@@ -49,6 +48,15 @@ You can choose any one of the above parameters to rate limit the requests.
 
 **Note**: If you set a `Unique Parameter` then the combination of both the `role_name` and the `Unique Parameter` will
 be used to rate-limit requests.
+
+:::info Note
+
+To enable rate limiting on Hasura Enterprise, you must set the
+[`HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`](/deployment/graphql-engine-flags/reference.mdx#rate-limit-redis-url) environment
+variable or the [`--rate-limit-redis-url`](/deployment/graphql-engine-flags/reference.mdx#rate-limit-redis-url) server flag
+with the appropriate Redis connection string.
+
+:::
 
 Example:
 

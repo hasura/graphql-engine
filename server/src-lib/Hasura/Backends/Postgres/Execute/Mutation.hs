@@ -33,8 +33,6 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (customSQLToTo
 import Hasura.Backends.Postgres.Translate.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR.BoolExp
@@ -44,9 +42,11 @@ import Hasura.RQL.IR.Returning
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Update
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.NamingCase (NamingCase)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Session
 
 data MutateResp (b :: BackendType) a = MutateResp
@@ -95,9 +95,9 @@ runMutation ::
   Mutation ('Postgres pgKind) ->
   m EncJSON
 runMutation mut =
-  bool (mutateAndReturn mut) (mutateAndSel mut) $
-    hasNestedFld $
-      _mOutput mut
+  bool (mutateAndReturn mut) (mutateAndSel mut)
+    $ hasNestedFld
+    $ _mOutput mut
 
 mutateAndReturn ::
   ( MonadTx m,
@@ -211,9 +211,9 @@ mutateAndSel (Mutation qt q mutationOutput allCols strfyNum tCase) = do
 withCheckPermission :: (MonadError QErr m) => m (a, Bool) -> m a
 withCheckPermission sqlTx = do
   (rawResponse, checkConstraint) <- sqlTx
-  unless checkConstraint $
-    throw400 PermissionError $
-      "check constraint of an insert/update permission has failed"
+  unless checkConstraint
+    $ throw400 PermissionError
+    $ "check constraint of an insert/update permission has failed"
   pure rawResponse
 
 executeMutationOutputQuery ::
@@ -235,7 +235,7 @@ executeMutationOutputQuery ::
   m EncJSON
 executeMutationOutputQuery qt allCols preCalAffRows cte mutOutput strfyNum tCase prepArgs = do
   queryTags <- ask
-  let queryTx :: PG.FromRes a => m a
+  let queryTx :: (PG.FromRes a) => m a
       queryTx = do
         let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase
             query = toQuery selectWith
@@ -257,7 +257,7 @@ mutateAndFetchCols ::
   Maybe NamingCase ->
   PG.TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
 mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
-  let mutationTx :: PG.FromRes a => PG.TxE QErr a
+  let mutationTx :: (PG.FromRes a) => PG.TxE QErr a
       mutationTx =
         -- See Note [Prepared statements in Mutations]
         PG.rawQE dmlTxErrorHandler sqlText (toList p) False
@@ -270,8 +270,8 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
     rawIdentifier = S.tableAliasToIdentifier rawAlias
     tabFrom = FromIdentifier $ FIIdentifier (unTableIdentifier rawIdentifier)
     tabPerm = TablePerm annBoolExpTrue Nothing
-    selFlds = flip map cols $
-      \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
+    selFlds = flip map cols
+      $ \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
 
     sqlText = toQuery selectWith
 
@@ -299,16 +299,16 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
         ]
 
     affRowsSel =
-      S.SESelect $
-        S.mkSelect
+      S.SESelect
+        $ S.mkSelect
           { S.selExtr = [S.Extractor S.countStar Nothing],
             S.selFrom = Just $ S.FromExp [S.FIIdentifier rawIdentifier]
           }
 
     (colSel, customSQLCTEs) =
-      runWriter $
-        S.SESelect
-          <$> mkSQLSelect
-            JASMultipleRows
-            ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
-            )
+      runWriter
+        $ S.SESelect
+        <$> mkSQLSelect
+          JASMultipleRows
+          ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
+          )

@@ -1,11 +1,9 @@
-import { set } from 'lodash';
+import set from 'lodash/set';
 import { useCallback, useEffect, useState, createContext } from 'react';
 import { Permissions, RowPermissionsState } from './types';
 import { updateKey } from './utils/helpers';
 
 export const rowPermissionsContext = createContext<RowPermissionsState>({
-  table: {},
-  tables: [],
   comparators: {},
   operators: {},
   permissions: {},
@@ -18,14 +16,9 @@ export const RowPermissionsProvider = ({
   children,
   operators,
   permissions,
-  table,
-  tables,
   comparators,
   onPermissionsChange,
-}: Pick<
-  RowPermissionsState,
-  'permissions' | 'operators' | 'table' | 'tables' | 'comparators'
-> & {
+}: Pick<RowPermissionsState, 'permissions' | 'operators' | 'comparators'> & {
   children?: React.ReactNode | undefined;
   onPermissionsChange?: (permissions: Permissions) => void;
 }) => {
@@ -79,9 +72,7 @@ export const RowPermissionsProvider = ({
         ...permissionsState,
         setValue,
         setKey,
-        table,
         setPermissions,
-        tables,
         comparators,
       }}
     >

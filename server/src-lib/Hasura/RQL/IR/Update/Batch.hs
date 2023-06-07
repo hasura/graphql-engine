@@ -12,7 +12,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
 
 -- | Represents a set of update operations ('_ubOperations') applied to a batch of rows selected
 -- from a table by filtering it with a boolean expression ('_ubWhere').

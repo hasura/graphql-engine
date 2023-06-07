@@ -1,0 +1,68 @@
+---
+description: Hasura GraphQL Federation
+title: GraphQL Federation Overview
+sidebar_label: Overview
+keywords:
+  - hasura
+  - docs
+  - data
+  - federation
+  - data federation
+hide_table_of_contents: true
+sidebar_position: 1
+---
+
+import VersionedLink from '@site/src/components/VersionedLink';
+import DataFederation from '@site/static/icons/features/data_federation.svg';
+
+# <DataFederation /> GraphQL Federation
+
+<div className="overview-header">
+  <div className="overview-text">
+    <p>
+      Federation with GraphQL and Hasura allows you to combine multiple sub-graphs into a supergraph. This allows you to
+      combine data from multiple sources into a single, consolidated endpoint.
+    </p>
+    <p>
+      These sub-graphs can be sourced from different data sources such as databases, REST APIs, or GraphQL APIs,
+      streamlining queries and mutations while maintaining the flexibility and modularity of the underlying services.
+    </p>
+    <h4>Quick Links</h4>
+    <ul>
+      <li>
+        <VersionedLink to="/data-federation/hasura-graphql-federation-architectures/">
+          Learn about Hasura architectures.
+        </VersionedLink>
+      </li>
+    </ul>
+  </div>
+  <iframe
+    src="https://www.youtube.com/embed/jvX07PgT54Y"
+    frameBorder="0"
+    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+    allowFullScreen
+  />
+</div>
+
+## Using GraphQL Federation
+
+<div className="overview-gallery">
+  <VersionedLink to="/data-federation/hasura-graphql-federation-architectures/">
+    <div className="card">
+      <h3>Hasura GraphQL Federation Architectures</h3>
+      <p>Learn about the different federation models enabled by Hasura.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/schema/postgres/remote-relationships/remote-schema-relationships/">
+    <div className="card">
+      <h3>Create a Database-to-Remote-Schema Relationship</h3>
+      <p>Learn how to create a database-to-remote-schema relationship using remote relationships.</p>
+    </div>
+  </VersionedLink>
+  <VersionedLink to="/data-federation/apollo-federation">
+    <div className="card">
+      <h3>Apollo Federation</h3>
+      <p>Learn how to use Apollo Federation to compose data from multiple sources using Hasura.</p>
+    </div>
+  </VersionedLink>
+</div>

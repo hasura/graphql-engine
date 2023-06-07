@@ -21,7 +21,7 @@ describe('../utils.ts/getRequestBody returns', () => {
         },
       ],
     });
-    expect(res).toMatchInlineSnapshot(`"{\\"name\\":\\"some value\\"}"`);
+    expect(res).toMatchInlineSnapshot(`"{"name":"some value"}"`);
   });
 
   it('a response containing form state vars from which URL vars have been filtered off', () => {
@@ -47,6 +47,6 @@ describe('../utils.ts/getRequestBody returns', () => {
         },
       ],
     });
-    expect(res).toMatchInlineSnapshot(`"{\\"name\\":\\"update_value\\"}"`);
+    expect(res).toMatchInlineSnapshot(`"{"name":"update_value"}"`);
   });
 });

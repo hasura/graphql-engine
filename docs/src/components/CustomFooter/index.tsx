@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "@docusaurus/Link";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 import GithubIcon from "@site/static/icons/github.svg";
@@ -7,8 +7,17 @@ import DiscordIcon from "@site/static/icons/discord.svg";
 import LinkedInIcon from "@site/static/icons/linkedin.svg";
 import YoutubeIcon from "@site/static/icons/youtube.svg";
 import styles from "./styles.module.scss";
+import { v4 as uuidv4 } from 'uuid';
+const CustomFooter = () => {
 
-const CustomFooter = () => (
+  useEffect(() => {
+    if (!localStorage.getItem('hasuraDocsUserID')) {
+      const userID = uuidv4();
+      localStorage.setItem('hasuraDocsUserID', userID);
+    }
+  }, []);
+
+return (
 <footer className={styles["custom-footer-wrapper"]}>
   <div className={styles["logo-wrapper"]}>
     <img src={useBaseUrl("/img/logo-light.svg")} className={styles["dark-theme-logo"]} />
@@ -65,6 +74,6 @@ const CustomFooter = () => (
     </div>
   </div>
 </footer>
-);
+)};
 
 export default CustomFooter;

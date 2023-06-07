@@ -1,4 +1,4 @@
-import type { ComponentStory } from '@storybook/react';
+import type { StoryFn } from '@storybook/react';
 
 import * as React from 'react';
 import { HeroEnabled as HeroEnabledComponent } from './HeroEnabled';
@@ -9,15 +9,12 @@ export default {
   title: 'Features/OpenTelemetry/Hero',
 };
 
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const HeroEnabled: ComponentStory<typeof HeroEnabledComponent> = () => (
+export const HeroEnabled: StoryFn<typeof HeroEnabledComponent> = () => (
   <HeroEnabledComponent />
 );
-export const HeroDisabled: ComponentStory<
-  typeof HeroDisabledComponent
-> = () => <HeroDisabledComponent />;
-export const HeroSkeleton: ComponentStory<
-  typeof HeroSkeletonComponent
-> = () => <HeroSkeletonComponent />;
+export const HeroDisabled: StoryFn<typeof HeroDisabledComponent> = () => (
+  <HeroDisabledComponent />
+);
+export const HeroSkeleton: StoryFn<typeof HeroSkeletonComponent> = () => (
+  <HeroSkeletonComponent />
+);

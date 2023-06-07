@@ -21,8 +21,8 @@ import Hasura.RQL.IR.Select
     ConnectionSelect (_csSelect),
   )
 import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.BackendType (BackendType (Postgres))
 import Hasura.RQL.Types.Common (FieldName (FieldName))
-import Hasura.SQL.Backend (BackendType (Postgres))
 
 -- | Translates IR to Postgres queries for "connection" queries (used for Relay).
 --
@@ -58,17 +58,18 @@ mkConnectionSelect connectionSelect = do
   let ( (connectionSource, topExtractor, nodeExtractors),
         SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}
         ) =
-          runWriter $
-            flip runReaderT strfyNum $
-              processConnectionSelect
-                sourcePrefixes
-                rootFieldName
-                (S.toTableAlias rootIdentifier)
-                mempty
-                connectionSelect
+          runWriter
+            $ flip evalStateT initialNativeQueryFreshIdStore
+            $ flip runReaderT strfyNum
+            $ processConnectionSelect
+              sourcePrefixes
+              rootFieldName
+              (S.toTableAlias rootIdentifier)
+              mempty
+              connectionSelect
       selectNode =
-        MultiRowSelectNode [topExtractor] $
-          SelectNode nodeExtractors joinTree
+        MultiRowSelectNode [topExtractor]
+          $ SelectNode nodeExtractors joinTree
       selectWith =
         connectionToSelectWith (S.toTableAlias rootIdentifier) connectionSource selectNode
   tell customSQLCTEs

@@ -12,7 +12,7 @@ module Test.Parser.Monad
 where
 
 import Control.Monad.Memoize
-import Data.Aeson.Internal (JSONPathElement)
+import Data.Aeson.Types (JSONPathElement)
 import Data.Has (Has (..))
 import Data.Text qualified as T
 import GHC.Stack
@@ -21,25 +21,25 @@ import Hasura.Base.ErrorMessage
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.ErrorCode
 import Hasura.GraphQL.Schema.Common
-import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options (SchemaOptions (..))
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.NamingCase
+import Hasura.RQL.Types.Roles (adminRoleName)
+import Hasura.RQL.Types.Schema.Options (SchemaOptions (..))
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source (SourceInfo)
 import Hasura.RQL.Types.SourceCustomization (MkRootFieldName)
 import Hasura.RemoteSchema.SchemaCache (CustomizeRemoteFieldName)
-import Hasura.SQL.Backend
-import Hasura.Session (adminRoleName)
 import Language.Haskell.TH.Syntax qualified as TH
 import Test.HUnit.Lang (assertFailure)
 
 -- | Placeholder value for test inputs that are not relevant yet.
-notImplementedYet :: HasCallStack => String -> a
+notImplementedYet :: (HasCallStack) => String -> a
 notImplementedYet thing =
-  withFrozenCallStack $
-    error $
-      ( unlines
+  withFrozenCallStack
+    $ error
+    $ ( unlines
           [ "\"" ++ thing ++ "\" is not yet defined, because it hasn't been touched by tests yet.",
             "If you see this message you likely need to provide/mock a value here"
           ]

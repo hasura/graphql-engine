@@ -5,12 +5,13 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy
 where
 
 import Control.Lens ((^?))
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
   ( IsIdentifier (toIdentifier),
     PGCol (..),
+    QualifiedFunction,
     TableIdentifier (..),
     qualifiedObjectToText,
     tableIdentifierToIdentifier,
@@ -31,28 +32,28 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
   ( aggregateFieldsToExtractorExps,
     mkAggregateOrderByExtractorAndFields,
   )
-import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
-  ( fromTableRowArgs,
-    selectFromToFromItem,
-  )
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (fromTableRowArgs)
 import Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
   ( withWriteArrayRelation,
     withWriteComputedFieldTableSet,
     withWriteObjectRelation,
   )
 import Hasura.Backends.Postgres.Translate.Types
-import Hasura.GraphQL.Schema.Options qualified as Options
+import Hasura.Backends.Postgres.Types.Function (ArgumentExp)
+import Hasura.Function.Cache (FunctionArgsExpG (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.OrderBy
   ( OrderByItemG (OrderByItemG, obiColumn),
   )
 import Hasura.RQL.IR.Select
+import Hasura.RQL.IR.Select.Lenses
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.Schema.Options qualified as Options
 
 {- Note [Optimizing queries using limit/offset]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,51 +112,57 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
       let ordByAlias = mkAnnOrderByAlias sourcePrefix fieldAlias similarArrayFields annObCol
       (ordByAlias,) <$> case annObCol of
         AOCColumn pgColInfo ->
-          pure $
-            S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix) $
-              toIdentifier $
-                ciColumn pgColInfo
+          pure
+            $ S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix)
+            $ toIdentifier
+            $ ciColumn pgColInfo
         AOCObjectRelation relInfo relFilter rest -> withWriteObjectRelation $ do
-          let RelInfo relName _ colMapping relTable _ _ = relInfo
+          let RelInfo {riName = relName, riMapping = colMapping, riTarget = relTarget} = relInfo
               relSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
               fieldName = mkOrderByFieldName relName
-          (relOrderByAlias, relOrdByExp) <-
-            processAnnotatedOrderByElement relSourcePrefix fieldName rest
-          let selectSource =
-                ObjectSelectSource
-                  (tableIdentifierToIdentifier relSourcePrefix)
-                  (S.FISimple relTable Nothing)
-                  (toSQLBoolExp (S.QualTable relTable) relFilter)
-              relSource = ObjectRelationSource relName colMapping selectSource
-          pure
-            ( relSource,
-              HM.singleton relOrderByAlias relOrdByExp,
-              S.mkQIdenExp relSourcePrefix relOrderByAlias
-            )
+          case relTarget of
+            RelTargetNativeQuery _ -> error "processAnnotatedOrderByElement RelTargetNativeQuery (AOCObjectRelation)"
+            RelTargetTable relTable -> do
+              (relOrderByAlias, relOrdByExp) <-
+                processAnnotatedOrderByElement relSourcePrefix fieldName rest
+              let selectSource =
+                    ObjectSelectSource
+                      (tableIdentifierToIdentifier relSourcePrefix)
+                      (S.FISimple relTable Nothing)
+                      (toSQLBoolExp (S.QualTable relTable) relFilter)
+                  relSource = ObjectRelationSource relName colMapping selectSource Nullable
+              pure
+                ( relSource,
+                  InsOrdHashMap.singleton relOrderByAlias relOrdByExp,
+                  S.mkQIdenExp relSourcePrefix relOrderByAlias
+                )
         AOCArrayAggregation relInfo relFilter aggOrderBy -> withWriteArrayRelation $ do
-          let RelInfo relName _ colMapping relTable _ _ = relInfo
-              fieldName = mkOrderByFieldName relName
-              relSourcePrefix =
-                mkArrayRelationSourcePrefix
-                  sourcePrefix
-                  fieldAlias
-                  similarArrayFields
-                  fieldName
-              relAlias = mkArrayRelationAlias fieldAlias similarArrayFields fieldName
-              (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
-              selectSource =
-                SelectSource
-                  (tableIdentifierToIdentifier relSourcePrefix)
-                  (S.FISimple relTable Nothing)
-                  (toSQLBoolExp (S.QualTable relTable) relFilter)
-                  noSortingAndSlicing
-              relSource = ArrayRelationSource relAlias colMapping selectSource
-          pure
-            ( relSource,
-              topExtractor,
-              HM.fromList $ aggregateFieldsToExtractorExps relSourcePrefix fields,
-              S.mkQIdenExp relSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
-            )
+          let RelInfo {riName = relName, riMapping = colMapping, riTarget = relTarget} = relInfo
+          case relTarget of
+            RelTargetNativeQuery _ -> error "processAnnotatedOrderByElement RelTargetNativeQuery (AOCArrayAggregation)"
+            RelTargetTable relTable -> do
+              let fieldName = mkOrderByFieldName relName
+                  relSourcePrefix =
+                    mkArrayRelationSourcePrefix
+                      sourcePrefix
+                      fieldAlias
+                      similarArrayFields
+                      fieldName
+                  relAlias = mkArrayRelationAlias fieldAlias similarArrayFields fieldName
+                  (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
+                  selectSource =
+                    SelectSource
+                      (tableIdentifierToIdentifier relSourcePrefix)
+                      (S.FISimple relTable Nothing)
+                      (toSQLBoolExp (S.QualTable relTable) relFilter)
+                      noSortingAndSlicing
+                  relSource = ArrayRelationSource relAlias colMapping selectSource
+              pure
+                ( relSource,
+                  topExtractor,
+                  InsOrdHashMap.fromList $ aggregateFieldsToExtractorExps relSourcePrefix fields,
+                  S.mkQIdenExp relSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
+                )
         AOCComputedField ComputedFieldOrderBy {..} ->
           case _cfobOrderByElement of
             CFOBEScalar _ -> do
@@ -167,8 +174,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
                   computedFieldSourcePrefix = mkComputedFieldTableIdentifier sourcePrefix fieldName
                   (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
                   fromItem =
-                    selectFromToFromItem sourcePrefix $
-                      FromFunction _cfobFunction _cfobFunctionArgsExp Nothing
+                    functionToFromItem sourcePrefix _cfobFunction _cfobFunctionArgsExp
                   functionQual = S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText _cfobFunction) Nothing
                   selectSource =
                     SelectSource
@@ -180,9 +186,16 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
               pure
                 ( source,
                   topExtractor,
-                  HM.fromList $ aggregateFieldsToExtractorExps computedFieldSourcePrefix fields,
+                  InsOrdHashMap.fromList $ aggregateFieldsToExtractorExps computedFieldSourcePrefix fields,
                   S.mkQIdenExp computedFieldSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
                 )
+
+    functionToFromItem :: TableIdentifier -> QualifiedFunction -> FunctionArgsExpG (ArgumentExp S.SQLExp) -> S.FromItem
+    functionToFromItem prefix qf args =
+      S.FIFunc
+        $ S.FunctionExp qf (fromTableRowArgs prefix args)
+        $ Just
+        $ S.mkFunctionAlias qf Nothing
 
     generateSorting ::
       NE.NonEmpty (OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.ColumnAlias, SQLExpression ('Postgres pgKind)))) ->
@@ -234,11 +247,11 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
       [OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.ColumnAlias, SQLExpression ('Postgres pgKind)))] ->
       S.SQLExp
     mkCursorExp orderByItemExps =
-      S.applyJsonBuildObj $
-        flip concatMap orderByItemExps $
-          \orderByItemExp ->
-            let OrderByItemG _ (annObCol, (_, valExp)) _ = orderByItemExp
-             in annObColToJSONField valExp annObCol
+      S.applyJsonBuildObj
+        $ flip concatMap orderByItemExps
+        $ \orderByItemExp ->
+          let OrderByItemG _ (annObCol, (_, valExp)) _ = orderByItemExp
+           in annObColToJSONField valExp annObCol
       where
         mkAggOrderByValExp valExp = \case
           AAOCount -> [S.SELit "count", valExp]

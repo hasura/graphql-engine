@@ -414,7 +414,7 @@ describe('GraphQL utils for browse rows - ', () => {
       expect(query).toMatchInlineSnapshot(`
         "query MyQuery  {
                 SourceNamespace_  {
-                  TablePrefix_CustomSelectQueryName_TableSuffix (where: {store_id: { _eq: 4},customNameForStreet: { _eq: \\"some street name\\"}},order_by: {customNameForStreet: desc},limit: 10,offset: 15) {
+                  TablePrefix_CustomSelectQueryName_TableSuffix (where: {store_id: { _eq: 4},customNameForStreet: { _eq: "some street name"}},order_by: {customNameForStreet: desc},limit: 10,offset: 15) {
                     store_id 
         ,store_name 
         ,customNameForPhone 

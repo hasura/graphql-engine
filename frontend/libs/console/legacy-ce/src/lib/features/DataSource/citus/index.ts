@@ -1,22 +1,41 @@
 import { Table } from '../../hasura-metadata-types';
 import { Database, Feature } from '..';
 import { runSQL } from '../api';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
+import {
+  defaultDatabaseProps,
+  defaultIntrospectionProps,
+} from '../common/defaultDatabaseProps';
 import { adaptIntrospectedTables } from '../common/utils';
-import { GetTrackableTablesProps } from '../types';
+import { GetTrackableTablesProps, GetVersionProps } from '../types';
 import {
   getTableColumns,
   getFKRelationships,
   getTablesListAsTree,
   getSupportedOperators,
+  getIsTableView,
 } from './introspection';
 import { getTableRows } from './query';
+import { postgresCapabilities } from '../common/capabilities';
+import { consoleDataTypeToSQLTypeMap } from '../postgres/utils';
 
 export type CitusTable = { name: string; schema: string };
 
 export const citus: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    ...defaultIntrospectionProps,
+    getVersion: async ({ dataSourceName, httpClient }: GetVersionProps) => {
+      const result = await runSQL({
+        source: {
+          name: dataSourceName,
+          kind: 'citus',
+        },
+        sql: `SELECT VERSION()`,
+        httpClient,
+      });
+      console.log(result);
+      return result.result?.[1][0] ?? '';
+    },
     getDriverInfo: async () => ({
       name: 'citus',
       displayName: 'Citus',
@@ -25,6 +44,7 @@ export const citus: Database = {
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
     },
+    getDriverCapabilities: async () => Promise.resolve(postgresCapabilities),
     getTrackableTables: async ({
       dataSourceName,
       httpClient,
@@ -65,6 +85,9 @@ export const citus: Database = {
     getFKRelationships,
     getTablesListAsTree,
     getSupportedOperators,
+    getDatabaseSchemas: async () => Feature.NotImplemented,
+    getIsTableView,
+    getSupportedDataTypes: async () => consoleDataTypeToSQLTypeMap,
   },
   query: {
     getTableRows,

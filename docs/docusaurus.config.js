@@ -19,7 +19,7 @@ const config = {
   projectName: 'graphql-engine',
   staticDirectories: ['static', 'public'],
   webpack: {
-    jsLoader: (isServer) => ({
+    jsLoader: isServer => ({
       loader: require.resolve('swc-loader'),
       options: {
         jsc: {
@@ -110,8 +110,8 @@ const config = {
       docs: {
         sidebar: {
           hideable: true,
-          autoCollapseCategories: true
-        }
+          autoCollapseCategories: true,
+        },
       },
       colorMode: {
         defaultMode: 'light',
@@ -176,6 +176,19 @@ const config = {
           {
             to: 'https://hasura.io/changelog',
             label: "What's New",
+            id: 'whats-new-link',
+            position: 'left',
+          },
+          {
+            to: '/latest/hasura-cloud/overview',
+            label: 'Hasura Cloud',
+            className: 'header-hasura-cloud-link',
+            position: 'left',
+          },
+          {
+            to: '/latest/enterprise/overview',
+            label: 'Hasura Enterprise',
+            className: 'header-hasura-ee-link',
             position: 'left',
           },
           {

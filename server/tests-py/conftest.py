@@ -1,11 +1,12 @@
 import collections
 import http.server
+import json
 import inspect
 import os
 import pytest
-import re
 import socket
 import sqlalchemy
+import subprocess
 import sys
 import threading
 import time
@@ -16,8 +17,10 @@ import uuid
 import auth_webhook_server
 from context import ActionsWebhookServer, EvtsWebhookServer, GQLWsClient, GraphQLWSClient, HGECtx, HGECtxGQLServer, HGECtxWebhook, PytestConf
 import fixtures.hge
+import fixtures.jwt
 import fixtures.postgres
 import fixtures.tls
+import jwk_server
 import ports
 import webhook
 import PortToHaskell
@@ -47,32 +50,10 @@ def pytest_addoption(parser):
     parser.addoption('--tls-ca-key', help='The CA key used for helper services', required=False)
 
     parser.addoption(
-        "--hge-jwt-key-file", metavar="HGE_JWT_KEY_FILE", help="File containing the private key used to encode jwt tokens using RS512 algorithm", required=False
-    )
-    parser.addoption(
-        "--hge-jwt-conf", metavar="HGE_JWT_CONF", help="The JWT conf", required=False
-    )
-
-    parser.addoption(
-        "--test-ws-init-cookie",
-        metavar="read|noread",
-        required=False,
-        help="Run testcases for testing cookie sending over websockets"
-    )
-
-    parser.addoption(
         "--test-hge-scale-url",
         metavar="<url>",
         required=False,
         help="Run testcases for horizontal scaling"
-    )
-
-    parser.addoption(
-        "--test-logging",
-        action="store_true",
-        default=False,
-        required=False,
-        help="Run testcases for logging"
     )
 
     parser.addoption(
@@ -89,56 +70,6 @@ def pytest_addoption(parser):
         default=False,
         required=False,
         help="Accept any failing test cases from YAML files as correct, and write the new files out to disk."
-    )
-    parser.addoption(
-        "--skip-schema-teardown",
-        action="store_true",
-        default=False,
-        required=False,
-        help="""
-Skip tearing down the schema/Hasura metadata after tests. This option may result in test failures if the schema
-has to change between the list of tests to be run
-"""
-    )
-    parser.addoption(
-        "--skip-schema-setup",
-        action="store_true",
-        default=False,
-        required=False,
-        help="""
-Skip setting up schema/Hasura metadata before tests.
-This option may result in test failures if the schema has to change between the list of tests to be run
-"""
-    )
-
-    parser.addoption(
-        "--avoid-error-message-checks",
-        action="store_true",
-        default=False,
-        required=False,
-        help="""
-    This option when set will ignore disparity in error messages between expected and response outputs.
-    Used basically in version upgrade/downgrade tests where the error messages may change
-    """
-    )
-
-    parser.addoption(
-        "--collect-upgrade-tests-to-file",
-        metavar="<path>",
-        required=False,
-        help="When used along with collect-only, it will write the list of upgrade tests into the file specified"
-    )
-
-    parser.addoption(
-        "--test-unauthorized-role",
-        action="store_true",
-        help="Run testcases for unauthorized role",
-    )
-
-    parser.addoption(
-        "--test-no-cookie-and-unauth-role",
-        action="store_true",
-        help="Run testcases for no unauthorized role and no cookie jwt header set (cookie auth is set as part of jwt config upon engine startup)",
     )
 
     parser.addoption(
@@ -162,13 +93,6 @@ This option may result in test failures if the schema has to change between the 
     )
 
     parser.addoption(
-        "--test-read-only-source",
-        action="store_true",
-        default=False,
-        required=False,
-        help="Run testcases with a read-only database source"
-    )
-    parser.addoption(
         "--port-to-haskell",
         action="store_true",
         default=False,
@@ -178,13 +102,13 @@ This option may result in test failures if the schema has to change between the 
 
 
 #By default,
-#1) Set test grouping to by class (--dist=loadfile)
+#1) Set test grouping to by class (--dist=loadscope)
 #2) Set default parallelism to one
 def pytest_cmdline_preparse(config, args):
     worker = os.environ.get('PYTEST_XDIST_WORKER')
     if 'xdist' in sys.modules and not worker:  # pytest-xdist plugin
         num = 1
-        args[:] = ['--dist=loadfile', f'-n{num}'] + args
+        args[:] = ['--dist=loadscope', f'-n{num}'] + args
 
 def pytest_configure(config):
     # Pytest has removed the global pytest.config
@@ -206,42 +130,6 @@ def pytest_configure(config):
             xdist_threads = config.getoption('-n')
             assert config.getoption('--hge-bin') or xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.hge_url_list))
             assert xdist_threads <= len(config.pg_url_list), "Not enough pg_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.pg_url_list))
-
-@pytest.hookimpl()
-def pytest_report_collectionfinish(config, startdir, items):
-    """
-    Collect server upgrade tests to the given file
-    """
-    tests_file = config.getoption('--collect-upgrade-tests-to-file')
-    tests = collections.OrderedDict()
-    if tests_file:
-        def is_upgrade_test(item):
-            # Check if allow_server_upgrade_tests marker are present
-            # skip_server_upgrade_tests marker is not present
-            return item.get_closest_marker('allow_server_upgrade_test') \
-                and not item.get_closest_marker('skip_server_upgrade_test')
-        with open(tests_file,'w') as f:
-            upgrade_items = filter(is_upgrade_test, items)
-            for item in upgrade_items:
-                # This test should be run separately,
-                # since its schema setup has function scope
-                if 'per_method_tests_db_state' in item.fixturenames:
-                    tests[item.nodeid] = True
-                elif any([ (x in item.fixturenames)
-                    for x in
-                    [ 'per_class_tests_db_state',
-                      'per_class_db_schema_for_mutation_tests'
-                    ]
-                ]):
-                    # For this test, schema setup has class scope
-                    # We can run a class of these tests at a time
-                    tests[item.parent.nodeid] = True
-                # Assume tests can only be run separately
-                else:
-                    tests[item.nodeid] = True
-            for test in tests.keys():
-                f.write(test + '\n')
-    return ''
 
 @pytest.hookimpl(optionalhook=True)
 def pytest_configure_node(node):
@@ -340,7 +228,10 @@ def add_source(
                     pass
             return ignoring_errors_impl
 
-        def impl(name: str, customization: Any = None):
+        def impl(name: str, read_only: bool = False, customization: Any = None) -> fixtures.postgres.Backend:
+            if read_only:
+                raise Exception('Cannot add a read-only source.')
+
             if name == 'pg1':
                 env_var = 'HASURA_GRAPHQL_PG_SOURCE_URL_1'
             elif name == 'pg2' or name == 'postgres':
@@ -374,8 +265,8 @@ def add_source(
 
         return impl
 
-    def impl(name: str, customization: Any = None):
-        backend = fixtures.postgres.create_schema(request, owner_engine, runner_engine, f'source_{name}')
+    def impl(name: str, read_only: bool = False, customization: Any = None) -> fixtures.postgres.Backend:
+        backend = fixtures.postgres.create_schema(request, owner_engine, runner_engine, f'source_{name}', read_only)
         fixtures.postgres.add_source(hge_ctx_fixture, backend, name, customization)
         request.addfinalizer(lambda: fixtures.postgres.drop_source(hge_ctx_fixture, name))
         return backend
@@ -398,7 +289,7 @@ def tls_ca_configuration(request: pytest.FixtureRequest, tmp_path_factory: pytes
 
 # TODO: remove once parallelization work is completed
 @pytest.fixture(scope='class', autouse=True)
-def hge_skip(request: pytest.FixtureRequest, hge_server: Optional[str], hge_fixture_env: dict[str, str]):
+def hge_skip(request: pytest.FixtureRequest, hge_server: Optional[Any], hge_fixture_env: dict[str, str]):
     # Let `hge_server` manage this stuff.
     if hge_server:
         return
@@ -424,8 +315,8 @@ def hge_bin(request: pytest.FixtureRequest) -> Optional[str]:
     return request.config.getoption('--hge-bin')  # type: ignore
 
 @pytest.fixture(scope='class')
-def hge_port() -> int:
-    return fixtures.hge.hge_port()
+def hge_port(worker_id: str) -> int:
+    return fixtures.hge.hge_port(worker_id)
 
 @pytest.fixture(scope='class')
 def hge_url(request: pytest.FixtureRequest, hge_bin: Optional[str], hge_port: int) -> str:
@@ -484,7 +375,7 @@ def hge_server(
     hge_key: Optional[str],
     hge_fixture_env: dict[str, str],
     metadata_schema_url: str,
-) -> Optional[str]:
+) -> Optional[subprocess.Popen[bytes]]:
     # TODO: remove once parallelization work is completed
     #       `hge_bin` will no longer be optional
     if not hge_bin:
@@ -543,8 +434,9 @@ def hge_ctx_fixture(
 @pytest.fixture(scope='class')
 def hge_ctx(
     hge_ctx_fixture: HGECtx,
-    hge_server: Optional[str],
-    source_backend: Optional[fixtures.postgres.Backend],
+    hge_server,
+    hge_url,
+    source_backend,
 ):
     return hge_ctx_fixture
 
@@ -727,6 +619,63 @@ def ws_client_graphql_ws(hge_ctx):
     yield client
     client.teardown()
 
+@pytest.fixture(scope='class')
+@pytest.mark.early
+def jwt_configuration(
+    request: pytest.FixtureRequest,
+    tmp_path_factory: pytest.TempPathFactory,
+    hge_fixture_env: dict[str, str],
+) -> Optional[fixtures.jwt.JWTConfiguration]:
+    marker = request.node.get_closest_marker('jwt')
+    if not marker:
+        raise Exception('JWT configuration is required.')
+
+    algorithm = marker.args[0]
+    try:
+        configuration = marker.args[1]
+    except IndexError:
+        configuration = {}
+
+    tmp_path = tmp_path_factory.mktemp('jwt')
+    match algorithm:
+        case 'rsa':
+            configuration = fixtures.jwt.init_rsa(tmp_path, configuration)
+        case 'ed25519':
+            configuration = fixtures.jwt.init_ed25519(tmp_path, configuration)
+        case _:
+            raise Exception(f'Unsupported JWT configuration: {marker.args!r}')
+
+    hge_fixture_env['HASURA_GRAPHQL_JWT_SECRET'] = json.dumps(configuration.server_configuration)
+    return configuration
+
+@pytest.fixture(scope='class')
+@pytest.mark.early
+def jwk_server_url(request: pytest.FixtureRequest, hge_fixture_env: dict[str, str]):
+    path_marker = request.node.get_closest_marker('jwk_path')
+    assert path_marker is not None, 'The test must set the `jwk_path` marker.'
+    path: str = path_marker.args[0]
+
+    # If the JWK server was started outside, just set the environment variable
+    # so that the test is skipped if the value is wrong.
+    env_var = os.getenv('JWK_SERVER_URL')
+    if env_var:
+        hge_fixture_env['HASURA_GRAPHQL_JWT_SECRET'] = '{"jwk_url": "' + env_var + path + '"}'
+        return env_var
+
+    server_address = extract_server_address_from('JWK_SERVER_URL')
+    server = jwk_server.create_server(server_address)
+    thread = threading.Thread(target=server.serve_forever)
+    thread.start()
+    request.addfinalizer(server.shutdown)
+
+    host = server.server_address[0]
+    port = server.server_address[1]
+    ports.wait_for_port(port)
+    url = f'http://{host}:{port}'
+    print(f'{jwk_server_url.__name__} server started on {url}')
+    hge_fixture_env['HASURA_GRAPHQL_JWT_SECRET'] = '{"jwk_url": "' + url + path + '"}'
+    return url
+
 def extract_server_address_from(env_var: str) -> tuple[str, int]:
     """
     Extracts a server address (a pair of host and port) from the given environment variable.
@@ -838,7 +787,6 @@ def per_method_db_data_for_mutation_tests(request, hge_ctx, per_class_db_schema_
         request, hge_ctx,
         'values_setup_files', values_setup,
         'values_teardown_files', values_teardown,
-        skip_setup=False, skip_teardown=False
     )
 
 def db_state_context(request, hge_ctx):
@@ -887,15 +835,10 @@ def db_context_with_schema_common(
     setup_files_attr, setup_default_file,
     teardown_files_attr, teardown_default_file,
 ):
-    (skip_setup, skip_teardown) = [
-        request.config.getoption('--' + x)
-        for x in ['skip-schema-setup', 'skip-schema-teardown']
-    ]
     yield from db_context_common(
         request, hge_ctx,
         setup_files_attr, setup_default_file,
         teardown_files_attr, teardown_default_file,
-        skip_setup, skip_teardown
     )
 
 def db_context_with_schema_common_new(
@@ -905,23 +848,17 @@ def db_context_with_schema_common_new(
     setup_sql_file, teardown_sql_file,
     pre_setup_file, post_teardown_file,
 ):
-    (skip_setup, skip_teardown) = [
-        request.config.getoption('--' + x)
-        for x in ['skip-schema-setup', 'skip-schema-teardown']
-    ]
     yield from db_context_common_new(
         request, hge_ctx,
         setup_files_attr, setup_default_file, setup_sql_file,
         teardown_files_attr, teardown_default_file, teardown_sql_file,
         pre_setup_file, post_teardown_file,
-        skip_setup, skip_teardown
     )
 
 def db_context_common(
         request, hge_ctx,
         setup_files_attr, setup_default_file,
         teardown_files_attr, teardown_default_file,
-        skip_setup=True, skip_teardown=True
 ):
     def get_files(attr, default_file):
         files = getattr(request.cls, attr, None)
@@ -934,13 +871,11 @@ def db_context_common(
         yield from setup_and_teardown_v1q(
             request, hge_ctx,
             setup, teardown,
-            skip_setup, skip_teardown
         )
     else:
         yield from setup_and_teardown_v2q(
             request, hge_ctx,
             setup, teardown,
-            skip_setup, skip_teardown
         )
 
 
@@ -949,7 +884,6 @@ def db_context_common_new(
         setup_files_attr, setup_default_file, setup_default_sql_file,
         teardown_files_attr, teardown_default_file, teardown_default_sql_file,
         pre_setup_file, post_teardown_file,
-        skip_setup=True, skip_teardown=True
 ):
     def get_files(attr, default_file):
         files = getattr(request.cls, attr, None)
@@ -967,13 +901,11 @@ def db_context_common_new(
         setup, teardown,
         setup_default_sql_file, teardown_default_sql_file,
         pre_setup_default_file, post_teardown_default_file,
-        skip_setup, skip_teardown
     )
 
 def setup_and_teardown_v1q(
     request, hge_ctx,
     setup_files, teardown_files,
-    skip_setup=False, skip_teardown=False
 ):
     if PytestConf.config.getoption("--port-to-haskell"):
       backend = hge_ctx.backend.title()
@@ -992,17 +924,13 @@ def setup_and_teardown_v1q(
         if os.path.isfile(filepath):
             return hge_ctx.v1q_f(filepath)
 
-    if not skip_setup:
-        run_on_elem_or_list(v1q_f, setup_files)
+    run_on_elem_or_list(v1q_f, setup_files)
     yield
-    # Teardown anyway if any of the tests have failed
-    if request.session.testsfailed > 0 or not skip_teardown:
-        run_on_elem_or_list(v1q_f, teardown_files)
+    run_on_elem_or_list(v1q_f, teardown_files)
 
 def setup_and_teardown_v2q(
     request, hge_ctx,
     setup_files, teardown_files,
-    skip_setup=False, skip_teardown=False
 ):
     if PytestConf.config.getoption("--port-to-haskell"):
       backend = hge_ctx.backend.title()
@@ -1021,19 +949,15 @@ def setup_and_teardown_v2q(
         if os.path.isfile(filepath):
             return hge_ctx.v2q_f(filepath)
 
-    if not skip_setup:
-        run_on_elem_or_list(v2q_f, setup_files)
+    run_on_elem_or_list(v2q_f, setup_files)
     yield
-    # Teardown anyway if any of the tests have failed
-    if request.session.testsfailed > 0 or not skip_teardown:
-        run_on_elem_or_list(v2q_f, teardown_files)
+    run_on_elem_or_list(v2q_f, teardown_files)
 
 def setup_and_teardown(
     request, hge_ctx,
     setup_files, teardown_files,
     sql_schema_setup_file, sql_schema_teardown_file,
     pre_setup_file, post_teardown_file,
-    skip_setup=False, skip_teardown=False
 ):
     if PytestConf.config.getoption("--port-to-haskell"):
       backend = hge_ctx.backend.title()
@@ -1078,16 +1002,13 @@ def setup_and_teardown(
       def pre_post_metadataq_f(f):
           if os.path.isfile(f):
               hge_ctx.v1metadataq_f(f)
-      if not skip_setup:
-          run_on_elem_or_list(pre_post_metadataq_f, pre_setup_file)
-          run_on_elem_or_list(v2q_f, sql_schema_setup_file)
-          run_on_elem_or_list(metadataq_f, setup_files)
+      run_on_elem_or_list(pre_post_metadataq_f, pre_setup_file)
+      run_on_elem_or_list(v2q_f, sql_schema_setup_file)
+      run_on_elem_or_list(metadataq_f, setup_files)
       yield
-      # Teardown anyway if any of the tests have failed
-      if request.session.testsfailed > 0 or not skip_teardown:
-          run_on_elem_or_list(metadataq_f, teardown_files)
-          run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
-          run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
+      run_on_elem_or_list(metadataq_f, teardown_files)
+      run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
+      run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
 
 def run_on_elem_or_list(f, x):
     if isinstance(x, str):

@@ -20,8 +20,8 @@ spec =
   Fixture.run
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [setupMetadata testEnvironment]
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [setupMetadata testEnv]
             }
         ]
     )
@@ -30,15 +30,15 @@ spec =
 -- ** Setup
 
 setupMetadata :: TestEnvironment -> Fixture.SetupAction
-setupMetadata testEnvironment = do
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+setupMetadata testEnv = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
       sourceName = Fixture.backendSourceName backendTypeMetadata
-      sourceConfiguration = Postgres.defaultSourceConfiguration testEnvironment
+      sourceConfiguration = Postgres.defaultSourceConfiguration testEnv
 
       setup :: IO ()
       setup =
         GraphqlEngine.postMetadata_
-          testEnvironment
+          testEnv
           [yaml|
             type: replace_metadata
             args:
@@ -54,7 +54,7 @@ setupMetadata testEnvironment = do
       teardown :: IO ()
       teardown =
         GraphqlEngine.postMetadata_
-          testEnvironment
+          testEnv
           [yaml|
             type: replace_metadata
             args:
@@ -67,12 +67,12 @@ setupMetadata testEnvironment = do
 
 -- * Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   describe "test_connection_template negative tests" do
     it "should fail for other backends" $ \testEnv -> do
       shouldReturnYaml
-        opts
+        testEnv
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnv
@@ -90,7 +90,7 @@ tests opts = do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
           sourceName = Fixture.backendSourceName backendTypeMetadata
       shouldReturnYaml
-        opts
+        testEnv
         ( GraphqlEngine.postMetadataWithStatus
             400
             testEnv

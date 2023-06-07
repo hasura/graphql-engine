@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { GraphiqlPopup } from './GraphiqlPopup';
 
@@ -7,9 +7,9 @@ export default {
   title: 'features/CloudOnboarding/One Click Deployment/Graphiql Popup',
   component: GraphiqlPopup,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof GraphiqlPopup>;
+} as Meta<typeof GraphiqlPopup>;
 
-export const Default: Story = () => (
+export const Default: StoryFn = () => (
   <GraphiqlPopup
     status="success"
     gitRepoName="abhi40308/hasura-sample-app-ocd"
@@ -18,7 +18,7 @@ export const Default: Story = () => (
   />
 );
 
-export const Error: Story = () => {
+export const Error: StoryFn = () => {
   return (
     <GraphiqlPopup
       status="error"

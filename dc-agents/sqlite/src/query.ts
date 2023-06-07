@@ -1,6 +1,6 @@
 import { Config }  from "./config";
-import { connect, SqlLogger } from "./db";
-import { coerceUndefinedToNull, coerceUndefinedOrNullToEmptyRecord, isEmptyObject, tableNameEquals, unreachable, stringArrayEquals, ErrorWithStatusCode } from "./util";
+import { defaultMode, SqlLogger, withConnection } from "./db";
+import { coerceUndefinedToNull, coerceUndefinedOrNullToEmptyRecord, isEmptyObject, tableNameEquals, unreachable, stringArrayEquals, ErrorWithStatusCode, mapObject } from "./util";
 import {
     Expression,
     BinaryComparisonOperator,
@@ -20,10 +20,12 @@ import {
     UnaryComparisonOperator,
     ExplainResponse,
     ExistsExpression,
-    ErrorResponse,
     OrderByRelation,
     OrderByElement,
     OrderByTarget,
+    ScalarValue,
+    TableRequest,
+    FunctionRelationships,
   } from "@hasura/dc-api-types";
 import { customAlphabet } from "nanoid";
 import { DEBUGGING_TAGS, QUERY_LENGTH_LIMIT } from "./environment";
@@ -107,6 +109,10 @@ export function json_object(relationships: TableRelationships[], fields: Fields,
           throw new Error(`Couldn't find relationship ${field.relationship} for field ${fieldName} on table ${table}`);
         }
         return `'${fieldName}', ${relationship(relationships, rel, field, tableAlias)}`;
+      case "object":
+        throw new Error('Unsupported field type "object"');
+      case "array":
+        throw new Error('Unsupported field type "array"');
       default:
         return unreachable(field["type"]);
     }
@@ -292,10 +298,7 @@ function aggregates_query(
     wLimit: number | null,
     wOffset: number | null,
     wOrder: OrderBy | null,
-  ): string[] {
-  if (isEmptyObject(aggregates))
-    return [];
-
+  ): string {
   const tableAlias = generateTableAlias(tableName);
 
   const orderByInfo = orderBy(ts, wOrder, tableName, tableAlias);
@@ -320,7 +323,7 @@ function aggregates_query(
     }
   }).join(', ');
 
-  return [`'aggregates', (SELECT JSON_OBJECT(${aggregate_pairs}) FROM (${sourceSubquery}))`];
+  return `'aggregates', (SELECT JSON_OBJECT(${aggregate_pairs}) FROM (${sourceSubquery}))`;
 }
 
 type RelationshipJoinInfo = {
@@ -332,17 +335,21 @@ function table_query(
     ts: TableRelationships[],
     tableName: TableName,
     joinInfo: RelationshipJoinInfo | null,
-    fields: Fields,
-    aggregates: Aggregates,
+    fields: Fields | null,
+    aggregates: Aggregates | null,
     wWhere: Expression | null,
+    aggregatesLimit: number | null,
     wLimit: number | null,
     wOffset: number | null,
     wOrder: OrderBy | null,
   ): string {
   const tableAlias      = generateTableAlias(tableName);
-  const aggregateSelect = aggregates_query(ts, tableName, joinInfo, aggregates, wWhere, wLimit, wOffset, wOrder);
-  const fieldSelect     = isEmptyObject(fields) ? [] : [`'rows', JSON_GROUP_ARRAY(j)`];
-  const fieldFrom       = isEmptyObject(fields) ? '' : (() => {
+  const aggregateSelect = aggregates ? [aggregates_query(ts, tableName, joinInfo, aggregates, wWhere, aggregatesLimit, wOffset, wOrder)] : [];
+  // The use of the JSON function inside JSON_GROUP_ARRAY is necessary from SQLite 3.39.0 due to breaking changes in
+  // SQLite. See https://sqlite.org/forum/forumpost/e3b101fb3234272b for more details. This approach still works fine
+  // for older versions too.
+  const fieldSelect     = fields === null ? [] : [`'rows', JSON_GROUP_ARRAY(JSON(j))`];
+  const fieldFrom       = fields === null ? '' : (() => {
     const whereClause = where(ts, wWhere, joinInfo, tableName, tableAlias);
     // NOTE: The reuse of the 'j' identifier should be safe due to scoping. This is confirmed in testing.
     if(wOrder === null || wOrder.elements.length < 1) {
@@ -371,18 +378,19 @@ function relationship(ts: TableRelationships[], r: Relationship, field: Relation
 
   // We force a limit of 1 for object relationships in case the user has configured a manual
   // "object" relationship that accidentally actually is an array relationship
-  const limit =
+  const [limit, aggregatesLimit] =
     r.relationship_type === "object"
-      ? 1
-      : coerceUndefinedToNull(field.query.limit);
+      ? [1, 1]
+      : [coerceUndefinedToNull(field.query.limit), coerceUndefinedToNull(field.query.aggregates_limit)];
 
   return tag("relationship", table_query(
     ts,
     r.target_table,
     relationshipJoinInfo,
-    coerceUndefinedOrNullToEmptyRecord(field.query.fields),
-    coerceUndefinedOrNullToEmptyRecord(field.query.aggregates),
+    coerceUndefinedToNull(field.query.fields),
+    coerceUndefinedToNull(field.query.aggregates),
     coerceUndefinedToNull(field.query.where),
+    aggregatesLimit,
     limit,
     coerceUndefinedToNull(field.query.offset),
     coerceUndefinedToNull(field.query.order_by),
@@ -646,14 +654,16 @@ function offset(o: number | null): string {
   }
 }
 
-function query(request: QueryRequest): string {
+function query(request: TableRequest): string {
+  const tableRelationships = only_table_relationships(request.table_relationships);
   const result = table_query(
-    request.table_relationships,
+    tableRelationships,
     request.table,
     null,
-    coerceUndefinedOrNullToEmptyRecord(request.query.fields),
-    coerceUndefinedOrNullToEmptyRecord(request.query.aggregates),
+    coerceUndefinedToNull(request.query.fields),
+    coerceUndefinedToNull(request.query.aggregates),
     coerceUndefinedToNull(request.query.where),
+    coerceUndefinedToNull(request.query.aggregates_limit),
     coerceUndefinedToNull(request.query.limit),
     coerceUndefinedToNull(request.query.offset),
     coerceUndefinedToNull(request.query.order_by),
@@ -661,12 +671,95 @@ function query(request: QueryRequest): string {
   return tag('query', `SELECT ${result} as data`);
 }
 
-/** Format the DB response into a /query response.
+/**
+ * Creates a SELECT statement that returns rows for the foreach ids.
  *
- * Note: There should always be one result since 0 rows still generates an empty JSON array.
+ * Given:
+ * ```
+ * [
+ *   {"columnA": {"value": "A1", "value_type": "string" }, "columnB": {"value": B1, "value_type": "string" }},
+ *   {"columnA": {"value": "A2", "value_type": "string" }, "columnB": {"value": B2, "value_type": "string" }}
+ * ]
+ * ```
+ *
+ * We will generate the following SQL:
+ *
+ * ```
+ * SELECT value ->> '$.columnA' AS "columnA", value ->> '$.columnB' AS "columnB"
+ * FROM JSON_EACH('[{"columnA":"A1","columnB":"B1"},{"columnA":"A2","columnB":"B2"}]')
+ * ```
  */
-function output(rows: any): QueryResponse {
-  return JSON.parse(rows[0].data);
+function foreach_ids_table_value(foreachIds: Record<string, ScalarValue>[]): string {
+  const columnNames = Object.keys(foreachIds[0]);
+
+  const columns = columnNames.map(name => `value ->> ${escapeString("$." + name)} AS ${escapeIdentifier(name)}`);
+  const jsonData = foreachIds.map(ids => mapObject(ids, ([column, scalarValue]) => [column, scalarValue.value]));
+
+  return tag('foreach_ids_table_value', `SELECT ${columns} FROM JSON_EACH(${escapeString(JSON.stringify(jsonData))})`)
+}
+
+/**
+ * Creates SQL query for a foreach query request.
+ *
+ * This is done by creating a CTE table that contains the foreach ids, and then wrapping
+ * the existing query in a new one that joins from the CTE virtual table to the original query table
+ * using a generated table relationship and fields list.
+ *
+ * The SQL we generate looks like this:
+ *
+ *```
+ * WITH foreach_ids_xxx AS (
+ *   SELECT ... FROM ... (see foreach_ids_table_value)
+ * )
+ * SELECT table_subquery AS data
+ * ```
+ */
+function foreach_query(foreachIds: Record<string, ScalarValue>[], request: TableRequest): string {
+  const randomSuffix = nanoid();
+  const foreachTableName: TableName = [`foreach_ids_${randomSuffix}`];
+  const foreachRelationshipName = "Foreach";
+  const foreachTableRelationship: TableRelationships = {
+    type: 'table',
+    source_table: foreachTableName,
+    relationships: {
+      [foreachRelationshipName]: {
+        relationship_type: "array",
+        target_table: request.table,
+        column_mapping: mapObject(foreachIds[0], ([columnName, _scalarValue]) => [columnName, columnName])
+      }
+    }
+  };
+  const foreachQueryFields: Record<string, Field> = {
+    "query": {
+      type: "relationship",
+      relationship: foreachRelationshipName,
+      query: request.query
+    }
+  };
+
+  const foreachIdsTableValue = foreach_ids_table_value(foreachIds);
+  const tableRelationships = only_table_relationships(request.table_relationships);
+  const tableSubquery = table_query(
+    [foreachTableRelationship, ...(tableRelationships)],
+    foreachTableName,
+    null,
+    foreachQueryFields,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    );
+  return tag('foreach_query', `WITH ${escapeTableName(foreachTableName)} AS (${foreachIdsTableValue}) SELECT ${tableSubquery} AS data`);
+}
+
+function only_table_relationships(all: Array<TableRelationships | FunctionRelationships>): Array<TableRelationships> {
+  return all.filter(isTableRelationship);
+}
+
+function isTableRelationship(relationships: TableRelationships | FunctionRelationships,): relationships is TableRelationships {
+  return (relationships as TableRelationships).source_table !== undefined;
 }
 
 /** Function to add SQL comments to the generated SQL to tag which procedures generated what text.
@@ -727,21 +820,25 @@ function tag(t: string, s: string): string {
  * ```
  *
  */
-export async function queryData(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<QueryResponse> {
-  const db = connect(config, sqlLogger); // TODO: Should this be cached?
-  const q = query(queryRequest);
+export async function queryData(config: Config, sqlLogger: SqlLogger, request: TableRequest): Promise<QueryResponse> {
+  return await withConnection(config, defaultMode, sqlLogger, async db => {
+    const q =
+    request.foreach
+        ? foreach_query(request.foreach, request)
+        : query(request);
 
-  if(q.length > QUERY_LENGTH_LIMIT) {
-    const error = new ErrorWithStatusCode(
-      `Generated SQL Query was too long (${q.length} > ${QUERY_LENGTH_LIMIT})`,
-      500,
-      { "query.length": q.length, "limit": QUERY_LENGTH_LIMIT }
-    );
-    throw error;
-  }
+    if(q.length > QUERY_LENGTH_LIMIT) {
+      const error = new ErrorWithStatusCode(
+        `Generated SQL Query was too long (${q.length} > ${QUERY_LENGTH_LIMIT})`,
+        500,
+        { "query.length": q.length, "limit": QUERY_LENGTH_LIMIT }
+      );
+      throw error;
+    }
 
-  const [result, metadata] = await db.query(q);
-  return output(result);
+    const results = await db.query(q);
+    return JSON.parse(results[0].data);
+  });
 }
 
 /**
@@ -757,14 +854,15 @@ export async function queryData(config: Config, sqlLogger: SqlLogger, queryReque
  * @param queryRequest
  * @returns
  */
-export async function explain(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<ExplainResponse> {
-  const db = connect(config, sqlLogger);
-  const q = query(queryRequest);
-  const [result, metadata] = await db.query(`EXPLAIN QUERY PLAN ${q}`);
-  return {
-    query: q,
-    lines: [ "", ...formatExplainLines(result as AnalysisEntry[])]
-  }
+export async function explain(config: Config, sqlLogger: SqlLogger, request: TableRequest): Promise<ExplainResponse> {
+  return await withConnection(config, defaultMode, sqlLogger, async db => {
+    const q = query(request);
+    const result = await db.query(`EXPLAIN QUERY PLAN ${q}`);
+    return {
+      query: q,
+      lines: [ "", ...formatExplainLines(result as AnalysisEntry[])]
+    };
+  });
 }
 
 function formatExplainLines(items: AnalysisEntry[]): string[] {
@@ -783,3 +881,4 @@ type AnalysisEntry = {
   parent: number,
   detail: string
 }
+

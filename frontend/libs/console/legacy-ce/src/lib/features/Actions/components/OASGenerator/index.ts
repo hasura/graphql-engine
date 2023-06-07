@@ -1,2 +1,2 @@
 export { OASGeneratorPage } from './OASGeneratorPage';
-export { GeneratedAction } from './types';
+export type { GeneratedAction } from './types';

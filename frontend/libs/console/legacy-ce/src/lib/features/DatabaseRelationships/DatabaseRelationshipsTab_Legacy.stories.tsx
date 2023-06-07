@@ -1,6 +1,6 @@
 import React from 'react';
 import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
-import { ComponentMeta } from '@storybook/react';
+import { Meta } from '@storybook/react';
 import { NormalizedTable } from '../../dataSources/types';
 import { DatabaseRelationshipsTab } from './DatabaseRelationshipsTab_Legacy';
 
@@ -8,7 +8,7 @@ export default {
   title: 'Features/Data Relationships/Database Relationships Tab',
   component: DatabaseRelationshipsTab,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof DatabaseRelationshipsTab>;
+} as Meta<typeof DatabaseRelationshipsTab>;
 
 const table: NormalizedTable = {
   table_schema: 'public',

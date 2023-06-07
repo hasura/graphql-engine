@@ -11,7 +11,7 @@ where
 
 import Control.Arrow ((>>>))
 import Control.Monad (unless)
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.Function (on)
 import Data.Void (absurd)
 import Hasura.Base.ErrorMessage
@@ -46,10 +46,10 @@ import Language.GraphQL.Draft.Syntax hiding (Definition)
 --      were to change.  We no longer cache execution plans; but we might do it
 --      again in the future, which is why we haven't removed some of the code
 --      that deals with re-usability.
-peelVariable :: MonadParse m => GType -> InputValue Variable -> m (InputValue Variable)
+peelVariable :: (MonadParse m) => GType -> InputValue Variable -> m (InputValue Variable)
 peelVariable = peelVariableWith False
 
-peelVariableWith :: MonadParse m => Bool -> GType -> InputValue Variable -> m (InputValue Variable)
+peelVariableWith :: (MonadParse m) => Bool -> GType -> InputValue Variable -> m (InputValue Variable)
 peelVariableWith locationHasDefaultValue locationType = \case
   GraphQLValue (VVariable var) -> do
     typeCheck locationHasDefaultValue locationType var
@@ -73,7 +73,7 @@ peelVariableWith locationHasDefaultValue locationType = \case
 -- might allow a nullable variable at a non-nullable location: when either side
 -- has a non-null default value. That's because GraphQL conflates nullability
 -- and optionality. See also Note [When are fields optional?].
-typeCheck :: MonadParse m => Bool -> GType -> Variable -> m ()
+typeCheck :: (MonadParse m) => Bool -> GType -> Variable -> m ()
 typeCheck locationHasDefaultValue locationType variable@Variable {vInfo, vType} =
   unless (isVariableUsageAllowed locationHasDefaultValue locationType variable) $
     parseError $
@@ -134,12 +134,12 @@ describeValueWith describeVariable = \case
   GraphQLValue gval -> describeGraphQL gval
   where
     describeJSON = \case
-      A.Null -> "null"
-      A.Bool _ -> "a boolean"
-      A.String _ -> "a string"
-      A.Number _ -> "a number"
-      A.Array _ -> "a list"
-      A.Object _ -> "an object"
+      J.Null -> "null"
+      J.Bool _ -> "a boolean"
+      J.String _ -> "a string"
+      J.Number _ -> "a number"
+      J.Array _ -> "a list"
+      J.Object _ -> "an object"
     describeGraphQL = \case
       VVariable var -> describeVariable var
       VInt _ -> "an integer"

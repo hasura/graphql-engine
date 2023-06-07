@@ -36,16 +36,11 @@ const PopupLink = ({
   if (videoId) {
     return (
       <li className={`${styles.popup_item} ${styles.video}`}>
-        <>
-          <div className={styles.link_container}>
-            <span className={styles.link_num}>{index}</span>
-            {title}
-          </div>
-          <YouTube
-            videoId={videoId}
-            opts={{ width: '100%', height: '240px' }}
-          />
-        </>
+        <div className={styles.link_container}>
+          <span className={styles.link_num}>{index}</span>
+          {title}
+        </div>
+        <YouTube videoId={videoId} opts={{ width: '100%', height: '240px' }} />
       </li>
     );
   }

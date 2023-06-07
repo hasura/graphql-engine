@@ -78,6 +78,10 @@ keywords:
 }
 ```
 
+## LogicalModelName {#logicalmodelname}
+
+`String`
+
 ## RoleName {#rolename}
 
 `String`
@@ -356,6 +360,13 @@ The `query_root_fields` and the `subscription_root_fields` are only available in
 | ------------ | -------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | filter       | true     | [BoolExp](#boolexp) | Only the rows where this expression holds true are deletable                                                                                                                                                                      |
 | backend_only | false    | Boolean             | When set to `true` the mutation is accessible only if the `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and the request is made with `x-hasura-admin-secret` set if any auth is configured |
+
+## LogicalModelSelectPermission {#logicalmodelselectpermission}
+
+| Key                      | Required | Schema                                                | Description                                                                                                                               |
+| ------------------------ | -------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| columns                  | true     | [PGColumn](#pgcolumn) array (or) `'*'`                | Only these columns are selectable (or all when `'*'` is specified)                                                                        |
+| filter                   | true     | [BoolExp](#boolexp)                                   | Only the rows where this expression holds true are selectable                                                                             |
 
 ## ObjRelUsing {#objrelusing}
 
@@ -1238,6 +1249,38 @@ via [Custom Types](/api-reference/metadata-api/custom-types.mdx)
 | argument_mapping | true     | Object (`String` : `String`)                   | Mapping from the argument name of the function to the column name of the table |
 | return_table     | false    | [BigQuery TableName](#bigquerytablename)       | Name of the table which the function returns                                   |
 
+## LogicalModelField {#logicalmodelfield}
+
+| Key         | Required | Schema    | Description                                                                                     |
+| ----------- | -------- | --------- | ------------------------------------------------------------------------------------------------|
+| name        | true     | `String`  | The name of the logical model field                                                             |
+| type        | true     | `String`  | The type of the exposed column, according to the underlying data source                         |
+| nullable    | false    | `Boolean` | True if the field should be exposed over the GraphQL API as a nullable field (default: `false`) |
+| description | false    | `String`  | An extended description of the field                                                            |
+
+## NativeQueryArgument {#nativequeryargument}
+
+| Key         | Required | Schema    | Description                                                     |
+| ----------- | -------- | --------- | --------------------------------------------------------------- |
+| type        | true     | `String`  | The type of the column, according to the underlying data source |
+| nullable    | false    | `Boolean` | True if the underlying column is nullable (default: `false`)    |
+| description | false    | `String`  | An extended description of the argument                         |
+
+## Stored Procedure Argument {#stored-procedure-argument}
+
+| Key         | Required | Schema    | Description                                                     |
+| ----------- | -------- | --------- | --------------------------------------------------------------- |
+| type        | true     | `String`  | The type of the column, according to the underlying data source |
+| nullable    | false    | `Boolean` | True if the underlying column is nullable (default: `false`)    |
+| description | false    | `String`  | An extended description of the argument                         |
+
+## Stored Procedure Configuration {#stored-procedure-configuration}
+
+| Key         | Required | Schema   | Description                                                                                                                                                             |
+| ----------- | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| custom_name | false    | `String` | Customize the `<stored-procedure-name>` with the provided custom name value. The GraphQL nodes for the stored procedure will be generated according to the custom name. |
+| exposed_as  | true     | `String` | In which part of the schema should we expose this stored procedure? Currently only "query" is supported.                                                                |
+
 ## Function Configuration {#function-configuration}
 
 | Key                | Required | Schema                                                      | Description                                                                                                                                             |
@@ -1697,4 +1740,3 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 | Key                   | required | Schema                           | Description                                                               |
 |-----------------------|----------|----------------------------------|---------------------------------------------------------------------------|
 | max_export_batch_size | false    |  `Integer`                       | Maximum number of spans allowed per export request. Default value is 512  |
-

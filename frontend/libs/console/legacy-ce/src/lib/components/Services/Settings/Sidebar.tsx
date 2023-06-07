@@ -7,14 +7,15 @@ import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import globals from '../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
-import { isProLiteConsole } from '../../../utils/proConsole';
 import {
   NavigationSidebar,
   NavigationSidebarProps,
   NavigationSidebarSection,
 } from '../../../new-components/NavigationSidebar';
 
-import { checkFeatureSupport } from '../../../helpers/versionUtils';
+import { useEELiteAccess } from '../../../features/EETrial';
+import { getQueryResponseCachingRoute } from '../../../utils/routeUtils';
+import { isCloudConsole } from '../../../utils/cloudConsole';
 
 export interface Metadata {
   inconsistentObjects: Record<string, unknown>[];
@@ -31,18 +32,35 @@ type SectionDataKey =
   | 'security'
   | 'monitoring'
   | 'performance'
-  | 'about';
+  | 'about'
+  | 'graphql';
 
 const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
+  const eeLiteAccess = useEELiteAccess(globals);
+
   const sectionsData: Partial<
     Record<SectionDataKey, NavigationSidebarSection>
   > = {};
-
   sectionsData.metadata = {
     key: 'metadata',
     label: 'Metadata',
     items: [],
   };
+
+  if (isCloudConsole(globals)) {
+    sectionsData.graphql = {
+      key: 'graphql',
+      label: 'GraphQL',
+      items: [
+        {
+          key: 'schema-registry',
+          label: 'Schema Registry',
+          route: '/settings/schema-registry',
+          dataTestVal: 'metadata-schema-registry-link',
+        },
+      ],
+    };
+  }
 
   sectionsData.metadata.items.push({
     key: 'actions',
@@ -105,11 +123,10 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     dataTestVal: 'insecure-domain-link',
   });
 
-  const temp = useMetadata(m => m.metadata.opentelemetry);
-
   const { data: openTelemetry } = useMetadata(m => m.metadata.opentelemetry);
   const { data: configData, isLoading, isError } = useServerConfig();
-  if (isProLiteConsole(window.__env)) {
+
+  if (eeLiteAccess.access !== 'forbidden') {
     sectionsData.monitoring = {
       key: 'monitoring',
       label: 'Monitoring & observability',
@@ -119,13 +136,16 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     sectionsData.monitoring.items.push({
       key: 'prometheus-settings',
       label: 'Prometheus Metrics',
-      status: isLoading
-        ? 'loading'
-        : isError
-        ? 'error'
-        : configData?.is_prometheus_metrics_enabled
-        ? 'enabled'
-        : 'disabled',
+      status:
+        eeLiteAccess.access !== 'active'
+          ? 'disabled'
+          : isLoading
+          ? 'loading'
+          : isError
+          ? 'error'
+          : configData?.is_prometheus_metrics_enabled
+          ? 'enabled'
+          : 'disabled',
       route: '/settings/prometheus-settings',
       dataTestVal: 'prometheus-settings-link',
     });
@@ -133,14 +153,62 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     sectionsData.monitoring.items.push({
       key: 'opentelemetry-settings',
       label: 'OpenTelemetry Exporter (Beta)',
-      status: !openTelemetry
-        ? 'none'
-        : openTelemetry.status === 'enabled'
-        ? 'enabled'
-        : 'disabled',
+      status:
+        eeLiteAccess.access !== 'active'
+          ? 'disabled'
+          : !openTelemetry
+          ? 'none'
+          : openTelemetry.status === 'enabled'
+          ? 'enabled'
+          : 'disabled',
       route: '/settings/opentelemetry',
       dataTestVal: 'opentelemetry-settings-link',
     });
+  }
+
+  if (eeLiteAccess.access !== 'forbidden') {
+    sectionsData.security.items.push({
+      key: 'multiple-admin-secrets',
+      label: 'Multiple admin secrets',
+      route: '/settings/multiple-admin-secrets',
+      dataTestVal: 'multiple-admin-secrets',
+    });
+
+    sectionsData.security.items.push({
+      key: 'multiple-jwt-secrets',
+      label: 'Multiple jwt secrets',
+      route: '/settings/multiple-jwt-secrets',
+      dataTestVal: 'multiple-jwt-secrets',
+    });
+
+    // sectionsData.security.items.push({
+    //   key: 'single-sign-on',
+    //   label: 'Single Sign On',
+    //   route: '/settings/single-sign-on',
+    //   dataTestVal: 'single-sign-on',
+    // });
+
+    sectionsData.performance = {
+      key: 'performance',
+      label: 'Performance',
+      items: [
+        {
+          key: 'query-response-caching',
+          label: 'Query Response Caching',
+          // // TODO: Figure out the disabled/enabled logic
+          // status:
+          //   licenseInfo?.status !== 'active'
+          //     ? 'disabled'
+          //     : isLoading
+          //     ? 'loading'
+          //     : isError
+          //     ? 'error'
+          //     : 'enabled',
+          route: getQueryResponseCachingRoute(),
+          dataTestVal: 'query-response-caching',
+        },
+      ],
+    };
   }
 
   sectionsData.about = {

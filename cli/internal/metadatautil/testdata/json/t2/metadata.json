@@ -25012,6 +25012,8 @@
           ]
         }
       ],
+      "native_queries": null,
+      "stored_procedures": null,
       "logical_models": null,
       "functions": [
         {

@@ -21,6 +21,7 @@ import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Metadata (ClearMetadata (..), runClearMetadata)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Common
+import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.DDL.Schema.LegacyCatalog (recreateSystemMetadata)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.SchemaCache
@@ -37,7 +38,7 @@ import Test.Hspec.Expectations.Lifted
 
 -- -- NOTE: downgrade test disabled for now (see #5273)
 
-newtype CacheRefT m a = CacheRefT {runCacheRefT :: MVar RebuildableSchemaCache -> m a}
+newtype CacheRefT m a = CacheRefT {runCacheRefT :: (CacheDynamicConfig, MVar RebuildableSchemaCache) -> m a}
   deriving
     ( Functor,
       Applicative,
@@ -46,14 +47,16 @@ newtype CacheRefT m a = CacheRefT {runCacheRefT :: MVar RebuildableSchemaCache -
       MonadError e,
       MonadBase b,
       MonadBaseControl b,
+      MonadReader (CacheDynamicConfig, MVar RebuildableSchemaCache),
       MonadTx,
+      HasCacheStaticConfig,
       UserInfoM,
-      HasServerConfigCtx,
       MonadMetadataStorage,
-      MonadMetadataStorageQueryAPI,
-      ProvidesNetwork
+      MonadResolveSource,
+      ProvidesNetwork,
+      MonadGetPolicies
     )
-    via (ReaderT (MVar RebuildableSchemaCache) m)
+    via (ReaderT (CacheDynamicConfig, MVar RebuildableSchemaCache) m)
 
 instance MonadTrans CacheRefT where
   lift = CacheRefT . const
@@ -63,10 +66,10 @@ instance MFunctor CacheRefT where
 
 -- instance (MonadBase IO m) => TableCoreInfoRM 'Postgres (CacheRefT m)
 instance (MonadBase IO m) => CacheRM (CacheRefT m) where
-  askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
+  askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar . snd)
 
 instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRefT m) where
-  runLogCleaner conf = lift $ runLogCleaner conf
+  runLogCleaner sourceCache conf = lift $ runLogCleaner sourceCache conf
   generateCleanupSchedules sourceInfo triggerName cleanupConfig = lift $ generateCleanupSchedules sourceInfo triggerName cleanupConfig
   updateTriggerCleanupSchedules logger oldSources newSources schemaCache = lift $ updateTriggerCleanupSchedules logger oldSources newSources schemaCache
 
@@ -74,20 +77,23 @@ instance
   ( MonadIO m,
     MonadBaseControl IO m,
     MonadError QErr m,
+    MonadMetadataStorage m,
     MonadResolveSource m,
-    HasServerConfigCtx m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    HasCacheStaticConfig m
   ) =>
   CacheRWM (CacheRefT m)
   where
-  buildSchemaCacheWithOptions reason invalidations metadata =
-    CacheRefT $ flip modifyMVar \schemaCache -> do
-      ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations metadata)
-      pure (cache, ())
+  tryBuildSchemaCacheWithOptions reason invalidations metadata validateNewSchemaCache = do
+    (dynamicConfig, scVar) <- ask
+    modifyMVar scVar \schemaCache -> do
+      (valueToReturn, cache, _, _) <- runCacheRWT dynamicConfig schemaCache (tryBuildSchemaCacheWithOptions reason invalidations metadata validateNewSchemaCache)
+      pure (cache, valueToReturn)
 
-  setMetadataResourceVersionInSchemaCache resourceVersion =
-    CacheRefT $ flip modifyMVar \schemaCache -> do
-      ((), cache, _) <- runCacheRWT schemaCache (setMetadataResourceVersionInSchemaCache resourceVersion)
+  setMetadataResourceVersionInSchemaCache resourceVersion = do
+    (dynamicConfig, scVar) <- ask
+    modifyMVar scVar \schemaCache -> do
+      ((), cache, _, _) <- runCacheRWT dynamicConfig schemaCache (setMetadataResourceVersionInSchemaCache resourceVersion)
       pure (cache, ())
 
 instance Example (MetadataT (CacheRefT m) ()) where
@@ -104,11 +110,12 @@ suite ::
   ( MonadIO m,
     MonadError QErr m,
     MonadBaseControl IO m,
-    HasServerConfigCtx m,
     MonadResolveSource m,
-    MonadMetadataStorageQueryAPI m,
+    MonadMetadataStorage m,
     MonadEventLogCleanup m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetPolicies m,
+    HasCacheStaticConfig m
   ) =>
   PostgresConnConfiguration ->
   PGExecCtx ->
@@ -121,12 +128,13 @@ suite srcConfig pgExecCtx pgConnInfo = do
         liftIO $ putStrLn $ LBS.toString $ encode $ EngineLog t logLevel logType logDetail
 
       migrateCatalogAndBuildCache env time = do
-        (migrationResult, metadata) <- runTx' pgExecCtx $ migrateCatalog (Just srcConfig) (ExtensionsSchema "public") MaintenanceModeDisabled time
-        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadata)
+        dynamicConfig <- asks fst
+        (migrationResult, metadataWithVersion) <- runTx' pgExecCtx $ migrateCatalog (Just srcConfig) (ExtensionsSchema "public") MaintenanceModeDisabled time
+        (,migrationResult) <$> runCacheBuildM (buildRebuildableSchemaCache logger env metadataWithVersion dynamicConfig Nothing)
 
-      dropAndInit env time = lift $
-        CacheRefT $ flip modifyMVar \_ ->
-          (runTx' pgExecCtx dropHdbCatalogSchema) *> (migrateCatalogAndBuildCache env time)
+      dropAndInit env time = lift do
+        scVar <- asks snd
+        modifyMVar scVar $ const $ (runTx' pgExecCtx dropHdbCatalogSchema) *> (migrateCatalogAndBuildCache env time)
       downgradeTo v = runTx' pgExecCtx . downgradeCatalog (Just srcConfig) DowngradeOptions {dgoDryRun = False, dgoTargetVersion = v}
 
   describe "migrateCatalog" $ do
@@ -146,9 +154,9 @@ suite srcConfig pgExecCtx pgConnInfo = do
       secondDump `shouldBe` firstDump
 
     it "supports upgrades after downgrade to version 12" \(NT transact) -> do
-      let upgradeToLatest env time = lift $
-            CacheRefT $ flip modifyMVar \_ ->
-              migrateCatalogAndBuildCache env time
+      let upgradeToLatest env time = lift do
+            scVar <- asks snd
+            modifyMVar scVar $ const $ migrateCatalogAndBuildCache env time
       env <- Env.getEnvironment
       time <- getCurrentTime
       transact (dropAndInit env time) `shouldReturn` MRInitialized

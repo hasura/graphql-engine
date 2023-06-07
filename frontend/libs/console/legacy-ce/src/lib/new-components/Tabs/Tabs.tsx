@@ -4,31 +4,40 @@ import clsx from 'clsx';
 
 interface TabsItem {
   value: string;
-  label: string;
+  label: React.ReactNode;
   icon?: React.ReactNode;
   content: React.ReactNode;
 }
 
-interface TabsProps extends React.ComponentProps<typeof RadixTabs.Root> {
+interface TabsCustomProps extends React.ComponentProps<typeof RadixTabs.Root> {
+  headerTabBackgroundColor?: string;
+}
+interface TabsProps extends TabsCustomProps {
   items: TabsItem[];
 }
 
 export const Tabs: React.FC<TabsProps> = props => {
-  const { items, ...rest } = props;
+  const { headerTabBackgroundColor, items, ...rest } = props;
+
+  const backgroundColor = headerTabBackgroundColor ?? 'bg-legacybg';
   return (
     <RadixTabs.Root
       defaultValue={rest?.defaultValue ?? items[0]?.value}
       {...rest}
     >
       <RadixTabs.List aria-label="Tabs">
-        <div className="border-b border-gray-200 bg-legacybg flex space-x-4">
+        <div
+          className={`border-b border-gray-200 ${backgroundColor} flex space-x-4`}
+        >
           {items.map(({ value: itemValue, label, icon }) => (
-            <RadixTabs.Trigger key={label} value={itemValue} asChild>
+            <RadixTabs.Trigger key={itemValue} value={itemValue} asChild>
               <button
                 className={clsx(
                   'whitespace-nowrap py-xs px-sm border-b-2 font-semibold',
                   'hover:border-gray-300 border-transparent text-muted',
-                  'radix-state-active:hover:border-yellow-500 radix-state-active:border-yellow-500 radix-state-active:text-yellow-500'
+                  'radix-state-active:hover:border-yellow-500 radix-state-active:border-yellow-500 radix-state-active:text-yellow-500',
+                  // add focus visible outline for accessibility
+                  'focus-visible:outline focus-visible:outline-2 outline-offset-2 focus-visible:outline-secondary'
                 )}
               >
                 {icon ? (

@@ -38,15 +38,16 @@ import {
 import ConfigureTransformation from '../../../../Common/ConfigureTransformation/ConfigureTransformation';
 import requestAction from '../../../../../utils/requestAction';
 import Endpoints from '../../../../../Endpoints';
-import defaultState from '../state';
+import { useEELiteAccess } from '../../../../../features/EETrial';
 import {
   getValidateTransformOptions,
   parseValidateApiData,
   getTransformState,
-} from '../../../../Common/ConfigureTransformation/utils';
-import { showErrorNotification } from '../../../Common/Notification';
+} from '../../../../../components/Common/ConfigureTransformation/utils';
+import { showErrorNotification } from '../../../../../components/Services/Common/Notification';
 import { Button } from '../../../../../new-components/Button';
 import { isProConsole } from '../../../../../utils/proConsole';
+import globals from '../../../../../Globals';
 import { getSourceDriver } from '../../../Data/utils';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { getEventRequestSampleInput } from '../utils';
@@ -70,7 +71,7 @@ import {
 import { AutoCleanupForm } from '../Common/AutoCleanupForm';
 import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const Modify: React.FC<Props> = props => {
   const { currentTrigger, readOnlyMode, dataSourcesList, dispatch } = props;
@@ -89,6 +90,12 @@ const Modify: React.FC<Props> = props => {
     requestTransformReducer,
     getEventRequestTransformDefaultState()
   );
+
+  const { access: eeLiteAccess } = useEELiteAccess(globals);
+  const autoCleanupSupport =
+    isProConsole(globals) || eeLiteAccess === 'active'
+      ? 'active'
+      : eeLiteAccess;
 
   useEffect(() => {
     if (currentTrigger) {
@@ -339,9 +346,10 @@ const Modify: React.FC<Props> = props => {
 
       const modifyTriggerState = { ...state };
 
+      /* don't pass cleanup config if it's empty or just have only paused */
       if (
-        !currentTrigger?.configuration?.cleanup_config &&
-        state.cleanupConfig?.paused
+        JSON.stringify(modifyTriggerState?.cleanupConfig) === '{}' ||
+        JSON.stringify(modifyTriggerState?.cleanupConfig) === '{"paused":true}'
       ) {
         delete modifyTriggerState?.cleanupConfig;
       }
@@ -359,110 +367,113 @@ const Modify: React.FC<Props> = props => {
       );
     };
 
+  const submit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    saveWrapper()();
+  };
+
   const deleteWrapper = () => {
     dispatch(deleteEventTrigger(currentTrigger));
   };
 
   return (
     <Analytics name="ModifyEventTriggers" {...REDACT_EVERYTHING}>
-      <div
-        key={currentTrigger.name}
-        className="w-full overflow-y-auto bg-gray-50"
-      >
+      <div className="w-full overflow-y-auto bg-gray-50">
         <div className="max-w-6xl">
-          <TableHeader
-            count={null}
-            triggerName={currentTrigger.name}
-            tabName="modify"
-            readOnlyMode={readOnlyMode}
-          />
-          <br />
-          <h2 className="text-lg font-semibold mb-xs flex items-center">
-            Event Info
-          </h2>
-          <Info currentTrigger={currentTrigger} />
-          <div className="relative">
-            <WebhookEditor
-              currentTrigger={currentTrigger}
-              webhook={state.webhook}
-              setWebhook={setState.webhook}
-              save={saveWrapper('webhook')}
+          <form onSubmit={submit}>
+            <TableHeader
+              count={null}
+              triggerName={currentTrigger.name}
+              tabName="modify"
+              readOnlyMode={readOnlyMode}
             />
-            <OperationEditor
-              currentTrigger={currentTrigger}
-              databaseInfo={databaseInfo}
-              operations={state.operations}
-              setOperations={setState.operations}
-              operationColumns={state.operationColumns}
-              setOperationColumns={setState.operationColumns}
-              save={saveWrapper('ops')}
-              isAllColumnChecked={state.isAllColumnChecked}
-              handleColumnRadioButton={setState.toggleAllColumnChecked}
-            />
-            <hr className="my-md" />
-            <RetryConfEditor
-              conf={state.retryConf}
-              setRetryConf={setState.retryConf}
-              currentTrigger={currentTrigger}
-              save={saveWrapper('retry_conf')}
-            />
-            <hr className="my-md" />
-            {isProConsole(window.__env) && (
-              <div className="mb-md">
-                <AutoCleanupForm
-                  onChange={setState.cleanupConfig}
-                  cleanupConfig={
-                    state?.cleanupConfig || defaultState.cleanupConfig
-                  }
-                />
-              </div>
-            )}
-            <HeadersEditor
-              headers={state.headers}
-              setHeaders={setState.headers}
-              currentTrigger={currentTrigger}
-              save={saveWrapper('headers')}
-            />
-            <ConfigureTransformation
-              transformationType="event"
-              requestTransfromState={transformState}
-              resetSampleInput={resetSampleInput}
-              envVarsOnChange={envVarsOnChange}
-              sessionVarsOnChange={sessionVarsOnChange}
-              requestMethodOnChange={requestMethodOnChange}
-              requestUrlOnChange={requestUrlOnChange}
-              requestQueryParamsOnChange={requestQueryParamsOnChange}
-              requestAddHeadersOnChange={requestAddHeadersOnChange}
-              requestBodyOnChange={requestBodyOnChange}
-              requestSampleInputOnChange={requestSampleInputOnChange}
-              requestContentTypeOnChange={requestContentTypeOnChange}
-              requestUrlTransformOnChange={requestUrlTransformOnChange}
-              requestPayloadTransformOnChange={requestPayloadTransformOnChange}
-            />
-            {!readOnlyMode && (
-              <div className="mb-md">
-                <span className="mr-md">
+            <br />
+            <div className="bootstrap-jail">
+              <h2 className="text-lg font-semibold mb-xs flex items-center">
+                Event Info
+              </h2>
+              <Info currentTrigger={currentTrigger} />
+            </div>
+            <div className="relative bootstrap-jail">
+              <WebhookEditor
+                currentTrigger={currentTrigger}
+                webhook={state.webhook}
+                setWebhook={setState.webhook}
+                save={saveWrapper('webhook')}
+              />
+              <OperationEditor
+                currentTrigger={currentTrigger}
+                databaseInfo={databaseInfo}
+                operations={state.operations}
+                setOperations={setState.operations}
+                operationColumns={state.operationColumns}
+                setOperationColumns={setState.operationColumns}
+                save={saveWrapper('ops')}
+                isAllColumnChecked={state.isAllColumnChecked}
+                handleColumnRadioButton={setState.toggleAllColumnChecked}
+              />
+              <hr className="my-md" />
+              <RetryConfEditor
+                conf={state.retryConf}
+                setRetryConf={setState.retryConf}
+                currentTrigger={currentTrigger}
+                save={saveWrapper('retry_conf')}
+              />
+              <hr className="my-md" />
+              {autoCleanupSupport !== 'forbidden' && (
+                <div className="mb-md">
+                  <AutoCleanupForm
+                    onChange={setState.cleanupConfig}
+                    cleanupConfig={state?.cleanupConfig}
+                  />
+                </div>
+              )}
+              <HeadersEditor
+                headers={state.headers}
+                setHeaders={setState.headers}
+                currentTrigger={currentTrigger}
+                save={saveWrapper('headers')}
+              />
+              <ConfigureTransformation
+                transformationType="event"
+                requestTransfromState={transformState}
+                resetSampleInput={resetSampleInput}
+                envVarsOnChange={envVarsOnChange}
+                sessionVarsOnChange={sessionVarsOnChange}
+                requestMethodOnChange={requestMethodOnChange}
+                requestUrlOnChange={requestUrlOnChange}
+                requestQueryParamsOnChange={requestQueryParamsOnChange}
+                requestAddHeadersOnChange={requestAddHeadersOnChange}
+                requestBodyOnChange={requestBodyOnChange}
+                requestSampleInputOnChange={requestSampleInputOnChange}
+                requestContentTypeOnChange={requestContentTypeOnChange}
+                requestUrlTransformOnChange={requestUrlTransformOnChange}
+                requestPayloadTransformOnChange={
+                  requestPayloadTransformOnChange
+                }
+              />
+              {!readOnlyMode && (
+                <div className="mb-md">
+                  <span className="mr-md">
+                    <Button
+                      mode="primary"
+                      type="submit"
+                      data-test="save-modify-trigger-changes"
+                    >
+                      Save Event Trigger
+                    </Button>
+                  </span>
                   <Button
-                    mode="primary"
-                    type="submit"
-                    onClick={() => {
-                      saveWrapper()();
-                    }}
-                    data-test="save-modify-trigger-changes"
+                    mode="destructive"
+                    data-test="delete-trigger"
+                    onClick={deleteWrapper}
                   >
-                    Save Event Trigger
+                    Delete Event Trigger
                   </Button>
-                </span>
-                <Button
-                  mode="destructive"
-                  data-test="delete-trigger"
-                  onClick={deleteWrapper}
-                >
-                  Delete Event Trigger
-                </Button>
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
+          </form>
         </div>
       </div>
     </Analytics>

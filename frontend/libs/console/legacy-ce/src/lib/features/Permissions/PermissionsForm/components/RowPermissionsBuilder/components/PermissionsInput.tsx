@@ -1,4 +1,4 @@
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import { Entry } from './Entry';
 import { Operator } from './Operator';
 import { isPrimitive } from './utils';
@@ -6,15 +6,16 @@ import { ValueInput } from './ValueInput';
 import { Permissions } from './types';
 
 export const PermissionsInput = ({
-  permissions,
-  path,
+  permissions, // permissions object, array, or primitive
+  path, // array of strings that represents the path to the current permission in the permissions object
 }: {
   permissions: Permissions;
   path: string[];
 }) => {
   const currentPath = path[path.length - 1];
-  if (isEmpty(permissions) && path.length === 0) {
-    return <Operator operator={'_eq'} path={[]} />;
+  const isInitialEmptyState = isEmpty(permissions) && path.length === 0;
+  if (isInitialEmptyState) {
+    return <Operator operator={'_eq'} path={[]} v={''} />;
   }
   if (isPrimitive(permissions) || currentPath === '_table') {
     return <ValueInput value={permissions} path={path} />;
@@ -24,6 +25,8 @@ export const PermissionsInput = ({
       <>
         {permissions.map((v, i) => {
           const index = isEmpty(v) ? 0 : i;
+          // Don't show empty arrays. They get handled by <EmptyEntry/ >
+          if (v === '') return null;
           return (
             <PermissionsInput
               key={path.join('.') + '.' + index}

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../../../store';
+import { useAppDispatch, useAppSelector } from '../../../../storeHooks';
 import { getManualEventsTriggers } from '../../../../metadata/selector';
 import {
   adaptFormValuesToQuery,
@@ -208,48 +208,50 @@ export const TableBrowseRowsContainer = (
     dispatch(vSetDefaults(newLimit));
 
   return (
-    <RightContainer>
-      <TableHeader
-        count={isCountEstimated ? estimatedCount : count}
-        isCountEstimated={isCountEstimated}
-        dispatch={dispatch}
-        table={table}
-        source={sourceName}
-        tabName="browse"
-        migrationMode={migrationMode}
-        readOnlyMode={readOnlyMode}
-      />
-      <ViewRows
-        activePath={activePath}
-        count={tableCount}
-        curDepth={0}
-        curFilter={curFilter}
-        curQuery={query}
-        currentSchema={schemaName}
-        currentSource={sourceName}
-        curRows={rows}
-        curTableName={tableName}
-        dispatch={dispatch}
-        expandedRow={expandedRow}
-        isProgressing={isProgressing}
-        isView={isTableView}
-        lastError={lastError}
-        lastSuccess={lastSuccess}
-        manualTriggers={manualTriggers}
-        ongoingRequest={ongoingRequest}
-        parentTableName={null}
-        readOnlyMode={readOnlyMode}
-        schemas={schemas}
-        shouldHidePagination={shouldHidePagination}
-        useCustomPagination={shouldUseCustomPagination}
-        filtersAndSort={filtersAndSort}
-        onRunQuery={(newUserQuery: UserQuery) => {
-          onRunQuery(newUserQuery);
-          setPaginationUserQuery(newUserQuery);
-        }}
-        paginationUserQuery={paginationUserQuery}
-        onChangePageSize={onChangePageSize}
-      />
-    </RightContainer>
+    <div className="bootstrap-jail">
+      <RightContainer>
+        <TableHeader
+          count={isCountEstimated ? estimatedCount : count}
+          isCountEstimated={isCountEstimated}
+          dispatch={dispatch}
+          table={table}
+          source={sourceName}
+          tabName="browse"
+          migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
+        />
+        <ViewRows
+          activePath={activePath}
+          count={tableCount}
+          curDepth={0}
+          curFilter={curFilter}
+          curQuery={query}
+          currentSchema={schemaName}
+          currentSource={sourceName}
+          curRows={rows}
+          curTableName={tableName}
+          dispatch={dispatch}
+          expandedRow={expandedRow}
+          isProgressing={isProgressing}
+          isView={isTableView}
+          lastError={lastError}
+          lastSuccess={lastSuccess}
+          manualTriggers={manualTriggers}
+          ongoingRequest={ongoingRequest}
+          parentTableName={null}
+          readOnlyMode={readOnlyMode}
+          schemas={schemas}
+          shouldHidePagination={shouldHidePagination}
+          useCustomPagination={shouldUseCustomPagination}
+          filtersAndSort={filtersAndSort}
+          onRunQuery={(newUserQuery: UserQuery) => {
+            onRunQuery(newUserQuery);
+            setPaginationUserQuery(newUserQuery);
+          }}
+          paginationUserQuery={paginationUserQuery}
+          onChangePageSize={onChangePageSize}
+        />
+      </RightContainer>
+    </div>
   );
 };

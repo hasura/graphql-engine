@@ -6,7 +6,7 @@
 module Hasura.Server.MetadataOpenAPI (metadataOpenAPI) where
 
 import Autodocodec.OpenAPI (declareNamedSchemaViaCodec)
-import Data.HashMap.Strict.InsOrd qualified as HM
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.OpenApi (Components (..), NamedSchema (..), OpenApi (..))
 import Data.OpenApi.Declare (MonadDeclare (declare), runDeclare)
 import Data.Proxy (Proxy (..))
@@ -24,8 +24,9 @@ metadataOpenAPI :: OpenApi
 metadataOpenAPI =
   mempty {_openApiComponents = mempty {_componentsSchemas = definitions}}
   where
-    definitions = fst $
-      flip runDeclare mempty $ do
+    definitions = fst
+      $ flip runDeclare mempty
+      $ do
         NamedSchema mName codecSchema <- declareNamedSchemaViaCodec (Proxy @MetadataDTO)
-        declare $ HM.fromList [(fromMaybe "MetadataDTO" mName, codecSchema)]
+        declare $ InsOrdHashMap.fromList [(fromMaybe "MetadataDTO" mName, codecSchema)]
         pure codecSchema

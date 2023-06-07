@@ -23,22 +23,27 @@ spec TestData {..} = describe "Basic Queries" $ do
       Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
       _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
+    it "can query for a list of artists with no columns and still receive empty rows" $ do
+      let query = artistsQueryRequest & qrQuery . qFields ?~ mempty
+      receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
+
+      let expectedArtists = Data.filterColumns [] $ _tdArtistsRows
+      Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
+      _qrAggregates receivedArtists `jsonShouldBe` Nothing
+
     it "can query for a list of albums with a subset of columns" $ do
       let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdAlbumsTableName "ArtistId"), ("Title", _tdColumnField _tdAlbumsTableName "Title")]
       let query = albumsQueryRequest & qrQuery . qFields ?~ fields
       receivedAlbums <- Data.sortResponseRowsBy "Title" <$> queryGuarded query
 
-      let filterToRequiredProperties =
-            HashMap.filterWithKey (\(FieldName propName) _value -> propName == "ArtistId" || propName == "Title")
-
-      let expectedAlbums = Data.sortBy (FieldName "Title") $ filterToRequiredProperties <$> _tdAlbumsRows
+      let expectedAlbums = Data.sortBy (FieldName "Title") $ Data.filterColumns ["ArtistId", "Title"] _tdAlbumsRows
       Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
       _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can project columns into fields with different names" $ do
       let fields = Data.mkFieldsMap [("Artist_Id", _tdColumnField _tdArtistsTableName "ArtistId"), ("Artist_Name", _tdColumnField _tdArtistsTableName "Name")]
       let query = artistsQueryRequest & qrQuery . qFields ?~ fields
-      receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
+      receivedArtists <- Data.sortResponseRowsBy "Artist_Id" <$> queryGuarded query
 
       let renameProperties =
             HashMap.mapKeys
@@ -48,7 +53,7 @@ spec TestData {..} = describe "Basic Queries" $ do
                   other -> other
               )
 
-      let expectedArtists = Data.sortBy (FieldName "ArtistId") $ renameProperties <$> _tdArtistsRows
+      let expectedArtists = Data.sortBy (FieldName "Artist_Id") $ renameProperties <$> _tdArtistsRows
       Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
       _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
@@ -69,10 +74,10 @@ spec TestData {..} = describe "Basic Queries" $ do
     artistsQueryRequest =
       let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdArtistsTableName [] query
+       in TableQueryRequest _tdArtistsTableName mempty query Nothing
 
     albumsQueryRequest :: QueryRequest
     albumsQueryRequest =
       let fields = Data.mkFieldsMap [("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"), ("ArtistId", _tdColumnField _tdAlbumsTableName "ArtistId"), ("Title", _tdColumnField _tdAlbumsTableName "Title")]
           query = Data.emptyQuery & qFields ?~ fields
-       in QueryRequest _tdAlbumsTableName [] query
+       in TableQueryRequest _tdAlbumsTableName mempty query Nothing

@@ -20,7 +20,7 @@ where
 import Data.Aeson (ToJSON (..))
 import Data.Bifunctor
 import Data.Containers.ListUtils
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List (intersperse)
 import Data.List.NonEmpty qualified as NE
 import Data.String
@@ -31,6 +31,7 @@ import Data.Text.Lazy.Builder qualified as LT
 import Data.Tuple
 import Data.Vector qualified as V
 import Hasura.Backends.BigQuery.Types
+import Hasura.NativeQuery.Metadata (InterpolatedItem (..), InterpolatedQuery (..))
 import Hasura.Prelude hiding (second)
 
 --------------------------------------------------------------------------------
@@ -139,6 +140,7 @@ fromScalarType =
     StructScalarType -> "STRUCT"
     DecimalScalarType -> "DECIMAL"
     BigDecimalScalarType -> "BIGDECIMAL"
+    JsonScalarType -> "JSON"
 
 fromOp :: Op -> Printer
 fromOp =
@@ -184,10 +186,28 @@ fromSelect Select {..} = finalExpression
     fromAsStruct = \case
       AsStruct -> "AS STRUCT"
       NoAsStruct -> ""
+    interpolatedQuery = \case
+      IIText t -> UnsafeTextPrinter t <+> NewlinePrinter
+      IIVariable v -> fromExpression v
+    fromWith = \case
+      Just (With expressions) -> do
+        let go :: InterpolatedQuery Expression -> Printer
+            go = foldr ((<+>) . interpolatedQuery) "" . getInterpolatedQuery
+
+        "WITH "
+          <+> SepByPrinter
+            ("," <+> NewlinePrinter)
+            [ fromNameText alias <+> " AS " <+> parens (go thing)
+              | Aliased thing alias <- toList expressions
+            ]
+      Nothing -> ""
+    fromJoinType LeftOuter = "LEFT OUTER JOIN "
+    fromJoinType Inner = "INNER JOIN "
     inner =
       SepByPrinter
         NewlinePrinter
-        [ "SELECT ",
+        [ fromWith selectWith,
+          "SELECT ",
           fromAsStruct selectAsStruct,
           IndentPrinter 7 projections,
           "FROM " <+> IndentPrinter 5 (fromFrom selectFrom),
@@ -196,7 +216,7 @@ fromSelect Select {..} = finalExpression
             ( map
                 ( \Join {..} ->
                     SeqPrinter
-                      [ "LEFT OUTER JOIN "
+                      [ fromJoinType joinType
                           <+> IndentPrinter 16 (fromJoinSource joinSource),
                         NewlinePrinter,
                         "AS " <+> fromJoinAlias joinAlias,
@@ -408,8 +428,8 @@ fromArrayAgg :: ArrayAgg -> Printer
 fromArrayAgg ArrayAgg {..} =
   SeqPrinter
     [ "ARRAY_AGG(",
-      IndentPrinter 10 $
-        SepByPrinter
+      IndentPrinter 10
+        $ SepByPrinter
           " "
           [ "STRUCT(" <+> IndentPrinter 7 projections <+> ")",
             fromOrderBys
@@ -539,6 +559,8 @@ fromFrom =
             )
             selectFromFunction
         )
+    -- Native Queries are bound as CTEs, so usage sites don't do "nativeQueryName AS alias".
+    FromNativeQuery (Aliased {aliasedAlias}) -> fromNameText aliasedAlias
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableNameSchema} =
@@ -592,14 +614,14 @@ toTextFlat = LT.toStrict . LT.toLazyText . toBuilderFlat
 -- | Produces a query with holes, and a mapping for each
 renderBuilderFlat :: Printer -> (Builder, InsOrdHashMap Int Value)
 renderBuilderFlat =
-  second (OMap.fromList . map swap . OMap.toList)
+  second (InsOrdHashMap.fromList . map swap . InsOrdHashMap.toList)
     . flip runState mempty
     . runBuilderFlat
 
 -- | Produces a query with holes, and a mapping for each
 renderBuilderPretty :: Printer -> (Builder, InsOrdHashMap Int Value)
 renderBuilderPretty =
-  second (OMap.fromList . map swap . OMap.toList)
+  second (InsOrdHashMap.fromList . map swap . InsOrdHashMap.toList)
     . flip runState mempty
     . runBuilderPretty
 
@@ -625,9 +647,9 @@ runBuilderFlat = go 0
         ValuePrinter v -> do
           themap <- get
           next <-
-            OMap.lookup v themap `onNothing` do
-              next <- gets OMap.size
-              modify (OMap.insert v next)
+            InsOrdHashMap.lookup v themap `onNothing` do
+              next <- gets InsOrdHashMap.size
+              modify (InsOrdHashMap.insert v next)
               pure next
           pure ("@" <> paramName next)
     notEmpty = (/= mempty)
@@ -649,9 +671,9 @@ runBuilderPretty = go 0
         ValuePrinter v -> do
           themap <- get
           next <-
-            OMap.lookup v themap `onNothing` do
-              next <- gets OMap.size
-              modify (OMap.insert v next)
+            InsOrdHashMap.lookup v themap `onNothing` do
+              next <- gets InsOrdHashMap.size
+              modify (InsOrdHashMap.insert v next)
               pure next
           pure ("@" <> paramName next)
     indentation n = LT.fromText (T.replicate n " ")

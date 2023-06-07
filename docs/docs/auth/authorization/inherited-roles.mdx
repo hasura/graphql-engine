@@ -6,8 +6,7 @@ keywords:
   - authorization
   - multiple roles
   - inherited roles
-sidebar_label: Inherited roles
-sidebar_position: 4
+sidebar_position: 40
 ---
 
 import Tabs from '@theme/Tabs';
@@ -17,29 +16,17 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
 # Inherited Roles
 
-## Introduction
-
 An inherited role is a way to create a new role which inherits permissions from two or more roles.
 
-Once an inherited role is created, it can be treated as any other role i.e. can be given in `X-Hasura-Role` session
-variable.
+Once an inherited role is created, it can be treated as any other role i.e. it can be provided in the `X-Hasura-Role`
+session variable. An inherited role derives its roles from a role set.
 
-Inherited roles are useful when you need to define multiple permission rules (may be overlapping) on schema objects and
-also for greater modularity in role management.
-
-By default, inherited roles will try to inherit the permissions from its parent roles. If you'd rather like to have a
-different permission than the inherited one for a particular entity and role pair, then it can be done by creating a
-permission for the entity and role pair. After creating this permission, it will override the inherited permission, if
-any.
+Inherited roles are useful for when you need to define multiple permission rules which may use overlapping logic on
+schema objects and also for greater modularity in role management.
 
 :::tip Supported from
 
-Inherited roles are supported for versions `v2.0.0-alpha.4` and above. The inherited roles feature is an experimental
-feature from versions `v2.0.0-alpha.4` till `v2.1.0-beta.1`, i.e it must be explicitly toggled in order to be enabled.
-This can be done either by setting the env var `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` or the server flag
-`--experimental-features` to `inherited_roles`.
-
-For versions `v2.1.0-beta.1` and above, inherited roles are enabled by default.
+Inherited roles are supported in all general availability (GA) versions of Hasura.
 
 :::
 
@@ -48,14 +35,17 @@ For versions `v2.1.0-beta.1` and above, inherited roles are enabled by default.
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-Go to the `Settings` tab (⚙) on the Console and click on `Inherited Roles`.
+Inherited roles can be created in the Console by going to the `Settings`⚙️ tab and clicking on `Inherited Roles`.
 
-<Thumbnail src="/img/auth/console-inherited-role.png" alt="Console create inherited role" width="1200px" />
+Enter the new inherited role name and click "Create". Select the role set which will comprise it and click "Save Role" to
+save your new Inherited Role.
+
+<Thumbnail src='/img/auth/inherited-roles_console-ui_2-16-1.png' alt='Console create inherited role' width='1200px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-To add a new inherited role, edit the `metadata/inherited_roles.yaml` file adding the inherited role definition like
+To add a new inherited role, edit the `metadata -> inherited_roles.yaml` file adding the inherited role definition like
 this:
 
 ```yaml
@@ -97,36 +87,45 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-:::info Note
+:::caution Inherited roles cannot form cycles
 
-Inherited roles cannot form cycles.
-
-**For example:**
+For example:
 
 Suppose there are two inherited roles: `inherited_role1`, `inherited_role2` and two non-inherited roles: `role1`,
 `role2` and:
 
-`inherited_role1` inherits from `role1` and `inherited_role2` `inherited_role2` inherits from `role2` and
-`inherited_role1`
+- `inherited_role1` inherits from `role1` and `inherited_role2`
+
+- `inherited_role2` inherits from `role2` and `inherited_role1`
 
 The above configuration won't work because `inherited_role1` and `inherited_role2` form a cycle.
 
 :::
 
-## How is the permission of the inherited role inherited?
+## Overriding inherited roles
+
+By default, inherited roles will inherit the permissions from its role set.
+
+If you need to define a different permission than the **inherited one** for a particular entity and role pair, then it
+can be done by creating a separate specific permission. After creation, it will override the inherited permission,
+if any.
+
+<Thumbnail src='/img/auth/overriding_permissions-2.16.1.png' alt='Overriding permissions' />
+
+## How the permissions of the inherited role are interpreted
 
 ### 1. Select permissions
 
 A select permission is comprised of the following things:
 
-1. Columns accessible to the role
-2. Row selection filter
+1. Row selection filter
+2. Columns accessible to the role
 3. Limit
 4. Allow aggregation
 5. Scalar computed fields accessible to the role
 
-Suppose there are two roles, `role1` gives access to column `C1` with row filter `P1` and `role2` gives access to
-columns `C1` and `C2` with row filter `P2`. Consider the following GraphQL query executed with an inherited role
+Suppose there are two roles, `role1` gives access to column `C1` with row permission `P1` and `role2` gives access to
+columns `C1` and `C2` with row permission `P2`. Consider the following GraphQL query executed with an inherited role
 comprised of `role1` and `role2`:
 
 ```graphql
@@ -158,12 +157,12 @@ The other parameters of the select permission will be combined in the following 
 Accessibility of a field for an inherited role is defined as follows:
 
 1. When all the roles give access to a column `C`, then `C` will always be accessible.
-2. When not all, but some of the roles give access to the column `C` then the value of the column `C` will be outputed
+2. When not all, but some of the roles give access to the column `C` then the value of the column `C` will be outputted
    when the OR of `P1,P2....P(n)` is `true` and when it evaluates to `false`, the value of the column `C` will be
    `null`, where `P` is the row filter of the select permissions in which column `C` is given access to.
 3. When none of the roles give access to column `C`, it won't be accessible to the inherited role.
 
-#### Examples
+#### Inherited select permissions Example 1
 
 Let's take the example of an `users` table with the following columns:
 
@@ -173,7 +172,7 @@ Let's take the example of an `users` table with the following columns:
 
 There are two roles defined namely `employee` and `manager`.
 
-1. User role - The user role will be able to access all columns of their row when the session variable
+1. User role - The user role will be able to access all columns of _**their row**_ when the session variable
    `X-Hasura-User-Id` is equal to the `id`.
 2. Anonymous role - The anonymous role will be able to access only the `id` and `name` columns of all the users.
 
@@ -196,7 +195,7 @@ X-Hasura-User-Id: 1
     name
     email
   }
- }`}
+}`}
   response={`{
   "data": {
     "users": [
@@ -206,8 +205,8 @@ X-Hasura-User-Id: 1
         "email": "alice@xyz.com"
       }
     ]
-    }
- }`}
+  }
+}`}
 />
 
 2.  Executing the query as `anonymous` role
@@ -224,7 +223,7 @@ X-Hasura-Role: anonymous
     id
     name
   }
- }`}
+}`}
   response={`{
   "data": {
     "users": [
@@ -242,7 +241,7 @@ X-Hasura-Role: anonymous
     }
     ]
   }
- }`}
+}`}
 />
 
 3.  Executing the query as `user_anonymous_inherited_role` role
@@ -287,16 +286,24 @@ X-Hasura-User-Id: 1
 
 In the response of the query being executed with the `user_anonymous_inherited_role` role, there are 3 rows returned and
 if we compare that to the queries executed as the `user` and `anonymous` roles, the results are unioned in the inherited
-role. But some of the fields have `null` values despite the value in the database not being `null`. This can only happen
-with inherited roles when a column doesn't have permission in the particular row. In the above example, we see that the
-`email` of "Bob" and "Sam" is `null` but a non null value for "Alice", this is because the "Alice" row is executed as
-the `user` role and the other rows are executed as the `anonymous` role which is why the value is `null`.
+role.
 
-4. Suppose we have two tables `users` and `authors` and similarly two roles `user` and `author` are defined. The `user`
-   role doesn't have permission to query the `authors` table and the `author` role doesn't have permission to query the
-   `users` table. With only the `user` and the `author` role, we won't be able to construct a query which fetches data
-   from both the tables. This can be solved by creating an inherited role out of `user` and `author` which can query
-   both the tables in a single query.
+But some of the fields in some of the results have `null` values despite the value in the database not being
+`null`. This can only happen with inherited roles when a column doesn't have permission in the particular row. In
+the above example, we see that the `email` of "Bob" and "Sam" is `null` but is populated for "Alice" as the
+`X-Hasura-User-Id` session variable on the query is set to the corresponding `id` of that row.
+
+The "Alice" row is executed as the `user` role and the other rows are executed as the `anonymous` role which
+is why the value is `null`.
+
+
+#### Inherited select permissions Example 2
+
+Suppose we have two tables, `users` and `authors`, and similarly two roles `user` and `author` are defined. The
+`user` role doesn't have permission to query the `authors` table and the `author` role doesn't have permission to query
+the `users` table. With only the `user` and the `author` role, we won't be able to construct a query which
+fetches data from both the tables. This can be solved by creating an inherited role out of `user` and `author` which
+can query both the tables in a single query.
 
 ```http
 POST /v1/graphql HTTP/1.1
@@ -342,13 +349,13 @@ X-Hasura-User-Id: 1
 
 A mutation (insert, update and delete) or Remote Schema permission is inherited in the following manner:
 
-Suppose there's an inherited role `(R)` which inherits permissions from `n` parent roles namely `pr1`, `pr2`, `pr3` ...
-`prn`. The permission for the role `R` on some entity can only be inherited when the permission on the entity is the
-same for all its parent roles.
+Suppose there's an inherited role `R` which inherits permissions from `n` roles in the set namely `pr1`, `pr2`,
+`pr3` ...`prn`. The inherited permission for the role `R` on some entity can only be inherited when the permission
+on the entity is the same for all roles in the set.
 
 For example, if two insert permissions are configured in the following way:
 
-1. insert permission of role `pr1`
+1. insert permission metadata of role `pr1`
 
    ```json
    {
@@ -366,7 +373,7 @@ For example, if two insert permissions are configured in the following way:
    }
    ```
 
-2. insert permission of the role `pr2`
+2. insert permission metadata of the role `pr2`
 
    ```json
    {
@@ -384,10 +391,12 @@ For example, if two insert permissions are configured in the following way:
    }
    ```
 
-The `check` constraint is different in both the permissions and there's no way to resolve this conflict.
+The `check` constraint is different for each of the permissions and there's no way to resolve this conflict.
 
-Whenever a conflict occurs while a role inherits from its parents, then the Metadata for that entity and role
-combination will be marked as inconsistent. These can be seen by calling the
+Whenever a conflict occurs while a role inherits from its role set, then the Metadata for that entity and role
+combination will be marked as inconsistent.
+
+These can be seen by calling the
 [get_inconsistent_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-get-inconsistent-metadata) API.
 Following the above example, the role `R` which is trying to inherit permissions from the role `pr1` and `pr2` will be
 marked as inconsistent for the table permission of the table `article`.
@@ -398,7 +407,7 @@ entity pair.
 
 ### 3. Actions and Custom Functions permissions
 
-Inheritance of permissions of Actions and custom functions work in the following manner:
+Inheritance of permissions of Actions and custom functions work in the following way:
 
-If any of the parent roles have permission configured for a given action or custom function, then the inherited role
+If any of the roles in the set have permission configured for a given Action or custom function, then the inherited role
 will also be able to access the given action or custom function.

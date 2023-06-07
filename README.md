@@ -91,6 +91,8 @@ Check out the instructions for the following one-click deployment options:
 | Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/azure-container-instances-postgres.html) |
 | Render | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/render-examples/hasura-graphql) | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/render-one-click.html) |
 
+> Note: The Hasura GraphQL Engine collects anonymous telemetry to understand usage and provide the best experience. Read more [here](https://hasura.io/docs/latest/policies/telemetry/) on what data is collected and the procedure to opt out.
+
 ### Other deployment methods
 
 For Docker-based deployment and advanced configuration options, see [deployment

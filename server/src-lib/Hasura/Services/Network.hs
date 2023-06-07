@@ -18,20 +18,20 @@ import Network.HTTP.Client qualified as HTTP
 
 --------------------------------------------------------------------------------
 
-class Monad m => ProvidesNetwork m where
+class (Monad m) => ProvidesNetwork m where
   askHTTPManager :: m HTTP.Manager
 
-instance ProvidesNetwork m => ProvidesNetwork (ReaderT r m) where
+instance (ProvidesNetwork m) => ProvidesNetwork (ReaderT r m) where
   askHTTPManager = lift askHTTPManager
 
 instance (Monoid w, ProvidesNetwork m) => ProvidesNetwork (WriterT w m) where
   askHTTPManager = lift askHTTPManager
 
-instance ProvidesNetwork m => ProvidesNetwork (StateT s m) where
+instance (ProvidesNetwork m) => ProvidesNetwork (StateT s m) where
   askHTTPManager = lift askHTTPManager
 
-instance ProvidesNetwork m => ProvidesNetwork (ExceptT e m) where
+instance (ProvidesNetwork m) => ProvidesNetwork (ExceptT e m) where
   askHTTPManager = lift askHTTPManager
 
-instance ProvidesNetwork m => ProvidesNetwork (TraceT m) where
+instance (ProvidesNetwork m) => ProvidesNetwork (TraceT m) where
   askHTTPManager = lift askHTTPManager

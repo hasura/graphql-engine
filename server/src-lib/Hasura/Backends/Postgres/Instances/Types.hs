@@ -32,11 +32,11 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp.AggregationPredicates qualified as Agg
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (SourceName, TriggerOnReplication (..))
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (..))
-import Hasura.SQL.Backend
-import Hasura.SQL.Tag
 
 --------------------------------------------------------------------------------
 -- PostgresBackend
@@ -64,13 +64,13 @@ class
   runPingSourceImpl _ _ _ _ = pure ()
 
 instance PostgresBackend 'Vanilla where
-  type PgExtraTableMetadata 'Vanilla = ()
+  type PgExtraTableMetadata 'Vanilla = Postgres.PGExtraTableMetadata
 
 instance PostgresBackend 'Citus where
   type PgExtraTableMetadata 'Citus = Citus.ExtraTableMetadata
 
 instance PostgresBackend 'Cockroach where
-  type PgExtraTableMetadata 'Cockroach = ()
+  type PgExtraTableMetadata 'Cockroach = Postgres.PGExtraTableMetadata
   versionCheckImpl = runCockroachVersionCheck
   runPingSourceImpl = runCockroachDBPing
 
@@ -127,12 +127,13 @@ instance
 
   type HealthCheckTest ('Postgres pgKind) = HealthCheckTestSql
   healthCheckImplementation =
-    Just $
-      HealthCheckImplementation
+    Just
+      $ HealthCheckImplementation
         { _hciDefaultTest = defaultHealthCheckTestSql,
           _hciTestCodec = codec
         }
 
+  supportsAggregateComputedFields = True
   versionCheckImplementation = versionCheckImpl @pgKind
   runPingSource = runPingSourceImpl @pgKind
   isComparableType = Postgres.isComparableType
@@ -155,7 +156,7 @@ instance
   getTableIdentifier = Postgres.getIdentifierQualifiedObject
   namingConventionSupport = Postgres.namingConventionSupport
 
-  resizeSourcePools sourceConfig serverReplicas = (Postgres._pecRunAction (Postgres._pscExecCtx sourceConfig)) (Postgres.ResizePoolMode serverReplicas)
+  resizeSourcePools sourceConfig serverReplicas = (Postgres._pecResizePools (Postgres._pscExecCtx sourceConfig)) serverReplicas
 
   defaultTriggerOnReplication = Just ((), TORDisableTrigger)
 
@@ -168,3 +169,10 @@ instance
   where
   type SourceConfig ('Postgres pgKind) = Postgres.PGSourceConfig
   type SourceConnConfiguration ('Postgres pgKind) = Postgres.PostgresConnConfiguration
+  sourceConfigNumReadReplicas = Postgres.sourceConfigNumReadReplicas
+  sourceConfigConnectonTemplateEnabled = Postgres.sourceConfigConnectonTemplateEnabled
+  sourceConfigBackendSourceKind _sourceConfig =
+    case backendTag @('Postgres pgKind) of
+      PostgresVanillaTag -> PostgresVanillaKind
+      PostgresCitusTag -> PostgresCitusKind
+      PostgresCockroachTag -> PostgresCockroachKind

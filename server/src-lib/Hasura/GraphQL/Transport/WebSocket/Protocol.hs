@@ -181,7 +181,7 @@ data DataMsg = DataMsg
 
 data ErrorMsg = ErrorMsg
   { _emId :: !OperationId,
-    _emPayload :: !J.Value
+    _emPayload :: !J.Encoding
   }
   deriving (Show, Eq)
 
@@ -241,8 +241,9 @@ encodeServerErrorMsg ecode = encJToLBS . encJFromJValue $ case ecode of
 
 encodeServerMsg :: ServerMsg -> BL.ByteString
 encodeServerMsg msg =
-  encJToLBS $
-    encJFromAssocList $ case msg of
+  encJToLBS
+    $ encJFromAssocList
+    $ case msg of
       SMConnAck ->
         [encTy SMT_GQL_CONNECTION_ACK]
       SMConnKeepAlive ->
@@ -259,7 +260,7 @@ encodeServerMsg msg =
       SMErr (ErrorMsg opId payload) ->
         [ encTy SMT_GQL_ERROR,
           ("id", encJFromJValue opId),
-          ("payload", encJFromJValue payload)
+          ("payload", encJFromJEncoding payload)
         ]
       SMComplete compMsg ->
         [ encTy SMT_GQL_COMPLETE,
@@ -299,8 +300,9 @@ getNewWSTimer :: Seconds -> IO WSConnInitTimer
 getNewWSTimer timeout = do
   timerState <- newTVarIO Running
   timer <- newEmptyTMVarIO
-  void $
-    forkIO $ do
+  void
+    $ forkIO
+    $ do
       sleep (seconds timeout)
       atomically $ do
         runTimerState <- readTVar timerState

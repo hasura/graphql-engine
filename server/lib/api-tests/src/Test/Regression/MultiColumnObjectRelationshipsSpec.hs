@@ -15,9 +15,9 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -51,8 +51,8 @@ spec = do
                   setupRelationships BigQuery.backendTypeMetadata testEnv
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
             },
@@ -152,11 +152,8 @@ setupRelationships backendTypeConfig testEnv =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests =
   it "Select quotes by characters" \testEnvironment -> do
     let schemaName = Schema.getSchemaName testEnvironment
 
@@ -192,4 +189,4 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected

@@ -1,69 +1,20 @@
-import { dataSource, generateTableDef } from '../..';
+import { generateTableDef } from '../../common/index';
+import type { WhereClause } from '../../../components/Common/utils/v1QueryUtils';
 import {
   getRunSqlQuery,
   getSelectQuery,
-  WhereClause,
 } from '../../../components/Common/utils/v1QueryUtils';
-import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
-import requestAction from '../../../utils/requestAction';
+import Endpoints from '../../../Endpoints';
 import {
   generateInsertRequestType,
   GenerateBulkDeleteRowRequest,
   GenerateDeleteRowRequest,
 } from '../../types';
 import { ReduxState } from './../../../types';
-import { getStatementTimeoutSql } from './sqlUtils';
+import { getEstimateCountQuery, getStatementTimeoutSql } from './sqlUtils';
 import { QualifiedTable, TableConfig } from '../../../metadata/types';
 
 type Tables = ReduxState['tables'];
-type Headers = Tables['dataHeaders'];
-
-export function getTableRowRequest({
-  tables,
-  headers,
-  isExport = false,
-}: {
-  tables: Tables;
-  headers: Headers;
-  isExport?: boolean;
-}) {
-  const {
-    currentTable: originalTable,
-    currentSchema,
-    currentDataSource,
-    view,
-  } = tables;
-  const limit = isExport ? null : view.query.limit;
-  const offset = isExport ? null : view.query.offset;
-  const requestBody = {
-    type: 'bulk',
-    source: currentDataSource,
-    args: [
-      getSelectQuery(
-        'select',
-        generateTableDef(originalTable, currentSchema),
-        view.query.columns,
-        view.query.where,
-        offset,
-        limit,
-        view.query.order_by,
-        currentDataSource
-      ),
-      getRunSqlQuery(
-        dataSource.getEstimateCountQuery(currentSchema, originalTable),
-        currentDataSource
-      ),
-    ],
-  };
-  const options: RequestInit = {
-    method: 'POST',
-    body: JSON.stringify(requestBody),
-    headers,
-    credentials: globalCookiePolicy,
-  };
-
-  return requestAction(Endpoints.query, options);
-}
 
 const getTableRowRequestBody = ({
   tables,
@@ -95,7 +46,7 @@ const getTableRowRequestBody = ({
         currentDataSource
       ),
       getRunSqlQuery(
-        dataSource.getEstimateCountQuery(currentSchema, originalTable),
+        getEstimateCountQuery(currentSchema, originalTable),
         currentDataSource,
         false,
         true

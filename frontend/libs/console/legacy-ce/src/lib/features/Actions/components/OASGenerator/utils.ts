@@ -14,22 +14,25 @@ import {
   Oas2,
   Oas3,
   createGraphQLSchema,
-} from 'openapi-to-graphql';
+} from '@dancamma/openapi-to-graphql';
 import {
   ReferenceObject,
   SchemaObject,
-} from 'openapi-to-graphql/dist/types/oas3';
+} from '@dancamma/openapi-to-graphql/dist/types/oas3';
 import { Microfiber } from 'microfiber';
 import { formatSdl } from 'format-graphql';
 import { getActionRequestSampleInput } from '../../../../components/Services/Actions/Add/utils';
 import {
   DataDefinition,
   GeneratedAction,
+  OASError,
   Operation,
   OperationParameters,
   Result,
   SubDefinition,
 } from './types';
+import { RequestTransformBody } from '../../../../metadata/types';
+import camelCase from 'lodash/camelCase';
 
 const parseRequestMethod = (method: string): RequestTransformMethod => {
   switch (method.toLowerCase()) {
@@ -74,9 +77,9 @@ export const generateQueryParams = (parameters: OperationParameters) => {
   if (isThereArray) {
     const stringParams = parameters.map(param => {
       if (isSchemaObject(param?.schema) && param.schema.type === 'array') {
-        return `concat({{ range _, x := $body.input.${param.name} }} "${param.name}={{x}}&" {{ end }})`;
+        return `concat({{ range _, x := $body.input?.${param.name} }} "${param.name}={{x}}&" {{ end }})`;
       }
-      return `"${param.name}={{$body.input.${param.name}}}&"`;
+      return `"${param.name}={{$body.input?.${param.name}}}&"`;
     });
 
     return `{{ concat ([${stringParams.join(', ')}]) }}`.replace(/&&/, '&');
@@ -87,13 +90,11 @@ export const generateQueryParams = (parameters: OperationParameters) => {
       ?.map(param => param.name) || [];
   return parameterNames.map(name => ({
     name,
-    value: `{{$body.input.${name}}}`,
+    value: `{{$body.input?.${name}}}`,
   }));
 };
 
-const lowerCaseFirstLetter = (str: string): string => {
-  return str ? str.charAt(0).toLowerCase() + str.slice(1) : '';
-};
+export const normalizeOperationId = camelCase;
 
 interface Transform {
   transform: Record<string, unknown>;
@@ -134,13 +135,11 @@ const createTransform = (
 
     let needTransform = false;
     const transform = Object.entries(definition).reduce((acc, curr) => {
+      const name = curr[0];
       const value = curr[1] as DataDefinition;
-      const keyFrom = inverse
-        ? lowerCaseFirstLetter(value.preferredName)
-        : curr[0];
-      const keyTo = inverse
-        ? curr[0]
-        : lowerCaseFirstLetter(value.preferredName);
+
+      const keyFrom = inverse ? normalizeOperationId(name) : curr[0];
+      const keyTo = inverse ? curr[0] : normalizeOperationId(name);
       if (keyFrom !== keyTo) {
         needTransform = true;
       }
@@ -199,8 +198,9 @@ const createSampleInput = (
     }
 
     return Object.entries(definition).reduce((acc, curr) => {
+      const name = curr[0];
       const value = curr[1] as DataDefinition;
-      const keyFrom = lowerCaseFirstLetter(value.preferredName);
+      const keyFrom = normalizeOperationId(name);
       const keyTo = curr[0];
 
       if (
@@ -261,30 +261,75 @@ const postProcessTransform = (output: Transform): string | null => {
   return string;
 };
 
-export const createRequestTransform = (operation: Operation): string => {
+const createApplicationJSONRequestTransform = (
+  operation: Operation,
+  inputName: string
+): GeneratedAction['requestTransforms'] => {
+  const defaultRequestTransform = ['POST', 'PUT', 'PATCH'].includes(
+    operation.method.toUpperCase()
+  )
+    ? `{{$body.input.${inputName}}}`
+    : '';
+  if (operation.payloadDefinition?.subDefinitions) {
+    return {
+      type: 'json',
+      value:
+        postProcessTransform(
+          createTransform(
+            operation.payloadDefinition.subDefinitions,
+            `$body.input.${inputName}`,
+            false
+          )
+        ) ?? defaultRequestTransform,
+    };
+  }
+
+  return {
+    type: 'json',
+    value: '',
+  };
+};
+
+const createXWWWFormURLEncodedRequestTransform = (
+  operation: Operation,
+  inputName: string
+): GeneratedAction['requestTransforms'] => {
+  if (operation.payloadDefinition?.subDefinitions) {
+    return {
+      type: 'x-www-form-urlencoded',
+      value: Object.entries(operation.payloadDefinition.subDefinitions).reduce(
+        (acc, curr) => {
+          const key = curr[0];
+          return {
+            ...acc,
+            [key]: `{{$body.input.${inputName}?.${normalizeOperationId(key)}}}`,
+          };
+        },
+        {} as Record<string, string>
+      ),
+    };
+  }
+  return {
+    type: 'x-www-form-urlencoded',
+    value: {},
+  };
+};
+
+export const createRequestTransform = (
+  operation: Operation
+): GeneratedAction['requestTransforms'] | null => {
   let inputName = '';
   const inputObjectType = operation.payloadDefinition?.graphQLInputObjectType;
   if (inputObjectType && 'name' in inputObjectType) {
-    inputName = lowerCaseFirstLetter(inputObjectType.name);
+    inputName = normalizeOperationId(inputObjectType.name);
+    if (operation.payloadContentType === 'application/x-www-form-urlencoded') {
+      return createXWWWFormURLEncodedRequestTransform(operation, inputName);
+    }
+    return createApplicationJSONRequestTransform(operation, inputName);
   }
-  if (operation.payloadDefinition?.subDefinitions) {
-    const defaultRequestTransform = ['POST', 'PUT', 'PATCH'].includes(
-      operation.method.toUpperCase()
-    )
-      ? `{{$body.input.${inputName}}}`
-      : '';
-    return (
-      postProcessTransform(
-        createTransform(
-          operation.payloadDefinition.subDefinitions,
-          `$body.input.${inputName}`,
-          false
-        )
-      ) ?? defaultRequestTransform
-    );
-  }
-  return '';
+  return null;
 };
+
 export const createResponseTransform = (operation: Operation): string => {
   if (operation.responseDefinition?.targetGraphQLType === 'string') {
     return '{{$body}}';
@@ -425,7 +470,7 @@ export const translateAction = (
       /\{([^}]+)\}/g,
       (_, p1) => `{{$body.input.${p1[0].toLowerCase()}${p1.slice(1)}}}`
     ),
-    requestTransforms: createRequestTransform(operation) ?? '',
+    requestTransforms: createRequestTransform(operation) ?? undefined,
     responseTransforms: createResponseTransform(operation) ?? '',
     sampleInput: JSON.stringify(sampleInput, null, 2),
     headers,
@@ -437,23 +482,33 @@ const applyWorkarounds = (properties: (SchemaObject | ReferenceObject)[]) => {
   // eslint-disable-next-line no-restricted-syntax
   for (const property of Object.values(properties ?? {})) {
     if (!('$ref' in property)) {
+      delete property.default;
       // fix boolean enum issue
       if (property.type === 'boolean') {
         delete property.enum;
       }
+      // fix null enum issue
+      if (property.type === 'string' && property.enum) {
+        property.enum = property.enum?.filter(v => v !== null);
+      }
+      // fix boolean enum issue
       if (
         property.type === 'string' &&
         (property.enum || []).some(v => v === 'true' || v === 'false')
       ) {
         delete property.enum;
       }
+      // fix empty type issue
       if (
         property.type === 'object' &&
         JSON.stringify(property.properties) === '{}'
       ) {
-        // fix empty type issue
         property.type = 'string';
         delete property.properties;
+      }
+      // fix array with no items issue
+      if (property.type === 'array' && !('items' in property)) {
+        property.items = { type: 'string' };
       }
       if (property.properties) {
         applyWorkarounds(Object.values(property.properties));
@@ -462,10 +517,17 @@ const applyWorkarounds = (properties: (SchemaObject | ReferenceObject)[]) => {
   }
 };
 
-const parseOas = async (oas: Oas2 | Oas3): Promise<Result> => {
+export const parseOas = async (oas: Oas2 | Oas3): Promise<Result> => {
   const oasCopy = JSON.parse(JSON.stringify(oas)) as Oas3;
   if (oasCopy.components?.schemas) {
     applyWorkarounds(Object.values(oasCopy.components?.schemas));
+    Object.values(oasCopy?.paths ?? {}).forEach(path => {
+      path.get?.parameters?.forEach(param => {
+        if ('schema' in param && param.schema) {
+          applyWorkarounds([param.schema]);
+        }
+      });
+    });
   }
 
   return createGraphQLSchema(oasCopy, {
@@ -473,6 +535,21 @@ const parseOas = async (oas: Oas2 | Oas3): Promise<Result> => {
     operationIdFieldNames: true,
     simpleEnumValues: true,
     viewer: false,
+    oasValidatorOptions: {
+      warnOnly: true,
+    },
+    softValidation: true,
+    report: {
+      validationErrors: [],
+      warnings: [],
+      numOps: 0,
+      numOpsQuery: 0,
+      numOpsMutation: 0,
+      numOpsSubscription: 0,
+      numQueriesCreated: 0,
+      numMutationsCreated: 0,
+      numSubscriptionsCreated: 0,
+    },
   });
 };
 
@@ -483,11 +560,6 @@ export const generateAction = async (
   const graphqlSchema = await parseOas(oas);
   const operation = graphqlSchema.data.operations[operationId];
   return translateAction(graphqlSchema, operation);
-};
-
-export const getOperations = async (oas: Oas2 | Oas3): Promise<Operation[]> => {
-  const graphqlSchema = await parseOas(oas);
-  return Object.values(graphqlSchema.data.operations);
 };
 
 type ActionState = {
@@ -509,6 +581,26 @@ type ActionState = {
   comment: string;
 };
 
+const generateRequestTransformBody = (
+  requestTransform: GeneratedAction['requestTransforms']
+): RequestTransformBody | undefined => {
+  if (requestTransform?.type === 'json') {
+    return {
+      action: 'transform',
+      template: requestTransform.value,
+    };
+  }
+
+  if (requestTransform?.type === 'x-www-form-urlencoded') {
+    return {
+      action: 'x_www_form_urlencoded',
+      form_template: requestTransform.value,
+    };
+  }
+
+  return undefined;
+};
+
 export const generatedActionToHasuraAction = (
   generatedAction: GeneratedAction
 ): {
@@ -526,7 +618,7 @@ export const generatedActionToHasuraAction = (
     },
     headers: generatedAction.headers.map(name => ({
       name,
-      value: `{{$body.input.${name}}}`,
+      value: `{{$body.input?.${name}}}`,
       type: 'static',
     })),
     forwardClientHeaders: true,
@@ -554,10 +646,7 @@ export const generatedActionToHasuraAction = (
 
     ...(generatedAction.requestTransforms
       ? {
-          body: {
-            action: 'transform',
-            template: generatedAction.requestTransforms,
-          },
+          body: generateRequestTransformBody(generatedAction.requestTransforms),
         }
       : {}),
   };
@@ -580,3 +669,6 @@ export const generatedActionToHasuraAction = (
     responseTransform,
   };
 };
+
+export const isOasError = (error: Error): error is OASError =>
+  'options' in error;

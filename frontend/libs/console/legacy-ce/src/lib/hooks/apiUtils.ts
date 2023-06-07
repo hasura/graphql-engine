@@ -8,7 +8,7 @@ interface IApiArgs {
   headers: Record<string, string>;
   url: string;
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-  body?: Record<any, any>;
+  body?: Record<any, any> | string;
   credentials?: 'include' | 'omit' | 'same-origin';
 }
 
@@ -30,7 +30,7 @@ async function fetchApi<T = unknown, V = T>(
     const response = await fetch(url, {
       headers,
       method,
-      body: JSON.stringify(body),
+      body: typeof body !== 'string' ? JSON.stringify(body) : body,
       credentials,
     });
     const contentType = response.headers.get('Content-Type');

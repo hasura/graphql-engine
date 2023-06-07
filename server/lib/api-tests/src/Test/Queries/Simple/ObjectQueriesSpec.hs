@@ -9,77 +9,89 @@
 module Test.Queries.Simple.ObjectQueriesSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.Has
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
-import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
+import Harness.Permissions (Permission (..), SelectPermissionDetails (..), selectPermission)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
+import Harness.Services.GraphqlEngine
+import Harness.Services.Schema
+import Harness.Services.Source.DCPostgres qualified as DC
+import Harness.Services.Source.Postgres
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Permissions (Permission (..), SelectPermissionDetails (..), selectPermission, withPermissions)
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
-import Harness.Yaml (shouldReturnYaml)
+import Harness.Test.Protocol (withEachProtocol)
+import Harness.TestEnvironment (GlobalTestEnvironment)
+import Harness.Yaml
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith GlobalTestEnvironment
 spec = do
-  Fixture.run
-    ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Postgres.setupTablesAction schema testEnvironment
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Citus.setupTablesAction schema testEnvironment
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [ Cockroach.setupTablesAction schema testEnv
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Sqlserver.setupTablesAction schema testEnvironment
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ BigQuery.setupTablesAction schema testEnvironment
-                ],
-              Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
-                    { Fixture.stringifyNumbers = True
+  withHge emptyHgeConfig $ do
+    withPostgresSource "postgres-source"
+      $ withSchemaName "test_schema"
+      $ withPostgresSchema schema
+      $ tests
+
+    DC.withDcPostgresSource "dc-postgres-source"
+      $ withSchemaName "test_schema"
+      $ DC.withDcPostgresSchema schema
+      $ tests
+
+  withEachProtocol
+    $ Fixture.run
+      ( NE.fromList
+          [ (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnvironment, _) ->
+                  [ Citus.setupTablesAction schema testEnvironment
+                  ]
+              },
+            (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnv, _) ->
+                  [ Cockroach.setupTablesAction schema testEnv
+                  ]
+              },
+            (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnvironment, _) ->
+                  [ Sqlserver.setupTablesAction schema testEnvironment
+                  ]
+              },
+            (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnvironment, _) ->
+                  [ BigQuery.setupTablesAction schema testEnvironment
+                  ],
+                Fixture.customOptions =
+                  Just
+                    $ Fixture.defaultOptions
+                      { Fixture.stringifyNumbers = True
+                      }
+              },
+            (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnvironment, _) ->
+                  [ Sqlite.setupTablesAction schema testEnvironment
+                  ]
+              }
+          ]
+      )
+      ( Fixture.withPermissions
+          ( NE.fromList
+              [ SelectPermission
+                  selectPermission
+                    { selectPermissionTable = "authors",
+                      selectPermissionColumns = ["id", "name"]
                     }
-            },
-          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Sqlite.setupTablesAction schema testEnvironment
-                ]
-            }
-        ]
-    )
-    ( withPermissions
-        ( NE.fromList
-            [ SelectPermission
-                selectPermission
-                  { selectPermissionTable = "authors",
-                    selectPermissionColumns = ["id", "name"]
-                  }
-            ]
-        )
-        . tests
-    )
+              ]
+          )
+          tests
+      )
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -112,16 +124,17 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests ::
+  forall testEnvironment.
+  ( Has PostGraphql testEnvironment,
+    Has ShouldReturnYamlF testEnvironment,
+    Has Schema.SchemaName testEnvironment
+  ) =>
+  SpecWith testEnvironment
+tests = do
   describe "Fetch a list of objects" do
     it "Fetch a list of authors" \testEnvironment -> do
-      let schemaName :: Schema.SchemaName
-          schemaName = Schema.getSchemaName testEnvironment
-
+      let schemaName = getter @Schema.SchemaName testEnvironment
           actual :: IO Value
           actual =
             postGraphql
@@ -150,12 +163,10 @@ tests opts = do
                   name: Anjela
             |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Fails on unknown fields" \testEnvironment -> do
-      let schemaName :: Schema.SchemaName
-          schemaName = Schema.getSchemaName testEnvironment
-
+      let schemaName = getter @Schema.SchemaName testEnvironment
           actual :: IO Value
           actual =
             postGraphql
@@ -178,4 +189,4 @@ tests opts = do
                 message: 'field ''unknown'' not found in type: ''#{schemaName}_authors'''
             |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected

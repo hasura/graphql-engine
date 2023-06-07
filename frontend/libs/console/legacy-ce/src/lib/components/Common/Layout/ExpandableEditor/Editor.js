@@ -36,8 +36,6 @@ class Editor extends React.Component {
     const {
       readOnlyMode = false,
       isCollapsable,
-      service,
-      property,
       collapseButtonText,
       expandButtonText,
     } = this.props;
@@ -52,7 +50,6 @@ class Editor extends React.Component {
         mode="default"
         size="sm"
         className="mr-sm"
-        data-test={`${service}-${isEditing ? 'close' : 'edit'}-${property}`}
         onClick={this.toggleEditor}
         disabled={readOnlyMode}
       >
@@ -67,7 +64,7 @@ class Editor extends React.Component {
     const saveWithToggle = () => saveFunc(this.toggleEditor);
     return (
       <Button
-        type="submit"
+        type="button"
         mode="primary"
         isLoading={isProcessing}
         loadingText="Saving..."
@@ -87,7 +84,7 @@ class Editor extends React.Component {
     const removeWithToggle = () => removeFunc(this.toggleEditor);
     return (
       <Button
-        type="submit"
+        type="button"
         mode="destructive"
         isLoading={isProcessing}
         loadingText="Removing..."

@@ -1,8 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import { Dispatch } from 'redux';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { isEmpty } from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import { Badge } from '../../../new-components/Badge';
 import { DropdownButton } from '../../../new-components/DropdownButton';
 import { FaArrowRight, FaFlask } from 'react-icons/fa';
@@ -69,6 +68,7 @@ export const TryOperation = (props: Props) => {
   if (isTryitButtonAvailable) {
     return (
       <DropdownButton
+        className="ml-xs"
         items={[
           [
             <span className="py-xs text-xs font-semibold text-muted uppercase tracking-wider whitespace-nowrap">
@@ -127,7 +127,7 @@ export const TryOperation = (props: Props) => {
   }
   return (
     <Tooltip
-      className="ml-0"
+      className="ml-xs"
       tooltipContentChildren='"Try it" is disabled for this table because it has customizations. Head to API Explorer to try out a query.'
     >
       <DropdownButton

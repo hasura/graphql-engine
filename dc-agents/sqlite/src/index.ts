@@ -5,7 +5,7 @@ import { explain, queryData } from './query';
 import { getConfig, tryGetConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
 import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse, RawRequest, RawResponse, ErrorResponse, MutationRequest, MutationResponse, DatasetTemplateName, DatasetGetTemplateResponse, DatasetCreateCloneRequest, DatasetCreateCloneResponse, DatasetDeleteCloneResponse } from '@hasura/dc-api-types';
-import { connect } from './db';
+import { defaultMode, withConnection } from './db';
 import metrics from 'fastify-metrics';
 import prometheus from 'prom-client';
 import { runRawOperation } from './raw';
@@ -131,11 +131,21 @@ server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (reque
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
   const end = queryHistogram.startTimer()
   const config = getConfig(request);
-  try {
-    const result : QueryResponse = await queryData(config, sqlLogger, request.body);
-    return result;
-  } finally {
-    end();
+  const body = request.body;
+  switch(body.type) {
+    case 'function':
+      throw new ErrorWithStatusCode(
+        "User defined functions not supported in queries",
+        500,
+        {function: { name: body.function }}
+      );
+    case 'table':
+      try {
+        const result : QueryResponse = await queryData(config, sqlLogger, body);
+        return result;
+      } finally {
+        end();
+      }
   }
 });
 
@@ -149,7 +159,17 @@ server.post<{ Body: RawRequest, Reply: RawResponse }>("/raw", async (request, _r
 server.post<{ Body: QueryRequest, Reply: ExplainResponse}>("/explain", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
   const config = getConfig(request);
-  return explain(config, sqlLogger, request.body);
+  const body = request.body;
+  switch(body.type) {
+    case 'function':
+      throw new ErrorWithStatusCode(
+        "User defined functions not supported in queries",
+        500,
+        {function: { name: body.function }}
+      );
+    case 'table':
+      return explain(config, sqlLogger, body);
+  }
 });
 
 if(MUTATIONS) {
@@ -170,14 +190,15 @@ server.get("/health", async (request, response) => {
     response.statusCode = 204;
   } else {
     server.log.info({ headers: request.headers, query: request.body, }, "health.db.request");
-    const db = connect(config, sqlLogger);
-    const [r, m] = await db.query('select 1 where 1 = 1');
-    if(r && JSON.stringify(r) == '[{"1":1}]') {
-      response.statusCode = 204;
-    } else {
-      response.statusCode = 500;
-      return { "error": "problem executing query", "query_result": r };
-    }
+    return await withConnection(config, defaultMode, sqlLogger, async db => {
+      const r = await db.query('select 1 where 1 = 1');
+      if (r && JSON.stringify(r) == '[{"1":1}]') {
+        response.statusCode = 204;
+      } else {
+        response.statusCode = 500;
+        return { "error": "problem executing query", "query_result": r };
+      }
+    });
   }
 });
 

@@ -18,7 +18,7 @@ module Hasura.Backends.BigQuery.Parser.Scalars
   )
 where
 
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.Int (Int64)
 import Data.Scientific (Scientific)
 import Data.Scientific qualified as S
@@ -39,14 +39,14 @@ import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Text.ParserCombinators.ReadP
 
-bqInt64 :: forall origin m. MonadParse m => Parser origin 'Both m BigQuery.Int64
+bqInt64 :: forall origin m. (MonadParse m) => Parser origin 'Both m BigQuery.Int64
 bqInt64 = mkScalar name "64-bit integers. Accepts both string and number literals." \case
   GraphQLValue (VInt i)
     | checkIntegerBounds i -> return $ BigQuery.Int64 (tshow i)
     | otherwise -> boundsFailure (tshow i)
   GraphQLValue (VString s) -> integralText s
-  JSONValue (A.String s) -> integralText s
-  JSONValue (A.Number n) -> integralSci (tshow n) n
+  JSONValue (J.String s) -> integralText s
+  JSONValue (J.Number n) -> integralSci (tshow n) n
   v -> typeMismatch name "a 64-bit integer" v
   where
     name = [G.name|bigquery_int|]
@@ -71,13 +71,13 @@ bqInt64 = mkScalar name "64-bit integers. Accepts both string and number literal
     boundsFailure inputText = parseErrorWith ParseFailed $ "The value " <> toErrorMessage inputText <> " lies outside the accepted numerical integral bounds."
     integralFailure inputText = parseErrorWith ParseFailed $ "The value " <> toErrorMessage inputText <> " has a non-zero fractional part."
 
-bqFloat64 :: forall origin m. MonadParse m => Parser origin 'Both m BigQuery.Float64
+bqFloat64 :: forall origin m. (MonadParse m) => Parser origin 'Both m BigQuery.Float64
 bqFloat64 = mkScalar name "64-bit floats. Accepts both string and number literals." \case
   GraphQLValue (VFloat f) -> floatSci (tshow f) f
   GraphQLValue (VInt i) -> floatSci (tshow i) (fromInteger i)
   GraphQLValue (VString s) -> floatText s
-  JSONValue (A.String s) -> floatText s
-  JSONValue (A.Number n) -> floatSci (tshow n) n
+  JSONValue (J.String s) -> floatText s
+  JSONValue (J.Number n) -> floatSci (tshow n) n
   v -> typeMismatch name "a 64-bit float" v
   where
     name = [G.name|bigquery_float|]
@@ -96,25 +96,25 @@ bqFloat64 = mkScalar name "64-bit floats. Accepts both string and number literal
     boundsFailure :: forall a. Text -> m a
     boundsFailure inputText = parseErrorWith ParseFailed $ "The value " <> toErrorMessage inputText <> " lies outside the accepted numerical integral bounds."
 
-bqBigDecimal :: MonadParse m => Parser origin 'Both m BigQuery.BigDecimal
+bqBigDecimal :: (MonadParse m) => Parser origin 'Both m BigQuery.BigDecimal
 bqBigDecimal = mkScalar name "BigDecimals. Accepts both string and number literals." $ fmap (BigQuery.BigDecimal . BigQuery.scientificToText) . decimal name
   where
     name = [G.name|bigquery_bigdecimal|]
 
-bqDecimal :: MonadParse m => Parser origin 'Both m BigQuery.Decimal
+bqDecimal :: (MonadParse m) => Parser origin 'Both m BigQuery.Decimal
 bqDecimal = mkScalar name "Decimals. Accepts both string and number literals." $ fmap (BigQuery.Decimal . BigQuery.scientificToText) . decimal name
   where
     name = [G.name|bigquery_decimal|]
 
-decimal :: MonadParse f => Name -> InputValue Variable -> f Scientific
+decimal :: (MonadParse f) => Name -> InputValue Variable -> f Scientific
 decimal name = \case
   GraphQLValue (VFloat f) -> pure f
   GraphQLValue (VInt i) -> pure $ S.scientific i 0
   GraphQLValue (VString s)
     | Just sci <- readMaybe (Text.unpack s) -> pure $ sci
     | otherwise -> stringNotationError name s
-  JSONValue (A.Number n) -> pure n
-  JSONValue (A.String s)
+  JSONValue (J.Number n) -> pure n
+  JSONValue (J.String s)
     | Just sci <- readMaybe (Text.unpack s) -> pure $ sci
     | otherwise -> stringNotationError name s
   v -> typeMismatch name "decimal" v
@@ -123,7 +123,7 @@ decimal name = \case
 -- Local helpers
 
 mkScalar ::
-  MonadParse m =>
+  (MonadParse m) =>
   Name ->
   Description ->
   (InputValue Variable -> m a) ->
@@ -139,13 +139,13 @@ mkScalar name desc parser =
 typeNamed :: Name -> Maybe Description -> Type origin 'Both
 typeNamed name description = TNamed NonNullable $ Definition name description Nothing [] TIScalar
 
-stringNotationError :: MonadParse m => G.Name -> Text -> m a
+stringNotationError :: (MonadParse m) => G.Name -> Text -> m a
 stringNotationError typeName actualString =
-  parseError $
-    "expected "
-      <> toErrorMessage (tshow typeName)
-      <> " represented as a string, but got "
-      <> dquote actualString
-      <> ", which is not a recognizable "
-      <> toErrorMessage (tshow typeName)
-      <> "."
+  parseError
+    $ "expected "
+    <> toErrorMessage (tshow typeName)
+    <> " represented as a string, but got "
+    <> dquote actualString
+    <> ", which is not a recognizable "
+    <> toErrorMessage (tshow typeName)
+    <> "."

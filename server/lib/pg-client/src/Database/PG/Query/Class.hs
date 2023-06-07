@@ -8,11 +8,8 @@
 {-# HLINT ignore "Use onLeft" #-}
 
 module Database.PG.Query.Class
-  ( WithCount (..),
-    WithReturning (..),
-    FromCol (..),
+  ( FromCol (..),
     fromColHelper,
-    FromRow (..),
     FromRes (..),
     ToPrepArg (..),
     toPrepValHelper,
@@ -34,7 +31,6 @@ import Control.Monad.Identity (Identity (..))
 import Control.Monad.Trans.Except (ExceptT (..))
 import Data.Aeson (FromJSON, ToJSON, Value, encode, parseJSON)
 import Data.Aeson.Types (parseEither)
-import Data.Attoparsec.ByteString.Char8 qualified as Atto
 import Data.Bifunctor (first)
 import Data.ByteString (ByteString, uncons)
 import Data.ByteString.Lazy qualified as Lazy (ByteString)
@@ -58,17 +54,6 @@ import PostgreSQL.Binary.Encoding qualified as PE
 import Prelude
 
 -------------------------------------------------------------------------------
-
-data WithCount a = WithCount
-  { wcCount :: Word64,
-    wcValue :: a
-  }
-  deriving stock (Eq, Show)
-
-data WithReturning a = WithReturning
-  { wrCount :: Word64,
-    wrResults :: Maybe a
-  }
 
 newtype SingleRow a = SingleRow
   { getRow :: a
@@ -152,13 +137,16 @@ instance FromCol TimeOfDay where
 instance FromCol UTCTime where
   fromCol = fromColHelper PD.timestamptz_int
 
+instance FromCol LocalTime where
+  fromCol = fromColHelper PD.timestamp_int
+
 instance FromCol Bool where
   fromCol = fromColHelper PD.bool
 
 instance FromCol UUID where
   fromCol = fromColHelper PD.uuid
 
-instance FromCol a => FromCol (Maybe a) where
+instance (FromCol a) => FromCol (Maybe a) where
   fromCol Nothing = return Nothing
   fromCol bs = Just <$> fromCol bs
 
@@ -182,36 +170,6 @@ instance FromRes Discard where
 
 newtype Discard = Discard ()
   deriving stock (Eq, Show)
-
-parseWord64 :: ByteString -> Either Text Word64
-parseWord64 b = either buildE return parsed
-  where
-    parsed = Atto.parseOnly (Atto.decimal <* Atto.endOfInput) b
-    buildE e = Left $ "Couldn't parse Word64: " <> fromString e
-
-extractCount :: PQ.Result -> ExceptT Text IO Word64
-extractCount r = do
-  cmd <- liftIO $ PQ.cmdTuples r
-  case cmd of
-    Just "" -> throwError "Affected rows information not found"
-    Nothing -> throwError "Affected rows information not found"
-    Just bs -> ExceptT $ return $ parseWord64 bs
-
-instance FromRes a => FromRes (WithReturning a) where
-  fromRes (ResultOkEmpty res) = do
-    c <- extractCount res
-    return $ WithReturning c Nothing
-  fromRes rs@(ResultOkData res) = do
-    c <- extractCount res
-    r <- fromRes rs
-    return $ WithReturning c $ Just r
-
-instance FromRes a => FromRes (WithCount a) where
-  fromRes resOk = do
-    let res = getPQRes resOk
-    a <- fromRes resOk
-    c <- extractCount res
-    return $ WithCount c a
 
 type ResultMatrix = V.Vector ResultRow
 
@@ -240,21 +198,21 @@ buildMat r = do
     VM.unsafeWrite mvx (rowInt ir) vy
   V.unsafeFreeze mvx
 
-instance FromRow a => FromRes [a] where
+instance (FromRow a) => FromRes [a] where
   fromRes (ResultOkEmpty _) =
     throwError "Expecting data. Instead, status is 'CommandOk'"
   fromRes (ResultOkData res) = do
     rm <- liftIO $ buildMat res
     ExceptT $ return $ fmap V.toList $ sequence $ V.map fromRow rm
 
-instance FromRow a => FromRes (V.Vector a) where
+instance (FromRow a) => FromRes (V.Vector a) where
   fromRes (ResultOkEmpty _) =
     throwError "Expecting data. Instead, status is 'CommandOk'"
   fromRes (ResultOkData res) = do
     rm <- liftIO $ buildMat res
     ExceptT $ return $ sequence $ V.map fromRow rm
 
-instance FromRow a => FromRes (SingleRow a) where
+instance (FromRow a) => FromRes (SingleRow a) where
   fromRes (ResultOkEmpty _) =
     throwError "Expecting data. Instead, status is 'CommandOk'"
   fromRes (ResultOkData res) = do
@@ -263,7 +221,7 @@ instance FromRow a => FromRes (SingleRow a) where
       then ExceptT $ return $ SingleRow <$> fromRow (rm V.! 0)
       else throwError "Rows returned != 1"
 
-instance FromRow a => FromRes (Maybe a) where
+instance (FromRow a) => FromRes (Maybe a) where
   fromRes (ResultOkEmpty _) =
     throwError "Expecting data. Instead, status is 'CommandOk'"
   fromRes (ResultOkData res) = do
@@ -283,7 +241,7 @@ colMismatch expected actual =
         show actual
       ]
 
-instance FromCol a => FromRow (Identity a) where
+instance (FromCol a) => FromRow (Identity a) where
   fromRow row = case V.length row of
     1 -> fmap Identity $ fromCol $ row V.! 0
     c -> throwError $ colMismatch 1 c

@@ -104,6 +104,10 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
     if (rfType.includes('one')) {
       return `${rfType.replace('one', rootField)}_one`;
     }
+    if (rfType.includes('_by_pk')) {
+      const [type] = rfType.split('_by_pk');
+      return `${type}_${rootField}_by_pk`;
+    }
     if (rfType === 'custom_name') {
       return rootField;
     }
@@ -183,9 +187,9 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
               {getRootFieldRow('insert_one', insertOneOnChange)}
               {getRootFieldRow('update', updateOnChange)}
               {getRootFieldRow('update_by_pk', updateByPkOnChange)}
+              {getRootFieldRow('update_many', updateManyOnChange)}
               {getRootFieldRow('delete', deleteOnChange)}
               {getRootFieldRow('delete_by_pk', deleteByPkOnChange)}
-              {getRootFieldRow('update_many', updateManyOnChange)}
             </div>
           )}
         </CollapsibleToggle>

@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -Wno-error=deprecations #-}
 
 -- | Tests for remote relationships to remote schemas. Remote relationships are
 -- relationships that are not local to a given source or remote schema, and are
@@ -10,28 +11,33 @@
 -- the tests.
 module Test.Schema.RemoteRelationships.XToRemoteSchemaRelationshipSpec (spec) where
 
+import Data.Aeson qualified as J
 import Data.Char (isUpper, toLower)
 import Data.List.NonEmpty qualified as NE
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types
 import Data.Morpheus.Types qualified as Morpheus
+import Data.Text qualified as Text
 import Data.Typeable (Typeable)
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.RemoteServer qualified as RemoteServer
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
+import Harness.Test.SetupAction (SetupAction (..))
 import Harness.Test.SetupAction qualified as SetupAction
 import Harness.Test.TestResource (Managed)
-import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment, stopServer)
+import Harness.TestEnvironment (GlobalTestEnvironment, Server, TestEnvironment (..), stopServer)
 import Harness.Yaml (shouldReturnYaml)
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
@@ -42,8 +48,8 @@ spec :: SpecWith GlobalTestEnvironment
 spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
     contexts =
-      NE.fromList $
-        map
+      NE.fromList
+        $ map
           mkFixture
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
               { Fixture.mkLocalTestEnvironment = lhsPostgresMkLocalTestEnvironment,
@@ -66,6 +72,12 @@ spec = Fixture.runWithLocalTestEnvironment contexts tests
                 Fixture.setupTeardown = \(testEnv, _localEnv) ->
                   [lhsSQLServerSetupAction testEnv]
               },
+            (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
+              { Fixture.mkLocalTestEnvironment = \_ -> pure Nothing,
+                Fixture.setupTeardown = \(testEnv, _localEnv) ->
+                  [ SetupAction (lhsSqliteSetup testEnv) sqliteTeardown
+                  ]
+              },
             (Fixture.fixture $ Fixture.RemoteGraphQLServer)
               { Fixture.mkLocalTestEnvironment = lhsRemoteServerMkLocalTestEnvironment,
                 Fixture.setupTeardown = \(testEnv, localEnv) ->
@@ -84,6 +96,7 @@ mkFixture lhs =
         pure $ LocalTestTestEnvironment lhsServer rhsServer,
       Fixture.setupTeardown = \(testEnvironment, LocalTestTestEnvironment lhsServer rhsServer) ->
         [ clearMetadataSetupAction testEnvironment,
+          setupSqliteAgentAction testEnvironment,
           rhsRemoteSchemaSetupAction (testEnvironment, rhsServer)
         ]
           <> lhsSetupTeardown (testEnvironment, lhsServer),
@@ -96,6 +109,7 @@ mkFixture lhs =
         setupTeardown = lhsSetupTeardown,
         customOptions = lhsOptions
       } = lhs
+    setupSqliteAgentAction testEnv = SetupAction.noTeardown (Sqlite.setupSqliteAgent testEnv)
 
 -- | Local test testEnvironment.
 data LocalTestTestEnvironment = LocalTestTestEnvironment
@@ -338,6 +352,53 @@ args:
   |]
 
 --------------------------------------------------------------------------------
+-- LHS SQLite
+
+lhsSqliteSetup :: TestEnvironment -> IO API.DatasetCloneName
+lhsSqliteSetup testEnvironment = do
+  let cloneName = API.DatasetCloneName $ tshow (uniqueTestId testEnvironment) <> "-lhs"
+  let lhsSourceName_ = "source"
+  let sourceName = Text.unpack lhsSourceName_
+  let sqliteLhsTableName = J.toJSON ["main" :: Text, "track"]
+
+  (API.Config sourceConfig) <- Sqlite.createEmptyDatasetCloneSourceConfig cloneName
+
+  -- Add remote source
+  Schema.addSource lhsSourceName_ (J.Object sourceConfig) testEnvironment
+
+  -- Setup tables
+  Sqlite.createTable sourceName testEnvironment track
+  Sqlite.insertTable sourceName testEnvironment track
+  Sqlite.trackTable sourceName testEnvironment track
+
+  -- Setup permissions
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+      type: bulk
+      args:
+      - type: sqlite_create_remote_relationship
+        args:
+          source: source
+          table: *sqliteLhsTableName
+          name: album
+          definition:
+            to_remote_schema:
+              remote_schema: target
+              lhs_fields: [album_id]
+              remote_field:
+                album:
+                  arguments:
+                    album_id: $album_id
+        |]
+
+  pure cloneName
+
+sqliteTeardown :: Maybe API.DatasetCloneName -> IO ()
+sqliteTeardown cloneName = do
+  traverse_ Sqlite.deleteDatasetClone cloneName
+
+--------------------------------------------------------------------------------
 -- LHS Remote Server
 
 -- | To circumvent Morpheus' default behaviour, which is to capitalize type
@@ -371,7 +432,7 @@ data LHSQuery m = LHSQuery
   }
   deriving (Generic)
 
-instance Typeable m => Morpheus.GQLType (LHSQuery m) where
+instance (Typeable m) => Morpheus.GQLType (LHSQuery m) where
   typeOptions _ _ = hasuraTypeOptions
 
 data LHSHasuraTrackArgs = LHSHasuraTrackArgs
@@ -391,7 +452,7 @@ data LHSHasuraTrack m = LHSHasuraTrack
   }
   deriving (Generic)
 
-instance Typeable m => Morpheus.GQLType (LHSHasuraTrack m) where
+instance (Typeable m) => Morpheus.GQLType (LHSHasuraTrack m) where
   typeOptions _ _ = hasuraTypeOptions
 
 data LHSHasuraTrackOrderBy = LHSHasuraTrackOrderBy
@@ -448,12 +509,12 @@ lhsRemoteServerMkLocalTestEnvironment _ =
             Nothing -> \_ _ -> EQ
             Just orderByArg -> orderTrack orderByArg
           limitFunction = maybe Hasura.Prelude.id take ta_limit
-      pure $
-        tracks
-          & filter filterFunction
-          & sortBy orderByFunction
-          & limitFunction
-          & map mkTrack
+      pure
+        $ tracks
+        & filter filterFunction
+        & sortBy orderByFunction
+        & limitFunction
+        & map mkTrack
     -- Returns True iif the given track matches the given boolean expression.
     matchTrack trackInfo@(trackId, trackTitle, maybeAlbumId) (LHSHasuraTrackBoolExp {..}) =
       and
@@ -474,16 +535,16 @@ lhsRemoteServerMkLocalTestEnvironment _ =
       (trackId2, trackTitle2, trackAlbumId2) =
         flip foldMap orderByList \LHSHasuraTrackOrderBy {..} ->
           if
-              | Just idOrder <- tob_id -> case idOrder of
-                  Asc -> compare trackId1 trackId2
-                  Desc -> compare trackId2 trackId1
-              | Just titleOrder <- tob_title -> case titleOrder of
-                  Asc -> compare trackTitle1 trackTitle2
-                  Desc -> compare trackTitle2 trackTitle1
-              | Just albumIdOrder <- tob_album_id ->
-                  compareWithNullLast albumIdOrder trackAlbumId1 trackAlbumId2
-              | otherwise ->
-                  error "empty track_order object"
+            | Just idOrder <- tob_id -> case idOrder of
+                Asc -> compare trackId1 trackId2
+                Desc -> compare trackId2 trackId1
+            | Just titleOrder <- tob_title -> case titleOrder of
+                Asc -> compare trackTitle1 trackTitle2
+                Desc -> compare trackTitle2 trackTitle1
+            | Just albumIdOrder <- tob_album_id ->
+                compareWithNullLast albumIdOrder trackAlbumId1 trackAlbumId2
+            | otherwise ->
+                error "empty track_order object"
     compareWithNullLast Desc x1 x2 = compareWithNullLast Asc x2 x1
     compareWithNullLast Asc Nothing Nothing = EQ
     compareWithNullLast Asc (Just _) Nothing = LT
@@ -611,20 +672,21 @@ rhsRemoteSchemaTeardown (_, server) = stopServer server
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
-tests opts = describe "remote-schema-relationship" do
-  schemaTests opts
-  executionTests opts
+tests :: SpecWith (TestEnvironment, LocalTestTestEnvironment)
+tests = describe "remote-schema-relationship" do
+  schemaTests
+  executionTests
 
 -- | Basic queries using *-to-DB joins
-executionTests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
-executionTests opts = describe "execution" do
+executionTests :: SpecWith (TestEnvironment, LocalTestTestEnvironment)
+executionTests = describe "execution" do
   -- fetches the relationship data
   it "related-data" \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName testEnvironment
     let query =
           [graphql|
           query {
-            track: hasura_track(where: {title: {_eq: "track1_album1"}}) {
+            track: #{lhsSchema}_track(where: {title: {_eq: "track1_album1"}}) {
               title
               album {
                 title
@@ -641,16 +703,17 @@ executionTests opts = describe "execution" do
                  title: album1_artist1
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
   -- when any of the join columns are null, the relationship should be null
   it "related-data-null" \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName testEnvironment
     let query =
           [graphql|
           query {
-            track: hasura_track(where: {title: {_eq: "track_no_album"}}) {
+            track: #{lhsSchema}_track(where: {title: {_eq: "track_no_album"}}) {
               title
               album {
                 title
@@ -666,16 +729,17 @@ executionTests opts = describe "execution" do
                album: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
   -- when the lhs response has both null and non-null values for join columns
   it "related-data-non-null-and-null" \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName testEnvironment
     let query =
           [graphql|
           query {
-            track: hasura_track(
+            track: #{lhsSchema}_track(
               where: {
                 _or: [
                   {title: {_eq: "track1_album1"}},
@@ -702,31 +766,32 @@ executionTests opts = describe "execution" do
                album: null
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse
 
-schemaTests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
-schemaTests opts =
+schemaTests :: SpecWith (TestEnvironment, LocalTestTestEnvironment)
+schemaTests =
   -- we use an introspection query to check:
   -- 1. a field 'album' is added to the track table
   -- 1. track's where clause does not have 'album' field
   -- 2. track's order_by clause does nat have 'album' field
   it "graphql-schema" \(testEnvironment, _) -> do
+    let lhsSchema = Schema.getSchemaName testEnvironment
     let query =
           [graphql|
           query {
-            track_fields: __type(name: "hasura_track") {
+            track_fields: __type(name: "#{lhsSchema}_track") {
               fields {
                 name
               }
             }
-            track_where_exp_fields: __type(name: "hasura_track_bool_exp") {
+            track_where_exp_fields: __type(name: "#{lhsSchema}_track_bool_exp") {
               inputFields {
                 name
               }
             }
-            track_order_by_exp_fields: __type(name: "hasura_track_order_by") {
+            track_order_by_exp_fields: __type(name: "#{lhsSchema}_track_order_by") {
               inputFields {
                 name
               }
@@ -757,6 +822,6 @@ schemaTests opts =
               - name: title
           |]
     shouldReturnYaml
-      opts
+      testEnvironment
       (GraphqlEngine.postGraphql testEnvironment query)
       expectedResponse

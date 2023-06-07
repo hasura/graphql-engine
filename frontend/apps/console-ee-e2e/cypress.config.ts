@@ -1,7 +1,9 @@
 import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { initPlugin as initSnapshotPlugin } from 'cypress-plugin-snapshots/plugin';
+import * as customTasks from './src/support/tasks';
 
-const nxConfig = nxE2EPreset(__dirname);
+const nxConfig = nxE2EPreset(__filename);
 
 export default defineConfig({
   viewportWidth: 1440,
@@ -20,5 +22,15 @@ export default defineConfig({
     ...nxConfig,
 
     video: false,
+
+    setupNodeEvents(on, config) {
+      on('task', {
+        ...customTasks,
+      });
+
+      initSnapshotPlugin(on, config);
+
+      return config;
+    },
   },
 });

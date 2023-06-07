@@ -9,16 +9,17 @@ import Control.Concurrent.Async.Lifted.Safe qualified as LA
 import Control.Concurrent.STM qualified as STM
 import Control.Exception.Lifted
 import Control.Monad.Trans.Control qualified as MC
-import Data.Aeson (object, toJSON, (.=))
+import Data.Aeson qualified as J
+import Data.Aeson.Encoding qualified as J
 import Data.ByteString.Char8 qualified as B (pack)
-import Data.Environment qualified as Env
 import Data.Text (pack)
+import Hasura.App.State
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
+import Hasura.CredentialCache
 import Hasura.GraphQL.Execute qualified as E
-import Hasura.GraphQL.Execute.Backend qualified as EB
-import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
-import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Logging
 import Hasura.GraphQL.Transport.HTTP (MonadExecuteQuery)
+import Hasura.GraphQL.Transport.HTTP.Protocol (encodeGQExecError)
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.GraphQL.Transport.WebSocket
 import Hasura.GraphQL.Transport.WebSocket.Protocol
@@ -27,14 +28,12 @@ import Hasura.GraphQL.Transport.WebSocket.Types
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
-import Hasura.RQL.Types.Common
+import Hasura.QueryTags
 import Hasura.RQL.Types.SchemaCache
-import Hasura.Server.Auth (AuthMode, UserAuthentication)
-import Hasura.Server.Cors
+import Hasura.Server.AppStateRef
+import Hasura.Server.Auth (UserAuthentication)
 import Hasura.Server.Init.Config
-  ( AllowListStatus,
-    KeepAliveDelay,
-    WSConnectionInitTimeout,
+  ( WSConnectionInitTimeout,
   )
 import Hasura.Server.Limits
 import Hasura.Server.Metrics (ServerMetrics (..))
@@ -43,10 +42,9 @@ import Hasura.Server.Prometheus
     decWebsocketConnections,
     incWebsocketConnections,
   )
-import Hasura.Server.Types (ReadOnlyMode)
+import Hasura.Server.Types (MonadGetPolicies (..))
 import Hasura.Services.Network
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client qualified as HTTP
 import Network.WebSockets qualified as WS
 import System.Metrics.Gauge qualified as EKG.Gauge
 
@@ -54,26 +52,27 @@ createWSServerApp ::
   ( MonadIO m,
     MC.MonadBaseControl IO m,
     LA.Forall (LA.Pure m),
-    UserAuthentication (Tracing.TraceT m),
+    UserAuthentication m,
     E.MonadGQLExecutionCheck m,
     WS.MonadWSLog m,
     MonadQueryLog m,
-    Tracing.HasReporter m,
+    MonadExecutionLog m,
     MonadExecuteQuery m,
     MonadMetadataStorage m,
-    EB.MonadQueryTags m,
+    MonadQueryTags m,
     HasResourceLimits m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    Tracing.MonadTrace m,
+    MonadGetPolicies m
   ) =>
-  Env.Environment ->
   HashSet (L.EngineLogType L.Hasura) ->
-  AuthMode ->
-  WSServerEnv ->
+  WSServerEnv impl ->
   WSConnectionInitTimeout ->
+  Maybe (CredentialCache AgentLicenseKey) ->
+  -- | aka generalized 'WS.ServerApp'
   WS.HasuraServerApp m
---   -- ^ aka generalized 'WS.ServerApp'
-createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ipAddress !pendingConn -> do
-  let getMetricsConfig = scMetricsConfig . fst <$> _wseGCtxMap serverEnv
+createWSServerApp enabledLogTypes serverEnv connInitTimeout licenseKeyCache = \ !ipAddress !pendingConn -> do
+  let getMetricsConfig = scMetricsConfig <$> getSchemaCache (_wseAppStateRef serverEnv)
   WS.createServerApp getMetricsConfig connInitTimeout (_wseServer serverEnv) prometheusMetrics handlers ipAddress pendingConn
   where
     handlers =
@@ -86,6 +85,7 @@ createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ip
     serverMetrics = _wseServerMetrics serverEnv
     prometheusMetrics = _wsePrometheusMetrics serverEnv
 
+    getAuthMode = acAuthMode <$> getAppContext (_wseAppStateRef serverEnv)
     wsActions = mkWSActions logger
 
     -- Mask async exceptions during event processing to help maintain integrity of mutable vars:
@@ -96,67 +96,48 @@ createWSServerApp env enabledLogTypes authMode serverEnv connInitTimeout = \ !ip
       flip runReaderT serverEnv $ onConn rid rh ip (wsActions sp)
 
     onMessageHandler conn bs sp =
-      mask_ $
-        onMessage env enabledLogTypes authMode serverEnv conn bs (wsActions sp)
+      mask_
+        $ onMessage enabledLogTypes getAuthMode serverEnv conn bs (wsActions sp) licenseKeyCache
 
     onCloseHandler conn = mask_ do
+      granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
       liftIO $ EKG.Gauge.dec $ smWebsocketConnections serverMetrics
       liftIO $ decWebsocketConnections $ pmConnections prometheusMetrics
-      onClose logger serverMetrics prometheusMetrics (_wseSubscriptionState serverEnv) conn
+      onClose logger serverMetrics prometheusMetrics (_wseSubscriptionState serverEnv) conn granularPrometheusMetricsState
 
-stopWSServerApp :: WSServerEnv -> IO ()
+stopWSServerApp :: WSServerEnv impl -> IO ()
 stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)
 
 createWSServerEnv ::
-  (MonadIO m) =>
-  L.Logger L.Hasura ->
-  ES.SubscriptionsState ->
-  ES.LiveQueriesOptions ->
-  ES.StreamQueriesOptions ->
-  IO (SchemaCache, SchemaCacheVer) ->
-  HTTP.Manager ->
-  CorsPolicy ->
-  SQLGenCtx ->
-  ReadOnlyMode ->
-  AllowListStatus ->
-  KeepAliveDelay ->
-  ServerMetrics ->
-  PrometheusMetrics ->
-  Tracing.SamplingPolicy ->
-  m WSServerEnv
-createWSServerEnv
-  logger
-  lqState
-  lqOpts
-  streamQOpts
-  getSchemaCache
-  httpManager
-  corsPolicy
-  sqlGenCtx
-  readOnlyMode
-  enableAL
-  keepAliveDelay
-  serverMetrics
-  prometheusMetrics
-  traceSamplingPolicy = do
-    wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
-    pure $
-      WSServerEnv
-        logger
-        lqState
-        lqOpts
-        streamQOpts
-        getSchemaCache
-        httpManager
-        corsPolicy
-        sqlGenCtx
-        readOnlyMode
-        wsServer
-        enableAL
-        keepAliveDelay
-        serverMetrics
-        prometheusMetrics
-        traceSamplingPolicy
+  ( HasAppEnv m,
+    MonadIO m
+  ) =>
+  AppStateRef impl ->
+  m (WSServerEnv impl)
+createWSServerEnv appStateRef = do
+  AppEnv {..} <- askAppEnv
+  let getCorsPolicy = acCorsPolicy <$> getAppContext appStateRef
+      logger = _lsLogger appEnvLoggers
+
+  AppContext {acEnableAllowlist, acAuthMode, acSQLGenCtx, acExperimentalFeatures, acDefaultNamingConvention} <- liftIO $ getAppContext appStateRef
+  allowlist <- liftIO $ scAllowlist <$> getSchemaCache appStateRef
+  corsPolicy <- liftIO getCorsPolicy
+
+  wsServer <- liftIO $ STM.atomically $ WS.createWSServer acAuthMode acEnableAllowlist allowlist corsPolicy acSQLGenCtx acExperimentalFeatures acDefaultNamingConvention logger
+
+  pure
+    $ WSServerEnv
+      (_lsLogger appEnvLoggers)
+      appEnvSubscriptionState
+      appStateRef
+      appEnvManager
+      getCorsPolicy
+      appEnvEnableReadOnlyMode
+      wsServer
+      appEnvWebSocketKeepAlive
+      appEnvServerMetrics
+      appEnvPrometheusMetrics
+      appEnvTraceSamplingPolicy
 
 mkWSActions :: L.Logger L.Hasura -> WSSubProtocol -> WS.WSActions WSConnData
 mkWSActions logger subProtocol =
@@ -172,7 +153,7 @@ mkWSActions logger subProtocol =
     mkPostExecErrMessageAction wsConn opId execErr =
       sendMsg wsConn $ case subProtocol of
         Apollo -> SMData $ DataMsg opId $ throwError execErr
-        GraphQLWS -> SMErr $ ErrorMsg opId $ toJSON execErr
+        GraphQLWS -> SMErr $ ErrorMsg opId $ encodeGQExecError execErr
 
     mkOnErrorMessageAction wsConn err mErrMsg =
       case subProtocol of
@@ -183,15 +164,15 @@ mkWSActions logger subProtocol =
         GraphQLWS -> sendCloseWithMsg logger wsConn (WS.mkWSServerErrorCode mErrMsg err) (Just $ SMConnErr err) Nothing
 
     mkConnectionCloseAction wsConn opId errMsg =
-      when (subProtocol == GraphQLWS) $
-        sendCloseWithMsg logger wsConn (GenericError4400 errMsg) (Just . SMErr $ ErrorMsg opId $ toJSON (pack errMsg)) (Just 1000)
+      when (subProtocol == GraphQLWS)
+        $ sendCloseWithMsg logger wsConn (GenericError4400 errMsg) (Just . SMErr $ ErrorMsg opId $ J.toEncoding (pack errMsg)) (Just 1000)
 
     getServerMsgType = case subProtocol of
       Apollo -> SMData
       GraphQLWS -> SMNext
 
-    keepAliveAction wsConn = sendMsg wsConn $
-      case subProtocol of
+    keepAliveAction wsConn = sendMsg wsConn
+      $ case subProtocol of
         Apollo -> SMConnKeepAlive
         GraphQLWS -> SMPing . Just $ keepAliveMessage
 
@@ -201,5 +182,5 @@ mkWSActions logger subProtocol =
         }
 
     fmtErrorMessage errMsgs = case subProtocol of
-      Apollo -> object ["errors" .= errMsgs]
-      GraphQLWS -> toJSON errMsgs
+      Apollo -> J.pairs (J.pair "errors" $ J.list id errMsgs)
+      GraphQLWS -> J.list id errMsgs

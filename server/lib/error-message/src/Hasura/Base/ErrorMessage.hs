@@ -26,7 +26,7 @@ newtype ErrorMessage = ErrorMessage
   { -- | A temporary extractor which will go away once 'ErrorMessage' is pervasive.
     fromErrorMessage :: Text
   }
-  deriving newtype (Eq, Semigroup, ToJSON)
+  deriving newtype (Eq, Semigroup, Monoid, ToJSON)
 
 -- | A smart constructor for 'ErrorMessage' so that it cannot be deconstructed.
 toErrorMessage :: Text -> ErrorMessage

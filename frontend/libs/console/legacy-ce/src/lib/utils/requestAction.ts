@@ -10,9 +10,42 @@ import {
   ERROR_REQUEST,
   CONNECTION_FAILED,
 } from '../components/App/Actions';
-import { globalCookiePolicy } from '../Endpoints';
+import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import { processResponseDetails } from '../components/Services/ApiExplorer/Actions';
 
+// if URL is graphql, and body is a query and not a mutation
+const checkCachable = (url: string, body: BodyInit | null | undefined) => {
+  if (url === Endpoints.graphQLUrl) {
+    if (body && typeof body === 'string') {
+      // get query and operation name from body init
+      const bodyObj = JSON.parse(body);
+      if (bodyObj.operationName && bodyObj.query) {
+        const queryRegex = new RegExp(
+          `query\\s+${bodyObj.operationName}\\s*`,
+          'i'
+        );
+        const isQuery = queryRegex.test(bodyObj.query as string);
+        return isQuery;
+      }
+    }
+  }
+  return false;
+};
+
+const getCacheRequestWarning = (
+  warningHeader: string | null
+): string | null => {
+  if (!warningHeader) {
+    return null;
+  }
+  return [
+    'cache-store-size-limit-exceeded',
+    'cache-store-capacity-exceeded',
+    'cache-store-error',
+  ]?.some(warning => warningHeader?.includes(warning))
+    ? warningHeader
+    : null;
+};
 const requestAction = <T = any>(
   url: string,
   options: RequestInit = {},
@@ -39,7 +72,9 @@ const requestAction = <T = any>(
       dispatch({ type: LOAD_REQUEST });
       const startTime = new Date().getTime();
       fetch(url, requestOptions).then(
-        response => {
+        async response => {
+          const endTime = new Date().getTime();
+          const responseSize = (await response.clone().text()).length;
           const contentType = response.headers.get('Content-Type');
           const isResponseJson = `${contentType}`.includes('application/json');
 
@@ -62,16 +97,23 @@ const requestAction = <T = any>(
               dispatch({ type: DONE_REQUEST });
 
               if (requestTrackingId) {
-                const endTime = new Date().getTime();
                 const responseTimeMs = endTime - startTime;
                 const isResponseCached = response.headers.has('Cache-Control');
-                const responseSize = JSON.stringify(results).length * 2;
+                const cacheWarning = getCacheRequestWarning(
+                  response.headers.get('Warning')
+                );
+                const isRequestCachable = checkCachable(
+                  url,
+                  requestOptions.body
+                );
                 dispatch(
                   processResponseDetails(
                     responseTimeMs,
                     responseSize,
                     isResponseCached,
-                    requestTrackingId
+                    requestTrackingId,
+                    cacheWarning,
+                    isRequestCachable
                   )
                 );
               }

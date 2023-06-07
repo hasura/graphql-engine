@@ -8,7 +8,7 @@ import { EditTableColumnDialog } from './EditTableColumnDialog/EditTableColumnDi
 import { TableColumnDescription } from './TableColumnDescription';
 import { ModifyTableProps } from '../ModifyTable';
 
-interface TableColumnProps extends ModifyTableProps {}
+type TableColumnProps = ModifyTableProps;
 export const TableColumns: React.VFC<TableColumnProps> = props => {
   const { dataSourceName, table } = props;
   const { columns, isLoading, isError } = useListAllTableColumns(

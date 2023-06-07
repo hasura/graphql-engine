@@ -11,6 +11,7 @@ module Test.AgentClient
     getAgentClientConfig,
     AgentClientT,
     runAgentClientT,
+    AgentAuthKey (..),
   )
 where
 
@@ -22,7 +23,7 @@ import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Reader (MonadReader)
 import Control.Monad.State.Class (get, modify')
 import Control.Monad.State.Strict (StateT, evalStateT)
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Lens (key)
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
@@ -35,6 +36,7 @@ import Data.Text qualified as Text
 import GHC.Stack (HasCallStack)
 import Hasura.Backends.DataConnector.API qualified as API
 import Network.HTTP.Client qualified as HttpClient
+import Network.HTTP.Client.Internal qualified as HttpClient
 import Network.HTTP.Types (HeaderName, Method, Status (..), statusIsSuccessful)
 import Servant.API (NamedRoutes)
 import Servant.Client (BaseUrl, Client, Response, defaultMakeClientRequest, hoistClient, mkClientEnv, runClientM)
@@ -50,25 +52,35 @@ import Prelude
 
 -------------------------------------------------------------------------------
 
-newtype AgentIOClient = AgentIOClient (forall m. MonadIO m => Client m (NamedRoutes API.Routes))
+newtype AgentIOClient = AgentIOClient (forall m. (MonadIO m) => Client m (NamedRoutes API.Routes))
 
 configHeader :: HeaderName
 configHeader = CI.mk "X-Hasura-DataConnector-Config"
 
-mkHttpClientManager :: MonadIO m => SensitiveOutputHandling -> m HttpClient.Manager
-mkHttpClientManager sensitiveOutputHandling =
-  let settings = HttpClient.defaultManagerSettings {HttpClient.managerModifyRequest = pure . addHeaderRedaction sensitiveOutputHandling}
+newtype AgentAuthKey = AgentAuthKey {getAgentAuthKey :: ByteString}
+
+eeLicenseKeyHeader :: HeaderName
+eeLicenseKeyHeader = CI.mk "X-Hasura-License"
+
+mkHttpClientManager :: (MonadIO m) => SensitiveOutputHandling -> Maybe AgentAuthKey -> m HttpClient.Manager
+mkHttpClientManager sensitiveOutputHandling agentAuthKey =
+  let modifyRequest = addHeaderRedaction sensitiveOutputHandling . maybe id addLicenseKeyHeader agentAuthKey
+      settings = HttpClient.defaultManagerSettings {HttpClient.managerModifyRequest = pure . modifyRequest}
    in liftIO $ HttpClient.newManager settings
+
+addLicenseKeyHeader :: AgentAuthKey -> HttpClient.Request -> HttpClient.Request
+addLicenseKeyHeader (AgentAuthKey eeKey) r =
+  r {HttpClient.requestHeaders = (eeLicenseKeyHeader, eeKey) : filter (\(h, _) -> h /= eeLicenseKeyHeader) (HttpClient.requestHeaders r)}
 
 addHeaderRedaction :: SensitiveOutputHandling -> HttpClient.Request -> HttpClient.Request
 addHeaderRedaction sensitiveOutputHandling request =
   case sensitiveOutputHandling of
     AllowSensitiveOutput -> request
-    DisallowSensitiveOutput -> request {HttpClient.redactHeaders = HttpClient.redactHeaders request <> Set.singleton configHeader}
+    DisallowSensitiveOutput -> request {HttpClient.redactHeaders = HttpClient.redactHeaders request <> Set.fromList [configHeader, eeLicenseKeyHeader]}
 
-mkAgentIOClient :: MonadIO m => SensitiveOutputHandling -> BaseUrl -> m AgentIOClient
-mkAgentIOClient sensitiveOutputHandling agentBaseUrl = do
-  manager <- mkHttpClientManager sensitiveOutputHandling
+mkAgentIOClient :: (MonadIO m) => SensitiveOutputHandling -> Maybe AgentAuthKey -> BaseUrl -> m AgentIOClient
+mkAgentIOClient sensitiveOutputHandling agentAuthKey agentBaseUrl = do
+  manager <- mkHttpClientManager sensitiveOutputHandling agentAuthKey
   let clientEnv = mkClientEnv manager agentBaseUrl
   pure $ AgentIOClient $ hoistClient (Proxy @(NamedRoutes API.Routes)) (\m -> liftIO (runClientM m clientEnv >>= either throwIO pure)) API.apiClient
 
@@ -80,9 +92,9 @@ data AgentClientConfig = AgentClientConfig
     _accSensitiveOutputHandling :: SensitiveOutputHandling
   }
 
-mkAgentClientConfig :: MonadIO m => SensitiveOutputHandling -> BaseUrl -> m AgentClientConfig
-mkAgentClientConfig sensitiveOutputHandling agentBaseUrl = do
-  manager <- mkHttpClientManager sensitiveOutputHandling
+mkAgentClientConfig :: (MonadIO m) => SensitiveOutputHandling -> Maybe AgentAuthKey -> BaseUrl -> m AgentClientConfig
+mkAgentClientConfig sensitiveOutputHandling agentAuthKey agentBaseUrl = do
+  manager <- mkHttpClientManager sensitiveOutputHandling agentAuthKey
   pure $ AgentClientConfig agentBaseUrl manager sensitiveOutputHandling
 
 -------------------------------------------------------------------------------
@@ -144,7 +156,10 @@ runRequestAcceptStatus' acceptStatus request = do
   let clientRequest = addHeaderRedaction _accSensitiveOutputHandling $ defaultMakeClientRequest _accBaseUrl request
 
   testFolder <- getCurrentFolder
-  for_ testFolder $ HttpFile.writeRequest _accBaseUrl clientRequest filenamePrefix
+  -- HttpClient modifies the request with settings from the Manager before it sends it. To log these modifications
+  -- correctly, we'll manually perform them and then record the modified request
+  (_, modifiedRequest) <- liftIO $ HttpClient.getModifiedRequestManager _accHttpManager clientRequest
+  for_ testFolder $ HttpFile.writeRequest _accBaseUrl modifiedRequest filenamePrefix
   incrementRequestCounter
 
   let redactResponseBody =
@@ -164,17 +179,17 @@ runRequestAcceptStatus' acceptStatus request = do
     then pure $ response
     else throwClientError $ mkFailureResponse _accBaseUrl request response
 
-getClientState :: Monad m => AgentClientT m AgentClientState
+getClientState :: (Monad m) => AgentClientT m AgentClientState
 getClientState = AgentClientT get
 
-incrementRequestCounter :: Monad m => AgentClientT m ()
+incrementRequestCounter :: (Monad m) => AgentClientT m ()
 incrementRequestCounter = AgentClientT $ modify' \state -> state {_acsRequestCounter = _acsRequestCounter state + 1}
 
-redactJsonResponse :: Method -> ByteString -> Aeson.Value -> Aeson.Value
+redactJsonResponse :: Method -> ByteString -> J.Value -> J.Value
 redactJsonResponse requestMethod requestPath =
   case requestMethod of
     "POST" | "/datasets/clones/" `BS.isPrefixOf` requestPath -> redactCreateCloneResponse
     _ -> id
 
-redactCreateCloneResponse :: Aeson.Value -> Aeson.Value
-redactCreateCloneResponse = key "config" .~ Aeson.String "<REDACTED>"
+redactCreateCloneResponse :: J.Value -> J.Value
+redactCreateCloneResponse = key "config" .~ J.String "<REDACTED>"

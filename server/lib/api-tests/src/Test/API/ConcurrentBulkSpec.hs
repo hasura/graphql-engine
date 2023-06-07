@@ -9,12 +9,11 @@ import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
-import Harness.Exceptions (HasCallStack)
 import Harness.GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -68,16 +67,14 @@ schema =
       }
   ]
 
-tests :: (TestEnvironment -> String -> IO Value) -> Fixture.Options -> SpecWith TestEnvironment
-tests query opts = do
-  let shouldBe :: HasCallStack => IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
+tests :: (TestEnvironment -> String -> IO Value) -> SpecWith TestEnvironment
+tests query =
   describe "'concurrent_bulk'" do
     it "returns the same results as regular 'bulk'" \testEnv -> do
       let actual = query testEnv "concurrent_bulk"
       expected <- query testEnv "bulk"
       show expected `shouldContain` "TuplesOk"
-      actual `shouldBe` expected
+      shouldReturnYaml testEnv actual expected
 
     it "fails when a query is not read-only" \testEnv -> do
       let expected =
@@ -86,15 +83,15 @@ tests query opts = do
               error: Only read-only queries are allowed in a concurrent_bulk
               path: $
             |]
-      runSqlDrop testEnv `shouldBe` expected
+      shouldReturnYaml testEnv (runSqlDrop testEnv) expected
 
 postgresRunSqlQuery :: TestEnvironment -> String -> IO Value
 postgresRunSqlQuery testEnvironment bulkType = do
   let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ getBackendTypeConfig testEnvironment
       sourceName = BackendType.backendSourceName backendTypeMetadata
       backendPrefix = BackendType.backendTypeString backendTypeMetadata
-  postV2Query 200 testEnvironment $
-    [interpolateYaml|
+  postV2Query 200 testEnvironment
+    $ [interpolateYaml|
       type: #{bulkType}
       args:
       - type: #{backendPrefix}_run_sql
@@ -156,8 +153,8 @@ mssqlRunSqlQuery testEnvironment bulkType = do
   let backendTypeMetadata = fromMaybe (error "Expected a backend type but got nothing") $ getBackendTypeConfig testEnvironment
       sourceName = BackendType.backendSourceName backendTypeMetadata
       backendPrefix = BackendType.backendTypeString backendTypeMetadata
-  postV2Query 200 testEnvironment $
-    [interpolateYaml|
+  postV2Query 200 testEnvironment
+    $ [interpolateYaml|
       type: #{bulkType}
       args:
       - type: #{backendPrefix}_run_sql

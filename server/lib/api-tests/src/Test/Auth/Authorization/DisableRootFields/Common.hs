@@ -19,7 +19,7 @@ where
 import Data.Aeson (Value)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
-import Harness.Test.Schema qualified as Schema
+import Harness.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 
 listQuery :: TestEnvironment -> Value

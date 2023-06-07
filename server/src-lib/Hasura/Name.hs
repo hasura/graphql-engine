@@ -103,9 +103,6 @@ __BigQuery_comparison_exp = [G.name|_BigQuery_comparison_exp|]
 __MSSQL_comparison_exp :: G.Name
 __MSSQL_comparison_exp = [G.name|_MSSQL_comparison_exp|]
 
-__MySQL_comparison_exp :: G.Name
-__MySQL_comparison_exp = [G.name|_MySQL_comparison_exp|]
-
 __cast :: G.Name
 __cast = [G.name|_cast|]
 

@@ -56,7 +56,6 @@ export const Field: React.FC<FieldProps> = ({
     // happens only first time when the node is created
     if (
       fieldVal &&
-      fieldVal !== {} &&
       Object.keys(fieldVal).length > 0 &&
       !isEmpty(fieldVal) &&
       !autoExpandInputPresets
@@ -67,12 +66,7 @@ export const Field: React.FC<FieldProps> = ({
   }, [autoExpandInputPresets]);
 
   useEffect(() => {
-    if (
-      fieldVal &&
-      fieldVal !== {} &&
-      Object.keys(fieldVal).length > 0 &&
-      !isEmpty(fieldVal)
-    ) {
+    if (fieldVal && Object.keys(fieldVal).length > 0 && !isEmpty(fieldVal)) {
       context.setArgTree((argTree: Record<string, any>) => {
         const tree = i.parentName
           ? {

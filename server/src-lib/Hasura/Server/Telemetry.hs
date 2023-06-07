@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- |
 --  Send anonymized metrics to the telemetry server regarding usage of various
@@ -29,35 +30,42 @@ import CI qualified
 import Control.Concurrent.Extended qualified as C
 import Control.Exception (try)
 import Control.Lens
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
+import Data.Aeson.TH qualified as Aeson
 import Data.ByteString.Lazy qualified as BL
-import Data.HashMap.Strict qualified as HM
-import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict qualified as HashMap
+import Data.Int (Int64)
 import Data.List qualified as L
 import Data.List.Extended qualified as L
 import Data.Text qualified as T
 import Data.Text.Conversions (UTF8 (..), decodeText)
+import Data.Text.Extended (toTxt)
+import Hasura.App.State qualified as State
 import Hasura.HTTP
 import Hasura.Logging
-import Hasura.LogicalModel.Metadata (LogicalModelInfo, lmiArguments)
+import Hasura.LogicalModel.Cache (LogicalModelInfo)
+import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiArguments))
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
+import Hasura.RQL.Types.BackendTag
+import Hasura.RQL.Types.BackendType (BackendType, backendTypeFromBackendSourceKind)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as Any
-import Hasura.SQL.Backend (BackendType)
-import Hasura.SQL.Tag
+import Hasura.Server.AppStateRef qualified as HGE
+import Hasura.Server.Init.Config
+import Hasura.Server.ResourceChecker
 import Hasura.Server.Telemetry.Counters (dumpServiceTimingMetrics)
 import Hasura.Server.Telemetry.Types
 import Hasura.Server.Types
 import Hasura.Server.Version
-import Hasura.Session
+import Hasura.StoredProcedure.Cache (StoredProcedureInfo (_spiArguments))
+import Hasura.Table.Cache
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wreq qualified as Wreq
@@ -81,25 +89,38 @@ data TelemetryHttpError = TelemetryHttpError
   }
   deriving (Show)
 
-instance A.ToJSON TelemetryLog where
+instance J.ToJSON TelemetryLog where
   toJSON tl =
-    A.object
-      [ "type" A..= _tlType tl,
-        "message" A..= _tlMessage tl,
-        "http_error" A..= (A.toJSON <$> _tlHttpError tl)
+    J.object
+      [ "type" J..= _tlType tl,
+        "message" J..= _tlMessage tl,
+        "http_error" J..= (J.toJSON <$> _tlHttpError tl)
       ]
 
-instance A.ToJSON TelemetryHttpError where
+instance J.ToJSON TelemetryHttpError where
   toJSON tlhe =
-    A.object
-      [ "status_code" A..= (HTTP.statusCode <$> tlheStatus tlhe),
-        "url" A..= tlheUrl tlhe,
-        "response" A..= tlheResponse tlhe,
-        "http_exception" A..= (A.toJSON <$> tlheHttpException tlhe)
+    J.object
+      [ "status_code" J..= (HTTP.statusCode <$> tlheStatus tlhe),
+        "url" J..= tlheUrl tlhe,
+        "response" J..= tlheResponse tlhe,
+        "http_exception" J..= (J.toJSON <$> tlheHttpException tlhe)
       ]
 
 instance ToEngineLog TelemetryLog Hasura where
-  toEngineLog tl = (_tlLogLevel tl, ELTInternal ILTTelemetry, A.toJSON tl)
+  toEngineLog tl = (_tlLogLevel tl, ELTInternal ILTTelemetry, J.toJSON tl)
+
+newtype ServerTelemetryRow = ServerTelemetryRow
+  { _strServerMetrics :: ServerTelemetry
+  }
+
+data ServerTelemetry = ServerTelemetry
+  { _stResourceCpu :: Maybe Int,
+    _stResourceMemory :: Maybe Int64,
+    _stResourceCheckerErrorCode :: Maybe ResourceCheckerError
+  }
+
+$(Aeson.deriveToJSON hasuraJSON ''ServerTelemetry)
+$(Aeson.deriveToJSON hasuraJSON ''ServerTelemetryRow)
 
 mkHttpError ::
   Text ->
@@ -128,46 +149,61 @@ telemetryUrl = "https://telemetry.hasura.io/v1/http"
 -- hours. The send time depends on when the server was started and will
 -- naturally drift.
 runTelemetry ::
+  forall m impl.
+  ( MonadIO m,
+    State.HasAppEnv m
+  ) =>
   Logger Hasura ->
-  HTTP.Manager ->
-  -- | an action that always returns the latest schema cache
-  IO SchemaCache ->
+  -- | an action that always returns the latest schema cache ref
+  HGE.AppStateRef impl ->
   MetadataDbId ->
-  InstanceId ->
   PGVersion ->
-  HashSet ExperimentalFeature ->
-  IO void
-runTelemetry (Logger logger) manager getSchemaCache metadataDbUid instanceId pgVersion experimentalFeatures = do
-  let options = wreqOptions manager []
-  forever $ do
-    schemaCache <- getSchemaCache
-    serviceTimings <- dumpServiceTimingMetrics
-    ci <- CI.getCI
+  ComputeResourcesResponse ->
+  m Void
+runTelemetry (Logger logger) appStateRef metadataDbUid pgVersion computeResources = do
+  State.AppEnv {..} <- State.askAppEnv
+  let options = wreqOptions appEnvManager []
+  forever $ liftIO $ do
+    telemetryStatus <- State.acEnableTelemetry <$> HGE.getAppContext appStateRef
+    case telemetryStatus of
+      TelemetryEnabled -> do
+        schemaCache <- HGE.getSchemaCache appStateRef
+        serviceTimings <- dumpServiceTimingMetrics
+        experimentalFeatures <- State.acExperimentalFeatures <$> HGE.getAppContext appStateRef
+        ci <- CI.getCI
+        -- Creates a telemetry payload for a specific backend.
+        let telemetryForSource :: forall (b :: BackendType). SourceInfo b -> TelemetryPayload
+            telemetryForSource =
+              mkTelemetryPayload
+                metadataDbUid
+                appEnvInstanceId
+                currentVersion
+                pgVersion
+                ci
+                serviceTimings
+                (scRemoteSchemas schemaCache)
+                (scActions schemaCache)
+                experimentalFeatures
+            telemetries =
+              map
+                (\sourceinfo -> (Any.dispatchAnyBackend @HasTag) sourceinfo telemetryForSource)
+                (HashMap.elems (scSources schemaCache))
+            payloads = J.encode <$> telemetries
 
-    -- Creates a telemetry payload for a specific backend.
-    let telemetryForSource :: forall (b :: BackendType). HasTag b => SourceInfo b -> TelemetryPayload
-        telemetryForSource =
-          mkTelemetryPayload
-            metadataDbUid
-            instanceId
-            currentVersion
-            pgVersion
-            ci
-            serviceTimings
-            (scRemoteSchemas schemaCache)
-            (scActions schemaCache)
-            experimentalFeatures
-        telemetries =
-          map
-            (\sourceinfo -> (Any.dispatchAnyBackend @HasTag) sourceinfo telemetryForSource)
-            (HM.elems (scSources schemaCache))
-        payloads = A.encode <$> telemetries
+            serverTelemetry =
+              J.encode
+                $ ServerTelemetryRow
+                $ ServerTelemetry
+                  (_rcrCpu computeResources)
+                  (_rcrMemory computeResources)
+                  (_rcrErrorCode computeResources)
 
-    for_ payloads $ \payload -> do
-      logger $ debugLBS $ "metrics_info: " <> payload
-      resp <- try $ Wreq.postWith options (T.unpack telemetryUrl) payload
-      either logHttpEx handleHttpResp resp
-    C.sleep $ days 1
+        for_ (serverTelemetry : payloads) $ \payload -> do
+          logger $ debugLBS $ "metrics_info: " <> payload
+          resp <- try $ Wreq.postWith options (T.unpack telemetryUrl) payload
+          either logHttpEx handleHttpResp resp
+        C.sleep $ days 1
+      TelemetryDisabled -> C.sleep $ seconds 1
   where
     logHttpEx :: HTTP.HttpException -> IO ()
     logHttpEx ex = do
@@ -190,7 +226,6 @@ runTelemetry (Logger logger) manager getSchemaCache metadataDbUid instanceId pgV
 --   only with the default source.
 mkTelemetryPayload ::
   forall (b :: BackendType).
-  HasTag b =>
   MetadataDbId ->
   InstanceId ->
   Version ->
@@ -207,7 +242,8 @@ mkTelemetryPayload metadataDbId instanceId version pgVersion ci serviceTimings r
       sourceMetadata =
         SourceMetadata
           { _smDbUid = forDefaultSource (mdDbIdToDbUid metadataDbId),
-            _smDbKind = reify $ backendTag @b,
+            _smBackendType = backendTypeFromBackendSourceKind $ _siSourceKind sourceInfo,
+            _smDbKind = toTxt (_siSourceKind sourceInfo),
             _smDbVersion = forDefaultSource (pgToDbVersion pgVersion)
           }
       -- We use this function to attach additional information that is not associated
@@ -240,10 +276,10 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
   let _mtTables = countSourceTables (isNothing . _tciViewInfo . _tiCoreInfo)
       _mtViews = countSourceTables (isJust . _tciViewInfo . _tiCoreInfo)
       _mtEnumTables = countSourceTables (isJust . _tciEnumValues . _tiCoreInfo)
-      allRels = join $ Map.elems $ Map.map (getRels . _tciFieldInfoMap . _tiCoreInfo) sourceTableCache
+      allRels = join $ HashMap.elems $ HashMap.map (getRels . _tciFieldInfoMap . _tiCoreInfo) sourceTableCache
       (manualRels, autoRels) = L.partition riIsManual allRels
       _mtRelationships = RelationshipMetric (length manualRels) (length autoRels)
-      rolePerms = join $ Map.elems $ Map.map permsOfTbl sourceTableCache
+      rolePerms = join $ HashMap.elems $ HashMap.map permsOfTbl sourceTableCache
       _pmRoles = length $ L.uniques $ fst <$> rolePerms
       allPerms = snd <$> rolePerms
       _pmInsert = calcPerms _permIns allPerms
@@ -253,32 +289,48 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
       _mtPermissions =
         PermissionMetric {..}
       _mtEventTriggers =
-        Map.size $
-          Map.filter (not . Map.null) $
-            Map.map _tiEventTriggerInfoMap sourceTableCache
-      _mtRemoteSchemas = Map.size <$> remoteSchemaMap
-      _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
+        HashMap.size
+          $ HashMap.filter (not . HashMap.null)
+          $ HashMap.map _tiEventTriggerInfoMap sourceTableCache
+      _mtRemoteSchemas = HashMap.size <$> remoteSchemaMap
+      _mtFunctions = HashMap.size $ HashMap.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
       _mtActions = computeActionsMetrics <$> actionCache
-      _mtLogicalModels = countLogicalModels (OMap.elems $ _siLogicalModels sourceInfo)
+      _mtNativeQueries = countNativeQueries (HashMap.elems $ _siNativeQueries sourceInfo)
+      _mtStoredProcedures = countStoredProcedures (HashMap.elems $ _siStoredProcedures sourceInfo)
+      _mtLogicalModels = countLogicalModels (HashMap.elems $ _siLogicalModels sourceInfo)
    in Metrics {..}
   where
     sourceTableCache = _siTables sourceInfo
     sourceFunctionCache = _siFunctions sourceInfo
-    countSourceTables predicate = length . filter predicate $ Map.elems sourceTableCache
+    countSourceTables predicate = length . filter predicate $ HashMap.elems sourceTableCache
 
     calcPerms :: (RolePermInfo b -> Maybe a) -> [RolePermInfo b] -> Int
     calcPerms fn perms = length $ mapMaybe fn perms
 
     permsOfTbl :: TableInfo b -> [(RoleName, RolePermInfo b)]
-    permsOfTbl = Map.toList . _tiRolePermInfoMap
+    permsOfTbl = HashMap.toList . _tiRolePermInfoMap
 
     countLogicalModels :: [LogicalModelInfo b] -> LogicalModelsMetrics
     countLogicalModels =
       foldMap
-        ( \logimo ->
-            if null (lmiArguments logimo)
-              then mempty {_lmmWithoutParameters = 1}
-              else mempty {_lmmWithParameters = 1}
+        (\_ -> mempty {_lmmCount = 1})
+
+    countNativeQueries :: [NativeQueryInfo b] -> NativeQueriesMetrics
+    countNativeQueries =
+      foldMap
+        ( \nativeQuery ->
+            if null (_nqiArguments nativeQuery)
+              then mempty {_nqmWithoutParameters = 1}
+              else mempty {_nqmWithParameters = 1}
+        )
+
+    countStoredProcedures :: [StoredProcedureInfo b] -> StoredProceduresMetrics
+    countStoredProcedures =
+      foldMap
+        ( \storedProcedure ->
+            if null (_spiArguments storedProcedure)
+              then mempty {_spmWithoutParameters = 1}
+              else mempty {_spmWithParameters = 1}
         )
 
 -- | Compute the relevant metrics for actions from the action cache.
@@ -286,7 +338,7 @@ computeActionsMetrics :: ActionCache -> ActionMetric
 computeActionsMetrics actionCache =
   ActionMetric syncActionsLen asyncActionsLen queryActionsLen typeRelationships customTypesLen
   where
-    actions = Map.elems actionCache
+    actions = HashMap.elems actionCache
     syncActionsLen = length . filter ((== ActionMutation ActionSynchronous) . _adType . _aiDefinition) $ actions
     asyncActionsLen = length . filter ((== ActionMutation ActionAsynchronous) . _adType . _aiDefinition) $ actions
     queryActionsLen = length . filter ((== ActionQuery) . _adType . _aiDefinition) $ actions

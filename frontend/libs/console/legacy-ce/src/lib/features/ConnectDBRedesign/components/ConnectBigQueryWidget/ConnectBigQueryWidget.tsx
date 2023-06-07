@@ -1,16 +1,16 @@
-import { InputField, useConsoleForm } from '../../../../new-components/Form';
-import { Tabs } from '../../../../new-components/Tabs';
-import { Button } from '../../../../new-components/Button';
 import { useEffect, useState } from 'react';
+import { InputField, useConsoleForm } from '../../../../new-components/Form';
+import { Button } from '../../../../new-components/Button';
 import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
 import { Configuration } from './parts/Configuration';
 import { getDefaultValues, BigQueryConnectionSchema, schema } from './schema';
-import { get } from 'lodash';
-import { FaExclamationTriangle } from 'react-icons/fa';
-import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { useMetadata } from '../../../hasura-metadata-api';
-import { generatePostgresRequestPayload } from './utils/generateRequests';
+import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
+import { generateBigQueryRequestPayload } from './utils/generateRequests';
+import { Collapsible } from '../../../../new-components/Collapsible';
+import { Tabs } from '../../../../new-components/Tabs';
+import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
 
 interface ConnectBigQueryWidgetProps {
   dataSourceName?: string;
@@ -25,6 +25,8 @@ export const ConnectBigQueryWidget = (props: ConnectBigQueryWidgetProps) => {
     m.metadata.sources.find(source => source.name === dataSourceName)
   );
 
+  const [tab, setTab] = useState('connectionDetails');
+
   const { createConnection, editConnection, isLoading } =
     useManageDatabaseConnection({
       onSuccess: () => {
@@ -38,29 +40,28 @@ export const ConnectBigQueryWidget = (props: ConnectBigQueryWidgetProps) => {
       onError: err => {
         hasuraToast({
           type: 'error',
-          title: 'Error while adding database',
-          children: JSON.stringify(err),
+          title: err.name,
+          children: <DisplayToastErrorMessage message={err.message} />,
         });
       },
     });
 
   const handleSubmit = (formValues: BigQueryConnectionSchema) => {
-    const payload = generatePostgresRequestPayload({
+    const payload = generateBigQueryRequestPayload({
       driver: 'bigquery',
       values: formValues,
     });
 
     if (isEditMode) {
-      editConnection(payload);
+      editConnection({ originalName: dataSourceName, ...payload });
     } else {
       createConnection(payload);
     }
   };
 
-  const [tab, setTab] = useState('connection_details');
   const {
     Form,
-    methods: { formState, reset },
+    methods: { reset },
   } = useConsoleForm({
     schema,
   });
@@ -69,66 +70,66 @@ export const ConnectBigQueryWidget = (props: ConnectBigQueryWidgetProps) => {
     try {
       reset(getDefaultValues(metadataSource));
     } catch (err) {
+      console.log(err);
       hasuraToast({
         type: 'error',
         title:
-          'Error while retriving database. Please check if the database is of type postgres',
+          'Error while retrieving database. Please check if the database is of type bigquery.',
       });
     }
   }, [metadataSource, reset]);
 
-  const connectionDetailsTabErrors = [
-    get(formState.errors, 'name'),
-    get(formState.errors, 'configuration.connectionInfo'),
-  ].filter(Boolean);
-
   return (
     <div>
       <div className="text-xl text-gray-600 font-semibold">
-        {isEditMode
-          ? 'Edit BigQuery Connection'
-          : 'Connect New BigQuery Database'}
+        {isEditMode ? 'Edit BigQuery Connection' : 'Connect BigQuery Database'}
       </div>
-      <Form onSubmit={handleSubmit}>
-        <Tabs
-          value={tab}
-          onValueChange={value => setTab(value)}
-          items={[
-            {
-              value: 'connection_details',
-              label: 'Connection Details',
-              icon: connectionDetailsTabErrors.length ? (
-                <FaExclamationTriangle className="text-red-800" />
-              ) : undefined,
-              content: (
-                <div className="mt-sm">
+
+      <Tabs
+        value={tab}
+        onValueChange={value => setTab(value)}
+        items={[
+          {
+            value: 'connectionDetails',
+            label: 'Connection Details',
+            content: (
+              <div className="mt-sm">
+                <Form onSubmit={handleSubmit}>
                   <InputField
                     name="name"
-                    label="Database display name"
+                    label="Database name"
                     placeholder="Database name"
                   />
                   <Configuration name="configuration" />
-                </div>
-              ),
-            },
-            {
-              value: 'customization',
-              label: 'GraphQL Customization',
-              content: <GraphQLCustomization name="customization" />,
-            },
-          ]}
-        />
-        <div className="flex justify-end">
-          <Button
-            type="submit"
-            mode="primary"
-            isLoading={isLoading}
-            loadingText="Saving"
-          >
-            {isEditMode ? 'Update Connection' : 'Connect Database'}
-          </Button>
-        </div>
-      </Form>
+
+                  <div className="mt-sm">
+                    <Collapsible
+                      triggerChildren={
+                        <div className="font-semibold text-muted">
+                          GraphQL Customization
+                        </div>
+                      }
+                    >
+                      <GraphQLCustomization name="customization" />
+                    </Collapsible>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      type="submit"
+                      mode="primary"
+                      isLoading={isLoading}
+                      loadingText="Saving"
+                    >
+                      {isEditMode ? 'Update Connection' : 'Connect Database'}
+                    </Button>
+                  </div>
+                </Form>
+              </div>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 };

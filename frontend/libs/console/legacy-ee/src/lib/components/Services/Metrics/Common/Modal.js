@@ -1,7 +1,5 @@
-import React from 'react';
-import BootstrapModal from 'react-bootstrap/lib/Modal';
-// import BootstrapModalButton from 'react-bootstrap/lib/Button';
 import CustomCopy from './CustomCopy';
+import { Dialog } from '@hasura/console-legacy-ce';
 
 import { transformedVals } from '../Operations/utils';
 import styles from '../Metrics.module.scss';
@@ -214,146 +212,148 @@ const Modal = props => {
   };
 
   return (
-    <BootstrapModal
+    <Dialog
       id="operationInspect"
-      onHide={onHide}
-      show
-      size="modal-lg"
-      className={styles.modalWrapper}
+      onClose={onHide}
+      hasBackdrop
+      size="xxxl"
+      title="Inspect"
     >
-      <BootstrapModal.Header className={styles.modalHeader} closeButton>
-        <BootstrapModal.Title className={styles.title}>
-          Inspect
-        </BootstrapModal.Title>
-      </BootstrapModal.Header>
-      <BootstrapModal.Body
-        className={styles.modalContainer}
-        style={{ maxHeight: '986px' }}
-      >
+      <div className={styles.modalWrapper}>
         <div
-          className={
-            styles.noPadd +
-            ' col-md-6 ' +
-            styles.borderRight +
-            ' ' +
-            styles.flexColumn
-          }
+          className={`mt-2 border border-top overflow-auto ${styles.modalContainer}`}
         >
-          <div className={styles.infoWrapper}>
-            <div className={`${styles.infoField} ${styles.paddingBottom}`}>
-              <div className={styles.information}>
-                TIMESTAMP: <span>{new Date(time).toLocaleString()}</span>
-              </div>
-              {/*
+          <div
+            className={
+              styles.noPadd +
+              ' col-md-6 ' +
+              styles.borderRight +
+              ' ' +
+              styles.flexColumn +
+              ' ' +
+              'overflow-auto'
+            }
+          >
+            <div className={styles.infoWrapper}>
+              <div className={`${styles.infoField} ${styles.paddingBottom}`}>
+                <div className={styles.information}>
+                  TIMESTAMP: <span>{new Date(time).toLocaleString()}</span>
+                </div>
+                {/*
               <div className={styles.information}>
                 ID: <span>{id}</span>
               </div>
               */}
-              <div className={styles.information}>
-                OPERATION NAME: <span>{operationName || 'N/A'}</span>
-              </div>
-              <div className={styles.information}>
-                OPERATION ID: <span>{operationId || 'N/A'}</span>
-              </div>
-              <div className={styles.information}>
-                REQUEST ID: <span>{requestId}</span>
-              </div>
-              <div
-                className={
-                  styles.information +
-                  ' ' +
-                  styles.borderBottom +
-                  ' ' +
-                  styles.addPaddBottom
-                }
-              >
-                TRANSPORT: <span>{transport}</span>
-              </div>
-              {transport === 'ws' ? (
-                <div className={styles.borderBottom + ' ' + styles.paddingTop}>
-                  <div className={styles.information}>
-                    WEBSOCKET ID: <span>{websocketId}</span>
-                  </div>
-                  <div className={styles.information}>
-                    WEBSOCKET OPERATION ID: <span>{websocketOperationId}</span>
-                  </div>
-                  {operationType === 'subscription' ? (
-                    <div className={styles.information}>
-                      SUBSCRIPTION STATUS <span>{status}</span>
-                    </div>
-                  ) : null}
+                <div className={styles.information}>
+                  OPERATION NAME: <span>{operationName || 'N/A'}</span>
                 </div>
-              ) : null}
-            </div>
-            <div className={`${styles.infoField} ${styles.noPaddingBottom}`}>
-              {/*
+                <div className={styles.information}>
+                  OPERATION ID: <span>{operationId || 'N/A'}</span>
+                </div>
+                <div className={styles.information}>
+                  REQUEST ID: <span>{requestId}</span>
+                </div>
+                <div
+                  className={
+                    styles.information +
+                    ' ' +
+                    styles.borderBottom +
+                    ' ' +
+                    styles.addPaddBottom
+                  }
+                >
+                  TRANSPORT: <span>{transport}</span>
+                </div>
+                {transport === 'ws' ? (
+                  <div
+                    className={styles.borderBottom + ' ' + styles.paddingTop}
+                  >
+                    <div className={styles.information}>
+                      WEBSOCKET ID: <span>{websocketId}</span>
+                    </div>
+                    <div className={styles.information}>
+                      WEBSOCKET OPERATION ID:{' '}
+                      <span>{websocketOperationId}</span>
+                    </div>
+                    {operationType === 'subscription' ? (
+                      <div className={styles.information}>
+                        SUBSCRIPTION STATUS <span>{status}</span>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+              <div className={`${styles.infoField} ${styles.noPaddingBottom}`}>
+                {/*
               <div className={styles.information}>
                 CLIENT ID: <span>{clientId}</span>
               </div>
               */}
-              <div className={styles.information}>
-                CLIENT NAME: <span>{client_name || 'N/A'}</span>
-              </div>
-              <div
-                className={`${styles.information} ${styles.noPaddingBottom}`}
-              >
-                ROLE: <span>{role || 'N/A'}</span>
-              </div>
-            </div>
-          </div>
-          {renderSessonVars()}
-          <div className={`${styles.infoWrapper} ${styles.noPaddingTop}`}>
-            <div className={`${styles.infoField} ${styles.noPaddingBottom}`}>
-              <div
-                className={`
-                  ${styles.information} ${styles.borderTop} ${styles.paddingTop}
-                `}
-              >
-                EXECUTION TIME:{' '}
-                <span>
-                  {('execution_time' in transformedVals &&
-                    transformedVals.execution_time(executionTime)) ||
-                    executionTime}{' '}
-                  ms
-                </span>
-              </div>
-              <div
-                className={`
-                  ${styles.information} ${styles.paddingTop}
-                `}
-              >
-                TIMING
-                <div className={styles.paddingTop}>
-                  {trace && trace?.length && <TraceGraph trace={trace} />}
+                <div className={styles.information}>
+                  CLIENT NAME: <span>{client_name || 'N/A'}</span>
+                </div>
+                <div
+                  className={`${styles.information} ${styles.noPaddingBottom}`}
+                >
+                  ROLE: <span>{role || 'N/A'}</span>
                 </div>
               </div>
-              <div className={`${styles.information} ${styles.addPaddBottom}`}>
-                REQUEST SIZE:{' '}
-                <span>
-                  {(transformedVals.hasOwnProperty('request_size') &&
-                    transformedVals.request_size(requestSize)) ||
-                    requestSize}{' '}
-                  kB
-                </span>
-                <br />
-                RESPONSE SIZE:{' '}
-                <span>
-                  {('response_size' in transformedVals &&
-                    transformedVals.response_size(responseSize)) ||
-                    responseSize}{' '}
-                  kB
-                </span>
+            </div>
+            {renderSessonVars()}
+            <div className={`${styles.infoWrapper} ${styles.noPaddingTop}`}>
+              <div className={`${styles.infoField} ${styles.noPaddingBottom}`}>
+                <div
+                  className={`
+                  ${styles.information} ${styles.borderTop} ${styles.paddingTop}
+                `}
+                >
+                  EXECUTION TIME:{' '}
+                  <span>
+                    {('execution_time' in transformedVals &&
+                      transformedVals.execution_time(executionTime)) ||
+                      executionTime}{' '}
+                    ms
+                  </span>
+                </div>
+                <div
+                  className={`
+                  ${styles.information} ${styles.paddingTop}
+                `}
+                >
+                  TIMING
+                  <div className={styles.paddingTop}>
+                    {trace && trace?.length && <TraceGraph trace={trace} />}
+                  </div>
+                </div>
+                <div
+                  className={`${styles.information} ${styles.addPaddBottom}`}
+                >
+                  REQUEST SIZE:{' '}
+                  <span>
+                    {(transformedVals.hasOwnProperty('request_size') &&
+                      transformedVals.request_size(requestSize)) ||
+                      requestSize}{' '}
+                    kB
+                  </span>
+                  <br />
+                  RESPONSE SIZE:{' '}
+                  <span>
+                    {('response_size' in transformedVals &&
+                      transformedVals.response_size(responseSize)) ||
+                      responseSize}{' '}
+                    kB
+                  </span>
+                </div>
               </div>
             </div>
+            {renderError()}
+            {renderResponseAnalysis()}
           </div>
-          {renderError()}
-          {renderResponseAnalysis()}
-        </div>
-        <div className={styles.noPadd + ' col-md-6'}>
-          {renderOperationQuery()}
-          {renderGeneratedSql()}
-          {renderRequestHeaders()}
-          {/*
+          <div className={`overflow-auto ${styles.noPadd} col-md-6`}>
+            {renderOperationQuery()}
+            {renderGeneratedSql()}
+            {renderRequestHeaders()}
+            {/*
           <div className={styles.infoWrapper}>
             <div className={styles.information}>
               GENERATED SQL:{' '}
@@ -364,9 +364,10 @@ const Modal = props => {
             <div className={styles.box} />
           </div>
           */}
+          </div>
         </div>
-      </BootstrapModal.Body>
-    </BootstrapModal>
+      </div>
+    </Dialog>
   );
 };
 

@@ -8,10 +8,10 @@ module Hasura.GraphQL.Parser.Internal.Convert
   )
 where
 
-import Data.Aeson qualified as A
+import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.Int (Int64)
 import Data.Scientific (toBoundedInteger)
 import Data.Traversable (for)
@@ -27,39 +27,39 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- Disable custom prelude warnings in preparation for extracting this module into a separate package.
 {-# ANN module ("HLint: ignore Use onNothing" :: String) #-}
 
-valueToJSON :: MonadParse m => G.GType -> InputValue Variable -> m A.Value
+valueToJSON :: (MonadParse m) => G.GType -> InputValue Variable -> m J.Value
 valueToJSON expectedType inputVal = do
   peeledVal <- peelVariable expectedType inputVal
   pure $ valueToJSON' peeledVal
   where
-    valueToJSON' :: InputValue Variable -> A.Value
+    valueToJSON' :: InputValue Variable -> J.Value
     valueToJSON' = \case
       JSONValue j -> j
       GraphQLValue g -> graphQLToJSON g
 
-    graphQLToJSON :: G.Value Variable -> A.Value
+    graphQLToJSON :: G.Value Variable -> J.Value
     graphQLToJSON = \case
-      G.VNull -> A.Null
-      G.VInt i -> A.toJSON i
-      G.VFloat f -> A.toJSON f
-      G.VString t -> A.toJSON t
-      G.VBoolean b -> A.toJSON b
-      G.VEnum (G.EnumValue n) -> A.toJSON n
-      G.VList values -> A.toJSON $ graphQLToJSON <$> values
-      G.VObject objects -> A.toJSON $ graphQLToJSON <$> objects
+      G.VNull -> J.Null
+      G.VInt i -> J.toJSON i
+      G.VFloat f -> J.toJSON f
+      G.VString t -> J.toJSON t
+      G.VBoolean b -> J.toJSON b
+      G.VEnum (G.EnumValue n) -> J.toJSON n
+      G.VList values -> J.toJSON $ graphQLToJSON <$> values
+      G.VObject objects -> J.toJSON $ graphQLToJSON <$> objects
       G.VVariable variable -> valueToJSON' $ absurd <$> vValue variable
 
-jsonToGraphQL :: A.Value -> Either ErrorMessage (G.Value Void)
+jsonToGraphQL :: J.Value -> Either ErrorMessage (G.Value Void)
 jsonToGraphQL = \case
-  A.Null -> Right G.VNull
-  A.Bool val -> Right $ G.VBoolean val
-  A.String val -> Right $ G.VString val
-  A.Number val -> case toBoundedInteger val of
+  J.Null -> Right G.VNull
+  J.Bool val -> Right $ G.VBoolean val
+  J.String val -> Right $ G.VString val
+  J.Number val -> case toBoundedInteger val of
     Just intVal -> Right $ G.VInt $ fromIntegral @Int64 intVal
     Nothing -> Right $ G.VFloat val
-  A.Array vals -> G.VList <$> traverse jsonToGraphQL (V.toList vals)
-  A.Object vals ->
-    G.VObject . M.fromList <$> for (KM.toList vals) \(key, val) -> do
+  J.Array vals -> G.VList <$> traverse jsonToGraphQL (V.toList vals)
+  J.Object vals ->
+    G.VObject . HashMap.fromList <$> for (KM.toList vals) \(key, val) -> do
       graphQLName <- maybe (invalidName key) Right $ G.mkName (K.toText key)
       (graphQLName,) <$> jsonToGraphQL val
   where

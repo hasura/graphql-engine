@@ -44,8 +44,8 @@ instance J.FromJSON Position where
       then fail "A Position needs at least 2 elements"
       else -- here we are ignoring anything past 3 elements
 
-        return $
-          Position
+        return
+          $ Position
             (arr `V.unsafeIndex` 0)
             (arr `V.unsafeIndex` 1)
             (arr V.!? 2)
@@ -110,8 +110,8 @@ instance J.FromJSON LinearRing where
             thrPos = arr `V.unsafeIndex` 2
             rest = V.drop 3 arr
         let lastPos = V.last rest
-        unless (fstPos == lastPos) $
-          fail "the first and last locations have to be equal for a LinearRing"
+        unless (fstPos == lastPos)
+          $ fail "the first and last locations have to be equal for a LinearRing"
         return $ LinearRing fstPos sndPos thrPos $ V.toList $ V.init rest
 
 instance J.ToJSON LinearRing where

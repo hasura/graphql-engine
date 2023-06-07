@@ -2,7 +2,7 @@ import { useRemoteSchemaRelationships } from '../../../../MetadataAPI';
 import { QualifiedTable } from '../../../../../metadata/types';
 import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { ReduxDecorator } from '../../../../../storybook/decorators/redux-decorator';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import React from 'react';
 
 function GetRemoteSchemaRelationshipsComponent({
@@ -25,23 +25,25 @@ function GetRemoteSchemaRelationshipsComponent({
   );
 }
 
-export const GetRemoteSchemaRelationships: ComponentStory<
+export const GetRemoteSchemaRelationships: StoryObj<
   typeof GetRemoteSchemaRelationshipsComponent
-> = args => {
-  return <GetRemoteSchemaRelationshipsComponent {...args} />;
-};
-
-GetRemoteSchemaRelationships.args = {
-  database: 'default',
-  qualifiedTable: {
-    schema: 'public',
-    name: 'person',
+> = {
+  render: args => {
+    return <GetRemoteSchemaRelationshipsComponent {...args} />;
   },
-};
 
-GetRemoteSchemaRelationships.parameters = {
-  // Disable storybook for Remote Relationship stories
-  chromatic: { disableSnapshot: true },
+  args: {
+    database: 'default',
+    qualifiedTable: {
+      schema: 'public',
+      name: 'person',
+    },
+  },
+
+  parameters: {
+    // Disable storybook for Remote Relationship stories
+    chromatic: { disableSnapshot: true },
+  },
 };
 
 export default {
@@ -50,4 +52,4 @@ export default {
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof GetRemoteSchemaRelationshipsComponent>;
+} as Meta<typeof GetRemoteSchemaRelationshipsComponent>;

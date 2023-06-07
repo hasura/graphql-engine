@@ -4,7 +4,7 @@ import { FieldError } from 'react-hook-form';
 import { InputField, useConsoleForm } from '../../../../new-components/Form';
 import { useFireNotification } from '../../../../new-components/Notifications';
 import { IconTooltip } from '../../../../new-components/Tooltip';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import { APIError } from '../../../../hooks/error';
 import React, { useState } from 'react';
 import { FaExclamationCircle, FaPlusCircle } from 'react-icons/fa';
@@ -94,7 +94,7 @@ export const Create = ({ onSuccess }: Props) => {
   ) as FieldError | undefined;
 
   return (
-    <Form onSubmit={onSubmit} className="overflow-y-hidden p-4">
+    <Form onSubmit={onSubmit} className="overflow-y-hidden p-4 bootstrap-jail">
       <Analytics name="AddRemoteSchema" {...REDACT_EVERYTHING}>
         <div className="max-w-6xl">
           <h1 className="text-xl leading-6 font-semibold mb-lg">

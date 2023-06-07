@@ -3,7 +3,8 @@ module SpecHook
     setupTestEnvironment,
     teardownTestEnvironment,
     setupGlobalConfig,
-    setupLogType,
+    setupLogger,
+    setupTestingMode,
   )
 where
 
@@ -13,15 +14,15 @@ import Data.Char qualified as Char
 import Data.IORef
 import Data.List qualified as List
 import Database.PostgreSQL.Simple.Options qualified as Options
-import Harness.Exceptions (HasCallStack, bracket)
+import Harness.Exceptions
 import Harness.GraphqlEngine (startServerThread)
 import Harness.Logging
-import Harness.Services.Composed (mkTestServicesConfig)
+import Harness.Services.Composed (mkTestServicesConfig, teardownServices)
 import Harness.Test.BackendType (BackendType (..))
-import Harness.TestEnvironment (GlobalTestEnvironment (..), TestingMode (..), stopServer)
+import Harness.TestEnvironment (GlobalFlags (..), GlobalTestEnvironment (..), Protocol (..), TestingMode (..), defaultGlobalFlags, stopServer)
 import Hasura.Prelude
 import System.Directory
-import System.Environment (getEnvironment)
+import System.Environment (getEnvironment, lookupEnv)
 import System.FilePath
 import System.IO.Unsafe (unsafePerformIO)
 import System.Log.FastLogger qualified as FL
@@ -74,18 +75,23 @@ parseBackendType backendType =
 setupTestEnvironment :: TestingMode -> Logger -> IO GlobalTestEnvironment
 setupTestEnvironment testingMode logger = do
   server <- startServerThread
-  servicesConfig <- mkTestServicesConfig
-  pure GlobalTestEnvironment {..}
+  servicesConfig <- mkTestServicesConfig logger
+  globalFlags <- do
+    gfTraceCommands <- maybe False read <$> lookupEnv "TRACE_COMMANDS"
+    pure defaultGlobalFlags {gfTraceCommands}
+  pure GlobalTestEnvironment {requestProtocol = HTTP, ..}
 
--- | tear down the shared server
+-- | tear down the shared server and services.
 teardownTestEnvironment :: GlobalTestEnvironment -> IO ()
-teardownTestEnvironment (GlobalTestEnvironment {server}) = stopServer server
+teardownTestEnvironment (GlobalTestEnvironment {server, servicesConfig}) = do
+  stopServer server
+  teardownServices servicesConfig
 
 -- | allow setting log output type
-setupLogType :: IO FL.LogType
-setupLogType = do
+setupLogger :: IO (Logger, IO ())
+setupLogger = do
   env <- getEnvironment
-  fromMaybe
+  logType <- fromMaybe
     (pure $ FL.LogFileNoRotate "tests-hspec.log" 1024)
     do
       str <- lookup "HASURA_TEST_LOGTYPE" env
@@ -102,20 +108,24 @@ setupLogType = do
             (error $ "(HASURA_TEST_LOGTYPE) Directory " ++ dir ++ " does not exist!")
           pure $ FL.LogFileNoRotate logfile 1024
         _ -> Nothing
+  (logger', cleanupLogger) <- FL.newFastLogger logType
+  return (flLogger logger', cleanupLogger)
 
-hook :: HasCallStack => SpecWith GlobalTestEnvironment -> Spec
+setupTestingMode :: IO TestingMode
+setupTestingMode = do
+  environment <- getEnvironment
+  lookupTestingMode environment `onLeft` error
+
+hook :: (HasCallStack) => SpecWith GlobalTestEnvironment -> Spec
 hook specs = do
-  (testingMode, logType) <-
-    runIO $
-      readIORef globalConfigRef `onNothingM` do
-        logType <- setupLogType
-        environment <- getEnvironment
-        testingMode <- lookupTestingMode environment `onLeft` error
-        setupGlobalConfig testingMode logType
-        pure (testingMode, logType)
-
-  (logger', _cleanup) <- runIO $ FL.newFastLogger logType
-  let logger = flLogger logger'
+  (testingMode, (logger, _cleanupLogger)) <-
+    runIO
+      $ readIORef globalConfigRef
+      `onNothingM` do
+        testingMode <- setupTestingMode
+        (logger, cleanupLogger) <- setupLogger
+        setupGlobalConfig testingMode (logger, cleanupLogger)
+        pure (testingMode, (logger, cleanupLogger))
 
   modifyConfig (addLoggingFormatter logger)
 
@@ -128,13 +138,13 @@ hook specs = do
         TestNoBackends -> True -- this is for catching "everything else"
         TestNewPostgresVariant {} -> "Postgres" `elem` labels
 
-  aroundAllWith (const . bracket (setupTestEnvironment testingMode logger) teardownTestEnvironment) $
-    mapSpecForest (filterForestWithLabels shouldRunTest) (contextualizeLogger specs)
+  aroundAllWith (const . bracket (setupTestEnvironment testingMode logger) teardownTestEnvironment)
+    $ mapSpecForest (filterForestWithLabels shouldRunTest) (contextualizeLogger specs)
 
 {-# NOINLINE globalConfigRef #-}
-globalConfigRef :: IORef (Maybe (TestingMode, FL.LogType))
+globalConfigRef :: IORef (Maybe (TestingMode, (Logger, IO ())))
 globalConfigRef = unsafePerformIO $ newIORef Nothing
 
-setupGlobalConfig :: TestingMode -> FL.LogType -> IO ()
-setupGlobalConfig testingMode logType =
-  writeIORef globalConfigRef $ Just (testingMode, logType)
+setupGlobalConfig :: TestingMode -> (Logger, IO ()) -> IO ()
+setupGlobalConfig testingMode loggerCleanup =
+  writeIORef globalConfigRef $ Just (testingMode, loggerCleanup)

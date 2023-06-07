@@ -1,23 +1,36 @@
-import { Table } from '../../../../../hasura-metadata-types';
+import { LogicalModel, Table } from '../../../../../hasura-metadata-types';
 import { Tables, Operators, Permissions, Comparators } from './types';
 import { RowPermissionsProvider } from './RowPermissionsProvider';
 import { TypesProvider } from './TypesProvider';
 import { TableProvider } from './TableProvider';
 import { RootInput } from './RootInput';
 import { JsonEditor } from './JsonEditor';
+import { RootTableProvider } from './RootTableProvider';
+import { RootLogicalModelProvider } from './RootLogicalModelProvider';
+import { LogicalModelWithSourceName } from '../../../../../Data/LogicalModels/LogicalModelPermissions/components/types';
+import {
+  ForbiddenFeaturesProvider,
+  Feature,
+} from './ForbiddenFeaturesProvider';
 
 export const RowPermissionsInput = ({
   permissions,
   tables,
   table,
+  logicalModel,
+  logicalModels,
   onPermissionsChange,
   comparators,
+  forbidden,
 }: {
   permissions: Permissions;
   tables: Tables;
-  table: Table;
+  table: Table | undefined;
+  logicalModels: LogicalModelWithSourceName[];
+  logicalModel: LogicalModel['name'] | undefined;
   onPermissionsChange?: (permissions: Permissions) => void;
   comparators: Comparators;
+  forbidden?: Feature[];
 }) => {
   const operators: Operators = {
     boolean: {
@@ -34,22 +47,29 @@ export const RowPermissionsInput = ({
     },
   };
   return (
-    <RowPermissionsProvider
-      operators={operators}
-      permissions={permissions}
-      table={table}
-      tables={tables}
-      comparators={comparators}
-      onPermissionsChange={onPermissionsChange}
-    >
-      <TypesProvider>
-        <TableProvider table={table}>
-          <div className="flex flex-col space-y-4 w-full">
-            <JsonEditor />
-            <RootInput />
-          </div>
-        </TableProvider>
-      </TypesProvider>
-    </RowPermissionsProvider>
+    <ForbiddenFeaturesProvider forbidden={forbidden}>
+      <RootLogicalModelProvider
+        logicalModel={logicalModel}
+        logicalModels={logicalModels}
+      >
+        <RootTableProvider table={table} tables={tables}>
+          <RowPermissionsProvider
+            operators={operators}
+            permissions={permissions}
+            comparators={comparators}
+            onPermissionsChange={onPermissionsChange}
+          >
+            <TypesProvider>
+              <TableProvider table={table}>
+                <div className="flex flex-col space-y-4 w-full">
+                  <JsonEditor />
+                  <RootInput />
+                </div>
+              </TableProvider>
+            </TypesProvider>
+          </RowPermissionsProvider>
+        </RootTableProvider>
+      </RootLogicalModelProvider>
+    </ForbiddenFeaturesProvider>
   );
 };

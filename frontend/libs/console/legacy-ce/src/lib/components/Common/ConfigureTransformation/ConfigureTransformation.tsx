@@ -120,7 +120,6 @@ const ConfigureTransformation: React.FC<
           <Button
             color="white"
             size="sm"
-            data-test="toggle-context-area"
             onClick={() => {
               toggleContextArea(!isContextAreaActive);
             }}
@@ -160,7 +159,6 @@ const ConfigureTransformation: React.FC<
             size="sm"
             icon={!isRequestUrlTransform ? <AddIcon /> : undefined}
             iconPosition="start"
-            data-test="toggle-request-transform"
             onClick={() => {
               requestUrlTransformOnChange(!isRequestUrlTransform);
               resetSampleInput();
@@ -203,7 +201,6 @@ const ConfigureTransformation: React.FC<
           <Button
             color="white"
             size="sm"
-            data-test="toggle-payload-transform"
             onClick={() => {
               requestPayloadTransformOnChange(!isRequestPayloadTransform);
               resetSampleInput();
@@ -245,7 +242,6 @@ const ConfigureTransformation: React.FC<
             <Button
               color="white"
               size="sm"
-              data-test="toggle-response-transform"
               onClick={() => {
                 responsePayloadTransformOnChange(
                   !responseTransformState.isResponsePayloadTransform

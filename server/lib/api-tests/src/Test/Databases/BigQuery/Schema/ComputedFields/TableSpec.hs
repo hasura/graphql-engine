@@ -6,17 +6,17 @@
 -- https://hasura.io/docs/latest/schema/bigquery/computed-fields/#bigquery-create-table-function
 module Test.Databases.BigQuery.Schema.ComputedFields.TableSpec (spec) where
 
-import Data.Aeson as Aeson
+import Data.Aeson as J
 import Data.List.NonEmpty qualified as NE
 import Data.String.Interpolate (i)
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
+import Harness.Schema (SchemaName (..), Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (SchemaName (..), Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -98,8 +98,8 @@ setupFunction testEnv =
   let schemaName = Schema.getSchemaName testEnv
    in [ Fixture.SetupAction
           { Fixture.setupAction =
-              BigQuery.run_ $
-                [i|
+              BigQuery.run_
+                $ [i|
                 CREATE TABLE FUNCTION #{ unSchemaName schemaName }.fetch_articles_implicit_return(a_id INT64, search STRING)
                 AS
                 SELECT article_alias.*
@@ -111,8 +111,8 @@ setupFunction testEnv =
           },
         Fixture.SetupAction
           { Fixture.setupAction =
-              BigQuery.run_ $
-                [i|
+              BigQuery.run_
+                $ [i|
                 CREATE TABLE FUNCTION #{ unSchemaName schemaName }.fetch_articles_explicit_return(a_id INT64, search STRING)
                 RETURNS TABLE<id INT64, title STRING, content STRING, author_id INT64> AS
                 SELECT article_alias.id, article_alias.title, article_alias.content, article_alias.author_id
@@ -125,10 +125,10 @@ setupFunction testEnv =
       ]
 
 setupMetadata :: TestEnvironment -> [Fixture.SetupAction]
-setupMetadata testEnvironment =
-  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+setupMetadata testEnv =
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
       schemaName :: Schema.SchemaName
-      schemaName = Schema.getSchemaName testEnvironment
+      schemaName = Schema.getSchemaName testEnv
 
       source :: String
       source = BackendType.backendSourceName backendTypeMetadata
@@ -145,7 +145,7 @@ setupMetadata testEnvironment =
                   name: article
                   dataset: *schemaName
                 |]
-                testEnvironment,
+                testEnv,
             Fixture.teardownAction = \_ -> pure ()
           },
         Fixture.SetupAction
@@ -156,23 +156,23 @@ setupMetadata testEnvironment =
                 "fetch_articles_explicit_return"
                 "search_articles_explicit_return"
                 [yaml| a_id: id |]
-                Aeson.Null
-                testEnvironment,
+                J.Null
+                testEnv,
             Fixture.teardownAction = \_ -> pure ()
           }
       ]
 
 -- * Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   -- This is a duplicate of `Test.Schema.ComputedFields.TableSpec/"Query with computed fields"
   -- but I thought it was clearer next to the counterexample that follows
   it "respects the `return_table` value in metadata, if it is not provided in the SQL statement" $ \testEnv -> do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      testEnv
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|
@@ -209,7 +209,7 @@ tests opts = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      testEnv
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|
@@ -248,7 +248,7 @@ tests opts = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      testEnv
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|
@@ -289,7 +289,7 @@ tests opts = do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      testEnv
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|

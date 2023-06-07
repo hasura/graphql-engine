@@ -60,19 +60,19 @@ ourIdleGC (Logger logger) idleInterval minGCInterval maxNoGCInterval =
 
       -- a major GC was run since last iteration (cool!), reset timer:
       if
-          | major_gcs > major_gcs_prev -> do
-              startTimer >>= go gcs major_gcs
+        | major_gcs > major_gcs_prev -> do
+            startTimer >>= go gcs major_gcs
 
-          -- we are idle and its a good time to do a GC, or we're overdue and must run a GC:
-          | areIdle || areOverdue -> do
-              when (areOverdue && not areIdle) $
-                logger $
-                  UnstructuredLog LevelWarn $
-                    "Overdue for a major GC: forcing one even though we don't appear to be idle"
-              performMajorGC
-              startTimer >>= go (gcs + 1) (major_gcs + 1)
+        -- we are idle and its a good time to do a GC, or we're overdue and must run a GC:
+        | areIdle || areOverdue -> do
+            when (areOverdue && not areIdle)
+              $ logger
+              $ UnstructuredLog LevelWarn
+              $ "Overdue for a major GC: forcing one even though we don't appear to be idle"
+            performMajorGC
+            startTimer >>= go (gcs + 1) (major_gcs + 1)
 
-          -- else keep the timer running, waiting for us to go idle:
-          | otherwise -> do
-              C.sleep idleInterval
-              go gcs major_gcs timerSinceLastMajorGC
+        -- else keep the timer running, waiting for us to go idle:
+        | otherwise -> do
+            C.sleep idleInterval
+            go gcs major_gcs timerSinceLastMajorGC

@@ -1,7 +1,4 @@
-import type { ComponentPropsWithoutRef } from 'react';
-import type { ComponentMeta, ComponentStory } from '@storybook/react';
-
-import * as React from 'react';
+import type { Meta, StoryObj } from '@storybook/react';
 
 import { LearnMoreLink } from './LearnMoreLink';
 
@@ -16,55 +13,19 @@ export default {
       source: { type: 'code' },
     },
   },
-} as ComponentMeta<typeof LearnMoreLink>;
+} as Meta<typeof LearnMoreLink>;
 
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// DEFAULT STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-
-export const Basic: ComponentStory<typeof LearnMoreLink> = args => (
-  <LearnMoreLink {...args} />
-);
-Basic.storyName = '🧰 Basic';
-
-const basicArgs: ComponentPropsWithoutRef<typeof LearnMoreLink> = {
-  href: 'https://hasura.io/docs',
+export const Basic: StoryObj<typeof LearnMoreLink> = {
+  name: '🧰 Basic',
+  args: {
+    href: 'https://hasura.io/docs',
+  },
 };
-Basic.args = basicArgs;
 
-// #endregion
-
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// CUSTOM TEXT
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-
-export const CustomText: ComponentStory<typeof LearnMoreLink> = args => (
-  <LearnMoreLink {...args} />
-);
-CustomText.storyName = '🎭 Custom text';
-
-const customTextArgs: ComponentPropsWithoutRef<typeof LearnMoreLink> = {
-  href: 'https://hasura.io/docs',
-  text: '(Read the docs)',
+export const CustomText: StoryObj<typeof LearnMoreLink> = {
+  name: '🎭 Custom text',
+  args: {
+    href: 'https://hasura.io/docs',
+    text: '(Read the docs)',
+  },
 };
-CustomText.args = customTextArgs;
-
-// #endregion

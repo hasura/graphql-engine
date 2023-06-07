@@ -12,33 +12,25 @@ module Hasura.RQL.Types.Metadata.Common
     CatalogState (..),
     CatalogStateType (..),
     ComputedFieldMetadata (..),
-    ComputedFields,
     CronTriggers,
-    Endpoints,
     LogicalModels,
+    Endpoints,
+    NativeQueries,
+    StoredProcedures,
     EventTriggers,
-    FunctionMetadata (..),
     Functions,
     GetCatalogState (..),
     InheritedRoles,
-    Permissions,
     QueryCollections,
-    Relationships,
     RemoteSchemaMetadata,
     RemoteSchemas,
     SetCatalogState (..),
     SourceMetadata (..),
     Sources,
-    TableMetadata (..),
     Tables,
     backendSourceMetadataCodec,
-    fmComment,
-    fmConfiguration,
-    fmFunction,
-    fmPermissions,
     getSourceName,
     mkSourceMetadata,
-    mkTableMeta,
     parseNonSourcesMetadata,
     smConfiguration,
     smFunctions,
@@ -47,22 +39,11 @@ module Hasura.RQL.Types.Metadata.Common
     smQueryTags,
     smTables,
     smCustomization,
+    smNativeQueries,
+    smStoredProcedures,
     smLogicalModels,
     smHealthCheckConfig,
     sourcesCodec,
-    tmArrayRelationships,
-    tmComputedFields,
-    tmConfiguration,
-    tmDeletePermissions,
-    tmApolloFederationConfig,
-    tmEventTriggers,
-    tmInsertPermissions,
-    tmIsEnum,
-    tmObjectRelationships,
-    tmRemoteRelationships,
-    tmSelectPermissions,
-    tmTable,
-    tmUpdatePermissions,
     toSourceMetadata,
   )
 where
@@ -72,45 +53,38 @@ import Autodocodec qualified as AC
 import Control.Lens hiding (set, (.=))
 import Data.Aeson.Casing
 import Data.Aeson.Extended (FromJSONWithContext (..))
-import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec, sortedElemsCodecWith)
-import Data.HashSet qualified as HS
 import Data.List.Extended qualified as L
 import Data.Maybe (fromJust)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
-import Hasura.LogicalModel.Metadata (LogicalModelInfo (..), LogicalModelName)
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
-import Hasura.Metadata.DTO.Utils (codecNamePrefix)
+import Hasura.Function.Metadata (FunctionMetadata (..))
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), LogicalModelName)
+import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..), NativeQueryName)
 import Hasura.Prelude
+import Hasura.QueryTags.Types
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (BackendTag, HasTag (backendTag), backendPrefix)
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.HealthCheck
-import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.QueryTags
-import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
-import Hasura.SQL.Tag (BackendTag, HasTag (backendTag))
-import Hasura.Session
+import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata (..))
+import Hasura.Table.Metadata
 
 -- | Parse a list of objects into a map from a derived key,
 -- failing if the list has duplicates.
@@ -123,279 +97,16 @@ parseListAsMap ::
 parseListAsMap things mapFn listP = do
   list <- listP
   let duplicates = toList $ L.duplicates $ map mapFn list
-  unless (null duplicates) $
-    fail $
-      T.unpack $
-        "multiple declarations exist for the following "
-          <> things
-          <> ": "
-          <> T.commaSeparated duplicates
+  unless (null duplicates)
+    $ fail
+    $ T.unpack
+    $ "multiple declarations exist for the following "
+    <> things
+    <> ": "
+    <> T.commaSeparated duplicates
   pure $ oMapFromL mapFn list
 
-data ComputedFieldMetadata b = ComputedFieldMetadata
-  { _cfmName :: ComputedFieldName,
-    _cfmDefinition :: ComputedFieldDefinition b,
-    _cfmComment :: Comment
-  }
-  deriving (Generic)
-
-deriving instance (Backend b) => Show (ComputedFieldMetadata b)
-
-deriving instance (Backend b) => Eq (ComputedFieldMetadata b)
-
-instance Backend b => HasCodec (ComputedFieldMetadata b) where
-  codec =
-    AC.object (codecNamePrefix @b <> "ComputedFieldMetadata") $
-      ComputedFieldMetadata
-        <$> requiredField' "name"
-          AC..= _cfmName
-        <*> requiredFieldWith' "definition" placeholderCodecViaJSON
-          AC..= _cfmDefinition
-        <*> optionalFieldWithOmittedDefault' "comment" Automatic
-          AC..= _cfmComment
-
-instance (Backend b) => ToJSON (ComputedFieldMetadata b) where
-  toJSON ComputedFieldMetadata {..} =
-    object $
-      [ "name" .= _cfmName,
-        "definition" .= _cfmDefinition,
-        "comment" .= _cfmComment
-      ]
-
-instance (Backend b) => FromJSON (ComputedFieldMetadata b) where
-  parseJSON = withObject "ComputedFieldMetadata" $ \obj ->
-    ComputedFieldMetadata
-      <$> obj
-        .: "name"
-      <*> obj
-        .: "definition"
-      <*> obj
-        .:? "comment"
-        .!= Automatic
-
-type Relationships a = InsOrdHashMap RelName a
-
-type ComputedFields b = InsOrdHashMap ComputedFieldName (ComputedFieldMetadata b)
-
-type RemoteRelationships = InsOrdHashMap RelName RemoteRelationship
-
-type Permissions a = InsOrdHashMap RoleName a
-
 type EventTriggers b = InsOrdHashMap TriggerName (EventTriggerConf b)
-
-data TableMetadata b = TableMetadata
-  { _tmTable :: TableName b,
-    _tmIsEnum :: Bool,
-    _tmConfiguration :: TableConfig b,
-    _tmObjectRelationships :: Relationships (ObjRelDef b),
-    _tmArrayRelationships :: Relationships (ArrRelDef b),
-    _tmComputedFields :: ComputedFields b,
-    _tmRemoteRelationships :: RemoteRelationships,
-    _tmInsertPermissions :: Permissions (InsPermDef b),
-    _tmSelectPermissions :: Permissions (SelPermDef b),
-    _tmUpdatePermissions :: Permissions (UpdPermDef b),
-    _tmDeletePermissions :: Permissions (DelPermDef b),
-    _tmEventTriggers :: EventTriggers b,
-    _tmApolloFederationConfig :: Maybe ApolloFederationConfig
-  }
-  deriving (Generic)
-
-deriving instance (Backend b) => Show (TableMetadata b)
-
-deriving instance (Backend b) => Eq (TableMetadata b)
-
-instance (Backend b) => ToJSON (TableMetadata b) where
-  toJSON = genericToJSON hasuraJSON
-
-instance (Backend b) => HasCodec (TableMetadata b) where
-  codec =
-    CommentCodec "Representation of a table in metadata, 'tables.yaml' and 'metadata.json'" $
-      AC.object (codecNamePrefix @b <> "TableMetadata") $
-        TableMetadata
-          <$> requiredField' "table"
-            .== _tmTable
-          <*> optionalFieldWithOmittedDefault' "is_enum" False
-            .== _tmIsEnum
-          <*> optionalFieldWithOmittedDefault "configuration" emptyTableConfig configDoc
-            .== _tmConfiguration
-          <*> optSortedList "object_relationships" _rdName
-            .== _tmObjectRelationships
-          <*> optSortedList "array_relationships" _rdName
-            .== _tmArrayRelationships
-          <*> optSortedList "computed_fields" _cfmName
-            .== _tmComputedFields
-          <*> optSortedList "remote_relationships" _rrName
-            .== _tmRemoteRelationships
-          <*> optSortedList "insert_permissions" _pdRole
-            .== _tmInsertPermissions
-          <*> optSortedList "select_permissions" _pdRole
-            .== _tmSelectPermissions
-          <*> optSortedList "update_permissions" _pdRole
-            .== _tmUpdatePermissions
-          <*> optSortedList "delete_permissions" _pdRole
-            .== _tmDeletePermissions
-          <*> eventTriggers
-          <*> optionalFieldOrNull' "apollo_federation_config"
-            .== _tmApolloFederationConfig
-    where
-      -- Some backends do not implement event triggers. In those cases we tailor
-      -- the codec to omit the @"event_triggers"@ field from the API.
-      eventTriggers = case defaultTriggerOnReplication @b of
-        Just _ -> optSortedList "event_triggers" etcName .== _tmEventTriggers
-        Nothing -> pure mempty
-
-      optSortedList ::
-        (HasCodec a, Eq a, Hashable k, Ord k, T.ToTxt k) =>
-        Text ->
-        (a -> k) ->
-        ObjectCodec (InsOrdHashMap k a) (InsOrdHashMap k a)
-      optSortedList name keyForElem =
-        AC.optionalFieldWithOmittedDefaultWith' name (sortedElemsCodec keyForElem) mempty
-
-      configDoc =
-        T.unlines
-          [ "Configuration for the table/view",
-            "",
-            "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/table-view.html#table-config"
-          ]
-
-      (.==) = (AC..=)
-
-$(makeLenses ''TableMetadata)
-
-mkTableMeta :: TableName b -> Bool -> TableConfig b -> TableMetadata b
-mkTableMeta qt isEnum config =
-  TableMetadata
-    qt
-    isEnum
-    config
-    mempty
-    mempty
-    mempty
-    mempty
-    mempty
-    mempty
-    mempty
-    mempty
-    mempty
-    Nothing
-
-instance (Backend b) => FromJSON (TableMetadata b) where
-  parseJSON = withObject "Object" $ \o -> do
-    let unexpectedKeys = getUnexpectedKeys o
-    unless (null unexpectedKeys) $
-      fail $
-        "unexpected keys when parsing TableMetadata: "
-          <> show (HS.toList unexpectedKeys)
-
-    TableMetadata
-      <$> o
-        .: tableKey
-      <*> o
-        .:? isEnumKey
-        .!= False
-      <*> o
-        .:? configKey
-        .!= emptyTableConfig
-      <*> parseListAsMap "object relationships" _rdName (o .:? orKey .!= [])
-      <*> parseListAsMap "array relationships" _rdName (o .:? arKey .!= [])
-      <*> parseListAsMap "computed fields" _cfmName (o .:? cfKey .!= [])
-      <*> parseListAsMap "remote relationships" _rrName (o .:? rrKey .!= [])
-      <*> parseListAsMap "insert permissions" _pdRole (o .:? ipKey .!= [])
-      <*> parseListAsMap "select permissions" _pdRole (o .:? spKey .!= [])
-      <*> parseListAsMap "update permissions" _pdRole (o .:? upKey .!= [])
-      <*> parseListAsMap "delete permissions" _pdRole (o .:? dpKey .!= [])
-      <*> parseListAsMap "event triggers" etcName (o .:? etKey .!= [])
-      <*> o
-        .:? enableAFKey
-    where
-      tableKey = "table"
-      isEnumKey = "is_enum"
-      configKey = "configuration"
-      orKey = "object_relationships"
-      arKey = "array_relationships"
-      ipKey = "insert_permissions"
-      spKey = "select_permissions"
-      upKey = "update_permissions"
-      dpKey = "delete_permissions"
-      etKey = "event_triggers"
-      cfKey = "computed_fields"
-      rrKey = "remote_relationships"
-      enableAFKey = "apollo_federation_config"
-
-      getUnexpectedKeys o =
-        HS.fromList (KM.keys o) `HS.difference` expectedKeySet
-
-      expectedKeySet =
-        HS.fromList
-          [ tableKey,
-            isEnumKey,
-            configKey,
-            orKey,
-            arKey,
-            ipKey,
-            spKey,
-            upKey,
-            dpKey,
-            etKey,
-            cfKey,
-            rrKey,
-            enableAFKey
-          ]
-
-data FunctionMetadata b = FunctionMetadata
-  { _fmFunction :: FunctionName b,
-    _fmConfiguration :: FunctionConfig,
-    _fmPermissions :: [FunctionPermissionInfo],
-    _fmComment :: Maybe Text
-  }
-  deriving (Generic)
-
-deriving instance (Backend b) => Show (FunctionMetadata b)
-
-deriving instance (Backend b) => Eq (FunctionMetadata b)
-
-instance (Backend b) => ToJSON (FunctionMetadata b) where
-  toJSON = genericToJSON hasuraJSON
-
-$(makeLenses ''FunctionMetadata)
-
-instance (Backend b) => FromJSON (FunctionMetadata b) where
-  parseJSON = withObject "FunctionMetadata" $ \o ->
-    FunctionMetadata
-      <$> o
-        .: "function"
-      <*> o
-        .:? "configuration"
-        .!= emptyFunctionConfig
-      <*> o
-        .:? "permissions"
-        .!= []
-      <*> o
-        .:? "comment"
-
-instance (Backend b) => HasCodec (FunctionMetadata b) where
-  codec =
-    CommentCodec
-      ( T.unlines
-          [ "A custom SQL function to add to the GraphQL schema with configuration.",
-            "",
-            "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax"
-          ]
-      )
-      $ AC.object (codecNamePrefix @b <> "FunctionMetadata")
-      $ FunctionMetadata
-        <$> requiredField "function" nameDoc
-          AC..= _fmFunction
-        <*> optionalFieldWithOmittedDefault "configuration" emptyFunctionConfig configDoc
-          AC..= _fmConfiguration
-        <*> optionalFieldWithOmittedDefault' "permissions" []
-          AC..= _fmPermissions
-        <*> optionalField' "comment"
-          AC..= _fmComment
-    where
-      nameDoc = "Name of the SQL function"
-      configDoc = "Configuration for the SQL function"
 
 type RemoteSchemaMetadata = RemoteSchemaMetadataG RemoteRelationshipDefinition
 
@@ -405,7 +116,11 @@ type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 
-type LogicalModels b = InsOrdHashMap LogicalModelName (LogicalModelInfo b)
+type NativeQueries b = InsOrdHashMap NativeQueryName (NativeQueryMetadata b)
+
+type StoredProcedures b = InsOrdHashMap (FunctionName b) (StoredProcedureMetadata b)
+
+type LogicalModels b = InsOrdHashMap LogicalModelName (LogicalModelMetadata b)
 
 type Endpoints = InsOrdHashMap EndpointName CreateEndpoint
 
@@ -421,10 +136,13 @@ data SourceMetadata b = SourceMetadata
     _smKind :: BackendSourceKind b,
     _smTables :: Tables b,
     _smFunctions :: Functions b,
+    _smNativeQueries :: NativeQueries b,
+    _smStoredProcedures :: StoredProcedures b,
     _smLogicalModels :: LogicalModels b,
     _smConfiguration :: SourceConnConfiguration b,
     _smQueryTags :: Maybe QueryTagsConfig,
     _smCustomization :: SourceCustomization,
+    -- | https://hasura.io/docs/latest/deployment/health-checks/source-health-check/
     _smHealthCheckConfig :: Maybe (HealthCheckConfig b)
   }
   deriving (Generic)
@@ -440,7 +158,9 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
     _smName <- o .: "name"
     _smTables <- oMapFromL _tmTable <$> o .: "tables"
     _smFunctions <- oMapFromL _fmFunction <$> o .:? "functions" .!= []
-    _smLogicalModels <- oMapFromL lmiRootFieldName <$> o .:? "logical_models" .!= []
+    _smNativeQueries <- oMapFromL _nqmRootFieldName <$> o .:? "native_queries" .!= []
+    _smStoredProcedures <- oMapFromL _spmStoredProcedure <$> o .:? "stored_procedures" .!= []
+    _smLogicalModels <- oMapFromL _lmmName <$> o .:? "logical_models" .!= []
     _smConfiguration <- o .: "configuration"
     _smQueryTags <- o .:? "query_tags"
     _smCustomization <- o .:? "customization" .!= emptySourceCustomization
@@ -449,7 +169,8 @@ instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (SourceMetadat
 
 backendSourceMetadataCodec :: JSONCodec BackendSourceMetadata
 backendSourceMetadataCodec =
-  named "SourceMetadata" $
+  named "SourceMetadata"
+    $
     -- Attempt to match against @SourceMetadata@ codecs for each native backend
     -- type. If none match then apply the @SourceMetadata DataConnector@ codec.
     -- DataConnector is the fallback case because the possible values for its
@@ -464,7 +185,7 @@ backendSourceMetadataCodec =
     matcherWithBackendCodec backendType =
       (matches backendType, AB.dispatchAnyBackend @Backend (AB.liftTag backendType) mkCodec)
 
-    mkCodec :: forall b. Backend b => (BackendTag b) -> JSONCodec BackendSourceMetadata
+    mkCodec :: forall b. (Backend b) => (BackendTag b) -> JSONCodec BackendSourceMetadata
     mkCodec _ = anySourceMetadataCodec $ codec @(SourceMetadata b)
 
     matches :: BackendType -> BackendSourceMetadata -> Maybe BackendSourceMetadata
@@ -480,33 +201,37 @@ backendSourceMetadataCodec =
 anySourceMetadataCodec :: (HasTag b) => JSONCodec (SourceMetadata b) -> JSONCodec BackendSourceMetadata
 anySourceMetadataCodec = dimapCodec dec enc
   where
-    dec :: HasTag b => SourceMetadata b -> BackendSourceMetadata
+    dec :: (HasTag b) => SourceMetadata b -> BackendSourceMetadata
     dec = BackendSourceMetadata . AB.mkAnyBackend
 
     -- This encoding function is partial, but that should be ok.
-    enc :: HasTag b => BackendSourceMetadata -> SourceMetadata b
+    enc :: (HasTag b) => BackendSourceMetadata -> SourceMetadata b
     enc input = fromJust $ AB.unpackAnyBackend $ unBackendSourceMetadata input
 
-instance Backend b => HasCodec (SourceMetadata b) where
+instance (Backend b) => HasCodec (SourceMetadata b) where
   codec =
-    AC.object (codecNamePrefix @b <> "SourceMetadata") $
-      SourceMetadata
-        <$> requiredField' "name"
-          .== _smName
+    AC.object (backendPrefix @b <> "SourceMetadata")
+      $ SourceMetadata
+      <$> requiredField' "name"
+      .== _smName
         <*> requiredField' "kind"
-          .== _smKind
+      .== _smKind
         <*> requiredFieldWith' "tables" (sortedElemsCodec _tmTable)
-          .== _smTables
+      .== _smTables
         <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) mempty
-          .== _smFunctions
-        <*> optionalFieldOrNullWithOmittedDefaultWith' "logical_models" (sortedElemsCodec lmiRootFieldName) mempty
-          .== _smLogicalModels
+      .== _smFunctions
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "native_queries" (sortedElemsCodec _nqmRootFieldName) mempty
+      .== _smNativeQueries
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "stored_procedures" (sortedElemsCodec _spmStoredProcedure) mempty
+      .== _smStoredProcedures
+        <*> optionalFieldOrNullWithOmittedDefaultWith' "logical_models" (sortedElemsCodec _lmmName) mempty
+      .== _smLogicalModels
         <*> requiredField' "configuration"
-          .== _smConfiguration
+      .== _smConfiguration
         <*> optionalFieldOrNull' "query_tags"
-          .== _smQueryTags
+      .== _smQueryTags
         <*> optionalFieldWithOmittedDefault' "customization" emptySourceCustomization
-          .== _smCustomization
+      .== _smCustomization
         <*> healthCheckField
     where
       healthCheckField = case healthCheckImplementation @b of
@@ -520,7 +245,7 @@ instance Backend b => HasCodec (SourceMetadata b) where
 
 mkSourceMetadata ::
   forall (b :: BackendType).
-  Backend b =>
+  (Backend b) =>
   SourceName ->
   BackendSourceKind b ->
   SourceConnConfiguration b ->
@@ -528,19 +253,21 @@ mkSourceMetadata ::
   Maybe (HealthCheckConfig b) ->
   BackendSourceMetadata
 mkSourceMetadata name backendSourceKind config customization healthCheckConfig =
-  BackendSourceMetadata $
-    AB.mkAnyBackend $
-      SourceMetadata
-        @b
-        name
-        backendSourceKind
-        mempty
-        mempty
-        mempty
-        config
-        Nothing
-        customization
-        healthCheckConfig
+  BackendSourceMetadata
+    $ AB.mkAnyBackend
+    $ SourceMetadata
+      @b
+      name
+      backendSourceKind
+      mempty
+      mempty
+      mempty
+      mempty
+      mempty
+      config
+      Nothing
+      customization
+      healthCheckConfig
 
 -- | Source configuration as stored in the Metadata DB for some existentialized backend.
 newtype BackendSourceMetadata = BackendSourceMetadata {unBackendSourceMetadata :: AB.AnyBackend SourceMetadata}
@@ -573,23 +300,31 @@ parseNonSourcesMetadata ::
     )
 parseNonSourcesMetadata o = do
   remoteSchemas <-
-    parseListAsMap "remote schemas" _rsmName $
-      o .:? "remote_schemas" .!= []
+    parseListAsMap "remote schemas" _rsmName
+      $ o
+      .:? "remote_schemas"
+      .!= []
   queryCollections <-
-    parseListAsMap "query collections" _ccName $
-      o .:? "query_collections" .!= []
+    parseListAsMap "query collections" _ccName
+      $ o
+      .:? "query_collections"
+      .!= []
   allowlist <- parseListAsMap "allowlist entries" aeCollection $ o .:? "allowlist" .!= []
   customTypes <- o .:? "custom_types" .!= emptyCustomTypes
   actions <- parseListAsMap "actions" _amName $ o .:? "actions" .!= []
   cronTriggers <-
-    parseListAsMap "cron triggers" ctName $
-      o .:? "cron_triggers" .!= []
+    parseListAsMap "cron triggers" ctName
+      $ o
+      .:? "cron_triggers"
+      .!= []
 
   apiLimits <- o .:? "api_limits" .!= emptyApiLimit
   metricsConfig <- o .:? "metrics_config" .!= emptyMetricsConfig
   inheritedRoles <-
-    parseListAsMap "inherited roles" _rRoleName $
-      o .:? "inherited_roles" .!= []
+    parseListAsMap "inherited roles" _rRoleName
+      $ o
+      .:? "inherited_roles"
+      .!= []
   introspectionDisabledForRoles <- o .:? "graphql_schema_introspection" .!= mempty
   pure
     ( remoteSchemas,
@@ -621,35 +356,52 @@ deriving newtype instance (Semigroup (BackendConfig b)) => Semigroup (BackendCon
 
 deriving newtype instance (Monoid (BackendConfig b)) => Monoid (BackendConfigWrapper b)
 
+instance (Backend b) => HasCodec (BackendConfigWrapper b) where
+  codec = dimapCodec BackendConfigWrapper unBackendConfigWrapper codec
+
 data CatalogStateType
   = CSTCli
   | CSTConsole
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON defaultOptions {constructorTagModifier = snakeCase . drop 3} ''CatalogStateType)
+instance FromJSON CatalogStateType where
+  parseJSON = genericParseJSON defaultOptions {constructorTagModifier = snakeCase . drop 3}
+
+instance ToJSON CatalogStateType where
+  toJSON = genericToJSON defaultOptions {constructorTagModifier = snakeCase . drop 3}
+  toEncoding = genericToEncoding defaultOptions {constructorTagModifier = snakeCase . drop 3}
 
 data SetCatalogState = SetCatalogState
   { _scsType :: CatalogStateType,
     _scsState :: Value
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON ''SetCatalogState)
+instance FromJSON SetCatalogState where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON SetCatalogState where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data CatalogState = CatalogState
   { _csId :: Text,
     _csCliState :: Value,
     _csConsoleState :: Value
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveToJSON hasuraJSON ''CatalogState)
+instance ToJSON CatalogState where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data GetCatalogState
   = GetCatalogState
-  deriving (Show, Eq)
+  deriving stock (Show, Eq, Generic)
 
-$(deriveToJSON defaultOptions ''GetCatalogState)
+instance ToJSON GetCatalogState where
+  toJSON = genericToJSON defaultOptions
+  toEncoding = genericToEncoding defaultOptions
 
 instance FromJSON GetCatalogState where
   parseJSON _ = pure GetCatalogState

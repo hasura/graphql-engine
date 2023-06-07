@@ -15,12 +15,12 @@ import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
 import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (generateSQLSelectFromArrayNode)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processAnnAggregateSelect)
-import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs, MultiRowSelectNode (MultiRowSelectNode), SelectNode (SelectNode), SelectWriter (..), SourcePrefixes (SourcePrefixes))
+import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs, MultiRowSelectNode (MultiRowSelectNode), SelectNode (SelectNode), SelectWriter (..), SourcePrefixes (SourcePrefixes), initialNativeQueryFreshIdStore)
 import Hasura.Prelude
 import Hasura.RQL.IR.Select (AnnAggregateSelect, AnnSelectG (_asnStrfyNum))
 import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.BackendType (BackendType (Postgres))
 import Hasura.RQL.Types.Common (FieldName (FieldName))
-import Hasura.SQL.Backend (BackendType (Postgres))
 
 -- | Translates IR to Postgres queries for aggregated SELECTs.
 --
@@ -50,9 +50,10 @@ mkAggregateSelect annAggSel = do
   let ( (selectSource, nodeExtractors, topExtractor),
         SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}
         ) =
-          runWriter $
-            flip runReaderT strfyNum $
-              processAnnAggregateSelect sourcePrefixes rootFieldName annAggSel
+          runWriter
+            $ flip runReaderT strfyNum
+            $ flip evalStateT initialNativeQueryFreshIdStore
+            $ processAnnAggregateSelect sourcePrefixes rootFieldName annAggSel
       -- select the relevant columns and subquery we want to aggregate
       selectNode = SelectNode nodeExtractors joinTree
       -- aggregate the results into a top-level return value

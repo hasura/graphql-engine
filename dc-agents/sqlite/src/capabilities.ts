@@ -95,7 +95,9 @@ export const capabilitiesResponse: CapabilitiesResponse = {
       column_nullability: "nullable_and_non_nullable",
     },
     scalar_types,
-    queries: {},
+    queries: {
+      foreach: {}
+    },
     relationships: {},
     comparisons: {
       subquery: {

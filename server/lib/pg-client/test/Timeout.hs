@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Timeout (specTimeout) where
@@ -7,10 +6,8 @@ module Timeout (specTimeout) where
 -------------------------------------------------------------------------------
 
 import Control.Concurrent.Async (async, wait)
-import Control.Monad (unless)
 import Control.Monad.Trans.Except (runExceptT)
 import Data.ByteString.Char8 qualified as BS
-import Data.Foldable (traverse_)
 import Data.Functor.Identity (Identity (..), runIdentity)
 import Data.Int (Int32)
 import Data.Time (diffUTCTime, getCurrentTime)
@@ -80,55 +77,6 @@ specTimeout = before initDB $ do
       -- out) and have the transaction committed anyway, if the exception is
       -- delivered after sending 'COMMIT' but before returning.
       countRows pool `shouldReturn` 0
-
-    it "leaves no running queries after cancelling" $ \pool -> do
-      cancelablePool <- mkPool True
-      -- let's make sure there's nothing else lingering
-      killAllRunningQueries pool
-      -- do an insert but cancel it
-      res <- timeout 500000 $ sleepyInsert cancelablePool 10000
-      -- check it was cancelled
-      res `shouldBe` Nothing
-      -- get running queries
-      runningQueries <- getRunningQueries pool
-      -- check there are none
-      length runningQueries `shouldBe` 0
-
--- | deliberately stop all running queries so we can be sure
--- that there'll only be ones we start
-killAllRunningQueries :: PGPool -> IO ()
-killAllRunningQueries pool = do
-  pids <- fmap fst <$> getRunningQueries pool
-  traverse_ (killQueryByPid pool) pids
-  leftovers <- getRunningQueries pool
-  unless
-    (null leftovers)
-    (error $ "not all processes have been stopped: " <> show leftovers)
-
-killQueryByPid :: PGPool -> Int32 -> IO (Either PGExecErr ())
-killQueryByPid pool pid =
-  runExceptT $ runTx pool mode tx
-  where
-    query = "SELECT pg_terminate_backend($1);"
-    tx = withQE PGExecErrTx (fromText query) (Identity pid) False
-
--- | ask Postgres how many queries are still running, to check
--- that we are actually killing them correctly
-getRunningQueries :: PGPool -> IO [(Int32, BS.ByteString)]
-getRunningQueries pool = do
-  Right count <- runExceptT $ runTx pool mode tx
-  return count
-  where
-    tx = withQE PGExecErrTx (fromText query) () False
-    query =
-      [sql|
-        SELECT
-          pid,
-          query
-        FROM pg_stat_activity
-        WHERE (now() - pg_stat_activity.query_start) > interval '0.1 seconds' 
-        AND pg_stat_activity.query != 'COMMIT';
-      |]
 
 mkPool :: Bool -> IO PGPool
 mkPool cancelable = do

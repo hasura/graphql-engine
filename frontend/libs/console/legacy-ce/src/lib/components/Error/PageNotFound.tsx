@@ -23,13 +23,11 @@ const PageNotFound = (props: PageNotFoundProps) => {
         <div className="px-5 md:p-0">
           <h1 className="font-bold text-6xl">404</h1>
           <br />
-          <>
-            This page does not exist. Head back{' '}
-            <Link to="/" onClick={resetCallback}>
-              Home
-            </Link>
-            .
-          </>
+          This page does not exist. Head back{' '}
+          <Link to="/" onClick={resetCallback}>
+            Home
+          </Link>
+          .
         </div>
         <div className="w-1/3">
           <img

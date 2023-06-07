@@ -20,7 +20,7 @@ PG_VOLUME_NAME='hasura-dev-postgres'
 PG_CONTAINER_IMAGE='postgis/postgis:15-3.3-alpine'
 PG_CONTAINER_NAME="hasura-dev-postgres-$PG_PORT"
 PG_DB_URL="postgresql://postgres:$PG_PASSWORD@127.0.0.1:$PG_PORT/postgres"
-PG_DOCKER="docker exec -u postgres -it $PG_CONTAINER_NAME psql $PG_DB_URL"
+PG_DOCKER="docker exec -u postgres $PG_CONTAINER_NAME psql $PG_DB_URL"
 
 # NOTE FWIW:
 #   Brandon tried these options to speed up integration tests, but to little effect:

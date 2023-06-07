@@ -31,6 +31,9 @@ export type LocalRelationship = BasicRelationshipDetails & {
   relationshipType: 'Array' | 'Object';
   definition: {
     toTable: Table;
+    toColumns?: string[];
+    fromTable?: Table;
+    fromColumns?: string[];
     mapping: Record<string, string>;
   };
 };

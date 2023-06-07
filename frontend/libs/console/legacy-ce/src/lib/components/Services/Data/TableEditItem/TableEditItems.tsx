@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppDispatch } from '../../../../store';
+import type { AppDispatch } from '../../../../store';
 import { Button } from '../../../../new-components/Button';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { ordinalColSort } from '../utils';
@@ -88,65 +88,63 @@ export const TableEditItems = ({
   const columns = currentTable?.columns.sort(ordinalColSort) || [];
 
   return (
-    <>
-      <RightContainer>
+    <RightContainer>
+      <div>
+        <TableHeader
+          count={count}
+          dispatch={dispatch}
+          table={currentTable}
+          source={currentSource}
+          tabName="edit"
+          migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
+          isCountEstimated={false}
+        />
+        <br />
         <div>
-          <TableHeader
-            count={count}
-            dispatch={dispatch}
-            table={currentTable}
-            source={currentSource}
-            tabName="edit"
-            migrationMode={migrationMode}
-            readOnlyMode={readOnlyMode}
-            isCountEstimated={false}
-          />
-          <br />
-          <div>
-            <div className="justify-center w-9/12 pl-md">
-              <form id="updateForm">
-                <div className="flex flex-col pt-sm">
-                  {columns.map((column, index) => (
-                    <DataTableRowItem
-                      defaultValue={
-                        oldItem ? oldItem[column?.column_name] : undefined
-                      }
-                      values={values}
-                      setNullCheckedValues={setNullCheckedValues}
-                      setDefaultValueColumns={setDefaultValueColumns}
-                      key={column?.column_name}
-                      column={column}
-                      onColumnUpdate={onColumnUpdate}
-                      enumOptions={enumOptions}
-                      index={index.toString()}
-                    />
-                  ))}
+          <div className="justify-center w-9/12 pl-md">
+            <form id="updateForm">
+              <div className="flex flex-col pt-sm">
+                {columns.map((column, index) => (
+                  <DataTableRowItem
+                    defaultValue={
+                      oldItem ? oldItem[column?.column_name] : undefined
+                    }
+                    values={values}
+                    setNullCheckedValues={setNullCheckedValues}
+                    setDefaultValueColumns={setDefaultValueColumns}
+                    key={column?.column_name}
+                    column={column}
+                    onColumnUpdate={onColumnUpdate}
+                    enumOptions={enumOptions}
+                    index={index.toString()}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center my-sm">
+                <div className="mr-md">
+                  <Button
+                    type="submit"
+                    mode="primary"
+                    onClick={onClickSave}
+                    data-test="edit-save-button"
+                  >
+                    {buttonText}
+                  </Button>
                 </div>
-                <div className="flex items-center my-sm">
-                  <div className="mr-md">
-                    <Button
-                      type="submit"
-                      mode="primary"
-                      onClick={onClickSave}
-                      data-test="edit-save-button"
-                    >
-                      {buttonText}
-                    </Button>
-                  </div>
-                  {currentTable.is_enum ? (
-                    <ReloadEnumValuesButton dispatch={dispatch} />
-                  ) : null}
-                </div>
-              </form>
-            </div>
-            <div className="w-3/12">
-              <Alert lastError={lastError} lastSuccess={lastSuccess} />
-            </div>
+                {currentTable.is_enum ? (
+                  <ReloadEnumValuesButton dispatch={dispatch} />
+                ) : null}
+              </div>
+            </form>
           </div>
-          <br />
-          <br />
+          <div className="w-3/12">
+            <Alert lastError={lastError} lastSuccess={lastSuccess} />
+          </div>
         </div>
-      </RightContainer>
-    </>
+        <br />
+        <br />
+      </div>
+    </RightContainer>
   );
 };

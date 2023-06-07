@@ -15,7 +15,7 @@ real-world practices, user experiences, and challenges when managing enterprise-
 
 ### Recommended patterns
 
-- Use the [Hasura CLI](/hasura-cli/index.mdx) to manage and export Metadata.
+- Use the [Hasura CLI](/hasura-cli/overview.mdx) to manage and export Metadata.
 
   - The CLI exports [YAML files](/migrations-metadata-seeds/manage-metadata.mdx) which is much more source-control
     friendly than JSON (exported by the Console and API).
@@ -36,8 +36,8 @@ real-world practices, user experiences, and challenges when managing enterprise-
 
 :::info Note
 
-Hasura Cloud users can leverage the [GitHub integration](/hasura-cloud/ci-cd/github-integration.mdx) to
-automate deployments.
+Hasura Cloud users can leverage the [GitHub integration](/hasura-cloud/ci-cd/github-integration.mdx) to automate
+deployments.
 
 :::
 
@@ -75,7 +75,7 @@ include the configurations in the exported Metadata.
   operates. Queries you structure differently may return unexpected results. You could modify security policies such as
   RBAC permissions or allowed queries via Metadata changes that cause unexpected behavior.
 
-- Don't apply Metadata generated from the Community Edition to an Enterprise Edition system that has EE features
-  configured (e.g., read-replicas). Hasura stores these configurations in the Metadata, and the Community Edition cannot
-  configure these features. The resulting exported Metadata will not contain these values, and this Metadata would
-  overwrite the Enterprise Edition configurations if you applied it.
+- Don't apply Metadata generated from the Community Edition to an Enterprise Edition system that has Enterprise Edition
+  features configured (e.g., read-replicas). Hasura stores these configurations in the Metadata, and the Community
+  Edition cannot configure these features. The resulting exported Metadata will not contain these values, and this
+  Metadata would overwrite the Enterprise Edition configurations if you applied it.

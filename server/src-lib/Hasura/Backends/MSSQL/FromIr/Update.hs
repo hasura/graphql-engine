@@ -17,8 +17,8 @@ import Hasura.Backends.MSSQL.Types.Update
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.Update.Batch qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
-import Hasura.SQL.Backend
 
 fromUpdate :: IR.AnnotatedUpdate 'MSSQL -> FromIr Update
 fromUpdate (IR.AnnotatedUpdateG table updatePermFilter _ (IR.UpdateBatch updateOperations whereClause) _ allColumns _tCase) = do

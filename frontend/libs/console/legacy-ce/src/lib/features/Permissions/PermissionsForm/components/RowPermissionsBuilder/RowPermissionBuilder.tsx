@@ -6,13 +6,13 @@ import { usePermissionTables } from './hooks/usePermissionTables';
 import { usePermissionComparators } from './hooks/usePermissionComparators';
 
 interface Props {
-  nesting: string[];
+  permissionsKey: 'check' | 'filter';
   table: Table;
   dataSourceName: string;
 }
 
 export const RowPermissionBuilder = ({
-  nesting,
+  permissionsKey,
   table,
   dataSourceName,
 }: Props) => {
@@ -20,7 +20,6 @@ export const RowPermissionBuilder = ({
 
   // by watching the top level of nesting we can get the values for the whole builder
   // this value will always be 'filter' or 'check' depending on the query type
-  const permissionsKey = nesting[0];
 
   const value = watch(permissionsKey);
 
@@ -32,14 +31,21 @@ export const RowPermissionBuilder = ({
 
   if (!tables) return <>Loading</>;
   return (
-    <RowPermissionsInput
-      onPermissionsChange={permissions => {
-        setValue(permissionsKey, permissions);
-      }}
-      table={table}
-      tables={tables}
-      permissions={value}
-      comparators={comparators}
-    />
+    <div
+      data-testid="row-permission-builder"
+      data-state={JSON.stringify(value)}
+    >
+      <RowPermissionsInput
+        onPermissionsChange={permissions => {
+          setValue(permissionsKey, permissions);
+        }}
+        table={table}
+        tables={tables}
+        logicalModel={undefined}
+        logicalModels={[]}
+        permissions={value}
+        comparators={comparators}
+      />
+    </div>
   );
 };

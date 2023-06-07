@@ -13,8 +13,6 @@ import { generatedActionToHasuraAction } from '../OASGenerator/utils';
 import { FaAngleRight, FaFileImport, FaHome } from 'react-icons/fa';
 import { z } from 'zod';
 import { useQueryClient } from 'react-query';
-import { isImportFromOpenAPIEnabled } from '../../../../utils';
-import { browserHistory } from 'react-router';
 import { SimpleForm } from '../../../../new-components/Form';
 import { OasGeneratorForm } from './OASGeneratorForm';
 import React from 'react';
@@ -92,7 +90,7 @@ export const OASGeneratorPage = () => {
 
   const onDelete = (actionName: string) => {
     const action = metadata?.metadata?.actions?.find(
-      a => a.name === actionName
+      a => a.name.toLowerCase() === actionName.toLowerCase()
     );
     if (action) {
       setBusy(true);
@@ -110,11 +108,6 @@ export const OASGeneratorPage = () => {
       );
     }
   };
-
-  if (!isImportFromOpenAPIEnabled(window.__env)) {
-    browserHistory.push('/actions');
-    return null;
-  }
 
   return (
     <div>

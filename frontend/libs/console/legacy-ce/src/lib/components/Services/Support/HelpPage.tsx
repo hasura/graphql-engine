@@ -92,6 +92,7 @@ const HelpPage = () => {
               href="https://hasura.io/help"
               // eslint-disable-next-line react/jsx-no-target-blank
               target="_blank"
+              rel="noreferrer"
             >
               help page
             </a>{' '}
@@ -100,6 +101,7 @@ const HelpPage = () => {
               href="https://calendly.com/hasura/prod-expert-call"
               // eslint-disable-next-line react/jsx-no-target-blank
               target="_blank"
+              rel="noreferrer"
             >
               set up a call
             </a>

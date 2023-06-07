@@ -5,7 +5,7 @@ import type { FieldWrapperPassThroughProps } from '../../../../../../new-compone
 import * as React from 'react';
 
 import { z } from 'zod';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import { useFormContext, useWatch } from 'react-hook-form';
 
 import { Switch } from '../../../../../../new-components/Switch';

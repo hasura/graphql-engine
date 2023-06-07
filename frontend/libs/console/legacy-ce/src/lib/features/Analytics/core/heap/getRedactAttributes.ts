@@ -10,6 +10,9 @@ import type { RedactOptions, HtmlRedactAttributes } from './types';
  */
 export const REDACT_EVERYTHING: RedactOptions = {
   redactText: true,
+
+  // Please note that ids cannot be fully redacted, be sure ids do not contain sensitive information.
+  // see https://developers.heap.io/docs/web#precise-data-redaction-via-heap-redact
   htmlAttributesToRedact:
     'id,title,data-test,data-element,data-cy,data-testid,data-index-id,data-key,href,value,name,key,placeholder,for',
 };

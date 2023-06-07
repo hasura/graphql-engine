@@ -170,7 +170,7 @@
   query:
     query: |
       mutation {
-        updateUsersByPk(pk_columns: {id: 3}, _set: {favouriteDay: WEDNESDAY}) {
+        updateUsersByPk(pkColumns: {id: 3}, _set: {favouriteDay: WEDNESDAY}) {
           id
           favouriteDay
         }

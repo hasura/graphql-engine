@@ -5,6 +5,7 @@ module Test.AgentDatasets
     DatasetCloneInfo (..),
     usesDataset,
     chinookTemplate,
+    functionsTemplate,
     testingEdgeCasesTemplate,
     HasDatasetContext,
     getDatasetContext,
@@ -33,6 +34,9 @@ import Prelude
 
 chinookTemplate :: API.DatasetTemplateName
 chinookTemplate = API.DatasetTemplateName "Chinook"
+
+functionsTemplate :: API.DatasetTemplateName
+functionsTemplate = API.DatasetTemplateName "Functions"
 
 testingEdgeCasesTemplate :: API.DatasetTemplateName
 testingEdgeCasesTemplate = API.DatasetTemplateName "TestingEdgeCases"
@@ -97,7 +101,7 @@ supportsDatasets = isJust . API._cDatasets . API._crCapabilities
 
 createClone :: (MonadIO m) => Client m (NamedRoutes API.Routes) -> API.DatasetTemplateName -> m DatasetCloneInfo
 createClone client datasetTemplateName = do
-  cloneName <- liftIO $ API.DatasetCloneName . UUID.toText <$> UUID.nextRandom
+  cloneName <- liftIO $ API.DatasetCloneName . Text.replace "-" "" . UUID.toText <$> UUID.nextRandom
   let request = API.DatasetCreateCloneRequest datasetTemplateName
   API.DatasetCreateCloneResponse {..} <- (client // API._datasets // API._createClone) cloneName request
   pure $ DatasetCloneInfo cloneName _dccrConfig

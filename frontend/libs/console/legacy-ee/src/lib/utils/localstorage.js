@@ -1,5 +1,4 @@
 let localStorageAvailable = null;
-const apiExplorerConsoleGraphQLHeaders = 'apiExplorer:graphiqlHeaders';
 
 /**
  * Set a given (key, value) to a given store.
@@ -78,8 +77,4 @@ export const initializeStore = () => {
     }
   }
   return localStorageAvailable;
-};
-
-export const clearPersistedGraphiQLHeaders = () => {
-  window.localStorage.removeItem(apiExplorerConsoleGraphQLHeaders);
 };

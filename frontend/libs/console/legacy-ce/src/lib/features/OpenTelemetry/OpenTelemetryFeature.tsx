@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { isProLiteConsole } from '../../utils';
+import globals from '../../Globals';
+import { useEELiteAccess } from '../../features/EETrial';
 import { OpenTelemetryProvider } from './OpenTelemetryProvider/OpenTelemetryProvider';
 
 export function OpenTelemetryFeature() {
@@ -9,7 +10,8 @@ export function OpenTelemetryFeature() {
   // But the feature itself should not be aware of when it's rendered or not.
 
   // eslint-disable-next-line no-underscore-dangle
-  if (!isProLiteConsole(window.__env)) return null;
+  const { access } = useEELiteAccess(globals);
+  if (access === 'forbidden') return null;
 
   return <OpenTelemetryProvider />;
 }

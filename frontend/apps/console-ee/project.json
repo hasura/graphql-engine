@@ -1,4 +1,5 @@
 {
+  "name": "console-ee",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/console-ee/src",
   "projectType": "application",
@@ -6,11 +7,16 @@
     "build-server-assets": {
       "executor": "@hasura/internal-plugin:build-server-assets",
       "inputs": ["{workspaceRoot}/dist/apps/console-ee/**"],
-      "outputs": ["dist/apps/server-assets-console-ee"],
+      "outputs": ["{workspaceRoot}/dist/apps/server-assets-console-ee"],
+      "dependsOn": ["validate-javascript-bundle-output"]
+    },
+    "validate-javascript-bundle-output": {
+      "executor": "@hasura/internal-plugin:validate-javascript-bundle-output",
+      "inputs": ["{workspaceRoot}/dist/apps/console-ee/**"],
       "dependsOn": ["build"]
     },
     "build": {
-      "executor": "@nrwl/web:webpack",
+      "executor": "@nrwl/webpack:webpack",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
@@ -31,7 +37,8 @@
         "styles": ["apps/console-ee/src/css/tailwind.css"],
         "scripts": [],
         "webpackConfig": "custom-webpack.config.js",
-        "postcssConfig": "apps/console-ee/postcss.config.js"
+        "postcssConfig": "apps/console-ee/postcss.config.js",
+        "isolatedConfig": true
       },
       "configurations": {
         "development": {
@@ -50,7 +57,7 @@
             }
           ],
           "optimization": true,
-          "outputHashing": "none",
+          "outputHashing": "bundles",
           "extractCss": false,
           "sourceMap": true,
           "namedChunks": true,
@@ -61,7 +68,7 @@
       }
     },
     "serve": {
-      "executor": "@nrwl/web:dev-server",
+      "executor": "@nrwl/webpack:dev-server",
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "console-ee:build",
@@ -83,17 +90,17 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/console-ee/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": ["apps/console-ee/**/*.{ts,tsx,js,jsx,json}"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/apps/console-ee"],
+      "outputs": ["{workspaceRoot}/coverage/apps/console-ee"],
       "options": {
         "jestConfig": "apps/console-ee/jest.config.ts",
         "passWithNoTests": true
       }
     }
   },
-  "tags": []
+  "tags": ["scope:console", "type:app", "meta:legacy"]
 }

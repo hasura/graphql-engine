@@ -53,26 +53,26 @@ _Sent with 💌 from the frontenders of the Hasura Platform team_.
 `;
   }
 
-  if (uncaughtChromaticError) {
-    const error =
-      uncaughtChromaticError instanceof Error
-        ? uncaughtChromaticError
-        : new Error(
-            `Something bad happened to the Chromatic build with an unexpected error (${uncaughtChromaticError})`
-          );
-
-    return {
-      status: 'uncaughtChromaticError',
-      error,
-      comment: `
-### ❌ Chromatic Visual Regression Report
-Something bad happened to the Chromatic build.
-
-${signature}`,
-    };
-  }
-
   if (!diagnosticFile) {
+    if (uncaughtChromaticError) {
+      const error =
+        uncaughtChromaticError instanceof Error
+          ? uncaughtChromaticError
+          : new Error(
+              `Something bad happened to the Chromatic build with an unexpected error (${uncaughtChromaticError})`
+            );
+
+      return {
+        status: 'uncaughtChromaticError',
+        error,
+        comment: `
+  ### ❌ Chromatic Visual Regression Report
+  Something bad happened to the Chromatic build.
+
+  ${signature}`,
+      };
+    }
+
     return {
       status: 'noDiagnosticFile',
       error: new Error(
@@ -178,11 +178,11 @@ ${signature}`,
       return {
         status: 'broken',
         error: new Error(
-          `Chromatic build is broken, maybe something is wrong with some stories. You can view them [here](${diagnosticData.build.webUrl}).`
+          `There are ${diagnosticData.build.errorCount} errors reported by Chromatic with this PR. You can view them [here](${diagnosticData.build.webUrl}).`
         ),
         comment: `
 ### ❌ Chromatic Visual Regression Report
-Chromatic build is broken, maybe something is wrong with some stories. You can view them [here](${diagnosticData.build.webUrl}).
+Chromatic reported ${diagnosticData.build.errorCount} errors with this PR. You can view them [here](${diagnosticData.build.webUrl}).
 
 ${signature}`,
       };

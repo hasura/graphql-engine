@@ -1,4 +1,4 @@
-import { getDownQueryComments } from './utils';
+import { getDownQueryComments } from './getDownQueryComments';
 import { RunSqlType } from '../../types';
 
 export interface RunSQLQueryType {

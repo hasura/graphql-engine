@@ -11,6 +11,7 @@ export { programmaticallyTraceError } from './core/programmaticallyTraceError';
 
 // REACT UTILITIES
 export { Analytics } from './components/Analytics';
+export { InitializeTelemetry } from './core/telemetry/components/InitializeTelemetry';
 export { useGetAnalyticsAttributes } from './hooks/useGetAnalyticsAttributes';
 
 // CUSTOM EVENTS

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveAnyClass #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
 
 module Hasura.RQL.DDL.Webhook.Transform.Method
   ( -- * Method transformations
@@ -11,12 +11,6 @@ where
 
 -------------------------------------------------------------------------------
 
-import Autodocodec (HasCodec (codec), dimapCodec)
-import Autodocodec.Extended (caseInsensitiveTextCodec)
-import Data.Aeson (FromJSON, ToJSON)
-import Data.Aeson qualified as J
-import Data.CaseInsensitive qualified as CI
-import Data.Text qualified as T
 import Data.Validation
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
@@ -25,37 +19,11 @@ import Hasura.RQL.DDL.Webhook.Transform.Class
     TransformErrorBundle (..),
   )
 import Hasura.RQL.DDL.Webhook.Transform.Request (RequestTransformCtx)
+import Hasura.RQL.Types.Webhook.Transform.Method (Method (..), MethodTransformFn (..), TransformCtx (..), TransformFn (..))
 
 -------------------------------------------------------------------------------
 
--- | The actual request method we are transforming.
---
--- This newtype is necessary because otherwise we end up with an
--- orphan instance.
-newtype Method = Method (CI.CI T.Text)
-  deriving stock (Generic)
-  deriving newtype (Show, Eq)
-  deriving anyclass (NFData)
-
-instance HasCodec Method where
-  codec = dimapCodec Method coerce caseInsensitiveTextCodec
-
-instance J.ToJSON Method where
-  toJSON = J.String . CI.original . coerce
-
-instance J.FromJSON Method where
-  parseJSON = J.withText "Method" (pure . coerce . CI.mk)
-
 instance Transform Method where
-  -- NOTE: GHC does not let us attach Haddock documentation to data family
-  -- instances, so 'MethodTransformFn' is defined separately from this
-  -- wrapper.
-  newtype TransformFn Method = MethodTransformFn_ MethodTransformFn
-    deriving stock (Eq, Generic, Show)
-    deriving newtype (NFData, FromJSON, ToJSON)
-
-  newtype TransformCtx Method = TransformCtx RequestTransformCtx
-
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'applyMethodTransformFn' is defined
   -- separately.
@@ -66,16 +34,6 @@ instance Transform Method where
   -- separately.
   validate engine (MethodTransformFn_ fn) = validateMethodTransformFn engine fn
 
--- | The defunctionalized transformation on 'Method'.
-newtype MethodTransformFn
-  = -- | Replace the HTTP existing 'Method' with a new one.
-    Replace Method
-  deriving stock (Eq, Generic, Show)
-  deriving newtype (NFData, FromJSON, ToJSON)
-
-instance HasCodec MethodTransformFn where
-  codec = dimapCodec Replace coerce codec
-
 -- | Provide an implementation for the transformations defined by
 -- 'MethodTransformFn'.
 --
@@ -83,7 +41,7 @@ instance HasCodec MethodTransformFn where
 -- transformations, this can be seen as an implementation of these
 -- transformations as normal Haskell functions.
 applyMethodTransformFn ::
-  MonadError TransformErrorBundle m =>
+  (MonadError TransformErrorBundle m) =>
   MethodTransformFn ->
   RequestTransformCtx ->
   Method ->

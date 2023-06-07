@@ -5,6 +5,7 @@
 module Hasura.RQL.Types.Relationships.Remote
   ( RemoteRelationship,
     RemoteRelationshipDefinition (..),
+    RemoteSourceRelationshipBuilder (..),
     parseRemoteRelationshipDefinition,
     RRFormat (..),
     RRParseMode (..),
@@ -30,11 +31,12 @@ import Autodocodec.Extended (hashSetCodec)
 import Control.Lens (makePrisms)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended (ToTxt (toTxt))
 import GHC.TypeLits (ErrorMessage (..), TypeError)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
@@ -43,7 +45,6 @@ import Hasura.RQL.Types.Relationships.ToSource
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend (AnyBackend)
-import Hasura.SQL.Backend
 
 type RemoteRelationship = RemoteRelationshipG RemoteRelationshipDefinition
 
@@ -53,7 +54,8 @@ instance HasCodec RemoteRelationship where
 instance FromJSON RemoteRelationship where
   parseJSON = withObject "RemoteRelationship" $ \obj ->
     RemoteRelationship
-      <$> obj .: "name"
+      <$> obj
+      .: "name"
       <*> (parseRemoteRelationshipDefinition RRPLenient =<< obj .: "definition")
 
 -- | Represents the format of the metadata a remote relationship was read from
@@ -67,6 +69,9 @@ data RRFormat
     RRFUnifiedFormat
   deriving (Show, Eq, Generic)
 
+-- | Specify whether remote schema <> source relationships should be built
+data RemoteSourceRelationshipBuilder = IncludeRemoteSourceRelationship | ExcludeRemoteSourceRelationship
+
 -- | Metadata representation of the internal definition of a remote relationship.
 data RemoteRelationshipDefinition
   = -- | Remote relationship targetting a source.
@@ -78,11 +83,12 @@ data RemoteRelationshipDefinition
 -- See documentation for 'parseRemoteRelationshipDefinition' for why
 -- this is necessary.
 instance
-  TypeError
-    ( 'ShowType RemoteRelationshipDefinition
-        ':<>: 'Text " has different JSON representations depending on context;"
-        ':$$: 'Text "call ‘parseRemoteRelationshipDefinition’ directly instead of relying on ‘FromJSON’"
-    ) =>
+  ( TypeError
+      ( 'ShowType RemoteRelationshipDefinition
+          ':<>: 'Text " has different JSON representations depending on context;"
+          ':$$: 'Text "call ‘parseRemoteRelationshipDefinition’ directly instead of relying on ‘FromJSON’"
+      )
+  ) =>
   FromJSON RemoteRelationshipDefinition
   where
   parseJSON = error "impossible"
@@ -127,11 +133,14 @@ remoteRelationshipDefinitionCodec mode =
 
     toSchemaOldDBFormat :: JSONCodec ToSchemaRelationshipDef
     toSchemaOldDBFormat =
-      AC.object "ToSchemaRelationshipDefLegacyFormat" $
-        ToSchemaRelationshipDef
-          <$> requiredField' "remote_schema" AC..= _trrdRemoteSchema
-          <*> requiredFieldWith' "hasura_fields" hashSetCodec AC..= _trrdLhsFields
-          <*> requiredField' "remote_field" AC..= _trrdRemoteField
+      AC.object "ToSchemaRelationshipDefLegacyFormat"
+        $ ToSchemaRelationshipDef
+        <$> requiredField' "remote_schema"
+        AC..= _trrdRemoteSchema
+          <*> requiredFieldWith' "hasura_fields" hashSetCodec
+        AC..= _trrdLhsFields
+          <*> requiredField' "remote_field"
+        AC..= _trrdRemoteField
 
 -- | Parse 'RemoteRelationshipDefinition' letting the caller decide how lenient to be.
 --
@@ -219,8 +228,8 @@ parseRemoteRelationshipDefinition mode = withObject ("RemoteRelationshipDefiniti
       RRPStrict -> ("(strict format)", "to_source, to_remote_schema")
 
     invalid =
-      fail $
-        mconcat
+      fail
+        $ mconcat
           [ "remote relationship definition ",
             suffix,
             " expects exactly one of: ",
@@ -244,7 +253,7 @@ instance ToJSON RemoteRelationshipDefinition where
 
 -- | Resolved remote relationship, as stored in the schema cache.
 data RemoteFieldInfo lhsJoinField = RemoteFieldInfo
-  { _rfiLHS :: HM.HashMap FieldName lhsJoinField,
+  { _rfiLHS :: HashMap.HashMap FieldName lhsJoinField,
     _rfiRHS :: RemoteFieldInfoRHS
   }
   deriving (Generic, Eq)
@@ -269,11 +278,11 @@ data DBJoinField (b :: BackendType)
   | JoinComputedField (ScalarComputedField b)
   deriving (Generic)
 
-deriving instance Backend b => Eq (DBJoinField b)
+deriving instance (Backend b) => Eq (DBJoinField b)
 
-deriving instance Backend b => Show (DBJoinField b)
+deriving instance (Backend b) => Show (DBJoinField b)
 
-instance Backend b => Hashable (DBJoinField b)
+instance (Backend b) => Hashable (DBJoinField b)
 
 instance (Backend b) => ToJSON (DBJoinField b) where
   toJSON = \case
@@ -291,13 +300,13 @@ data ScalarComputedField (b :: BackendType) = ScalarComputedField
   }
   deriving (Generic)
 
-deriving instance Backend b => Eq (ScalarComputedField b)
+deriving instance (Backend b) => Eq (ScalarComputedField b)
 
-deriving instance Backend b => Show (ScalarComputedField b)
+deriving instance (Backend b) => Show (ScalarComputedField b)
 
-instance Backend b => Hashable (ScalarComputedField b)
+instance (Backend b) => Hashable (ScalarComputedField b)
 
-instance Backend b => ToJSON (ScalarComputedField b) where
+instance (Backend b) => ToJSON (ScalarComputedField b) where
   toJSON ScalarComputedField {..} =
     object
       [ "name" .= _scfName,

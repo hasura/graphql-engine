@@ -1,6 +1,6 @@
 import Endpoints from '../../../../../Endpoints';
 import { Api } from '../../../../../hooks/apiUtils';
-import { useAppSelector } from '../../../../../store';
+import { useAppSelector } from '../../../../../storeHooks';
 import { useQuery, UseQueryOptions } from 'react-query';
 import { CronTriggerAPIResult, ScheduledTrigger } from '../../types';
 

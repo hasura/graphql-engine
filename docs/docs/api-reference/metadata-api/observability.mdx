@@ -1,6 +1,6 @@
 ---
 sidebar_label: Observability Options
-sidebar_position: 20
+sidebar_position: 24
 description: Manage observability options with the Hasura metadata API
 keywords:
   - hasura
@@ -18,12 +18,11 @@ keywords:
   - ee
 ---
 
+import ProductBadge from '@site/src/components/ProductBadge';
+
 # Metadata API Reference: Observability Options
 
-<div className="badge badge--primary heading-badge">
-  Available on: Community Edition, Cloud Free, Cloud Standard, Cloud Professional, Cloud Enterprise, Self-hosted
-  Enterprise
-</div>
+<ProductBadge ce free standard pro ee self />
 
 ## Introduction
 
@@ -31,7 +30,7 @@ The API to manage `Observability` related metadata configurations.
 
 ## Logs and metrics configuration
 
-<div className="badge badge--primary heading-badge">Available on: Cloud Standard, Cloud Professional</div>
+<ProductBadge standard pro />
 
 These are the configurations that govern the metrics and logging output for debugging and analytics.
 
@@ -76,7 +75,7 @@ X-Hasura-Role: admin
 
 ## OpenTelemetry Configuration
 
-<div className="badge badge--primary heading-badge">Available on: Self-hosted Enterprise</div>
+<ProductBadge self />
 
 The OpenTelemetry configuration enables export of [distributed traces](/observability/tracing.mdx) to an
 [OpenTelemetry](https://opentelemetry.io/) compliant APM receiver.

@@ -1,5 +1,5 @@
-import { DEFAULT_STALE_TIME } from '../../DatabaseRelationships';
 import { DataSource, Feature } from '../../DataSource';
+import { DEFAULT_STALE_TIME } from '../../hasura-metadata-api/useMetadata';
 import { Table } from '../../hasura-metadata-types';
 import { useHttpClient } from '../../Network';
 import { useQuery } from 'react-query';

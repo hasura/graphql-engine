@@ -1,6 +1,9 @@
 import { Table } from '../../hasura-metadata-types';
 import { Database, Feature } from '..';
-import { defaultDatabaseProps } from '../common/defaultDatabaseProps';
+import {
+  defaultDatabaseProps,
+  defaultIntrospectionProps,
+} from '../common/defaultDatabaseProps';
 import {
   getTrackableTables,
   getTableColumns,
@@ -8,12 +11,15 @@ import {
   getSupportedOperators,
 } from './introspection';
 import { getTableRows } from './query';
+import { Capabilities } from '@hasura/dc-api-types';
+import { DataTypeToSQLTypeMap } from './utils';
 
 export type BigQueryTable = { name: string; dataset: string };
 
 export const bigquery: Database = {
   ...defaultDatabaseProps,
   introspection: {
+    ...defaultIntrospectionProps,
     getDriverInfo: async () => ({
       name: 'bigquery',
       displayName: 'BigQuery',
@@ -21,6 +27,12 @@ export const bigquery: Database = {
     }),
     getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
+    },
+    getDriverCapabilities: async () => {
+      const bigQueryCapabilities: Capabilities = {
+        queries: {},
+      };
+      return Promise.resolve(bigQueryCapabilities);
     },
     getTrackableTables,
     getDatabaseHierarchy: async () => {
@@ -30,6 +42,9 @@ export const bigquery: Database = {
     getFKRelationships: async () => Feature.NotImplemented,
     getTablesListAsTree,
     getSupportedOperators,
+    getDatabaseSchemas: async () => Feature.NotImplemented,
+    getIsTableView: async () => Feature.NotImplemented,
+    getSupportedDataTypes: async () => DataTypeToSQLTypeMap,
   },
   query: {
     getTableRows,

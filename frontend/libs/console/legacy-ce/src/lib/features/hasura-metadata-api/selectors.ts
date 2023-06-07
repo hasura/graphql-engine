@@ -1,3 +1,7 @@
+import {
+  LogicalModelWithSource,
+  NativeQueryWithSource,
+} from '../Data/LogicalModels/types';
 import { Metadata, Table } from '../hasura-metadata-types';
 import * as utils from './utils';
 
@@ -31,3 +35,29 @@ export const findTable =
     utils.findMetadataTable(dataSourceName, table, m);
 
 export const resourceVersion = () => (m: Metadata) => m?.resource_version;
+
+export const extractModelsAndQueriesFromMetadata = (
+  m: Metadata
+): { queries: NativeQueryWithSource[]; models: LogicalModelWithSource[] } => {
+  const sources = m.metadata.sources;
+  let models: LogicalModelWithSource[] = [];
+  let queries: NativeQueryWithSource[] = [];
+
+  sources.forEach(s => {
+    if (s.logical_models && s.logical_models.length > 0) {
+      models = [...models, ...s.logical_models.map(m => ({ ...m, source: s }))];
+    }
+
+    if (s.native_queries && s.native_queries.length > 0) {
+      queries = [
+        ...queries,
+        ...s.native_queries.map(q => ({ ...q, source: s })),
+      ];
+    }
+  });
+
+  return {
+    models,
+    queries,
+  };
+};

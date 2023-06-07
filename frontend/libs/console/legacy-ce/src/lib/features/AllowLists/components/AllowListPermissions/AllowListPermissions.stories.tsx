@@ -1,7 +1,8 @@
-import React from 'react';
-import { Story, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { expect } from '@storybook/jest';
+import { Meta, StoryObj } from '@storybook/react';
+import { screen, userEvent, waitFor, within } from '@storybook/testing-library';
 import { handlers } from '../../../../mocks/metadata.mock';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import {
   AllowListPermissions,
   AllowListPermissionsTabProps,
@@ -16,10 +17,40 @@ export default {
   },
 } as Meta;
 
-export const Default: Story<AllowListPermissionsTabProps> = args => {
-  return <AllowListPermissions {...args} />;
+export const Default: StoryObj<AllowListPermissionsTabProps> = {
+  render: args => {
+    return <AllowListPermissions {...args} />;
+  },
+
+  args: {
+    collectionName: 'allowed-queries',
+  },
 };
 
-Default.args = {
-  collectionName: 'allowed-queries',
+Default.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+
+  await waitFor(() => {
+    expect(screen.queryByText('admin')).toBeInTheDocument();
+  });
+
+  await expect(screen.queryByText('user')).toBeInTheDocument();
+
+  // toggle the user permission and check the success notification
+  await userEvent.click(canvas.getByTestId('user'));
+  await expect(
+    await canvas.findByText(`Allow list permissions updated`)
+  ).toBeInTheDocument();
+
+  // Add new role
+  await userEvent.type(
+    canvas.getByPlaceholderText('Create New Role...'),
+    'role'
+  );
+
+  // toggle new role and check the success notification
+  await userEvent.click(canvas.getByTestId('role'));
+  await expect(
+    await canvas.findByText(`Allow list permissions updated`)
+  ).toBeInTheDocument();
 };

@@ -55,48 +55,45 @@ spec = Fixture.runWithLocalTestEnvironmentSingleSetup contexts tests
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
-tests opts = describe "drop-source-metadata-tests" do
-  dropMetadataTests opts
-
-dropMetadataTests :: Fixture.Options -> SpecWith (TestEnvironment, LocalTestTestEnvironment)
-dropMetadataTests opts = describe "drop_source on RHS source should remove remote relationship from LHS" do
-  it "drops the RHS source 'target'" \(testEnvironment, _) -> do
-    let query =
-          [yaml|
-            type: pg_drop_source
-            args :
-              name: target
-              cascade: true
-          |]
-
-        expectedDropSourceResponse =
-          [yaml|
-            message: success
-          |]
-    shouldReturnYaml
-      opts
-      (GraphqlEngine.postMetadata testEnvironment query)
-      expectedDropSourceResponse
-
-  it "export metadata, check if remote relationship is removed from LHS ('source', remote schema)" \(testEnvironment, _) -> do
-    -- No remote relationship should be present for table 'track' in 'source' remote schema
-    let expectedRSRelationshipMetadata =
-          [yaml|
-              - relationships: []
-                type_name: hasura_track
+tests :: SpecWith (TestEnvironment, LocalTestTestEnvironment)
+tests = describe "drop-source-metadata-tests" do
+  describe "drop_source on RHS source should remove remote relationship from LHS" do
+    it "drops the RHS source 'target'" \(testEnvironment, _) -> do
+      let query =
+            [yaml|
+              type: pg_drop_source
+              args :
+                name: target
+                cascade: true
             |]
 
-    metadata <- GraphqlEngine.exportMetadata testEnvironment
+          expectedDropSourceResponse =
+            [yaml|
+              message: success
+            |]
+      shouldReturnYaml
+        testEnvironment
+        (GraphqlEngine.postMetadata testEnvironment query)
+        expectedDropSourceResponse
 
-    let remoteSchemas = key "remote_schemas" . values
-        -- Extract the 'source' remote schema and check if any remote relationships exists
-        sourceRemoteSchema =
-          Unsafe.fromJust $
-            findOf
-              remoteSchemas
-              (has $ key "name" . _String . only "source")
-              metadata
-        sourceRemoteSchemaRemoteRelationships = sourceRemoteSchema ^?! key "remote_relationships"
+    it "export metadata, check if remote relationship is removed from LHS ('source', remote schema)" \(testEnvironment, _) -> do
+      -- No remote relationship should be present for table 'track' in 'source' remote schema
+      let expectedRSRelationshipMetadata =
+            [yaml|
+                - relationships: []
+                  type_name: hasura_track
+              |]
 
-    shouldBeYaml expectedRSRelationshipMetadata sourceRemoteSchemaRemoteRelationships
+      metadata <- GraphqlEngine.exportMetadata testEnvironment
+
+      let remoteSchemas = key "remote_schemas" . values
+          -- Extract the 'source' remote schema and check if any remote relationships exists
+          sourceRemoteSchema =
+            Unsafe.fromJust
+              $ findOf
+                remoteSchemas
+                (has $ key "name" . _String . only "source")
+                metadata
+          sourceRemoteSchemaRemoteRelationships = sourceRemoteSchema ^?! key "remote_relationships"
+
+      shouldBeYaml expectedRSRelationshipMetadata sourceRemoteSchemaRemoteRelationships

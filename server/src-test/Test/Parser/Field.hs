@@ -42,8 +42,9 @@ field =
   where
     fieldExp :: String -> ExpQ
     fieldExp input = do
-      either fail TH.lift $
-        runExcept $ do
+      either fail TH.lift
+        $ runExcept
+        $ do
           parsed <- hoistEither $ Parser.parseOnly (Parser.skipSpace *> GraphQL.field @GraphQL.Name) . T.pack $ input
           fixField parsed
 

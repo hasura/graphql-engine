@@ -14,20 +14,20 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
 ## Introduction
 
-All GraphQL requests for queries, subscriptions and mutations are made
-to the GraphQL API.
+All GraphQL requests for queries, subscriptions and mutations are made to the GraphQL API.
 
 ## Endpoint
 
-All requests are `POST` requests to the `/v1/graphql` (or
-`/v1alpha1/graphql`) endpoint.
+The GraphQL API is available at the `/v1/graphql` (or `/v1alpha1/graphql`) endpoint of your Hasura GraphQL Engine
+instance.
+
+For example, if your GraphQL Engine is running at `https://my-graphql-engine.com`, the GraphQL API will be available at
+`https://my-graphql-engine.com/v1/graphql` via `POST` requests.
 
 :::info Note
 
-The `/v1/graphql` endpoint returns HTTP 200 status codes for all
-responses. This is a **breaking** change from the `/v1alpha1/graphql`
-behavior, where request errors and internal errors were responded with
-4xx and 5xx status codes.
+The `/v1/graphql` endpoint returns HTTP 200 status codes for all responses. This is a **breaking** change from the
+`/v1alpha1/graphql` behavior, where request errors and internal errors were responded with 4xx and 5xx status codes.
 
 :::
 
@@ -40,13 +40,12 @@ The following types of requests can be made using the GraphQL API:
 
 ## Batching requests
 
-The GraphQL API provides support for batched requests (which can be a
-combination of queries and mutations). The endpoint will accept an array
-of operations in place of a single operation, and return an array of
-corresponding responses.
+The GraphQL API provides support for batched requests (which can be a combination of queries and mutations). The
+endpoint will accept an array of operations in place of a single operation, and return an array of corresponding
+responses.
 
-**Example:** using a client which supports batching (such as Apollo
-Client), we can send two query operations in one request:
+**Example:** using a client which supports batching (such as Apollo Client), we can send two query operations in one
+request:
 
 <GraphiQLIDE
   query={`query first {

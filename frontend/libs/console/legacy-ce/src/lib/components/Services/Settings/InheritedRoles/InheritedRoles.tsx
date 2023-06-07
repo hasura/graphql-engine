@@ -96,7 +96,7 @@ const InheritedRoles: React.FC<Props> = props => {
 
   return (
     <Analytics name="InheritedRoles" {...REDACT_EVERYTHING}>
-      <div className="clear-both pl-md pt-md mb-md">
+      <div className="clear-both pl-md pt-md mb-md bootstrap-jail">
         <div className="flex items-center">
           <Heading fontSize="24px">Inherited Roles</Heading>
         </div>

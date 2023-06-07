@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAppDispatch } from '../../../../../store';
+import { useAppDispatch } from '../../../../../storeHooks';
 import { programmaticallyTraceError } from '../../../../Analytics';
 import {
   FetchOneClickDeploymentStateLogSubscriptionSubscription,
@@ -8,10 +8,7 @@ import {
   controlPlaneClient,
 } from '../../../../ControlPlane';
 import { reactQueryClient } from '../../../../../lib/reactQuery';
-import {
-  forceChangeGraphiqlQuery,
-  forceGraphiQLIntrospection,
-} from '../../../../../components/Services/ApiExplorer/OneGraphExplorer/utils';
+import { forceGraphiQLIntrospection } from '../../../../../components/Services/ApiExplorer/OneGraphExplorer/utils';
 import {
   RequiredEnvVar,
   OneClickDeploymentState,

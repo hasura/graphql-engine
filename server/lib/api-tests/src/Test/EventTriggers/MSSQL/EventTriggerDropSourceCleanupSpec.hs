@@ -11,9 +11,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (permitTeardownFail)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
@@ -72,15 +72,11 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  cleanupEventTriggersWhenSourceDropped opts
-
-cleanupEventTriggersWhenSourceDropped :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-cleanupEventTriggersWhenSourceDropped opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "dropping a source with event triggers should remove 'hdb_catalog' schema and the SQL triggers created on the table" do
-    it "check: inserting a new row invokes a event trigger" $
-      \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+    it "check: inserting a new row invokes a event trigger"
+      $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
             insertQuery =
@@ -107,7 +103,7 @@ cleanupEventTriggersWhenSourceDropped opts =
 
         -- Insert a row into the table with event trigger
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 
@@ -119,8 +115,8 @@ cleanupEventTriggersWhenSourceDropped opts =
 
         eventPayload `shouldBeYaml` expectedEventPayload
 
-    it "drop source, check the table works as it was before event trigger was created on it" $
-      \(testEnvironment, _) -> do
+    it "drop source, check the table works as it was before event trigger was created on it"
+      $ \(testEnvironment, _) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
         let dropSourceQuery =
@@ -135,7 +131,7 @@ cleanupEventTriggersWhenSourceDropped opts =
 
         -- Dropping the source should remove 'hdb_catalog' and SQL triggers related to it
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postMetadata testEnvironment dropSourceQuery)
           dropSourceQueryExpectedRespnse
 
@@ -175,7 +171,7 @@ cleanupEventTriggersWhenSourceDropped opts =
         -- because the SQL triggers that were created by event triggers might try
         -- to write to a non existent 'hdb_catalog' schema.
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 
@@ -188,8 +184,8 @@ mssqlSetupWithEventTriggers testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: mssql_create_event_trigger

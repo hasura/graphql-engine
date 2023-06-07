@@ -10,13 +10,14 @@ import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -36,13 +37,18 @@ spec = do
                 [ Citus.setupTablesAction schema testEnv
                 ]
             },
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Cockroach.setupTablesAction schema testEnv
+                ]
+            },
           (Fixture.fixture $ Fixture.Backend BigQuery.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ BigQuery.setupTablesAction schema testEnv
                 ],
               Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
+                Just
+                  $ Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True
                     }
             }
@@ -87,11 +93,8 @@ schema =
 -- For cockroach, it's the opposite:
 --   - @asc_nulls_first@ is the behaviour of @asc@
 --   - @desc_nulls_last@ is the behaviour of @desc@
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   it "Find the oldest writer of each genre - nulls last" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
         schemaName = Schema.getSchemaName testEnvironment
@@ -127,7 +130,7 @@ tests opts = do
                 name: Bart
           |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected
 
   it "Find the oldest writer of each genre - nulls first" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -164,4 +167,4 @@ tests opts = do
                 name: Carol
           |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected

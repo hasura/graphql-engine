@@ -43,7 +43,7 @@ export const useDeletePermission = ({
       driver,
       dataSourceName,
       table,
-      roleName,
+      role: roleName,
       resourceVersion,
       queries,
     });

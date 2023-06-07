@@ -1,0 +1,77 @@
+---
+description: Quickstart with Event Triggers
+title: Quickstart
+keywords:
+  - hasura
+  - docs
+  - event triggers
+sidebar_position: 1.3
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import SampleAppBlock from '@site/src/components/SampleAppBlock';
+
+# Quickstart Event Triggers
+
+Let's imagine that we want to send a welcome email to every new user who signs up. We can do this by creating an Event
+Trigger that calls out to a webhook whenever a new user is inserted into the `users` table. The webhook payload will
+contain the user's email address, and we can use this in the endpoint which we create to send them the welcome email.
+
+<SampleAppBlock />
+
+## Step 1: Navigate to Event Triggers {#step-2}
+
+To create an Event Trigger, navigate to the `Event` tab in the Console and click the `Create` button while on the
+`Event Triggers` tab in the left navigation.
+
+<Thumbnail src="/img/event-triggers/event-triggers_main-screen_2-19-0.png" alt="Click create for new Action" />
+
+## Step 2: Create a new Event Trigger {#step-3}
+
+On the Event Trigger creation page, input the name of the trigger, `send_welcome_email`, and select the database, schema
+and table that the trigger will be listening to. In this case we'll be listening to the `users` table for an INSERT
+event.
+
+For the endpoint to call when the event is triggered, we'll use the `https://httpbin.org/post` endpoint. This is a demo
+endpoint which will just return a `200` success status code and the data that we initially sent it.
+
+For now, ignore `Auto-cleanup Event Logs`, `Advanced Settings` and `Configure REST Connectors`.
+
+Click `Create Event Trigger` to create the Event Trigger.
+
+<Thumbnail src="/img/event-triggers/event-triggers_create-event-trigger_2-19-0.png" alt="Click create for new Action" />
+
+## Step 3: Test the Event Trigger {#step-4}
+
+Now that we've created the Event Trigger, let's test it out by inserting a new user into the `users` table. To do this,
+navigate to the `Data` tab in the Console and click the `Insert Row` tab in the `users` table. Insert some dummy data
+and click `Save`.
+
+<Thumbnail
+  src="/img/event-triggers/event-triggers_insert-user-dummy-data_2-19-0.png"
+  alt="Click create for new Action"
+/>
+
+## Step 4: Check the Event Logs {#step-5}
+
+Navigate back to the `send_welcome_email` Event Trigger and click the `Processed Events` tab. You should see a new log
+showing a successfully delivered event as it received a `200` status code as the response. You can inspect the `Request`
+and `Response` tabs to see exactly what data was sent to and received from the `httpbin.org` endpoint.
+
+<Thumbnail src="/img/event-triggers/event-triggers_processed-events_2-19-0.png" alt="Click create for new Action" />
+
+## Recap
+
+What just happened? Congrats! You just called a remote endpoint asynchronously when something happened in your database
+and your user (theoretically) received a welcome email. 🎉
+
+In a real world scenario, you would create a custom endpoint to send the welcome email, but in this example we showed
+you just the mechanics of how to create an Event Trigger and test it out.
+
+You can enable your Event Triggers for any table and event type, INSERT, UPDATE or DELETE, and you can also enable the
+[manual invocation of your Event Trigger via a button in the Console](/event-triggers/invoke-trigger-manually.mdx).
+
+You can also thoroughly customize your Event Triggers to your needs using the
+[`Retry Configuration`](/event-triggers/create-trigger.mdx/#retry-logic),
+[`Advanced Settings`](/event-triggers/create-trigger.mdx#advanced-settings) and
+[`Configure REST Connectors`](/event-triggers/rest-connectors.mdx) options.

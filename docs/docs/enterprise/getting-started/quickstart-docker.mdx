@@ -1,7 +1,7 @@
 ---
 sidebar_label: Quickstart with Docker
 description: Quickstart with Docker for Hasura Enterprise Edition
-title: 'EE: Quickstart with Docker'
+title: 'Enterprise Edition: Quickstart with Docker'
 keywords:
   - hasura
   - docs
@@ -11,10 +11,11 @@ sidebar_position: 1
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import LatestRelease from '@site/src/components/LatestRelease';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Quickstart with Docker
 
-<div className="badge badge--primary heading-badge">Available on: Self-hosted Enterprise</div>
+<ProductBadge self />
 
 ## Introduction
 
@@ -24,16 +25,12 @@ Enterprise Edition on your **local environment**.
 
 **This guide requires HGE versions `v2.12.0` and above.** Installation instructions are below.
 
-## Deploying Hasura EE using Docker
+## Deploying Hasura Enterprise Edition using Docker
 
 ### Prerequisites
 
-This tutorial assumes that the following prerequisites have been met:
-
-- To deploy Hasura EE, you will need a license key. [Please contact Hasura Sales](mailto:sales@hasura.io) if you do not
-  already have one.
-- You have [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
-  working on your machine.
+You have [Docker](https://docs.docker.com/install/) and [Docker Compose version 2.0 or higher](https://docs.docker.com/compose/install/)
+working on your machine.
 
 ### Step 1: Get the docker-compose file
 
@@ -47,20 +44,18 @@ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-mani
 curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/enterprise/docker-compose/docker-compose.yaml -o docker-compose.yml
 ```
 
-### Step 2: Set the Hasura EE license key and the admin secret
-
-Edit the downloaded `docker-compose.yml` and set the license key and admin secret:
+### Step 2: Set the admin secret
 
 To make sure that your GraphQL endpoint and the Hasura Console are not publicly accessible, you need to configure an
 admin secret key.
 
-#### Run the Docker container with the license key and admin secret env var
+Edit the downloaded `docker-compose.yml` and set the admin secret as an environment variable.
 
-```yaml {4-5}
+```yaml {5}
 graphql-engine:
   image: hasura/graphql-engine:v2.12.0
   environment:
-    HASURA_GRAPHQL_EE_LICENSE_KEY: "<license key>"
+    HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
     HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
   ...
 ```
@@ -68,12 +63,28 @@ graphql-engine:
 :::info Note
 
 The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL Engine as it would give
-the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for
+the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/overview.mdx) for
 information on setting up authentication.
 
 :::
 
-### Step 3: Run Hasura GraphQL Engine
+### Step 3: Set up a license key
+
+If you don't have a license key, you can skip this step and proceed with this guide to set up Hasura. Once you have Hasura up and running, you can sign up for a [free 30 day Enterprise Edition trial](/enterprise/try-hasura-enterprise-edition.mdx) from the Hasura console.
+
+If you have been provided a license key by the Hasura team, add it as an environment variable to Hasura. Edit the `docker-compose.yaml` to set the license key as the value for the `HASURA_GRAPHQL_EE_LICENSE_KEY` environment variable.
+
+```yaml {6}
+graphql-engine:
+  image: hasura/graphql-engine:v2.12.0
+  environment:
+    HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+    HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+    HASURA_GRAPHQL_EE_LICENSE_KEY: '<license key>'
+  ...
+```
+
+### Step 4: Run Hasura GraphQL Engine
 
 The following command will run Hasura GraphQL Engine along with a Postgres database to store its metadata.
 
@@ -91,10 +102,10 @@ CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
 b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
 ```
 
-### Step 4 (optional): Use your PostgreSQL and Redis instances
+### Step 5 (optional): Use your PostgreSQL and Redis instances
 
-The Hasura EE Docker compose files come with containerized open-source versions of PostgreSQL and Redis. Note that these
-are not managed by Hasura.
+The Hasura Enterprise Edition Docker compose files come with containerized open-source versions of PostgreSQL and Redis.
+Note that these are not managed by Hasura.
 
 We highly recommend using managed PostgreSQL and Redis instances in production.
 
@@ -110,10 +121,10 @@ graphql-engine:
   ...
 ```
 
-### Step 5: Start using Hasura
+### Step 6: Start using Hasura
 
-Congratulations! You have successfully set up Hasura EE on Docker.
-[Start using Hasura EE now](/enterprise/getting-started/start-using-hasura-ee.mdx).
+Congratulations! You have successfully set up Hasura Enterprise Edition on Docker.
+[Start using Hasura Enterprise Edition now](/enterprise/getting-started/start-using-hasura-ee.mdx).
 
 ## Hasura GraphQL Engine server logs {#docker-logs}
 

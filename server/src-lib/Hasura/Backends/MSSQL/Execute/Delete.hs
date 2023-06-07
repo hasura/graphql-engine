@@ -24,12 +24,12 @@ import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Session
 
 -- | Executes a Delete IR AST and return results as JSON.
@@ -70,26 +70,30 @@ buildDeleteTx ::
 buildDeleteTx deleteOperation stringifyNum queryTags = do
   let withAlias = "with_alias"
       createInsertedTempTableQuery =
-        toQueryFlat $
-          TQ.fromSelectIntoTempTable $
-            TSQL.toSelectIntoTempTable tempTableNameDeleted (_adTable deleteOperation) (_adAllCols deleteOperation) RemoveConstraints
+        toQueryFlat
+          $ TQ.fromSelectIntoTempTable
+          $ TSQL.toSelectIntoTempTable tempTableNameDeleted (_adTable deleteOperation) (_adAllCols deleteOperation) RemoveConstraints
+
   -- Create a temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
   let deleteQuery = TQ.fromDelete <$> TSQL.fromDelete deleteOperation
-  deleteQueryValidated <- toQueryFlat <$> runFromIr deleteQuery
+  deleteQueryValidated <- toQueryFlat . qwdQuery <$> runFromIrErrorOnCTEs deleteQuery
+
   -- Execute DELETE statement
   Tx.unitQueryE mutationMSSQLTxErrorHandler (deleteQueryValidated `withQueryTags` queryTags)
-  mutationOutputSelect <- runFromIr $ mkMutationOutputSelect stringifyNum withAlias $ _adOutput deleteOperation
+  mutationOutputSelect <- qwdQuery <$> runFromIrUseCTEs (mkMutationOutputSelect stringifyNum withAlias $ _adOutput deleteOperation)
 
   let withSelect =
         emptySelect
           { selectProjections = [StarProjection],
             selectFrom = Just $ FromTempTable $ Aliased tempTableNameDeleted "deleted_alias"
           }
-      finalMutationOutputSelect = mutationOutputSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
+      finalMutationOutputSelect = mutationOutputSelect {selectWith = Just $ With $ pure $ Aliased (CTESelect withSelect) withAlias}
       mutationOutputSelectQuery = toQueryFlat $ TQ.fromSelect finalMutationOutputSelect
+
   -- Execute SELECT query and fetch mutation response
   result <- encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (mutationOutputSelectQuery `withQueryTags` queryTags)
+
   -- delete the temporary table
   let dropDeletedTempTableQuery = toQueryFlat $ dropTempTableQuery tempTableNameDeleted
   Tx.unitQueryE defaultMSSQLTxErrorHandler (dropDeletedTempTableQuery `withQueryTags` queryTags)

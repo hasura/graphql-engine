@@ -49,35 +49,37 @@ const Manage = ({ allTypes, dispatch, readOnlyMode, ...manageProps }) => {
   const editorLabel = 'All custom types';
 
   return (
-    <CustomTypesContainer tabName="manage" dispatch={dispatch}>
-      <GraphQLEditor
-        value={sdl}
-        error={error}
-        timer={timer}
-        onChange={sdlOnChange}
-        placeholder={''}
-        label={editorLabel}
-        tooltip={editorTooltip}
-        height="600px"
-        readOnlyMode={readOnlyMode}
-        fontSize="14px"
-        allowEmpty
-      />
-      <hr className="my-md" />
-      <div className="flex">
-        <div className="mr-5">
-          <Button onClick={onSave} disabled={!allowSave} mode="primary">
-            Save
+    <div className="bootstrap-jail">
+      <CustomTypesContainer tabName="manage" dispatch={dispatch}>
+        <GraphQLEditor
+          value={sdl}
+          error={error}
+          timer={timer}
+          onChange={sdlOnChange}
+          placeholder={''}
+          label={editorLabel}
+          tooltip={editorTooltip}
+          height="600px"
+          readOnlyMode={readOnlyMode}
+          fontSize="14px"
+          allowEmpty
+        />
+        <hr className="my-md" />
+        <div className="flex">
+          <div className="mr-5">
+            <Button onClick={onSave} disabled={!allowSave} mode="primary">
+              Save
+            </Button>
+          </div>
+          <Button onClick={init} mode="default" disabled={readOnlyMode}>
+            Reset
           </Button>
         </div>
-        <Button onClick={init} mode="default" disabled={readOnlyMode}>
-          Reset
-        </Button>
-      </div>
-      {readOnlyMode && (
-        <ToolTip message="Modifying custom type is not allowed in Read only mode!" />
-      )}
-    </CustomTypesContainer>
+        {readOnlyMode && (
+          <ToolTip message="Modifying custom type is not allowed in Read only mode!" />
+        )}
+      </CustomTypesContainer>
+    </div>
   );
 };
 

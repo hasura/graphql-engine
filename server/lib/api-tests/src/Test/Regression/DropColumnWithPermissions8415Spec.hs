@@ -7,10 +7,11 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Constants qualified as Constants
 import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.Permissions qualified as Permissions
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema hiding (runSQL)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Permissions qualified as Permissions
-import Harness.Test.Schema hiding (runSQL)
+import Harness.Test.SetupAction (setupPermissionsAction)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -26,7 +27,7 @@ spec = do
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv,
-                  Postgres.setupPermissionsAction [updatePermission] testEnv
+                  setupPermissionsAction [updatePermission] testEnv
                 ]
             }
         ]
@@ -72,10 +73,8 @@ updatePermission =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   it "Drop column which is not referred in update permission" \testEnvironment -> do
     let runSQL = "alter table " <> Constants.postgresDb <> "." <> authorTableName <> " drop column name;"
 
@@ -96,7 +95,7 @@ tests opts = do
             result_type: CommandOk
           |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected
 
   it "Drop column which is referred in update permission" \testEnvironment -> do
     let runSQL = "alter table " <> Constants.postgresDb <> "." <> authorTableName <> " drop column age;"
@@ -120,4 +119,4 @@ tests opts = do
             path: "$"
           |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected

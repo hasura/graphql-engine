@@ -5,7 +5,7 @@ import { BigQueryConnectionSchema } from '../schema';
 export const ProjectId = ({ name }: { name: string }) => {
   const options = [
     { value: 'value', label: 'Project ID value' },
-    { value: 'envVar', label: 'Enviromnent variable' },
+    { value: 'envVar', label: 'Environment variable' },
   ];
 
   const { watch } =
@@ -23,7 +23,7 @@ export const ProjectId = ({ name }: { name: string }) => {
           label="Project ID"
           options={options}
           orientation="horizontal"
-          tooltip="Enviroment variable recomennded"
+          tooltip="Environment variable recommended"
         />
       </div>
 

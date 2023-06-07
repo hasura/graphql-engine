@@ -15,10 +15,10 @@ import Hasura.Base.Error (QErr, showQErr)
 import Hasura.Eventing.Common (cleanupSchedulesToBeGenerated)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (defaultSource)
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.ResizePool
-import Hasura.SQL.Backend
 import Hasura.Server.Init (considerEnv, databaseUrlOption, runWithEnv, _envVar)
 import System.Cron (everyMinute)
 import System.Environment (getEnvironment)
@@ -30,20 +30,22 @@ buildEventTriggerCleanupSuite :: IO Spec
 buildEventTriggerCleanupSuite = do
   env <- getEnvironment
 
-  pgUrlText :: Text <- flip onLeft (printErrExit . T.pack) $
-    runWithEnv env $ do
+  pgUrlText :: Text <- flip onLeft (printErrExit . T.pack)
+    $ runWithEnv env
+    $ do
       let envVar = _envVar databaseUrlOption
       maybeV <- considerEnv envVar
-      onNothing maybeV $
-        throwError $
-          "Expected: " <> envVar
+      onNothing maybeV
+        $ throwError
+        $ "Expected: "
+        <> envVar
 
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
 
   pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams print
 
   let pgContext = mkPGExecCtx PG.ReadCommitted pgPool NeverResizePool
-      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema mempty Nothing
+      dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema mempty ConnTemplate_NotApplicable
 
   pure $ do
     describe "Event trigger log cleanup" $ eventTriggerLogCleanupSpec dbSourceConfig
@@ -281,7 +283,7 @@ triggerLogCleanupConfig shouldDelInv =
 -- * Utils
 
 -- | Stringifies QErrs and throws them.
-runExceptQErr :: MonadFail m => ExceptT QErr m a -> m a
+runExceptQErr :: (MonadFail m) => ExceptT QErr m a -> m a
 runExceptQErr ex = runExceptT ex >>= (`onLeft` (fail . T.unpack . showQErr))
 
 -- | Print QErr
@@ -291,7 +293,8 @@ printErrExit = (*> exitFailure) . T.putStrLn
 -- | Returns a count of cleanup schedules based on status
 getCleanupStatusCount :: TriggerName -> Text -> PG.TxE QErr Int
 getCleanupStatusCount triggername status =
-  runIdentity . PG.getRow
+  runIdentity
+    . PG.getRow
     <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|

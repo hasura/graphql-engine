@@ -37,8 +37,8 @@ git clone https://github.com/<your-user-name>/graphql-engine
 cd graphql-engine
 cd console
 nvm use
-npm ci
-npx nx build-server-assets console-ce
+yarn install
+yarn nx build-server-assets console-ce
 ```
 
 At this point you need to compile and run the graphql-engine (follow the [getting started guide](../../server//CONTRIBUTING.md)), run it, and the console will be served at `http://localhost:8080`.

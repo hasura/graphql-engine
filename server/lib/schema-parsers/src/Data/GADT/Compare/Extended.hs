@@ -17,7 +17,7 @@ strengthenOrdering GT = GGT
 
 infixr 6 `extendGOrdering`
 
-extendGOrdering :: GOrdering a b -> (a ~ b => GOrdering c d) -> GOrdering c d
+extendGOrdering :: GOrdering a b -> ((a ~ b) => GOrdering c d) -> GOrdering c d
 extendGOrdering GLT _ = GLT
 extendGOrdering GEQ x = x
 extendGOrdering GGT _ = GGT

@@ -1,0 +1,76 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`internal-generators e2e update-generators-scope-and-types import checker scope imports should validate the scope imports from console: Import from console:utils 1`] = `
+[
+  "import 'PROJECT-nx-plugins-utils';:2:1  error  A project tagged with "scope:console" can only depend on libs tagged with "scope:console", "scope:shared"  @nrwl/nx/enforce-module-boundaries",
+]
+`;
+
+exports[`internal-generators e2e update-generators-scope-and-types import checker scope imports should validate the scope imports from nx-plugins: Import from nx-plugins:utils 1`] = `
+[
+  "import 'PROJECT-console-utils';:1:1  error  A project tagged with "scope:nx-plugins" can only depend on libs tagged with "scope:shared", "scope:nx-plugins"  @nrwl/nx/enforce-module-boundaries",
+]
+`;
+
+exports[`internal-generators e2e update-generators-scope-and-types import checker scope imports should validate the scope imports from shared: Import from shared:utils 1`] = `
+[
+  "import 'PROJECT-console-utils';:1:1  error  A project tagged with "scope:shared" can only depend on libs tagged with "scope:shared"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-nx-plugins-utils';:2:1  error  A project tagged with "scope:shared" can only depend on libs tagged with "scope:shared"  @nrwl/nx/enforce-module-boundaries",
+]
+`;
+
+exports[`internal-generators e2e update-generators-scope-and-types import checker type imports should validate the type imports from app: Import from shared:app 1`] = `
+[
+  "import 'PROJECT-shared-app-copy';:5:1  error  A project tagged with "type:app" can only depend on libs tagged with "type:data", "type:utils", "type:ui", "type:feature"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-storybook';:6:1  error  A project tagged with "type:app" can only depend on libs tagged with "type:data", "type:utils", "type:ui", "type:feature"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-e2e';:7:1  error  A project tagged with "type:app" can only depend on libs tagged with "type:data", "type:utils", "type:ui", "type:feature"  @nrwl/nx/enforce-module-boundaries",
+]
+`;
+
+exports[`internal-generators e2e update-generators-scope-and-types import checker type imports should validate the type imports from data: Import from shared:data 1`] = `
+[
+  "import 'PROJECT-shared-ui';:2:1  error  A project tagged with "type:data" can only depend on libs tagged with "type:data", "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-feature';:4:1  error  A project tagged with "type:data" can only depend on libs tagged with "type:data", "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-app';:5:1  error  A project tagged with "type:data" can only depend on libs tagged with "type:data", "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-storybook';:6:1  error  A project tagged with "type:data" can only depend on libs tagged with "type:data", "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-e2e';:7:1  error  A project tagged with "type:data" can only depend on libs tagged with "type:data", "type:utils"  @nrwl/nx/enforce-module-boundaries",
+]
+`;
+
+exports[`internal-generators e2e update-generators-scope-and-types import checker type imports should validate the type imports from e2e: Import from shared:e2e 1`] = `[]`;
+
+exports[`internal-generators e2e update-generators-scope-and-types import checker type imports should validate the type imports from feature: Import from shared:feature 1`] = `
+[
+  "import 'PROJECT-shared-app';:5:1  error  A project tagged with "type:feature" can only depend on libs tagged with "type:data", "type:feature", "type:ui", "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-storybook';:6:1  error  A project tagged with "type:feature" can only depend on libs tagged with "type:data", "type:feature", "type:ui", "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-e2e';:7:1  error  A project tagged with "type:feature" can only depend on libs tagged with "type:data", "type:feature", "type:ui", "type:utils"  @nrwl/nx/enforce-module-boundaries",
+]
+`;
+
+exports[`internal-generators e2e update-generators-scope-and-types import checker type imports should validate the type imports from storybook: Import from shared:storybook 1`] = `
+[
+  "import 'PROJECT-shared-app';:5:1  error  A project tagged with "type:storybook" can only depend on libs tagged with "type:data", "type:storybook", "type:utils", "type:feature", "type:ui"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-e2e';:7:1  error  A project tagged with "type:storybook" can only depend on libs tagged with "type:data", "type:storybook", "type:utils", "type:feature", "type:ui"  @nrwl/nx/enforce-module-boundaries",
+]
+`;
+
+exports[`internal-generators e2e update-generators-scope-and-types import checker type imports should validate the type imports from ui: Import from shared:ui 1`] = `
+[
+  "import 'PROJECT-shared-data';:3:1  error  A project tagged with "type:ui" can only depend on libs tagged with "type:ui", "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-feature';:4:1  error  A project tagged with "type:ui" can only depend on libs tagged with "type:ui", "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-app';:5:1  error  A project tagged with "type:ui" can only depend on libs tagged with "type:ui", "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-storybook';:6:1  error  A project tagged with "type:ui" can only depend on libs tagged with "type:ui", "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-e2e';:7:1  error  A project tagged with "type:ui" can only depend on libs tagged with "type:ui", "type:utils"  @nrwl/nx/enforce-module-boundaries",
+]
+`;
+
+exports[`internal-generators e2e update-generators-scope-and-types import checker type imports should validate the type imports from utils: Import from shared:utils 1`] = `
+[
+  "import 'PROJECT-shared-ui';:2:1  error  A project tagged with "type:utils" can only depend on libs tagged with "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-data';:3:1  error  A project tagged with "type:utils" can only depend on libs tagged with "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-feature';:4:1  error  A project tagged with "type:utils" can only depend on libs tagged with "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-app';:5:1  error  A project tagged with "type:utils" can only depend on libs tagged with "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-storybook';:6:1  error  A project tagged with "type:utils" can only depend on libs tagged with "type:utils"  @nrwl/nx/enforce-module-boundaries",
+  "import 'PROJECT-shared-e2e';:7:1  error  A project tagged with "type:utils" can only depend on libs tagged with "type:utils"  @nrwl/nx/enforce-module-boundaries",
+]
+`;

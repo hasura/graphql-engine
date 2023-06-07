@@ -9,9 +9,11 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
-import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.EncJSON
 import Hasura.GraphQL.Context qualified as C
 import Hasura.GraphQL.Execute qualified as E
@@ -29,17 +31,19 @@ import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.IR
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Session
+import Hasura.Session (UserAdminSecret (..), UserInfo, UserRoleBuild (..), mkSessionVariablesText, mkUserInfo)
 import Hasura.Tracing (MonadTrace)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 
 data GQLExplain = GQLExplain
   { _gqeQuery :: !GH.GQLReqParsed,
-    _gqeUser :: !(Maybe (Map.HashMap Text Text)),
+    _gqeUser :: !(Maybe (HashMap.HashMap Text Text)),
     _gqeIsRelay :: !(Maybe Bool)
   }
   deriving (Show, Eq)
@@ -52,18 +56,20 @@ $( J.deriveJSON
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.
 explainQueryField ::
+  forall m.
   ( MonadError QErr m,
     MonadIO m,
     MonadBaseControl IO m,
     MonadTrace m
   ) =>
+  Maybe (CredentialCache AgentLicenseKey) ->
   UserInfo ->
   [HTTP.Header] ->
   Maybe G.Name ->
   RootFieldAlias ->
   QueryRootField UnpreparedValue ->
   m EncJSON
-explainQueryField userInfo reqHeaders operationName fieldName rootField = do
+explainQueryField agentLicenseKey userInfo reqHeaders operationName fieldName rootField = do
   case rootField of
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
@@ -74,10 +80,10 @@ explainQueryField userInfo reqHeaders operationName fieldName rootField = do
         exists
         \(SourceConfigWith sourceConfig _ (QDBR db)) -> do
           let (newDB, remoteJoins) = RJ.getRemoteJoinsQueryDB db
-          unless (isNothing remoteJoins) $
-            throw400 InvalidParams "queries with remote relationships cannot be explained"
+          unless (isNothing remoteJoins)
+            $ throw400 InvalidParams "queries with remote relationships cannot be explained"
           mkDBQueryExplain fieldName userInfo sourceName sourceConfig newDB reqHeaders operationName
-      AB.dispatchAnyBackend @BackendTransport step runDBQueryExplain
+      AB.dispatchAnyBackend @BackendTransport step (runDBQueryExplain agentLicenseKey)
 
 explainGQLQuery ::
   forall m.
@@ -89,10 +95,11 @@ explainGQLQuery ::
     MonadTrace m
   ) =>
   SchemaCache ->
+  Maybe (CredentialCache AgentLicenseKey) ->
   [HTTP.Header] ->
   GQLExplain ->
   m EncJSON
-explainGQLQuery sc reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) = do
+explainGQLQuery sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) = do
   -- NOTE!: we will be executing what follows as though admin role. See e.g. notes in explainField:
   userInfo <-
     mkUserInfo
@@ -108,7 +115,7 @@ explainGQLQuery sc reqHeaders (GQLExplain query userVarsRaw maybeIsRelay) = do
         E.parseGraphQLQuery graphQLContext varDefs (GH._grVariables query) directives inlinedSelSet
       -- TODO: validate directives here
       encJFromList
-        <$> for (OMap.toList unpreparedQueries) (uncurry (explainQueryField userInfo reqHeaders (_unOperationName <$> _grOperationName query)))
+        <$> for (InsOrdHashMap.toList unpreparedQueries) (uncurry (explainQueryField agentLicenseKey userInfo reqHeaders (_unOperationName <$> _grOperationName query)))
     G.TypedOperationDefinition G.OperationTypeMutation _ _ _ _ ->
       throw400 InvalidParams "only queries can be explained"
     G.TypedOperationDefinition G.OperationTypeSubscription _ varDefs directives inlinedSelSet -> do

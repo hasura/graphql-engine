@@ -28,7 +28,7 @@ import { Nullable } from '../Common/utils/tsUtils';
 import { mapDispatchToPropsEmpty } from '../Common/utils/reactUtils';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { StyledText } from '../UIKit/atoms/Typography/Typography';
-import { LS_KEYS } from '../../utils/localStorage';
+import { getLSItem, LS_KEYS, setLSItem } from '../../utils/localStorage';
 import { ConsoleState, NotificationsState } from '../../telemetry/state';
 import {
   linkStyle,
@@ -245,10 +245,7 @@ const VersionUpdateNotification: React.FC<VersionUpdateNotificationProps> = ({
   }`;
 
   const handleClick = () => {
-    window.localStorage.setItem(
-      LS_KEYS.versionUpdateCheckLastClosed,
-      latestVersion || ''
-    );
+    setLSItem(LS_KEYS.versionUpdateCheckLastClosed, latestVersion || '');
     onClick();
   };
 
@@ -366,7 +363,7 @@ const checkVersionUpdate = (
   }
 
   try {
-    const lastUpdateCheckClosed = window.localStorage.getItem(
+    const lastUpdateCheckClosed = getLSItem(
       LS_KEYS.versionUpdateCheckLastClosed
     );
     if (
@@ -633,10 +630,7 @@ const HasuraNotifications: React.FC<
     const readAllState = getReadAllNotificationsState();
     dispatch(updateConsoleNotificationsState(readAllState));
     pagination.reset();
-    window.localStorage.setItem(
-      'notifications:data',
-      JSON.stringify(consoleNotifications)
-    );
+    setLSItem(LS_KEYS.notificationsData, JSON.stringify(consoleNotifications));
     // to clear the beta-version update if you mark all as read
     if (!checkStableVersion(latestVersion) && displayNewVersionUpdate) {
       optOutCallback();

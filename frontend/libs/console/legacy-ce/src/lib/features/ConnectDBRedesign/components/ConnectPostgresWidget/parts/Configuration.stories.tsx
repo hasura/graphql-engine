@@ -1,15 +1,15 @@
 import { SimpleForm } from '../../../../../new-components/Form';
 import { Button } from '../../../../../new-components/Button';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { z } from 'zod';
 
 import { Configuration } from './Configuration';
 
 export default {
   component: Configuration,
-} as ComponentMeta<typeof Configuration>;
+} as Meta<typeof Configuration>;
 
-export const Primary: ComponentStory<typeof Configuration> = () => (
+export const Primary: StoryFn<typeof Configuration> = () => (
   <SimpleForm
     onSubmit={data => console.log(data)}
     schema={z.any()}

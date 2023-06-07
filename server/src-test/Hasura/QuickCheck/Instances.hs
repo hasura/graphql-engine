@@ -6,7 +6,7 @@ module Hasura.QuickCheck.Instances () where
 
 import Data.Aeson.Types qualified as Aeson.Types
 import Data.HashMap.Strict.Extended qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrd.HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.Multi qualified as MMap
 import Data.HashSet qualified as HashSet
 import Data.Ratio ((%))
@@ -24,7 +24,6 @@ import Hasura.RQL.Types.Metadata.Object
     MetadataObject (..),
   )
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Table
 import Hasura.RemoteSchema.Metadata (RemoteSchemaName (..))
 import Hasura.RemoteSchema.SchemaCache
   ( RemoteSchemaInputValueDefinition (..),
@@ -33,6 +32,7 @@ import Hasura.RemoteSchema.SchemaCache
   )
 import Hasura.Server.Utils qualified as Utils
 import Hasura.Session (SessionVariable, mkSessionVariable)
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as GraphQL
 import Network.HTTP.Types qualified as HTTP.Types
 import Test.QuickCheck.Extended
@@ -54,8 +54,8 @@ instance
   (Arbitrary k, Hashable k, Arbitrary v) =>
   Arbitrary (InsOrdHashMap k v)
   where
-  arbitrary = InsOrd.HashMap.fromList <$> arbitrary
-  shrink = fmap InsOrd.HashMap.fromList . shrink . InsOrd.HashMap.toList
+  arbitrary = InsOrdHashMap.fromList <$> arbitrary
+  shrink = fmap InsOrdHashMap.fromList . shrink . InsOrdHashMap.toList
 
 instance Arbitrary Aeson.Types.JSONPathElement where
   arbitrary = Aeson.Types.Index <$> arbitrary
@@ -204,7 +204,7 @@ genObjectTypeDefinition inputTypes outputTypeNames interfaceTypeNames name =
     fields = distinct1 >>= traverse (genFieldDefinition inputTypes outputTypeNames)
 
 genInterfaceTypeDefinition ::
-  Arbitrary possibleType =>
+  (Arbitrary possibleType) =>
   Gen [inputType] ->
   [GraphQL.Name] ->
   GraphQL.Name ->
@@ -233,7 +233,7 @@ genInputObjectTypeDefinition values name =
 -------------------------------------------------------------------------------
 -- Instances for GraphQL Engine types
 
-instance Arbitrary a => Arbitrary (PathComponent a) where
+instance (Arbitrary a) => Arbitrary (PathComponent a) where
   arbitrary =
     oneof
       [ PathLiteral <$> arbitrary,
@@ -264,39 +264,39 @@ instance Arbitrary IntrospectionResult where
     scalarTypeDefinitions <-
       for scalarTypeNames genScalarTypeDefinition
     objectTypeDefinitions <-
-      for objectTypeNames $
-        genObjectTypeDefinition inputValues outputTypeNames interfaceTypeNames
+      for objectTypeNames
+        $ genObjectTypeDefinition inputValues outputTypeNames interfaceTypeNames
     interfaceTypeDefinitions <-
-      for interfaceTypeNames $
-        genInterfaceTypeDefinition inputValues outputTypeNames
+      for interfaceTypeNames
+        $ genInterfaceTypeDefinition inputValues outputTypeNames
     unionTypeDefinitions <-
-      for unionTypeNames $
-        genUnionTypeDefinition objectTypeNames
+      for unionTypeNames
+        $ genUnionTypeDefinition objectTypeNames
     enumTypeDefinitions <-
       for enumTypeNames genEnumTypeDefinition
     inputObjectTypeDefinitions <-
-      for inputObjectTypeNames $
-        genInputObjectTypeDefinition inputValues
+      for inputObjectTypeNames
+        $ genInputObjectTypeDefinition inputValues
 
     -- finally, create an IntrospectionResult from the aggregated definitions
     let irDoc =
-          RemoteSchemaIntrospection $
-            HashMap.fromListOn getTypeName $
-              concat
-                [ GraphQL.TypeDefinitionScalar <$> scalarTypeDefinitions,
-                  GraphQL.TypeDefinitionObject <$> objectTypeDefinitions,
-                  GraphQL.TypeDefinitionInterface <$> interfaceTypeDefinitions,
-                  GraphQL.TypeDefinitionUnion <$> unionTypeDefinitions,
-                  GraphQL.TypeDefinitionEnum <$> enumTypeDefinitions,
-                  GraphQL.TypeDefinitionInputObject <$> inputObjectTypeDefinitions
-                ]
+          RemoteSchemaIntrospection
+            $ HashMap.fromListOn getTypeName
+            $ concat
+              [ GraphQL.TypeDefinitionScalar <$> scalarTypeDefinitions,
+                GraphQL.TypeDefinitionObject <$> objectTypeDefinitions,
+                GraphQL.TypeDefinitionInterface <$> interfaceTypeDefinitions,
+                GraphQL.TypeDefinitionUnion <$> unionTypeDefinitions,
+                GraphQL.TypeDefinitionEnum <$> enumTypeDefinitions,
+                GraphQL.TypeDefinitionInputObject <$> inputObjectTypeDefinitions
+              ]
     irQueryRoot <- elements objectTypeNames
     let maybeObjectTypeName = elements $ Nothing : (Just <$> objectTypeNames)
     irMutationRoot <- maybeObjectTypeName
     irSubscriptionRoot <- maybeObjectTypeName
     pure $ IntrospectionResult {..}
 
-instance Arbitrary a => Arbitrary (NamespacedField a) where
+instance (Arbitrary a) => Arbitrary (NamespacedField a) where
   arbitrary = oneof [NotNamespaced <$> arbitrary, Namespaced <$> arbitrary]
   shrink = namespacedField (fmap NotNamespaced . shrink) (fmap Namespaced . shrink)
 

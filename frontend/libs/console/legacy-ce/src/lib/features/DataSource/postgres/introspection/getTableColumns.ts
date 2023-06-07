@@ -34,7 +34,7 @@ export const getTableColumns = async ({
   const { schema, name } = table as PostgresTable;
 
   const sql = `
-  SELECT 
+   SELECT 
    column_name, data_type, is_nullable
   FROM 
     information_schema.columns 
@@ -48,6 +48,7 @@ export const getTableColumns = async ({
       kind: 'postgres',
     },
     sql,
+    readOnly: true,
     httpClient,
   });
 
@@ -105,6 +106,7 @@ export const getTableColumns = async ({
       kind: 'postgres',
     },
     sql: primaryKeySql,
+    readOnly: true,
     httpClient,
   });
 

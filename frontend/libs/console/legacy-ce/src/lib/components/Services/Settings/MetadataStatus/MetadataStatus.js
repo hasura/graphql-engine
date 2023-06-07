@@ -328,7 +328,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
 
   return (
     <Analytics name="MetadataStatus" {...REDACT_EVERYTHING}>
-      <div className="mb-md">
+      <div className="mb-md bootstrap-jail">
         {banner()}
         <div className="clear-both pl-md mt-md mb-md">
           <h2 className="text-xl font-bold">Hasura Metadata Status</h2>

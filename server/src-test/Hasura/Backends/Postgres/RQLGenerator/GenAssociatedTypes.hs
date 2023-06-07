@@ -7,6 +7,7 @@ module Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes
     genTableName,
     genXComputedField,
     genFunctionArgumentExp,
+    genIdentifier,
   )
 where
 
@@ -24,7 +25,7 @@ import Hasura.Backends.Postgres.Types.Function qualified as PGTypes
 import Hasura.Generator.Common (defaultRange, genArbitraryUnicodeText)
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend (BackendType (..), PostgresKind (..))
+import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (..))
 import Hedgehog (MonadGen)
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range (Range)
@@ -33,14 +34,14 @@ import Hedgehog.Range qualified as Range
 --------------------------------------------------------------------------------
 -- Exported
 
-genColumn :: MonadGen m => m (Column ('Postgres 'Vanilla))
+genColumn :: (MonadGen m) => m (Column ('Postgres 'Vanilla))
 genColumn = Postgres.unsafePGCol <$> genArbitraryUnicodeText defaultRange
 
 -- | Generator for a qualified Postgres 'TableName'
-genTableName :: MonadGen m => m (TableName ('Postgres 'Vanilla))
+genTableName :: (MonadGen m) => m (TableName ('Postgres 'Vanilla))
 genTableName = genQualifiedTable
 
-genScalarType :: MonadGen m => m (ScalarType ('Postgres 'Vanilla))
+genScalarType :: (MonadGen m) => m (ScalarType ('Postgres 'Vanilla))
 genScalarType =
   Gen.choice
     [ pure Postgres.PGSmallInt,
@@ -74,14 +75,14 @@ genScalarType =
       Postgres.PGCompositeScalar <$> genArbitraryUnicodeText defaultRange
     ]
 
-genFunctionName :: MonadGen m => m (FunctionName ('Postgres 'Vanilla))
+genFunctionName :: (MonadGen m) => m (FunctionName ('Postgres 'Vanilla))
 genFunctionName =
   Postgres.QualifiedObject <$> genSchemaName defaultRange <*> genPgFunctionName defaultRange
 
-genXComputedField :: MonadGen m => m (XComputedField ('Postgres 'Vanilla))
+genXComputedField :: (MonadGen m) => m (XComputedField ('Postgres 'Vanilla))
 genXComputedField = pure ()
 
-genBooleanOperators :: MonadGen m => m a -> m (BooleanOperators ('Postgres 'Vanilla) a)
+genBooleanOperators :: (MonadGen m) => m a -> m (BooleanOperators ('Postgres 'Vanilla) a)
 genBooleanOperators genA =
   Gen.choice
     [ B.AILIKE <$> genA,
@@ -121,7 +122,7 @@ genBooleanOperators genA =
       B.AMatchesFulltext <$> genA
     ]
 
-genFunctionArgumentExp :: MonadGen m => m a -> m (FunctionArgumentExp ('Postgres 'Vanilla) a)
+genFunctionArgumentExp :: (MonadGen m) => m a -> m (FunctionArgumentExp ('Postgres 'Vanilla) a)
 genFunctionArgumentExp genA =
   Gen.choice
     [ pure PGTypes.AETableRow,
@@ -134,7 +135,7 @@ genFunctionArgumentExp genA =
 -- Unexported Helpers
 
 -- | Generator for a qualified Postgres table.
-genQualifiedTable :: MonadGen m => m PGTypes.QualifiedTable
+genQualifiedTable :: (MonadGen m) => m PGTypes.QualifiedTable
 genQualifiedTable = do
   let schema = PGTypes.SchemaName <$> genIdentifier
       table = PGTypes.TableName <$> genIdentifier
@@ -153,7 +154,7 @@ genQualifiedTableFixture =
 -- | Generator for an arbitrary Postgres identifier.
 --
 -- cf. https://www.postgresql.org/docs/11/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
-genIdentifier :: MonadGen m => m Text
+genIdentifier :: (MonadGen m) => m Text
 genIdentifier = do
   -- NOTE: 'Gen.alpha' is used out of convenience, but the Postgres
   -- specification states that identifiers may begin with "letters with
@@ -177,21 +178,21 @@ genIdentifier = do
   -- Construct the arbitrarily generated identifier
   pure $ T.cons begin rest
 
-genSchemaName :: MonadGen m => Range Int -> m Postgres.SchemaName
+genSchemaName :: (MonadGen m) => Range Int -> m Postgres.SchemaName
 genSchemaName textRange =
   Gen.choice [pure Postgres.publicSchema, Postgres.SchemaName <$> genArbitraryUnicodeText textRange]
 
-genPgFunctionName :: MonadGen m => Range Int -> m Postgres.FunctionName
+genPgFunctionName :: (MonadGen m) => Range Int -> m Postgres.FunctionName
 genPgFunctionName textRange = Postgres.FunctionName <$> genArbitraryUnicodeText textRange
 
-genDWithinGeomOp :: MonadGen m => m a -> m (DWithinGeomOp a)
+genDWithinGeomOp :: (MonadGen m) => m a -> m (DWithinGeomOp a)
 genDWithinGeomOp genA = DWithinGeomOp <$> genA <*> genA
 
-genDWithinGeogOp :: MonadGen m => m a -> m (DWithinGeogOp a)
+genDWithinGeogOp :: (MonadGen m) => m a -> m (DWithinGeogOp a)
 genDWithinGeogOp genA = DWithinGeogOp <$> genA <*> genA <*> genA
 
-genTIntersectsGeomminNband :: MonadGen m => m a -> m (STIntersectsGeomminNband a)
+genTIntersectsGeomminNband :: (MonadGen m) => m a -> m (STIntersectsGeomminNband a)
 genTIntersectsGeomminNband genA = STIntersectsGeomminNband <$> genA <*> Gen.maybe genA
 
-genSTIntersectsNbandGeommin :: MonadGen m => m a -> m (STIntersectsNbandGeommin a)
+genSTIntersectsNbandGeommin :: (MonadGen m) => m a -> m (STIntersectsNbandGeommin a)
 genSTIntersectsNbandGeommin genA = STIntersectsNbandGeommin <$> genA <*> genA

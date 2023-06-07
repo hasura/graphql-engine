@@ -73,7 +73,7 @@ where
 -------------------------------------------------------------------------------
 
 import Control.Monad.IO.Class (MonadIO)
-import Data.HashMap.Strict as M
+import Data.HashMap.Strict as HashMap
 import Data.Scientific (fromFloatDigits)
 import Data.Text (Text)
 import Data.Text qualified as T
@@ -96,7 +96,7 @@ instance Generator Void where
 instance Generator Name where
   genValue = genValueWith [genName]
 
-generate :: MonadIO m => Gen a -> m a
+generate :: (MonadIO m) => Gen a -> m a
 generate = Gen.sample
 
 -------------------------------------------------------------------------------
@@ -107,7 +107,7 @@ genDocument :: Gen Document
 genDocument =
   Document <$> Gen.list (Range.linear 0 3) genDefinition
 
-genExecutableDocument :: Generator a => Gen (ExecutableDocument a)
+genExecutableDocument :: (Generator a) => Gen (ExecutableDocument a)
 genExecutableDocument =
   ExecutableDocument <$> Gen.list (Range.linear 1 3) genExecutableDefinition
 
@@ -174,8 +174,8 @@ genEnumValue = EnumValue <$> genName
 genListValue :: Gen (Value a) -> Gen [Value a]
 genListValue = mkList
 
-genObjectValue :: Gen (Value a) -> Gen (M.HashMap Name (Value a))
-genObjectValue genVal = M.fromList <$> mkList genObjectField
+genObjectValue :: Gen (Value a) -> Gen (HashMap.HashMap Name (Value a))
+genObjectValue genVal = HashMap.fromList <$> mkList genObjectField
   where
     genObjectField = (,) <$> genName <*> genVal
 
@@ -219,21 +219,21 @@ genDefinition =
       DefinitionTypeSystem <$> genTypeSystemDefinition
     ]
 
-genExecutableDefinition :: Generator a => Gen (ExecutableDefinition a)
+genExecutableDefinition :: (Generator a) => Gen (ExecutableDefinition a)
 genExecutableDefinition =
   Gen.choice
     [ ExecutableDefinitionOperation <$> genOperationDefinition,
       ExecutableDefinitionFragment <$> genFragmentDefinition
     ]
 
-genOperationDefinition :: Generator a => Gen (OperationDefinition FragmentSpread a)
+genOperationDefinition :: (Generator a) => Gen (OperationDefinition FragmentSpread a)
 genOperationDefinition =
   Gen.choice
     [ OperationDefinitionTyped <$> genTypedOperationDefinition,
       OperationDefinitionUnTyped <$> genSelectionSet
     ]
 
-genTypedOperationDefinition :: Generator a => Gen (TypedOperationDefinition FragmentSpread a)
+genTypedOperationDefinition :: (Generator a) => Gen (TypedOperationDefinition FragmentSpread a)
 genTypedOperationDefinition =
   TypedOperationDefinition
     <$> genOperationType
@@ -422,10 +422,10 @@ genTypeSystemDirectiveLocation =
 
 -- Structure
 
-genSelectionSet :: Generator a => Gen (SelectionSet FragmentSpread a)
+genSelectionSet :: (Generator a) => Gen (SelectionSet FragmentSpread a)
 genSelectionSet = mkListNonEmpty genSelection
 
-genSelection :: Generator a => Gen (Selection FragmentSpread a)
+genSelection :: (Generator a) => Gen (Selection FragmentSpread a)
 genSelection =
   Gen.recursive
     Gen.choice
@@ -435,38 +435,38 @@ genSelection =
       SelectionInlineFragment <$> genInlineFragment
     ]
 
-genFragmentSpread :: Generator a => Gen (FragmentSpread a)
+genFragmentSpread :: (Generator a) => Gen (FragmentSpread a)
 genFragmentSpread =
   FragmentSpread
     <$> genName
     <*> genDirectives
 
-genInlineFragment :: Generator a => Gen (InlineFragment FragmentSpread a)
+genInlineFragment :: (Generator a) => Gen (InlineFragment FragmentSpread a)
 genInlineFragment =
   InlineFragment
     <$> Gen.maybe genName
     <*> genDirectives
     <*> genSelectionSet
 
-genField :: Generator a => Gen (Field FragmentSpread a)
+genField :: (Generator a) => Gen (Field FragmentSpread a)
 genField =
   Field
     <$> Gen.maybe genName
     <*> genName
-    <*> (M.fromList <$> mkList genArgument)
+    <*> (HashMap.fromList <$> mkList genArgument)
     <*> genDirectives
     <*> genSelectionSet
 
-genDirective :: Generator a => Gen (Directive a)
+genDirective :: (Generator a) => Gen (Directive a)
 genDirective =
   Directive
     <$> genName
-    <*> (M.fromList <$> mkList genArgument)
+    <*> (HashMap.fromList <$> mkList genArgument)
 
-genDirectives :: Generator a => Gen [Directive a]
+genDirectives :: (Generator a) => Gen [Directive a]
 genDirectives = mkList genDirective
 
-genArgument :: Generator a => Gen (Name, Value a)
+genArgument :: (Generator a) => Gen (Name, Value a)
 genArgument = (,) <$> genName <*> genValue
 
 -------------------------------------------------------------------------------

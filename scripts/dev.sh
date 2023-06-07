@@ -3,6 +3,8 @@
 
 set -euo pipefail
 shopt -s globstar
+# for extended case patterns:
+shopt -s extglob
 
 # A development swiss army knife script. The goals are to:
 #
@@ -45,7 +47,7 @@ Available COMMANDs:
         --prof-ticky        : "Ticky ticky" profiling for accounting of allocations (see: cabal/README.md)
         --prof-heap-infomap : Heap profiling (see: cabal/README.md)
         --prof-ghc-debug    : Enable ghc-debug (see: cabal/README.md)
-        --prof-time         : NOT YET IMPLEMENTED (TODO After 9.4) (see: cabal/README.md)
+        --prof-time         : Time profiling (see: cabal/README.md)
 
   postgres
     Launch a postgres container suitable for use with graphql-engine, watch its
@@ -93,7 +95,25 @@ try_jq() {
 }
 
 case "${1-}" in
-  graphql-engine)
+  graphql-engine?(-pro) )
+    ## The differences between OSS and Enterprise/pro defined here:
+    EDITION_NAME="${1-}"
+    if [ "$EDITION_NAME" = "graphql-engine-pro" ];then
+      EDITION_ABBREV=ee
+      if [ -z "${HASURA_GRAPHQL_EE_LICENSE_KEY-}" ]; then
+          echo_error "You need to have the HASURA_GRAPHQL_EE_LICENSE_KEY environment variable defined." 
+          echo_error "Ask a pro developer for the dev key."
+          exit 1
+      fi
+      # This is required for pro with EE license available:
+      if [ -z "${HASURA_GRAPHQL_ADMIN_SECRET-}" ]; then
+        # This should match benchmarks and other dev utilities:
+        export HASURA_GRAPHQL_ADMIN_SECRET=my-secret
+      fi
+    else
+      EDITION_ABBREV=ce
+    fi
+
     # pass arguments after '--' directly to engine:
     GRAPHQL_ENGINE_EXTRA_ARGS=()
     case "${2-}" in
@@ -104,11 +124,13 @@ case "${1-}" in
       ;;
 
       --prof-ticky)
-      echo_warn "This will delete any 'graphql-engine.ticky' and perform significant recompilation. Ok?"
-      echo_warn  "Press enter to continue [will proceed in 10s]"
+      if [ -f "$EDITION_NAME.ticky" ]; then
+          echo_error "The file '$EDITION_NAME.ticky' exists and we would clobber it. Please delete or rename it and try again."
+          exit 1
+      fi
+      echo_warn "This will perform significant recompilation. Ok?"
+      echo_warn "    Press enter to continue [will proceed in 10s]"
       read -r -t10 || true
-      # Avoid confusion:
-      rm -f graphql-engine.ticky
       CABAL_PROJECT_FILE=cabal/dev-sh-prof-ticky.project
       HASURA_PROF_MODE=ticky
       GRAPHQL_ENGINE_EXTRA_ARGS+=( +RTS -r -RTS )
@@ -120,12 +142,12 @@ case "${1-}" in
       ;;
 
       --prof-heap-infomap)
-      echo_warn "This will delete any 'graphql-engine.eventlog' and 'graphql-engine.eventlog.html' and perform significant recompilation. Ok?"
+      echo_warn "This will delete any '$EDITION_NAME.eventlog' and '$EDITION_NAME.eventlog.html' and perform significant recompilation. Ok?"
       echo_warn  "Press enter to continue [will proceed in 10s]"
       read -r -t10 || true
       # Avoid confusion:
-      rm -f graphql-engine.eventlog
-      rm -f graphql-engine.eventlog.html
+      rm -f "$EDITION_NAME.eventlog"
+      rm -f "$EDITION_NAME.eventlog.html"
       CABAL_PROJECT_FILE=cabal/dev-sh-prof-heap-infomap.project
       HASURA_PROF_MODE=heap-infomap
       GRAPHQL_ENGINE_EXTRA_ARGS+=( +RTS -hi -l-agu -RTS )
@@ -157,15 +179,18 @@ case "${1-}" in
       ;;
 
       --prof-time)
-      die_usage  # NOT YET IMPLEMENTED
-      echo_warn "This will delete any graphql-engine.prof and perform significant recompilation."
+      echo_warn "This will delete any $EDITION_NAME.prof and perform significant recompilation."
       echo_warn  "Press enter to continue [will proceed in 10s]"
       read -r -t10 || true
-      rm -f graphql-engine.prof
-      rm -f graphql-engine.profiterole.html
+      rm -f "$EDITION_NAME.prof"
+      rm -f "$EDITION_NAME.profiterole.html"
       CABAL_PROJECT_FILE=cabal/dev-sh-prof-time.project
       HASURA_PROF_MODE="time"
       GRAPHQL_ENGINE_EXTRA_ARGS+=( +RTS -P -RTS )
+      # TODO alternatively we can do `-pj` and use speedscope (unfortunately we
+      # can't get both formats of output), but I think profiterole is more
+      # useful
+      # GRAPHQL_ENGINE_EXTRA_ARGS+=( +RTS -pj -RTS )
       case "${3-}" in
           --)
           GRAPHQL_ENGINE_EXTRA_ARGS+=( "${@:4}" )
@@ -255,12 +280,19 @@ echo '12345' > "$PROJECT_ROOT/server/CURRENT_VERSION"
 if command -v pyenv >/dev/null; then
   # Use the latest version of Python installed with `pyenv`.
   # Ensure that it is at least v3.9, so that generic types are fully supported.
-  v="$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.9 { print $1 }' | tail -n1)"
-  if [[ -z "$v" ]]; then
+  v="$(pyenv versions --bare | (grep  '^ *3' || true) | awk '{ print $1 }' | tail -n1)"
+
+  # Awk fails when you compare e.g. 3.9 and 3.10, because 3.9 is a higher
+  # number than 3.1 (having coerced both to floats). So, we convert a version
+  # like 1.20.3 to a number like 001020003000 (every section becomes a
+  # three-digit number) and we compare them instead.
+  formatted="$(printf "%03d%03d%03d%03d" $(echo $v | tr '.' ' '))"
+  if [[ "$formatted" -lt "003009000000" ]]; then
     # shellcheck disable=SC2016
-    echo_error 'Please `pyenv install` a version of python >= 3.9 so we can use it'
+    echo_error 'Please `pyenv install` a version of python >= 3.9 (found '$v')'
     exit 2
   fi
+
   echo_pretty "Pyenv found. Using Python version: $v"
   export PYENV_VERSION=$v
   python3 --version
@@ -358,10 +390,16 @@ function start_dbs() {
 ###     Graphql-engine        ###
 #################################
 
-if [ "$MODE" = "graphql-engine" ]; then
+if [ "$MODE" = "graphql-engine" ] || [ "$MODE" = "graphql-engine-pro" ]; then
+  # Set the file descriptor limit up to the hard limit.  The common default of
+  # 1024 is too low to really properly test subscriptions for instance.
+  # It might be best just to do this in the engines:
+  # https://hackage.haskell.org/package/unix-2.8.1.1/docs/System-Posix-Resource.html
+  ulimit -Sn unlimited
+
   cd "$PROJECT_ROOT"
   # Existing tix files for a different hge binary will cause issues:
-  rm -f graphql-engine.tix
+  rm -f "$EDITION_NAME.tix"
 
   # Attempt to run this after a CTRL-C:
   function cleanup {
@@ -369,18 +407,71 @@ if [ "$MODE" = "graphql-engine" ]; then
     ### Run analysis or visualization tools, if we ran in one of the profiling modes
     case "${HASURA_PROF_MODE-}" in
         ticky)
-          echo_warn "Done. View the ticky report at: graphql-engine.ticky"
-          echo_warn "See: https://downloads.haskell.org/ghc/latest/docs/users_guide/profiling.html#using-ticky-ticky-profiling-for-implementors"
-          echo_warn "Lookup referenced STG names dumped to their respective module files:  dist-newstyle/**/*.dump-stg-final"
-          # TODO some analysis utilities:
-          #   - sort by top
-          #   - find dictionaries ("+" args)
+          TICKY_FILENAME=$("$PROJECT_ROOT"/scripts/get-version.sh)-$(date +%s).ticky
+          if [ -f "$EDITION_NAME.ticky" ]; then
+              # Sort the main part of the profile by allocations and reassemble:
+              TICKY_TEMPD=$(mktemp -d)
+              awk -v TICKY_TEMPD="$TICKY_TEMPD" \
+                  '/-------------[-]+$|\*\*\*\*\*[*]+$/{n++}{print >TICKY_TEMPD "/" "x" n }' \
+                  "$EDITION_NAME.ticky"
+              ticky_tmp=$(mktemp hasura_devsh_ticky.tmp.XXXXXXX)
+              {
+              cat "$TICKY_TEMPD/x" "$TICKY_TEMPD/x1"        ;
+              head -n1   "$TICKY_TEMPD/x2"                  ;
+              # This is the main section we care about, with allocation counts by name:
+              tail -n +2 "$TICKY_TEMPD/x2" | sort -k2 -r -n | tee "$ticky_tmp";
+              cat        "$TICKY_TEMPD/x3"
+              } >> "$TICKY_FILENAME"
+
+              # Make sure we didn't screw anything up, e.g. if ticky format changes:
+              TICKY_FILENAME_sz=$(wc -c <"$TICKY_FILENAME")
+              wc_c=$(wc -c <"$EDITION_NAME.ticky")
+              if [ "$TICKY_FILENAME_sz" -ne "$wc_c" ]; then
+                  echo_error "Erm... seems our processing of ticky file has a bug. Please fix me"
+              fi
+              rm -r "$TICKY_TEMPD"
+
+              echo_warn "Done. View the ticky report at:  $TICKY_FILENAME"
+              echo_warn "See: https://downloads.haskell.org/ghc/latest/docs/users_guide/profiling.html#using-ticky-ticky-profiling-for-implementors"
+              echo_warn "Lookup referenced STG names dumped to their respective module files:  dist-newstyle/**/*.dump-stg-final"
+              
+              ### Do some additional analysis:
+              # Extract module names, along with allocation counts
+              ticky_tmp2=$(mktemp hasura_devsh_ticky2.tmp.XXXXXXX)
+              if command -v rg >/dev/null ; then
+                rg -o ' +[0-9]+ +([0-9]+).*(   | \()([A-Z][a-zA-Z]*(\.[A-Z][A-Za-z]*)*)' -r '$1  $3' \
+                    "$ticky_tmp" > "$ticky_tmp2"
+                awk '{sum[$2]+=$1} END {for (val in sum) printf "%'"'"'20d\t%s\n", sum[val], val }' "$ticky_tmp2" \
+                    | sort -nr -k1 \
+                    > "$TICKY_FILENAME.modules"
+                echo
+                echo_warn "Here are the top modules by allocation (see $TICKY_FILENAME.modules for all):"
+                head -n5 "$TICKY_FILENAME.modules"
+                echo
+              else
+                echo_error "Please install ripgrep (rg) to get per-module allocation summary"
+              fi
+              # NOTE: this should equal the sum of allocations in all entries
+              # in the list and we find it does within ~1% for e.g. a benchmark
+              # workload, but it's not clear why it doesn't exactly match:
+              instrumented_bytes_allocated=$(grep ALLOC_HEAP_tot "$EDITION_NAME.ticky" | awk '{print $1}')
+              echo_warn "There were..." 
+              printf "%'20d\n" "$instrumented_bytes_allocated" 
+              echo_warn "...bytes allocated from instrumented code in the profile."
+              echo_warn "Compare this to the \"bytes allocated in the heap\" reported from the"
+              echo_warn "'+RTS -s' above to see how many allocations aren't visible due to dependencies"
+              echo_warn "not being instrumented (TODO --prof-ticky-all mode, maybe)"
+
+              rm "$ticky_tmp" "$ticky_tmp2" "$EDITION_NAME.ticky"
+          else
+              echo_error "Hmmm. $EDITION_NAME.ticky wasn't generated for some reason..."
+          fi
         ;;
         heap-infomap)
           if command -v eventlog2html >/dev/null ; then
-            echo_warn "Running eventlog2html against the event log we just generated:  graphql-engine.eventlog"
-            eventlog2html --bands 100 graphql-engine.eventlog
-            echo_warn "Done. View the report at: graphql-engine.eventlog.html"
+            echo_warn "Running eventlog2html against the event log we just generated:  $EDITION_NAME.eventlog"
+            eventlog2html --bands 100 "$EDITION_NAME.eventlog"
+            echo_warn "Done. View the report at: $EDITION_NAME.eventlog.html"
             echo_warn "Lookup referenced STG names dumped to their respective module files:  dist-newstyle/**/*.dump-stg-final"
           else
             echo_warn "Please install eventlog2html"
@@ -391,14 +482,18 @@ if [ "$MODE" = "graphql-engine" ]; then
         ;;
         time)
           if command -v profiterole >/dev/null ; then
-            echo_warn "Running profiterole..."
-            profiterole graphql-engine.prof
-            echo_warn "Done. Check out..."
-            echo_warn "  - graphql-engine.prof              ...for the top-down report"
-            echo_warn "  - graphql-engine.profiterole.html  ...for the top-down report"
-            echo_warn "Lookup referenced STG names dumped to their respective module files:  dist-newstyle/**/*.dump-stg-final"
+            if [ -f "$EDITION_NAME.prof" ]; then
+                echo_warn "Running profiterole..."
+                profiterole "$EDITION_NAME.prof"
+                echo_warn "Done. Check out..."
+                echo_warn "  - $EDITION_NAME.prof              ...for the top-down report"
+                echo_warn "  - $EDITION_NAME.profiterole.html  ...for the folded report"
+                echo_warn "Lookup referenced STG names dumped to their respective module files:  dist-newstyle/**/*.dump-stg-final"
+            else
+                echo_error "No $EDITION_NAME.prof was created... :("
+            fi
           else
-            echo_warn "Please install profiterole"
+            echo_warn "You may wish to install profiterole"
           fi
         ;;
         "")
@@ -411,6 +506,7 @@ if [ "$MODE" = "graphql-engine" ]; then
 
     ### Generate coverage, which can be useful for debugging or understanding
     if command -v hpc >/dev/null && command -v jq >/dev/null ; then
+      # FIXME: this was broken some time ago
       # Get the appropriate mix dir (the newest one); this way this hopefully
       # works when 'cabal/dev-sh.project.local' is edited to turn on
       # optimizations.
@@ -447,6 +543,8 @@ if [ "$MODE" = "graphql-engine" ]; then
 
   export HASURA_GRAPHQL_DATABASE_URL=${HASURA_GRAPHQL_DATABASE_URL-$PG_DB_URL}
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
+  # Add 'developer' to the default list, for more visiblility:
+  export HASURA_GRAPHQL_ENABLED_APIS=metadata,graphql,pgdump,config,developer
 
   echo_pretty "We will connect to postgres at '$HASURA_GRAPHQL_DATABASE_URL'"
   echo_pretty "If you haven't overridden HASURA_GRAPHQL_DATABASE_URL, you can"
@@ -456,17 +554,17 @@ if [ "$MODE" = "graphql-engine" ]; then
   echo_pretty ""
 
   RUN_INVOCATION=(cabal new-run --project-file="$CABAL_PROJECT_FILE" --RTS --
-    exe:graphql-engine +RTS -N -T -s -RTS serve
-    --enable-console --console-assets-dir "$PROJECT_ROOT/frontend/dist/apps/server-assets-console-ce"
+    "exe:$EDITION_NAME" +RTS -N -T -s -RTS serve
+    --enable-console --console-assets-dir "$PROJECT_ROOT/frontend/dist/apps/server-assets-console-$EDITION_ABBREV"
     "${GRAPHQL_ENGINE_EXTRA_ARGS[@]}"
     )
 
   echo_pretty 'About to do:'
-  echo_pretty "    $ cabal new-build --project-file=$CABAL_PROJECT_FILE exe:graphql-engine"
+  echo_pretty "    $ cabal new-build --project-file=$CABAL_PROJECT_FILE exe:$EDITION_NAME"
   echo_pretty "    $ ${RUN_INVOCATION[*]}"
   echo_pretty ''
 
-  cabal new-build --project-file="$CABAL_PROJECT_FILE" exe:graphql-engine
+  cabal new-build --project-file="$CABAL_PROJECT_FILE" "exe:$EDITION_NAME"
 
   # We assume a PG is *already running*, and therefore bypass the
   # cleanup mechanism previously set.
@@ -478,9 +576,9 @@ if [ "$MODE" = "graphql-engine" ]; then
       sleep 0.2
     done
     sleep 1
-    echo_pretty "▲▲▲ graphql-engine startup logs above ▲▲▲"
+    echo_pretty "▲▲▲ $EDITION_NAME startup logs above ▲▲▲"
     echo_pretty ""
-    echo_pretty "You can set additional environment vars to tailor 'graphql-engine' next time you"
+    echo_pretty "You can set additional environment vars to tailor '$EDITION_NAME' next time you"
     echo_pretty "invoke this script, e.g.:"
     echo_pretty "    # Keep polling statements out of logs"
     echo_pretty "    HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL=3000000"
@@ -490,16 +588,22 @@ if [ "$MODE" = "graphql-engine" ]; then
     echo_pretty ""
     echo_pretty "  If the console was modified since your last build (re)build assets with:"
     echo_pretty "      $ cd \"$PROJECT_ROOT/frontend\""
-    echo_pretty "      $ npm ci && npm run server-build:ce"
+    echo_pretty "      $ yarn install && yarn server-build:$EDITION_ABBREV"
     echo_pretty ""
-    echo_pretty "Useful endpoints when compiling with 'graphql-engine:developer' and running with '+RTS -T'"
-    echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/subscriptions"
+    echo_pretty "Useful endpoints when compiling with '$EDITION_NAME:developer' and running with '+RTS -T'"
+    echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/subscriptions/extended"
     echo_pretty "   http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/dev/plan_cache"
     echo_pretty ""
     echo_pretty "To view realtime GC stats and other info open in your browser:"
     echo_pretty "    file://$PROJECT_ROOT/scripts/ekg/ekg.html#$HASURA_GRAPHQL_SERVER_PORT"
     echo_pretty ""
-    echo_pretty "▼▼▼ additional graphql-engine logs will appear below: ▼▼▼"
+    if [ "$EDITION_NAME" = "graphql-engine-pro" ]; then
+    echo_pretty "If you want to observe traces, you can run jaeger all-in-oner:"
+    echo_pretty "    $ docker run -d --name jaeger -e COLLECTOR_ZIPKIN_HOST_PORT=:9411 -e COLLECTOR_OTLP_ENABLED=true -p 6831:6831/udp -p 6832:6832/udp -p 5778:5778 -p 16686:16686 -p 4317:4317 -p 4318:4318 -p 14250:14250 -p 14268:14268 -p 14269:14269 -p 9411:9411 jaegertracing/all-in-one:1.44"
+    echo_pretty "...then configure http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/console/settings/opentelemetry"
+    echo_pretty "...setting 'Endpoint' to: http://localhost:4318/v1/traces"
+    fi
+    echo_pretty "▼▼▼ additional $EDITION_NAME logs will appear below: ▼▼▼"
   } &
 
   # Logs printed until CTRL-C:
@@ -527,7 +631,7 @@ elif [ "$MODE" = "postgres" ]; then
   echo_pretty "    $PG_DB_URL"
   echo_pretty ""
   echo_pretty "If you want to launch a 'graphql-engine' that works with this database:"
-  echo_pretty "    $ $0 graphql-engine"
+  echo_pretty "    $ $0 graphql-engine  # or graphql-engine-pro"
   docker logs -f --tail=0 "$PG_CONTAINER_NAME"
 
 

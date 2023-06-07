@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 module Hasura.RQL.DDL.Webhook.Transform.Url
   ( -- * Url Transformations
     Url (..),
@@ -9,8 +11,6 @@ where
 
 -------------------------------------------------------------------------------
 
-import Autodocodec (HasCodec (codec), dimapCodec)
-import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.Text qualified as T
 import Data.Validation
@@ -19,7 +19,6 @@ import Hasura.RQL.DDL.Webhook.Transform.Class
   ( TemplatingEngine,
     Transform (..),
     TransformErrorBundle (..),
-    UnescapedTemplate (..),
     throwErrorBundle,
     wrapUnescapedTemplate,
   )
@@ -28,27 +27,12 @@ import Hasura.RQL.DDL.Webhook.Transform.Request
     runRequestTemplateTransform,
     validateRequestUnescapedTemplateTransform',
   )
+import Hasura.RQL.Types.Webhook.Transform.Url (TransformCtx (..), TransformFn (..), Url (..), UrlTransformFn (..))
 import Network.URI (parseURI)
 
 -------------------------------------------------------------------------------
 
--- | The actual URL string we are transforming.
---
--- This newtype is necessary because otherwise we end up with an
--- orphan instance.
-newtype Url = Url {unUrl :: Text}
-  deriving stock (Eq, Show)
-
 instance Transform Url where
-  -- NOTE: GHC does not let us attach Haddock documentation to data family
-  -- instances, so 'UrlTransformFn' is defined separately from this
-  -- wrapper.
-  newtype TransformFn Url = UrlTransformFn_ UrlTransformFn
-    deriving stock (Eq, Generic, Show)
-    deriving newtype (NFData, FromJSON, ToJSON)
-
-  newtype TransformCtx Url = TransformCtx RequestTransformCtx
-
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'applyUrlTransformFn' is defined separately.
   transform (UrlTransformFn_ fn) (TransformCtx reqCtx) = applyUrlTransformFn fn reqCtx
@@ -57,15 +41,6 @@ instance Transform Url where
   -- method implementations, so 'validateUrlTransformFn' is defined separately.
   validate engine (UrlTransformFn_ fn) = validateUrlTransformFn engine fn
 
--- | The defunctionalized transformation function on 'Url'
-newtype UrlTransformFn
-  = Modify UnescapedTemplate
-  deriving stock (Eq, Generic, Show)
-  deriving newtype (NFData, FromJSON, ToJSON)
-
-instance HasCodec UrlTransformFn where
-  codec = dimapCodec Modify coerce codec
-
 -- | Provide an implementation for the transformations defined by
 -- 'UrlTransformFn'.
 --
@@ -73,7 +48,7 @@ instance HasCodec UrlTransformFn where
 -- transformations, this can be seen as an implementation of these
 -- transformations as normal Haskell functions.
 applyUrlTransformFn ::
-  MonadError TransformErrorBundle m =>
+  (MonadError TransformErrorBundle m) =>
   UrlTransformFn ->
   RequestTransformCtx ->
   Url ->

@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef } from 'react';
-import type { ComponentStory, ComponentMeta } from '@storybook/react';
+import type { StoryObj, Meta } from '@storybook/react';
 
 import * as React from 'react';
 
@@ -22,31 +22,7 @@ export default {
       source: { type: 'code' },
     },
   },
-} as ComponentMeta<typeof Toggle>;
-
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// BASIC STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const Basic: ComponentStory<typeof Toggle> = args => {
-  const schema = z.object({ status: z.boolean() });
-
-  return (
-    <SimpleForm schema={schema} onSubmit={() => {}}>
-      <Toggle {...args} />
-    </SimpleForm>
-  );
-};
-
-Basic.storyName = '🧰 Basic';
+} as Meta<typeof Toggle>;
 
 // --------------------------------------------------
 // PROPS
@@ -59,33 +35,20 @@ const basicStoryArgs: ComponentPropsWithoutRef<typeof Toggle> = {
   label: 'Status',
 };
 
-Basic.args = basicStoryArgs;
+export const Basic: StoryObj<typeof Toggle> = {
+  render: args => {
+    const schema = z.object({ status: z.boolean() });
 
-// #endregion
+    return (
+      <SimpleForm schema={schema} onSubmit={() => {}}>
+        <Toggle {...args} />
+      </SimpleForm>
+    );
+  },
 
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// WITHOUT LABEL STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const WithoutLabel: ComponentStory<typeof Toggle> = args => {
-  const schema = z.object({ status: z.boolean() });
-
-  return (
-    <SimpleForm schema={schema} onSubmit={() => {}}>
-      <Toggle {...args} />
-    </SimpleForm>
-  );
+  name: '🧰 Basic',
+  args: basicStoryArgs,
 };
-
-WithoutLabel.storyName = '🎭 Variant - Without label';
 
 // --------------------------------------------------
 // PROPS
@@ -97,33 +60,20 @@ const withoutLabelStoryArgs: ComponentPropsWithoutRef<typeof Toggle> = {
   name: 'status',
 };
 
-WithoutLabel.args = withoutLabelStoryArgs;
+export const WithoutLabel: StoryObj<typeof Toggle> = {
+  render: args => {
+    const schema = z.object({ status: z.boolean() });
 
-// #endregion
+    return (
+      <SimpleForm schema={schema} onSubmit={() => {}}>
+        <Toggle {...args} />
+      </SimpleForm>
+    );
+  },
 
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// DISABLED STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const Disabled: ComponentStory<typeof Toggle> = args => {
-  const schema = z.object({ status: z.boolean() });
-
-  return (
-    <SimpleForm schema={schema} onSubmit={() => {}}>
-      <Toggle {...args} />
-    </SimpleForm>
-  );
+  name: '🎭 Variant - Without label',
+  args: withoutLabelStoryArgs,
 };
-
-Disabled.storyName = '🎭 Variant - Disabled';
 
 // --------------------------------------------------
 // PROPS
@@ -137,33 +87,20 @@ const disabledStoryArgs: ComponentPropsWithoutRef<typeof Toggle> = {
   disabled: true,
 };
 
-Disabled.args = disabledStoryArgs;
+export const Disabled: StoryObj<typeof Toggle> = {
+  render: args => {
+    const schema = z.object({ status: z.boolean() });
 
-// #endregion
+    return (
+      <SimpleForm schema={schema} onSubmit={() => {}}>
+        <Toggle {...args} />
+      </SimpleForm>
+    );
+  },
 
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// WRITTEN STATUS STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const WrittenStatus: ComponentStory<typeof Toggle> = args => {
-  const schema = z.object({ status: z.boolean() });
-
-  return (
-    <SimpleForm schema={schema} onSubmit={() => {}}>
-      <Toggle {...args} />
-    </SimpleForm>
-  );
+  name: '🎭 Variant - Disabled',
+  args: disabledStoryArgs,
 };
-
-WrittenStatus.storyName = '🎭 Variant - With written status';
 
 // --------------------------------------------------
 // PROPS
@@ -177,36 +114,20 @@ const writtenStatusStoryArgs: ComponentPropsWithoutRef<typeof Toggle> = {
   writtenStatus: { true: 'Enabled', false: 'Disabled' },
 };
 
-WrittenStatus.args = writtenStatusStoryArgs;
+export const WrittenStatus: StoryObj<typeof Toggle> = {
+  render: args => {
+    const schema = z.object({ status: z.boolean() });
 
-// #endregion
+    return (
+      <SimpleForm schema={schema} onSubmit={() => {}}>
+        <Toggle {...args} />
+      </SimpleForm>
+    );
+  },
 
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// TESTING SCALABILITY STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const TestingScalability: ComponentStory<typeof Toggle> = args => {
-  const schema = z.object({ status: z.boolean() });
-
-  return (
-    <SimpleForm schema={schema} onSubmit={() => {}}>
-      <Toggle {...args} />
-      <span>
-        <i>After-toggle text</i>
-      </span>
-    </SimpleForm>
-  );
+  name: '🎭 Variant - With written status',
+  args: writtenStatusStoryArgs,
 };
-
-TestingScalability.storyName = '🧪 Testing - Scalability';
 
 // --------------------------------------------------
 // PROPS
@@ -229,33 +150,23 @@ const testingScalabilityStoryArgs: ComponentPropsWithoutRef<typeof Toggle> = {
     'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
 };
 
-TestingScalability.args = testingScalabilityStoryArgs;
+export const TestingScalability: StoryObj<typeof Toggle> = {
+  render: args => {
+    const schema = z.object({ status: z.boolean() });
 
-// #endregion
+    return (
+      <SimpleForm schema={schema} onSubmit={() => {}}>
+        <Toggle {...args} />
+        <span>
+          <i>After-toggle text</i>
+        </span>
+      </SimpleForm>
+    );
+  },
 
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// HAPPYPATH STORY
-// #region
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------
-
-// --------------------------------------------------
-// STORY DEFINITION
-// --------------------------------------------------
-export const HappyPath: ComponentStory<typeof Toggle> = args => {
-  const schema = z.object({ status: z.boolean() });
-
-  return (
-    <SimpleForm schema={schema} onSubmit={() => {}}>
-      <Toggle {...args} />
-    </SimpleForm>
-  );
+  name: '🧪 Testing - Scalability',
+  args: testingScalabilityStoryArgs,
 };
-
-HappyPath.storyName = '🧪 Testing - When clicked, should enable';
 
 // --------------------------------------------------
 // PROPS
@@ -269,22 +180,33 @@ const happyPathStoryArgs: ComponentPropsWithoutRef<typeof Toggle> = {
   writtenStatus: { true: 'Enabled', false: 'Disabled' },
 };
 
-HappyPath.args = happyPathStoryArgs;
+export const HappyPath: StoryObj<typeof Toggle> = {
+  render: args => {
+    const schema = z.object({ status: z.boolean() });
 
-HappyPath.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-  const label = await canvas.getByText('Status');
+    return (
+      <SimpleForm schema={schema} onSubmit={() => {}}>
+        <Toggle {...args} />
+      </SimpleForm>
+    );
+  },
 
-  // STEP: check the initial disabled status
-  const writtenStatus = await canvas.getByText('Disabled');
+  name: '🧪 Testing - When clicked, should enable',
+  args: happyPathStoryArgs,
 
-  await expect(writtenStatus).toBeVisible();
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const label = await canvas.getByText('Status');
 
-  // STEP: CLick the toggle
-  await userEvent.click(label);
+    // STEP: check the initial disabled status
+    const writtenStatus = await canvas.getByText('Disabled');
 
-  // STEP: check the enabled status
-  await expect(writtenStatus).toHaveTextContent('Enabled');
+    await expect(writtenStatus).toBeVisible();
+
+    // STEP: CLick the toggle
+    await userEvent.click(label);
+
+    // STEP: check the enabled status
+    await expect(writtenStatus).toHaveTextContent('Enabled');
+  },
 };
-
-// #endregion

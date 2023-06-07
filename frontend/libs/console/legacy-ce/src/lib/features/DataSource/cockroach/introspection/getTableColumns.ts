@@ -36,6 +36,7 @@ export const getTableColumns = async ({
       kind: 'cockroach',
     },
     sql,
+    readOnly: true,
     httpClient,
   });
 

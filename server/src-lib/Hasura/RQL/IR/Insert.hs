@@ -43,15 +43,15 @@ where
 import Control.Lens ((^?))
 import Control.Lens.TH (makeLenses, makePrisms)
 import Data.Kind (Type)
-import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Conflict
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.SQL.Backend
 
 -- | Overall representation of an insert mutation, corresponding to one root
 -- field in our mutation, including the parsed selection set of the mutation's
@@ -75,6 +75,8 @@ data AnnotatedInsertData (b :: BackendType) (f :: Type -> Type) (v :: Type) = An
     _aiTableName :: TableName b,
     _aiCheckCondition :: (AnnBoolExp b v, Maybe (AnnBoolExp b v)),
     _aiTableColumns :: [ColumnInfo b],
+    _aiPrimaryKey :: Maybe (NESeq (Column b)),
+    _aiExtraTableMetadata :: ExtraTableMetadata b,
     _aiPresetValues :: PreSetColsG b v,
     _aiBackendInsert :: BackendInsert b v
   }

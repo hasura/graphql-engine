@@ -10,8 +10,8 @@ import Autodocodec (HasCodec)
 import Data.Aeson.Extended
 import Data.Kind (Type)
 import Hasura.Prelude
-import Hasura.SQL.Backend
-import Hasura.SQL.Tag
+import Hasura.RQL.Types.BackendTag
+import Hasura.RQL.Types.BackendType
 
 type Representable a = (Show a, Eq a, Hashable a, NFData a)
 
@@ -34,3 +34,12 @@ class
   -- | Internal connection configuration for a database - connection string,
   -- connection pool etc
   type SourceConfig b :: Type
+
+  -- | The number of read replicas specified in the source configuration
+  sourceConfigNumReadReplicas :: SourceConfig b -> Int
+
+  -- | Whether the source configuration specifies the use of a connection
+  -- template
+  sourceConfigConnectonTemplateEnabled :: SourceConfig b -> Bool
+
+  sourceConfigBackendSourceKind :: SourceConfig b -> BackendSourceKind b

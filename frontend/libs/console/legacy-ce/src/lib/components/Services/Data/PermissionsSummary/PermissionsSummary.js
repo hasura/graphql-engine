@@ -986,7 +986,7 @@ class PermissionsSummary extends Component {
     return (
       <RightContainer>
         <div
-          className={`${styles.clear_fix} ${styles.padd_left} ${styles.fit_content}`}
+          className={`${styles.clear_fix} ${styles.padd_left} ${styles.fit_content} bootstrap-jail`}
         >
           <Helmet title="Permissions Summary | Hasura" />
           <Analytics name="PermissionsSummary" {...REDACT_EVERYTHING}>

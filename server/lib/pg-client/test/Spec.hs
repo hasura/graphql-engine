@@ -26,6 +26,10 @@ import Prelude
 
 -------------------------------------------------------------------------------
 
+{-# ANN module ("HLint: ignore avoid Control.Concurrent.forkIO" :: String) #-}
+
+{-# ANN module ("HLint: ignore avoid Control.Concurrent.threadDelay" :: String) #-}
+
 {- Note [Running tests]
 ~~~~~~~~~~~~~~~~~~~~~~~
 The tests in this module expect a postgres instance running. No setup is
@@ -76,7 +80,7 @@ withFreshPool pool action =
     . const
     $ lift action
 
-err :: Show a => a -> IO (Maybe String)
+err :: (Show a) => a -> IO (Maybe String)
 err = pure . Just . show
 
 nada :: IO ()

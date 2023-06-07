@@ -1,7 +1,7 @@
 import React from 'react';
 import { isEnvironmentSupportMultiTenantConnectionPooling } from '../../../utils/proConsole';
 import { DeepRequired } from 'ts-essentials';
-import { ColumnsInfoResult, currentDriver, DataSourcesAPI } from '../..';
+import type { ColumnsInfoResult, DataSourcesAPI } from '../../';
 
 import {
   Table,
@@ -77,7 +77,6 @@ import {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsQuery,
   getDatabaseTableNames,
 } from './sqlUtils';
 import globals from '../../../Globals';
@@ -330,10 +329,6 @@ type ColumnsInfoPayload = {
 };
 
 const isColumnGenerated = (isGenerated: ColumnsInfoPayload['is_generated']) => {
-  if (currentDriver === 'cockroach') {
-    return isGenerated === 'YES';
-  }
-
   return isGenerated === 'ALWAYS';
 };
 
@@ -384,21 +379,23 @@ const parseColumnsInfoResult = (data: string[][]) => {
 };
 
 const columnDataTypes = {
-  INTEGER: 'integer',
-  SERIAL: 'serial',
+  ARRAY: 'ARRAY',
   BIGINT: 'bigint',
   BIGSERIAL: 'bigserial',
-  UUID: 'uuid',
-  JSONDTYPE: 'json',
-  JSONB: 'jsonb',
-  TIMESTAMP: 'timestamp with time zone',
-  TIME: 'time with time zone',
-  NUMERIC: 'numeric',
-  DATE: 'date',
-  TIMETZ: 'timetz',
   BOOLEAN: 'boolean',
+  BOOL: 'bool',
+  DATE: 'date',
+  DATETIME: 'datetime',
+  INTEGER: 'integer',
+  JSONB: 'jsonb',
+  JSONDTYPE: 'json',
+  NUMERIC: 'numeric',
+  SERIAL: 'serial',
   TEXT: 'text',
-  ARRAY: 'ARRAY',
+  TIME: 'time with time zone',
+  TIMESTAMP: 'timestamp with time zone',
+  TIMETZ: 'timetz',
+  UUID: 'uuid',
 };
 
 const commonDataTypes = [
@@ -767,7 +764,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     ssl_certificates:
       globals.consoleType === 'cloud' ||
       globals.consoleType === 'pro' ||
-      globals.consoleType === 'pro-lite',
+      globals.consoleType === 'pro-lite', // TODO: should be enabled only when license is active
   },
 };
 
@@ -891,6 +888,5 @@ export const postgres: DataSourcesAPI = {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsQuery,
   getDatabaseTableNames,
 };

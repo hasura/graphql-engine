@@ -1,6 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import AceEditor, {
   IAceOptions,
   IAceEditorProps,

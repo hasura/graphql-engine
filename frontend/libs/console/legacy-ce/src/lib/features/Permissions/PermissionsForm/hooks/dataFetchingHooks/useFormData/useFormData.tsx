@@ -47,6 +47,7 @@ export const useFormData = ({
       JSON.stringify(table),
       roleName,
       tableColumns,
+      queryType,
     ],
     queryFn: async () => {
       if (tableColumns.length === 0)
@@ -66,17 +67,19 @@ export const useFormData = ({
         dataSourceName,
       })) as Operator[];
 
-      const defaultValues = createDefaultValues({
-        queryType,
-        roleName,
-        dataSourceName,
-        metadata,
-        table,
-        tableColumns,
-        defaultQueryRoot,
-        metadataSource,
-        supportedOperators: supportedOperators ?? [],
-      });
+      const defaultValues = {
+        ...createDefaultValues({
+          queryType,
+          roleName,
+          dataSourceName,
+          metadata,
+          table,
+          tableColumns,
+          defaultQueryRoot,
+          metadataSource,
+          supportedOperators: supportedOperators ?? [],
+        }),
+      };
 
       const formData = createFormData({
         dataSourceName,
@@ -89,7 +92,6 @@ export const useFormData = ({
 
       return { formData, defaultValues };
     },
-
     refetchOnWindowFocus: false,
   });
 };

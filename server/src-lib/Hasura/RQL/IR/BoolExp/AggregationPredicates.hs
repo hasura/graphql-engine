@@ -16,8 +16,8 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExp, OpExpG)
 import Hasura.RQL.Types.Backend (Backend (Column))
 import Hasura.RQL.Types.Backend qualified as B
+import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Relationships.Local (RelInfo)
-import Hasura.SQL.Backend (BackendType)
 
 -- | This type the default non-empty implementation of the
 -- 'AggregationPredicates' type family of 'class Backend'.
@@ -160,12 +160,12 @@ data AggregationPredicateArguments (b :: BackendType)
   | AggregationPredicateArguments (NonEmpty (Column b))
   deriving stock (Generic)
 
-deriving instance B.Backend b => Eq (AggregationPredicateArguments b)
+deriving instance (B.Backend b) => Eq (AggregationPredicateArguments b)
 
-deriving instance B.Backend b => Show (AggregationPredicateArguments b)
+deriving instance (B.Backend b) => Show (AggregationPredicateArguments b)
 
-instance Backend b => Hashable (AggregationPredicateArguments b)
+instance (Backend b) => Hashable (AggregationPredicateArguments b)
 
-instance Backend b => NFData (AggregationPredicateArguments b)
+instance (Backend b) => NFData (AggregationPredicateArguments b)
 
 instance (Backend b) => ToJSON (AggregationPredicateArguments b)

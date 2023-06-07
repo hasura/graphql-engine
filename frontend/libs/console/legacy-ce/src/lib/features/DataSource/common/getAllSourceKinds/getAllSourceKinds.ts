@@ -6,6 +6,7 @@ type SourceKindsResponse = {
     kind: string;
     display_name: string;
     release_name?: string;
+    available: boolean;
   }[];
 };
 export const getAllSourceKinds = async ({ httpClient }: NetworkArgs) => {

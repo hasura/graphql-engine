@@ -4,7 +4,7 @@ module Hasura.Backends.DataConnector.Logging
   )
 where
 
-import Control.Lens ((^.))
+import Control.Lens ((^.), (^?))
 import Data.Aeson (object, (.=))
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap (KeyMap)
@@ -21,7 +21,7 @@ import Hasura.Prelude
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
 import Hasura.Tracing.TraceId (spanIdToHex, traceIdToHex)
-import Network.HTTP.Client.Transformable (Header, HttpException (..), Request, Response (..), body, headers, method, path, statusCode, url)
+import Network.HTTP.Client.Transformable qualified as HTTP
 import Servant.Client (ClientError (..), responseStatusCode, showBaseUrl)
 import Servant.Client.Core (RequestF (..))
 
@@ -47,8 +47,8 @@ instance ToEngineLog AgentCommunicationLog Hasura where
     (LevelDebug, ELTDataConnectorLog, logJson)
     where
       logJson =
-        object $
-          catMaybes
+        object
+          $ catMaybes
             [ ("requestMethod" .=) . _rliRequestMethod <$> _aclRequest,
               ("requestUri" .=) . _rliRequestUri <$> _aclRequest,
               ("requestHeaders" .=) . _rliRequestHeaders <$> _aclRequest,
@@ -59,37 +59,38 @@ instance ToEngineLog AgentCommunicationLog Hasura where
               Just $ "spanId" .= _aclSpanId
             ]
 
-logAgentRequest :: (MonadIO m, MonadTrace m) => Logger Hasura -> Request -> Either HttpException (Response BSL.ByteString) -> m ()
+logAgentRequest :: (MonadIO m, MonadTrace m) => Logger Hasura -> HTTP.Request -> Either HTTP.HttpException (HTTP.Response BSL.ByteString) -> m ()
 logAgentRequest (Logger writeLog) req responseOrError = do
   traceCtx <- Tracing.currentContext
   let _aclRequest = Just $ extractRequestLogInfoFromClientRequest req
       _aclResponseStatusCode = case responseOrError of
-        Right response -> Just . statusCode $ responseStatus response
+        Right response -> Just . HTTP.statusCode $ HTTP.responseStatus response
         Left httpExn -> Hasura.HTTP.getHTTPExceptionStatus $ Hasura.HTTP.HttpException httpExn
       _aclError = either (Just . Hasura.HTTP.serializeHTTPExceptionMessageForDebugging) (const Nothing) responseOrError
-      _aclTraceId = bsToTxt $ traceIdToHex $ Tracing.tcCurrentTrace traceCtx
-      _aclSpanId = bsToTxt $ spanIdToHex $ Tracing.tcCurrentSpan traceCtx
+      _aclTraceId = maybe "" (bsToTxt . traceIdToHex . Tracing.tcCurrentTrace) traceCtx
+      _aclSpanId = maybe "" (bsToTxt . spanIdToHex . Tracing.tcCurrentSpan) traceCtx
   writeLog AgentCommunicationLog {..}
 
-extractRequestLogInfoFromClientRequest :: Request -> RequestLogInfo
+extractRequestLogInfoFromClientRequest :: HTTP.Request -> RequestLogInfo
 extractRequestLogInfoFromClientRequest req =
-  let _rliRequestMethod = req ^. method & fromUtf8
-      _rliRequestUri = req ^. url
-      _rliRequestPath = req ^. path & fromUtf8
-      _rliRequestHeaders = req ^. headers & headersToKeyMap
-      _rliRequestBody = req ^. body <&> (BSL.toStrict >>> fromUtf8)
+  let _rliRequestMethod = req ^. HTTP.method & fromUtf8
+      _rliRequestUri = req ^. HTTP.url
+      _rliRequestPath = req ^. HTTP.path & fromUtf8
+      _rliRequestHeaders = req ^. HTTP.headers & headersToKeyMap
+      -- NOTE: We cannot decode IO based body types.
+      _rliRequestBody = req ^? (HTTP.body . HTTP._RequestBodyLBS) <&> (BSL.toStrict >>> fromUtf8)
    in RequestLogInfo {..}
 
 logClientError :: (MonadIO m, MonadTrace m) => Logger Hasura -> ClientError -> m ()
 logClientError (Logger writeLog) clientError = do
   traceCtx <- Tracing.currentContext
   let _aclResponseStatusCode = case clientError of
-        FailureResponse _ response -> Just . statusCode $ responseStatusCode response
+        FailureResponse _ response -> Just . HTTP.statusCode $ responseStatusCode response
         _ -> Nothing
       _aclRequest = extractRequestLogInfoFromClientInfo clientError
       _aclError = Just $ Hasura.HTTP.serializeServantClientErrorMessageForDebugging clientError
-      _aclTraceId = bsToTxt $ traceIdToHex $ Tracing.tcCurrentTrace traceCtx
-      _aclSpanId = bsToTxt $ spanIdToHex $ Tracing.tcCurrentSpan traceCtx
+      _aclTraceId = maybe "" (bsToTxt . traceIdToHex . Tracing.tcCurrentTrace) traceCtx
+      _aclSpanId = maybe "" (bsToTxt . spanIdToHex . Tracing.tcCurrentSpan) traceCtx
   writeLog AgentCommunicationLog {..}
 
 extractRequestLogInfoFromClientInfo :: ClientError -> Maybe RequestLogInfo
@@ -103,7 +104,7 @@ extractRequestLogInfoFromClientInfo = \case
      in Just RequestLogInfo {..}
   _ -> Nothing
 
-headersToKeyMap :: [Header] -> KeyMap Text
+headersToKeyMap :: [HTTP.Header] -> KeyMap Text
 headersToKeyMap headers' =
   headers'
     <&> (\(name, value) -> (K.fromText . fromUtf8 $ CI.original name, fromUtf8 value))

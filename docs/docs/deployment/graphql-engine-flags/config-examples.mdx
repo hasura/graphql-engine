@@ -178,9 +178,11 @@ it might not be the latest version of the Console.
 
 The Hasura GraphQL Engine may provide additional information for each
 object in the `extensions` key of `errors`. The `internal` key contains
-error information including the generated SQL statement and exception
-information from Postgres. This can be highly useful, especially in the
-case of debugging errors in [action](/actions/debugging.mdx) requests.
+error information including the generated SQL statement, exception
+information from Postgres and, if applicable, resolved
+[connection template](/databases/database-config/dynamic-db-connection.mdx#connection-template)
+information. This can be highly useful, especially in the case of
+debugging errors in [Action](/actions/debugging.mdx) requests.
 
 By default the `internal` key is not sent in the `extensions` response
 (except for `admin` roles). To enable this, start the GraphQL Engine

@@ -1,4 +1,4 @@
-import * as DomParser from 'dom-parser';
+import DomParser from 'dom-parser';
 
 export type Asset = {
   tag: string;

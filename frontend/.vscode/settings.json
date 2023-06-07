@@ -9,5 +9,10 @@
     // detects strings in objects and nested objects. Just prefix variable name with tw like so: const twStyleObject = {};
     ["tw\\w+ = {\\s+([^;]+)\\s+};", "(?:'|\"|`)([^`]*)(?:'|\"|`)"]
   ],
-  "tailwindCSS.rootFontSize": 14
+  "tailwindCSS.rootFontSize": 14,
+
+  // adding this setting per this discussion on github:
+  // https://github.com/nrwl/nx/issues/9465#issuecomment-1080093295
+  "typescript.preferences.importModuleSpecifier": "project-relative",
+  "git.ignoreLimitWarning": true
 }

@@ -100,91 +100,87 @@ const RemoteRelEditor: React.FC<Props> = ({
   );
 
   return (
-    <React.Fragment>
-      <div>
-        <div className={`${styles.add_mar_bottom}`}>
-          <div
-            className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}
-          >
-            <div className={styles.add_mar_right_small}>
-              <b>Name</b>
-            </div>
-            <div>
-              <RelNameTooltip tableName={table.table_name} />
-            </div>
+    <div>
+      <div className={`${styles.add_mar_bottom}`}>
+        <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>
+          <div className={styles.add_mar_right_small}>
+            <b>Name</b>
           </div>
           <div>
-            <input
-              type="text"
-              className={`form-control ${styles.wd300Px}`}
-              placeholder="name"
-              value={state.name}
-              onChange={handleNameChange}
-              disabled={!isLast}
-              title={!isLast ? 'Name cannot be changed' : undefined}
-              data-test="remote-rel-name-input"
-            />
-          </div>
-        </div>
-        <div className={`${styles.add_mar_bottom}`}>
-          <div
-            className={`${styles.add_mar_bottom_mid} ${styles.display_flex} ${styles.add_mar_right_small}`}
-          >
-            <div className={styles.add_mar_right_small}>
-              <b>Remote Schema:</b>
-            </div>
-            <div>
-              <RemoteSchemaTooltip tableName={table.table_name} />
-            </div>
-          </div>
-          <div>
-            <select
-              className={`form-control ${styles.wd300Px}`}
-              value={state.remoteSchema}
-              onChange={handleRemoteSchemaChange}
-              data-test="remote-rel-schema-input"
-            >
-              <option key="placeholder" value="">
-                {' '}
-                -- remote schema --
-              </option>
-              {remoteSchemas.map(s => {
-                return (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                );
-              })}
-            </select>
+            <RelNameTooltip tableName={table.table_name} />
           </div>
         </div>
         <div>
-          <div
-            className={`${styles.add_mar_bottom_mid} ${styles.display_flex} ${styles.add_mar_right_small}`}
-          >
-            <div className={styles.add_mar_right_small}>
-              <b>Configuration:</b>
-            </div>
-            <div>
-              <ConfigTooltip />
-            </div>
-          </div>
-          <Explorer
-            relationship={state}
-            toggleArg={handleArgToggle}
-            toggleField={handleFieldToggle}
-            handleArgValueKindChange={handleArgValueKindChange}
-            handleArgValueChange={handleArgValueChange}
-            remoteSchemaName={state.remoteSchema}
-            columns={{
-              columns: tableColumns,
-              computedFields: computedFieldsNames,
-            }}
-            reduxDispatch={reduxDispatch}
+          <input
+            type="text"
+            className={`form-control ${styles.wd300Px}`}
+            placeholder="name"
+            value={state.name}
+            onChange={handleNameChange}
+            disabled={!isLast}
+            title={!isLast ? 'Name cannot be changed' : undefined}
+            data-test="remote-rel-name-input"
           />
         </div>
       </div>
-    </React.Fragment>
+      <div className={`${styles.add_mar_bottom}`}>
+        <div
+          className={`${styles.add_mar_bottom_mid} ${styles.display_flex} ${styles.add_mar_right_small}`}
+        >
+          <div className={styles.add_mar_right_small}>
+            <b>Remote Schema:</b>
+          </div>
+          <div>
+            <RemoteSchemaTooltip tableName={table.table_name} />
+          </div>
+        </div>
+        <div>
+          <select
+            className={`form-control ${styles.wd300Px}`}
+            value={state.remoteSchema}
+            onChange={handleRemoteSchemaChange}
+            data-test="remote-rel-schema-input"
+          >
+            <option key="placeholder" value="">
+              {' '}
+              -- remote schema --
+            </option>
+            {remoteSchemas.map(s => {
+              return (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      </div>
+      <div>
+        <div
+          className={`${styles.add_mar_bottom_mid} ${styles.display_flex} ${styles.add_mar_right_small}`}
+        >
+          <div className={styles.add_mar_right_small}>
+            <b>Configuration:</b>
+          </div>
+          <div>
+            <ConfigTooltip />
+          </div>
+        </div>
+        <Explorer
+          relationship={state}
+          toggleArg={handleArgToggle}
+          toggleField={handleFieldToggle}
+          handleArgValueKindChange={handleArgValueKindChange}
+          handleArgValueChange={handleArgValueChange}
+          remoteSchemaName={state.remoteSchema}
+          columns={{
+            columns: tableColumns,
+            computedFields: computedFieldsNames,
+          }}
+          reduxDispatch={reduxDispatch}
+        />
+      </div>
+    </div>
   );
 };
 

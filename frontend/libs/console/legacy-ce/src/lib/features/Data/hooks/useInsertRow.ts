@@ -51,23 +51,23 @@ export const useInsertRow = ({
       table,
     });
 
+    const mutationObject = Object.entries(values).reduce((acc, val) => {
+      const [columnName, body] = val;
+
+      if (body.option === 'value')
+        return {
+          ...acc,
+          [columnName]: body.value,
+        };
+
+      return acc;
+    }, {});
+
     const gqlQuery = generateGraphQLInsertMutation({
       defaultQueryRoot,
       tableCustomization: data?.tableCustomization,
       sourceCustomization: data?.sourceCustomization,
-      objects: [
-        Object.entries(values).reduce((acc, val) => {
-          const [columnName, body] = val;
-
-          if (body.option === 'value')
-            return {
-              ...acc,
-              [columnName]: body.value,
-            };
-
-          return acc;
-        }, {}),
-      ],
+      objects: [mutationObject],
       mutationName: 'insertRow',
     });
 

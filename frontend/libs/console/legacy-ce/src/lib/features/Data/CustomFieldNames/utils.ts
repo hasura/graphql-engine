@@ -1,7 +1,7 @@
 import { Driver } from '../../../dataSources';
 import { getDriverPrefix } from '../../DataSource';
 import { MetadataTableConfig } from '../../hasura-metadata-types';
-import pickBy from 'lodash.pickby';
+import pickBy from 'lodash/pickBy';
 import {
   CustomFieldNamesFormVals,
   GetTablePayloadArgs,
@@ -19,9 +19,9 @@ export const customFieldNamesPlaceholders = (
   insert: `insert_${tableName} (default)`,
   insert_one: `insert_${tableName}_one (default)`,
   update: `update_${tableName} (default)`,
-  update_by_pk: `update_by_pk_${tableName} (default)`,
+  update_by_pk: `update_${tableName}_by_pk (default)`,
   delete: `delete_${tableName} (default)`,
-  delete_by_pk: `delete_by_pk_${tableName} (default)`,
+  delete_by_pk: `delete_${tableName}_by_pk (default)`,
   update_many: `update_many_${tableName} (default)`,
 });
 
