@@ -66,6 +66,12 @@ instance J.ToJSON ResourceCheckerError where
 perCpuShares :: Int
 perCpuShares = 1024
 
+-- | Limit the maximum memory capacity of the physical server
+-- The resource checker will returns the inconclusive memory error if the value exceeds this limit
+-- according to Red Hat limits https://access.redhat.com/articles/rhel-limits
+maximumMemoryLimitBytes :: Int64
+maximumMemoryLimitBytes = 256 * (1024 ^ (4 :: Int64)) -- 256 TiBs
+
 -- | Determine allocated cpu and memory resources of the host server or Container Runtime.
 -- because HGE mainly runs in the container runtime
 -- we need to determine the max cpu and memory limit constraints
@@ -224,13 +230,19 @@ getMemoryAllocation ::
   (MonadIO m, MonadError ResourceCheckerError m) =>
   FilePath ->
   m (Maybe Int64, Maybe ResourceCheckerError)
-getMemoryAllocation path =
-  readFileT (const MemoryInconclusive) path
-    >>= ( \content ->
-            bool (Just <$> liftEither (parseUint content)) getMaxPhysicalMemory (content == "max")
-              <&> (,Nothing)
-        )
-    . T.strip
+getMemoryAllocation path = do
+  content <- readFileT (const MemoryInconclusive) path <&> T.strip
+  mMaxPhysicalMemory <- getMaxPhysicalMemory
+  return
+    $ if content == "max"
+      then (mMaxPhysicalMemory, Nothing)
+      else case parseUint content of
+        Left e -> (mMaxPhysicalMemory, Just e)
+        -- the cgroup memory limit config should be smaller or equal the max physical memory
+        Right mem ->
+          if mem <= fromMaybe maximumMemoryLimitBytes mMaxPhysicalMemory
+            then (Just mem, Nothing)
+            else (mMaxPhysicalMemory, Just MemoryInconclusive)
 
 -- catch cpu allocation error with default physical cpu resource
 catchCpuAllocation ::

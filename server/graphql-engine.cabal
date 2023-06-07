@@ -1135,6 +1135,7 @@ test-suite graphql-engine-tests
     , vector
     , yaml
     , shakespeare
+    , temporary
 
   if !flag(ghci-load-test-with-lib)
     build-depends: graphql-engine
@@ -1221,6 +1222,7 @@ test-suite graphql-engine-tests
     Hasura.Server.VersionSpec
     Hasura.Server.InitSpec
     Hasura.Server.Init.ArgSpec
+    Hasura.Server.ResourceCheckerSpec
     Hasura.SessionSpec
     Hasura.SQL.BackendMapSpec
     Hasura.SQL.WKTSpec
