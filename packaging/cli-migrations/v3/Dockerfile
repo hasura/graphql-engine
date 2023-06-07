@@ -18,9 +18,7 @@ RUN mkdir -p /.hasura \
 ENV HASURA_GRAPHQL_SHOW_UPDATE_NOTIFICATION=false
 
 COPY docker-entrypoint.sh /bin/
-COPY hasura-cli /bin/hasura-cli
-
-RUN chmod +x /bin/hasura-cli 
+COPY --chmod=+x hasura-cli /bin/hasura-cli
 
 # set an env var to let the cli know that
 # it is running in server environment
