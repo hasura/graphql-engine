@@ -215,7 +215,7 @@ export const AddNativeQuery = ({
             />
           ) : null}
           <div className="flex flex-row justify-end gap-2">
-            {/* 
+            {/*
               Validate Button will remain hidden until we have more information about how to handle standalone validation
               Slack thread: https://hasurahq.slack.com/archives/C04LV93JNSH/p1682965503376129
           */}

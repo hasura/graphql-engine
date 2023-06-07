@@ -115,6 +115,7 @@ export const FieldsInput = ({
           <div className={clsx(fieldLabelStyles, 'mb-0')}>Fields</div>
           <Button
             icon={<FaPlusCircle />}
+            disabled={!types || types.length === 0}
             onClick={() => {
               append({ name: '', type: 'text', nullable: true });
             }}
