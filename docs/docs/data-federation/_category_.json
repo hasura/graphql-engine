@@ -1,6 +1,6 @@
 {
   "label": "GraphQL Federation",
-  "position": 100,
+  "position": 24,
   "customProps": {
     "sidebar_pathname": "data-federation"
   }
