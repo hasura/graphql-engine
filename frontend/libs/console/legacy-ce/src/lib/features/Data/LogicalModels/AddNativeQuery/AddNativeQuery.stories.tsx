@@ -36,7 +36,7 @@ const fillAndSubmitForm: Story['play'] = async ({ canvasElement }) => {
   const errorMessages = [
     'Native Query Name is required',
     'Database is required',
-    'Paramater Name is required',
+    'Parameter Name is required',
     'Query Return Type is required',
   ];
 
@@ -45,7 +45,7 @@ const fillAndSubmitForm: Story['play'] = async ({ canvasElement }) => {
   }
 
   // remove param added for error testing
-  await userEvent.click(c.getByText('Remove'));
+  await userEvent.click(c.getAllByText('Remove')[0]);
 
   await userEvent.type(
     c.getByPlaceholderText('Name that exposes this model in GraphQL API'),
@@ -65,8 +65,8 @@ const fillAndSubmitForm: Story['play'] = async ({ canvasElement }) => {
   await userEvent.click(await c.findByText('Add Parameter'));
 
   await userEvent.type(c.getByPlaceholderText('Parameter Name'), 'param1');
-  await userEvent.type(c.getByPlaceholderText('Default Value'), 'default');
-  await userEvent.click(c.getByTestId('required-switch'));
+  await userEvent.type(c.getByPlaceholderText('Description'), 'description');
+  await userEvent.click(c.getByTestId('nullable-switch'));
 
   await userEvent.selectOptions(
     await c.findByLabelText('Query Return Type', undefined, { timeout: 3000 }),

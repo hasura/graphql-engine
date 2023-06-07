@@ -27,7 +27,7 @@ export const BooleanInput = ({
           error={fieldState.error}
         >
           <Switch
-            data-testid="required-switch"
+            data-testid={wrapperProps.dataTestId || 'switch'}
             checked={value}
             onCheckedChange={onChange}
             disabled={disabled}

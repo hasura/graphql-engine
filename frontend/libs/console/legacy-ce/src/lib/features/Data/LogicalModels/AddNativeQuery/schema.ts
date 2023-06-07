@@ -16,10 +16,10 @@ export const schema = implement<NativeQueryForm>().with({
   type: z.enum(['query', 'mutation']).default('query').optional(),
   arguments: z
     .object({
-      name: reqString('Paramater Name'),
+      name: reqString('Parameter Name'),
       type: reqString('Parameter Type'),
-      default_value: z.string().optional(),
-      required: z.boolean().optional(),
+      description: z.string().optional(),
+      nullable: z.boolean().optional(),
     })
     .array(),
   code: reqString('Sql Query'),

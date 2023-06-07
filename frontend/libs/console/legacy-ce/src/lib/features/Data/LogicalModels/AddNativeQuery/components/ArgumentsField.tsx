@@ -10,9 +10,9 @@ import { FaPlusCircle } from 'react-icons/fa';
 import { Button } from '../../../../../new-components/Button';
 import {
   GraphQLSanitizedInputField,
-  InputField,
   Select,
   fieldLabelStyles,
+  InputField,
 } from '../../../../../new-components/Form';
 import { BooleanInput } from '../../components/BooleanInput';
 import { useCardedTableFromReactTableWithRef } from '../../components/CardedTableFromReactTable';
@@ -57,23 +57,26 @@ export const ArgumentsField = ({ types }: { types: string[] }) => {
         ),
         header: 'Type',
       }),
-      columnHelper.accessor('default_value', {
-        id: 'default_value',
+      columnHelper.accessor('description', {
+        id: 'description',
         cell: ({ row }) => (
           <InputField
             noErrorPlaceholder
-            placeholder="Default Value"
-            name={`arguments.${row.index}.default_value`}
+            placeholder="Description"
+            name={`arguments.${row.index}.description`}
           />
         ),
-        header: 'Default Value',
+        header: 'Description',
       }),
-      columnHelper.accessor('required', {
-        id: 'required',
+      columnHelper.accessor('nullable', {
+        id: 'nullable',
         cell: ({ row }) => (
-          <BooleanInput name={`arguments.${row.index}.required`} />
+          <BooleanInput
+            name={`arguments.${row.index}.nullable`}
+            dataTestId="nullable-switch"
+          />
         ),
-        header: 'Required',
+        header: 'Nullable',
       }),
       columnHelper.display({
         id: 'action',
@@ -110,6 +113,8 @@ export const ArgumentsField = ({ types }: { types: string[] }) => {
               append({
                 name: '',
                 type: 'text',
+                nullable: false,
+                description: '',
               });
             }}
           >
